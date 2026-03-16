@@ -5,7 +5,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 export const metadata: Metadata = {
   title: "Photography Locations in Portugal",
   description:
-    "Explore the best photography locations across Portugal — Lisbon, Porto, Algarve, Sintra, Madeira, Cascais, and the Azores. Find your perfect photoshoot spot.",
+    "Explore 23+ stunning photography locations across Portugal — from Lisbon and Porto to the Algarve coast, Azores islands, and hidden gems. Find your perfect photoshoot spot.",
 };
 
 export default function LocationsPage() {

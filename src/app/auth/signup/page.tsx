@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
-  const [role, setRole] = useState<"client" | "photographer">("client");
+  const searchParams = useSearchParams();
+  const initialRole = searchParams.get("role") === "photographer" ? "photographer" : "client";
+  const [role, setRole] = useState<"client" | "photographer">(initialRole);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -199,5 +202,13 @@ export default function SignUpPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense>
+      <SignUpForm />
+    </Suspense>
   );
 }

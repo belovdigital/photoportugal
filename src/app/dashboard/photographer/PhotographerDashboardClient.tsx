@@ -172,7 +172,7 @@ export function PhotographerDashboardClient({
     setPkgDesc(pkg.description || "");
     setPkgDuration(pkg.duration_minutes.toString());
     setPkgPhotos(pkg.num_photos.toString());
-    setPkgPrice((pkg.price / 100).toString());
+    setPkgPrice(pkg.price.toString());
     setPkgPopular(pkg.is_popular);
     setShowPackageForm(true);
   }
@@ -600,7 +600,7 @@ export function PhotographerDashboardClient({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-bold text-gray-900">&euro;{(pkg.price / 100).toFixed(0)}</p>
+                      <p className="text-xl font-bold text-gray-900">&euro;{pkg.price}</p>
                       <div className="mt-2 flex gap-2">
                         <button
                           onClick={() => openEditPackage(pkg)}

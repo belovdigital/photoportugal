@@ -75,7 +75,7 @@ export function Header() {
                 Sign In
               </Link>
               <Link
-                href="/auth/signup"
+                href="/auth/signup?role=photographer"
                 className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700"
               >
                 Join as Photographer
@@ -132,7 +132,7 @@ export function Header() {
                   Sign In
                 </Link>
                 <Link
-                  href="/auth/signup"
+                  href="/auth/signup?role=photographer"
                   className="rounded-lg bg-primary-600 px-4 py-2 text-center text-sm font-semibold text-white"
                 >
                   Join as Photographer

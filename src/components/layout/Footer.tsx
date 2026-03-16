@@ -2,7 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { locations } from "@/lib/locations-data";
 
+const TOP_LOCATIONS = ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"];
+
 export function Footer() {
+  const topLocations = locations.filter((l) => TOP_LOCATIONS.includes(l.slug));
+
   return (
     <footer className="border-t border-warm-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -30,7 +34,7 @@ export function Footer() {
               Top Locations
             </h3>
             <ul className="mt-3 space-y-2">
-              {locations.map((loc) => (
+              {topLocations.map((loc) => (
                 <li key={loc.slug}>
                   <Link
                     href={`/locations/${loc.slug}`}
@@ -40,6 +44,14 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  href="/locations"
+                  className="text-sm font-medium text-primary-600 transition hover:text-primary-700"
+                >
+                  View all {locations.length} locations
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -51,18 +63,10 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               <li>
                 <Link
-                  href="/auth/signup"
+                  href="/auth/signup?role=photographer"
                   className="text-sm text-gray-500 transition hover:text-primary-600"
                 >
                   Join as Photographer
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/pricing"
-                  className="text-sm text-gray-500 transition hover:text-primary-600"
-                >
-                  Pricing Plans
                 </Link>
               </li>
               <li>
@@ -82,35 +86,19 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               <li>
                 <Link
-                  href="/about"
+                  href="/how-it-works"
                   className="text-sm text-gray-500 transition hover:text-primary-600"
                 >
-                  About Us
+                  About
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/contact"
+                <a
+                  href="mailto:info@photoportugal.com"
                   className="text-sm text-gray-500 transition hover:text-primary-600"
                 >
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-sm text-gray-500 transition hover:text-primary-600"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-sm text-gray-500 transition hover:text-primary-600"
-                >
-                  Terms of Service
-                </Link>
+                  Contact Us
+                </a>
               </li>
             </ul>
           </div>

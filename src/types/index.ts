@@ -79,8 +79,8 @@ export interface PortfolioItem {
   url: string;
   thumbnail_url: string;
   caption: string | null;
-  location_id: string | null;
-  order: number;
+  location_slug: string | null;
+  sort_order: number;
 }
 
 export interface Location {

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
-      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price * 100), is_popular || false]
+      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false]
     );
 
     return NextResponse.json({ success: true, id: (pkg as { id: string }).id });
@@ -61,7 +61,7 @@ export async function PUT(req: NextRequest) {
       `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6
        WHERE id = $7 AND photographer_id = $8
        RETURNING id`,
-      [name, description || null, duration_minutes, num_photos, Math.round(price * 100), is_popular || false, id, profile.id]
+      [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, id, profile.id]
     );
 
     if (!pkg) {
