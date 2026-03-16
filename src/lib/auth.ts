@@ -1,10 +1,15 @@
 import NextAuth from "next-auth";
+import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { queryOne } from "./db";
+import { queryOne, query } from "./db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     Credentials({
       name: "Email",
       credentials: {
@@ -43,13 +48,51 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-    // Google provider will be added when OAuth credentials are available
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        const email = user.email;
+        if (!email) return false;
+
+        // Check if user exists
+        const existing = await queryOne<{ id: string; role: string }>(
+          "SELECT id, role FROM users WHERE email = $1",
+          [email]
+        );
+
+        if (existing) {
+          // Update google_id if not set
+          await query(
+            "UPDATE users SET google_id = COALESCE(google_id, $1), avatar_url = COALESCE(avatar_url, $2), email_verified = TRUE WHERE email = $3",
+            [account.providerAccountId, user.image, email]
+          );
+        } else {
+          // New user — will be created with default 'client' role
+          // They can choose role on the onboarding page
+          await query(
+            "INSERT INTO users (email, name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, 'client', TRUE)",
+            [email, user.name, account.providerAccountId, user.image]
+          );
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.role = (user as { role?: string }).role;
-        token.id = user.id;
+        // Fresh login — get role from DB
+        const dbUser = await queryOne<{ id: string; role: string }>(
+          "SELECT id, role FROM users WHERE email = $1",
+          [user.email!]
+        );
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.id = dbUser.id;
+        }
+      }
+      // Allow role update via update() call
+      if (trigger === "update" && session?.role) {
+        token.role = session.role;
       }
       return token;
     },
@@ -63,6 +106,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: "/auth/signin",
+    newUser: "/auth/onboarding",
   },
   session: {
     strategy: "jwt",
