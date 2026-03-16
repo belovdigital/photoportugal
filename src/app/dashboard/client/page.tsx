@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
+import { ReviewForm } from "@/components/ui/ReviewForm";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-700" },
@@ -35,6 +36,7 @@ export default async function ClientDashboardPage() {
     total_price: number | null;
     message: string | null;
     created_at: string;
+    has_review: boolean;
   }[] = [];
 
   try {
@@ -42,7 +44,8 @@ export default async function ClientDashboardPage() {
       `SELECT b.id, pp.display_name as photographer_name, pp.slug as photographer_slug,
               u.avatar_url as photographer_avatar,
               p.name as package_name, p.duration_minutes, p.num_photos,
-              b.status, b.shoot_date, b.total_price, b.message, b.created_at
+              b.status, b.shoot_date, b.total_price, b.message, b.created_at,
+              (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
        JOIN users u ON u.id = pp.user_id
@@ -154,13 +157,24 @@ export default async function ClientDashboardPage() {
                   {booking.message && (
                     <p className="mt-3 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
                   )}
-                  <div className="mt-4">
+                  <div className="mt-4 flex flex-wrap gap-3">
                     <Link
                       href={`/dashboard/messages/${booking.id}`}
                       className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
                     >
                       Message
                     </Link>
+                    {booking.status === "completed" && !booking.has_review && (
+                      <ReviewForm bookingId={booking.id} photographerName={booking.photographer_name} />
+                    )}
+                    {booking.has_review && (
+                      <span className="flex items-center gap-1 text-sm text-accent-600">
+                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Reviewed
+                      </span>
+                    )}
                   </div>
                 </div>
               );

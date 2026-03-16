@@ -125,8 +125,47 @@ export default async function PhotographerProfilePage({
   }
 
   const photographer = result.data;
-  const reviews = result.type === "demo" ? getReviewsForPhotographer(photographer.id) : [];
+  let reviews = result.type === "demo" ? getReviewsForPhotographer(photographer.id) : [];
   const portfolioItems = result.type === "db" ? (photographer as { portfolioItems: { url: string; caption: string | null }[] }).portfolioItems : [];
+
+  // Fetch real reviews from DB for DB photographers
+  if (result.type === "db") {
+    try {
+      const dbReviews = await query<{
+        id: string;
+        rating: number;
+        title: string | null;
+        text: string | null;
+        is_verified: boolean;
+        created_at: string;
+        client_name: string;
+        client_avatar: string | null;
+      }>(
+        `SELECT r.id, r.rating, r.title, r.text, r.is_verified, r.created_at,
+                u.name as client_name, u.avatar_url as client_avatar
+         FROM reviews r
+         JOIN users u ON u.id = r.client_id
+         WHERE r.photographer_id = $1
+         ORDER BY r.created_at DESC`,
+        [photographer.id]
+      );
+      reviews = dbReviews.map((r) => ({
+        id: r.id,
+        booking_id: "",
+        client_id: "",
+        photographer_id: photographer.id,
+        client_name: r.client_name,
+        client_avatar: r.client_avatar,
+        rating: r.rating,
+        title: r.title || "",
+        text: r.text || "",
+        photos: [],
+        photos_public: false,
+        is_verified: r.is_verified,
+        created_at: r.created_at,
+      }));
+    } catch {}
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",

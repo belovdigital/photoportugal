@@ -312,6 +312,43 @@ export function PhotographerDashboardClient({
       <div className="mt-8">
         {activeTab === "profile" && (
           <form onSubmit={saveProfile} className="max-w-2xl space-y-6">
+            {/* Avatar */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-600 overflow-hidden">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    profile.display_name.charAt(0)
+                  )}
+                </div>
+                <label className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                  Upload Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      showMessage("Uploading avatar...");
+                      const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
+                      if (res.ok) {
+                        showMessage("Avatar updated!");
+                        router.refresh();
+                      } else {
+                        showMessage("Upload failed");
+                      }
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Display Name</label>
               <input
