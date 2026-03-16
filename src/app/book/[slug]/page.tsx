@@ -129,7 +129,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             {photographer?.display_name} will review your request and get back to you soon.
           </p>
           <div className="mt-6 flex justify-center gap-3">
-            <Link href="/dashboard/client" className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
+            <Link href="/dashboard" className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
               My Bookings
             </Link>
             <Link href="/photographers" className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50">

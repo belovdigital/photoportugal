@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { query } from "@/lib/db";
+import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -15,6 +15,12 @@ export default async function ClientDashboardPage() {
   if (!session?.user) redirect("/auth/signin");
 
   const userId = (session.user as { id?: string }).id;
+
+  // Role check — photographers go to their dashboard
+  try {
+    const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
+    if (userRow?.role === "photographer") redirect("/dashboard/photographer");
+  } catch {}
 
   let bookings: {
     id: string;

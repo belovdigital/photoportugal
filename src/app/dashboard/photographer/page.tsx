@@ -10,6 +10,10 @@ export default async function PhotographerDashboardPage() {
 
   const userId = (session.user as { id?: string }).id;
 
+  // Role check — only photographers can access this page
+  const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
+  if (!userRow || userRow.role !== "photographer") redirect("/dashboard/client");
+
   const profile = await queryOne<{
     id: string;
     slug: string;

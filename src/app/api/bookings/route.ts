@@ -21,6 +21,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
     }
 
+    // Prevent self-booking
+    const selfCheck = await queryOne(
+      "SELECT id FROM photographer_profiles WHERE id = $1 AND user_id = $2",
+      [photographer_id, userId]
+    );
+    if (selfCheck) {
+      return NextResponse.json({ error: "You cannot book yourself" }, { status: 400 });
+    }
+
     // Get package price if selected
     let totalPrice = null;
     if (package_id) {
@@ -53,7 +62,13 @@ export async function GET() {
   }
 
   const userId = (session.user as { id?: string }).id;
-  const role = (session.user as { role?: string }).role;
+
+  // Read role from DB (JWT may be stale)
+  let role = (session.user as { role?: string }).role;
+  try {
+    const dbUser = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
+    if (dbUser) role = dbUser.role;
+  } catch {}
 
   try {
     let bookings;
