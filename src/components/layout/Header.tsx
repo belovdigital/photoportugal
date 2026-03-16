@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -10,55 +9,47 @@ export function Header() {
   const { data: session } = useSession();
   const user = session?.user;
   const role = (user as { role?: string } | undefined)?.role;
+  const isPhotographer = role === "photographer";
 
   return (
     <header className="sticky top-0 z-50 border-b border-warm-200 bg-warm-50/95 backdrop-blur-sm">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center">
-          <Image
+      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Logo */}
+        <Link href="/" className="shrink-0">
+          <img
             src="/logo.svg"
             alt="Photo Portugal"
-            width={200}
-            height={36}
-            className="h-9 w-auto"
-            priority
+            className="h-7 w-auto"
           />
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden items-center gap-8 md:flex">
-          {role !== "photographer" && (
-            <Link
-              href="/photographers"
-              className="text-sm font-medium text-gray-600 transition hover:text-primary-600"
-            >
+        <div className="hidden items-center gap-6 md:flex">
+          {/* Main links */}
+          {!isPhotographer && (
+            <Link href="/photographers" className="text-sm font-medium text-gray-600 transition hover:text-primary-600">
               Find Photographers
             </Link>
           )}
-          <Link
-            href="/locations"
-            className="text-sm font-medium text-gray-600 transition hover:text-primary-600"
-          >
+          <Link href="/locations" className="text-sm font-medium text-gray-600 transition hover:text-primary-600">
             Locations
           </Link>
           {!user && (
-            <Link
-              href="/how-it-works"
-              className="text-sm font-medium text-gray-600 transition hover:text-primary-600"
-            >
+            <Link href="/how-it-works" className="text-sm font-medium text-gray-600 transition hover:text-primary-600">
               How It Works
             </Link>
           )}
 
+          {/* Divider */}
+          <div className="h-5 w-px bg-warm-200" />
+
+          {/* Auth area */}
           {user ? (
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium text-gray-700 transition hover:text-primary-600"
-              >
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="text-sm font-medium text-gray-700 transition hover:text-primary-600">
                 Dashboard
               </Link>
-              {role === "photographer" && (
+              {isPhotographer && (
                 <Link
                   href={`/photographers/${user.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`}
                   className="text-sm font-medium text-gray-600 transition hover:text-primary-600"
@@ -66,13 +57,17 @@ export function Header() {
                   My Profile
                 </Link>
               )}
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
-                  {user.name?.charAt(0) ?? "U"}
-                </div>
+              <div className="flex items-center gap-2.5">
+                {user.image ? (
+                  <img src={user.image} alt="" className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
+                    {user.name?.charAt(0) ?? "U"}
+                  </div>
+                )}
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-sm text-gray-500 transition hover:text-gray-700"
+                  className="text-sm text-gray-400 transition hover:text-gray-600"
                 >
                   Sign Out
                 </button>
@@ -80,10 +75,7 @@ export function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Link
-                href="/auth/signin"
-                className="text-sm font-medium text-gray-700 transition hover:text-primary-600"
-              >
+              <Link href="/auth/signin" className="text-sm font-medium text-gray-700 transition hover:text-primary-600">
                 Sign In
               </Link>
               <Link
@@ -99,7 +91,7 @@ export function Header() {
         {/* Mobile menu button */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-2 text-gray-600"
+          className="p-2 text-gray-600 md:hidden"
           aria-label="Toggle menu"
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -116,7 +108,7 @@ export function Header() {
       {mobileOpen && (
         <div className="border-t border-warm-200 bg-warm-50 px-4 py-4 md:hidden">
           <div className="flex flex-col gap-4">
-            {role !== "photographer" && (
+            {!isPhotographer && (
               <Link href="/photographers" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-gray-600">
                 Find Photographers
               </Link>
@@ -135,6 +127,15 @@ export function Header() {
                 <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-gray-700">
                   Dashboard
                 </Link>
+                {isPhotographer && (
+                  <Link
+                    href={`/photographers/${user.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`}
+                    onClick={() => setMobileOpen(false)}
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    My Profile
+                  </Link>
+                )}
                 <button
                   onClick={() => { setMobileOpen(false); signOut({ callbackUrl: "/" }); }}
                   className="text-left text-sm text-gray-500"
@@ -144,11 +145,12 @@ export function Header() {
               </>
             ) : (
               <>
-                <Link href="/auth/signin" className="text-sm font-medium text-gray-700">
+                <Link href="/auth/signin" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-gray-700">
                   Sign In
                 </Link>
                 <Link
                   href="/auth/signup?role=photographer"
+                  onClick={() => setMobileOpen(false)}
                   className="rounded-lg bg-primary-600 px-4 py-2 text-center text-sm font-semibold text-white"
                 >
                   Join as Photographer
