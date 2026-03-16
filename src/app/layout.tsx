@@ -40,11 +40,20 @@ export const metadata: Metadata = {
     title: "Photo Portugal — Find Your Perfect Photographer in Portugal",
     description: "Book professional photographers across Portugal for vacation photoshoots, couples sessions, family portraits & more.",
     url: "https://photoportugal.com",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Photo Portugal — Find Your Perfect Photographer in Portugal",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Photo Portugal — Find Your Perfect Photographer in Portugal",
     description: "Book professional photographers across Portugal.",
+    images: ["/og-image.png"],
   },
   alternates: {
     canonical: "https://photoportugal.com",

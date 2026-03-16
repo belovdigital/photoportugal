@@ -85,20 +85,29 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-gray-900">Company</h3>
             <ul className="mt-3 space-y-2">
               <li>
-                <Link
-                  href="/how-it-works"
-                  className="text-sm text-gray-500 transition hover:text-primary-600"
-                >
-                  About
+                <Link href="/about" className="text-sm text-gray-500 transition hover:text-primary-600">
+                  About Us
                 </Link>
               </li>
               <li>
-                <a
-                  href="mailto:info@photoportugal.com"
-                  className="text-sm text-gray-500 transition hover:text-primary-600"
-                >
-                  Contact Us
-                </a>
+                <Link href="/faq" className="text-sm text-gray-500 transition hover:text-primary-600">
+                  FAQ
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-sm text-gray-500 transition hover:text-primary-600">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-sm text-gray-500 transition hover:text-primary-600">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-sm text-gray-500 transition hover:text-primary-600">
+                  Terms of Service
+                </Link>
               </li>
             </ul>
           </div>

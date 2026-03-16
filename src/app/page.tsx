@@ -7,8 +7,33 @@ import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
 import { heroImage } from "@/lib/unsplash-images";
 
 export default function HomePage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Photo Portugal",
+    url: "https://photoportugal.com",
+    description: "Find and book professional photographers across Portugal for vacation photoshoots.",
+    publisher: {
+      "@type": "Organization",
+      name: "Photo Portugal",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://photoportugal.com/logo.svg",
+      },
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://photoportugal.com/photographers?location={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
