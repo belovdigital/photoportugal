@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -13,13 +14,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-warm-200 bg-warm-50/95 backdrop-blur-sm">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white font-bold text-lg">
-            P
-          </div>
-          <span className="font-display text-xl font-bold text-gray-900">
-            Photo Portugal
-          </span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/logo.svg"
+            alt="Photo Portugal"
+            width={200}
+            height={36}
+            className="h-9 w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop nav */}

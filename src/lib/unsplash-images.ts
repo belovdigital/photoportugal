@@ -1,66 +1,66 @@
 // Curated Unsplash images for Photo Portugal
-// All images verified working (200 status) — location-accurate photos
+// All 24 photos verified (HTTP 200) — real location-accurate photos from Unsplash API
 
 export const locationImages: Record<string, string> = {
   // Greater Lisbon
-  lisbon:
-    "https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=800&q=80&fit=crop",
-  sintra:
-    "https://images.unsplash.com/photo-1562195168-c82fea0f0953?w=800&q=80&fit=crop",
-  cascais:
-    "https://images.unsplash.com/photo-1587973878097-ef3aabd5eeaa?w=800&q=80&fit=crop",
-  caparica:
-    "https://images.unsplash.com/photo-1517760444937-f6397edcbbcd?w=800&q=80&fit=crop",
-  comporta:
-    "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80&fit=crop",
-  setubal:
-    "https://images.unsplash.com/photo-1608777452976-b5f298a76892?w=800&q=80&fit=crop",
+  lisbon: // Lisbon tram on cobblestone streets
+    "https://images.unsplash.com/photo-1536663060084-a0d9eeeaf44b?w=800&q=80&fit=crop",
+  sintra: // Pena Palace, colorful hilltop palace
+    "https://images.unsplash.com/photo-1697394494123-c6c1323a14f7?w=800&q=80&fit=crop",
+  cascais: // Cascais coastal town with boats
+    "https://images.unsplash.com/photo-1748792753424-38cbb745508a?w=800&q=80&fit=crop",
+  caparica: // Dusk at Costa da Caparica beach
+    "https://images.unsplash.com/photo-1667155522672-abab34f534b4?w=800&q=80&fit=crop",
+  comporta: // Comporta beach
+    "https://images.unsplash.com/photo-1656106357023-a5f8955c6455?w=800&q=80&fit=crop",
+  setubal: // Praia dos Galapinhos, Arrábida
+    "https://images.unsplash.com/photo-1704658011867-1fef84ee619e?w=800&q=80&fit=crop",
 
   // Northern Portugal
-  guimaraes:
-    "https://images.unsplash.com/photo-1580502304784-8985b7eb7260?w=800&q=80&fit=crop",
-  porto:
-    "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800&q=80&fit=crop",
-  braga:
-    "https://images.unsplash.com/photo-1568977337691-8e2c4baa094b?w=800&q=80&fit=crop",
-  "douro-valley":
-    "https://images.unsplash.com/photo-1603657289433-e4983d2114b9?w=800&q=80&fit=crop",
-  aveiro:
-    "https://images.unsplash.com/photo-1656569884248-86553eb6a540?w=800&q=80&fit=crop",
-  geres:
-    "https://images.unsplash.com/photo-1598887142487-3c854d51eabb?w=800&q=80&fit=crop",
+  guimaraes: // Guimarães castle
+    "https://images.unsplash.com/photo-1697984431654-d234e3ca432b?w=800&q=80&fit=crop",
+  porto: // Dom Luís I Bridge, Porto
+    "https://images.unsplash.com/photo-1756765786971-384a44daf35d?w=800&q=80&fit=crop",
+  braga: // Bom Jesus do Monte baroque staircase
+    "https://images.unsplash.com/photo-1761071300593-901f8d4c6a98?w=800&q=80&fit=crop",
+  "douro-valley": // Douro River terraced vineyards
+    "https://images.unsplash.com/photo-1693825208005-02563f6a95ce?w=800&q=80&fit=crop",
+  aveiro: // Colorful moliceiro boats in canal
+    "https://images.unsplash.com/photo-1758193465576-926a324b400a?w=800&q=80&fit=crop",
+  geres: // Peneda-Gerês waterfall
+    "https://images.unsplash.com/photo-1655476967861-7cf1eeb1a79f?w=800&q=80&fit=crop",
 
   // Central Portugal
-  tomar:
-    "https://images.unsplash.com/photo-1602002418816-5c0aeef426aa?w=800&q=80&fit=crop",
-  peniche:
-    "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800&q=80&fit=crop",
-  coimbra:
-    "https://images.unsplash.com/photo-1672995259409-f749336b646b?w=800&q=80&fit=crop",
-  obidos:
-    "https://images.unsplash.com/photo-1586029714704-d864f4603de0?w=800&q=80&fit=crop",
-  nazare:
-    "https://images.unsplash.com/photo-1711239071120-8b1b4068d4b3?w=800&q=80&fit=crop",
+  tomar: // Convent of Christ, Templar castle
+    "https://images.unsplash.com/photo-1537025130223-dccf9faeff7f?w=800&q=80&fit=crop",
+  peniche: // Baleal beach, Peniche coast
+    "https://images.unsplash.com/photo-1745594207432-6ba381dfba2e?w=800&q=80&fit=crop",
+  coimbra: // Old town with Portuguese flag over Mondego river
+    "https://images.unsplash.com/photo-1631053744868-8afbc4df3d4e?w=800&q=80&fit=crop",
+  obidos: // Medieval walled town
+    "https://images.unsplash.com/photo-1557260465-1579873ad508?w=800&q=80&fit=crop",
+  nazare: // Giant waves, WSL Big Wave contest
+    "https://images.unsplash.com/photo-1607333618830-dc42123dc28d?w=800&q=80&fit=crop",
 
   // Alentejo
-  evora:
-    "https://images.unsplash.com/photo-1685562249762-581b9ba55ab1?w=800&q=80&fit=crop",
+  evora: // Roman Temple of Diana
+    "https://images.unsplash.com/photo-1651508820682-2d3e37e7183e?w=800&q=80&fit=crop",
 
   // Southern Portugal
-  algarve:
-    "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=800&q=80&fit=crop",
-  lagos:
-    "https://images.unsplash.com/photo-1608649944716-228404a0a8bb?w=800&q=80&fit=crop",
-  tavira:
-    "https://images.unsplash.com/photo-1603013904410-30a7db75d473?w=800&q=80&fit=crop",
+  algarve: // Benagil cave with turquoise water
+    "https://images.unsplash.com/photo-1560242374-7befcc667b39?w=800&q=80&fit=crop",
+  lagos: // Ponta da Piedade golden cliffs
+    "https://images.unsplash.com/photo-1593897810048-0195fd308ee6?w=800&q=80&fit=crop",
+  tavira: // Tavira bridge and town
+    "https://images.unsplash.com/photo-1707862992563-ac8e01d606ec?w=800&q=80&fit=crop",
 
   // Islands
-  madeira:
-    "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=800&q=80&fit=crop",
-  azores:
-    "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80&fit=crop",
+  madeira: // Road to Ponta de São Lourenço, dramatic coast
+    "https://images.unsplash.com/photo-1721241843813-c54b77496005?w=800&q=80&fit=crop",
+  azores: // Sete Cidades twin lakes panorama
+    "https://images.unsplash.com/photo-1542575749037-7ef4545e897d?w=800&q=80&fit=crop",
 };
 
-// Porto panoramic sunset
+// Couple posing for a picture on the beach — people, emotions, vacation vibes
 export const heroImage =
-  "https://images.unsplash.com/photo-1734026473904-dc99baa544d0?w=1920&q=80&fit=crop";
+  "https://images.unsplash.com/photo-1765854638659-aa17a6b00543?w=1920&q=80&fit=crop";
