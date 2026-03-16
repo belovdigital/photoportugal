@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { locations } from "@/lib/locations-data";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
@@ -12,12 +11,11 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <Image
+          <img
             src={heroImage}
-            alt="Portugal sunset"
-            fill
-            className="object-cover"
-            priority
+            alt="Couple photoshoot in Portugal"
+            className="h-full w-full object-cover"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary-950/90 via-primary-900/75 to-primary-800/60" />
         </div>

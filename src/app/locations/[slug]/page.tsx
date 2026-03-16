@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { locations, getLocationBySlug } from "@/lib/locations-data";
+import { locationImage } from "@/lib/unsplash-images";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -59,8 +60,16 @@ export default async function LocationPage({
       />
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 to-primary-700">
-        <div className="absolute inset-0 bg-gradient-to-t from-primary-900/60 to-transparent" />
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={locationImage(location.slug, "hero")}
+            alt={`${location.name}, Portugal`}
+            className="h-full w-full object-cover"
+            fetchPriority="high"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-950/85 via-primary-900/70 to-primary-800/50" />
+        </div>
         <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold text-primary-300">
