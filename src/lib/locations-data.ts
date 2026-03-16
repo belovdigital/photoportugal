@@ -57,6 +57,24 @@ export const locations: Location[] = [
       "Book a professional photographer in Cascais, Portugal. Stunning beach, coastal cliff, and town photoshoots near Lisbon. Verified local photographers.",
   },
   {
+    id: "caparica",
+    slug: "caparica",
+    name: "Costa da Caparica",
+    region: "Greater Lisbon",
+    description:
+      "Endless golden beaches, surfer vibes, and dramatic sunsets just across the bridge from Lisbon.",
+    long_description:
+      "Costa da Caparica offers 30 kilometers of uninterrupted golden sand beaches stretching south from Lisbon. Each beach has its own character — from the lively town beach with bars and restaurants to the wild, windswept dunes of Fonte da Telha and the nudist Praia da Bela Vista. The area is a surfer's paradise with consistent Atlantic swells, and the clifftop views from the Arriba Fóssil protected landscape are spectacular. The sunset over the Atlantic here is one of the best near Lisbon, making it perfect for golden hour photoshoots with a relaxed, beachy atmosphere.",
+    cover_image: "/images/locations/caparica-cover.jpg",
+    gallery_images: [],
+    lat: 38.6268,
+    lng: -9.2355,
+    photographer_count: 0,
+    seo_title: "Photographer in Costa da Caparica, Portugal | Beach Sunset Photoshoots",
+    seo_description:
+      "Book a photographer in Costa da Caparica, Portugal. Golden beach, surf, and sunset photoshoots just minutes from Lisbon.",
+  },
+  {
     id: "setubal",
     slug: "setubal",
     name: "Setúbal",
@@ -75,7 +93,44 @@ export const locations: Location[] = [
       "Book a photographer in Setúbal and Arrábida, Portugal. Stunning coastal cliffs, hidden beaches, and natural beauty near Lisbon.",
   },
 
+  {
+    id: "comporta",
+    slug: "comporta",
+    name: "Comporta",
+    region: "Greater Lisbon",
+    description:
+      "Portugal's secret beach paradise — rice paddies, pine forests, and pristine white sand.",
+    long_description:
+      "Comporta is the Hamptons of Portugal — a chic, under-the-radar beach destination beloved by celebrities and in-the-know travelers. Located on the Tróia Peninsula south of Lisbon, it features miles of pristine white sand beaches backed by umbrella pine forests and rice paddies. The landscape is uniquely flat for Portugal, creating a serene, minimalist aesthetic perfect for editorial and fashion-inspired photoshoots. Stork nests dot the rice fields, fisherman's huts line the shore, and the light has a soft, dreamy quality. Comporta offers a completely different vibe from anywhere else in Portugal — bohemian luxury meets raw nature.",
+    cover_image: "/images/locations/comporta-cover.jpg",
+    gallery_images: [],
+    lat: 38.3795,
+    lng: -8.7863,
+    photographer_count: 0,
+    seo_title: "Photographer in Comporta, Portugal | Luxury Beach Photoshoots",
+    seo_description:
+      "Book a photographer in Comporta, Portugal. Stunning beach, rice field, and bohemian luxury photoshoots on the Tróia coast.",
+  },
+
   // Northern Portugal
+  {
+    id: "guimaraes",
+    slug: "guimaraes",
+    name: "Guimarães",
+    region: "Northern Portugal",
+    description:
+      "The birthplace of Portugal — medieval castle, historic center, and deep national pride.",
+    long_description:
+      "Guimarães is where Portugal was born. The medieval castle and the Palace of the Dukes of Braganza dominate the skyline of this UNESCO World Heritage city. The historic center features narrow cobblestone streets, medieval squares like Largo da Oliveira, and beautifully preserved granite buildings. The inscription 'Aqui nasceu Portugal' (Portugal was born here) on the old city walls sets the tone for a city steeped in national identity. Guimarães offers an intimate, authentically Portuguese setting that is less touristy than Lisbon or Porto — perfect for couples seeking a uniquely historical backdrop.",
+    cover_image: "/images/locations/guimaraes-cover.jpg",
+    gallery_images: [],
+    lat: 41.4425,
+    lng: -8.2918,
+    photographer_count: 0,
+    seo_title: "Photographer in Guimarães, Portugal | Medieval Castle Photoshoots",
+    seo_description:
+      "Book a photographer in Guimarães, the birthplace of Portugal. Historic castle, medieval streets, and UNESCO World Heritage photoshoots.",
+  },
   {
     id: "porto",
     slug: "porto",
@@ -149,7 +204,62 @@ export const locations: Location[] = [
       "Book a photographer in Aveiro, Portugal. Colorful canal boats, Art Nouveau architecture, and Costa Nova beach photoshoots.",
   },
 
+  {
+    id: "geres",
+    slug: "geres",
+    name: "Peneda-Gerês",
+    region: "Northern Portugal",
+    description:
+      "Portugal's only national park — wild mountains, waterfalls, and ancient granite villages.",
+    long_description:
+      "Peneda-Gerês is Portugal's sole national park and one of the last truly wild places in Western Europe. Granite mountain peaks, ancient oak forests, cascading waterfalls, and turquoise river pools create an epic natural landscape. The park is home to wild Garrano ponies, ancient Roman roads, and granite villages that seem frozen in time. Key photography spots include the dramatic Cascata do Tahiti waterfall, the emerald waters of the Caniçada Reservoir, and the ancient village of Lindoso with its hilltop castle and traditional espigueiros (granite granaries). For couples and families who love nature and adventure, Gerês offers the most dramatic wild scenery in Portugal.",
+    cover_image: "/images/locations/geres-cover.jpg",
+    gallery_images: [],
+    lat: 41.7213,
+    lng: -8.1558,
+    photographer_count: 0,
+    seo_title: "Photographer in Peneda-Gerês, Portugal | National Park Photoshoots",
+    seo_description:
+      "Book a photographer in Peneda-Gerês National Park, Portugal. Waterfalls, mountain lakes, and wild nature photoshoots.",
+  },
+
   // Central Portugal
+  {
+    id: "tomar",
+    slug: "tomar",
+    name: "Tomar",
+    region: "Central Portugal",
+    description:
+      "The Knights Templar city — a stunning fortified convent and centuries of mystery.",
+    long_description:
+      "Tomar is one of Portugal's most fascinating and photogenic small cities. The Convent of Christ, a UNESCO World Heritage site founded by the Knights Templar in the 12th century, is an architectural masterpiece spanning Romanesque, Gothic, Manueline, and Renaissance styles. Its famous Manueline window is one of the most ornate in the world. Below the castle, the charming old town features a Renaissance-era synagogue (the oldest in Portugal), riverside gardens along the Nabão River, and the beautiful Mata Nacional dos Sete Montes park. Tomar offers a mystical, dramatic atmosphere unlike anywhere else.",
+    cover_image: "/images/locations/tomar-cover.jpg",
+    gallery_images: [],
+    lat: 39.6036,
+    lng: -8.4097,
+    photographer_count: 0,
+    seo_title: "Photographer in Tomar, Portugal | Knights Templar Photoshoots",
+    seo_description:
+      "Book a photographer in Tomar, Portugal. Stunning photoshoots at the Convent of Christ, Templar castle, and historic riverside town.",
+  },
+  {
+    id: "peniche",
+    slug: "peniche",
+    name: "Peniche",
+    region: "Central Portugal",
+    description:
+      "World-class surf, the mystical Berlengas Islands, and rugged Atlantic coastline.",
+    long_description:
+      "Peniche is a dramatic Atlantic peninsula famous for world-class surfing at Supertubos (host of the WSL Championship Tour), the medieval fortress overlooking the harbor, and the stunning Berlengas Islands — a nature reserve accessible by boat with crystal-clear waters and a 17th-century island fort. The rugged coastline features dramatic cliff formations, hidden beaches, and powerful wave action that creates spectacular photo opportunities. The fishing harbor with colorful boats and the sunset views from Cabo Carvoeiro lighthouse are particularly photogenic.",
+    cover_image: "/images/locations/peniche-cover.jpg",
+    gallery_images: [],
+    lat: 39.3558,
+    lng: -9.3811,
+    photographer_count: 0,
+    seo_title: "Photographer in Peniche, Portugal | Surf & Coastal Photoshoots",
+    seo_description:
+      "Book a photographer in Peniche, Portugal. Dramatic surf, cliff, and Berlengas Island photoshoots on the Atlantic coast.",
+  },
   {
     id: "coimbra",
     slug: "coimbra",
