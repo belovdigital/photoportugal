@@ -8,7 +8,7 @@ import { unsplashUrl } from "@/lib/unsplash-images";
 
 // Hero gallery photos — real Portugal moments with people
 const heroPhotos = [
-  { id: "photo-1765854638659-aa17a6b00543", alt: "Couple photoshoot on the beach" },
+  { id: "LOCAL:/hero-family.webp", alt: "Family photoshoot on Algarve beach" },
   { id: "photo-1536663060084-a0d9eeeaf44b", alt: "Lisbon tram streets" },
   { id: "photo-1560242374-7befcc667b39", alt: "Benagil cave Algarve" },
   { id: "photo-1542575749037-7ef4545e897d", alt: "Sete Cidades Azores" },
@@ -108,7 +108,7 @@ export default function HomePage() {
                 {/* Main large photo */}
                 <div className="col-span-4 row-span-4 overflow-hidden rounded-2xl shadow-xl">
                   <img
-                    src={unsplashUrl(heroPhotos[0].id, 800)}
+                    src="/hero-family.webp"
                     alt={heroPhotos[0].alt}
                     className="h-full w-full object-cover"
                     fetchPriority="high"
@@ -175,7 +175,7 @@ export default function HomePage() {
             <div className="relative -mx-4 overflow-hidden rounded-2xl sm:mx-0 lg:hidden">
               <div className="aspect-[4/3]">
                 <img
-                  src={unsplashUrl(heroPhotos[0].id, 800)}
+                  src="/hero-family.webp"
                   alt={heroPhotos[0].alt}
                   className="h-full w-full object-cover"
                   fetchPriority="high"
