@@ -8,7 +8,7 @@ const baseUrls: Record<string, string> = {
   sintra: "photo-1697394494123-c6c1323a14f7", // Pena Palace
   cascais: "photo-1748792753424-38cbb745508a", // Cascais coast
   caparica: "photo-1667155522672-abab34f534b4", // Costa da Caparica
-  comporta: "photo-1656106357023-a5f8955c6455", // Comporta beach
+  comporta: "photo-1636834843464-2133f4226f7c", // Comporta beach aerial
   setubal: "photo-1704658011867-1fef84ee619e", // Arrábida
 
   // Northern Portugal
