@@ -171,8 +171,18 @@ export default async function LocationPage({
       </section>
 
       {/* CTA */}
-      <section className="bg-primary-50">
-        <div className="mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={locationImage(location.slug, "card")}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm" />
+        </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-bold text-gray-900">
             Ready for Your {location.name} Photoshoot?
           </h2>
