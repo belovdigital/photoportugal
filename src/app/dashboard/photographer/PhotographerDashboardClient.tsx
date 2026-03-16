@@ -42,23 +42,41 @@ interface Package {
   is_popular: boolean;
 }
 
+interface Booking {
+  id: string;
+  client_name: string;
+  client_email: string;
+  client_avatar: string | null;
+  package_name: string | null;
+  duration_minutes: number | null;
+  num_photos: number | null;
+  status: string;
+  shoot_date: string | null;
+  shoot_time: string | null;
+  total_price: number | null;
+  message: string | null;
+  created_at: string;
+}
+
 interface LocationOption {
   slug: string;
   name: string;
   region: string;
 }
 
-type Tab = "profile" | "portfolio" | "packages";
+type Tab = "profile" | "portfolio" | "packages" | "bookings";
 
 export function PhotographerDashboardClient({
   profile,
   portfolioItems,
   packages,
+  bookings,
   allLocations,
 }: {
   profile: Profile;
   portfolioItems: PortfolioItem[];
   packages: Package[];
+  bookings: Booking[];
   allLocations: LocationOption[];
 }) {
   const router = useRouter();
@@ -216,7 +234,9 @@ export function PhotographerDashboardClient({
     }
   }
 
+  const pendingBookings = bookings.filter((b) => b.status === "pending").length;
   const tabs: { key: Tab; label: string }[] = [
+    { key: "bookings", label: `Bookings${pendingBookings > 0 ? ` (${pendingBookings} new)` : bookings.length > 0 ? ` (${bookings.length})` : ""}` },
     { key: "profile", label: "Profile" },
     { key: "portfolio", label: `Portfolio (${portfolioItems.length})` },
     { key: "packages", label: `Packages (${packages.length})` },
@@ -627,7 +647,113 @@ export function PhotographerDashboardClient({
             </div>
           </div>
         )}
+
+        {/* === BOOKINGS TAB === */}
+        {activeTab === "bookings" && (
+          <div>
+            {bookings.length > 0 ? (
+              <div className="space-y-4">
+                {bookings.map((booking) => (
+                  <BookingCard key={booking.id} booking={booking} onUpdate={() => router.refresh()} />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border-2 border-dashed border-warm-300 p-12 text-center">
+                <p className="text-gray-400">No booking requests yet. Share your profile to start receiving bookings!</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-700",
+  confirmed: "bg-green-100 text-green-700",
+  completed: "bg-blue-100 text-blue-700",
+  cancelled: "bg-gray-100 text-gray-500",
+};
+
+function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => void }) {
+  const [updating, setUpdating] = useState(false);
+
+  async function updateStatus(status: string) {
+    setUpdating(true);
+    const res = await fetch(`/api/bookings/${booking.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    setUpdating(false);
+    if (res.ok) onUpdate();
+  }
+
+  return (
+    <div className="rounded-xl border border-warm-200 bg-white p-6">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-lg font-bold text-primary-600 overflow-hidden">
+            {booking.client_avatar ? (
+              <img src={booking.client_avatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              booking.client_name.charAt(0)
+            )}
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">{booking.client_name}</p>
+            <p className="text-sm text-gray-500">{booking.client_email}</p>
+          </div>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLORS[booking.status] || STATUS_COLORS.pending}`}>
+          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+        </span>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
+        {booking.package_name && <span>{booking.package_name}</span>}
+        {booking.shoot_date && (
+          <span>{new Date(booking.shoot_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+        )}
+        {booking.shoot_time && <span>{booking.shoot_time}</span>}
+        {booking.total_price && <span>&euro;{booking.total_price}</span>}
+      </div>
+
+      {booking.message && (
+        <p className="mt-3 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
+      )}
+
+      {booking.status === "pending" && (
+        <div className="mt-4 flex gap-3">
+          <button
+            onClick={() => updateStatus("confirmed")}
+            disabled={updating}
+            className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50"
+          >
+            Confirm
+          </button>
+          <button
+            onClick={() => updateStatus("cancelled")}
+            disabled={updating}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+          >
+            Decline
+          </button>
+        </div>
+      )}
+
+      {booking.status === "confirmed" && (
+        <div className="mt-4">
+          <button
+            onClick={() => updateStatus("completed")}
+            disabled={updating}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            Mark as Completed
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,8 +22,12 @@ export function PhotographerCard({
         )}
         {/* Avatar */}
         <div className="absolute -bottom-6 left-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-primary-100 text-xl font-bold text-primary-600 shadow-md">
-            {photographer.display_name.charAt(0)}
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-primary-100 text-xl font-bold text-primary-600 shadow-md overflow-hidden">
+            {photographer.avatar_url ? (
+              <img src={photographer.avatar_url} alt={photographer.display_name} className="h-full w-full object-cover" />
+            ) : (
+              photographer.display_name.charAt(0)
+            )}
           </div>
         </div>
       </div>

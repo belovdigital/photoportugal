@@ -340,9 +340,9 @@ export default async function PhotographerProfilePage({
                           {pkg.num_photos} edited photos
                         </li>
                       </ul>
-                      <button className="mt-6 w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700">
+                      <Link href={`/book/${photographer.slug}`} className="mt-6 block w-full rounded-xl bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-primary-700">
                         Book This Package
-                      </button>
+                      </Link>
                     </div>
                   ))}
                 </>

@@ -78,11 +78,38 @@ export default async function PhotographerDashboardPage() {
     region: l.region,
   }));
 
+  const bookings = await query<{
+    id: string;
+    client_name: string;
+    client_email: string;
+    client_avatar: string | null;
+    package_name: string | null;
+    duration_minutes: number | null;
+    num_photos: number | null;
+    status: string;
+    shoot_date: string | null;
+    shoot_time: string | null;
+    total_price: number | null;
+    message: string | null;
+    created_at: string;
+  }>(
+    `SELECT b.id, u.name as client_name, u.email as client_email, u.avatar_url as client_avatar,
+            p.name as package_name, p.duration_minutes, p.num_photos,
+            b.status, b.shoot_date, b.shoot_time, b.total_price, b.message, b.created_at
+     FROM bookings b
+     JOIN users u ON u.id = b.client_id
+     LEFT JOIN packages p ON p.id = b.package_id
+     WHERE b.photographer_id = $1
+     ORDER BY b.created_at DESC`,
+    [profile.id]
+  );
+
   return (
     <PhotographerDashboardClient
       profile={{ ...profile, location_slugs: locationSlugs }}
       portfolioItems={portfolioItems}
       packages={packages}
+      bookings={bookings}
       allLocations={allLocations}
     />
   );
