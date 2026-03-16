@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { locations } from "@/lib/locations-data";
 import { PhotographerDashboardClient } from "./PhotographerDashboardClient";
 
 export default async function PhotographerDashboardPage() {
@@ -18,6 +19,7 @@ export default async function PhotographerDashboardPage() {
     avatar_url: string | null;
     cover_url: string | null;
     languages: string[];
+    shoot_types: string[];
     hourly_rate: number | null;
     experience_years: number;
     plan: string;
@@ -25,7 +27,7 @@ export default async function PhotographerDashboardPage() {
     review_count: number;
     session_count: number;
   }>(
-    "SELECT id, slug, display_name, tagline, bio, avatar_url, cover_url, languages, hourly_rate, experience_years, plan, rating, review_count, session_count FROM photographer_profiles WHERE user_id = $1",
+    "SELECT id, slug, display_name, tagline, bio, avatar_url, cover_url, languages, shoot_types, hourly_rate, experience_years, plan, rating, review_count, session_count FROM photographer_profiles WHERE user_id = $1",
     [userId]
   );
 
@@ -38,15 +40,22 @@ export default async function PhotographerDashboardPage() {
     );
   }
 
+  // Get photographer's locations
+  const locationRows = await query<{ location_slug: string }>(
+    "SELECT location_slug FROM photographer_locations WHERE photographer_id = $1",
+    [profile.id]
+  );
+  const locationSlugs = locationRows.map((r) => r.location_slug);
+
   const portfolioItems = await query<{
     id: string;
     type: string;
     url: string;
     thumbnail_url: string | null;
     caption: string | null;
-    order: number;
+    sort_order: number;
   }>(
-    "SELECT id, type, url, thumbnail_url, caption, \"order\" FROM portfolio_items WHERE photographer_id = $1 ORDER BY \"order\"",
+    "SELECT id, type, url, thumbnail_url, caption, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order",
     [profile.id]
   );
 
@@ -63,11 +72,18 @@ export default async function PhotographerDashboardPage() {
     [profile.id]
   );
 
+  const allLocations = locations.map((l) => ({
+    slug: l.slug,
+    name: l.name,
+    region: l.region,
+  }));
+
   return (
     <PhotographerDashboardClient
-      profile={profile}
+      profile={{ ...profile, location_slugs: locationSlugs }}
       portfolioItems={portfolioItems}
       packages={packages}
+      allLocations={allLocations}
     />
   );
 }

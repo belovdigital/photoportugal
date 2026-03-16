@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     const url = `/uploads/portfolio/${profile.id}/${filename}`;
 
     const item = await queryOne(
-      `INSERT INTO portfolio_items (photographer_id, type, url, "order")
+      `INSERT INTO portfolio_items (photographer_id, type, url, sort_order)
        VALUES ($1, 'photo', $2, $3)
        RETURNING id`,
       [profile.id, url, count]
