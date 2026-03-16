@@ -21,11 +21,11 @@ export function HeroSearchBar({ locations }: { locations: LocationOption[] }) {
   }
 
   return (
-    <div className="mt-12 max-w-2xl">
-      <div className="flex overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="flex flex-1 items-center gap-3 px-6 py-4">
+    <div className="max-w-xl">
+      <div className="flex overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-lg transition-shadow focus-within:shadow-xl focus-within:border-primary-300">
+        <div className="flex flex-1 items-center gap-3 px-5 py-4">
           <svg
-            className="h-5 w-5 shrink-0 text-gray-400"
+            className="h-5 w-5 shrink-0 text-primary-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -58,9 +58,12 @@ export function HeroSearchBar({ locations }: { locations: LocationOption[] }) {
         </div>
         <button
           onClick={handleSearch}
-          className="flex items-center bg-primary-600 px-8 font-semibold text-white transition hover:bg-primary-700"
+          className="flex items-center gap-2 bg-primary-600 px-6 sm:px-8 font-semibold text-white transition hover:bg-primary-700"
         >
-          Search
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span className="hidden sm:inline">Search</span>
         </button>
       </div>
     </div>
