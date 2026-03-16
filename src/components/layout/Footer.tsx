@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { locations } from "@/lib/locations-data";
 
 export function Footer() {
@@ -8,13 +9,14 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-600 text-white font-bold">
-                P
-              </div>
-              <span className="font-display text-lg font-bold text-gray-900">
-                Photo Portugal
-              </span>
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo.svg"
+                alt="Photo Portugal"
+                width={180}
+                height={32}
+                className="h-8 w-auto"
+              />
             </Link>
             <p className="mt-3 text-sm text-gray-500">
               Connecting travelers with talented local photographers across
