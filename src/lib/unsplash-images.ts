@@ -51,16 +51,16 @@ export function unsplashUrl(
   width: number = 400,
   quality: number = 75
 ): string {
-  return `https://images.unsplash.com/${id}?w=${width}&q=${quality}&auto=format&fit=crop`;
+  return `https://images.unsplash.com/${id}?w=${width}&q=${quality}&auto=format&fit=crop&dpr=2`;
 }
 
-// Pre-built sizes for common use cases
+// Pre-built sizes — CSS display sizes (Unsplash serves 2x via dpr=2)
 export const IMAGE_SIZES = {
-  card: 400, // Location cards, photographer cards
-  cardLarge: 600, // Featured/highlighted cards
-  hero: 1400, // Hero section
-  profile: 800, // Photographer profile cover
-  thumbnail: 200, // Small thumbnails
+  card: 400, // Location cards → serves 800px for Retina
+  cardLarge: 600, // Featured cards → serves 1200px
+  hero: 1400, // Hero section → serves 2800px
+  profile: 800, // Profile cover → serves 1600px
+  thumbnail: 200, // Thumbnails → serves 400px
 } as const;
 
 export function locationImage(slug: string, size: keyof typeof IMAGE_SIZES = "card"): string {
