@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #fdf4f3;
+  --color-primary-100: #fce8e6;
+  --color-primary-200: #f9d5d1;
+  --color-primary-300: #f3b4ac;
+  --color-primary-400: #ea8a7e;
+  --color-primary-500: #dc6254;
+  --color-primary-600: #c94536;
+  --color-primary-700: #a9372a;
+  --color-primary-800: #8c3126;
+  --color-primary-900: #752e25;
+  --color-primary-950: #40140f;
+
+  --color-accent-50: #f0f9f4;
+  --color-accent-100: #dbf0e3;
+  --color-accent-200: #b9e1ca;
+  --color-accent-300: #8bcba8;
+  --color-accent-400: #5baf83;
+  --color-accent-500: #399367;
+  --color-accent-600: #287651;
+  --color-accent-700: #205f42;
+  --color-accent-800: #1c4c36;
+  --color-accent-900: #183f2e;
+  --color-accent-950: #0c231a;
+
+  --color-warm-50: #faf8f5;
+  --color-warm-100: #f3efe8;
+  --color-warm-200: #e6ddd0;
+  --color-warm-300: #d5c5b0;
+  --color-warm-400: #c3a98e;
+  --color-warm-500: #b59475;
+  --color-warm-600: #a88167;
+  --color-warm-700: #8c6b55;
+  --color-warm-800: #735849;
+  --color-warm-900: #5f4a3d;
+  --color-warm-950: #322520;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-warm-50 text-gray-900 antialiased;
+  }
+}

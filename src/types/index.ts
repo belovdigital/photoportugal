@@ -1,0 +1,100 @@
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: "client" | "photographer";
+  avatar_url: string | null;
+  created_at: string;
+}
+
+export interface PhotographerProfile {
+  id: string;
+  user_id: string;
+  slug: string;
+  display_name: string;
+  tagline: string;
+  bio: string;
+  avatar_url: string | null;
+  cover_url: string | null;
+  languages: string[];
+  hourly_rate: number;
+  currency: string;
+  locations: Location[];
+  packages: Package[];
+  experience_years: number;
+  is_verified: boolean;
+  is_featured: boolean;
+  plan: "free" | "pro" | "premium";
+  rating: number;
+  review_count: number;
+  session_count: number;
+  created_at: string;
+}
+
+export interface Package {
+  id: string;
+  name: string;
+  description: string;
+  duration_minutes: number;
+  num_photos: number;
+  price: number;
+  is_popular: boolean;
+}
+
+export interface PortfolioItem {
+  id: string;
+  photographer_id: string;
+  type: "photo" | "video";
+  url: string;
+  thumbnail_url: string;
+  caption: string | null;
+  location_id: string | null;
+  order: number;
+}
+
+export interface Location {
+  id: string;
+  slug: string;
+  name: string;
+  region: string;
+  description: string;
+  long_description: string;
+  cover_image: string;
+  gallery_images: string[];
+  lat: number;
+  lng: number;
+  photographer_count: number;
+  seo_title: string;
+  seo_description: string;
+}
+
+export interface Booking {
+  id: string;
+  client_id: string;
+  photographer_id: string;
+  location_id: string | null;
+  package_id: string | null;
+  date: string;
+  time: string;
+  duration_minutes: number;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  total_price: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface Review {
+  id: string;
+  booking_id: string;
+  client_id: string;
+  photographer_id: string;
+  client_name: string;
+  client_avatar: string | null;
+  rating: number;
+  title: string;
+  text: string;
+  photos: string[];
+  photos_public: boolean;
+  is_verified: boolean;
+  created_at: string;
+}
