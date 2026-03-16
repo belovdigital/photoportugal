@@ -50,6 +50,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      const productionUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || baseUrl;
+      // Relative URLs — prefix with production URL
+      if (url.startsWith("/")) return `${productionUrl}${url}`;
+      // Same origin — allow
+      try {
+        if (new URL(url).origin === new URL(productionUrl).origin) return url;
+      } catch {}
+      return productionUrl;
+    },
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         const email = user.email;
