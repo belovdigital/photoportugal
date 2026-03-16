@@ -7,6 +7,36 @@ export interface User {
   created_at: string;
 }
 
+export const SHOOT_TYPES = [
+  "Couples",
+  "Family",
+  "Solo Portrait",
+  "Engagement",
+  "Proposal",
+  "Honeymoon",
+  "Wedding",
+  "Maternity",
+  "Friends Trip",
+  "Anniversary",
+  "Elopement",
+  "Birthday",
+] as const;
+
+export type ShootType = (typeof SHOOT_TYPES)[number];
+
+export const LANGUAGES = [
+  "English",
+  "Portuguese",
+  "Spanish",
+  "French",
+  "German",
+  "Italian",
+  "Dutch",
+  "Russian",
+  "Chinese",
+  "Japanese",
+] as const;
+
 export interface PhotographerProfile {
   id: string;
   user_id: string;
@@ -21,6 +51,7 @@ export interface PhotographerProfile {
   currency: string;
   locations: Location[];
   packages: Package[];
+  shoot_types: string[];
   experience_years: number;
   is_verified: boolean;
   is_featured: boolean;

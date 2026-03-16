@@ -1,15 +1,26 @@
 import Link from "next/link";
+import Image from "next/image";
 import { locations } from "@/lib/locations-data";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
+import { heroImage } from "@/lib/unsplash-images";
 
 export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
-        <div className="absolute inset-0 bg-[url('/images/ui/hero-pattern.svg')] opacity-10" />
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src={heroImage}
+            alt="Portugal sunset"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-950/90 via-primary-900/75 to-primary-800/60" />
+        </div>
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-40">
           <div className="max-w-3xl">
             <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -111,9 +122,17 @@ export default function HomePage() {
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {locations.map((location) => (
+          {locations.slice(0, 6).map((location) => (
             <LocationCard key={location.slug} location={location} />
           ))}
+        </div>
+        <div className="mt-8 text-center">
+          <Link
+            href="/locations"
+            className="inline-flex rounded-xl border border-primary-200 px-6 py-3 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
+          >
+            View All {locations.length} Locations
+          </Link>
         </div>
       </section>
 

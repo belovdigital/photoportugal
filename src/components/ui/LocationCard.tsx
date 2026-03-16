@@ -1,16 +1,28 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Location } from "@/types";
+import { locationImages } from "@/lib/unsplash-images";
 
 export function LocationCard({ location }: { location: Location }) {
+  const imageUrl = locationImages[location.slug];
+
   return (
     <Link
       href={`/locations/${location.slug}`}
       className="group relative overflow-hidden rounded-2xl bg-gray-900 shadow-lg transition hover:shadow-xl"
     >
-      {/* Gradient placeholder for cover image */}
-      <div className="aspect-[4/3] w-full bg-gradient-to-br from-primary-400 to-primary-700 transition-transform duration-500 group-hover:scale-105">
-        {/* When real images are added:
-        <Image src={location.cover_image} alt={location.name} fill className="object-cover" /> */}
+      <div className="aspect-[4/3] w-full overflow-hidden">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={`Photography in ${location.name}, Portugal`}
+            width={600}
+            height={450}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-primary-400 to-primary-700" />
+        )}
       </div>
       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-6">
