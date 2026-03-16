@@ -32,10 +32,22 @@ export const metadata: Metadata = {
     "family photographer algarve",
     "professional photographer portugal",
   ],
+  metadataBase: new URL("https://photoportugal.com"),
   openGraph: {
     type: "website",
     locale: "en_US",
     siteName: "Photo Portugal",
+    title: "Photo Portugal — Find Your Perfect Photographer in Portugal",
+    description: "Book professional photographers across Portugal for vacation photoshoots, couples sessions, family portraits & more.",
+    url: "https://photoportugal.com",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Photo Portugal — Find Your Perfect Photographer in Portugal",
+    description: "Book professional photographers across Portugal.",
+  },
+  alternates: {
+    canonical: "https://photoportugal.com",
   },
   icons: {
     icon: [

@@ -1,35 +1,16 @@
 import type { MetadataRoute } from "next";
 import { locations } from "@/lib/locations-data";
 import { demoPhotographers } from "@/lib/demo-data";
+import { query } from "@/lib/db";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://photoportugal.com";
 
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/photographers`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/locations`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/how-it-works`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
+    { url: baseUrl, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
+    { url: `${baseUrl}/photographers`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
+    { url: `${baseUrl}/locations`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
+    { url: `${baseUrl}/how-it-works`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
   ];
 
   const locationPages: MetadataRoute.Sitemap = locations.map((loc) => ({
@@ -39,14 +20,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  const photographerPages: MetadataRoute.Sitemap = demoPhotographers.map(
-    (p) => ({
-      url: `${baseUrl}/photographers/${p.slug}`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: p.plan === "premium" ? 0.8 : 0.7,
-    })
-  );
+  // Demo photographers
+  const demoSlugs = new Set(demoPhotographers.map((p) => p.slug));
+  const demoPages: MetadataRoute.Sitemap = demoPhotographers.map((p) => ({
+    url: `${baseUrl}/photographers/${p.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: p.plan === "premium" ? 0.8 : 0.7,
+  }));
 
-  return [...staticPages, ...locationPages, ...photographerPages];
+  // DB photographers
+  let dbPages: MetadataRoute.Sitemap = [];
+  try {
+    const dbProfiles = await query<{ slug: string; plan: string; updated_at: string }>(
+      "SELECT slug, plan, updated_at FROM photographer_profiles"
+    );
+    dbPages = dbProfiles
+      .filter((p) => !demoSlugs.has(p.slug))
+      .map((p) => ({
+        url: `${baseUrl}/photographers/${p.slug}`,
+        lastModified: new Date(p.updated_at),
+        changeFrequency: "weekly" as const,
+        priority: p.plan === "premium" ? 0.8 : 0.7,
+      }));
+  } catch {}
+
+  return [...staticPages, ...locationPages, ...demoPages, ...dbPages];
 }

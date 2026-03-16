@@ -724,27 +724,27 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
         <p className="mt-3 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
       )}
 
-      {booking.status === "pending" && (
-        <div className="mt-4 flex gap-3">
-          <button
-            onClick={() => updateStatus("confirmed")}
-            disabled={updating}
-            className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50"
-          >
-            Confirm
-          </button>
-          <button
-            onClick={() => updateStatus("cancelled")}
-            disabled={updating}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-          >
-            Decline
-          </button>
-        </div>
-      )}
+      <div className="mt-4 flex gap-3">
+        {booking.status === "pending" && (
+          <>
+            <button
+              onClick={() => updateStatus("confirmed")}
+              disabled={updating}
+              className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50"
+            >
+              Confirm
+            </button>
+            <button
+              onClick={() => updateStatus("cancelled")}
+              disabled={updating}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Decline
+            </button>
+          </>
+        )}
 
-      {booking.status === "confirmed" && (
-        <div className="mt-4">
+        {booking.status === "confirmed" && (
           <button
             onClick={() => updateStatus("completed")}
             disabled={updating}
@@ -752,8 +752,14 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
           >
             Mark as Completed
           </button>
-        </div>
-      )}
+        )}
+        <a
+          href={`/dashboard/messages/${booking.id}`}
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+        >
+          Message
+        </a>
+      </div>
     </div>
   );
 }

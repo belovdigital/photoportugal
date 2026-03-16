@@ -148,6 +148,14 @@ export default async function ClientDashboardPage() {
                   {booking.message && (
                     <p className="mt-3 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
                   )}
+                  <div className="mt-4">
+                    <Link
+                      href={`/dashboard/messages/${booking.id}`}
+                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      Message
+                    </Link>
+                  </div>
                 </div>
               );
             })}
