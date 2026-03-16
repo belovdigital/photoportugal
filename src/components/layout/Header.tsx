@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session } = useSession();
+  const user = session?.user;
+  const role = (user as { role?: string } | undefined)?.role;
 
   return (
     <header className="sticky top-0 z-50 border-b border-warm-200 bg-warm-50/95 backdrop-blur-sm">
@@ -38,20 +42,43 @@ export function Header() {
           >
             How It Works
           </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/auth/signin"
-              className="text-sm font-medium text-gray-700 transition hover:text-primary-600"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700"
-            >
-              Join as Photographer
-            </Link>
-          </div>
+
+          {user ? (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-gray-700 transition hover:text-primary-600"
+              >
+                Dashboard
+              </Link>
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
+                  {user.name?.charAt(0) ?? "U"}
+                </div>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="text-sm text-gray-500 transition hover:text-gray-700"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link
+                href="/auth/signin"
+                className="text-sm font-medium text-gray-700 transition hover:text-primary-600"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700"
+              >
+                Join as Photographer
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -74,37 +101,41 @@ export function Header() {
       {mobileOpen && (
         <div className="border-t border-warm-200 bg-warm-50 px-4 py-4 md:hidden">
           <div className="flex flex-col gap-4">
-            <Link
-              href="/photographers"
-              onClick={() => setMobileOpen(false)}
-              className="text-sm font-medium text-gray-600"
-            >
+            <Link href="/photographers" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-gray-600">
               Find Photographers
             </Link>
-            <Link
-              href="/locations"
-              onClick={() => setMobileOpen(false)}
-              className="text-sm font-medium text-gray-600"
-            >
+            <Link href="/locations" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-gray-600">
               Locations
             </Link>
-            <Link
-              href="/how-it-works"
-              onClick={() => setMobileOpen(false)}
-              className="text-sm font-medium text-gray-600"
-            >
+            <Link href="/how-it-works" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-gray-600">
               How It Works
             </Link>
             <hr className="border-warm-200" />
-            <Link href="/auth/signin" className="text-sm font-medium text-gray-700">
-              Sign In
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="rounded-lg bg-primary-600 px-4 py-2 text-center text-sm font-semibold text-white"
-            >
-              Join as Photographer
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-gray-700">
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => { setMobileOpen(false); signOut({ callbackUrl: "/" }); }}
+                  className="text-left text-sm text-gray-500"
+                >
+                  Sign Out ({user.name})
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/signin" className="text-sm font-medium text-gray-700">
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="rounded-lg bg-primary-600 px-4 py-2 text-center text-sm font-semibold text-white"
+                >
+                  Join as Photographer
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -1,0 +1,125 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { queryOne, query } from "@/lib/db";
+import { writeFile, mkdir, unlink } from "fs/promises";
+import path from "path";
+import crypto from "crypto";
+
+const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = (session.user as { id?: string }).id;
+
+  const profile = await queryOne<{ id: string; plan: string }>(
+    "SELECT id, plan FROM photographer_profiles WHERE user_id = $1",
+    [userId]
+  );
+
+  if (!profile) {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  // Check portfolio limits based on plan
+  const items = await query(
+    "SELECT COUNT(*) as count FROM portfolio_items WHERE photographer_id = $1",
+    [profile.id]
+  );
+  const count = parseInt((items[0] as { count: string }).count);
+  const limits: Record<string, number> = { free: 10, pro: 50, premium: 999 };
+  const limit = limits[profile.plan] || 10;
+
+  if (count >= limit) {
+    return NextResponse.json(
+      { error: `Portfolio limit reached (${limit} photos on ${profile.plan} plan)` },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
+
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return NextResponse.json({ error: "Only images are allowed" }, { status: 400 });
+    }
+
+    const ext = file.name.split(".").pop() || "jpg";
+    const filename = `${crypto.randomUUID()}.${ext}`;
+    const portfolioDir = path.join(UPLOAD_DIR, "portfolio", profile.id);
+    await mkdir(portfolioDir, { recursive: true });
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(path.join(portfolioDir, filename), buffer);
+
+    const url = `/uploads/portfolio/${profile.id}/${filename}`;
+
+    const item = await queryOne(
+      `INSERT INTO portfolio_items (photographer_id, type, url, "order")
+       VALUES ($1, 'photo', $2, $3)
+       RETURNING id`,
+      [profile.id, url, count]
+    );
+
+    return NextResponse.json({ success: true, item });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = (session.user as { id?: string }).id;
+  const { searchParams } = new URL(req.url);
+  const itemId = searchParams.get("id");
+
+  if (!itemId) {
+    return NextResponse.json({ error: "Item ID required" }, { status: 400 });
+  }
+
+  const profile = await queryOne<{ id: string }>(
+    "SELECT id FROM photographer_profiles WHERE user_id = $1",
+    [userId]
+  );
+
+  if (!profile) {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  const item = await queryOne<{ url: string }>(
+    "DELETE FROM portfolio_items WHERE id = $1 AND photographer_id = $2 RETURNING url",
+    [itemId, profile.id]
+  );
+
+  if (!item) {
+    return NextResponse.json({ error: "Item not found" }, { status: 404 });
+  }
+
+  // Delete file from disk
+  try {
+    const filePath = path.join(UPLOAD_DIR, item.url.replace("/uploads/", ""));
+    await unlink(filePath);
+  } catch {
+    // File may not exist, that's ok
+  }
+
+  return NextResponse.json({ success: true });
+}
