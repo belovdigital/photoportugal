@@ -37,6 +37,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Photo Portugal",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   robots: {
     index: true,
     follow: true,

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="256" fill="#C84B38"/>
+  <g fill="none" stroke="#fff" stroke-width="36" stroke-linecap="round">
+    <!-- Top-left corner -->
+    <path d="M152 172 Q152 152 172 152 L212 152"/>
+    <path d="M152 172 L152 212"/>
+    <!-- Top-right corner -->
+    <path d="M360 172 Q360 152 340 152 L300 152"/>
+    <path d="M360 172 L360 212"/>
+    <!-- Bottom-left corner -->
+    <path d="M152 340 Q152 360 172 360 L212 360"/>
+    <path d="M152 340 L152 300"/>
+    <!-- Bottom-right corner -->
+    <path d="M360 340 Q360 360 340 360 L300 360"/>
+    <path d="M360 340 L360 300"/>
+  </g>
+</svg>
