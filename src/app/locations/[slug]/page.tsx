@@ -20,10 +20,12 @@ export async function generateMetadata({
   return {
     title: location.seo_title,
     description: location.seo_description,
+    alternates: { canonical: `https://photoportugal.com/locations/${slug}` },
     openGraph: {
       title: location.seo_title,
       description: location.seo_description,
       type: "website",
+      url: `https://photoportugal.com/locations/${slug}`,
     },
   };
 }

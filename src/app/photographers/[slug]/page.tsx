@@ -97,9 +97,18 @@ export async function generateMetadata({
 
   const p = result.data;
   const locationNames = (p.locations || []).map((l: { name: string }) => l.name).join(", ");
+  const title = `${p.display_name} — Photographer in ${locationNames || "Portugal"}`;
+  const description = `Book ${p.display_name}, a professional photographer in ${locationNames || "Portugal"}. ${p.tagline || ""}`;
   return {
-    title: `${p.display_name} — Photographer in ${locationNames || "Portugal"}`,
-    description: `Book ${p.display_name}, a professional photographer in ${locationNames || "Portugal"}. ${p.tagline || ""}`,
+    title,
+    description,
+    alternates: { canonical: `https://photoportugal.com/photographers/${slug}` },
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: `https://photoportugal.com/photographers/${slug}`,
+    },
   };
 }
 
