@@ -49,4 +49,15 @@
   body {
     @apply bg-warm-50 text-gray-900 antialiased;
   }
+
+  button,
+  [role="button"],
+  a,
+  select,
+  label[for],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"] {
+    cursor: pointer;
+  }
 }
