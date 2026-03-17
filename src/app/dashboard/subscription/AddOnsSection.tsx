@@ -156,9 +156,10 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+351 912 345 678"
+                    placeholder="962 598 885"
                     className="w-full rounded-lg border border-warm-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                   />
+                  <p className="mt-1 text-[11px] text-gray-400">Portuguese numbers auto-prefixed with +351</p>
                   <button
                     onClick={handleSendCode}
                     disabled={!!loading}

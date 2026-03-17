@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
   }
 
+  // Auto-prefix with +351 for Portuguese numbers without country code
+  let formattedPhone = phone.trim().replace(/\s+/g, "");
+  if (!formattedPhone.startsWith("+")) {
+    formattedPhone = "+351" + formattedPhone;
+  }
+
   try {
     const profile = await queryOne<{ id: string; is_verified: boolean }>(
       "SELECT id, is_verified FROM photographer_profiles WHERE user_id = $1", [userId]
@@ -34,15 +40,15 @@ export async function POST(req: NextRequest) {
     // Save phone number
     await queryOne(
       "UPDATE photographer_profiles SET phone_number = $1, phone_verified = FALSE WHERE id = $2 RETURNING id",
-      [phone.trim(), profile.id]
+      [formattedPhone, profile.id]
     );
 
     // Send via Twilio Verify
     if (accountSid && authToken && verifySid) {
       const client = twilio(accountSid, authToken);
       await client.verify.v2.services(verifySid)
-        .verifications.create({ to: phone.trim(), channel: "sms" });
-      console.log(`[verification] Twilio Verify SMS sent to ${phone}`);
+        .verifications.create({ to: formattedPhone, channel: "sms" });
+      console.log(`[verification] Twilio Verify SMS sent to ${formattedPhone}`);
     } else {
       console.log(`[verification] Twilio not configured — skipping SMS to ${phone}`);
       return NextResponse.json({ error: "SMS service not configured" }, { status: 500 });
