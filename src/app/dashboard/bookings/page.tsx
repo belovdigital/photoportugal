@@ -33,9 +33,6 @@ export default async function BookingsPage() {
   const user = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
   const isPhotographer = user?.role === "photographer";
 
-  // Ensure delivery columns exist
-  try { await queryOne("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_token VARCHAR(64)", []); } catch {}
-
   let bookings: {
     id: string;
     other_name: string;

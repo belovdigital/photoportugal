@@ -13,17 +13,6 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const userId = (session.user as { id?: string }).id;
 
-  // Ensure tables exist
-  await queryOne(`CREATE TABLE IF NOT EXISTS delivery_photos (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-    url TEXT NOT NULL, filename VARCHAR(255) NOT NULL,
-    file_size INTEGER DEFAULT 0, sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-  )`, []);
-  await queryOne("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_token VARCHAR(64)", []);
-  await queryOne("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_expires_at TIMESTAMPTZ", []);
-
   const booking = await queryOne<{
     id: string;
     photographer_user_id: string;

@@ -33,10 +33,6 @@ export async function POST(req: NextRequest) {
     if (!profile) return NextResponse.json({ error: "Not a photographer" }, { status: 400 });
     if (profile.is_verified) return NextResponse.json({ error: "Already verified" }, { status: 400 });
 
-    // Ensure columns exist
-    await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20)", []);
-    await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE", []);
-
     // Save phone number
     await queryOne(
       "UPDATE photographer_profiles SET phone_number = $1, phone_verified = FALSE WHERE id = $2 RETURNING id",

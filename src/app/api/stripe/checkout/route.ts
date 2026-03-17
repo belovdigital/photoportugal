@@ -65,7 +65,6 @@ export async function POST(req: NextRequest) {
         metadata: { user_id: userId! },
       });
       customerId = customer.id;
-      await queryOne("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)", []);
       await queryOne("UPDATE users SET stripe_customer_id = $1 WHERE id = $2 RETURNING id", [customerId, userId]);
     }
 
@@ -108,19 +107,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Save the session for reference
-    await queryOne(
-      `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS service_fee NUMERIC`,
-      []
-    );
-    await queryOne(
-      `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS platform_fee NUMERIC`,
-      []
-    );
-    await queryOne(
-      `ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payout_amount NUMERIC`,
-      []
-    );
+    // Save fee breakdown
     await queryOne(
       `UPDATE bookings SET service_fee = $1, platform_fee = $2, payout_amount = $3 WHERE id = $4 RETURNING id`,
       [payment.serviceFee, payment.platformFee, payment.photographerPayout, booking.id]

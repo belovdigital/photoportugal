@@ -11,21 +11,6 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB per photo (delivery photos can be high-res)
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
-// Ensure delivery tables exist
-async function ensureDeliveryTables() {
-  await queryOne(`CREATE TABLE IF NOT EXISTS delivery_photos (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
-    url TEXT NOT NULL,
-    filename VARCHAR(255) NOT NULL,
-    file_size INTEGER DEFAULT 0,
-    sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-  )`, []);
-  await queryOne("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_token VARCHAR(64)", []);
-  await queryOne("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_password VARCHAR(10)", []);
-  await queryOne("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_expires_at TIMESTAMPTZ", []);
-}
 
 // GET: List delivery photos for a booking
 export async function GET(
@@ -51,7 +36,7 @@ export async function GET(
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  await ensureDeliveryTables();
+
 
   const photos = await query(
     "SELECT id, url, filename, file_size, sort_order, created_at FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at",
@@ -92,7 +77,7 @@ export async function POST(
     return NextResponse.json({ error: "Booking must be completed first" }, { status: 400 });
   }
 
-  await ensureDeliveryTables();
+
 
   const contentType = req.headers.get("content-type") || "";
 

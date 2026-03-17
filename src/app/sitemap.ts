@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 import { locations } from "@/lib/locations-data";
-import { demoPhotographers } from "@/lib/demo-data";
 import { query } from "@/lib/db";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -14,7 +13,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.4 },
     { url: `${baseUrl}/faq`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/pricing`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
-    { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
     { url: `${baseUrl}/privacy`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.2 },
     { url: `${baseUrl}/terms`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.2 },
   ];
@@ -26,30 +24,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }));
 
-  // Demo photographers
-  const demoSlugs = new Set(demoPhotographers.map((p) => p.slug));
-  const demoPages: MetadataRoute.Sitemap = demoPhotographers.map((p) => ({
-    url: `${baseUrl}/photographers/${p.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: p.plan === "premium" ? 0.8 : 0.7,
-  }));
-
   // DB photographers
-  let dbPages: MetadataRoute.Sitemap = [];
+  let photographerPages: MetadataRoute.Sitemap = [];
   try {
     const dbProfiles = await query<{ slug: string; plan: string; updated_at: string }>(
-      "SELECT slug, plan, updated_at FROM photographer_profiles"
+      "SELECT slug, plan, updated_at FROM photographer_profiles WHERE is_approved = TRUE"
     );
-    dbPages = dbProfiles
-      .filter((p) => !demoSlugs.has(p.slug))
-      .map((p) => ({
-        url: `${baseUrl}/photographers/${p.slug}`,
-        lastModified: new Date(p.updated_at),
-        changeFrequency: "weekly" as const,
-        priority: p.plan === "premium" ? 0.8 : 0.7,
-      }));
+    photographerPages = dbProfiles.map((p) => ({
+      url: `${baseUrl}/photographers/${p.slug}`,
+      lastModified: new Date(p.updated_at),
+      changeFrequency: "weekly" as const,
+      priority: p.plan === "premium" ? 0.8 : 0.7,
+    }));
   } catch {}
 
-  return [...staticPages, ...locationPages, ...demoPages, ...dbPages];
+  return [...staticPages, ...locationPages, ...photographerPages];
 }

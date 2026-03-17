@@ -23,6 +23,8 @@ CREATE TABLE users (
   avatar_url TEXT,
   google_id VARCHAR(255) UNIQUE,
   email_verified BOOLEAN DEFAULT FALSE,
+  stripe_customer_id VARCHAR(255),
+  last_seen_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -130,9 +132,14 @@ CREATE TABLE bookings (
   group_size INTEGER,
   occasion VARCHAR(100),
   stripe_payment_intent_id VARCHAR(255),
+  service_fee NUMERIC,
+  platform_fee NUMERIC,
+  payout_amount NUMERIC,
   delivery_token VARCHAR(64) UNIQUE,
   delivery_password VARCHAR(10),
   delivery_expires_at TIMESTAMPTZ,
+  reminder_sent BOOLEAN DEFAULT FALSE,
+  review_requested BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

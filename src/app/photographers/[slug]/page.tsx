@@ -1,29 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  demoPhotographers,
-  getPhotographerBySlug,
-  getReviewsForPhotographer,
-} from "@/lib/demo-data";
 import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 
-// Keep demo params for SSG, but allow dynamic slugs too
-export function generateStaticParams() {
-  return demoPhotographers.map((p) => ({ slug: p.slug }));
-}
-
 export const dynamicParams = true;
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 60;
 
 async function getPhotographer(slug: string) {
-  // Try demo data first
-  const demo = getPhotographerBySlug(slug);
-  if (demo) return { type: "demo" as const, data: demo };
-
-  // Try DB
   try {
     const profile = await queryOne<{
       id: string;
@@ -135,8 +120,8 @@ export default async function PhotographerProfilePage({
   }
 
   const photographer = result.data;
-  let reviews = result.type === "demo" ? getReviewsForPhotographer(photographer.id) : [];
-  const portfolioItems = result.type === "db" ? (photographer as { portfolioItems: { url: string; caption: string | null }[] }).portfolioItems : [];
+  let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string; client_avatar: string | null }[] = [];
+  const portfolioItems = (photographer as { portfolioItems?: { url: string; caption: string | null }[] }).portfolioItems || [];
 
   // Fetch real reviews from DB for DB photographers
   if (result.type === "db") {

@@ -36,7 +36,6 @@ export async function POST(req: NextRequest) {
         metadata: { user_id: userId!, photographer_id: profile.id },
       });
       customerId = customer.id;
-      await queryOne("ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)", []);
       await queryOne("UPDATE users SET stripe_customer_id = $1 WHERE id = $2 RETURNING id", [customerId, userId]);
     }
 

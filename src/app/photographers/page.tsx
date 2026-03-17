@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { locations, regions } from "@/lib/locations-data";
-import { demoPhotographers } from "@/lib/demo-data";
 import { SHOOT_TYPES, PhotographerProfile } from "@/types";
 import { PhotographerCatalog } from "./PhotographerCatalog";
 import { query } from "@/lib/db";
@@ -121,16 +120,9 @@ export default async function PhotographersPage({
   const { location: initialLocation, shoot: initialShootType } = await searchParams;
   const dbPhotographers = await getDbPhotographers();
 
-  // Merge: DB photographers first (real), then demo (exclude if slug conflicts)
-  const dbSlugs = new Set(dbPhotographers.map((p) => p.slug));
-  const combined = [
-    ...dbPhotographers,
-    ...demoPhotographers.filter((p) => !dbSlugs.has(p.slug)),
-  ];
-
   return (
     <PhotographerCatalog
-      photographers={combined}
+      photographers={dbPhotographers}
       locations={locations}
       regions={regions}
       shootTypes={SHOOT_TYPES as unknown as string[]}

@@ -5,37 +5,37 @@ const shootTypes = [
   {
     title: "Couples",
     description: "Romantic moments in stunning settings",
-    image: "photo-1529634597503-139d3726fed5", // couple photo
+    image: "photo-1529634597503-139d3726fed5",
     slug: "couple",
   },
   {
     title: "Family",
     description: "Natural, joyful family memories",
-    image: "photo-1581579438747-104c53d7fbc4", // family
+    image: "photo-1609220136736-443140cffec6",
     slug: "family",
   },
   {
     title: "Honeymoon",
     description: "Celebrate your love story in Portugal",
-    image: "photo-1519741497674-611481863552", // honeymoon/wedding vibes
+    image: "photo-1519741497674-611481863552",
     slug: "honeymoon",
   },
   {
     title: "Solo",
     description: "Stunning portraits, zero selfie struggle",
-    image: "photo-1494790108377-be9c29b29330", // solo portrait
+    image: "photo-1494790108377-be9c29b29330",
     slug: "solo",
   },
   {
     title: "Engagement",
     description: "Say yes with Portugal as your backdrop",
-    image: "photo-1522673607200-164d1b6ce486", // engagement
+    image: "photo-1522673607200-164d1b6ce486",
     slug: "engagement",
   },
   {
     title: "Friends",
     description: "Group trips deserve great photos",
-    image: "photo-1529156069898-49953e39b3ac", // group of friends
+    image: "photo-1529156069898-49953e39b3ac",
     slug: "friends",
   },
 ];
@@ -79,7 +79,6 @@ export function ShootTypesSection() {
                 </p>
               </div>
 
-              {/* Hover arrow */}
               <div className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/0 transition group-hover:bg-white/20">
                 <svg className="h-4 w-4 text-white opacity-0 transition group-hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -87,6 +86,18 @@ export function ShootTypesSection() {
               </div>
             </Link>
           ))}
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/photographers"
+            className="inline-flex items-center gap-2 rounded-xl border border-primary-200 px-6 py-3 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
+          >
+            View All Shoot Types
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
         </div>
       </div>
     </section>

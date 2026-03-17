@@ -15,10 +15,6 @@ export default async function SubscriptionPage() {
   const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
   if (!userRow || userRow.role !== "photographer") redirect("/dashboard");
 
-  // Ensure phone verification columns exist
-  await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20)", []);
-  await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE", []);
-
   const profile = await queryOne<{ plan: string; is_verified: boolean; is_featured: boolean; phone_number: string | null; phone_verified: boolean }>(
     "SELECT plan, is_verified, is_featured, phone_number, phone_verified FROM photographer_profiles WHERE user_id = $1",
     [userId]

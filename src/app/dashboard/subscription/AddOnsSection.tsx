@@ -175,8 +175,8 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
                     type="text"
                     value={code}
                     onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="Enter 6-digit code"
-                    maxLength={6}
+                    placeholder="Enter 4-digit code"
+                    maxLength={4}
                     className="mt-2 w-full rounded-lg border border-warm-200 px-3 py-2 text-center text-lg tracking-[0.3em] font-mono focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                   />
                   <button

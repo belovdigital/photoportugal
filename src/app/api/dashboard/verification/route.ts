@@ -21,9 +21,6 @@ export async function POST() {
     if (profile.is_verified) return NextResponse.json({ error: "Already verified" }, { status: 400 });
     if (profile.verification_requested_at) return NextResponse.json({ error: "Already requested" }, { status: 400 });
 
-    // Add column if not exists (safe idempotent migration)
-    await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS verification_requested_at TIMESTAMP", []);
-
     await queryOne(
       "UPDATE photographer_profiles SET verification_requested_at = NOW() WHERE id = $1 RETURNING id",
       [profile.id]
