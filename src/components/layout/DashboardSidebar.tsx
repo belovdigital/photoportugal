@@ -74,11 +74,11 @@ export function DashboardSidebar() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed left-0 top-0 z-30 h-full w-64 shrink-0 border-r border-warm-200 bg-white pt-[100px] transition-transform
-        md:sticky md:top-[100px] md:h-auto md:translate-x-0 md:pt-0
+        fixed left-0 top-0 z-30 h-full w-56 shrink-0 bg-warm-50 pt-[100px] transition-transform
+        md:sticky md:top-[100px] md:h-auto md:translate-x-0 md:bg-transparent md:pt-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `} style={{ maxHeight: "calc(100vh - 100px)" }}>
-        <nav className="flex flex-col gap-1 p-4">
+        <nav className="flex flex-col gap-0.5 p-3">
           {filteredItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
@@ -87,10 +87,10 @@ export function DashboardSidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                   isActive
-                    ? "bg-primary-50 text-primary-700"
-                    : "text-gray-600 hover:bg-warm-50 hover:text-gray-900"
+                    ? "bg-white text-primary-700 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
                 }`}
               >
                 <span className="flex items-center gap-3">
