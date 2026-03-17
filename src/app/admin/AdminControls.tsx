@@ -3,6 +3,72 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+export function AdminLoginForm() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    setLoading(false);
+    if (res.ok) {
+      router.refresh();
+    } else {
+      const data = await res.json();
+      setError(data.error || "Invalid credentials");
+    }
+  }
+
+  return (
+    <div className="flex min-h-[80vh] items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center">
+          <h1 className="font-display text-2xl font-bold text-gray-900">Admin</h1>
+        </div>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          {error && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+          )}
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+            className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+            className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50"
+          >
+            {loading ? "..." : "Sign In"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function AdminToggleClient({ id, field, value }: { id: string; field: string; value: boolean }) {
   const router = useRouter();
   const [checked, setChecked] = useState(value);
@@ -31,11 +97,7 @@ export function AdminToggleClient({ id, field, value }: { id: string; field: str
         checked ? "bg-accent-500" : "bg-gray-200"
       } ${loading ? "opacity-50" : ""}`}
     >
-      <span
-        className={`inline-block h-4 w-4 rounded-full bg-white transition ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}
-      />
+      <span className={`inline-block h-4 w-4 rounded-full bg-white transition ${checked ? "translate-x-6" : "translate-x-1"}`} />
     </button>
   );
 }

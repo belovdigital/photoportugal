@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { sendBookingNotification } from "@/lib/email";
 
 // Create a booking request
 export async function POST(req: NextRequest) {
@@ -46,6 +47,27 @@ export async function POST(req: NextRequest) {
        RETURNING id`,
       [userId, photographer_id, package_id || null, location_slug || null, shoot_date || null, shoot_time || null, message || null, totalPrice]
     );
+
+    // Send email notification to photographer
+    try {
+      const photographerInfo = await queryOne<{ email: string; display_name: string }>(
+        `SELECT u.email, pp.display_name FROM photographer_profiles pp
+         JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`,
+        [photographer_id]
+      );
+      const clientInfo = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
+      const pkgInfo = package_id ? await queryOne<{ name: string }>("SELECT name FROM packages WHERE id = $1", [package_id]) : null;
+
+      if (photographerInfo && clientInfo) {
+        sendBookingNotification(
+          photographerInfo.email,
+          photographerInfo.display_name,
+          clientInfo.name,
+          pkgInfo?.name || null,
+          shoot_date || null
+        );
+      }
+    } catch {}
 
     return NextResponse.json({ success: true, booking_id: booking?.id });
   } catch (error) {

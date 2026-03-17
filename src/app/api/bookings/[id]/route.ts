@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
+import { sendBookingConfirmation } from "@/lib/email";
 
 export async function PATCH(
   req: NextRequest,
@@ -51,6 +52,31 @@ export async function PATCH(
       "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING id",
       [status, id]
     );
+
+    // Send email when booking is confirmed
+    if (status === "confirmed") {
+      try {
+        const bookingDetails = await queryOne<{
+          client_email: string; client_name: string; photographer_name: string; shoot_date: string | null;
+        }>(
+          `SELECT u.email as client_email, u.name as client_name,
+                  pp.display_name as photographer_name, b.shoot_date
+           FROM bookings b
+           JOIN users u ON u.id = b.client_id
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           WHERE b.id = $1`,
+          [id]
+        );
+        if (bookingDetails) {
+          sendBookingConfirmation(
+            bookingDetails.client_email,
+            bookingDetails.client_name,
+            bookingDetails.photographer_name,
+            bookingDetails.shoot_date
+          );
+        }
+      } catch {}
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

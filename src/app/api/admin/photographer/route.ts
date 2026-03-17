@@ -1,17 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { queryOne } from "@/lib/db";
 
-export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+async function verifyAdmin(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
+  if (!token) return false;
 
-  // Verify admin role
-  const userId = (session.user as { id?: string }).id;
-  const user = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
-  if (!user || user.role !== "admin") {
+  try {
+    const decoded = Buffer.from(token, "base64").toString();
+    const [email, ts] = decoded.split(":");
+    const timestamp = parseInt(ts);
+    if (Date.now() - timestamp > 24 * 60 * 60 * 1000) return false;
+
+    const user = await queryOne<{ role: string }>(
+      "SELECT role FROM users WHERE email = $1",
+      [email]
+    );
+    return user?.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  if (!(await verifyAdmin())) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -23,7 +36,6 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Photographer ID required" }, { status: 400 });
     }
 
-    // Build dynamic update query
     const fields: string[] = [];
     const values: unknown[] = [];
     let paramIndex = 1;
@@ -42,7 +54,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (fields.length === 0) {
-      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+      return NextResponse.json({ error: "No valid fields" }, { status: 400 });
     }
 
     values.push(id);

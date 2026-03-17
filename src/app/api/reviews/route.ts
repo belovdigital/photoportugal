@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { sendReviewNotification } from "@/lib/email";
 
 // Create a review (client only, after completed booking)
 export async function POST(req: NextRequest) {
@@ -61,6 +62,19 @@ export async function POST(req: NextRequest) {
        WHERE id = $1`,
       [booking.photographer_id]
     );
+
+    // Notify photographer
+    try {
+      const info = await queryOne<{ email: string; display_name: string }>(
+        `SELECT u.email, pp.display_name FROM photographer_profiles pp
+         JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`,
+        [booking.photographer_id]
+      );
+      const client = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
+      if (info && client) {
+        sendReviewNotification(info.email, info.display_name, client.name, rating);
+      }
+    } catch {}
 
     return NextResponse.json({ success: true, id: review?.id });
   } catch (error) {
