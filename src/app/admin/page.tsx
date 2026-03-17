@@ -3,6 +3,7 @@ import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
 import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton } from "./AdminControls";
+import { LocationsManager } from "./LocationsManager";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
@@ -203,6 +204,9 @@ export default async function AdminPage() {
           </table>
         </div>
       </section>
+
+      {/* Locations Management */}
+      <LocationsManager />
     </div>
   );
 }
