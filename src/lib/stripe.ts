@@ -7,8 +7,15 @@ export const stripe = process.env.STRIPE_SECRET_KEY
 // Commission rates by plan
 export const COMMISSION_RATES: Record<string, number> = {
   free: 0.20,     // 20%
-  pro: 0.12,      // 12%
-  premium: 0.07,  // 7%
+  pro: 0.15,      // 15%
+  premium: 0.10,  // 10%
+};
+
+// Plan prices (monthly)
+export const PLAN_PRICES: Record<string, number> = {
+  free: 0,
+  pro: 29,
+  premium: 59,
 };
 
 export const SERVICE_FEE_RATE = 0.10; // 10% client service fee

@@ -27,12 +27,12 @@ export default async function SubscriptionPage() {
       features: ["10 portfolio photos", "1 location", "Basic visibility", "20% commission"],
     },
     {
-      name: "Pro", price: "19", current: currentPlan === "pro",
-      features: ["50 portfolio photos", "3 locations", "Priority ranking", "Verified badge", "Analytics", "12% commission"],
+      name: "Pro", price: "29", current: currentPlan === "pro",
+      features: ["30 portfolio photos", "5 locations", "Priority ranking", "Profile analytics", "15% commission"],
     },
     {
-      name: "Premium", price: "39", current: currentPlan === "premium",
-      features: ["Unlimited photos", "All locations", "Top ranking", "Featured badge", "Full analytics", "7% commission"],
+      name: "Premium", price: "59", current: currentPlan === "premium",
+      features: ["Unlimited photos", "All locations", "Top ranking", "Full analytics", "10% commission", "Priority support"],
     },
   ];
 

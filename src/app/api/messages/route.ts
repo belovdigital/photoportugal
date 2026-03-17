@@ -76,13 +76,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "booking_id and text required" }, { status: 400 });
     }
 
-    // Check for contact info sharing
+    // Check for contact info sharing — soft warning, still send
     const contactType = detectContactInfo(text);
+    let contactWarning: string | null = null;
     if (contactType) {
-      return NextResponse.json({
-        error: `For your safety, please avoid sharing ${contactType}s in messages. Keep all communication and payments on Photo Portugal.`,
-        warning: true,
-      }, { status: 400 });
+      // Allow photoportugal.com links
+      const isInternalLink = /photoportugal\.com/i.test(text);
+      if (!isInternalLink) {
+        contactWarning = `For your safety, we recommend keeping all communication on Photo Portugal. Sharing ${contactType}s may put your booking protection at risk.`;
+      }
     }
 
     // Verify user is part of this booking
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest) {
       }
     } catch {}
 
-    return NextResponse.json({ success: true, message });
+    return NextResponse.json({ success: true, message, warning: contactWarning });
   } catch (error) {
     console.error("[messages] send error:", error);
     return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
