@@ -15,7 +15,7 @@ export default async function DashboardLayout({
   return (
     <div className="mx-auto flex max-w-screen-xl">
       <DashboardSidebar />
-      <main className="min-h-[calc(100vh-100px)] flex-1 overflow-x-hidden md:border-r md:border-warm-200">
+      <main className="min-h-[50vh] flex-1 overflow-x-hidden md:border-r md:border-warm-200">
         {children}
       </main>
     </div>
