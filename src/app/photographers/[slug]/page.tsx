@@ -15,6 +15,7 @@ export function generateStaticParams() {
 }
 
 export const dynamicParams = true;
+export const revalidate = 60; // Revalidate every 60 seconds
 
 async function getPhotographer(slug: string) {
   // Try demo data first
