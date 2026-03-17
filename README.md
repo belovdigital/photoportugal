@@ -6,35 +6,68 @@ Professional photographer marketplace for tourists visiting Portugal. Find and b
 
 ## Stack
 
-- **Frontend:** Next.js 16, React, Tailwind CSS 4
-- **Backend:** Next.js API routes, PostgreSQL
-- **Auth:** NextAuth.js v5 (Google OAuth + Email/Password)
-- **Hosting:** DigitalOcean Droplet, Nginx, PM2, Let's Encrypt SSL
-- **Images:** Unsplash CDN (location photos), local uploads (portfolio)
+- **Frontend:** Next.js 16, React 19, Tailwind CSS 4
+- **Backend:** Next.js API routes, PostgreSQL 16
+- **Auth:** NextAuth.js v5 (Auth.js) — Google OAuth + Email/Password
+- **Real-time:** Server-Sent Events (SSE) for messaging
+- **Hosting:** DigitalOcean Droplet (2vCPU, 4GB), Nginx, PM2, Let's Encrypt SSL
+- **Images:** Unsplash CDN (location photos), local uploads (portfolio/avatars)
+- **DNS/CDN:** Cloudflare (optional, currently direct)
 
 ## Features
 
-### For Tourists
+### For Tourists (Clients)
 - Browse 23 photography locations across Portugal
 - Filter photographers by location, shoot type, language, price, rating
 - View photographer portfolios and verified reviews
 - Book photoshoots with package selection, date/time picker
-- Real-time messaging with photographers
+- Real-time messaging with photographers (SSE, Telegram-style UI)
+- Leave reviews after completed sessions
 - Client dashboard with booking management
 
 ### For Photographers
-- Profile management (bio, languages, shoot types, locations)
-- Portfolio upload with plan-based limits
-- Package creation (name, duration, photos, price)
+- Profile management (bio, languages, shoot types, 23 locations)
+- Portfolio upload (plan-based limits: Free 10, Pro 50, Premium unlimited)
+- Avatar upload
+- Package creation (name, duration, photos, price, "Most Popular" flag)
 - Incoming booking management (confirm/decline/complete)
-- Messaging with clients
-- Plans: Free, Pro ($19/mo), Premium ($39/mo)
+- Real-time messaging with clients
+- Settings: account, notifications, subscription
+- Plans: Free (active), Pro $19/mo, Premium $39/mo (coming soon)
+
+### Admin Panel
+- Access: `/admin` (role: admin)
+- Platform stats (users, photographers, bookings, reviews, messages)
+- Photographer management: verify, feature, change plans
+- All bookings overview with status
+- User list with roles
 
 ### SEO
 - Location landing pages optimized for "photographer in [city] portugal"
-- Schema.org JSON-LD (LocalBusiness, TouristDestination)
-- Dynamic sitemap with all locations and photographers
-- OpenGraph + Twitter card metadata
+- Schema.org JSON-LD: WebSite, Organization, FAQPage, LocalBusiness, TouristDestination
+- Dynamic sitemap (locations + DB photographers + demo)
+- OpenGraph + Twitter card with custom OG image (1200x630)
+- Canonical URLs on all pages
+- robots.txt (disallow /dashboard, /api, /auth)
+- Web manifest (PWA-ready)
+
+### Pages
+- `/` — Homepage with hero, search, locations, testimonials
+- `/photographers` — Catalog with sidebar filters (DB + demo merge)
+- `/photographers/[slug]` — Profile (DB or demo, revalidate 60s)
+- `/locations` — All 23 locations
+- `/locations/[slug]` — Location detail with hero photo
+- `/book/[slug]` — Booking flow
+- `/dashboard` — Auto-redirect by role
+- `/dashboard/photographer` — Photographer dashboard (tabs: bookings, profile, portfolio, packages)
+- `/dashboard/client` — Client dashboard (bookings + reviews)
+- `/dashboard/messages` — Real-time chat (sidebar + chat panel)
+- `/dashboard/settings` — Account, notifications, subscription
+- `/admin` — Admin panel
+- `/pricing` — Plans comparison
+- `/faq` — FAQ with FAQPage schema
+- `/about`, `/contact`, `/privacy`, `/terms`
+- `/how-it-works`
 
 ## Development
 
@@ -45,34 +78,71 @@ npm run dev
 
 ## Environment Variables
 
-```
-DATABASE_URL=postgresql://user:pass@localhost:5432/photoportugal
+```env
+# Database
+DATABASE_URL=postgresql://photoportugal:PASSWORD@localhost:5432/photoportugal
+
+# Auth
 NEXTAUTH_URL=https://photoportugal.com
 NEXTAUTH_SECRET=<random-secret>
 AUTH_URL=https://photoportugal.com
 AUTH_TRUST_HOST=true
+
+# Google OAuth
 GOOGLE_CLIENT_ID=<google-oauth-client-id>
 GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
 ```
+
+**Important:** On the production server, env vars are passed via PM2 ecosystem config (`ecosystem.config.cjs`), NOT from `.env` file. Next.js does not auto-load `.env` in production when started via PM2.
 
 ## Database
 
 Schema: `db/schema.sql`
 
+Tables: users, photographer_profiles, photographer_locations, packages, portfolio_items, bookings, reviews, review_photos, messages
+
+Enums: user_role (client, photographer, admin), plan_type, booking_status, payment_status
+
 ```bash
 psql -U photoportugal -d photoportugal -f db/schema.sql
 ```
 
+### Admin User
+The admin user is created directly in the DB:
+```sql
+INSERT INTO users (email, name, password_hash, role, email_verified)
+VALUES ('info@photoportugal.com', 'Admin', '<bcrypt-hash>', 'admin', TRUE);
+```
+
 ## Deployment
 
-Server: DO Droplet (146.190.166.142), PM2 ecosystem config.
+Server: DO Droplet (146.190.166.142)
 
 ```bash
-# On server
+# SSH to server
+ssh root@146.190.166.142
+
+# Deploy
 cd /var/www/photoportugal
 git pull origin main
 npm run build
 pm2 restart photoportugal
+
+# PM2 config
+pm2 start ecosystem.config.cjs
+pm2 save
+
+# SSL (Let's Encrypt, auto-renews)
+certbot --nginx -d photoportugal.com -d www.photoportugal.com
+
+# Nginx config
+/etc/nginx/sites-available/photoportugal
+
+# Uploads directory
+/var/www/photoportugal/uploads/ (portfolio/, avatars/)
+
+# DB credentials
+/root/.db_credentials
 ```
 
 ## Project Structure
@@ -80,18 +150,58 @@ pm2 restart photoportugal
 ```
 src/
   app/
-    api/          # API routes (auth, bookings, messages, dashboard)
-    auth/         # Sign in, sign up pages
-    book/         # Booking flow
-    dashboard/    # Client + photographer dashboards, messaging
-    locations/    # Location pages (23 cities)
-    photographers/ # Catalog + individual profiles
-  components/     # Reusable UI components
-  lib/            # Auth, DB, data helpers
-  types/          # TypeScript types
+    admin/            # Admin panel (server + client components)
+    api/
+      admin/          # Admin API (photographer management)
+      auth/           # Auth routes (register, set-role)
+      bookings/       # Booking CRUD + status updates
+      dashboard/      # Profile, portfolio, packages, avatar APIs
+      messages/       # Messages + SSE stream + conversations
+      photographers/  # Public photographer data API
+      reviews/        # Review creation
+    auth/             # Sign in, sign up, auth layout (noindex)
+    book/             # Booking flow (/book/[slug])
+    dashboard/
+      client/         # Client dashboard
+      messages/       # Real-time chat UI
+      photographer/   # Photographer dashboard
+      settings/       # Account settings
+    locations/        # Location pages (23 cities)
+    photographers/    # Catalog + profiles (DB + demo)
+    about/, contact/, faq/, pricing/, privacy/, terms/, how-it-works/
+  components/
+    layout/           # Header (dropdown menu), Footer
+    photographers/    # PhotographerCard
+    providers/        # SessionProvider
+    ui/               # LocationCard, HeroSearchBar, ReviewForm, HowItWorks, Testimonials
+  lib/
+    auth.ts           # NextAuth config (Google + Credentials, callbacks)
+    db.ts             # PostgreSQL pool (query, queryOne helpers)
+    demo-data.ts      # Demo photographers and reviews
+    locations-data.ts # 23 location definitions
+    unsplash-images.ts # Image URLs with Retina (dpr=2) support
+  types/
+    index.ts          # TypeScript interfaces
 db/
-  schema.sql      # PostgreSQL schema
+  schema.sql          # Canonical database schema
 public/
-  logo.svg        # Brand logo
-  favicon.*       # Favicons
+  logo.svg            # Brand logo (SVG)
+  og-image.png        # Social sharing image (1200x630)
+  hero-family.webp    # Hero section main photo
+  favicon.*, icon-*   # Favicons and PWA icons
+  manifest.json       # Web manifest
 ```
+
+## Key Architecture Decisions
+
+1. **Demo + DB merge**: Photographer catalog shows both demo photographers (for SEO/showcase) and real DB profiles. Demo data used as fallback when DB is empty.
+
+2. **SSE for messaging**: Server-Sent Events with 1-second polling for real-time chat. Simpler than WebSockets, works with Next.js API routes. Auto-reconnect on disconnect.
+
+3. **Unsplash CDN for location images**: No local image processing. Unsplash handles WebP/AVIF, resizing, and CDN. `dpr=2` for Retina displays.
+
+4. **PM2 ecosystem config for env vars**: Next.js doesn't auto-load `.env` in production when spawned by PM2. All env vars must be in `ecosystem.config.cjs`.
+
+5. **Role-based access**: Dashboard routing reads role from DB (not JWT) to handle stale tokens after role changes. Auth pages redirect logged-in users.
+
+6. **ISR for profiles**: `revalidate = 60` on photographer profile pages so new packages/changes appear within a minute without rebuild.

@@ -25,7 +25,9 @@ export default async function DashboardPage() {
     } catch {}
   }
 
-  if (role === "photographer") {
+  if (role === "admin") {
+    redirect("/admin");
+  } else if (role === "photographer") {
     redirect("/dashboard/photographer");
   } else {
     redirect("/dashboard/client");
