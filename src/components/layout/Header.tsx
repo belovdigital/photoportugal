@@ -165,8 +165,8 @@ export function Header() {
               FAQ
             </Link>
 
-            {/* For Photographers dropdown — hide for logged-in clients */}
-            {!user && <div className="relative">
+            {/* For Photographers dropdown — hide for logged-in clients only */}
+            {(!user || role === "photographer") && <div className="relative">
               <button
                 onClick={() => toggleMenu("photographers")}
                 className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
