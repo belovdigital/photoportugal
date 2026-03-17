@@ -16,7 +16,7 @@ export async function PATCH(
   const userId = (session.user as { id?: string }).id;
   const { status } = await req.json();
 
-  const validStatuses = ["confirmed", "completed", "cancelled"];
+  const validStatuses = ["confirmed", "completed", "delivered", "cancelled"];
   if (!validStatuses.includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
@@ -51,8 +51,10 @@ export async function PATCH(
     // Validate status transitions
     const currentBooking = await queryOne<{ status: string }>("SELECT status FROM bookings WHERE id = $1", [id]);
     const validTransitions: Record<string, string[]> = {
+      inquiry: ["pending", "cancelled"],
       pending: ["confirmed", "cancelled"],
       confirmed: ["completed", "cancelled"],
+      completed: ["delivered"],
     };
     if (currentBooking && !validTransitions[currentBooking.status]?.includes(status)) {
       return NextResponse.json({ error: `Cannot change from ${currentBooking.status} to ${status}` }, { status: 400 });

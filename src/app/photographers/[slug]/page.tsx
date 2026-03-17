@@ -8,6 +8,7 @@ import {
 } from "@/lib/demo-data";
 import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
+import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 
 // Keep demo params for SSG, but allow dynamic slugs too
 export function generateStaticParams() {
@@ -419,6 +420,11 @@ export default async function PhotographerProfilePage({
                     </p>
                   )}
                 </div>
+              )}
+
+              {/* Message button — always visible for DB photographers */}
+              {result.type === "db" && (
+                <AskQuestionButton photographerId={photographer.id} photographerName={photographer.display_name} />
               )}
             </div>
           </div>

@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not your booking" }, { status: 403 });
     }
 
-    if (booking.status !== "completed") {
-      return NextResponse.json({ error: "Can only review completed bookings" }, { status: 400 });
+    if (booking.status !== "completed" && booking.status !== "delivered") {
+      return NextResponse.json({ error: "Can only review completed sessions" }, { status: 400 });
     }
 
     const existingReview = await queryOne(

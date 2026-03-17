@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { photographer_id, package_id, location_slug, shoot_date, shoot_time, message } = await req.json();
+    const { photographer_id, package_id, location_slug, shoot_date, shoot_time, group_size, occasion, message } = await req.json();
 
     if (!photographer_id) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
@@ -50,10 +50,10 @@ export async function POST(req: NextRequest) {
     }
 
     const booking = await queryOne<{ id: string }>(
-      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, shoot_date, shoot_time, message, total_price, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
+      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, shoot_date, shoot_time, group_size, occasion, message, total_price, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
        RETURNING id`,
-      [userId, photographer_id, package_id || null, location_slug || null, shoot_date || null, shoot_time || null, message || null, totalPrice]
+      [userId, photographer_id, package_id || null, location_slug || null, shoot_date || null, shoot_time || null, group_size || 2, occasion || null, message || null, totalPrice]
     );
 
     // Send email notification to photographer (if enabled)

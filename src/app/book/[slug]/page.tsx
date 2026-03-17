@@ -37,6 +37,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [selectedLocation, setSelectedLocation] = useState<string>("");
   const [shootDate, setShootDate] = useState("");
   const [shootTime, setShootTime] = useState("");
+  const [groupSize, setGroupSize] = useState("2");
+  const [occasion, setOccasion] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -84,6 +86,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         location_slug: selectedLocation || null,
         shoot_date: shootDate || null,
         shoot_time: shootTime || null,
+        group_size: parseInt(groupSize) || 2,
+        occasion: occasion || null,
         message,
       }),
     });
@@ -258,14 +262,54 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           </div>
         </div>
 
+        {/* Group & Occasion */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Group size</label>
+            <select
+              value={groupSize}
+              onChange={(e) => setGroupSize(e.target.value)}
+              className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+            >
+              <option value="1">Solo (1 person)</option>
+              <option value="2">Couple (2 people)</option>
+              <option value="3">Small group (3-4)</option>
+              <option value="5">Group (5-8)</option>
+              <option value="9">Large group (9+)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Occasion</label>
+            <select
+              value={occasion}
+              onChange={(e) => setOccasion(e.target.value)}
+              className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+            >
+              <option value="">Select occasion</option>
+              <option value="vacation">Vacation</option>
+              <option value="honeymoon">Honeymoon</option>
+              <option value="engagement">Engagement</option>
+              <option value="proposal">Proposal</option>
+              <option value="anniversary">Anniversary</option>
+              <option value="birthday">Birthday</option>
+              <option value="family">Family trip</option>
+              <option value="friends">Friends trip</option>
+              <option value="solo">Solo travel</option>
+              <option value="elopement">Elopement</option>
+              <option value="maternity">Maternity</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
         {/* Message */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Message to photographer</label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            rows={4}
-            placeholder="Tell them about your occasion, group size, any special requests..."
+            rows={3}
+            placeholder="Any special requests, preferred spots, or questions..."
             className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
           />
         </div>

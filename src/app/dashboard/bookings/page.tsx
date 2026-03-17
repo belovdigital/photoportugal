@@ -7,9 +7,11 @@ import { BookingStatusButtons } from "./BookingStatusButtons";
 export const dynamic = "force-dynamic";
 
 const STATUS_STYLES: Record<string, string> = {
+  inquiry: "bg-purple-100 text-purple-700",
   pending: "bg-yellow-100 text-yellow-700",
   confirmed: "bg-green-100 text-green-700",
   completed: "bg-blue-100 text-blue-700",
+  delivered: "bg-accent-100 text-accent-700",
   cancelled: "bg-gray-100 text-gray-500",
 };
 
@@ -39,6 +41,8 @@ export default async function BookingsPage() {
     status: string;
     shoot_date: string | null;
     shoot_time: string | null;
+    group_size: number | null;
+    occasion: string | null;
     total_price: number | null;
     message: string | null;
     created_at: string;
@@ -51,7 +55,7 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.total_price, b.message, b.created_at,
+                  p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at,
                   FALSE as has_review
            FROM bookings b
            JOIN users u ON u.id = b.client_id
@@ -64,7 +68,7 @@ export default async function BookingsPage() {
     } else {
       bookings = await query(
         `SELECT b.id, pp.display_name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.total_price, b.message, b.created_at,
+                p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -122,6 +126,8 @@ export default async function BookingsPage() {
                   <span>{new Date(booking.shoot_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
                 )}
                 {booking.shoot_time && <span>{TIME_LABELS[booking.shoot_time] || booking.shoot_time}</span>}
+                {booking.group_size && booking.group_size > 1 && <span>{booking.group_size} people</span>}
+                {booking.occasion && <span className="capitalize">{booking.occasion}</span>}
                 {booking.total_price && <span>&euro;{booking.total_price}</span>}
                 <span>Requested {new Date(booking.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
               </div>
@@ -143,7 +149,7 @@ export default async function BookingsPage() {
                 {!isPhotographer && (booking.status === "pending" || booking.status === "confirmed") && (
                   <BookingStatusButtons bookingId={booking.id} currentStatus="cancel-only" />
                 )}
-                {!isPhotographer && booking.status === "completed" && !booking.has_review && (
+                {!isPhotographer && (booking.status === "completed" || booking.status === "delivered") && !booking.has_review && (
                   <ReviewForm bookingId={booking.id} photographerName={booking.other_name} />
                 )}
                 {booking.has_review && (

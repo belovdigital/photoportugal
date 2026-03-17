@@ -15,26 +15,33 @@ export function BookingStatusButtons({ bookingId, currentStatus }: { bookingId: 
       body: JSON.stringify({ status }),
     });
     setUpdating(false);
-    if (res.ok) {
-      router.refresh();
-    }
+    if (res.ok) router.refresh();
+  }
+
+  if (currentStatus === "inquiry") {
+    return (
+      <>
+        <button onClick={() => updateStatus("pending")} disabled={updating}
+          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
+          Convert to Booking
+        </button>
+        <button onClick={() => updateStatus("cancelled")} disabled={updating}
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+          Decline
+        </button>
+      </>
+    );
   }
 
   if (currentStatus === "pending") {
     return (
       <>
-        <button
-          onClick={() => updateStatus("confirmed")}
-          disabled={updating}
-          className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50"
-        >
+        <button onClick={() => updateStatus("confirmed")} disabled={updating}
+          className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50">
           Confirm
         </button>
-        <button
-          onClick={() => updateStatus("cancelled")}
-          disabled={updating}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
-        >
+        <button onClick={() => updateStatus("cancelled")} disabled={updating}
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
           Decline
         </button>
       </>
@@ -43,27 +50,26 @@ export function BookingStatusButtons({ bookingId, currentStatus }: { bookingId: 
 
   if (currentStatus === "confirmed") {
     return (
-      <button
-        onClick={() => updateStatus("completed")}
-        disabled={updating}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-      >
-        Mark Completed
+      <button onClick={() => updateStatus("completed")} disabled={updating}
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+        Mark Session Done
+      </button>
+    );
+  }
+
+  if (currentStatus === "completed") {
+    return (
+      <button onClick={() => updateStatus("delivered")} disabled={updating}
+        className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50">
+        Photos Delivered
       </button>
     );
   }
 
   if (currentStatus === "cancel-only") {
     return (
-      <button
-        onClick={() => {
-          if (confirm("Are you sure you want to cancel this booking?")) {
-            updateStatus("cancelled");
-          }
-        }}
-        disabled={updating}
-        className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-      >
+      <button onClick={() => { if (confirm("Cancel this booking?")) updateStatus("cancelled"); }} disabled={updating}
+        className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">
         Cancel Booking
       </button>
     );
