@@ -318,76 +318,10 @@ export function PhotographerDashboardClient({
         {activeTab === "profile" && (
           <form onSubmit={saveProfile} className="max-w-2xl space-y-6">
             {/* Avatar */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
-              <div className="flex items-center gap-4">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-600 overflow-hidden">
-                  {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    profile.display_name.charAt(0)
-                  )}
-                </div>
-                <label className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-                  Upload Photo
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const formData = new FormData();
-                      formData.append("file", file);
-                      showMessage("Uploading avatar...");
-                      const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
-                      if (res.ok) {
-                        showMessage("Avatar updated!");
-                        router.refresh();
-                      } else {
-                        showMessage("Upload failed");
-                      }
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
+            <AvatarUpload initialUrl={profile.avatar_url} fallbackChar={profile.display_name.charAt(0)} onMessage={showMessage} />
 
             {/* Cover Image */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
-              <p className="text-xs text-gray-400 mb-2">Recommended: landscape photo, min 1200px wide. Shows on your public profile.</p>
-              <div className="flex items-center gap-4">
-                {profile.cover_url ? (
-                  <div className="h-20 w-40 overflow-hidden rounded-lg bg-warm-100">
-                    <img src={profile.cover_url} alt="Cover" className="h-full w-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="flex h-20 w-40 items-center justify-center rounded-lg bg-gradient-to-br from-primary-300 to-primary-600 text-xs text-white/60">No cover</div>
-                )}
-                <label className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-                  Upload Cover
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const formData = new FormData();
-                      formData.append("file", file);
-                      formData.append("type", "cover");
-                      showMessage("Uploading cover...");
-                      const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
-                      if (res.ok) { showMessage("Cover updated!"); router.refresh(); }
-                      else showMessage("Upload failed");
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
+            <CoverUpload initialUrl={profile.cover_url} onMessage={showMessage} />
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Display Name</label>
@@ -845,6 +779,95 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
         >
           Message
         </a>
+      </div>
+    </div>
+  );
+}
+
+function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: string | null; fallbackChar: string; onMessage: (msg: string) => void }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPreviewUrl(URL.createObjectURL(file));
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploading(true);
+    onMessage("Uploading photo...");
+    const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
+    setUploading(false);
+    if (res.ok) { const data = await res.json(); setPreviewUrl(data.url); onMessage("Photo updated!"); }
+    else { setPreviewUrl(initialUrl); onMessage("Upload failed"); }
+    e.target.value = "";
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+      <div className="flex items-center gap-4">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-600 overflow-hidden">
+          {previewUrl ? <img src={previewUrl} alt="" className="h-full w-full object-cover" /> : fallbackChar}
+        </div>
+        <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+          {uploading ? "Uploading..." : "Upload Photo"}
+          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onMessage: (msg: string) => void }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Instant local preview
+    const localUrl = URL.createObjectURL(file);
+    setPreviewUrl(localUrl);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", "cover");
+
+    setUploading(true);
+    onMessage("Uploading cover...");
+
+    const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
+    setUploading(false);
+
+    if (res.ok) {
+      const data = await res.json();
+      setPreviewUrl(data.url);
+      onMessage("Cover updated!");
+    } else {
+      setPreviewUrl(initialUrl);
+      onMessage("Upload failed");
+    }
+    e.target.value = "";
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+      <p className="text-xs text-gray-400 mb-2">Recommended: landscape photo, min 1200px wide. Shows on your public profile.</p>
+      <div className="flex items-center gap-4">
+        {previewUrl ? (
+          <div className="h-20 w-40 overflow-hidden rounded-lg bg-warm-100">
+            <img src={previewUrl} alt="Cover" className="h-full w-full object-cover" />
+          </div>
+        ) : (
+          <div className="flex h-20 w-40 items-center justify-center rounded-lg bg-gradient-to-br from-primary-300 to-primary-600 text-xs text-white/60">No cover</div>
+        )}
+        <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+          {uploading ? "Uploading..." : "Upload Cover"}
+          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+        </label>
       </div>
     </div>
   );
