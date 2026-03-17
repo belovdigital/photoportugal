@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   const encoder = new TextEncoder();
-  let lastId = "00000000-0000-0000-0000-000000000000";
+  let lastTimestamp = new Date(0).toISOString();
   let closed = false;
 
   const stream = new ReadableStream({
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "init", messages })}\n\n`));
 
         if (messages.length > 0) {
-          lastId = messages[messages.length - 1].id as string;
+          lastTimestamp = (messages[messages.length - 1] as { created_at: string }).created_at;
         }
 
         // Mark as read
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         console.error("[stream] init error:", e);
       }
 
-      // Poll for new messages every 1 second (fast polling over SSE)
+      // Poll every 3 seconds (not 1 — reduces DB load)
       const interval = setInterval(async () => {
         if (closed) {
           clearInterval(interval);
@@ -77,33 +77,28 @@ export async function GET(req: NextRequest) {
                     u.name as sender_name, u.avatar_url as sender_avatar
              FROM messages m
              JOIN users u ON u.id = m.sender_id
-             WHERE m.booking_id = $1 AND m.id > $2
+             WHERE m.booking_id = $1 AND m.created_at > $2
              ORDER BY m.created_at ASC`,
-            [bookingId, lastId]
+            [bookingId, lastTimestamp]
           );
 
           if (newMessages.length > 0) {
-            lastId = newMessages[newMessages.length - 1].id as string;
-
+            lastTimestamp = (newMessages[newMessages.length - 1] as { created_at: string }).created_at;
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "new", messages: newMessages })}\n\n`)
             );
 
-            // Mark as read
             await query(
               "UPDATE messages SET read_at = NOW() WHERE booking_id = $1 AND sender_id != $2 AND read_at IS NULL",
               [bookingId, userId]
             );
           }
-
-          // Heartbeat
-          controller.enqueue(encoder.encode(": heartbeat\n\n"));
         } catch (e) {
           console.error("[stream] poll error:", e);
         }
-      }, 1000);
+      }, 3000);
 
-      // Cleanup after 5 minutes (reconnect)
+      // Cleanup after 5 minutes
       setTimeout(() => {
         closed = true;
         clearInterval(interval);

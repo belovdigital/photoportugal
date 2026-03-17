@@ -46,6 +46,10 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         .then((data) => {
           if (data.error) {
             setError("Photographer not found");
+          } else if (data.is_demo) {
+            setError("This is a sample profile. Browse real photographers to book a session.");
+            setLoading(false);
+            return;
           } else {
             setPhotographer(data);
             if (data.packages?.length > 0) {

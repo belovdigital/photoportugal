@@ -74,15 +74,11 @@ export function PhotographerCatalog({
     }
 
     const range = PRICE_RANGES[priceRange];
-    if (range && range.max !== Infinity) {
+    if (range && (range.max !== Infinity || range.min > 0)) {
       result = result.filter((p) => {
+        if (p.packages.length === 0) return false;
         const cheapest = Math.min(...p.packages.map((pkg) => pkg.price));
         return cheapest >= range.min && cheapest <= range.max;
-      });
-    } else if (range && range.min > 0) {
-      result = result.filter((p) => {
-        const cheapest = Math.min(...p.packages.map((pkg) => pkg.price));
-        return cheapest >= range.min;
       });
     }
 

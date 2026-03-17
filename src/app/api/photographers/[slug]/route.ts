@@ -60,7 +60,7 @@ export async function GET(
       });
     }
 
-    // Fallback to demo
+    // Fallback to demo (not bookable)
     const demo = getPhotographerBySlug(slug);
     if (demo) {
       return NextResponse.json({
@@ -70,6 +70,7 @@ export async function GET(
         avatar_url: demo.avatar_url,
         locations: demo.locations.map((l) => ({ slug: l.slug, name: l.name })),
         packages: demo.packages,
+        is_demo: true,
       });
     }
 

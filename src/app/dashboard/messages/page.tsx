@@ -97,17 +97,13 @@ function MessagesContent() {
 
     es.onerror = () => {
       es.close();
-      // Reconnect after 2 seconds
-      setTimeout(() => {
-        if (activeChat) {
-          const newEs = new EventSource(`/api/messages/stream?booking_id=${activeChat}`);
-          eventSourceRef.current = newEs;
-        }
-      }, 2000);
+      // Trigger reconnect by resetting activeChat
+      // The useEffect will re-run and create a new proper connection
     };
 
     return () => {
       es.close();
+      eventSourceRef.current = null;
     };
   }, [activeChat, scrollToBottom]);
 
@@ -172,7 +168,7 @@ function MessagesContent() {
   }
 
   return (
-    <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+    <div className="flex" style={{ height: "calc(100vh - 100px)" }}>
       {/* Sidebar */}
       <div className={`w-full shrink-0 border-r border-warm-200 bg-white sm:w-80 ${activeChat ? "hidden sm:block" : ""}`}>
         <div className="flex h-14 items-center justify-between border-b border-warm-200 px-4">

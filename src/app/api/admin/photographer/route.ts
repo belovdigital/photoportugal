@@ -1,26 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { queryOne } from "@/lib/db";
+import { verifyToken } from "@/app/api/admin/login/route";
 
 async function verifyAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
   const token = cookieStore.get("admin_token")?.value;
   if (!token) return false;
-
-  try {
-    const decoded = Buffer.from(token, "base64").toString();
-    const [email, ts] = decoded.split(":");
-    const timestamp = parseInt(ts);
-    if (Date.now() - timestamp > 24 * 60 * 60 * 1000) return false;
-
-    const user = await queryOne<{ role: string }>(
-      "SELECT role FROM users WHERE email = $1",
-      [email]
-    );
-    return user?.role === "admin";
-  } catch {
-    return false;
-  }
+  const data = verifyToken(token);
+  if (!data) return false;
+  const user = await queryOne<{ role: string }>("SELECT role FROM users WHERE email = $1", [data.email]);
+  return user?.role === "admin";
 }
 
 export async function PATCH(req: NextRequest) {

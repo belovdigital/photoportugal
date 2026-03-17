@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
-import { compare } from "bcryptjs";
 import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
 import { AdminToggleClient, AdminPlanSelectClient } from "./AdminControls";
+import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
 
@@ -12,21 +12,14 @@ async function verifyAdmin(): Promise<boolean> {
   const token = cookieStore.get("admin_token")?.value;
   if (!token) return false;
 
-  // Token is base64(email:timestamp), valid for 24 hours
-  try {
-    const decoded = Buffer.from(token, "base64").toString();
-    const [email, ts] = decoded.split(":");
-    const timestamp = parseInt(ts);
-    if (Date.now() - timestamp > 24 * 60 * 60 * 1000) return false;
+  const data = verifyToken(token);
+  if (!data) return false;
 
-    const user = await queryOne<{ role: string }>(
-      "SELECT role FROM users WHERE email = $1",
-      [email]
-    );
-    return user?.role === "admin";
-  } catch {
-    return false;
-  }
+  const user = await queryOne<{ role: string }>(
+    "SELECT role FROM users WHERE email = $1",
+    [data.email]
+  );
+  return user?.role === "admin";
 }
 
 export default async function AdminPage() {
@@ -107,7 +100,6 @@ export default async function AdminPage() {
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Email</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Plan</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Rating</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Verified</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Featured</th>
@@ -121,9 +113,6 @@ export default async function AdminPage() {
                     <Link href={`/photographers/${p.slug}`} className="hover:text-primary-600">{p.display_name}</Link>
                   </td>
                   <td className="px-4 py-3 text-gray-500">{p.email}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-warm-100 px-2 py-0.5 text-xs font-semibold uppercase">{p.plan}</span>
-                  </td>
                   <td className="px-4 py-3 text-gray-700">{p.rating || "—"}</td>
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_verified" value={p.is_verified} /></td>
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_featured" value={p.is_featured} /></td>

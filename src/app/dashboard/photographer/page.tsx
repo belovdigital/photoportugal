@@ -31,7 +31,12 @@ export default async function PhotographerDashboardPage() {
     review_count: number;
     session_count: number;
   }>(
-    "SELECT id, slug, display_name, tagline, bio, avatar_url, cover_url, languages, shoot_types, hourly_rate, experience_years, plan, rating, review_count, session_count FROM photographer_profiles WHERE user_id = $1",
+    `SELECT pp.id, pp.slug, pp.display_name, pp.tagline, pp.bio, u.avatar_url, pp.cover_url,
+            pp.languages, pp.shoot_types, pp.hourly_rate, pp.experience_years, pp.plan,
+            pp.rating, pp.review_count, pp.session_count
+     FROM photographer_profiles pp
+     JOIN users u ON u.id = pp.user_id
+     WHERE pp.user_id = $1`,
     [userId]
   );
 

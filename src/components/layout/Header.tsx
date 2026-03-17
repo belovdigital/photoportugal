@@ -24,7 +24,7 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const profileSlug = user?.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  // Profile link goes to dashboard where "View Public Profile" is available
 
   return (
     <>
@@ -32,7 +32,7 @@ export function Header() {
       <div className="bg-gray-900 text-center text-xs sm:text-sm">
         <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
           <p className="text-gray-300">
-            <span className="text-white font-semibold">200+ verified photographers</span> across 23 stunning locations in Portugal
+            <span className="text-white font-semibold">Professional vacation photography</span> across 23 stunning locations in Portugal
             <Link href="/photographers" className="ml-2 text-primary-400 hover:text-primary-300 font-medium">
               Browse now &rarr;
             </Link>
@@ -107,8 +107,8 @@ export function Header() {
                     <div className="py-1">
                       <DropdownLink href="/dashboard" icon="grid" label="Dashboard" onClick={() => setProfileOpen(false)} />
                       <DropdownLink href="/dashboard/messages" icon="chat" label="Messages" onClick={() => setProfileOpen(false)} />
-                      {isPhotographer && profileSlug && (
-                        <DropdownLink href={`/photographers/${profileSlug}`} icon="user" label="My Profile" onClick={() => setProfileOpen(false)} />
+                      {isPhotographer && (
+                        <DropdownLink href="/dashboard/photographer" icon="user" label="My Profile" onClick={() => setProfileOpen(false)} />
                       )}
                       <DropdownLink href="/dashboard/settings" icon="settings" label="Settings" onClick={() => setProfileOpen(false)} />
                     </div>
@@ -161,8 +161,8 @@ export function Header() {
                 <>
                   <MobileLink href="/dashboard" label="Dashboard" onClick={() => setMobileOpen(false)} />
                   <MobileLink href="/dashboard/messages" label="Messages" onClick={() => setMobileOpen(false)} />
-                  {isPhotographer && profileSlug && (
-                    <MobileLink href={`/photographers/${profileSlug}`} label="My Profile" onClick={() => setMobileOpen(false)} />
+                  {isPhotographer && (
+                    <MobileLink href="/dashboard/photographer" label="My Profile" onClick={() => setMobileOpen(false)} />
                   )}
                   <MobileLink href="/dashboard/settings" label="Settings" onClick={() => setMobileOpen(false)} />
                   <button

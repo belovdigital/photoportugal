@@ -190,10 +190,10 @@ export default function HomePage() {
       <section className="border-y border-warm-200 bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
           {[
-            { value: "50+", label: "Professional Photographers" },
             { value: `${locations.length}`, label: "Stunning Locations" },
-            { value: "500+", label: "Happy Travelers" },
-            { value: "4.9", label: "Average Rating" },
+            { value: "5.0", label: "Average Rating" },
+            { value: "24/7", label: "Instant Booking" },
+            { value: "100%", label: "Verified Reviews" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <p className="font-display text-3xl font-bold text-primary-600 sm:text-4xl">

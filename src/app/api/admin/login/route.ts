@@ -1,6 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { compare } from "bcryptjs";
 import { queryOne } from "@/lib/db";
+import crypto from "crypto";
+
+function signToken(payload: string): string {
+  const secret = process.env.NEXTAUTH_SECRET || "fallback-secret";
+  const hmac = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+  return Buffer.from(`${payload}:${hmac}`).toString("base64");
+}
+
+export function verifyToken(token: string): { email: string; timestamp: number } | null {
+  try {
+    const decoded = Buffer.from(token, "base64").toString();
+    const parts = decoded.split(":");
+    const hmac = parts.pop()!;
+    const payload = parts.join(":");
+    const secret = process.env.NEXTAUTH_SECRET || "fallback-secret";
+    const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+    if (hmac !== expected) return null;
+
+    const [email, ts] = payload.split(":");
+    const timestamp = parseInt(ts);
+    if (Date.now() - timestamp > 24 * 60 * 60 * 1000) return null;
+    return { email, timestamp };
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,8 +50,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    // Create admin token (base64 of email:timestamp)
-    const token = Buffer.from(`${email}:${Date.now()}`).toString("base64");
+    const token = signToken(`${email}:${Date.now()}`);
 
     const response = NextResponse.json({ success: true });
     response.cookies.set("admin_token", token, {
@@ -33,7 +58,7 @@ export async function POST(req: NextRequest) {
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 24 * 60 * 60, // 24 hours
+      maxAge: 24 * 60 * 60,
     });
 
     return response;
