@@ -4,6 +4,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { HeroSearchBar } from "@/components/ui/HeroSearchBar";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
+import { ShootTypesSection } from "@/components/ui/ShootTypesSection";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { unsplashUrl } from "@/lib/unsplash-images";
 
@@ -191,18 +192,44 @@ export default function HomePage() {
 
       {/* ===== STATS ===== */}
       <section className="border-y border-warm-200 bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:gap-8 lg:px-8">
           {[
-            { value: `${locations.length}`, label: "Stunning Locations" },
-            { value: "5.0", label: "Average Rating" },
-            { value: "24/7", label: "Instant Booking" },
-            { value: "100%", label: "Verified Reviews" },
+            {
+              value: `${locations.length}+`,
+              label: "Stunning Locations",
+              icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />,
+              color: "text-primary-500 bg-primary-50",
+            },
+            {
+              value: "5.0",
+              label: "Average Rating",
+              icon: <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />,
+              color: "text-yellow-500 bg-yellow-50",
+              filled: true,
+            },
+            {
+              value: "24h",
+              label: "Photo Delivery",
+              icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+              color: "text-accent-500 bg-accent-50",
+            },
+            {
+              value: "100%",
+              label: "Secure Payments",
+              icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
+              color: "text-blue-500 bg-blue-50",
+            },
           ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-display text-3xl font-bold text-primary-600 sm:text-4xl">
+            <div key={stat.label} className="flex flex-col items-center text-center">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.color}`}>
+                <svg className="h-5 w-5" fill={stat.filled ? "currentColor" : "none"} viewBox="0 0 20 20" stroke={stat.filled ? undefined : "currentColor"}>
+                  {stat.icon}
+                </svg>
+              </div>
+              <p className="mt-2 font-display text-2xl font-bold text-gray-900 sm:text-3xl">
                 {stat.value}
               </p>
-              <p className="mt-1 text-sm text-gray-500">{stat.label}</p>
+              <p className="mt-0.5 text-xs font-medium text-gray-400">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -211,14 +238,23 @@ export default function HomePage() {
       {/* ===== FEATURED PHOTOGRAPHERS ===== */}
       <FeaturedPhotographers />
 
+      {/* ===== HOW IT WORKS ===== */}
+      <HowItWorksSection />
+
+      {/* ===== SHOOT TYPES ===== */}
+      <ShootTypesSection />
+
       {/* ===== LOCATIONS ===== */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         <div className="text-center">
-          <h2 className="font-display text-3xl font-bold text-gray-900 sm:text-4xl">
-            Explore Portugal&apos;s Most Photogenic Locations
+          <span className="inline-block rounded-full bg-warm-200 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-warm-700">
+            Destinations
+          </span>
+          <h2 className="mt-4 font-display text-3xl font-bold text-gray-900 sm:text-4xl">
+            Portugal&apos;s Most Photogenic Locations
           </h2>
-          <p className="mt-4 text-lg text-gray-500">
-            Each destination offers unique backdrops for your perfect photoshoot
+          <p className="mx-auto mt-4 max-w-xl text-gray-500">
+            From Lisbon&apos;s cobblestone streets to the Algarve&apos;s golden cliffs — each destination offers unique backdrops
           </p>
         </div>
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -229,17 +265,17 @@ export default function HomePage() {
         <div className="mt-8 text-center">
           <Link
             href="/locations"
-            className="inline-flex rounded-xl border border-primary-200 px-6 py-3 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-primary-200 px-6 py-3 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
           >
             View All {locations.length} Locations
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </Link>
         </div>
       </section>
 
-      {/* How It Works */}
-      <HowItWorksSection />
-
-      {/* Testimonials */}
+      {/* ===== TESTIMONIALS ===== */}
       <TestimonialsSection />
 
       {/* ===== CTA ===== */}
