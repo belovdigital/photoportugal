@@ -45,12 +45,12 @@ export default async function AdminPage() {
   const photographers = await query<{
     id: string; display_name: string; slug: string; plan: string; rating: number;
     review_count: number; session_count: number; is_verified: boolean; is_featured: boolean;
-    created_at: string; email: string;
+    is_approved: boolean; created_at: string; email: string;
   }>(
     `SELECT pp.id, pp.display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
-            pp.session_count, pp.is_verified, pp.is_featured, pp.created_at, u.email
+            pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, pp.created_at, u.email
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
-     ORDER BY pp.created_at DESC`
+     ORDER BY pp.is_approved ASC, pp.created_at DESC`
   );
 
   const bookings = await query<{
@@ -101,6 +101,7 @@ export default async function AdminPage() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Email</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Rating</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Approved</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Verified</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Featured</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Plan</th>
@@ -114,6 +115,7 @@ export default async function AdminPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-500">{p.email}</td>
                   <td className="px-4 py-3 text-gray-700">{p.rating || "—"}</td>
+                  <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_approved" value={p.is_approved} /></td>
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_verified" value={p.is_verified} /></td>
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_featured" value={p.is_featured} /></td>
                   <td className="px-4 py-3"><AdminPlanSelectClient id={p.id} currentPlan={p.plan} /></td>

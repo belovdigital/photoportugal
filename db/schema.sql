@@ -48,6 +48,7 @@ CREATE TABLE photographer_profiles (
   experience_years INTEGER DEFAULT 0,
   is_verified BOOLEAN DEFAULT FALSE,
   is_featured BOOLEAN DEFAULT FALSE,
+  is_approved BOOLEAN DEFAULT FALSE,
   plan plan_type DEFAULT 'free',
   rating NUMERIC(2,1) DEFAULT 0,
   review_count INTEGER DEFAULT 0,

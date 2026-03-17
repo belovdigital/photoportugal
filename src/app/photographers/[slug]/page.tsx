@@ -37,15 +37,16 @@ async function getPhotographer(slug: string) {
       experience_years: number;
       is_verified: boolean;
       is_featured: boolean;
+      is_approved: boolean;
       plan: string;
       rating: number;
       review_count: number;
       session_count: number;
     }>(
-      "SELECT id, slug, display_name, tagline, bio, avatar_url, languages, shoot_types, hourly_rate, experience_years, is_verified, is_featured, plan, rating, review_count, session_count FROM photographer_profiles WHERE slug = $1",
+      "SELECT id, slug, display_name, tagline, bio, avatar_url, languages, shoot_types, hourly_rate, experience_years, is_verified, is_featured, is_approved, plan, rating, review_count, session_count FROM photographer_profiles WHERE slug = $1",
       [slug]
     );
-    if (!profile) return null;
+    if (!profile || !profile.is_approved) return null;
 
     const locationRows = await query<{ location_slug: string }>(
       "SELECT location_slug FROM photographer_locations WHERE photographer_id = $1",

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { unsplashUrl } from "@/lib/unsplash-images";
 
 function useNotifications(loggedIn: boolean) {
   const [unread, setUnread] = useState(0);
@@ -19,16 +20,12 @@ function useNotifications(loggedIn: boolean) {
 }
 
 const TOP_DESTINATIONS = [
-  { slug: "lisbon", name: "Lisbon" },
-  { slug: "porto", name: "Porto" },
-  { slug: "algarve", name: "Algarve" },
-  { slug: "sintra", name: "Sintra" },
-  { slug: "madeira", name: "Madeira" },
-  { slug: "azores", name: "Azores" },
-  { slug: "cascais", name: "Cascais" },
-  { slug: "lagos", name: "Lagos" },
-  { slug: "douro-valley", name: "Douro Valley" },
-  { slug: "nazare", name: "Nazaré" },
+  { slug: "lisbon", name: "Lisbon", img: "photo-1536663060084-a0d9eeeaf44b" },
+  { slug: "porto", name: "Porto", img: "photo-1756765786971-384a44daf35d" },
+  { slug: "algarve", name: "Algarve", img: "photo-1560242374-7befcc667b39" },
+  { slug: "sintra", name: "Sintra", img: "photo-1697394494123-c6c1323a14f7" },
+  { slug: "madeira", name: "Madeira", img: "photo-1721241843813-c54b77496005" },
+  { slug: "azores", name: "Azores", img: "photo-1542575749037-7ef4545e897d" },
 ];
 
 const SHOOT_TYPES = [
@@ -105,40 +102,43 @@ export function Header() {
               </button>
 
               {activeMenu === "destinations" && (
-                <div className="absolute left-1/2 top-full mt-2 w-[520px] -translate-x-1/2 rounded-xl border border-warm-200 bg-white p-5 shadow-xl">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Popular Cities</p>
-                      <div className="mt-3 grid grid-cols-2 gap-1">
+                <div className="absolute left-0 top-full mt-2 w-[640px] rounded-xl border border-warm-200 bg-white p-5 shadow-xl">
+                  <div className="flex gap-6">
+                    {/* Photo grid */}
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Popular Destinations</p>
+                      <div className="mt-3 grid grid-cols-3 gap-2">
                         {TOP_DESTINATIONS.map((d) => (
                           <Link
                             key={d.slug}
                             href={`/locations/${d.slug}`}
                             onClick={() => setActiveMenu(null)}
-                            className="rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
+                            className="group overflow-hidden rounded-lg"
                           >
-                            {d.name}
+                            <div className="relative aspect-[4/3]">
+                              <img
+                                src={unsplashUrl(d.img, 200, 70)}
+                                alt={d.name}
+                                className="h-full w-full object-cover transition group-hover:scale-105"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                              <p className="absolute bottom-1.5 left-2 text-xs font-semibold text-white">{d.name}</p>
+                            </div>
                           </Link>
                         ))}
                       </div>
-                      <Link
-                        href="/locations"
-                        onClick={() => setActiveMenu(null)}
-                        className="mt-3 inline-flex text-sm font-semibold text-primary-600 hover:text-primary-700"
-                      >
-                        View all 23 locations &rarr;
+                      <Link href="/locations" onClick={() => setActiveMenu(null)} className="mt-3 inline-flex text-sm font-semibold text-primary-600 hover:text-primary-700">
+                        All 23 locations &rarr;
                       </Link>
                     </div>
-                    <div>
+                    {/* Occasion list */}
+                    <div className="w-40 shrink-0 border-l border-warm-100 pl-5">
                       <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">By Occasion</p>
-                      <div className="mt-3 space-y-1">
+                      <div className="mt-3 space-y-0.5">
                         {SHOOT_TYPES.map((s) => (
-                          <Link
-                            key={s.label}
-                            href={s.href}
-                            onClick={() => setActiveMenu(null)}
-                            className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
-                          >
+                          <Link key={s.label} href={s.href} onClick={() => setActiveMenu(null)}
+                            className="block rounded-lg px-2 py-1.5 text-sm text-gray-600 transition hover:bg-primary-50 hover:text-primary-600">
                             {s.label}
                           </Link>
                         ))}
@@ -199,12 +199,12 @@ export function Header() {
                       Pricing Plans
                     </Link>
                     <Link
-                      href="/how-it-works"
+                      href="/for-photographers"
                       onClick={() => setActiveMenu(null)}
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
                     >
                       <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      How It Works
+                      Learn More
                     </Link>
                   </div>
                 </div>

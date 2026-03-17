@@ -30,6 +30,10 @@ export async function PATCH(req: NextRequest) {
     const values: unknown[] = [];
     let paramIndex = 1;
 
+    if ("is_approved" in updates) {
+      fields.push(`is_approved = $${paramIndex++}`);
+      values.push(updates.is_approved);
+    }
     if ("is_verified" in updates) {
       fields.push(`is_verified = $${paramIndex++}`);
       values.push(updates.is_verified);
