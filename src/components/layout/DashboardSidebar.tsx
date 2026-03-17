@@ -29,7 +29,7 @@ export function DashboardSidebar() {
         .catch(() => {});
     }
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 15000);
+    const interval = setInterval(fetchNotifications, 8000);
     return () => clearInterval(interval);
   }, []);
 

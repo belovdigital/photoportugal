@@ -46,7 +46,7 @@ function MessagesContent() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, []);
 
   // Load conversations
@@ -174,7 +174,7 @@ function MessagesContent() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-100px)]">
+    <div className="flex" style={{ height: "min(600px, calc(100vh - 160px))" }}>
       {/* Sidebar */}
       <div className={`w-full shrink-0 border-r border-warm-200 bg-white sm:w-72 ${activeChat ? "hidden sm:block" : ""}`}>
         <div className="flex h-12 items-center border-b border-warm-200 px-4">

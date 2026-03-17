@@ -4,6 +4,20 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 
+function useNotifications(loggedIn: boolean) {
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    if (!loggedIn) return;
+    function fetch_() {
+      fetch("/api/notifications").then(r => r.json()).then(d => setUnread(d.unread_messages || 0)).catch(() => {});
+    }
+    fetch_();
+    const i = setInterval(fetch_, 8000);
+    return () => clearInterval(i);
+  }, [loggedIn]);
+  return unread;
+}
+
 const TOP_DESTINATIONS = [
   { slug: "lisbon", name: "Lisbon" },
   { slug: "porto", name: "Porto" },
@@ -37,6 +51,7 @@ export function Header() {
   const role = (user as { role?: string } | undefined)?.role;
   const isPhotographer = role === "photographer";
   const isLoading = status === "loading";
+  const unreadMessages = useNotifications(!!user);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -212,7 +227,7 @@ export function Header() {
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-1.5 rounded-full border border-warm-200 p-1 pr-2 transition hover:bg-warm-50"
+                  className="relative flex items-center gap-1.5 rounded-full border border-warm-200 p-1 pr-2 transition hover:bg-warm-50"
                 >
                   {user.image ? (
                     <img src={user.image} alt="" className="h-7 w-7 rounded-full object-cover" />
@@ -220,6 +235,11 @@ export function Header() {
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
                       {user.name?.charAt(0) ?? "U"}
                     </div>
+                  )}
+                  {unreadMessages > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                      {unreadMessages}
+                    </span>
                   )}
                   <svg className={`h-3.5 w-3.5 text-gray-400 transition ${profileOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
