@@ -245,7 +245,7 @@ export function PhotographerDashboardClient({
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -292,8 +292,8 @@ export function PhotographerDashboardClient({
       )}
 
       {/* Tabs */}
-      <div className="mt-8 border-b border-warm-200">
-        <div className="flex gap-6">
+      <div className="mt-8 overflow-x-auto border-b border-warm-200">
+        <div className="flex gap-6 whitespace-nowrap">
           {tabs.map((tab) => (
             <button
               key={tab.key}

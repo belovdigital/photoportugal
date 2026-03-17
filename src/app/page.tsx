@@ -86,7 +86,7 @@ export default function HomePage() {
               </div>
 
               {/* Social proof row */}
-              <div className="mt-8 flex items-center gap-6 text-sm text-gray-400">
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                   <svg className="h-4 w-4 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                   <span>Verified reviews</span>

@@ -75,7 +75,7 @@ export default function PricingPage() {
         </p>
       </div>
 
-      <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
         {plans.map((plan) => (
           <div
             key={plan.name}

@@ -96,7 +96,7 @@ export default async function AdminPage() {
       <section className="mt-10">
         <h2 className="text-xl font-bold text-gray-900">Photographers ({photographers.length})</h2>
         <div className="mt-4 overflow-x-auto rounded-xl border border-warm-200 bg-white">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[700px] text-sm">
             <thead className="border-b border-warm-200 bg-warm-50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
@@ -131,7 +131,7 @@ export default async function AdminPage() {
       <section className="mt-10">
         <h2 className="text-xl font-bold text-gray-900">Recent Bookings</h2>
         <div className="mt-4 overflow-x-auto rounded-xl border border-warm-200 bg-white">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[700px] text-sm">
             <thead className="border-b border-warm-200 bg-warm-50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Client</th>
@@ -168,7 +168,7 @@ export default async function AdminPage() {
       <section className="mt-10 mb-12">
         <h2 className="text-xl font-bold text-gray-900">Users ({recentUsers.length})</h2>
         <div className="mt-4 overflow-x-auto rounded-xl border border-warm-200 bg-white">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[700px] text-sm">
             <thead className="border-b border-warm-200 bg-warm-50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>

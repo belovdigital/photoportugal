@@ -116,10 +116,10 @@ function MessagesContent() {
       <h1 className="font-display text-2xl font-bold text-gray-900">Messages</h1>
       <p className="mt-1 text-gray-500">Chat with your {userId ? "contacts" : "photographers"}</p>
 
-      <div className="mt-6 flex gap-4 rounded-xl border border-warm-200 bg-white" style={{ height: "520px" }}>
+      <div className="mt-6 flex gap-4 rounded-xl border border-warm-200 bg-white" style={{ height: "min(520px, calc(100vh - 220px))" }}>
         {/* Conversations sidebar */}
         <div className={`w-full shrink-0 border-r border-warm-100 sm:w-64 ${activeChat ? "hidden sm:block" : ""}`}>
-          <div className="overflow-y-auto p-2" style={{ height: "520px" }}>
+          <div className="overflow-y-auto p-2" style={{ height: "min(520px, calc(100vh - 220px))" }}>
             {loadingConvos ? (
               <div className="space-y-3 p-2">
                 {[...Array(3)].map((_, i) => (
@@ -214,7 +214,7 @@ function MessagesContent() {
                   placeholder="Type a message..."
                   className="flex-1 rounded-full border border-warm-200 bg-warm-50 px-4 py-2 text-sm outline-none focus:border-primary-300 focus:bg-white"
                 />
-                <button type="submit" disabled={sending || !newMessage.trim()} className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white disabled:opacity-30">
+                <button type="submit" disabled={sending || !newMessage.trim()} className="flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-primary-600 text-white disabled:opacity-30">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h14M12 5l7 7-7 7" /></svg>
                 </button>
               </form>
