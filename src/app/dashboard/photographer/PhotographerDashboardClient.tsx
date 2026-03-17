@@ -478,7 +478,7 @@ export function PhotographerDashboardClient({
                 className="rounded-lg border border-warm-200 px-2.5 py-2 text-xs text-gray-600 outline-none"
               >
                 <option value="">Location (optional)</option>
-                {allLocations.filter((l) => selectedLocations.includes(l.slug)).map((l) => (
+                {allLocations.map((l) => (
                   <option key={l.slug} value={l.slug}>{l.name}</option>
                 ))}
               </select>
@@ -488,7 +488,7 @@ export function PhotographerDashboardClient({
                 className="rounded-lg border border-warm-200 px-2.5 py-2 text-xs text-gray-600 outline-none"
               >
                 <option value="">Shoot type (optional)</option>
-                {selectedShootTypes.map((t) => (
+                {SHOOT_TYPES.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
