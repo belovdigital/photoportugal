@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import Link from "next/link";
 import { StripeConnectSection } from "./StripeConnectSection";
+import { SubscriptionManager } from "./SubscriptionManager";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,12 @@ export default async function SubscriptionPage() {
             )}
           </div>
         ))}
+      </div>
+
+      {/* Upgrade/Manage */}
+      <div className="mt-8 rounded-xl border border-warm-200 bg-white p-6">
+        <h2 className="text-lg font-bold text-gray-900">Manage Plan</h2>
+        <SubscriptionManager currentPlan={currentPlan} />
       </div>
 
       {/* Stripe Connect */}

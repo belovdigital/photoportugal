@@ -118,3 +118,28 @@ export async function sendReviewNotification(
     `
   );
 }
+
+export async function sendSubscriptionEmail(
+  email: string, name: string, plan: string, action: "upgraded" | "downgraded" | "cancelled"
+) {
+  const subjects: Record<string, string> = {
+    upgraded: `Welcome to Photo Portugal ${plan}!`,
+    downgraded: `Your plan has been changed to ${plan}`,
+    cancelled: "Your subscription has been cancelled",
+  };
+  const messages: Record<string, string> = {
+    upgraded: `You've been upgraded to the <strong>${plan}</strong> plan. Enjoy lower commission rates and more features!`,
+    downgraded: `Your plan has been changed to <strong>${plan}</strong>. Your features have been updated accordingly.`,
+    cancelled: `Your subscription has been cancelled. You've been moved to the <strong>Free</strong> plan. You can upgrade again anytime.`,
+  };
+  await sendEmail(email, subjects[action],
+    `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Plan ${action === "cancelled" ? "Cancelled" : "Updated"}</h2>
+      <p>Hi ${name},</p>
+      <p>${messages[action]}</p>
+      <p><a href="${BASE_URL}/dashboard/subscription" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Subscription</a></p>
+      <p style="color: #999; font-size: 12px;">Invoices are available in your Stripe billing portal.</p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>`
+  );
+}
