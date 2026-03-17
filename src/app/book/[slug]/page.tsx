@@ -316,12 +316,23 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
 
         {/* Summary */}
         {selectedPkg && (
-          <div className="rounded-xl bg-warm-50 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Total</span>
-              <span className="text-2xl font-bold text-gray-900">&euro;{selectedPkg.price}</span>
+          <div className="rounded-xl border border-warm-200 bg-white p-5">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">{selectedPkg.name}</span>
+                <span className="text-gray-900">&euro;{Number(selectedPkg.price).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Service fee (10%)</span>
+                <span className="text-gray-900">&euro;{(Number(selectedPkg.price) * 0.1).toFixed(2)}</span>
+              </div>
+              <hr className="border-warm-200" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-900">Total</span>
+                <span className="text-xl font-bold text-gray-900">&euro;{(Number(selectedPkg.price) * 1.1).toFixed(2)}</span>
+              </div>
             </div>
-            <p className="mt-1 text-xs text-gray-400">Payment will be arranged with the photographer after confirmation</p>
+            <p className="mt-3 text-xs text-gray-400">Payment is processed securely after the photographer confirms your booking.</p>
           </div>
         )}
 

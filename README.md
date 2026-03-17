@@ -91,6 +91,18 @@ AUTH_TRUST_HOST=true
 # Google OAuth
 GOOGLE_CLIENT_ID=<google-oauth-client-id>
 GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
+
+# Stripe Connect
+STRIPE_SECRET_KEY=sk_test_xxx (or sk_live_xxx for production)
+STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+# SMTP
+SMTP_HOST=smtp.migadu.com
+SMTP_PORT=465
+SMTP_USER=info@photoportugal.com
+SMTP_PASS=<smtp-password>
 ```
 
 **Important:** On the production server, env vars are passed via PM2 ecosystem config (`ecosystem.config.cjs`), NOT from `.env` file. Next.js does not auto-load `.env` in production when started via PM2.
@@ -99,9 +111,36 @@ GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
 
 Schema: `db/schema.sql`
 
-Tables: users, photographer_profiles, photographer_locations, packages, portfolio_items, bookings, reviews, review_photos, messages
+Tables: users, photographer_profiles, photographer_locations, packages, portfolio_items, bookings, reviews, review_photos, messages, notification_preferences, managed_locations
 
-Enums: user_role (client, photographer, admin), plan_type, booking_status, payment_status
+Enums: user_role (client, photographer, admin), plan_type, booking_status (inquiry, pending, confirmed, completed, delivered, cancelled), payment_status
+
+## Stripe Connect
+
+Platform account: Portugal (Express accounts for photographers).
+
+### Payment Flow
+1. Photographer connects Stripe Express account from Dashboard → Subscription
+2. Client books → photographer confirms → client sees "Pay" button
+3. Payment: package price + 10% service fee
+4. Stripe splits: photographer gets payout, platform gets service fee + commission
+5. Commission: Free 20%, Pro 12%, Premium 7%
+
+### Webhooks
+- Test: `we_1TC0H1GU0seq3XOVp2mzojNp` → `whsec_1BlzPQDp4kK54mdovxYhem8Y1PdxBqny`
+- Live: `we_1TC0JgGU0seq3XOVdR1J2IPx` → `whsec_PDpO01bnlRhfG6ZAYsnBEpgEFZyaC0hf`
+- Events: payment_intent.succeeded/failed, account.updated, checkout.session.completed
+
+### Switching to Live
+1. Replace `sk_test_` / `pk_test_` with `sk_live_` / `pk_live_` in ecosystem.config.cjs
+2. Replace `STRIPE_WEBHOOK_SECRET` with live webhook secret
+3. Restart PM2: `pm2 delete photoportugal && pm2 start ecosystem.config.cjs && pm2 save`
+
+## Cron Jobs
+
+Daily at 8 AM UTC (`/var/www/photoportugal/scripts/run-cron.sh`):
+- 24h booking reminder (emails both client and photographer)
+- Auto review request (3 days after completed/delivered)
 
 ```bash
 psql -U photoportugal -d photoportugal -f db/schema.sql

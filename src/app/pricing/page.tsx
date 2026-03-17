@@ -134,8 +134,47 @@ export default function PricingPage() {
           <span>Booking management</span>
           <span>Client messaging</span>
           <span>Verified reviews</span>
-          <span>Mobile-friendly profile</span>
-          <span>SEO-optimized pages</span>
+          <span>Stripe payments</span>
+          <span>SEO-optimized profile</span>
+        </div>
+      </div>
+
+      {/* How payments work */}
+      <div className="mt-8 rounded-xl border border-warm-200 bg-white p-8">
+        <h3 className="text-lg font-bold text-gray-900">How payments work</h3>
+        <div className="mt-4 grid gap-6 sm:grid-cols-2">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">For clients</p>
+            <p className="mt-1 text-sm text-gray-500">
+              Clients pay the package price plus a 10% service fee. Payment is processed securely via Stripe
+              when the photographer confirms the booking.
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">For photographers</p>
+            <p className="mt-1 text-sm text-gray-500">
+              You receive the package price minus platform commission (depends on your plan).
+              Payouts are processed automatically to your connected bank account via Stripe.
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-warm-200">
+                <th className="pb-2 text-left font-medium text-gray-500">Example: €300 package</th>
+                <th className="pb-2 text-right font-medium text-gray-500">Free</th>
+                <th className="pb-2 text-right font-medium text-gray-500">Pro</th>
+                <th className="pb-2 text-right font-medium text-gray-500">Premium</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr><td className="py-1">Client pays</td><td className="py-1 text-right">€330</td><td className="py-1 text-right">€330</td><td className="py-1 text-right">€330</td></tr>
+              <tr><td className="py-1">Service fee (10%)</td><td className="py-1 text-right">€30</td><td className="py-1 text-right">€30</td><td className="py-1 text-right">€30</td></tr>
+              <tr><td className="py-1">Platform commission</td><td className="py-1 text-right text-red-500">-€60 (20%)</td><td className="py-1 text-right text-red-500">-€36 (12%)</td><td className="py-1 text-right text-red-500">-€21 (7%)</td></tr>
+              <tr className="border-t border-warm-200 font-semibold text-gray-900"><td className="pt-2">You receive</td><td className="pt-2 text-right text-accent-600">€240</td><td className="pt-2 text-right text-accent-600">€264</td><td className="pt-2 text-right text-accent-600">€279</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

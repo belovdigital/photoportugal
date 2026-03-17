@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { ReviewForm } from "@/components/ui/ReviewForm";
+import { PayButton } from "@/components/ui/PayButton";
 import { BookingStatusButtons } from "./BookingStatusButtons";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,7 @@ export default async function BookingsPage() {
     message: string | null;
     created_at: string;
     has_review: boolean;
+    payment_status: string | null;
   }[] = [];
 
   try {
@@ -55,7 +57,7 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at,
+                  p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
                   FALSE as has_review
            FROM bookings b
            JOIN users u ON u.id = b.client_id
@@ -68,7 +70,7 @@ export default async function BookingsPage() {
     } else {
       bookings = await query(
         `SELECT b.id, pp.display_name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at,
+                p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -146,6 +148,9 @@ export default async function BookingsPage() {
                 >
                   Message
                 </Link>
+                {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
+                  <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />
+                )}
                 {!isPhotographer && (booking.status === "pending" || booking.status === "confirmed") && (
                   <BookingStatusButtons bookingId={booking.id} currentStatus="cancel-only" />
                 )}
