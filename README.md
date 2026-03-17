@@ -127,9 +127,9 @@ Platform account: Portugal (Express accounts for photographers).
 5. Commission: Free 20%, Pro 12%, Premium 7%
 
 ### Webhooks
-- Test: `we_1TC0H1GU0seq3XOVp2mzojNp` → `whsec_1BlzPQDp4kK54mdovxYhem8Y1PdxBqny`
-- Live: `we_1TC0JgGU0seq3XOVdR1J2IPx` → `whsec_PDpO01bnlRhfG6ZAYsnBEpgEFZyaC0hf`
+- URL: `https://photoportugal.com/api/stripe/webhook`
 - Events: payment_intent.succeeded/failed, account.updated, checkout.session.completed
+- Secrets stored in ecosystem.config.cjs on server (never commit to git)
 
 ### Switching to Live
 1. Replace `sk_test_` / `pk_test_` with `sk_live_` / `pk_live_` in ecosystem.config.cjs
