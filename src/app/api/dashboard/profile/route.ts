@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 
 export async function PUT(req: NextRequest) {
   const session = await auth();
@@ -55,6 +56,13 @@ export async function PUT(req: NextRequest) {
         );
       }
     }
+
+    // Revalidate photographer's public profile page
+    const slugRow = await queryOne<{ slug: string }>(
+      "SELECT slug FROM photographer_profiles WHERE user_id = $1", [userId]
+    );
+    if (slugRow) revalidatePath(`/photographers/${slugRow.slug}`);
+    revalidatePath("/photographers");
 
     return NextResponse.json({ success: true });
   } catch (error) {

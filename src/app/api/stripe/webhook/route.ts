@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { stripe } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 import { sendSubscriptionEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
@@ -152,6 +153,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[stripe/webhook] Error processing event:", error);
   }
+
+  // Revalidate public pages after any subscription/payment change
+  revalidatePath("/");
+  revalidatePath("/photographers");
 
   return NextResponse.json({ received: true });
 }

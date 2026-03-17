@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { revalidatePath } from "next/cache";
 import { sendReviewNotification } from "@/lib/email";
 
 // Create a review (client only, after completed booking)
@@ -75,6 +76,11 @@ export async function POST(req: NextRequest) {
         sendReviewNotification(info.email, info.display_name, client.name, rating);
       }
     } catch {}
+
+    // Revalidate photographer profile and homepage
+    const slugRow = await queryOne<{ slug: string }>("SELECT slug FROM photographer_profiles WHERE id = $1", [booking.photographer_id]);
+    if (slugRow) revalidatePath(`/photographers/${slugRow.slug}`);
+    revalidatePath("/");
 
     return NextResponse.json({ success: true, id: review?.id });
   } catch (error) {
