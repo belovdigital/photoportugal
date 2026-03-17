@@ -71,7 +71,7 @@ export function StripeConnectSection() {
         <ul className="mt-2 space-y-1 text-xs text-gray-500">
           <li>Client pays package price + 10% service fee at booking confirmation</li>
           <li>Payment is held securely until the session is marked as delivered</li>
-          <li>Platform commission depends on your plan (Free: 20%, Pro: 12%, Premium: 7%)</li>
+          <li>Platform commission depends on your plan (Free: 20%, Pro: 15%, Premium: 10%)</li>
           <li>Payouts are processed automatically to your connected bank account</li>
         </ul>
       </div>

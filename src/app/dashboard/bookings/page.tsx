@@ -33,6 +33,9 @@ export default async function BookingsPage() {
   const user = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
   const isPhotographer = user?.role === "photographer";
 
+  // Ensure delivery columns exist
+  try { await queryOne("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS delivery_token VARCHAR(64)", []); } catch {}
+
   let bookings: {
     id: string;
     other_name: string;
@@ -49,6 +52,7 @@ export default async function BookingsPage() {
     created_at: string;
     has_review: boolean;
     payment_status: string | null;
+    delivery_token: string | null;
   }[] = [];
 
   try {
@@ -58,7 +62,7 @@ export default async function BookingsPage() {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
                   p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
-                  FALSE as has_review
+                  FALSE as has_review, b.delivery_token
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            LEFT JOIN packages p ON p.id = b.package_id
@@ -71,7 +75,7 @@ export default async function BookingsPage() {
       bookings = await query(
         `SELECT b.id, pp.display_name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
-                (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review
+                (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users u ON u.id = pp.user_id
@@ -139,7 +143,7 @@ export default async function BookingsPage() {
               )}
 
               <div className="mt-4 flex flex-wrap gap-2">
-                {isPhotographer && (booking.status === "inquiry" || booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed") && (
+                {isPhotographer && (booking.status === "inquiry" || booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
                   <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} />
                 )}
                 <Link
@@ -153,6 +157,17 @@ export default async function BookingsPage() {
                 )}
                 {!isPhotographer && (booking.status === "pending" || booking.status === "confirmed") && (
                   <BookingStatusButtons bookingId={booking.id} currentStatus="cancel-only" />
+                )}
+                {!isPhotographer && booking.status === "delivered" && booking.delivery_token && (
+                  <Link
+                    href={`/delivery/${booking.delivery_token}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    View Photos
+                  </Link>
                 )}
                 {!isPhotographer && (booking.status === "completed" || booking.status === "delivered") && !booking.has_review && (
                   <ReviewForm bookingId={booking.id} photographerName={booking.other_name} />

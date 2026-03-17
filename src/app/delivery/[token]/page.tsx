@@ -1,0 +1,65 @@
+import { notFound } from "next/navigation";
+import { queryOne } from "@/lib/db";
+import type { Metadata } from "next";
+import { DeliveryPageClient } from "./DeliveryPageClient";
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+  const booking = await queryOne<{ photographer_name: string }>(
+    `SELECT pp.display_name as photographer_name
+     FROM bookings b
+     JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     WHERE b.delivery_token = $1`, [token]
+  );
+
+  return {
+    title: booking ? `Photos by ${booking.photographer_name} — Photo Portugal` : "Photo Delivery — Photo Portugal",
+    robots: "noindex, nofollow",
+  };
+}
+
+export default async function DeliveryPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+
+  // Check if gallery exists (without revealing any data)
+  const booking = await queryOne<{
+    photographer_name: string;
+    photographer_avatar: string | null;
+    delivery_expires_at: string;
+  }>(
+    `SELECT pp.display_name as photographer_name, u.avatar_url as photographer_avatar,
+            b.delivery_expires_at
+     FROM bookings b
+     JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     JOIN users u ON u.id = pp.user_id
+     WHERE b.delivery_token = $1 AND b.status = 'delivered'`, [token]
+  );
+
+  if (!booking) notFound();
+
+  const expired = new Date(booking.delivery_expires_at) < new Date();
+
+  if (expired) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+          <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h1 className="mt-4 font-display text-2xl font-bold text-gray-900">Gallery Expired</h1>
+        <p className="mt-2 text-gray-500">This photo gallery has expired. Please contact your photographer to request a new link.</p>
+      </div>
+    );
+  }
+
+  return (
+    <DeliveryPageClient
+      token={token}
+      photographerName={booking.photographer_name}
+      photographerAvatar={booking.photographer_avatar}
+    />
+  );
+}

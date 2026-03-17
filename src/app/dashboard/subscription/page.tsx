@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import Link from "next/link";
 import { StripeConnectSection } from "./StripeConnectSection";
 import { SubscriptionManager } from "./SubscriptionManager";
+import { AddOnsSection } from "./AddOnsSection";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +15,18 @@ export default async function SubscriptionPage() {
   const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
   if (!userRow || userRow.role !== "photographer") redirect("/dashboard");
 
-  const profile = await queryOne<{ plan: string }>(
-    "SELECT plan FROM photographer_profiles WHERE user_id = $1",
+  // Ensure verification_requested_at column exists
+  await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS verification_requested_at TIMESTAMP", []);
+
+  const profile = await queryOne<{ plan: string; is_verified: boolean; is_featured: boolean; verification_requested_at: string | null }>(
+    "SELECT plan, is_verified, is_featured, verification_requested_at FROM photographer_profiles WHERE user_id = $1",
     [userId]
   );
 
   const currentPlan = profile?.plan || "free";
+  const isVerified = profile?.is_verified || false;
+  const isFeatured = profile?.is_featured || false;
+  const verificationRequested = !!profile?.verification_requested_at;
 
   const plans = [
     {
@@ -76,12 +82,8 @@ export default async function SubscriptionPage() {
                 </li>
               ))}
             </ul>
-            {plan.current ? (
+            {plan.current && (
               <p className="mt-6 text-center text-sm font-semibold text-primary-600">Current Plan</p>
-            ) : (
-              <button disabled className="mt-6 w-full rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400">
-                Coming Soon
-              </button>
             )}
           </div>
         ))}
@@ -92,6 +94,13 @@ export default async function SubscriptionPage() {
         <h2 className="text-lg font-bold text-gray-900">Manage Plan</h2>
         <SubscriptionManager currentPlan={currentPlan} />
       </div>
+
+      {/* Add-ons: Verified & Featured */}
+      <AddOnsSection
+        isVerified={isVerified}
+        isFeatured={isFeatured}
+        verificationRequested={verificationRequested}
+      />
 
       {/* Stripe Connect */}
       <StripeConnectSection />

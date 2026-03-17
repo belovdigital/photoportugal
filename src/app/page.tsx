@@ -4,7 +4,10 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { HeroSearchBar } from "@/components/ui/HeroSearchBar";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
+import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { unsplashUrl } from "@/lib/unsplash-images";
+
+export const revalidate = 300; // ISR: revalidate every 5 minutes
 
 // Hero gallery photos — real Portugal moments with people
 const heroPhotos = [
@@ -204,6 +207,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ===== FEATURED PHOTOGRAPHERS ===== */}
+      <FeaturedPhotographers />
 
       {/* ===== LOCATIONS ===== */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">

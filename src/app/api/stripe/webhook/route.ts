@@ -25,14 +25,31 @@ export async function POST(req: NextRequest) {
 
   try {
     switch (event.type) {
+      case "checkout.session.completed": {
+        const checkoutSession = event.data.object;
+        const bookingId = checkoutSession.metadata?.booking_id;
+
+        if (bookingId && checkoutSession.payment_intent) {
+          // Link payment intent to booking and mark as paid
+          await queryOne(
+            `UPDATE bookings SET stripe_payment_intent_id = $1, payment_status = 'paid'
+             WHERE id = $2 RETURNING id`,
+            [checkoutSession.payment_intent, bookingId]
+          );
+          console.log(`[webhook] Checkout completed for booking ${bookingId}, PI: ${checkoutSession.payment_intent}`);
+        }
+        break;
+      }
+
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object;
         const bookingId = paymentIntent.metadata?.booking_id;
 
         if (bookingId) {
+          // Update by booking_id (payment intent may or may not be pre-linked)
           await queryOne(
-            "UPDATE bookings SET payment_status = 'paid' WHERE id = $1 AND stripe_payment_intent_id = $2 RETURNING id",
-            [bookingId, paymentIntent.id]
+            "UPDATE bookings SET payment_status = 'paid', stripe_payment_intent_id = $1 WHERE id = $2 RETURNING id",
+            [paymentIntent.id, bookingId]
           );
           console.log(`[webhook] Payment succeeded for booking ${bookingId}`);
         }
@@ -45,8 +62,8 @@ export async function POST(req: NextRequest) {
 
         if (bookingId) {
           await queryOne(
-            "UPDATE bookings SET payment_status = 'failed' WHERE id = $1 AND stripe_payment_intent_id = $2 RETURNING id",
-            [bookingId, paymentIntent.id]
+            "UPDATE bookings SET payment_status = 'failed' WHERE id = $1 RETURNING id",
+            [bookingId]
           );
           console.log(`[webhook] Payment failed for booking ${bookingId}`);
         }
@@ -57,15 +74,25 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.updated": {
         const subscription = event.data.object;
         const photographerId = subscription.metadata?.photographer_id;
-        const plan = subscription.metadata?.plan;
-        if (photographerId && plan) {
+        const subType = subscription.metadata?.type;
+
+        if (photographerId && subType === "featured") {
+          // Featured add-on subscription
+          const isFeatured = subscription.status === "active";
+          await queryOne(
+            "UPDATE photographer_profiles SET is_featured = $1 WHERE id = $2 RETURNING id",
+            [isFeatured, photographerId]
+          );
+          console.log(`[webhook] Featured subscription ${subscription.status} for photographer ${photographerId} → is_featured=${isFeatured}`);
+        } else if (photographerId && subscription.metadata?.plan) {
+          // Plan subscription
+          const plan = subscription.metadata.plan;
           const newPlan = subscription.status === "active" ? plan : "free";
           await queryOne(
             "UPDATE photographer_profiles SET plan = $1 WHERE id = $2 RETURNING id",
             [newPlan, photographerId]
           );
           console.log(`[webhook] Subscription ${subscription.status} for photographer ${photographerId} → ${newPlan}`);
-          // Send email
           try {
             const info = await queryOne<{ email: string; name: string }>(
               "SELECT u.email, u.name FROM users u JOIN photographer_profiles pp ON pp.user_id = u.id WHERE pp.id = $1", [photographerId]
@@ -79,7 +106,14 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.deleted": {
         const subscription = event.data.object;
         const photographerId = subscription.metadata?.photographer_id;
-        if (photographerId) {
+        const subType = subscription.metadata?.type;
+
+        if (photographerId && subType === "featured") {
+          // Featured add-on cancelled
+          await queryOne("UPDATE photographer_profiles SET is_featured = FALSE WHERE id = $1 RETURNING id", [photographerId]);
+          console.log(`[webhook] Featured subscription cancelled for photographer ${photographerId}`);
+        } else if (photographerId) {
+          // Plan subscription cancelled
           await queryOne("UPDATE photographer_profiles SET plan = 'free' WHERE id = $1 RETURNING id", [photographerId]);
           console.log(`[webhook] Subscription cancelled for photographer ${photographerId} → free`);
           try {

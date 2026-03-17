@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Enum types
 CREATE TYPE user_role AS ENUM ('client', 'photographer', 'admin');
 CREATE TYPE plan_type AS ENUM ('free', 'pro', 'premium');
-CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'completed', 'cancelled', 'disputed');
+CREATE TYPE booking_status AS ENUM ('inquiry', 'pending', 'confirmed', 'completed', 'delivered', 'cancelled', 'disputed');
 CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'refunded', 'failed');
 
 -- ============================================================
@@ -49,6 +49,7 @@ CREATE TABLE photographer_profiles (
   is_verified BOOLEAN DEFAULT FALSE,
   is_featured BOOLEAN DEFAULT FALSE,
   is_approved BOOLEAN DEFAULT FALSE,
+  verification_requested_at TIMESTAMP,
   plan plan_type DEFAULT 'free',
   rating NUMERIC(2,1) DEFAULT 0,
   review_count INTEGER DEFAULT 0,
@@ -123,6 +124,12 @@ CREATE TABLE bookings (
   message TEXT, -- initial message from client
   total_price INTEGER, -- in EUR (whole euros)
   payment_status payment_status DEFAULT 'pending',
+  group_size INTEGER,
+  occasion VARCHAR(100),
+  stripe_payment_intent_id VARCHAR(255),
+  delivery_token VARCHAR(64) UNIQUE,
+  delivery_password VARCHAR(10),
+  delivery_expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -130,6 +137,7 @@ CREATE TABLE bookings (
 CREATE INDEX idx_bookings_client ON bookings(client_id);
 CREATE INDEX idx_bookings_photographer ON bookings(photographer_id);
 CREATE INDEX idx_bookings_status ON bookings(status);
+CREATE UNIQUE INDEX idx_bookings_delivery_token ON bookings(delivery_token) WHERE delivery_token IS NOT NULL;
 
 -- ============================================================
 -- REVIEWS
@@ -174,6 +182,21 @@ CREATE TABLE messages (
 );
 
 CREATE INDEX idx_messages_booking ON messages(booking_id);
+
+-- ============================================================
+-- DELIVERY PHOTOS (photos delivered to client per booking)
+-- ============================================================
+CREATE TABLE delivery_photos (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  filename VARCHAR(255) NOT NULL,
+  file_size INTEGER DEFAULT 0,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_delivery_photos_booking ON delivery_photos(booking_id);
 
 -- ============================================================
 -- TRIGGER: auto-update updated_at
