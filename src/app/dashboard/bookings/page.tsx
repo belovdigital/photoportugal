@@ -79,7 +79,7 @@ export default async function BookingsPage() {
 
   return (
     <div className="p-6 sm:p-8">
-      <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="font-display text-2xl font-bold text-gray-900">
         {isPhotographer ? "Booking Requests" : "My Bookings"}
       </h1>
       <p className="mt-1 text-gray-500">

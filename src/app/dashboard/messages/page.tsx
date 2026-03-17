@@ -105,7 +105,7 @@ function MessagesContent() {
 
   return (
     <div className="p-6 sm:p-8">
-      <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+      <h1 className="font-display text-2xl font-bold text-gray-900">Messages</h1>
       <p className="mt-1 text-gray-500">Chat with your {userId ? "contacts" : "photographers"}</p>
 
       <div className="mt-6 flex gap-4 rounded-xl border border-warm-200 bg-white" style={{ height: "520px" }}>

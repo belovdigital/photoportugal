@@ -44,7 +44,7 @@ export async function sendBookingNotification(
       <h2 style="color: #C94536;">New Booking Request</h2>
       <p>Hi ${photographerName},</p>
       <p><strong>${clientName}</strong> has requested a photoshoot${packageName ? ` (${packageName})` : ""}${shootDate ? ` on ${shootDate}` : ""}.</p>
-      <p><a href="${BASE_URL}/dashboard/photographer" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
+      <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
     `
@@ -109,7 +109,7 @@ export async function sendReviewNotification(
       <p>Hi ${photographerName},</p>
       <p><strong>${clientName}</strong> left you a review:</p>
       <p style="font-size: 24px; color: #F59E0B;">${stars}</p>
-      <p><a href="${BASE_URL}/dashboard/photographer" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Review</a></p>
+      <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Review</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
     `

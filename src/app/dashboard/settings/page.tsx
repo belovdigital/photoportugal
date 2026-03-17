@@ -16,11 +16,6 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Notification preferences
-  const [emailBookings, setEmailBookings] = useState(true);
-  const [emailMessages, setEmailMessages] = useState(true);
-  const [emailReviews, setEmailReviews] = useState(true);
-
   function showMessage(msg: string) {
     setMessage(msg);
     setTimeout(() => setMessage(""), 3000);
@@ -29,11 +24,16 @@ export default function SettingsPage() {
   async function saveAccount(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    // TODO: implement account update API
-    setTimeout(() => {
-      setSaving(false);
-      showMessage("Settings saved!");
-    }, 500);
+    try {
+      const res = await fetch("/api/dashboard/account", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) showMessage("Settings saved!");
+      else showMessage("Failed to save");
+    } catch { showMessage("Failed to save"); }
+    setSaving(false);
   }
 
   if (!user) {
@@ -46,7 +46,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="font-display text-3xl font-bold text-gray-900">Settings</h1>
+      <h1 className="font-display text-2xl font-bold text-gray-900">Settings</h1>
       <p className="mt-1 text-gray-500">Manage your account and preferences</p>
 
       {message && (
@@ -95,45 +95,11 @@ export default function SettingsPage() {
       {/* Notifications */}
       <section className="mt-8">
         <h2 className="text-lg font-bold text-gray-900">Email Notifications</h2>
-        <div className="mt-4 rounded-xl border border-warm-200 bg-white p-6 space-y-4">
-          <label className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700">New bookings</p>
-              <p className="text-xs text-gray-400">Get notified when someone books you</p>
-            </div>
-            <input
-              type="checkbox"
-              checked={emailBookings}
-              onChange={(e) => setEmailBookings(e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-primary-600"
-            />
-          </label>
-          <hr className="border-warm-100" />
-          <label className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700">New messages</p>
-              <p className="text-xs text-gray-400">Get notified when you receive a message</p>
-            </div>
-            <input
-              type="checkbox"
-              checked={emailMessages}
-              onChange={(e) => setEmailMessages(e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-primary-600"
-            />
-          </label>
-          <hr className="border-warm-100" />
-          <label className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700">New reviews</p>
-              <p className="text-xs text-gray-400">Get notified when a client leaves a review</p>
-            </div>
-            <input
-              type="checkbox"
-              checked={emailReviews}
-              onChange={(e) => setEmailReviews(e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 text-primary-600"
-            />
-          </label>
+        <div className="mt-4 rounded-xl border border-warm-200 bg-white p-6">
+          <p className="text-sm text-gray-600">
+            You&apos;ll receive email notifications for new bookings, messages, and reviews.
+            Notification preferences customization is coming soon.
+          </p>
         </div>
       </section>
 
@@ -142,33 +108,15 @@ export default function SettingsPage() {
         <section className="mt-8">
           <h2 className="text-lg font-bold text-gray-900">Subscription & Billing</h2>
           <div className="mt-4 rounded-xl border border-warm-200 bg-white p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-gray-900">Current Plan</p>
-                  <span className="rounded-full bg-primary-50 px-3 py-0.5 text-xs font-bold text-primary-600 uppercase">
-                    Free
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-gray-500">
-                  10 portfolio photos, 1 location, basic visibility
-                </p>
-              </div>
-              <Link
-                href="/pricing"
-                className="rounded-xl border border-primary-200 px-4 py-2 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
-              >
-                View Plans
-              </Link>
-            </div>
-            <div className="mt-4 rounded-lg bg-warm-50 p-4">
-              <p className="text-sm text-gray-600">
-                Pro and Premium plans are coming soon. Want early access?{" "}
-                <a href="mailto:info@photoportugal.com" className="font-semibold text-primary-600 hover:underline">
-                  Contact us
-                </a>
-              </p>
-            </div>
+            <p className="text-sm text-gray-600">
+              Manage your subscription plan and billing details.
+            </p>
+            <Link
+              href="/dashboard/subscription"
+              className="mt-3 inline-flex rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+            >
+              Manage Subscription
+            </Link>
           </div>
         </section>
       )}

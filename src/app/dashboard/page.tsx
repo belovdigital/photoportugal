@@ -128,7 +128,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
         </div>
       )}
 
-      <div className="mt-2 flex justify-end">
+      {profile.is_approved && <div className="mt-2 flex justify-end">
         <Link
           href={`/photographers/${profile.slug}`}
           target="_blank"
@@ -136,7 +136,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
         >
           View Public Profile
         </Link>
-      </div>
+      </div>}
 
       {/* Stats */}
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">

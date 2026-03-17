@@ -249,7 +249,7 @@ export function PhotographerDashboardClient({
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-gray-900">
+          <h1 className="font-display text-2xl font-bold text-gray-900">
             Photographer Dashboard
           </h1>
           <p className="mt-1 text-gray-500">

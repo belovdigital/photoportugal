@@ -48,10 +48,27 @@ export async function PATCH(
       return NextResponse.json({ error: "Only the photographer can confirm bookings" }, { status: 403 });
     }
 
-    await queryOne(
-      "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING id",
-      [status, id]
-    );
+    // Validate status transitions
+    const currentBooking = await queryOne<{ status: string }>("SELECT status FROM bookings WHERE id = $1", [id]);
+    const validTransitions: Record<string, string[]> = {
+      pending: ["confirmed", "cancelled"],
+      confirmed: ["completed", "cancelled"],
+    };
+    if (currentBooking && !validTransitions[currentBooking.status]?.includes(status)) {
+      return NextResponse.json({ error: `Cannot change from ${currentBooking.status} to ${status}` }, { status: 400 });
+    }
+
+    await queryOne("UPDATE bookings SET status = $1 WHERE id = $2 RETURNING id", [status, id]);
+
+    // Increment session_count when completed
+    if (status === "completed") {
+      try {
+        await queryOne(
+          "UPDATE photographer_profiles SET session_count = session_count + 1 WHERE id = (SELECT photographer_id FROM bookings WHERE id = $1)",
+          [id]
+        );
+      } catch {}
+    }
 
     // Send email when booking is confirmed
     if (status === "confirmed") {

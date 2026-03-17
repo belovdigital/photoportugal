@@ -37,7 +37,7 @@ export default async function SubscriptionPage() {
 
   return (
     <div className="p-6 sm:p-8">
-      <h1 className="text-2xl font-bold text-gray-900">Subscription & Billing</h1>
+      <h1 className="font-display text-2xl font-bold text-gray-900">Subscription & Billing</h1>
       <p className="mt-1 text-gray-500">Manage your plan and payment method</p>
 
       {/* Current plan */}
