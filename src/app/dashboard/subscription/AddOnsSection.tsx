@@ -5,18 +5,74 @@ import { useState } from "react";
 interface AddOnsSectionProps {
   isVerified: boolean;
   isFeatured: boolean;
-  verificationRequested: boolean;
+  phoneVerified: boolean;
+  phoneNumber: string | null;
 }
 
-export function AddOnsSection({ isVerified, isFeatured, verificationRequested }: AddOnsSectionProps) {
+export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPhoneVerified, phoneNumber: initialPhone }: AddOnsSectionProps) {
   const [loading, setLoading] = useState("");
-  const [requested, setRequested] = useState(verificationRequested);
+  const [phone, setPhone] = useState(initialPhone || "");
+  const [phoneVerified, setPhoneVerified] = useState(initialPhoneVerified);
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
 
-  async function handleRequestVerification() {
-    setLoading("verify");
+  async function handleSendCode() {
+    if (!phone.trim() || phone.length < 8) {
+      setError("Enter a valid phone number with country code (e.g. +351...)");
+      return;
+    }
+    setLoading("send-code");
+    setError("");
     try {
-      const res = await fetch("/api/dashboard/verification", { method: "POST" });
-      if (res.ok) setRequested(true);
+      const res = await fetch("/api/dashboard/verification/phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCodeSent(true);
+      } else {
+        setError(data.error || "Failed to send code");
+      }
+    } catch {
+      setError("Failed to send code");
+    }
+    setLoading("");
+  }
+
+  async function handleVerifyCode() {
+    if (!code.trim() || code.length < 4) {
+      setError("Enter the verification code");
+      return;
+    }
+    setLoading("verify-code");
+    setError("");
+    try {
+      const res = await fetch("/api/dashboard/verification/phone", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPhoneVerified(true);
+      } else {
+        setError(data.error || "Invalid code");
+      }
+    } catch {
+      setError("Verification failed");
+    }
+    setLoading("");
+  }
+
+  async function handleBuyVerified() {
+    setLoading("buy-verified");
+    try {
+      const res = await fetch("/api/stripe/verified", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
     } catch {}
     setLoading("");
   }
@@ -61,37 +117,117 @@ export function AddOnsSection({ isVerified, isFeatured, verificationRequested }:
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">Verified Badge</h3>
-              <p className="text-xs text-gray-500">Free — Identity verification</p>
+              <p className="text-xs text-gray-500">&euro;19 one-time — Phone verification</p>
             </div>
           </div>
 
           {isVerified ? (
-            <div className="mt-4 flex items-center gap-2 rounded-lg bg-accent-50 p-3">
-              <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm font-medium text-accent-700">Verified</span>
+            /* Already verified */
+            <div className="mt-4">
+              <div className="flex items-center gap-2 rounded-lg bg-accent-50 p-3">
+                <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-medium text-accent-700">Verified</span>
+              </div>
+              {initialPhone && (
+                <p className="mt-2 text-xs text-gray-400">Phone: {initialPhone}</p>
+              )}
             </div>
-          ) : requested ? (
-            <div className="mt-4 flex items-center gap-2 rounded-lg bg-yellow-50 p-3">
-              <svg className="h-4 w-4 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-sm font-medium text-yellow-700">Pending review — we&apos;ll verify your profile shortly</span>
+          ) : !phoneVerified ? (
+            /* Step 1: Phone verification */
+            <div className="mt-4">
+              <p className="text-xs text-gray-500">
+                Verify your phone number to prove your identity. Then complete payment for the badge.
+              </p>
+
+              {/* Steps indicator */}
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-[10px]">1</span>
+                <span className="font-medium text-blue-600">Phone</span>
+                <div className="h-px w-4 bg-gray-200" />
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-gray-400 font-bold text-[10px]">2</span>
+                <span className="text-gray-400">Payment</span>
+              </div>
+
+              {!codeSent ? (
+                <div className="mt-3">
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+351 912 345 678"
+                    className="w-full rounded-lg border border-warm-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  />
+                  <button
+                    onClick={handleSendCode}
+                    disabled={!!loading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {loading === "send-code" ? "Sending..." : "Send SMS Code"}
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-3">
+                  <p className="text-xs text-accent-600 font-medium">Code sent to {phone}</p>
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="Enter 6-digit code"
+                    maxLength={6}
+                    className="mt-2 w-full rounded-lg border border-warm-200 px-3 py-2 text-center text-lg tracking-[0.3em] font-mono focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  />
+                  <button
+                    onClick={handleVerifyCode}
+                    disabled={!!loading}
+                    className="mt-2 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {loading === "verify-code" ? "Verifying..." : "Verify Code"}
+                  </button>
+                  <button
+                    onClick={() => { setCodeSent(false); setCode(""); setError(""); }}
+                    className="mt-1 w-full text-xs text-gray-400 hover:text-gray-600"
+                  >
+                    Change number or resend
+                  </button>
+                </div>
+              )}
+
+              {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
             </div>
           ) : (
-            <>
-              <p className="mt-3 text-xs text-gray-500">
-                Get verified to build trust with clients. Our team will review your profile and portfolio.
-              </p>
+            /* Step 2: Phone verified, now pay */
+            <div className="mt-4">
+              {/* Steps indicator */}
+              <div className="mb-3 flex items-center gap-2 text-xs">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent-500 text-white font-bold text-[10px]">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                </span>
+                <span className="font-medium text-accent-600">Phone verified</span>
+                <div className="h-px w-4 bg-gray-200" />
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-[10px]">2</span>
+                <span className="font-medium text-blue-600">Payment</span>
+              </div>
+
+              <div className="rounded-lg bg-accent-50 p-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-medium text-accent-700">Phone verified: {phone || initialPhone}</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500">Complete payment to activate your Verified badge.</p>
               <button
-                onClick={handleRequestVerification}
+                onClick={handleBuyVerified}
                 disabled={!!loading}
-                className="mt-3 w-full rounded-lg border border-blue-300 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 disabled:opacity-50"
+                className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading === "verify" ? "Submitting..." : "Request Verification"}
+                {loading === "buy-verified" ? "Redirecting..." : "Get Verified — \u20AC19"}
               </button>
-            </>
+            </div>
           )}
         </div>
 

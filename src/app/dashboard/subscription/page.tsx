@@ -15,18 +15,20 @@ export default async function SubscriptionPage() {
   const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
   if (!userRow || userRow.role !== "photographer") redirect("/dashboard");
 
-  // Ensure verification_requested_at column exists
-  await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS verification_requested_at TIMESTAMP", []);
+  // Ensure phone verification columns exist
+  await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS phone_number VARCHAR(20)", []);
+  await queryOne("ALTER TABLE photographer_profiles ADD COLUMN IF NOT EXISTS phone_verified BOOLEAN DEFAULT FALSE", []);
 
-  const profile = await queryOne<{ plan: string; is_verified: boolean; is_featured: boolean; verification_requested_at: string | null }>(
-    "SELECT plan, is_verified, is_featured, verification_requested_at FROM photographer_profiles WHERE user_id = $1",
+  const profile = await queryOne<{ plan: string; is_verified: boolean; is_featured: boolean; phone_number: string | null; phone_verified: boolean }>(
+    "SELECT plan, is_verified, is_featured, phone_number, phone_verified FROM photographer_profiles WHERE user_id = $1",
     [userId]
   );
 
   const currentPlan = profile?.plan || "free";
   const isVerified = profile?.is_verified || false;
   const isFeatured = profile?.is_featured || false;
-  const verificationRequested = !!profile?.verification_requested_at;
+  const phoneVerified = profile?.phone_verified || false;
+  const phoneNumber = profile?.phone_number || null;
 
   const plans = [
     {
@@ -99,7 +101,8 @@ export default async function SubscriptionPage() {
       <AddOnsSection
         isVerified={isVerified}
         isFeatured={isFeatured}
-        verificationRequested={verificationRequested}
+        phoneVerified={phoneVerified}
+        phoneNumber={phoneNumber}
       />
 
       {/* Stripe Connect */}

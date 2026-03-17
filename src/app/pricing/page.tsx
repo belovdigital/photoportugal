@@ -132,9 +132,9 @@ export default function PricingPage() {
               </div>
             </div>
             <p className="mt-3 text-sm text-gray-600">
-              Get a verified badge by completing identity verification. Includes phone number confirmation and portfolio review by our team.
+              Get a verified badge by confirming your phone number via SMS. Builds trust with clients and boosts your booking rate.
             </p>
-            <p className="mt-2 text-sm font-semibold text-gray-900">Free with any plan</p>
+            <p className="mt-2 text-sm font-semibold text-gray-900">&euro;19 one-time payment</p>
           </div>
 
           <div className="rounded-xl border border-warm-200 bg-white p-6">
@@ -152,7 +152,7 @@ export default function PricingPage() {
             <p className="mt-3 text-sm text-gray-600">
               Get featured on the homepage and appear first in search results. Includes a &quot;Featured&quot; badge on your profile and cards.
             </p>
-            <p className="mt-2 text-sm font-semibold text-gray-900">Coming soon</p>
+            <p className="mt-2 text-sm font-semibold text-gray-900">&euro;19/month</p>
           </div>
         </div>
       </div>

@@ -28,9 +28,20 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const checkoutSession = event.data.object;
         const bookingId = checkoutSession.metadata?.booking_id;
+        const checkoutType = checkoutSession.metadata?.type;
 
-        if (bookingId && checkoutSession.payment_intent) {
-          // Link payment intent to booking and mark as paid
+        if (checkoutType === "verified") {
+          // Verified badge payment completed — activate badge
+          const photographerId = checkoutSession.metadata?.photographer_id;
+          if (photographerId) {
+            await queryOne(
+              "UPDATE photographer_profiles SET is_verified = TRUE WHERE id = $1 RETURNING id",
+              [photographerId]
+            );
+            console.log(`[webhook] Verified badge activated for photographer ${photographerId}`);
+          }
+        } else if (bookingId && checkoutSession.payment_intent) {
+          // Booking payment completed
           await queryOne(
             `UPDATE bookings SET stripe_payment_intent_id = $1, payment_status = 'paid'
              WHERE id = $2 RETURNING id`,
