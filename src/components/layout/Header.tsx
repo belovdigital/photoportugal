@@ -236,9 +236,12 @@ export function Header() {
                       <DropdownLink href="/dashboard" icon="grid" label="Dashboard" onClick={() => setProfileOpen(false)} />
                       <DropdownLink href="/dashboard/messages" icon="chat" label="Messages" onClick={() => setProfileOpen(false)} />
                       {isPhotographer && (
-                        <DropdownLink href="/dashboard/photographer" icon="user" label="My Profile" onClick={() => setProfileOpen(false)} />
+                        <DropdownLink href="/dashboard/profile" icon="user" label="My Profile" onClick={() => setProfileOpen(false)} />
                       )}
                       <DropdownLink href="/dashboard/settings" icon="settings" label="Settings" onClick={() => setProfileOpen(false)} />
+                      {role === "admin" && (
+                        <DropdownLink href="/admin" icon="grid" label="Admin Panel" onClick={() => setProfileOpen(false)} />
+                      )}
                     </div>
                     <div className="border-t border-warm-100 py-1">
                       <button
