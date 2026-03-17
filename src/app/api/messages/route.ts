@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { sendNewMessageNotification } from "@/lib/email";
 
 // Get messages for a booking
 export async function GET(req: NextRequest) {
@@ -98,6 +99,27 @@ export async function POST(req: NextRequest) {
        RETURNING id, created_at`,
       [booking_id, userId, text.trim()]
     );
+
+    // Send email notification to the other person (if they have it enabled)
+    try {
+      const recipientId = userId === booking.client_id ? booking.photographer_user_id : booking.client_id;
+      const prefs = await queryOne<{ email_messages: boolean }>(
+        "SELECT email_messages FROM notification_preferences WHERE user_id = $1",
+        [recipientId]
+      );
+      // Default to true if no preferences set
+      if (prefs?.email_messages !== false) {
+        const recipient = await queryOne<{ email: string; name: string }>(
+          "SELECT email, name FROM users WHERE id = $1", [recipientId]
+        );
+        const sender = await queryOne<{ name: string }>(
+          "SELECT name FROM users WHERE id = $1", [userId]
+        );
+        if (recipient && sender) {
+          sendNewMessageNotification(recipient.email, recipient.name, sender.name);
+        }
+      }
+    } catch {}
 
     return NextResponse.json({ success: true, message });
   } catch (error) {

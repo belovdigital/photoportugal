@@ -56,17 +56,21 @@ export async function POST(req: NextRequest) {
       [userId, photographer_id, package_id || null, location_slug || null, shoot_date || null, shoot_time || null, message || null, totalPrice]
     );
 
-    // Send email notification to photographer
+    // Send email notification to photographer (if enabled)
     try {
-      const photographerInfo = await queryOne<{ email: string; display_name: string }>(
-        `SELECT u.email, pp.display_name FROM photographer_profiles pp
+      const photographerInfo = await queryOne<{ email: string; display_name: string; user_id: string }>(
+        `SELECT u.email, pp.display_name, u.id as user_id FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`,
         [photographer_id]
+      );
+      const prefs = await queryOne<{ email_bookings: boolean }>(
+        "SELECT email_bookings FROM notification_preferences WHERE user_id = $1",
+        [photographerInfo?.user_id]
       );
       const clientInfo = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
       const pkgInfo = package_id ? await queryOne<{ name: string }>("SELECT name FROM packages WHERE id = $1", [package_id]) : null;
 
-      if (photographerInfo && clientInfo) {
+      if (photographerInfo && clientInfo && prefs?.email_bookings !== false) {
         sendBookingNotification(
           photographerInfo.email,
           photographerInfo.display_name,
