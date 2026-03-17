@@ -148,17 +148,12 @@ export function PhotographerDashboardClient({
   }
 
   // === Portfolio ===
-  const [photoLocation, setPhotoLocation] = useState("");
-  const [photoShootType, setPhotoShootType] = useState("");
-
   async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append("file", file);
-    if (photoLocation) formData.append("location_slug", photoLocation);
-    if (photoShootType) formData.append("shoot_type", photoShootType);
 
     showMessage("Uploading...");
     const res = await fetch("/api/dashboard/portfolio", {
@@ -180,6 +175,21 @@ export function PhotographerDashboardClient({
     if (!confirm("Delete this photo?")) return;
     const res = await fetch(`/api/dashboard/portfolio?id=${id}`, { method: "DELETE" });
     if (res.ok) router.refresh();
+  }
+
+  async function updatePhotoTag(itemId: string, field: "location_slug" | "shoot_type", value: string) {
+    const item = portfolioItems.find((p) => p.id === itemId);
+    if (!item) return;
+    await fetch("/api/dashboard/portfolio", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: itemId,
+        location_slug: field === "location_slug" ? (value || null) : item.location_slug,
+        shoot_type: field === "shoot_type" ? (value || null) : item.shoot_type,
+      }),
+    });
+    router.refresh();
   }
 
   // === Packages ===
@@ -465,72 +475,60 @@ export function PhotographerDashboardClient({
         {/* === PORTFOLIO TAB === */}
         {activeTab === "portfolio" && (
           <div>
-            {/* Upload controls */}
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-500">
-                  Upload your best work ({portfolioItems.length} photos)
-                </p>
-              </div>
-              <select
-                value={photoLocation}
-                onChange={(e) => setPhotoLocation(e.target.value)}
-                className="rounded-lg border border-warm-200 px-2.5 py-2 text-xs text-gray-600 outline-none"
-              >
-                <option value="">Location (optional)</option>
-                {allLocations.map((l) => (
-                  <option key={l.slug} value={l.slug}>{l.name}</option>
-                ))}
-              </select>
-              <select
-                value={photoShootType}
-                onChange={(e) => setPhotoShootType(e.target.value)}
-                className="rounded-lg border border-warm-200 px-2.5 py-2 text-xs text-gray-600 outline-none"
-              >
-                <option value="">Shoot type (optional)</option>
-                {SHOOT_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+            {/* Header + Upload */}
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-500">
+                Upload your best work ({portfolioItems.length} photos)
+              </p>
               <label className="cursor-pointer rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
                 Upload Photo
                 <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" />
               </label>
             </div>
 
-            {/* Photo grid */}
-            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {/* Photo grid with per-photo tag editing */}
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {portfolioItems.map((item) => (
-                <div key={item.id} className="group relative aspect-square overflow-hidden rounded-xl bg-warm-100">
-                  <img
-                    src={item.url}
-                    alt={item.caption || "Portfolio photo"}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                  {/* Tags overlay */}
-                  {(item.location_slug || item.shoot_type) && (
-                    <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-                      {item.location_slug && (
-                        <span className="rounded bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-                          {allLocations.find((l) => l.slug === item.location_slug)?.name || item.location_slug}
-                        </span>
-                      )}
-                      {item.shoot_type && (
-                        <span className="rounded bg-primary-600/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-                          {item.shoot_type}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {/* Delete hover */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+                <div key={item.id} className="group overflow-hidden rounded-xl border border-warm-200 bg-white">
+                  {/* Image */}
+                  <div className="relative aspect-[4/3] bg-warm-100">
+                    <img
+                      src={item.url}
+                      alt={item.caption || "Portfolio photo"}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
                     <button
                       onClick={() => deletePhoto(item.id)}
-                      className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white"
+                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
                     >
-                      Delete
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
+                  </div>
+                  {/* Tags */}
+                  <div className="flex gap-2 p-2.5">
+                    <select
+                      value={item.location_slug || ""}
+                      onChange={(e) => updatePhotoTag(item.id, "location_slug", e.target.value)}
+                      className="flex-1 truncate rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+                    >
+                      <option value="">Location</option>
+                      {allLocations.map((l) => (
+                        <option key={l.slug} value={l.slug}>{l.name}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={item.shoot_type || ""}
+                      onChange={(e) => updatePhotoTag(item.id, "shoot_type", e.target.value)}
+                      className="flex-1 truncate rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+                    >
+                      <option value="">Shoot type</option>
+                      {SHOOT_TYPES.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               ))}

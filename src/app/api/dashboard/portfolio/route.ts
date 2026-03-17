@@ -125,3 +125,26 @@ export async function DELETE(req: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+// Update tags on a portfolio item
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const userId = (session.user as { id?: string }).id;
+  const { id: itemId, location_slug, shoot_type } = await req.json();
+
+  if (!itemId) return NextResponse.json({ error: "Item ID required" }, { status: 400 });
+
+  const profile = await queryOne<{ id: string }>(
+    "SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]
+  );
+  if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+
+  await queryOne(
+    "UPDATE portfolio_items SET location_slug = $1, shoot_type = $2 WHERE id = $3 AND photographer_id = $4 RETURNING id",
+    [location_slug || null, shoot_type || null, itemId, profile.id]
+  );
+
+  return NextResponse.json({ success: true });
+}
