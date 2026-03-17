@@ -242,7 +242,7 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">Featured Placement</h3>
-              <p className="text-xs text-gray-500">&euro;19/month — Homepage visibility</p>
+              <p className="text-xs text-gray-500">&euro;19/month — Priority visibility</p>
             </div>
           </div>
 
@@ -265,7 +265,7 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
           ) : (
             <>
               <p className="mt-3 text-xs text-gray-500">
-                Get featured on the homepage and appear first in search results. Includes a &quot;Featured&quot; badge on your profile.
+                Featured on the homepage, shown first on the photographers page, and a &quot;Featured&quot; badge on your profile and cards.
               </p>
               <button
                 onClick={handleGetFeatured}

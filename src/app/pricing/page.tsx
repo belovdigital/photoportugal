@@ -151,7 +151,7 @@ export default function PricingPage() {
               </div>
             </div>
             <p className="mt-3 text-sm text-gray-600">
-              Get featured on the homepage and appear first in search results. Includes a &quot;Featured&quot; badge on your profile and cards.
+              Featured on the homepage, shown first on the photographers page with any sort order, and a &quot;Featured&quot; badge on your profile and cards.
             </p>
             <p className="mt-2 text-sm font-semibold text-gray-900">&euro;19/month</p>
           </div>

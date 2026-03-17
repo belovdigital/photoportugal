@@ -90,12 +90,21 @@ export function PhotographerCatalog({
       });
     }
 
+    // Sort — featured always pinned first, then by selected criteria
+    const featuredFirst = (a: PhotographerProfile, b: PhotographerProfile) => {
+      if (a.is_featured && !b.is_featured) return -1;
+      if (!a.is_featured && b.is_featured) return 1;
+      return 0;
+    };
+
     switch (sortBy) {
       case "rating":
-        result = [...result].sort((a, b) => b.rating - a.rating || b.review_count - a.review_count);
+        result = [...result].sort((a, b) => featuredFirst(a, b) || b.rating - a.rating || b.review_count - a.review_count);
         break;
       case "price-low":
         result = [...result].sort((a, b) => {
+          const ff = featuredFirst(a, b);
+          if (ff) return ff;
           const aMin = a.packages.length ? Math.min(...a.packages.map((p) => p.price)) : Infinity;
           const bMin = b.packages.length ? Math.min(...b.packages.map((p) => p.price)) : Infinity;
           return aMin - bMin;
@@ -103,13 +112,15 @@ export function PhotographerCatalog({
         break;
       case "price-high":
         result = [...result].sort((a, b) => {
+          const ff = featuredFirst(a, b);
+          if (ff) return ff;
           const aMin = a.packages.length ? Math.min(...a.packages.map((p) => p.price)) : 0;
           const bMin = b.packages.length ? Math.min(...b.packages.map((p) => p.price)) : 0;
           return bMin - aMin;
         });
         break;
       case "reviews":
-        result = [...result].sort((a, b) => b.review_count - a.review_count);
+        result = [...result].sort((a, b) => featuredFirst(a, b) || b.review_count - a.review_count);
         break;
     }
 
