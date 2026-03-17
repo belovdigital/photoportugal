@@ -161,8 +161,8 @@ export function Header() {
               FAQ
             </Link>
 
-            {/* For Photographers dropdown */}
-            <div className="relative">
+            {/* For Photographers dropdown — hide for logged-in clients */}
+            {role !== "client" && <div className="relative">
               <button
                 onClick={() => toggleMenu("photographers")}
                 className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -209,7 +209,7 @@ export function Header() {
                   </div>
                 </div>
               )}
-            </div>
+            </div>}
           </div>
 
           {/* Right side */}
@@ -305,10 +305,14 @@ export function Header() {
               <MobileLink href="/locations" label="All Destinations" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/how-it-works" label="How It Works" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/faq" label="FAQ" onClick={() => setMobileOpen(false)} />
-              <hr className="my-2 border-warm-200" />
-              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">For Photographers</p>
-              <MobileLink href="/auth/signup?role=photographer" label="Join as Photographer" onClick={() => setMobileOpen(false)} />
-              <MobileLink href="/pricing" label="Pricing Plans" onClick={() => setMobileOpen(false)} />
+              {role !== "client" && (
+                <>
+                  <hr className="my-2 border-warm-200" />
+                  <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">For Photographers</p>
+                  <MobileLink href="/auth/signup?role=photographer" label="Join as Photographer" onClick={() => setMobileOpen(false)} />
+                  <MobileLink href="/pricing" label="Pricing Plans" onClick={() => setMobileOpen(false)} />
+                </>
+              )}
               <hr className="my-2 border-warm-200" />
               {user ? (
                 <>
