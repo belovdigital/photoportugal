@@ -16,7 +16,7 @@ export async function PATCH(
   const userId = (session.user as { id?: string }).id;
   const { status } = await req.json();
 
-  const validStatuses = ["confirmed", "completed", "delivered", "cancelled"];
+  const validStatuses = ["pending", "confirmed", "completed", "delivered", "cancelled"];
   if (!validStatuses.includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
@@ -44,7 +44,7 @@ export async function PATCH(
     }
 
     // Only photographer can confirm/complete
-    if ((status === "confirmed" || status === "completed") && !isPhotographer) {
+    if ((status === "confirmed" || status === "completed" || status === "delivered") && !isPhotographer) {
       return NextResponse.json({ error: "Only the photographer can confirm bookings" }, { status: 403 });
     }
 

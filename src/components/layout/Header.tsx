@@ -166,7 +166,7 @@ export function Header() {
             </Link>
 
             {/* For Photographers dropdown — hide for logged-in clients */}
-            {role !== "client" && <div className="relative">
+            {!user && <div className="relative">
               <button
                 onClick={() => toggleMenu("photographers")}
                 className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -281,7 +281,6 @@ export function Header() {
                     </div>
                     <div className="py-1">
                       <DropdownLink href="/dashboard" icon="grid" label="Dashboard" onClick={() => setProfileOpen(false)} />
-                      <DropdownLink href="/dashboard/messages" icon="chat" label="Messages" onClick={() => setProfileOpen(false)} />
                       {isPhotographer && (
                         <DropdownLink href="/dashboard/profile" icon="user" label="My Profile" onClick={() => setProfileOpen(false)} />
                       )}
@@ -333,7 +332,7 @@ export function Header() {
               <MobileLink href="/locations" label="All Destinations" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/how-it-works" label="How It Works" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/faq" label="FAQ" onClick={() => setMobileOpen(false)} />
-              {role !== "client" && (
+              {!user && (
                 <>
                   <hr className="my-2 border-warm-200" />
                   <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">For Photographers</p>
@@ -354,9 +353,11 @@ export function Header() {
               ) : !isLoading ? (
                 <MobileLink href="/auth/signin" label="Log In" onClick={() => setMobileOpen(false)} />
               ) : null}
-              <Link href="/photographers" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white">
-                Book a Photoshoot
-              </Link>
+              {!isPhotographer && (
+                <Link href="/photographers" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white">
+                  Book a Photoshoot
+                </Link>
+              )}
             </div>
           </div>
         )}

@@ -20,6 +20,7 @@ interface Profile {
   rating: number;
   review_count: number;
   session_count: number;
+  is_approved: boolean;
   location_slugs: string[];
 }
 
@@ -260,13 +261,15 @@ export function PhotographerDashboardClient({
           <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-600 uppercase">
             {profile.plan} plan
           </span>
-          <a
-            href={`/photographers/${profile.slug}`}
-            target="_blank"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-          >
-            View Public Profile
-          </a>
+          {profile.is_approved && (
+            <a
+              href={`/photographers/${profile.slug}`}
+              target="_blank"
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+            >
+              View Public Profile
+            </a>
+          )}
         </div>
       </div>
 
@@ -344,6 +347,41 @@ export function PhotographerDashboardClient({
                       } else {
                         showMessage("Upload failed");
                       }
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Cover Image */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+              <p className="text-xs text-gray-400 mb-2">Recommended: landscape photo, min 1200px wide. Shows on your public profile.</p>
+              <div className="flex items-center gap-4">
+                {profile.cover_url ? (
+                  <div className="h-20 w-40 overflow-hidden rounded-lg bg-warm-100">
+                    <img src={profile.cover_url} alt="Cover" className="h-full w-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="flex h-20 w-40 items-center justify-center rounded-lg bg-gradient-to-br from-primary-300 to-primary-600 text-xs text-white/60">No cover</div>
+                )}
+                <label className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                  Upload Cover
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      formData.append("type", "cover");
+                      showMessage("Uploading cover...");
+                      const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
+                      if (res.ok) { showMessage("Cover updated!"); router.refresh(); }
+                      else showMessage("Upload failed");
                       e.target.value = "";
                     }}
                   />

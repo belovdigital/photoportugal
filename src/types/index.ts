@@ -110,7 +110,7 @@ export interface Booking {
   shoot_date: string | null;
   shoot_time: string | null;
   message: string | null;
-  status: "pending" | "confirmed" | "completed" | "cancelled" | "disputed";
+  status: "inquiry" | "pending" | "confirmed" | "completed" | "delivered" | "cancelled" | "disputed";
   total_price: number | null;
   created_at: string;
 }
