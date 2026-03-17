@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
     const checkoutSession = await (stripe.checkout.sessions.create as any)({
       customer: customerId,
       mode: "payment",
+      locale: "auto",
+      adaptive_pricing: { enabled: true },
       line_items: [{
         price_data: {
           currency: "eur",

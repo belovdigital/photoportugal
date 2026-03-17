@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
       const checkoutSession = await (stripe.checkout.sessions.create as any)({
         customer: customerId,
         mode: "subscription",
+        locale: "auto",
+        adaptive_pricing: { enabled: true },
         line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
         success_url: `${process.env.AUTH_URL}/dashboard/subscription?success=true`,
         cancel_url: `${process.env.AUTH_URL}/dashboard/subscription?canceled=true`,

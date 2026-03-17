@@ -75,7 +75,9 @@ export async function POST() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkoutSession = await (stripe.checkout.sessions.create as any)({
       customer: customerId,
-      mode: "payment", // one-time, not subscription
+      mode: "payment",
+      locale: "auto",
+      adaptive_pricing: { enabled: true },
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.AUTH_URL}/dashboard/subscription?verified=success`,
       cancel_url: `${process.env.AUTH_URL}/dashboard/subscription?verified=canceled`,
