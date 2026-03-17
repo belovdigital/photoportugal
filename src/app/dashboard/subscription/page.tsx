@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import Link from "next/link";
+import { StripeConnectSection } from "./StripeConnectSection";
 
 export const dynamic = "force-dynamic";
 
@@ -85,16 +86,8 @@ export default async function SubscriptionPage() {
         ))}
       </div>
 
-      {/* Payment method */}
-      <div className="mt-8 rounded-xl border border-warm-200 bg-white p-6">
-        <h2 className="text-lg font-bold text-gray-900">Payment Method</h2>
-        <p className="mt-2 text-sm text-gray-500">
-          Payment processing is coming soon. When available, you&apos;ll be able to upgrade your plan and manage your billing here.
-        </p>
-        <p className="mt-4 text-sm text-gray-500">
-          Want to upgrade now? <a href="mailto:info@photoportugal.com" className="font-semibold text-primary-600 hover:underline">Contact us</a>
-        </p>
-      </div>
+      {/* Stripe Connect */}
+      <StripeConnectSection />
     </div>
   );
 }

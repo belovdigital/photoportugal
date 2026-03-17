@@ -2,7 +2,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: "client" | "photographer";
+  role: "client" | "photographer" | "admin";
   avatar_url: string | null;
   created_at: string;
 }
@@ -20,6 +20,8 @@ export const SHOOT_TYPES = [
   "Anniversary",
   "Elopement",
   "Birthday",
+  "Studio Portrait",
+  "Content Creator",
 ] as const;
 
 export type ShootType = (typeof SHOOT_TYPES)[number];

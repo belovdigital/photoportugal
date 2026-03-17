@@ -66,6 +66,9 @@ export async function sendBookingConfirmation(
       <p>Hi ${clientName},</p>
       <p><strong>${photographerName}</strong> has confirmed your photoshoot${shootDate ? ` on ${shootDate}` : ""}.</p>
       <p>You can message your photographer to discuss the details.</p>
+      <p style="margin-top: 12px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px; color: #5f4a3d;">
+        <strong>Next step:</strong> Discuss the meeting point, outfit ideas, and any special requests with your photographer through our messaging system.
+      </p>
       <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Messages</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
