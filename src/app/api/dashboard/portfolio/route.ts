@@ -6,7 +6,7 @@ import path from "path";
 import crypto from "crypto";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per portfolio photo
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     [profile.id]
   );
   const count = parseInt((items[0] as { count: string }).count);
-  const limits: Record<string, number> = { free: 10, pro: 50, premium: 999 };
+  const limits: Record<string, number> = { free: 10, pro: 30, premium: 100 };
   const limit = limits[profile.plan] || 10;
 
   if (count >= limit) {

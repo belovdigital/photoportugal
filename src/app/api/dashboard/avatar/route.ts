@@ -6,7 +6,7 @@ import path from "path";
 import crypto from "crypto";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const type = (formData.get("type") as string) || "avatar";
 
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    if (file.size > MAX_FILE_SIZE) return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
+    if (file.size > MAX_FILE_SIZE) return NextResponse.json({ error: "File too large (max 2MB)" }, { status: 400 });
     if (!file.type.startsWith("image/")) return NextResponse.json({ error: "Only images allowed" }, { status: 400 });
 
     const ext = file.name.split(".").pop() || "jpg";

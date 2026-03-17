@@ -8,7 +8,8 @@ import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB per photo (delivery photos can be high-res)
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per delivery photo
+const MAX_DELIVERY_PHOTOS = 200; // max photos per delivery
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
 
@@ -178,6 +179,10 @@ export async function POST(
       "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1", [id]
     );
     let sortOrder = parseInt(currentCount?.count || "0");
+
+    if (sortOrder >= MAX_DELIVERY_PHOTOS) {
+      return NextResponse.json({ error: `Delivery limit reached (max ${MAX_DELIVERY_PHOTOS} photos)` }, { status: 403 });
+    }
 
     const uploaded = [];
     for (const file of files) {
