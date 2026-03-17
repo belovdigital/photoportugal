@@ -78,10 +78,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-      <body className="font-sans">
+      <body className="flex min-h-screen flex-col font-sans">
         <SessionProvider>
           <Header />
-          <main className="min-h-screen">{children}</main>
+          <main className="flex-1">{children}</main>
           <Footer />
         </SessionProvider>
       </body>

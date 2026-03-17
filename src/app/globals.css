@@ -54,6 +54,8 @@
   [role="button"],
   a,
   select,
+  summary,
+  details,
   label[for],
   input[type="checkbox"],
   input[type="radio"],

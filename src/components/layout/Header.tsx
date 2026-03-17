@@ -4,10 +4,34 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 
+const TOP_DESTINATIONS = [
+  { slug: "lisbon", name: "Lisbon" },
+  { slug: "porto", name: "Porto" },
+  { slug: "algarve", name: "Algarve" },
+  { slug: "sintra", name: "Sintra" },
+  { slug: "madeira", name: "Madeira" },
+  { slug: "azores", name: "Azores" },
+  { slug: "cascais", name: "Cascais" },
+  { slug: "lagos", name: "Lagos" },
+  { slug: "douro-valley", name: "Douro Valley" },
+  { slug: "nazare", name: "Nazaré" },
+];
+
+const SHOOT_TYPES = [
+  { label: "Couples", href: "/photographers?shoot=Couples" },
+  { label: "Family", href: "/photographers?shoot=Family" },
+  { label: "Solo Portrait", href: "/photographers?shoot=Solo+Portrait" },
+  { label: "Engagement", href: "/photographers?shoot=Engagement" },
+  { label: "Proposal", href: "/photographers?shoot=Proposal" },
+  { label: "Honeymoon", href: "/photographers?shoot=Honeymoon" },
+];
+
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
   const user = session?.user;
   const role = (user as { role?: string } | undefined)?.role;
@@ -16,15 +40,16 @@ export function Header() {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setProfileOpen(false);
-      }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setActiveMenu(null);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Profile link goes to dashboard where "View Public Profile" is available
+  function toggleMenu(menu: string) {
+    setActiveMenu(activeMenu === menu ? null : menu);
+  }
 
   return (
     <>
@@ -44,32 +69,136 @@ export function Header() {
       <header className="sticky top-0 z-50 border-b border-warm-200 bg-white/95 backdrop-blur-sm">
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
-          <Link href="/" className="shrink-0">
+          <Link href="/" className="shrink-0" onClick={() => setActiveMenu(null)}>
             <img src="/logo.svg" alt="Photo Portugal" className="h-7 w-auto" />
           </Link>
 
-          {/* Desktop nav — center */}
-          <div className="hidden items-center gap-1 lg:flex">
-            <Link href="/locations" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
-              Destinations
-            </Link>
+          {/* Desktop nav */}
+          <div className="hidden items-center gap-1 lg:flex" ref={menuRef}>
+            {/* Destinations dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => toggleMenu("destinations")}
+                className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  activeMenu === "destinations" ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50"
+                }`}
+              >
+                Destinations
+                <svg className={`h-3.5 w-3.5 transition ${activeMenu === "destinations" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {activeMenu === "destinations" && (
+                <div className="absolute left-1/2 top-full mt-2 w-[520px] -translate-x-1/2 rounded-xl border border-warm-200 bg-white p-5 shadow-xl">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Popular Cities</p>
+                      <div className="mt-3 grid grid-cols-2 gap-1">
+                        {TOP_DESTINATIONS.map((d) => (
+                          <Link
+                            key={d.slug}
+                            href={`/locations/${d.slug}`}
+                            onClick={() => setActiveMenu(null)}
+                            className="rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
+                          >
+                            {d.name}
+                          </Link>
+                        ))}
+                      </div>
+                      <Link
+                        href="/locations"
+                        onClick={() => setActiveMenu(null)}
+                        className="mt-3 inline-flex text-sm font-semibold text-primary-600 hover:text-primary-700"
+                      >
+                        View all 23 locations &rarr;
+                      </Link>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">By Occasion</p>
+                      <div className="mt-3 space-y-1">
+                        {SHOOT_TYPES.map((s) => (
+                          <Link
+                            key={s.label}
+                            href={s.href}
+                            onClick={() => setActiveMenu(null)}
+                            className="block rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
+                          >
+                            {s.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Link href="/photographers" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
               Photographers
             </Link>
+
             <Link href="/how-it-works" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
               How It Works
             </Link>
-            <Link href="/pricing" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
-              Pricing
-            </Link>
+
             <Link href="/faq" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
               FAQ
             </Link>
+
+            {/* For Photographers dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => toggleMenu("photographers")}
+                className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  activeMenu === "photographers" ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50"
+                }`}
+              >
+                For Photographers
+                <svg className={`h-3.5 w-3.5 transition ${activeMenu === "photographers" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {activeMenu === "photographers" && (
+                <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-warm-200 bg-white p-5 shadow-xl">
+                  <p className="text-sm font-semibold text-gray-900">Become a photographer</p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Join our network and connect with travelers from around the world
+                  </p>
+                  <div className="mt-4 space-y-1">
+                    <Link
+                      href="/auth/signup?role=photographer"
+                      onClick={() => setActiveMenu(null)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
+                    >
+                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                      Join as Photographer
+                    </Link>
+                    <Link
+                      href="/pricing"
+                      onClick={() => setActiveMenu(null)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
+                    >
+                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      Pricing Plans
+                    </Link>
+                    <Link
+                      href="/how-it-works"
+                      onClick={() => setActiveMenu(null)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
+                    >
+                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      How It Works
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            {/* Book CTA — always visible */}
             <Link
               href="/photographers"
               className="hidden rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 sm:inline-flex"
@@ -77,7 +206,6 @@ export function Header() {
               Book a Photoshoot
             </Link>
 
-            {/* Auth area */}
             {isLoading ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-warm-200" />
             ) : user ? (
@@ -130,7 +258,6 @@ export function Header() {
               </Link>
             )}
 
-            {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="p-2 text-gray-600 lg:hidden"
@@ -152,36 +279,27 @@ export function Header() {
           <div className="border-t border-warm-200 bg-white px-4 py-4 lg:hidden">
             <div className="flex flex-col gap-1">
               <MobileLink href="/photographers" label="Find Photographers" onClick={() => setMobileOpen(false)} />
-              <MobileLink href="/locations" label="Destinations" onClick={() => setMobileOpen(false)} />
+              <MobileLink href="/locations" label="All Destinations" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/how-it-works" label="How It Works" onClick={() => setMobileOpen(false)} />
-              <MobileLink href="/pricing" label="Pricing" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/faq" label="FAQ" onClick={() => setMobileOpen(false)} />
+              <hr className="my-2 border-warm-200" />
+              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">For Photographers</p>
+              <MobileLink href="/auth/signup?role=photographer" label="Join as Photographer" onClick={() => setMobileOpen(false)} />
+              <MobileLink href="/pricing" label="Pricing Plans" onClick={() => setMobileOpen(false)} />
               <hr className="my-2 border-warm-200" />
               {user ? (
                 <>
                   <MobileLink href="/dashboard" label="Dashboard" onClick={() => setMobileOpen(false)} />
                   <MobileLink href="/dashboard/messages" label="Messages" onClick={() => setMobileOpen(false)} />
-                  {isPhotographer && (
-                    <MobileLink href="/dashboard/photographer" label="My Profile" onClick={() => setMobileOpen(false)} />
-                  )}
                   <MobileLink href="/dashboard/settings" label="Settings" onClick={() => setMobileOpen(false)} />
-                  <button
-                    onClick={() => { setMobileOpen(false); signOut({ callbackUrl: "/" }); }}
-                    className="rounded-lg px-3 py-2.5 text-left text-sm text-gray-500"
-                  >
+                  <button onClick={() => { setMobileOpen(false); signOut({ callbackUrl: "/" }); }} className="rounded-lg px-3 py-2.5 text-left text-sm text-gray-500">
                     Sign Out
                   </button>
                 </>
               ) : !isLoading ? (
-                <>
-                  <MobileLink href="/auth/signin" label="Log In" onClick={() => setMobileOpen(false)} />
-                </>
+                <MobileLink href="/auth/signin" label="Log In" onClick={() => setMobileOpen(false)} />
               ) : null}
-              <Link
-                href="/photographers"
-                onClick={() => setMobileOpen(false)}
-                className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white"
-              >
+              <Link href="/photographers" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white">
                 Book a Photoshoot
               </Link>
             </div>
