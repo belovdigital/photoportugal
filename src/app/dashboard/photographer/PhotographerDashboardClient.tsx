@@ -72,15 +72,17 @@ export function PhotographerDashboardClient({
   packages,
   bookings,
   allLocations,
+  initialTab,
 }: {
   profile: Profile;
   portfolioItems: PortfolioItem[];
   packages: Package[];
   bookings: Booking[];
   allLocations: LocationOption[];
+  initialTab?: Tab;
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>("profile");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab || "profile");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
