@@ -15,6 +15,9 @@ export function PhotographerCard({
     >
       {/* Cover */}
       <div className="relative h-48 bg-gradient-to-br from-primary-300 to-primary-600">
+        {photographer.cover_url && (
+          <img src={photographer.cover_url} alt="" className="h-full w-full object-cover" />
+        )}
         {photographer.is_featured && (
           <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900">
             Featured

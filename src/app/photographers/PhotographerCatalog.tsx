@@ -27,9 +27,9 @@ export function PhotographerCatalog({
   initialLocation,
   initialShootType,
 }: Props) {
-  const [locationFilter, setLocationFilter] = useState(initialLocation || "");
+  const [locationFilters, setLocationFilters] = useState<string[]>(initialLocation ? [initialLocation] : []);
   const [locationSearch, setLocationSearch] = useState("");
-  const [shootTypeFilter, setShootTypeFilter] = useState(initialShootType || "");
+  const [shootTypeFilters, setShootTypeFilters] = useState<string[]>(initialShootType ? [initialShootType] : []);
   const [languageFilter, setLanguageFilter] = useState("");
   const [priceRange, setPriceRange] = useState(0);
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "reviews">("rating");
@@ -48,18 +48,30 @@ export function PhotographerCatalog({
     );
   }, [locations, locationSearch]);
 
+  function toggleLocation(slug: string) {
+    setLocationFilters((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
+  }
+
+  function toggleShootType(type: string) {
+    setShootTypeFilters((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  }
+
   const filtered = useMemo(() => {
     let result = photographers;
 
-    if (locationFilter) {
+    if (locationFilters.length > 0) {
       result = result.filter((p) =>
-        p.locations.some((l) => l.slug === locationFilter)
+        p.locations.some((l) => locationFilters.includes(l.slug))
       );
     }
 
-    if (shootTypeFilter) {
+    if (shootTypeFilters.length > 0) {
       result = result.filter((p) =>
-        p.shoot_types.includes(shootTypeFilter)
+        shootTypeFilters.some((t) => p.shoot_types.includes(t))
       );
     }
 
@@ -102,23 +114,27 @@ export function PhotographerCatalog({
     }
 
     return result;
-  }, [photographers, locationFilter, shootTypeFilter, languageFilter, priceRange, sortBy]);
+  }, [photographers, locationFilters, shootTypeFilters, languageFilter, priceRange, sortBy]);
 
   const activeFilterCount =
-    (locationFilter ? 1 : 0) +
-    (shootTypeFilter ? 1 : 0) +
+    locationFilters.length +
+    shootTypeFilters.length +
     (languageFilter ? 1 : 0) +
     (priceRange > 0 ? 1 : 0);
 
-  const selectedLocationName = locations.find((l) => l.slug === locationFilter)?.name;
+  const selectedLocationNames = locationFilters
+    .map((s) => locations.find((l) => l.slug === s)?.name)
+    .filter(Boolean);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
       <div>
         <h1 className="font-display text-3xl font-bold text-gray-900">
-          {selectedLocationName
-            ? `Photographers in ${selectedLocationName}`
+          {selectedLocationNames.length === 1
+            ? `Photographers in ${selectedLocationNames[0]}`
+            : selectedLocationNames.length > 1
+            ? `Photographers in ${selectedLocationNames.length} locations`
             : "Find Your Photographer"}
         </h1>
         <p className="mt-2 text-gray-500">
@@ -126,123 +142,142 @@ export function PhotographerCatalog({
         </p>
       </div>
 
-      {/* Compact filter bar */}
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        {/* Location dropdown with search */}
-        <div className="relative">
-          <button
-            onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
-              locationFilter ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700 hover:bg-gray-50"
+      {/* Filter bar */}
+      <div className="mt-6 space-y-3">
+        {/* Top row: Location + Language + Price + Sort */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Location dropdown with multi-select */}
+          <div className="relative">
+            <button
+              onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                locationFilters.length > 0 ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              {locationFilters.length === 0
+                ? "All locations"
+                : locationFilters.length === 1
+                ? selectedLocationNames[0]
+                : `${locationFilters.length} locations`}
+              <svg className="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showLocationDropdown && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowLocationDropdown(false)} />
+                <div className="absolute left-0 top-full z-20 mt-1 w-64 rounded-xl border border-warm-200 bg-white shadow-lg">
+                  <div className="p-2">
+                    <input
+                      type="text"
+                      value={locationSearch}
+                      onChange={(e) => setLocationSearch(e.target.value)}
+                      placeholder="Search locations..."
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="max-h-60 overflow-y-auto px-1 pb-1">
+                    <button
+                      onClick={() => { setLocationFilters([]); setLocationSearch(""); }}
+                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${locationFilters.length === 0 ? "font-semibold text-primary-600" : "text-gray-600"}`}
+                    >
+                      All locations
+                    </button>
+                    {filteredLocations.map((loc) => (
+                      <button
+                        key={loc.slug}
+                        onClick={() => toggleLocation(loc.slug)}
+                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${locationFilters.includes(loc.slug) ? "font-semibold text-primary-600" : "text-gray-600"}`}
+                      >
+                        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                          locationFilters.includes(loc.slug) ? "border-primary-500 bg-primary-500" : "border-gray-300"
+                        }`}>
+                          {locationFilters.includes(loc.slug) && (
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </span>
+                        {loc.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Language select */}
+          <select
+            value={languageFilter}
+            onChange={(e) => setLanguageFilter(e.target.value)}
+            className={`rounded-lg border px-3 py-2 text-sm outline-none transition ${
+              languageFilter ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700"
             }`}
           >
-            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            </svg>
-            {selectedLocationName || "All locations"}
-            <svg className="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+            <option value="">Any language</option>
+            {allLanguages.map((l) => (
+              <option key={l} value={l}>{l}</option>
+            ))}
+          </select>
 
-          {showLocationDropdown && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setShowLocationDropdown(false)} />
-              <div className="absolute left-0 top-full z-20 mt-1 w-64 rounded-xl border border-warm-200 bg-white shadow-lg">
-                <div className="p-2">
-                  <input
-                    type="text"
-                    value={locationSearch}
-                    onChange={(e) => setLocationSearch(e.target.value)}
-                    placeholder="Search locations..."
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
-                    autoFocus
-                  />
-                </div>
-                <div className="max-h-60 overflow-y-auto px-1 pb-1">
-                  <button
-                    onClick={() => { setLocationFilter(""); setShowLocationDropdown(false); setLocationSearch(""); }}
-                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${!locationFilter ? "font-semibold text-primary-600" : "text-gray-600"}`}
-                  >
-                    All locations
-                  </button>
-                  {filteredLocations.map((loc) => (
-                    <button
-                      key={loc.slug}
-                      onClick={() => { setLocationFilter(loc.slug); setShowLocationDropdown(false); setLocationSearch(""); }}
-                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${locationFilter === loc.slug ? "font-semibold text-primary-600" : "text-gray-600"}`}
-                    >
-                      {loc.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
+          {/* Price select */}
+          <select
+            value={priceRange}
+            onChange={(e) => setPriceRange(parseInt(e.target.value))}
+            className={`rounded-lg border px-3 py-2 text-sm outline-none transition ${
+              priceRange > 0 ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700"
+            }`}
+          >
+            {PRICE_RANGES.map((r, i) => (
+              <option key={r.label} value={i}>{r.label}</option>
+            ))}
+          </select>
+
+          {/* Sort */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none"
+          >
+            <option value="rating">Top Rated</option>
+            <option value="reviews">Most Reviews</option>
+            <option value="price-low">Price: Low → High</option>
+            <option value="price-high">Price: High → Low</option>
+          </select>
+
+          {/* Clear */}
+          {activeFilterCount > 0 && (
+            <button
+              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setPriceRange(0); }}
+              className="rounded-lg px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-50"
+            >
+              Clear all ({activeFilterCount})
+            </button>
           )}
         </div>
 
-        {/* Shoot type select */}
-        <select
-          value={shootTypeFilter}
-          onChange={(e) => setShootTypeFilter(e.target.value)}
-          className={`rounded-lg border px-3 py-2 text-sm outline-none transition ${
-            shootTypeFilter ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700"
-          }`}
-        >
-          <option value="">All shoot types</option>
-          {shootTypes.map((t) => (
-            <option key={t} value={t}>{t}</option>
+        {/* Shoot type pills (multi-select) */}
+        <div className="flex flex-wrap gap-1.5">
+          {shootTypes.map((type) => (
+            <button
+              key={type}
+              onClick={() => toggleShootType(type)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                shootTypeFilters.includes(type)
+                  ? "bg-primary-600 text-white"
+                  : "bg-warm-100 text-gray-600 hover:bg-warm-200"
+              }`}
+            >
+              {type}
+            </button>
           ))}
-        </select>
-
-        {/* Language select */}
-        <select
-          value={languageFilter}
-          onChange={(e) => setLanguageFilter(e.target.value)}
-          className={`rounded-lg border px-3 py-2 text-sm outline-none transition ${
-            languageFilter ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700"
-          }`}
-        >
-          <option value="">Any language</option>
-          {allLanguages.map((l) => (
-            <option key={l} value={l}>{l}</option>
-          ))}
-        </select>
-
-        {/* Price select */}
-        <select
-          value={priceRange}
-          onChange={(e) => setPriceRange(parseInt(e.target.value))}
-          className={`rounded-lg border px-3 py-2 text-sm outline-none transition ${
-            priceRange > 0 ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700"
-          }`}
-        >
-          {PRICE_RANGES.map((r, i) => (
-            <option key={r.label} value={i}>{r.label}</option>
-          ))}
-        </select>
-
-        {/* Sort */}
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none"
-        >
-          <option value="rating">Top Rated</option>
-          <option value="reviews">Most Reviews</option>
-          <option value="price-low">Price: Low → High</option>
-          <option value="price-high">Price: High → Low</option>
-        </select>
-
-        {/* Clear */}
-        {activeFilterCount > 0 && (
-          <button
-            onClick={() => { setLocationFilter(""); setShootTypeFilter(""); setLanguageFilter(""); setPriceRange(0); }}
-            className="rounded-lg px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-50"
-          >
-            Clear ({activeFilterCount})
-          </button>
-        )}
+        </div>
       </div>
 
       {/* Grid */}
@@ -256,7 +291,7 @@ export function PhotographerCatalog({
         <div className="mt-12 text-center">
           <p className="text-lg text-gray-500">No photographers match your filters.</p>
           <button
-            onClick={() => { setLocationFilter(""); setShootTypeFilter(""); setLanguageFilter(""); setPriceRange(0); }}
+            onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setPriceRange(0); }}
             className="mt-4 text-sm font-semibold text-primary-600 hover:text-primary-700"
           >
             Clear all filters
