@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 
@@ -56,6 +57,10 @@ export async function PATCH(req: NextRequest) {
       `UPDATE photographer_profiles SET ${fields.join(", ")} WHERE id = $${paramIndex} RETURNING id`,
       values
     );
+
+    // Bust ISR cache on homepage, photographers list, and profile page
+    revalidatePath("/");
+    revalidatePath("/photographers");
 
     return NextResponse.json({ success: true });
   } catch (error) {
