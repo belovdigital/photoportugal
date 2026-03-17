@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
-import { AdminToggleClient, AdminPlanSelectClient } from "./AdminControls";
+import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton } from "./AdminControls";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
@@ -79,6 +79,7 @@ export default async function AdminPage() {
           <h1 className="font-display text-3xl font-bold text-gray-900">Admin Panel</h1>
           <p className="mt-1 text-gray-500">Platform overview and management</p>
         </div>
+        <AdminLogoutButton />
       </div>
 
       {/* Stats */}
@@ -153,7 +154,7 @@ export default async function AdminPage() {
                       "bg-yellow-100 text-yellow-700"
                     }`}>{b.status}</span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{b.shoot_date ? new Date(b.shoot_date).toLocaleDateString() : "—"}</td>
+                  <td className="px-4 py-3 text-gray-500">{b.shoot_date ? new Date(b.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</td>
                   <td className="px-4 py-3 text-gray-700">{b.total_price ? `€${b.total_price}` : "—"}</td>
                 </tr>
               ))}
@@ -195,7 +196,7 @@ export default async function AdminPage() {
                       u.role === "admin" ? "bg-red-100 text-red-700" : u.role === "photographer" ? "bg-primary-100 text-primary-700" : "bg-warm-100 text-warm-700"
                     }`}>{u.role}</span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{new Date(u.created_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-gray-500">{new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
                 </tr>
               ))}
             </tbody>

@@ -22,12 +22,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
     }
 
-    // Prevent self-booking
-    const selfCheck = await queryOne(
-      "SELECT id FROM photographer_profiles WHERE id = $1 AND user_id = $2",
-      [photographer_id, userId]
+    // Verify photographer exists and is approved
+    const photographerCheck = await queryOne<{ is_approved: boolean; user_id: string }>(
+      "SELECT is_approved, user_id FROM photographer_profiles WHERE id = $1",
+      [photographer_id]
     );
-    if (selfCheck) {
+    if (!photographerCheck) {
+      return NextResponse.json({ error: "Photographer not found" }, { status: 404 });
+    }
+    if (!photographerCheck.is_approved) {
+      return NextResponse.json({ error: "This photographer is not yet approved" }, { status: 400 });
+    }
+
+    // Prevent self-booking
+    if (photographerCheck.user_id === userId) {
       return NextResponse.json({ error: "You cannot book yourself" }, { status: 400 });
     }
 

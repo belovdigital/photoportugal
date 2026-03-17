@@ -715,6 +715,15 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-gray-100 text-gray-500",
 };
 
+const TIME_LABELS: Record<string, string> = {
+  sunrise: "Sunrise (6-8 AM)",
+  morning: "Morning (8-11 AM)",
+  midday: "Midday (11 AM-2 PM)",
+  afternoon: "Afternoon (2-5 PM)",
+  golden_hour: "Golden Hour (5-7 PM)",
+  sunset: "Sunset (7-9 PM)",
+};
+
 function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => void }) {
   const [updating, setUpdating] = useState(false);
 
@@ -755,7 +764,7 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
         {booking.shoot_date && (
           <span>{new Date(booking.shoot_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
         )}
-        {booking.shoot_time && <span>{booking.shoot_time}</span>}
+        {booking.shoot_time && <span>{TIME_LABELS[booking.shoot_time] || booking.shoot_time}</span>}
         {booking.total_price && <span>&euro;{booking.total_price}</span>}
       </div>
 
@@ -793,7 +802,7 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
           </button>
         )}
         <a
-          href={`/dashboard/messages/${booking.id}`}
+          href={`/dashboard/messages?chat=${booking.id}`}
           className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
         >
           Message

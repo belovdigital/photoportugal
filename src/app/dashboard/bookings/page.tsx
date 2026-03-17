@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { ReviewForm } from "@/components/ui/ReviewForm";
+import { BookingStatusButtons } from "./BookingStatusButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,15 @@ const STATUS_STYLES: Record<string, string> = {
   confirmed: "bg-green-100 text-green-700",
   completed: "bg-blue-100 text-blue-700",
   cancelled: "bg-gray-100 text-gray-500",
+};
+
+const TIME_LABELS: Record<string, string> = {
+  sunrise: "Sunrise (6-8 AM)",
+  morning: "Morning (8-11 AM)",
+  midday: "Midday (11 AM-2 PM)",
+  afternoon: "Afternoon (2-5 PM)",
+  golden_hour: "Golden Hour (5-7 PM)",
+  sunset: "Sunset (7-9 PM)",
 };
 
 export default async function BookingsPage() {
@@ -111,7 +121,7 @@ export default async function BookingsPage() {
                 {booking.shoot_date && (
                   <span>{new Date(booking.shoot_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
                 )}
-                {booking.shoot_time && <span>{booking.shoot_time}</span>}
+                {booking.shoot_time && <span>{TIME_LABELS[booking.shoot_time] || booking.shoot_time}</span>}
                 {booking.total_price && <span>&euro;{booking.total_price}</span>}
                 <span>Requested {new Date(booking.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
               </div>
@@ -121,12 +131,18 @@ export default async function BookingsPage() {
               )}
 
               <div className="mt-4 flex flex-wrap gap-2">
+                {isPhotographer && (booking.status === "pending" || booking.status === "confirmed") && (
+                  <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} />
+                )}
                 <Link
                   href={`/dashboard/messages?chat=${booking.id}`}
                   className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
                 >
                   Message
                 </Link>
+                {!isPhotographer && (booking.status === "pending" || booking.status === "confirmed") && (
+                  <BookingStatusButtons bookingId={booking.id} currentStatus="cancel-only" />
+                )}
                 {!isPhotographer && booking.status === "completed" && !booking.has_review && (
                   <ReviewForm bookingId={booking.id} photographerName={booking.other_name} />
                 )}

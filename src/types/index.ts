@@ -103,14 +103,13 @@ export interface Booking {
   id: string;
   client_id: string;
   photographer_id: string;
-  location_id: string | null;
+  location_slug: string | null;
   package_id: string | null;
-  date: string;
-  time: string;
-  duration_minutes: number;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
-  total_price: number;
-  notes: string | null;
+  shoot_date: string | null;
+  shoot_time: string | null;
+  message: string | null;
+  status: "pending" | "confirmed" | "completed" | "cancelled" | "disputed";
+  total_price: number | null;
   created_at: string;
 }
 

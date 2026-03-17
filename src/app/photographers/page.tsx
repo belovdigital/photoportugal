@@ -116,9 +116,9 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
 export default async function PhotographersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ location?: string }>;
+  searchParams: Promise<{ location?: string; shoot?: string }>;
 }) {
-  const { location: initialLocation } = await searchParams;
+  const { location: initialLocation, shoot: initialShootType } = await searchParams;
   const dbPhotographers = await getDbPhotographers();
 
   // Merge: DB photographers first (real), then demo (exclude if slug conflicts)
@@ -135,6 +135,7 @@ export default async function PhotographersPage({
       regions={regions}
       shootTypes={SHOOT_TYPES as unknown as string[]}
       initialLocation={initialLocation}
+      initialShootType={initialShootType}
     />
   );
 }

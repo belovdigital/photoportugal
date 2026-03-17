@@ -95,10 +95,16 @@ export function PhotographerCard({
         {/* Price */}
         <div className="mt-4 flex items-center justify-between border-t border-warm-100 pt-4">
           <div>
-            <span className="text-sm text-gray-400">From </span>
-            <span className="text-lg font-bold text-gray-900">
-              &euro;{popularPackage?.price ?? photographer.hourly_rate}
-            </span>
+            {(popularPackage?.price || photographer.packages[0]?.price || photographer.hourly_rate) ? (
+              <>
+                <span className="text-sm text-gray-400">From </span>
+                <span className="text-lg font-bold text-gray-900">
+                  &euro;{popularPackage?.price ?? photographer.packages[0]?.price ?? photographer.hourly_rate}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm text-gray-400">Contact for pricing</span>
+            )}
           </div>
           <span className="rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white">
             View Profile

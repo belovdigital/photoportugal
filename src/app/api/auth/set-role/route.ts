@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
       const createdAt = new Date(user.created_at);
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-      // Only set role if user was just created (within 5 min) or still has default 'client' role
-      if (createdAt > fiveMinutesAgo || user.role === "client") {
+      // Only set role if user was just created (within 5 min)
+      if (createdAt > fiveMinutesAgo) {
         await query("UPDATE users SET role = $1 WHERE id = $2", [role, user.id]);
 
         if (role === "photographer") {

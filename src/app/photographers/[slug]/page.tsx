@@ -31,6 +31,7 @@ async function getPhotographer(slug: string) {
       tagline: string | null;
       bio: string | null;
       avatar_url: string | null;
+      cover_url: string | null;
       languages: string[];
       shoot_types: string[];
       hourly_rate: number | null;
@@ -43,7 +44,12 @@ async function getPhotographer(slug: string) {
       review_count: number;
       session_count: number;
     }>(
-      "SELECT id, slug, display_name, tagline, bio, avatar_url, languages, shoot_types, hourly_rate, experience_years, is_verified, is_featured, is_approved, plan, rating, review_count, session_count FROM photographer_profiles WHERE slug = $1",
+      `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.languages, p.shoot_types,
+              p.hourly_rate, p.experience_years, p.is_verified, p.is_featured, p.is_approved, p.plan,
+              p.rating, p.review_count, p.session_count
+       FROM photographer_profiles p
+       JOIN users u ON u.id = p.user_id
+       WHERE p.slug = $1`,
       [slug]
     );
     if (!profile || !profile.is_approved) return null;
@@ -196,7 +202,11 @@ export default async function PhotographerProfilePage({
       />
 
       {/* Cover */}
-      <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-700 sm:h-80" />
+      <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-700 sm:h-80 overflow-hidden">
+        {photographer.cover_url && (
+          <img src={photographer.cover_url} alt="" className="h-full w-full object-cover" />
+        )}
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative -mt-16 sm:-mt-20">

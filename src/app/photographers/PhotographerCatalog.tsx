@@ -10,6 +10,7 @@ interface Props {
   regions: string[];
   shootTypes: string[];
   initialLocation?: string;
+  initialShootType?: string;
 }
 
 const PRICE_RANGES = [
@@ -24,10 +25,11 @@ export function PhotographerCatalog({
   locations,
   shootTypes,
   initialLocation,
+  initialShootType,
 }: Props) {
   const [locationFilter, setLocationFilter] = useState(initialLocation || "");
   const [locationSearch, setLocationSearch] = useState("");
-  const [shootTypeFilter, setShootTypeFilter] = useState("");
+  const [shootTypeFilter, setShootTypeFilter] = useState(initialShootType || "");
   const [languageFilter, setLanguageFilter] = useState("");
   const [priceRange, setPriceRange] = useState(0);
   const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "reviews">("rating");

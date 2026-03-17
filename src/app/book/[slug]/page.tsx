@@ -147,8 +147,13 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
 
   if (!photographer) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-gray-500">{error || "Photographer not found"}</p>
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-gray-500">{error || "Photographer not found"}</p>
+          <Link href="/photographers" className="mt-4 inline-flex rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
+            Browse Photographers
+          </Link>
+        </div>
       </div>
     );
   }

@@ -69,6 +69,24 @@ export function AdminLoginForm() {
   );
 }
 
+export function AdminLogoutButton() {
+  const router = useRouter();
+
+  async function handleLogout() {
+    document.cookie = "admin_token=; path=/; max-age=0";
+    router.refresh();
+  }
+
+  return (
+    <button
+      onClick={handleLogout}
+      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+    >
+      Log Out
+    </button>
+  );
+}
+
 export function AdminToggleClient({ id, field, value }: { id: string; field: string; value: boolean }) {
   const router = useRouter();
   const [checked, setChecked] = useState(value);

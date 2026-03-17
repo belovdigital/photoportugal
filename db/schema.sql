@@ -43,7 +43,7 @@ CREATE TABLE photographer_profiles (
   cover_url TEXT,
   languages TEXT[] DEFAULT '{}',
   shoot_types TEXT[] DEFAULT '{}',
-  hourly_rate INTEGER, -- in cents (EUR)
+  hourly_rate INTEGER, -- in EUR (whole euros)
   currency VARCHAR(3) DEFAULT 'EUR',
   experience_years INTEGER DEFAULT 0,
   is_verified BOOLEAN DEFAULT FALSE,
@@ -83,7 +83,7 @@ CREATE TABLE packages (
   description TEXT,
   duration_minutes INTEGER NOT NULL,
   num_photos INTEGER NOT NULL,
-  price INTEGER NOT NULL, -- in cents (EUR)
+  price INTEGER NOT NULL, -- in EUR (whole euros)
   is_popular BOOLEAN DEFAULT FALSE,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -121,7 +121,7 @@ CREATE TABLE bookings (
   shoot_date DATE,
   shoot_time TIME,
   message TEXT, -- initial message from client
-  total_price INTEGER, -- in cents
+  total_price INTEGER, -- in EUR (whole euros)
   payment_status payment_status DEFAULT 'pending',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
