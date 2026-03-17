@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Contact Us",
   description:
     "Get in touch with Photo Portugal. Questions about bookings, photographer accounts, or partnerships? We're here to help.",
+  alternates: { canonical: "https://photoportugal.com/contact" },
 };
 
 export default function ContactPage() {

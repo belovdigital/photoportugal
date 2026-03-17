@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Photography Locations in Portugal",
   description:
     "Explore 23+ stunning photography locations across Portugal — from Lisbon and Porto to the Algarve coast, Azores islands, and hidden gems. Find your perfect photoshoot spot.",
+  alternates: { canonical: "https://photoportugal.com/locations" },
 };
 
 export default function LocationsPage() {

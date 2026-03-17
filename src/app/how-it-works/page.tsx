@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "How It Works",
   description:
     "Learn how to book a professional photographer in Portugal with Photo Portugal. Three simple steps to your perfect vacation photoshoot.",
+  alternates: { canonical: "https://photoportugal.com/how-it-works" },
 };
 
 export default function HowItWorksPage() {

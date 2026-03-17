@@ -94,6 +94,7 @@ export async function generateMetadata({
   const locationNames = (p.locations || []).map((l: { name: string }) => l.name).join(", ");
   const title = `${p.display_name} — Photographer in ${locationNames || "Portugal"}`;
   const description = `Book ${p.display_name}, a professional photographer in ${locationNames || "Portugal"}. ${p.tagline || ""}`;
+  const ogImage = p.cover_url || p.avatar_url || "/og-image.png";
   return {
     title,
     description,
@@ -103,6 +104,7 @@ export async function generateMetadata({
       description,
       type: "profile",
       url: `https://photoportugal.com/photographers/${slug}`,
+      images: [{ url: ogImage, alt: title }],
     },
   };
 }
@@ -166,19 +168,28 @@ export default async function PhotographerProfilePage({
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: photographer.display_name,
-    description: photographer.bio,
+    description: photographer.bio || photographer.tagline,
+    url: `https://photoportugal.com/photographers/${slug}`,
+    image: photographer.cover_url || photographer.avatar_url || undefined,
+    priceRange: photographer.hourly_rate ? `From €${photographer.hourly_rate}` : undefined,
     aggregateRating: photographer.review_count > 0
       ? {
           "@type": "AggregateRating",
           ratingValue: photographer.rating,
           reviewCount: photographer.review_count,
+          bestRating: 5,
         }
       : undefined,
     address: {
       "@type": "PostalAddress",
       addressLocality: photographer.locations?.[0]?.name,
+      addressRegion: photographer.locations?.[0]?.name,
       addressCountry: "PT",
     },
+    areaServed: (photographer.locations || []).map((l: { name: string }) => ({
+      "@type": "City",
+      name: l.name,
+    })),
   };
 
   return (
@@ -191,7 +202,7 @@ export default async function PhotographerProfilePage({
       {/* Cover */}
       <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-700 sm:h-80 overflow-hidden">
         {photographer.cover_url && (
-          <img src={photographer.cover_url} alt="" className="h-full w-full object-cover" />
+          <img src={photographer.cover_url} alt={`${photographer.display_name} — photography portfolio cover`} className="h-full w-full object-cover" />
         )}
       </div>
 

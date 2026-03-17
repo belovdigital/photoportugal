@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "Photo Portugal terms of service — rules and guidelines for using our photographer marketplace.",
+  alternates: { canonical: "https://photoportugal.com/terms" },
+  robots: { index: false, follow: true },
 };
 
 export default function TermsPage() {

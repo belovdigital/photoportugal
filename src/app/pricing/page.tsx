@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Pricing Plans for Photographers",
   description:
     "Choose the right plan for your photography business on Photo Portugal. Free, Pro, and Premium plans available.",
+  alternates: { canonical: "https://photoportugal.com/pricing" },
 };
 
 const plans = [

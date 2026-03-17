@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "FAQ — Frequently Asked Questions",
   description:
     "Find answers to common questions about booking photographers in Portugal, pricing, cancellation policy, and more.",
+  alternates: { canonical: "https://photoportugal.com/faq" },
 };
 
 const faqs = [

@@ -222,7 +222,7 @@ export default function HomePage() {
           ].map((stat) => (
             <div key={stat.label} className="flex flex-col items-center text-center">
               <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.color}`}>
-                <svg className="h-5 w-5" fill={stat.filled ? "currentColor" : "none"} viewBox="0 0 20 20" stroke={stat.filled ? undefined : "currentColor"}>
+                <svg className="h-5 w-5" fill={stat.filled ? "currentColor" : "none"} viewBox={stat.filled ? "0 0 20 20" : "0 0 24 24"} stroke={stat.filled ? undefined : "currentColor"}>
                   {stat.icon}
                 </svg>
               </div>

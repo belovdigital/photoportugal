@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "For Photographers — Join Photo Portugal",
   description: "Join Portugal's growing photographer marketplace. Connect with travelers, manage bookings, and grow your business.",
+  alternates: { canonical: "https://photoportugal.com/for-photographers" },
 };
 
 export default function ForPhotographersPage() {
