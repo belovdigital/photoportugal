@@ -44,10 +44,11 @@ async function getPhotographer(slug: string) {
       rating: number;
       review_count: number;
       session_count: number;
+      last_seen_at: string | null;
     }>(
       `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.languages, p.shoot_types,
               p.hourly_rate, p.experience_years, p.is_verified, p.is_featured, p.is_approved, p.plan,
-              p.rating, p.review_count, p.session_count
+              p.rating, p.review_count, p.session_count, u.last_seen_at
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.slug = $1`,
@@ -213,11 +214,16 @@ export default async function PhotographerProfilePage({
         <div className="relative -mt-16 sm:-mt-20">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-8">
             {/* Avatar */}
-            <div className="flex h-32 w-32 items-center justify-center rounded-2xl border-4 border-white bg-primary-100 text-4xl font-bold text-primary-600 shadow-lg sm:h-40 sm:w-40 overflow-hidden">
-              {photographer.avatar_url ? (
-                <img src={photographer.avatar_url} alt={photographer.display_name} className="h-full w-full object-cover" />
-              ) : (
-                photographer.display_name.charAt(0)
+            <div className="relative">
+              <div className="flex h-32 w-32 items-center justify-center rounded-2xl border-4 border-white bg-primary-100 text-4xl font-bold text-primary-600 shadow-lg sm:h-40 sm:w-40 overflow-hidden">
+                {photographer.avatar_url ? (
+                  <img src={photographer.avatar_url} alt={photographer.display_name} className="h-full w-full object-cover" />
+                ) : (
+                  photographer.display_name.charAt(0)
+                )}
+              </div>
+              {result.type === "db" && (photographer as { last_seen_at?: string }).last_seen_at && (Date.now() - new Date((photographer as { last_seen_at: string }).last_seen_at).getTime()) < 5 * 60 * 1000 && (
+                <span className="absolute bottom-1 right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-green-500" title="Online" />
               )}
             </div>
             <div className="pb-2">

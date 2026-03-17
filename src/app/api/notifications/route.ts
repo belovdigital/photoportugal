@@ -11,9 +11,9 @@ export async function GET() {
   const userId = (session.user as { id?: string }).id;
 
   try {
-    // Get user role from DB
+    // Update last seen + get role
     const user = await queryOne<{ role: string }>(
-      "SELECT role FROM users WHERE id = $1",
+      "UPDATE users SET last_seen_at = NOW() WHERE id = $1 RETURNING role",
       [userId]
     );
 

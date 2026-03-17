@@ -6,17 +6,17 @@ import { useSession, signOut } from "next-auth/react";
 import { unsplashUrl } from "@/lib/unsplash-images";
 
 function useNotifications(loggedIn: boolean) {
-  const [unread, setUnread] = useState(0);
+  const [data, setData] = useState({ unread_messages: 0, pending_bookings: 0 });
   useEffect(() => {
     if (!loggedIn) return;
     function fetch_() {
-      fetch("/api/notifications").then(r => r.json()).then(d => setUnread(d.unread_messages || 0)).catch(() => {});
+      fetch("/api/notifications").then(r => r.json()).then(setData).catch(() => {});
     }
     fetch_();
     const i = setInterval(fetch_, 8000);
     return () => clearInterval(i);
   }, [loggedIn]);
-  return unread;
+  return data;
 }
 
 const TOP_DESTINATIONS = [
@@ -48,7 +48,7 @@ export function Header() {
   const role = (user as { role?: string } | undefined)?.role;
   const isPhotographer = role === "photographer";
   const isLoading = status === "loading";
-  const unreadMessages = useNotifications(!!user);
+  const notifications = useNotifications(!!user);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -217,38 +217,61 @@ export function Header() {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/photographers"
-              className="hidden rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 sm:inline-flex"
-            >
-              Book a Photoshoot
-            </Link>
+          <div className="flex items-center gap-2">
+            {/* Book CTA — only for non-photographers */}
+            {!isPhotographer && (
+              <Link
+                href="/photographers"
+                className="hidden rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 sm:inline-flex"
+              >
+                Book a Photoshoot
+              </Link>
+            )}
 
             {isLoading ? (
-              <div className="h-8 w-8 animate-pulse rounded-full bg-warm-200" />
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 animate-pulse rounded-full bg-warm-200" />
+              </div>
             ) : user ? (
-              <div className="relative" ref={profileRef}>
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="relative flex items-center gap-1.5 rounded-full border border-warm-200 p-1 pr-2 transition hover:bg-warm-50"
-                >
-                  {user.image ? (
-                    <img src={user.image} alt="" className="h-7 w-7 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
-                      {user.name?.charAt(0) ?? "U"}
-                    </div>
-                  )}
-                  {unreadMessages > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
-                      {unreadMessages}
+              <div className="flex items-center gap-1">
+                {/* Bookings icon with pending badge */}
+                <Link href="/dashboard/bookings" className="relative rounded-lg p-2 text-gray-500 transition hover:bg-warm-50 hover:text-gray-700">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {notifications.pending_bookings > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-600 px-1 text-[9px] font-bold text-white">
+                      {notifications.pending_bookings}
                     </span>
                   )}
-                  <svg className={`h-3.5 w-3.5 text-gray-400 transition ${profileOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </Link>
+
+                {/* Messages icon with unread badge */}
+                <Link href="/dashboard/messages" className="relative rounded-lg p-2 text-gray-500 transition hover:bg-warm-50 hover:text-gray-700">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
-                </button>
+                  {notifications.unread_messages > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                      {notifications.unread_messages}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Avatar dropdown */}
+                <div className="relative" ref={profileRef}>
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="flex items-center rounded-full p-1 transition hover:bg-warm-50"
+                  >
+                    {user.image ? (
+                      <img src={user.image} alt="" className="h-8 w-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
+                        {user.name?.charAt(0) ?? "U"}
+                      </div>
+                    )}
+                  </button>
 
                 {profileOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-warm-200 bg-white shadow-lg">
@@ -278,6 +301,7 @@ export function Header() {
                     </div>
                   </div>
                 )}
+              </div>
               </div>
             ) : (
               <Link href="/auth/signin" className="text-sm font-medium text-gray-600 transition hover:text-gray-900">
