@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
 import { sendNewMessageNotification } from "@/lib/email";
+import { detectContactInfo } from "@/lib/content-filter";
 
 // Get messages for a booking
 export async function GET(req: NextRequest) {
@@ -73,6 +74,15 @@ export async function POST(req: NextRequest) {
 
     if (!booking_id || !text?.trim()) {
       return NextResponse.json({ error: "booking_id and text required" }, { status: 400 });
+    }
+
+    // Check for contact info sharing
+    const contactType = detectContactInfo(text);
+    if (contactType) {
+      return NextResponse.json({
+        error: `For your safety, please avoid sharing ${contactType}s in messages. Keep all communication and payments on Photo Portugal.`,
+        warning: true,
+      }, { status: 400 });
     }
 
     // Verify user is part of this booking

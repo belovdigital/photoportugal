@@ -143,6 +143,10 @@ export function Header() {
                           </Link>
                         ))}
                       </div>
+                      <Link href="/photographers" onClick={() => setActiveMenu(null)}
+                        className="mt-2 block text-xs font-semibold text-primary-600 hover:text-primary-700 px-2">
+                        All types &rarr;
+                      </Link>
                     </div>
                   </div>
                 </div>

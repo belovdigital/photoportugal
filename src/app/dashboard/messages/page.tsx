@@ -93,8 +93,16 @@ function MessagesContent() {
     setSending(true);
     const res = await fetch("/api/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ booking_id: activeChat, text }) });
     setSending(false);
-    if (res.ok) await fetchMessages(activeChat);
-    else setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+    if (res.ok) {
+      await fetchMessages(activeChat);
+    } else {
+      setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+      const data = await res.json();
+      if (data.warning) {
+        setNewMessage(text); // restore the message so user can edit
+        alert(data.error);
+      }
+    }
     setConversations((prev) => prev.map((c) => c.booking_id === activeChat ? { ...c, last_message: text, last_message_at: new Date().toISOString() } : c));
     inputRef.current?.focus();
   }
