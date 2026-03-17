@@ -35,8 +35,8 @@ export default async function ProfilePage() {
   );
 
   const portfolioItems = await query<{
-    id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; sort_order: number;
-  }>("SELECT id, type, url, thumbnail_url, caption, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order", [profile.id]);
+    id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number;
+  }>("SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order", [profile.id]);
 
   const packages = await query<{
     id: string; name: string; description: string | null; duration_minutes: number; num_photos: number; price: number; is_popular: boolean;

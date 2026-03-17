@@ -32,7 +32,7 @@ export function PhotographerCatalog({
   const [shootTypeFilters, setShootTypeFilters] = useState<string[]>(initialShootType ? [initialShootType] : []);
   const [languageFilter, setLanguageFilter] = useState("");
   const [priceRange, setPriceRange] = useState(0);
-  const [sortBy, setSortBy] = useState<"rating" | "price-low" | "price-high" | "reviews">("rating");
+  const [sortBy, setSortBy] = useState<"featured" | "rating" | "price-low" | "price-high" | "reviews">("featured");
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
   const allLanguages = useMemo(() => {
@@ -98,6 +98,9 @@ export function PhotographerCatalog({
     };
 
     switch (sortBy) {
+      case "featured":
+        result = [...result].sort((a, b) => featuredFirst(a, b) || b.rating - a.rating || b.review_count - a.review_count);
+        break;
       case "rating":
         result = [...result].sort((a, b) => featuredFirst(a, b) || b.rating - a.rating || b.review_count - a.review_count);
         break;
@@ -256,6 +259,7 @@ export function PhotographerCatalog({
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none"
           >
+            <option value="featured">Featured</option>
             <option value="rating">Top Rated</option>
             <option value="reviews">Most Reviews</option>
             <option value="price-low">Price: Low → High</option>

@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
+      return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
     }
 
     if (!file.type.startsWith("image/")) {
@@ -66,12 +66,14 @@ export async function POST(req: NextRequest) {
     await writeFile(path.join(portfolioDir, filename), buffer);
 
     const url = `/uploads/portfolio/${profile.id}/${filename}`;
+    const locationSlug = (formData.get("location_slug") as string) || null;
+    const shootType = (formData.get("shoot_type") as string) || null;
 
     const item = await queryOne(
-      `INSERT INTO portfolio_items (photographer_id, type, url, sort_order)
-       VALUES ($1, 'photo', $2, $3)
+      `INSERT INTO portfolio_items (photographer_id, type, url, location_slug, shoot_type, sort_order)
+       VALUES ($1, 'photo', $2, $3, $4, $5)
        RETURNING id`,
-      [profile.id, url, count]
+      [profile.id, url, locationSlug, shootType, count]
     );
 
     return NextResponse.json({ success: true, item });

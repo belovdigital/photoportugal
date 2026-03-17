@@ -108,6 +108,7 @@ CREATE TABLE portfolio_items (
   thumbnail_url TEXT,
   caption TEXT,
   location_slug VARCHAR(100),
+  shoot_type VARCHAR(50),
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

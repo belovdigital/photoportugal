@@ -30,6 +30,8 @@ interface PortfolioItem {
   url: string;
   thumbnail_url: string | null;
   caption: string | null;
+  location_slug: string | null;
+  shoot_type: string | null;
   sort_order: number;
 }
 
@@ -146,12 +148,17 @@ export function PhotographerDashboardClient({
   }
 
   // === Portfolio ===
+  const [photoLocation, setPhotoLocation] = useState("");
+  const [photoShootType, setPhotoShootType] = useState("");
+
   async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append("file", file);
+    if (photoLocation) formData.append("location_slug", photoLocation);
+    if (photoShootType) formData.append("shoot_type", photoShootType);
 
     showMessage("Uploading...");
     const res = await fetch("/api/dashboard/portfolio", {
@@ -458,20 +465,40 @@ export function PhotographerDashboardClient({
         {/* === PORTFOLIO TAB === */}
         {activeTab === "portfolio" && (
           <div>
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">
-                Upload your best work to attract clients ({portfolioItems.length} photos)
-              </p>
+            {/* Upload controls */}
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-500">
+                  Upload your best work ({portfolioItems.length} photos)
+                </p>
+              </div>
+              <select
+                value={photoLocation}
+                onChange={(e) => setPhotoLocation(e.target.value)}
+                className="rounded-lg border border-warm-200 px-2.5 py-2 text-xs text-gray-600 outline-none"
+              >
+                <option value="">Location (optional)</option>
+                {allLocations.filter((l) => selectedLocations.includes(l.slug)).map((l) => (
+                  <option key={l.slug} value={l.slug}>{l.name}</option>
+                ))}
+              </select>
+              <select
+                value={photoShootType}
+                onChange={(e) => setPhotoShootType(e.target.value)}
+                className="rounded-lg border border-warm-200 px-2.5 py-2 text-xs text-gray-600 outline-none"
+              >
+                <option value="">Shoot type (optional)</option>
+                {selectedShootTypes.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
               <label className="cursor-pointer rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
                 Upload Photo
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={uploadPhoto}
-                  className="hidden"
-                />
+                <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" />
               </label>
             </div>
+
+            {/* Photo grid */}
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {portfolioItems.map((item) => (
                 <div key={item.id} className="group relative aspect-square overflow-hidden rounded-xl bg-warm-100">
@@ -481,6 +508,22 @@ export function PhotographerDashboardClient({
                     className="h-full w-full object-cover"
                     loading="lazy"
                   />
+                  {/* Tags overlay */}
+                  {(item.location_slug || item.shoot_type) && (
+                    <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+                      {item.location_slug && (
+                        <span className="rounded bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                          {allLocations.find((l) => l.slug === item.location_slug)?.name || item.location_slug}
+                        </span>
+                      )}
+                      {item.shoot_type && (
+                        <span className="rounded bg-primary-600/70 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                          {item.shoot_type}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {/* Delete hover */}
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
                     <button
                       onClick={() => deletePhoto(item.id)}
