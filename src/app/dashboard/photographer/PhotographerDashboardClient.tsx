@@ -195,13 +195,19 @@ export function PhotographerDashboardClient({
     router.refresh();
   }
 
+  const [localItems, setLocalItems] = useState(portfolioItems);
+  // Sync when server data changes
+  if (portfolioItems.length !== localItems.length || portfolioItems.some((p, i) => p.id !== localItems[i]?.id)) {
+    setLocalItems(portfolioItems);
+  }
+
   function handleDragStart(id: string) {
     setDragId(id);
   }
 
-  async function handleDrop(targetId: string) {
+  function handleDrop(targetId: string) {
     if (!dragId || dragId === targetId) { setDragId(null); return; }
-    const items = [...portfolioItems];
+    const items = [...localItems];
     const fromIdx = items.findIndex((p) => p.id === dragId);
     const toIdx = items.findIndex((p) => p.id === targetId);
     if (fromIdx === -1 || toIdx === -1) { setDragId(null); return; }
@@ -209,9 +215,10 @@ export function PhotographerDashboardClient({
     const [moved] = items.splice(fromIdx, 1);
     items.splice(toIdx, 0, moved);
     setDragId(null);
+    setLocalItems(items);
 
-    // Save new order
-    await fetch("/api/dashboard/portfolio", {
+    // Save in background (no refresh)
+    fetch("/api/dashboard/portfolio", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -219,14 +226,13 @@ export function PhotographerDashboardClient({
         items: items.map((item, i) => ({ id: item.id, sort_order: i })),
       }),
     });
-    router.refresh();
   }
 
   // Portfolio filters: only show tags that exist
-  const usedLocations = [...new Set(portfolioItems.map((p) => p.location_slug).filter(Boolean))] as string[];
-  const usedShootTypes = [...new Set(portfolioItems.map((p) => p.shoot_type).filter(Boolean))] as string[];
+  const usedLocations = [...new Set(localItems.map((p) => p.location_slug).filter(Boolean))] as string[];
+  const usedShootTypes = [...new Set(localItems.map((p) => p.shoot_type).filter(Boolean))] as string[];
 
-  const filteredPortfolio = portfolioItems.filter((item) => {
+  const filteredPortfolio = localItems.filter((item) => {
     if (portfolioFilter.location && item.location_slug !== portfolioFilter.location) return false;
     if (portfolioFilter.shootType && item.shoot_type !== portfolioFilter.shootType) return false;
     return true;
@@ -518,7 +524,7 @@ export function PhotographerDashboardClient({
             {/* Header + Upload */}
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">
-                {portfolioItems.length} photo{portfolioItems.length !== 1 ? "s" : ""} &middot; Drag to reorder
+                {localItems.length} photo{localItems.length !== 1 ? "s" : ""} &middot; Drag to reorder
               </p>
               <label className="cursor-pointer rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
                 Upload Photo
@@ -536,7 +542,7 @@ export function PhotographerDashboardClient({
                       ? "bg-primary-600 text-white" : "bg-warm-100 text-gray-500 hover:bg-warm-200"
                   }`}
                 >
-                  All ({portfolioItems.length})
+                  All ({localItems.length})
                 </button>
                 {usedLocations.map((slug) => (
                   <button
@@ -626,12 +632,12 @@ export function PhotographerDashboardClient({
                   </div>
                 </div>
               ))}
-              {portfolioItems.length === 0 && (
+              {localItems.length === 0 && (
                 <div className="col-span-full rounded-xl border-2 border-dashed border-warm-300 p-12 text-center">
                   <p className="text-gray-400">No photos yet. Upload your first photo to get started!</p>
                 </div>
               )}
-              {portfolioItems.length > 0 && filteredPortfolio.length === 0 && (
+              {localItems.length > 0 && filteredPortfolio.length === 0 && (
                 <div className="col-span-full py-8 text-center">
                   <p className="text-gray-400">No photos match this filter.</p>
                 </div>

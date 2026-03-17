@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
+import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 
 export const dynamicParams = true;
@@ -62,8 +63,8 @@ async function getPhotographer(slug: string) {
       [profile.id]
     );
 
-    const portfolioItems = await query<{ url: string; caption: string | null }>(
-      "SELECT url, caption FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order LIMIT 12",
+    const portfolioItems = await query<{ url: string; caption: string | null; location_slug: string | null; shoot_type: string | null }>(
+      "SELECT url, caption, location_slug, shoot_type FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order",
       [profile.id]
     );
 
@@ -123,7 +124,7 @@ export default async function PhotographerProfilePage({
 
   const photographer = result.data;
   let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string; client_avatar: string | null }[] = [];
-  const portfolioItems = (photographer as { portfolioItems?: { url: string; caption: string | null }[] }).portfolioItems || [];
+  const portfolioItems = (photographer as { portfolioItems?: { url: string; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
   // Fetch real reviews from DB for DB photographers
   if (result.type === "db") {
@@ -302,16 +303,10 @@ export default async function PhotographerProfilePage({
 
             {/* Portfolio */}
             {portfolioItems.length > 0 && (
-              <section>
-                <h2 className="text-xl font-bold text-gray-900">Portfolio</h2>
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {portfolioItems.map((item: { url: string; caption: string | null }, i: number) => (
-                    <div key={i} className="aspect-square overflow-hidden rounded-xl bg-warm-100">
-                      <img src={item.url} alt={item.caption || "Portfolio photo"} className="h-full w-full object-cover" loading="lazy" />
-                    </div>
-                  ))}
-                </div>
-              </section>
+              <PortfolioGallery
+                items={portfolioItems}
+                locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
+              />
             )}
 
             {/* Reviews */}
