@@ -126,20 +126,33 @@ export async function DELETE(req: NextRequest) {
   return NextResponse.json({ success: true });
 }
 
-// Update tags on a portfolio item
+// Update tags or reorder portfolio items
 export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = (session.user as { id?: string }).id;
-  const { id: itemId, location_slug, shoot_type } = await req.json();
-
-  if (!itemId) return NextResponse.json({ error: "Item ID required" }, { status: 400 });
+  const body = await req.json();
 
   const profile = await queryOne<{ id: string }>(
     "SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]
   );
   if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+
+  // Batch reorder
+  if (body.action === "reorder" && Array.isArray(body.items)) {
+    for (const item of body.items) {
+      await queryOne(
+        "UPDATE portfolio_items SET sort_order = $1 WHERE id = $2 AND photographer_id = $3",
+        [item.sort_order, item.id, profile.id]
+      );
+    }
+    return NextResponse.json({ success: true });
+  }
+
+  // Update tags on single item
+  const { id: itemId, location_slug, shoot_type } = body;
+  if (!itemId) return NextResponse.json({ error: "Item ID required" }, { status: 400 });
 
   await queryOne(
     "UPDATE portfolio_items SET location_slug = $1, shoot_type = $2 WHERE id = $3 AND photographer_id = $4 RETURNING id",
