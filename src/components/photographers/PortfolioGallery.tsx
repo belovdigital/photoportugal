@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface PortfolioItem {
   url: string;
@@ -33,6 +33,31 @@ export function PortfolioGallery({
     if (filter.shootType && item.shoot_type !== filter.shootType) return false;
     return true;
   });
+
+  // Keyboard navigation for lightbox
+  const navigate = useCallback((dir: number) => {
+    setLightbox((prev) => {
+      if (prev === null) return null;
+      const next = prev + dir;
+      if (next < 0 || next >= filtered.length) return prev;
+      return next;
+    });
+  }, [filtered.length]);
+
+  useEffect(() => {
+    if (lightbox === null) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") navigate(1);
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") navigate(-1);
+      else if (e.key === "Escape") setLightbox(null);
+    }
+    window.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [lightbox, navigate]);
 
   return (
     <section>
@@ -77,18 +102,18 @@ export function PortfolioGallery({
         </div>
       )}
 
-      {/* Grid */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {/* Masonry grid — preserves original aspect ratios */}
+      <div className="mt-4 columns-2 gap-3 sm:columns-3">
         {filtered.map((item, i) => (
           <div
             key={i}
-            className="group cursor-pointer aspect-square overflow-hidden rounded-xl bg-warm-100"
+            className="mb-3 cursor-pointer overflow-hidden rounded-xl bg-warm-100 break-inside-avoid transition hover:opacity-90"
             onClick={() => setLightbox(i)}
           >
             <img
               src={item.url}
               alt={item.caption || "Portfolio photo"}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full"
               loading="lazy"
             />
           </div>
@@ -99,25 +124,27 @@ export function PortfolioGallery({
         <p className="mt-4 text-sm text-gray-400">No photos match this filter.</p>
       )}
 
-      {/* Lightbox */}
+      {/* Lightbox / Slider */}
       {lightbox !== null && filtered[lightbox] && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
           onClick={() => setLightbox(null)}
         >
+          {/* Close */}
           <button
             onClick={() => setLightbox(null)}
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
+          {/* Previous */}
           {lightbox > 0 && (
             <button
-              onClick={(e) => { e.stopPropagation(); setLightbox(lightbox - 1); }}
-              className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+              className="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -125,6 +152,7 @@ export function PortfolioGallery({
             </button>
           )}
 
+          {/* Image */}
           <img
             src={filtered[lightbox].url}
             alt={filtered[lightbox].caption || "Portfolio photo"}
@@ -132,10 +160,11 @@ export function PortfolioGallery({
             onClick={(e) => e.stopPropagation()}
           />
 
+          {/* Next */}
           {lightbox < filtered.length - 1 && (
             <button
-              onClick={(e) => { e.stopPropagation(); setLightbox(lightbox + 1); }}
-              className="absolute right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              onClick={(e) => { e.stopPropagation(); navigate(1); }}
+              className="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -143,8 +172,15 @@ export function PortfolioGallery({
             </button>
           )}
 
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-white/70">
-            {lightbox + 1} / {filtered.length}
+          {/* Counter + caption */}
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1">
+            {filtered[lightbox].caption && (
+              <p className="text-sm text-white/80">{filtered[lightbox].caption}</p>
+            )}
+            <div className="flex items-center gap-3 text-sm text-white/50">
+              <span>{lightbox + 1} / {filtered.length}</span>
+              <span className="text-white/30">Use arrow keys to navigate</span>
+            </div>
           </div>
         </div>
       )}

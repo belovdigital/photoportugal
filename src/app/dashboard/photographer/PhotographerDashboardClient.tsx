@@ -572,7 +572,7 @@ export function PhotographerDashboardClient({
             )}
 
             {/* Photo grid with drag & drop */}
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {filteredPortfolio.map((item) => (
                 <div
                   key={item.id}
@@ -585,7 +585,7 @@ export function PhotographerDashboardClient({
                   }`}
                 >
                   {/* Image */}
-                  <div className="relative aspect-[4/3] bg-warm-100">
+                  <div className="relative aspect-square bg-warm-100">
                     <img
                       src={item.url}
                       alt={item.caption || "Portfolio photo"}
