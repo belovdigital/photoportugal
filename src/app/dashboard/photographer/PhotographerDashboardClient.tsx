@@ -219,8 +219,10 @@ export function PhotographerDashboardClient({
   }
 
   const [localItems, setLocalItems] = useState(portfolioItems);
-  // Sync when server data changes
-  if (portfolioItems.length !== localItems.length || portfolioItems.some((p, i) => p.id !== localItems[i]?.id)) {
+  // Sync only when items are added/removed (not on reorder)
+  const serverIds = portfolioItems.map((p) => p.id).sort().join(",");
+  const localIds = localItems.map((p) => p.id).sort().join(",");
+  if (serverIds !== localIds) {
     setLocalItems(portfolioItems);
   }
 
