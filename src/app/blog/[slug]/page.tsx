@@ -71,7 +71,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-function renderContent(content: string) {
+function isHtmlContent(content: string): boolean {
+  // Detect if content is HTML by checking for common block-level HTML tags
+  return /^<(h[1-6]|p|div|section|article|figure|ul|ol|blockquote|table|hr|img)\b/im.test(
+    content.trim()
+  );
+}
+
+function renderHtmlContent(content: string) {
+  return (
+    <div
+      className="blog-html-content"
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
+  );
+}
+
+function renderMarkdownContent(content: string) {
   const blocks = content.split(/\n\n+/);
 
   return blocks.map((block, i) => {
@@ -138,42 +154,53 @@ function renderContent(content: string) {
   });
 }
 
+function renderContent(content: string) {
+  if (isHtmlContent(content)) {
+    return renderHtmlContent(content);
+  }
+  return renderMarkdownContent(content);
+}
+
 function formatInline(text: string): React.ReactNode {
-  // Process bold and italic markers
+  // Process bold, italic, and link markers
   const parts: React.ReactNode[] = [];
   let remaining = text;
   let key = 0;
 
   while (remaining.length > 0) {
-    // Bold
     const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
-    // Italic
     const italicMatch = remaining.match(/\*(.+?)\*/);
+    const linkMatch = remaining.match(/\[([^\]]+)\]\(([^)]+)\)/);
 
     const boldIdx = boldMatch?.index ?? Infinity;
     const italicIdx = italicMatch?.index ?? Infinity;
+    const linkIdx = linkMatch?.index ?? Infinity;
 
-    if (boldIdx === Infinity && italicIdx === Infinity) {
+    const minIdx = Math.min(boldIdx, italicIdx, linkIdx);
+
+    if (minIdx === Infinity) {
       parts.push(remaining);
       break;
     }
 
-    if (boldIdx <= italicIdx && boldMatch) {
-      // Text before bold
-      if (boldIdx > 0) {
-        parts.push(remaining.slice(0, boldIdx));
-      }
+    if (minIdx === boldIdx && boldMatch) {
+      if (boldIdx > 0) parts.push(remaining.slice(0, boldIdx));
       parts.push(
         <strong key={key++} className="font-semibold text-gray-900">
           {boldMatch[1]}
         </strong>
       );
       remaining = remaining.slice(boldIdx + boldMatch[0].length);
+    } else if (minIdx === linkIdx && linkMatch) {
+      if (linkIdx > 0) parts.push(remaining.slice(0, linkIdx));
+      parts.push(
+        <a key={key++} href={linkMatch[2]} className="text-primary-600 underline transition hover:text-primary-700">
+          {linkMatch[1]}
+        </a>
+      );
+      remaining = remaining.slice(linkIdx + linkMatch[0].length);
     } else if (italicMatch) {
-      // Text before italic
-      if (italicIdx > 0) {
-        parts.push(remaining.slice(0, italicIdx));
-      }
+      if (italicIdx > 0) parts.push(remaining.slice(0, italicIdx));
       parts.push(<em key={key++}>{italicMatch[1]}</em>);
       remaining = remaining.slice(italicIdx + italicMatch[0].length);
     }

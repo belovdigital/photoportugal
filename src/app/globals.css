@@ -52,6 +52,67 @@
   100% { opacity: 1; transform: scale(1); }
 }
 
+/* Blog HTML content styling — matches the markdown renderer output */
+.blog-html-content h2 {
+  @apply mt-10 mb-4 font-display text-2xl font-bold text-gray-900 sm:text-3xl;
+}
+
+.blog-html-content h3 {
+  @apply mt-8 mb-3 font-display text-xl font-bold text-gray-900;
+}
+
+.blog-html-content p {
+  @apply my-4 text-gray-600 leading-relaxed;
+}
+
+.blog-html-content strong {
+  @apply font-semibold text-gray-900;
+}
+
+.blog-html-content em {
+  @apply italic;
+}
+
+.blog-html-content a {
+  @apply text-primary-600 underline transition hover:text-primary-700;
+}
+
+.blog-html-content ul {
+  @apply my-4 list-disc space-y-1 pl-6 text-gray-600;
+}
+
+.blog-html-content ol {
+  @apply my-4 list-decimal space-y-1 pl-6 text-gray-600;
+}
+
+.blog-html-content figure {
+  @apply my-8;
+}
+
+.blog-html-content img {
+  @apply w-full rounded-xl;
+}
+
+.blog-html-content blockquote {
+  @apply my-6 border-l-4 border-primary-300 pl-4 italic text-gray-500;
+}
+
+.blog-html-content table {
+  @apply my-6 w-full border-collapse text-sm;
+}
+
+.blog-html-content th {
+  @apply border-b-2 border-warm-200 px-4 py-2 text-left font-semibold text-gray-900;
+}
+
+.blog-html-content td {
+  @apply border-b border-warm-100 px-4 py-2 text-gray-600;
+}
+
+.blog-html-content hr {
+  @apply my-8 border-warm-200;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
