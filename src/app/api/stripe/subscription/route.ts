@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const portalSession = await (stripe.billingPortal.sessions.create as any)({
         customer: customerId,
-        return_url: `${process.env.AUTH_URL}/dashboard/subscription`,
+        return_url: `${process.env.AUTH_URL}/dashboard/subscriptions`,
       });
       return NextResponse.json({ url: portalSession.url });
     }
@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
         locale: "auto",
         adaptive_pricing: { enabled: true },
         line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
-        success_url: `${process.env.AUTH_URL}/dashboard/subscription?success=true`,
-        cancel_url: `${process.env.AUTH_URL}/dashboard/subscription?canceled=true`,
+        success_url: `${process.env.AUTH_URL}/dashboard/subscriptions?success=true`,
+        cancel_url: `${process.env.AUTH_URL}/dashboard/subscriptions?canceled=true`,
         subscription_data: { metadata: { photographer_id: profile.id, plan } },
       });
       return NextResponse.json({ url: checkoutSession.url });

@@ -169,7 +169,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
           {profile.plan === "free" ? "Upgrade to get more visibility and features" : "Active subscription"}
         </span>
         {profile.plan === "free" && (
-          <Link href="/dashboard/subscription" className="ml-auto text-sm font-semibold text-primary-600 hover:text-primary-700">
+          <Link href="/dashboard/subscriptions" className="ml-auto text-sm font-semibold text-primary-600 hover:text-primary-700">
             Upgrade
           </Link>
         )}

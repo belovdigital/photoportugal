@@ -79,8 +79,8 @@ export async function POST() {
       locale: "auto",
       adaptive_pricing: { enabled: true },
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.AUTH_URL}/dashboard/subscription?verified=success`,
-      cancel_url: `${process.env.AUTH_URL}/dashboard/subscription?verified=canceled`,
+      success_url: `${process.env.AUTH_URL}/dashboard/subscriptions?verified=success`,
+      cancel_url: `${process.env.AUTH_URL}/dashboard/subscriptions?verified=canceled`,
       metadata: {
         photographer_id: profile.id,
         type: "verified",

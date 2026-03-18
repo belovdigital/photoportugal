@@ -28,7 +28,7 @@ export function DashboardSidebar() {
     { href: "/dashboard/profile", label: "Profile", icon: "user", roles: ["photographer"] },
     { href: "/dashboard/portfolio", label: "Portfolio", icon: "image", roles: ["photographer"] },
     { href: "/dashboard/packages", label: "Packages", icon: "package", roles: ["photographer"] },
-    { href: "/dashboard/subscription", label: "Subscription", icon: "credit-card", roles: ["photographer"] },
+    { href: "/dashboard/subscriptions", label: "Subscriptions", icon: "credit-card", roles: ["photographer"] },
     { href: "/dashboard/settings", label: "Settings", icon: "settings", roles: ["client", "photographer"] },
   ];
 

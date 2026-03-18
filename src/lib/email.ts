@@ -137,7 +137,7 @@ export async function sendSubscriptionEmail(
       <h2 style="color: #C94536;">Plan ${action === "cancelled" ? "Cancelled" : "Updated"}</h2>
       <p>Hi ${name},</p>
       <p>${messages[action]}</p>
-      <p><a href="${BASE_URL}/dashboard/subscription" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Subscription</a></p>
+      <p><a href="${BASE_URL}/dashboard/subscriptions" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Subscription</a></p>
       <p style="color: #999; font-size: 12px;">Invoices are available in your Stripe billing portal.</p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>`

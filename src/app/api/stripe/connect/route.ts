@@ -44,8 +44,8 @@ export async function POST() {
     // Create onboarding link
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.AUTH_URL}/dashboard/subscription?stripe=refresh`,
-      return_url: `${process.env.AUTH_URL}/dashboard/subscription?stripe=success`,
+      refresh_url: `${process.env.AUTH_URL}/dashboard/subscriptions?stripe=refresh`,
+      return_url: `${process.env.AUTH_URL}/dashboard/subscriptions?stripe=success`,
       type: "account_onboarding",
     });
 
