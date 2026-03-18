@@ -246,8 +246,8 @@ export default async function PhotographerProfilePage({
         <div className="relative -mt-16 sm:-mt-20">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-8">
             {/* Avatar */}
-            <div className="relative">
-              <div className="flex h-32 w-32 items-center justify-center rounded-2xl border-4 border-white bg-primary-100 text-4xl font-bold text-primary-600 shadow-lg sm:h-40 sm:w-40 overflow-hidden">
+            <div className="relative shrink-0">
+              <div className="flex h-32 w-32 items-center justify-center rounded-full ring-[5px] ring-white bg-primary-100 text-4xl font-bold text-primary-600 sm:h-40 sm:w-40 overflow-hidden">
                 {photographer.avatar_url ? (
                   <img src={photographer.avatar_url} alt={photographer.display_name} className="h-full w-full object-cover" />
                 ) : (
@@ -255,7 +255,7 @@ export default async function PhotographerProfilePage({
                 )}
               </div>
               {result.type === "db" && (photographer as { last_seen_at?: string }).last_seen_at && (Date.now() - new Date((photographer as { last_seen_at: string }).last_seen_at).getTime()) < 5 * 60 * 1000 && (
-                <span className="absolute bottom-1 right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-green-500" title="Online" />
+                <span className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 flex h-4 w-4 rounded-full ring-[3px] ring-white bg-green-500" title="Online" />
               )}
             </div>
             <div className="pb-2">
