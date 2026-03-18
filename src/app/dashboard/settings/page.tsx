@@ -145,19 +145,6 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Subscription */}
-      {isPhotographer && (
-        <section className="mt-8">
-          <h2 className="text-lg font-bold text-gray-900">Subscription & Billing</h2>
-          <div className="mt-4 rounded-xl border border-warm-200 bg-white p-6">
-            <p className="text-sm text-gray-600">Manage your plan and payment details.</p>
-            <Link href="/dashboard/subscription" className="mt-3 inline-flex rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700">
-              Manage Subscription
-            </Link>
-          </div>
-        </section>
-      )}
-
       {/* Danger Zone */}
       <section className="mt-8 mb-12">
         <h2 className="text-lg font-bold text-red-600">Danger Zone</h2>
