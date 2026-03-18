@@ -45,7 +45,11 @@ export async function POST(req: NextRequest) {
     </div>
     `;
 
-    await sendEmail(adminEmail, `[Support] ${subject.trim()}`, html);
+    // Support multiple emails separated by commas
+    const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+    for (const email of emails) {
+      await sendEmail(email, `[Support] ${subject.trim()}`, html);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

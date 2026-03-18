@@ -107,7 +107,7 @@ export default async function AdminPage() {
         <h2 className="text-xl font-bold text-gray-900">Platform Settings</h2>
         <div className="mt-4 rounded-xl border border-warm-200 bg-white p-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">Admin notification email</label>
-          <p className="text-xs text-gray-400 mb-3">Support requests from photographers will be sent to this address.</p>
+          <p className="text-xs text-gray-400 mb-3">Support requests and notifications will be sent here. Use commas for multiple emails.</p>
           <AdminNotificationEmail initialValue={adminNotificationEmail} />
         </div>
       </section>

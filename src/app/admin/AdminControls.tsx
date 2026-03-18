@@ -174,10 +174,10 @@ export function AdminNotificationEmail({ initialValue }: { initialValue: string 
   return (
     <div className="flex items-center gap-3">
       <input
-        type="email"
+        type="text"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="info@photoportugal.com"
+        placeholder="admin@photoportugal.com, backup@gmail.com"
         className="block w-full max-w-sm rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500"
       />
       <button
