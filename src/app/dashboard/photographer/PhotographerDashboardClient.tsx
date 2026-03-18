@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
 import {
@@ -1165,6 +1165,9 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const [uploading, setUploading] = useState(false);
 
+  // Sync with server data (e.g. after router.refresh())
+  useEffect(() => { setPreviewUrl(initialUrl); }, [initialUrl]);
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1175,10 +1178,22 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
     formData.append("file", file);
     setUploading(true);
     onMessage("Uploading photo...");
-    const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
+    try {
+      const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewUrl(data.url);
+        onMessage("Photo updated!");
+      } else {
+        const err = await res.json().catch(() => null);
+        setPreviewUrl(initialUrl);
+        onMessage(err?.error || "Upload failed");
+      }
+    } catch {
+      setPreviewUrl(initialUrl);
+      onMessage("Upload failed — check your connection");
+    }
     setUploading(false);
-    if (res.ok) { const data = await res.json(); setPreviewUrl(data.url); onMessage("Photo updated!"); }
-    else { setPreviewUrl(initialUrl); onMessage("Upload failed"); }
     e.target.value = "";
   }
 
@@ -1191,7 +1206,7 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
         </div>
         <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
           {uploading ? "Uploading..." : "Upload Photo"}
-          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+          <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleUpload} disabled={uploading} />
         </label>
       </div>
     </div>
@@ -1201,6 +1216,9 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
 function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onMessage: (msg: string) => void }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const [uploading, setUploading] = useState(false);
+
+  // Sync with server data (e.g. after router.refresh())
+  useEffect(() => { setPreviewUrl(initialUrl); }, [initialUrl]);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -1219,17 +1237,22 @@ function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onM
     setUploading(true);
     onMessage("Uploading cover...");
 
-    const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
-    setUploading(false);
-
-    if (res.ok) {
-      const data = await res.json();
-      setPreviewUrl(data.url);
-      onMessage("Cover updated!");
-    } else {
+    try {
+      const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewUrl(data.url);
+        onMessage("Cover updated!");
+      } else {
+        const err = await res.json().catch(() => null);
+        setPreviewUrl(initialUrl);
+        onMessage(err?.error || "Upload failed");
+      }
+    } catch {
       setPreviewUrl(initialUrl);
-      onMessage("Upload failed");
+      onMessage("Upload failed — check your connection");
     }
+    setUploading(false);
     e.target.value = "";
   }
 
