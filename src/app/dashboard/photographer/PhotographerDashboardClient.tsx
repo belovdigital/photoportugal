@@ -3,6 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Profile {
   id: string;
@@ -172,7 +190,12 @@ export function PhotographerDashboardClient({
   }
 
   const [portfolioFilter, setPortfolioFilter] = useState<{ location: string; shootType: string }>({ location: "", shootType: "" });
-  const [dragId, setDragId] = useState<string | null>(null);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  );
 
   async function deletePhoto(id: string) {
     if (!confirm("Delete this photo?")) return;
@@ -201,45 +224,34 @@ export function PhotographerDashboardClient({
     setLocalItems(portfolioItems);
   }
 
-  function handleDragStart(e: React.DragEvent, id: string) {
-    setDragId(id);
-    e.dataTransfer.effectAllowed = "move";
-    // Set drag data so the browser knows this is a valid drag
-    e.dataTransfer.setData("text/plain", id);
+  function handleDragStart(event: DragStartEvent) {
+    setActiveDragId(event.active.id as string);
   }
 
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setActiveDragId(null);
+    if (!over || active.id === over.id) return;
 
-  function handleDragEnd() {
-    setDragId(null);
-  }
+    const oldIndex = localItems.findIndex((p) => p.id === active.id);
+    const newIndex = localItems.findIndex((p) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
 
-  function handleDrop(e: React.DragEvent, targetId: string) {
-    e.preventDefault();
-    if (!dragId || dragId === targetId) { setDragId(null); return; }
-    const items = [...localItems];
-    const fromIdx = items.findIndex((p) => p.id === dragId);
-    const toIdx = items.findIndex((p) => p.id === targetId);
-    if (fromIdx === -1 || toIdx === -1) { setDragId(null); return; }
+    const reordered = arrayMove(localItems, oldIndex, newIndex);
+    setLocalItems(reordered);
 
-    const [moved] = items.splice(fromIdx, 1);
-    items.splice(toIdx, 0, moved);
-    setDragId(null);
-    setLocalItems(items);
-
-    // Save in background (no refresh)
+    // Save in background
     fetch("/api/dashboard/portfolio", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "reorder",
-        items: items.map((item, i) => ({ id: item.id, sort_order: i })),
+        items: reordered.map((item, i) => ({ id: item.id, sort_order: i })),
       }),
     });
   }
+
+  const activeDragItem = activeDragId ? localItems.find((p) => p.id === activeDragId) : null;
 
   // Portfolio filters: only show tags that exist
   const usedLocations = [...new Set(localItems.map((p) => p.location_slug).filter(Boolean))] as string[];
@@ -585,79 +597,45 @@ export function PhotographerDashboardClient({
             )}
 
             {/* Photo grid with drag & drop */}
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {filteredPortfolio.map((item) => (
-                <div
-                  key={item.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, item.id)}
-                  onDragOver={handleDragOver}
-                  onDragEnd={handleDragEnd}
-                  onDrop={(e) => handleDrop(e, item.id)}
-                  className={`group cursor-grab overflow-hidden rounded-xl border bg-white transition active:cursor-grabbing ${
-                    dragId === item.id ? "border-primary-400 opacity-50 ring-2 ring-primary-200" : "border-warm-200"
-                  }`}
-                >
-                  {/* Image */}
-                  <div className="relative aspect-square bg-warm-100">
-                    <img
-                      src={item.url}
-                      alt={item.caption || "Portfolio photo"}
-                      className="h-full w-full object-cover pointer-events-none select-none"
-                      draggable={false}
-                      loading="lazy"
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={filteredPortfolio.map((p) => p.id)} strategy={rectSortingStrategy}>
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {filteredPortfolio.map((item) => (
+                    <SortablePhotoCard
+                      key={item.id}
+                      item={item}
+                      allLocations={allLocations}
+                      onDelete={deletePhoto}
+                      onUpdateTag={updatePhotoTag}
                     />
-                    <button
-                      onClick={() => deletePhoto(item.id)}
-                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                    {/* Drag handle indicator */}
-                    <div className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition group-hover:opacity-100">
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                      </svg>
+                  ))}
+                  {localItems.length === 0 && (
+                    <div className="col-span-full rounded-xl border-2 border-dashed border-warm-300 p-12 text-center">
+                      <p className="text-gray-400">No photos yet. Upload your first photo to get started!</p>
+                    </div>
+                  )}
+                  {localItems.length > 0 && filteredPortfolio.length === 0 && (
+                    <div className="col-span-full py-8 text-center">
+                      <p className="text-gray-400">No photos match this filter.</p>
+                    </div>
+                  )}
+                </div>
+              </SortableContext>
+              <DragOverlay>
+                {activeDragItem && (
+                  <div className="rounded-xl border-2 border-primary-400 bg-white shadow-2xl ring-4 ring-primary-200/50" style={{ width: 200 }}>
+                    <div className="aspect-square overflow-hidden rounded-t-xl bg-warm-100">
+                      <img src={activeDragItem.url} alt="" className="h-full w-full object-cover" />
                     </div>
                   </div>
-                  {/* Tags */}
-                  <div className="flex flex-col gap-1.5 p-2.5">
-                    <select
-                      value={item.location_slug || ""}
-                      onChange={(e) => updatePhotoTag(item.id, "location_slug", e.target.value)}
-                      className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
-                    >
-                      <option value="">Location</option>
-                      {allLocations.map((l) => (
-                        <option key={l.slug} value={l.slug}>{l.name}</option>
-                      ))}
-                    </select>
-                    <select
-                      value={item.shoot_type || ""}
-                      onChange={(e) => updatePhotoTag(item.id, "shoot_type", e.target.value)}
-                      className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
-                    >
-                      <option value="">Shoot type</option>
-                      {SHOOT_TYPES.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              ))}
-              {localItems.length === 0 && (
-                <div className="col-span-full rounded-xl border-2 border-dashed border-warm-300 p-12 text-center">
-                  <p className="text-gray-400">No photos yet. Upload your first photo to get started!</p>
-                </div>
-              )}
-              {localItems.length > 0 && filteredPortfolio.length === 0 && (
-                <div className="col-span-full py-8 text-center">
-                  <p className="text-gray-400">No photos match this filter.</p>
-                </div>
-              )}
-            </div>
+                )}
+              </DragOverlay>
+            </DndContext>
           </div>
         )}
 
@@ -836,6 +814,85 @@ export function PhotographerDashboardClient({
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SortablePhotoCard({
+  item,
+  allLocations,
+  onDelete,
+  onUpdateTag,
+}: {
+  item: PortfolioItem;
+  allLocations: LocationOption[];
+  onDelete: (id: string) => void;
+  onUpdateTag: (id: string, field: "location_slug" | "shoot_type", value: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="group overflow-hidden rounded-xl border border-warm-200 bg-white">
+      {/* Image — drag handle */}
+      <div
+        className="relative aspect-square cursor-grab bg-warm-100 active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <img
+          src={item.url}
+          alt={item.caption || "Portfolio photo"}
+          className="h-full w-full object-cover pointer-events-none select-none"
+          draggable={false}
+          loading="lazy"
+        />
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
+        >
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition group-hover:opacity-100">
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </div>
+      </div>
+      {/* Tags — not draggable */}
+      <div className="flex flex-col gap-1.5 p-2.5">
+        <select
+          value={item.location_slug || ""}
+          onChange={(e) => onUpdateTag(item.id, "location_slug", e.target.value)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+        >
+          <option value="">Location</option>
+          {allLocations.map((l) => (
+            <option key={l.slug} value={l.slug}>{l.name}</option>
+          ))}
+        </select>
+        <select
+          value={item.shoot_type || ""}
+          onChange={(e) => onUpdateTag(item.id, "shoot_type", e.target.value)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+        >
+          <option value="">Shoot type</option>
+          {SHOOT_TYPES.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
       </div>
     </div>
   );
