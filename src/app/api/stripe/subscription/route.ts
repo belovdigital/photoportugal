@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { stripe } from "@/lib/stripe";
+import { requireStripe } from "@/lib/stripe";
 
 const PRICE_IDS: Record<string, string> = {
   pro: process.env.STRIPE_PRO_PRICE_ID || "price_1TC1VTGU0seq3XOV7ztETK3Z",
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // Get or create Stripe customer
     let customerId = user.stripe_customer_id;
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await requireStripe().customers.create({
         email: user.email,
         metadata: { user_id: userId!, photographer_id: profile.id },
       });
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     if (action === "portal") {
       // Billing portal for managing payment methods, invoices, cancellation
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const portalSession = await (stripe.billingPortal.sessions.create as any)({
+      const portalSession = await (requireStripe().billingPortal.sessions.create as any)({
         customer: customerId,
         return_url: `${process.env.AUTH_URL}/dashboard/subscriptions`,
       });
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     if (action === "subscribe" && plan && PRICE_IDS[plan]) {
       // Create checkout session for subscription
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const checkoutSession = await (stripe.checkout.sessions.create as any)({
+      const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
         customer: customerId,
         mode: "subscription",
         locale: "auto",

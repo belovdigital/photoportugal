@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { stripe } from "@/lib/stripe";
+import { requireStripe } from "@/lib/stripe";
 
 const VERIFIED_PRICE = 1900; // €19.00
 
@@ -10,25 +10,26 @@ async function getVerifiedPriceId(): Promise<string> {
   if (process.env.STRIPE_VERIFIED_PRICE_ID) return process.env.STRIPE_VERIFIED_PRICE_ID;
 
   // Search for existing product
+  const stripeClient = requireStripe();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const products = await (stripe.products.list as any)({ limit: 100, active: true });
+  const products = await (stripeClient.products.list as any)({ limit: 100, active: true });
   const verifiedProduct = products.data.find(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (p: any) => p.metadata?.type === "verified" && p.active
   );
 
   if (verifiedProduct) {
-    const prices = await stripe.prices.list({ product: verifiedProduct.id, active: true, limit: 1 });
+    const prices = await stripeClient.prices.list({ product: verifiedProduct.id, active: true, limit: 1 });
     if (prices.data.length > 0) return prices.data[0].id;
   }
 
   // Create product + price (yearly subscription)
-  const product = await stripe.products.create({
+  const product = await stripeClient.products.create({
     name: "Photo Portugal — Verified Badge",
     description: "Identity-verified badge with phone number confirmation — annual subscription",
     metadata: { type: "verified" },
   });
-  const price = await stripe.prices.create({
+  const price = await stripeClient.prices.create({
     product: product.id,
     unit_amount: VERIFIED_PRICE,
     currency: "eur",
@@ -62,7 +63,7 @@ export async function POST() {
     // Get or create Stripe customer
     let customerId = user.stripe_customer_id;
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await requireStripe().customers.create({
         email: user.email,
         metadata: { user_id: userId!, photographer_id: profile.id },
       });
@@ -73,7 +74,7 @@ export async function POST() {
     const priceId = await getVerifiedPriceId();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const checkoutSession = await (stripe.checkout.sessions.create as any)({
+    const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
       customer: customerId,
       mode: "subscription",
       locale: "auto",

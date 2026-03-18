@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
-import { stripe } from "@/lib/stripe";
+import { requireStripe } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendSubscriptionEmail } from "@/lib/email";
@@ -15,9 +15,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
   }
 
+  const stripeClient = requireStripe();
+
   let event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig!, webhookSecret);
+    event = stripeClient.webhooks.constructEvent(body, sig!, webhookSecret);
   } catch (err) {
     console.error("[stripe/webhook] Signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });

@@ -145,6 +145,53 @@ export function AdminDeletePhotographer({ id, name }: { id: string; name: string
   );
 }
 
+export function AdminNotificationEmail({ initialValue }: { initialValue: string }) {
+  const [email, setEmail] = useState(initialValue);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function handleSave() {
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "admin_notification_email", value: email.trim() }),
+      });
+      if (res.ok) {
+        setMessage("Saved!");
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        setMessage("Failed to save");
+      }
+    } catch {
+      setMessage("Failed to save");
+    }
+    setSaving(false);
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="info@photoportugal.com"
+        className="block w-full max-w-sm rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500"
+      />
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="shrink-0 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+      >
+        {saving ? "..." : "Save"}
+      </button>
+      {message && <span className="text-sm text-green-600">{message}</span>}
+    </div>
+  );
+}
+
 export function AdminPlanSelectClient({ id, currentPlan }: { id: string; currentPlan: string }) {
   const router = useRouter();
   const [plan, setPlan] = useState(currentPlan);

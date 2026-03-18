@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { stripe } from "@/lib/stripe";
+import { requireStripe } from "@/lib/stripe";
 
 const FEATURED_PRICE = 1900; // €19.00
 
@@ -12,24 +12,25 @@ async function getFeaturedPriceId(): Promise<string> {
 
   // Search for existing product with metadata
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const products = await (stripe.products.list as any)({ limit: 100, active: true });
+  const stripeClient = requireStripe();
+  const products = await (stripeClient.products.list as any)({ limit: 100, active: true });
   const featuredProduct = products.data.find(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (p: any) => p.metadata?.type === "featured" && p.active
   );
 
   if (featuredProduct) {
-    const prices = await stripe.prices.list({ product: featuredProduct.id, active: true, limit: 1 });
+    const prices = await stripeClient.prices.list({ product: featuredProduct.id, active: true, limit: 1 });
     if (prices.data.length > 0) return prices.data[0].id;
   }
 
   // Create product + price (one-time)
-  const product = await stripe.products.create({
+  const product = await stripeClient.products.create({
     name: "Photo Portugal — Featured Placement",
     description: "Homepage featured section and priority search ranking with Featured badge",
     metadata: { type: "featured" },
   });
-  const price = await stripe.prices.create({
+  const price = await stripeClient.prices.create({
     product: product.id,
     unit_amount: FEATURED_PRICE,
     currency: "eur",
@@ -62,7 +63,7 @@ export async function POST() {
     // Get or create Stripe customer
     let customerId = user.stripe_customer_id;
     if (!customerId) {
-      const customer = await stripe.customers.create({
+      const customer = await requireStripe().customers.create({
         email: user.email,
         metadata: { user_id: userId!, photographer_id: profile.id },
       });
@@ -73,7 +74,7 @@ export async function POST() {
     const priceId = await getFeaturedPriceId();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const checkoutSession = await (stripe.checkout.sessions.create as any)({
+    const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
       customer: customerId,
       mode: "subscription",
       locale: "auto",

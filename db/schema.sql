@@ -221,6 +221,16 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   email_bookings BOOLEAN DEFAULT TRUE,
   email_messages BOOLEAN DEFAULT TRUE,
   email_reviews BOOLEAN DEFAULT TRUE,
+  sms_bookings BOOLEAN DEFAULT TRUE,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- PLATFORM SETTINGS (key-value store)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS platform_settings (
+  key VARCHAR(100) PRIMARY KEY,
+  value TEXT,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

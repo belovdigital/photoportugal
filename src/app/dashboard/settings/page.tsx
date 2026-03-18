@@ -32,6 +32,7 @@ export default function SettingsPage() {
   const [emailBookings, setEmailBookings] = useState(true);
   const [emailMessages, setEmailMessages] = useState(true);
   const [emailReviews, setEmailReviews] = useState(true);
+  const [smsBookings, setSmsBookings] = useState(true);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   // Load preferences from DB
@@ -42,6 +43,7 @@ export default function SettingsPage() {
         setEmailBookings(data.email_bookings ?? true);
         setEmailMessages(data.email_messages ?? true);
         setEmailReviews(data.email_reviews ?? true);
+        setSmsBookings(data.sms_bookings ?? true);
         setPrefsLoaded(true);
       })
       .catch(() => setPrefsLoaded(true));
@@ -68,7 +70,7 @@ export default function SettingsPage() {
   }
 
   async function saveNotificationPref(key: string, value: boolean) {
-    const prefs = { email_bookings: emailBookings, email_messages: emailMessages, email_reviews: emailReviews, [key]: value };
+    const prefs = { email_bookings: emailBookings, email_messages: emailMessages, email_reviews: emailReviews, sms_bookings: smsBookings, [key]: value };
     try {
       await fetch("/api/dashboard/notifications", {
         method: "PUT",
@@ -144,6 +146,22 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
+
+      {/* SMS Notifications */}
+      {isPhotographer && (
+        <section className="mt-8">
+          <h2 className="text-lg font-bold text-gray-900">SMS Notifications</h2>
+          <div className="mt-4 rounded-xl border border-warm-200 bg-white divide-y divide-warm-100">
+            <div className="flex items-center justify-between px-6 py-4">
+              <div>
+                <p className="text-sm font-medium text-gray-900">New bookings</p>
+                <p className="text-xs text-gray-400">Receive an SMS when someone requests a session</p>
+              </div>
+              {prefsLoaded && <Toggle enabled={smsBookings} onChange={(v) => { setSmsBookings(v); saveNotificationPref("sms_bookings", v); }} />}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Danger Zone */}
       <section className="mt-8 mb-12">

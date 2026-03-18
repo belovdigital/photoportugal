@@ -1,8 +1,18 @@
 import Stripe from "stripe";
 
-export const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
-  : null as unknown as Stripe;
+function getStripeClient(): Stripe | null {
+  if (!process.env.STRIPE_SECRET_KEY) return null;
+  return new Stripe(process.env.STRIPE_SECRET_KEY);
+}
+
+export const stripe = getStripeClient();
+
+export function requireStripe(): Stripe {
+  if (!stripe) {
+    throw new Error("Stripe is not configured. Set STRIPE_SECRET_KEY environment variable.");
+  }
+  return stripe;
+}
 
 // Commission rates by plan (whole percentages)
 export const COMMISSION_RATES: Record<string, number> = {

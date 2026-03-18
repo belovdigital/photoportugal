@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { stripe } from "@/lib/stripe";
+import { requireStripe } from "@/lib/stripe";
 
 // Create Stripe Connect Express account for photographer
 export async function POST() {
@@ -10,6 +10,14 @@ export async function POST() {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = (session.user as { id?: string }).id;
+
+  let stripeClient;
+  try {
+    stripeClient = requireStripe();
+  } catch {
+    console.error("[stripe/connect] Stripe not configured");
+    return NextResponse.json({ error: "Stripe is not configured on the server" }, { status: 500 });
+  }
 
   try {
     const profile = await queryOne<{ id: string; stripe_account_id: string | null }>(
@@ -23,7 +31,7 @@ export async function POST() {
 
     // Create Stripe Express account if doesn't exist
     if (!accountId) {
-      const account = await stripe.accounts.create({
+      const account = await stripeClient.accounts.create({
         type: "express",
         country: "PT",
         email: session.user.email!,
@@ -42,7 +50,7 @@ export async function POST() {
     }
 
     // Create onboarding link
-    const accountLink = await stripe.accountLinks.create({
+    const accountLink = await stripeClient.accountLinks.create({
       account: accountId,
       refresh_url: `${process.env.AUTH_URL}/dashboard/subscriptions?stripe=refresh`,
       return_url: `${process.env.AUTH_URL}/dashboard/subscriptions?stripe=success`,
@@ -52,7 +60,8 @@ export async function POST() {
     return NextResponse.json({ url: accountLink.url });
   } catch (error) {
     console.error("[stripe/connect] error:", error);
-    return NextResponse.json({ error: "Failed to create Stripe account" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Failed to create Stripe account";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -73,8 +82,9 @@ export async function GET() {
       return NextResponse.json({ connected: false, onboarded: false });
     }
 
-    // Check if onboarding is complete
-    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
+    // Check if onboarding is complete via Stripe API
+    const stripeClient = requireStripe();
+    const account = await stripeClient.accounts.retrieve(profile.stripe_account_id);
     const onboarded = account.charges_enabled && account.payouts_enabled;
 
     if (onboarded && !profile.stripe_onboarding_complete) {

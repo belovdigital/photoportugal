@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
-import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeletePhotographer } from "./AdminControls";
+import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeletePhotographer, AdminNotificationEmail } from "./AdminControls";
 import { LocationsManager } from "./LocationsManager";
 import { verifyToken } from "@/app/api/admin/login/route";
 
@@ -38,6 +38,15 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM reviews"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM messages"),
   ]);
+
+  // Platform settings
+  let adminNotificationEmail = "";
+  try {
+    const setting = await queryOne<{ value: string }>(
+      "SELECT value FROM platform_settings WHERE key = 'admin_notification_email'"
+    );
+    if (setting?.value) adminNotificationEmail = setting.value;
+  } catch {}
 
   const clients = await query<{
     id: string; email: string; name: string; created_at: string; avatar_url: string | null;
@@ -92,6 +101,16 @@ export default async function AdminPage() {
           </div>
         ))}
       </div>
+
+      {/* Settings */}
+      <section className="mt-8">
+        <h2 className="text-xl font-bold text-gray-900">Platform Settings</h2>
+        <div className="mt-4 rounded-xl border border-warm-200 bg-white p-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Admin notification email</label>
+          <p className="text-xs text-gray-400 mb-3">Support requests from photographers will be sent to this address.</p>
+          <AdminNotificationEmail initialValue={adminNotificationEmail} />
+        </div>
+      </section>
 
       {/* Photographers */}
       <section className="mt-10">

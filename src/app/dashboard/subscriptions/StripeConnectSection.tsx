@@ -6,6 +6,7 @@ import { COMMISSION_RATES, SERVICE_FEE_RATE } from "@/lib/stripe";
 export function StripeConnectSection() {
   const [status, setStatus] = useState<{ connected: boolean; onboarded: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/stripe/connect")
@@ -16,11 +17,19 @@ export function StripeConnectSection() {
 
   async function handleConnect() {
     setLoading(true);
-    const res = await fetch("/api/stripe/connect", { method: "POST" });
-    const data = await res.json();
-    setLoading(false);
-    if (data.url) {
-      window.location.href = data.url;
+    setError(null);
+    try {
+      const res = await fetch("/api/stripe/connect", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.error || "Failed to start Stripe onboarding. Please try again.");
+        setLoading(false);
+      }
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+      setLoading(false);
     }
   }
 
@@ -30,6 +39,12 @@ export function StripeConnectSection() {
       <p className="mt-2 text-sm text-gray-500">
         Connect your Stripe account to receive payments from clients.
       </p>
+
+      {error && (
+        <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-3">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
 
       {status === null ? (
         <div className="mt-4 h-10 w-40 animate-pulse rounded-lg bg-warm-200" />

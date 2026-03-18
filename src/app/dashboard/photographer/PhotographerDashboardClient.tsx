@@ -166,26 +166,48 @@ export function PhotographerDashboardClient({
   }
 
   // === Portfolio ===
+  const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
+
   async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    setUploadingPortfolio(true);
+    const total = files.length;
+    let uploaded = 0;
+    let failed = 0;
 
-    showMessage("Uploading...");
-    const res = await fetch("/api/dashboard/portfolio", {
-      method: "POST",
-      body: formData,
-    });
+    for (let i = 0; i < total; i++) {
+      showMessage(`Uploading ${i + 1} of ${total}...`);
+      const formData = new FormData();
+      formData.append("file", files[i]);
 
-    if (res.ok) {
-      showMessage("Photo uploaded!");
-      router.refresh();
-    } else {
-      const data = await res.json();
-      showMessage(data.error || "Upload failed");
+      try {
+        const res = await fetch("/api/dashboard/portfolio", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (res.ok) {
+          uploaded++;
+        } else {
+          failed++;
+          const data = await res.json();
+          console.error(`Upload failed for ${files[i].name}:`, data.error);
+        }
+      } catch {
+        failed++;
+        console.error(`Upload error for ${files[i].name}`);
+      }
     }
+
+    setUploadingPortfolio(false);
+    if (failed === 0) {
+      showMessage(`${uploaded} photo${uploaded !== 1 ? "s" : ""} uploaded!`);
+    } else {
+      showMessage(`${uploaded} uploaded, ${failed} failed`);
+    }
+    router.refresh();
     e.target.value = "";
   }
 
@@ -314,7 +336,8 @@ export function PhotographerDashboardClient({
       setShowPackageForm(false);
       router.refresh();
     } else {
-      showMessage("Error saving package");
+      const data = await res.json().catch(() => null);
+      showMessage(data?.error || "Error saving package");
     }
   }
 
@@ -553,9 +576,9 @@ export function PhotographerDashboardClient({
               <p className="text-sm text-gray-500">
                 {localItems.length} photo{localItems.length !== 1 ? "s" : ""} &middot; Drag to reorder
               </p>
-              <label className="cursor-pointer rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
-                Upload Photo
-                <input type="file" accept="image/*" multiple onChange={uploadPhoto} className="hidden" />
+              <label className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${uploadingPortfolio ? "cursor-not-allowed bg-primary-400" : "cursor-pointer bg-primary-600 hover:bg-primary-700"}`}>
+                {uploadingPortfolio ? "Uploading..." : "Upload Photos"}
+                <input type="file" accept="image/*" multiple onChange={uploadPhoto} className="hidden" disabled={uploadingPortfolio} />
               </label>
             </div>
 
@@ -714,10 +737,12 @@ export function PhotographerDashboardClient({
                       value={pkgPrice}
                       onChange={(e) => setPkgPrice(e.target.value)}
                       required
-                      min="0"
-                      step="5"
+                      min="1"
+                      step="1"
+                      placeholder="e.g. 149"
                       className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
+                    <p className="mt-1 text-xs text-gray-400">Whole euros, any amount</p>
                   </div>
                   <div className="flex items-end">
                     <label className="flex cursor-pointer items-center gap-2 rounded-xl px-4 py-3">

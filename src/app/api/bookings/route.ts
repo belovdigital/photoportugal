@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
 
 // Create a booking request
@@ -64,8 +65,8 @@ export async function POST(req: NextRequest) {
          JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`,
         [photographer_id]
       );
-      const prefs = await queryOne<{ email_bookings: boolean }>(
-        "SELECT email_bookings FROM notification_preferences WHERE user_id = $1",
+      const prefs = await queryOne<{ email_bookings: boolean; sms_bookings: boolean }>(
+        "SELECT email_bookings, sms_bookings FROM notification_preferences WHERE user_id = $1",
         [photographerInfo?.user_id]
       );
       const clientInfo = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
@@ -79,6 +80,20 @@ export async function POST(req: NextRequest) {
           pkgInfo?.name || null,
           shoot_date || null
         );
+      }
+
+      // Send SMS notification to photographer (if enabled and phone number exists)
+      if (photographerInfo && clientInfo && prefs?.sms_bookings !== false) {
+        const profile = await queryOne<{ phone_number: string | null }>(
+          "SELECT phone_number FROM photographer_profiles WHERE id = $1",
+          [photographer_id]
+        );
+        if (profile?.phone_number) {
+          sendSMS(
+            profile.phone_number,
+            `New booking request on Photo Portugal from ${clientInfo.name}. Log in to review: https://photoportugal.com/dashboard/bookings`
+          );
+        }
       }
     } catch {}
 

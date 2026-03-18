@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { stripe, calculatePayment } from "@/lib/stripe";
+import { requireStripe, calculatePayment } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     );
     let customerId = user?.stripe_customer_id;
     if (!customerId && user) {
-      const customer = await stripe.customers.create({
+      const customer = await requireStripe().customers.create({
         email: user.email,
         metadata: { user_id: userId! },
       });
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     // Create Stripe Checkout Session with automatic_payment_methods
     // This supports: Cards, Apple Pay, Google Pay, Link, bank transfers
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const checkoutSession = await (stripe.checkout.sessions.create as any)({
+    const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
       customer: customerId,
       mode: "payment",
       locale: "auto",
