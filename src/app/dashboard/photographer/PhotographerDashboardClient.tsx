@@ -194,6 +194,11 @@ export function PhotographerDashboardClient({
 
         if (res.ok) {
           uploaded++;
+          const data = await res.json();
+          if (data.item) {
+            setLocalItems((prev) => [...prev, data.item]);
+          }
+          showMessage(`${uploaded} of ${total} uploaded`);
         } else {
           failed++;
           const data = await res.json();
@@ -211,7 +216,6 @@ export function PhotographerDashboardClient({
     } else {
       showMessage(`${uploaded} uploaded, ${failed} failed`);
     }
-    router.refresh();
     e.target.value = "";
   }
 

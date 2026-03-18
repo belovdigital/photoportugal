@@ -69,10 +69,10 @@ export async function POST(req: NextRequest) {
     const locationSlug = (formData.get("location_slug") as string) || null;
     const shootType = (formData.get("shoot_type") as string) || null;
 
-    const item = await queryOne(
+    const item = await queryOne<{ id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number }>(
       `INSERT INTO portfolio_items (photographer_id, type, url, location_slug, shoot_type, sort_order)
        VALUES ($1, 'photo', $2, $3, $4, $5)
-       RETURNING id`,
+       RETURNING id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order`,
       [profile.id, url, locationSlug, shootType, count]
     );
 
