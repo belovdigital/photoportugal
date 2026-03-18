@@ -139,14 +139,16 @@ export default async function PhotographersPage({
   const { location: initialLocation, shoot, shootType } = await searchParams;
   const initialShootType = shoot || shootType;
   const dbPhotographers = await getDbPhotographers();
+  const resolvedShootType = resolveShootType(initialShootType);
 
   return (
     <PhotographerCatalog
+      key={`${initialLocation || ""}_${resolvedShootType || ""}`}
       photographers={dbPhotographers}
       locations={locations}
       shootTypes={SHOOT_TYPES as unknown as string[]}
       initialLocation={initialLocation}
-      initialShootType={resolveShootType(initialShootType)}
+      initialShootType={resolvedShootType}
     />
   );
 }
