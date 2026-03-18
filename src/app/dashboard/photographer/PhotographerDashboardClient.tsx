@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Cropper from "react-easy-crop";
 import { useRouter } from "next/navigation";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
 import {
@@ -1161,24 +1162,60 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
   );
 }
 
+function getCroppedBlob(imageSrc: string, pixelCrop: { x: number; y: number; width: number; height: number }): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = pixelCrop.width;
+      canvas.height = pixelCrop.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(image, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height);
+      canvas.toBlob((blob) => { if (blob) resolve(blob); else reject(new Error("Canvas is empty")); }, "image/jpeg", 0.92);
+    };
+    image.onerror = reject;
+    image.src = imageSrc;
+  });
+}
+
 function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: string | null; fallbackChar: string; onMessage: (msg: string) => void }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const [uploading, setUploading] = useState(false);
 
-  // Sync with server data (e.g. after router.refresh())
+  // Crop modal state
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+
   useEffect(() => { setPreviewUrl(initialUrl); }, [initialUrl]);
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  const onCropComplete = useCallback((_: unknown, pixels: { x: number; y: number; width: number; height: number }) => {
+    setCroppedAreaPixels(pixels);
+  }, []);
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { onMessage("File too large (max 5MB)"); return; }
-    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage("Only images allowed"); return; }
-    setPreviewUrl(URL.createObjectURL(file));
-    const formData = new FormData();
-    formData.append("file", file);
+    if (file.size > 10 * 1024 * 1024) { onMessage("File too large (max 10MB)"); e.target.value = ""; return; }
+    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage("Only images allowed"); e.target.value = ""; return; }
+    setCropSrc(URL.createObjectURL(file));
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    e.target.value = "";
+  }
+
+  async function handleCropConfirm() {
+    if (!cropSrc || !croppedAreaPixels) return;
     setUploading(true);
     onMessage("Uploading photo...");
     try {
+      const blob = await getCroppedBlob(cropSrc, croppedAreaPixels);
+      setPreviewUrl(URL.createObjectURL(blob));
+      setCropSrc(null);
+      const formData = new FormData();
+      formData.append("file", new File([blob], "avatar.jpg", { type: "image/jpeg" }));
       const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
       if (res.ok) {
         const data = await res.json();
@@ -1194,22 +1231,71 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
       onMessage("Upload failed — check your connection");
     }
     setUploading(false);
-    e.target.value = "";
   }
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
-      <div className="flex items-center gap-4">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-600 overflow-hidden">
-          {previewUrl ? <img src={previewUrl} alt="" className="h-full w-full object-cover" /> : fallbackChar}
+    <>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+        <div className="flex items-center gap-4">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-600 overflow-hidden">
+            {previewUrl ? <img src={previewUrl} alt="" className="h-full w-full object-cover" /> : fallbackChar}
+          </div>
+          <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+            {uploading ? "Uploading..." : "Upload Photo"}
+            <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+          </label>
         </div>
-        <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-          {uploading ? "Uploading..." : "Upload Photo"}
-          <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleUpload} disabled={uploading} />
-        </label>
       </div>
-    </div>
+
+      {/* Crop Modal */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setCropSrc(null)}>
+          <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-warm-200 px-6 py-4">
+              <h3 className="text-lg font-bold text-gray-900">Adjust Your Photo</h3>
+              <p className="text-xs text-gray-400 mt-1">Zoom and drag to position your profile photo</p>
+            </div>
+            <div className="relative h-72 sm:h-80 bg-gray-900">
+              <Cropper
+                image={cropSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            <div className="px-6 py-3 border-t border-warm-100 bg-warm-50">
+              <div className="flex items-center gap-3">
+                <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.05}
+                  value={zoom}
+                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  className="w-full accent-primary-600"
+                />
+                <svg className="h-5 w-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" /></svg>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-warm-200 px-6 py-4">
+              <button type="button" onClick={() => setCropSrc(null)} className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                Cancel
+              </button>
+              <button type="button" onClick={handleCropConfirm} disabled={uploading} className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50">
+                {uploading ? "Uploading..." : "Save Photo"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1217,27 +1303,39 @@ function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onM
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const [uploading, setUploading] = useState(false);
 
-  // Sync with server data (e.g. after router.refresh())
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+
   useEffect(() => { setPreviewUrl(initialUrl); }, [initialUrl]);
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  const onCropComplete = useCallback((_: unknown, pixels: { x: number; y: number; width: number; height: number }) => {
+    setCroppedAreaPixels(pixels);
+  }, []);
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { onMessage("File too large (max 5MB)"); return; }
-    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage("Only images allowed"); return; }
+    if (file.size > 10 * 1024 * 1024) { onMessage("File too large (max 10MB)"); e.target.value = ""; return; }
+    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage("Only images allowed"); e.target.value = ""; return; }
+    setCropSrc(URL.createObjectURL(file));
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    e.target.value = "";
+  }
 
-    // Instant local preview
-    const localUrl = URL.createObjectURL(file);
-    setPreviewUrl(localUrl);
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("type", "cover");
-
+  async function handleCropConfirm() {
+    if (!cropSrc || !croppedAreaPixels) return;
     setUploading(true);
     onMessage("Uploading cover...");
-
     try {
+      const blob = await getCroppedBlob(cropSrc, croppedAreaPixels);
+      setPreviewUrl(URL.createObjectURL(blob));
+      setCropSrc(null);
+      const formData = new FormData();
+      formData.append("file", new File([blob], "cover.jpg", { type: "image/jpeg" }));
+      formData.append("type", "cover");
       const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
       if (res.ok) {
         const data = await res.json();
@@ -1253,26 +1351,74 @@ function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onM
       onMessage("Upload failed — check your connection");
     }
     setUploading(false);
-    e.target.value = "";
   }
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
-      <p className="text-xs text-gray-400 mb-2">Recommended: landscape photo, min 1200px wide. Shows on your public profile.</p>
-      <div className="flex items-center gap-4">
-        {previewUrl ? (
-          <div className="h-20 w-40 overflow-hidden rounded-lg bg-warm-100">
-            <img src={previewUrl} alt="Cover" className="h-full w-full object-cover" />
-          </div>
-        ) : (
-          <div className="flex h-20 w-40 items-center justify-center rounded-lg bg-gradient-to-br from-primary-300 to-primary-600 text-xs text-white/60">No cover</div>
-        )}
-        <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-          {uploading ? "Uploading..." : "Upload Cover"}
-          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
-        </label>
+    <>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+        <p className="text-xs text-gray-400 mb-2">Recommended: landscape photo, min 1200px wide. Shows on your public profile.</p>
+        <div className="flex items-center gap-4">
+          {previewUrl ? (
+            <div className="h-20 w-40 overflow-hidden rounded-lg bg-warm-100">
+              <img src={previewUrl} alt="Cover" className="h-full w-full object-cover" />
+            </div>
+          ) : (
+            <div className="flex h-20 w-40 items-center justify-center rounded-lg bg-gradient-to-br from-primary-300 to-primary-600 text-xs text-white/60">No cover</div>
+          )}
+          <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+            {uploading ? "Uploading..." : "Upload Cover"}
+            <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+          </label>
+        </div>
       </div>
-    </div>
+
+      {/* Cover Crop Modal */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setCropSrc(null)}>
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-warm-200 px-6 py-4">
+              <h3 className="text-lg font-bold text-gray-900">Adjust Cover Image</h3>
+              <p className="text-xs text-gray-400 mt-1">Zoom and drag to position your cover photo</p>
+            </div>
+            <div className="relative h-56 sm:h-72 bg-gray-900">
+              <Cropper
+                image={cropSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={16 / 9}
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+              />
+            </div>
+            <div className="px-6 py-3 border-t border-warm-100 bg-warm-50">
+              <div className="flex items-center gap-3">
+                <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.05}
+                  value={zoom}
+                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  className="w-full accent-primary-600"
+                />
+                <svg className="h-5 w-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" /></svg>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-warm-200 px-6 py-4">
+              <button type="button" onClick={() => setCropSrc(null)} className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                Cancel
+              </button>
+              <button type="button" onClick={handleCropConfirm} disabled={uploading} className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50">
+                {uploading ? "Uploading..." : "Save Cover"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -449,10 +449,18 @@ export default async function PhotographerProfilePage({
               {(!photographer.packages || photographer.packages.length === 0) && (
                 <div className="rounded-xl border border-warm-200 bg-white p-6">
                   <h2 className="text-lg font-bold text-gray-900">Interested?</h2>
-                  <p className="mt-2 text-sm text-gray-500">This photographer hasn&apos;t set up packages yet. Check back soon!</p>
-                  {photographer.hourly_rate && (
-                    <p className="mt-4 text-sm text-gray-600">
-                      Starting from <span className="text-xl font-bold text-gray-900">&euro;{photographer.hourly_rate}</span>/hour
+                  {photographer.hourly_rate ? (
+                    <>
+                      <p className="mt-2 text-sm text-gray-500">
+                        Send a message to discuss availability and book your session.
+                      </p>
+                      <p className="mt-4 text-sm text-gray-600">
+                        Starting from <span className="text-xl font-bold text-gray-900">&euro;{photographer.hourly_rate.toFixed(0)}</span>/hour
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-sm text-gray-500">
+                      Send a message to discuss packages, pricing, and availability.
                     </p>
                   )}
                 </div>
