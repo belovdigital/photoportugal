@@ -25,8 +25,8 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { onMessage("File too large (max 2MB)"); return; }
-    if (!file.type.startsWith("image/")) { onMessage("Only images allowed"); return; }
+    if (file.size > 5 * 1024 * 1024) { onMessage("File too large (max 5MB)"); return; }
+    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage("Only images allowed"); return; }
     setPreviewUrl(URL.createObjectURL(file));
     const formData = new FormData();
     formData.append("file", file);

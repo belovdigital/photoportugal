@@ -24,12 +24,12 @@ export async function PUT(req: NextRequest) {
       locations: locationSlugs,
     } = body;
 
-    const profile = await queryOne<{ id: string }>(
+    const profile = await queryOne<{ id: string; plan: string }>(
       `UPDATE photographer_profiles
        SET display_name = $1, tagline = $2, bio = $3, languages = $4,
            shoot_types = $5, hourly_rate = $6, experience_years = $7, updated_at = NOW()
        WHERE user_id = $8
-       RETURNING id`,
+       RETURNING id, plan`,
       [
         display_name,
         tagline || null,
@@ -46,10 +46,13 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Update locations (many-to-many)
+    // Update locations (many-to-many) with plan-based limits
     if (Array.isArray(locationSlugs)) {
+      const maxLocations = profile.plan === "premium" ? Infinity : profile.plan === "pro" ? 5 : 1;
+      const limitedSlugs = locationSlugs.slice(0, maxLocations === Infinity ? locationSlugs.length : maxLocations);
+
       await query("DELETE FROM photographer_locations WHERE photographer_id = $1", [profile.id]);
-      for (const slug of locationSlugs) {
+      for (const slug of limitedSlugs) {
         await query(
           "INSERT INTO photographer_locations (photographer_id, location_slug) VALUES ($1, $2) ON CONFLICT DO NOTHING",
           [profile.id, slug]

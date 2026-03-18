@@ -545,25 +545,43 @@ export function PhotographerDashboardClient({
 
             {/* Locations */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Locations you cover</label>
-              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                {allLocations.map((loc) => (
-                  <label
-                    key={loc.slug}
-                    className={`flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
-                      selectedLocations.includes(loc.slug) ? "bg-primary-50 text-primary-700" : "hover:bg-warm-50"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedLocations.includes(loc.slug)}
-                      onChange={() => toggleItem(selectedLocations, loc.slug, setSelectedLocations)}
-                      className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                    />
-                    {loc.name}
-                  </label>
-                ))}
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Locations you cover</label>
+              {(() => {
+                const maxLocations = profile.plan === "premium" ? Infinity : profile.plan === "pro" ? 5 : 1;
+                const atLimit = selectedLocations.length >= maxLocations;
+                return (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2">
+                      {selectedLocations.length}/{maxLocations === Infinity ? "unlimited" : maxLocations} locations selected
+                      {maxLocations !== Infinity && atLimit && " (limit reached)"}
+                      {maxLocations !== Infinity && <> &middot; <a href="/dashboard/subscriptions" className="text-primary-600 hover:underline">Upgrade for more</a></>}
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                      {allLocations.map((loc) => {
+                        const isSelected = selectedLocations.includes(loc.slug);
+                        const isDisabled = !isSelected && atLimit;
+                        return (
+                          <label
+                            key={loc.slug}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
+                              isSelected ? "bg-primary-50 text-primary-700" : isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-warm-50"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => { if (!isDisabled) toggleItem(selectedLocations, loc.slug, setSelectedLocations); }}
+                              disabled={isDisabled}
+                              className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            {loc.name}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -1150,6 +1168,8 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { onMessage("File too large (max 5MB)"); return; }
+    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage("Only images allowed"); return; }
     setPreviewUrl(URL.createObjectURL(file));
     const formData = new FormData();
     formData.append("file", file);
@@ -1185,6 +1205,8 @@ function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onM
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { onMessage("File too large (max 5MB)"); return; }
+    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage("Only images allowed"); return; }
 
     // Instant local preview
     const localUrl = URL.createObjectURL(file);

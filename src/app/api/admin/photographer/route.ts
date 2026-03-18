@@ -71,9 +71,17 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // Bust ISR cache on homepage, photographers list, and profile page
+    // Bust ISR cache on homepage, photographers list, profile page, and dashboard
     revalidatePath("/");
     revalidatePath("/photographers");
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/photographer");
+
+    // Also revalidate the specific photographer's public profile
+    const slugRow = await queryOne<{ slug: string }>(
+      "SELECT slug FROM photographer_profiles WHERE id = $1", [id]
+    );
+    if (slugRow) revalidatePath(`/photographers/${slugRow.slug}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
