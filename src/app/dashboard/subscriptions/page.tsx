@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { COMMISSION_RATES, PLAN_PRICES } from "@/lib/stripe";
-import { StripeConnectSection } from "./StripeConnectSection";
 import { PlanCard } from "./SubscriptionManager";
 import { AddOnsSection } from "./AddOnsSection";
 
@@ -62,8 +61,6 @@ export default async function SubscriptionPage() {
         phoneNumber={phoneNumber}
       />
 
-      {/* Stripe Connect */}
-      <StripeConnectSection />
     </div>
   );
 }

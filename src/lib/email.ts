@@ -25,14 +25,14 @@ export async function getAdminEmail(): Promise<string> {
   }
 }
 
-export async function sendEmail(to: string, subject: string, html: string) {
+export async function sendEmail(to: string, subject: string, html: string, options?: { replyTo?: string }) {
   if (!process.env.SMTP_PASS) {
     console.log(`[email] SMTP not configured, skipping: ${subject} → ${to}`);
     return;
   }
 
   try {
-    await transporter.sendMail({ from: FROM, to, subject, html });
+    await transporter.sendMail({ from: FROM, to, subject, html, ...(options?.replyTo ? { replyTo: options.replyTo } : {}) });
     console.log(`[email] Sent: ${subject} → ${to}`);
   } catch (error) {
     console.error(`[email] Failed: ${subject} → ${to}`, error);
