@@ -27,12 +27,17 @@ const faqs = [
   {
     question: "Can I cancel or reschedule my booking?",
     answer:
-      "Yes. You can cancel or request a reschedule through your dashboard. Cancellation policies vary by photographer \u2014 most offer free cancellation up to 48 hours before the shoot. Contact your photographer directly through our messaging system for reschedule requests.",
+      "Yes. You can cancel or request a reschedule through your dashboard. Free cancellation is available up to <strong>7 days</strong> before the shoot. Reschedules within 7 days are handled directly with your photographer through our messaging system \u2014 most photographers are flexible and happy to find an alternative date. If a paid booking is cancelled before photo delivery, you receive a full refund.",
   },
   {
     question: "How long until I receive my photos?",
     answer:
-      'Delivery time varies by photographer, but most deliver edited photos within 3\u20137 business days after your session. Some offer rush delivery for an additional fee. Check the <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographer\'s profile</a> for their specific turnaround time.',
+      'Delivery time depends on the photographer and package you choose \u2014 each package shows the estimated delivery days on the photographer\'s profile. Once ready, you\u2019ll receive a link to a <strong>private, password-protected gallery</strong> where you can view, download individually, or grab the full collection as a ZIP archive. Your gallery stays accessible for 90 days.',
+  },
+  {
+    question: "How does the photo delivery work?",
+    answer:
+      "After your shoot, the photographer edits your photos and uploads them to a <strong>private, password-protected gallery</strong>. You\u2019ll receive a notification with a link and password. Once you view and accept the delivery, the photographer receives their payment. You can download photos individually in high resolution or grab the entire collection as a ZIP archive. Your gallery stays accessible for 90 days after acceptance.",
   },
   {
     question: "Are the reviews verified?",
@@ -62,12 +67,12 @@ const faqs = [
   {
     question: "What are the photographer plans?",
     answer:
-      'We offer three plans \u2014 Free, Pro, and Premium \u2014 each with different portfolio limits, location slots, and visibility features. Visit our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for current rates and a full feature comparison.',
+      'We offer three plans: <strong>Free</strong> (20% commission, 1 location, 10 portfolio photos), <strong>Pro</strong> at \u20ac29/month (15% commission, 5 locations, 30 portfolio photos), and <strong>Premium</strong> at \u20ac59/month (10% commission, unlimited locations, 100 portfolio photos). All plans include booking management, client messaging, verified reviews, and secure Stripe payments. Visit our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for a full comparison.',
   },
   {
     question: "Is my payment secure?",
     answer:
-      "Payment details are arranged directly between you and the photographer after booking confirmation. We\u2019re working on integrating secure escrow payments through Stripe Connect, which will hold funds until the session is completed.",
+      "Absolutely. All payments are processed securely through <strong>Stripe</strong>, trusted by millions of businesses worldwide. You can pay with credit/debit cards, Apple Pay, or Google Pay. Your payment is held safely until your photographer delivers your photos and you accept them \u2014 so you\u2019re always protected. If a booking is cancelled before delivery, you receive a full refund.",
   },
 ];
 

@@ -144,6 +144,10 @@ export function PhotographerDashboardClient({
   // === Profile ===
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
+    if (selectedLanguages.length === 0) {
+      showMessage("Please select at least one language");
+      return;
+    }
     setSaving(true);
 
     const res = await fetch("/api/dashboard/profile", {
@@ -504,7 +508,7 @@ export function PhotographerDashboardClient({
 
             {/* Languages */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Languages</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Languages <span className="text-red-500">*</span></label>
               <div className="flex flex-wrap gap-2">
                 {LANGUAGES.map((lang) => (
                   <button

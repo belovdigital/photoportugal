@@ -24,6 +24,10 @@ export async function PUT(req: NextRequest) {
       locations: locationSlugs,
     } = body;
 
+    if (!Array.isArray(languages) || languages.length === 0) {
+      return NextResponse.json({ error: "At least one language is required" }, { status: 400 });
+    }
+
     const profile = await queryOne<{ id: string; plan: string }>(
       `UPDATE photographer_profiles
        SET display_name = $1, tagline = $2, bio = $3, languages = $4,

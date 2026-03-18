@@ -12,12 +12,7 @@ interface Props {
   initialShootType?: string;
 }
 
-const PRICE_RANGES = [
-  { label: "Any price", min: 0, max: Infinity },
-  { label: "Under €150", min: 0, max: 150 },
-  { label: "€150 – €200", min: 150, max: 200 },
-  { label: "€200+", min: 200, max: Infinity },
-];
+const PRICE_MAX = 5000;
 
 export function PhotographerCatalog({
   photographers,
@@ -30,7 +25,8 @@ export function PhotographerCatalog({
   const [locationSearch, setLocationSearch] = useState("");
   const [shootTypeFilters, setShootTypeFilters] = useState<string[]>(initialShootType ? [initialShootType] : []);
   const [languageFilter, setLanguageFilter] = useState("");
-  const [priceRange, setPriceRange] = useState(0);
+  const [priceMin, setPriceMin] = useState(0);
+  const [priceMax, setPriceMax] = useState(PRICE_MAX);
   const [sortBy, setSortBy] = useState<"featured" | "rating" | "price-low" | "price-high" | "reviews">("featured");
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
@@ -80,12 +76,11 @@ export function PhotographerCatalog({
       );
     }
 
-    const range = PRICE_RANGES[priceRange];
-    if (range && (range.max !== Infinity || range.min > 0)) {
+    if (priceMin > 0 || priceMax < PRICE_MAX) {
       result = result.filter((p) => {
         if (p.packages.length === 0) return false;
         const cheapest = Math.min(...p.packages.map((pkg) => pkg.price));
-        return cheapest >= range.min && cheapest <= range.max;
+        return cheapest >= priceMin && (priceMax >= PRICE_MAX ? true : cheapest <= priceMax);
       });
     }
 
@@ -123,13 +118,14 @@ export function PhotographerCatalog({
     }
 
     return result;
-  }, [photographers, locationFilters, shootTypeFilters, languageFilter, priceRange, sortBy]);
+  }, [photographers, locationFilters, shootTypeFilters, languageFilter, priceMin, priceMax, sortBy]);
 
+  const priceFilterActive = priceMin > 0 || priceMax < PRICE_MAX;
   const activeFilterCount =
     locationFilters.length +
     shootTypeFilters.length +
     (languageFilter ? 1 : 0) +
-    (priceRange > 0 ? 1 : 0);
+    (priceFilterActive ? 1 : 0);
 
   const selectedLocationNames = locationFilters
     .map((s) => locations.find((l) => l.slug === s)?.name)
@@ -235,18 +231,34 @@ export function PhotographerCatalog({
             ))}
           </select>
 
-          {/* Price select */}
-          <select
-            value={priceRange}
-            onChange={(e) => setPriceRange(parseInt(e.target.value))}
-            className={`rounded-lg border px-3 py-2 text-sm outline-none transition ${
-              priceRange > 0 ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700"
-            }`}
-          >
-            {PRICE_RANGES.map((r, i) => (
-              <option key={r.label} value={i}>{r.label}</option>
-            ))}
-          </select>
+          {/* Price range */}
+          <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+            priceFilterActive ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700"
+          }`}>
+            <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <input
+              type="number"
+              min={0}
+              max={priceMax}
+              value={priceMin || ""}
+              onChange={(e) => setPriceMin(Math.min(Number(e.target.value) || 0, priceMax))}
+              placeholder="0"
+              className="w-14 bg-transparent text-center outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <span className="text-gray-400">—</span>
+            <input
+              type="number"
+              min={priceMin}
+              max={PRICE_MAX}
+              value={priceMax >= PRICE_MAX ? "" : priceMax}
+              onChange={(e) => setPriceMax(Number(e.target.value) || PRICE_MAX)}
+              placeholder={`${PRICE_MAX}+`}
+              className="w-14 bg-transparent text-center outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <span className="text-gray-400">&euro;</span>
+          </div>
 
           {/* Sort */}
           <select
@@ -264,7 +276,7 @@ export function PhotographerCatalog({
           {/* Clear */}
           {activeFilterCount > 0 && (
             <button
-              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setPriceRange(0); }}
+              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setPriceMin(0); setPriceMax(PRICE_MAX); }}
               className="rounded-lg px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-50"
             >
               Clear all ({activeFilterCount})
@@ -301,7 +313,7 @@ export function PhotographerCatalog({
         <div className="mt-12 text-center">
           <p className="text-lg text-gray-500">No photographers match your filters.</p>
           <button
-            onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setPriceRange(0); }}
+            onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setPriceMin(0); setPriceMax(PRICE_MAX); }}
             className="mt-4 text-sm font-semibold text-primary-600 hover:text-primary-700"
           >
             Clear all filters

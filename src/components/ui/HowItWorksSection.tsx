@@ -44,8 +44,8 @@ const steps = [
   {
     number: "4",
     title: "Get Your Photos",
-    description: "Receive professionally edited photos in a private gallery. View online, download individually, or grab the full ZIP.",
-    detail: "Delivered within 3-7 days",
+    description: "Receive professionally edited photos in a private, password-protected gallery. View online, download individually, or grab the full ZIP.",
+    detail: "Secure gallery with password protection",
     color: "from-blue-500 to-indigo-500",
     iconBg: "bg-blue-500",
     icon: (

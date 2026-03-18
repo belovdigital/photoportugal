@@ -6,7 +6,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 export const metadata: Metadata = {
   title: "How to Book a Photographer in Portugal — 4 Simple Steps",
   description:
-    "Book a professional photographer in Portugal in 4 simple steps. Browse portfolios, book instantly, enjoy your photoshoot, receive edited photos in 3-7 days. From EUR150/session.",
+    "Book a professional photographer in Portugal in 4 simple steps. Browse portfolios, book instantly with secure Stripe payments, enjoy your photoshoot, and receive edited photos in a private gallery.",
   alternates: { canonical: "https://photoportugal.com/how-it-works" },
 };
 
@@ -46,7 +46,7 @@ export default function HowItWorksPage() {
             },
             {
               title: "Book Instantly",
-              text: "Choose your date, time, and package. Your photographer confirms within 24 hours. No commitment until confirmed.",
+              text: "Choose your date, time, and package. Your photographer confirms within 24 hours. Pay securely via Stripe — your money is held until photos are delivered.",
             },
             {
               title: "Meet & Shoot",
@@ -54,7 +54,7 @@ export default function HowItWorksPage() {
             },
             {
               title: "Get Your Photos",
-              text: "Receive your professionally edited photos within 3-7 days. Download in high resolution from your personal gallery.",
+              text: "Receive your professionally edited photos in a private, password-protected gallery. Download in high resolution individually or as a full ZIP archive. Delivery time depends on the photographer and package you choose.",
             },
           ].map((item) => (
             <div
@@ -129,7 +129,7 @@ export default function HowItWorksPage() {
             },
             {
               q: "How do I receive my photos?",
-              a: "You'll receive a link to your private online gallery within 3-7 days after your photoshoot. All photos are professionally edited and available for high-resolution download.",
+              a: "You'll receive a link to your private, password-protected gallery. All photos are professionally edited and available for high-resolution download — individually or as a full ZIP archive. Delivery time varies by photographer and is shown on each package.",
             },
             {
               q: "Can I request specific locations?",
