@@ -20,8 +20,9 @@ export async function middleware(request: NextRequest) {
   // Protect /dashboard/* routes - redirect to sign in if no session
   if (pathname.startsWith("/dashboard")) {
     if (!token) {
-      const signInUrl = new URL("/auth/signin", request.url);
-      signInUrl.searchParams.set("callbackUrl", request.url);
+      const base = process.env.NEXTAUTH_URL || process.env.AUTH_URL || "https://photoportugal.com";
+      const signInUrl = new URL("/auth/signin", base);
+      signInUrl.searchParams.set("callbackUrl", `${base}${pathname}`);
       return NextResponse.redirect(signInUrl);
     }
     return NextResponse.next();
