@@ -455,7 +455,7 @@ export default async function PhotographerProfilePage({
                         Send a message to discuss availability and book your session.
                       </p>
                       <p className="mt-4 text-sm text-gray-600">
-                        Starting from <span className="text-xl font-bold text-gray-900">&euro;{photographer.hourly_rate.toFixed(0)}</span>/hour
+                        Starting from <span className="text-xl font-bold text-gray-900">&euro;{Number(photographer.hourly_rate).toFixed(0)}</span>/hour
                       </p>
                     </>
                   ) : (
