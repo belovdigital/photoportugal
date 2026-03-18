@@ -10,8 +10,18 @@ export async function GET(request: NextRequest) {
   }
 
   const role = request.nextUrl.searchParams.get("role");
-  const redirectPath = request.nextUrl.searchParams.get("redirect") || "/dashboard";
+  let redirectPath = request.nextUrl.searchParams.get("redirect") || "/dashboard";
   const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+
+  // Validate redirect path to prevent open redirect attacks
+  if (
+    !redirectPath.startsWith("/") ||
+    redirectPath.startsWith("//") ||
+    redirectPath.includes("://") ||
+    redirectPath.includes("\\")
+  ) {
+    redirectPath = "/dashboard";
+  }
 
   try {
     if (role === "photographer" || role === "client") {

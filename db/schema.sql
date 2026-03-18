@@ -129,7 +129,7 @@ CREATE TABLE bookings (
   location_slug VARCHAR(100),
   status booking_status DEFAULT 'pending',
   shoot_date DATE,
-  shoot_time TIME,
+  shoot_time VARCHAR(50),
   message TEXT, -- initial message from client
   total_price INTEGER, -- in EUR (whole euros)
   payment_status payment_status DEFAULT 'pending',
@@ -140,7 +140,7 @@ CREATE TABLE bookings (
   platform_fee NUMERIC,
   payout_amount NUMERIC,
   delivery_token VARCHAR(64) UNIQUE,
-  delivery_password VARCHAR(10),
+  delivery_password VARCHAR(64),
   delivery_expires_at TIMESTAMPTZ,
   reminder_sent BOOLEAN DEFAULT FALSE,
   review_requested BOOLEAN DEFAULT FALSE,
