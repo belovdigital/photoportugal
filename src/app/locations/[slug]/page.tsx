@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { locations, getLocationBySlug, getNearbyLocations } from "@/lib/locations-data";
 import { photoSpots } from "@/lib/photo-spots-data";
+import { getLocationServices } from "@/lib/location-services-data";
 import { locationImage } from "@/lib/unsplash-images";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
@@ -84,6 +85,7 @@ export default async function LocationPage({
   };
 
   const spots = photoSpots[slug] || [];
+  const services = getLocationServices(slug);
 
   return (
     <>
@@ -214,6 +216,55 @@ export default async function LocationPage({
           </div>
         </div>
       </section>
+
+      {/* Popular Photoshoot Types */}
+      {services.length > 0 && (
+        <section className="border-t border-warm-200 bg-warm-50">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-gray-900">
+              Popular Photoshoot Types in {location.name}
+            </h2>
+            <p className="mt-2 text-gray-500">
+              Dedicated photographers for every occasion in {location.name}
+            </p>
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {services.map((service) => (
+                <div
+                  key={service.shootTypeSlug}
+                  className="flex flex-col rounded-xl border border-warm-200 bg-white p-6 shadow-sm transition hover:border-primary-200 hover:shadow-md"
+                >
+                  <h3 className="text-lg font-bold text-gray-900">
+                    {service.label} Photography
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-600">
+                    {service.description}
+                  </p>
+                  <Link
+                    href={`/photographers?location=${slug}&shoot=${service.shootTypeSlug}`}
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 transition hover:text-primary-700"
+                  >
+                    Browse {service.label.toLowerCase()} photographers in{" "}
+                    {location.name}
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      />
+                    </svg>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Top Photo Spots */}
       {spots.length > 0 && (
