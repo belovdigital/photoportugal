@@ -151,7 +151,7 @@ export function AdminDashboard({
         </aside>
 
         {/* Main content */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pl-8">
           {activeTab === "overview" && (
             <div>
               {/* Stats */}
