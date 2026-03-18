@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
       mode: "payment",
       locale: "auto",
       adaptive_pricing: { enabled: true },
+      allow_promotion_codes: true,
       line_items: [{
         price_data: {
           currency: "eur",

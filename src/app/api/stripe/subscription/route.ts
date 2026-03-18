@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
         mode: "subscription",
         locale: "auto",
         adaptive_pricing: { enabled: true },
+        allow_promotion_codes: true,
         line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
         success_url: `${process.env.AUTH_URL}/dashboard/subscriptions?success=true`,
         cancel_url: `${process.env.AUTH_URL}/dashboard/subscriptions?canceled=true`,

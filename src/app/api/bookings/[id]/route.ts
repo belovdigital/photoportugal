@@ -258,6 +258,7 @@ export async function PATCH(
                 mode: "payment",
                 locale: "auto",
                 adaptive_pricing: { enabled: true },
+                allow_promotion_codes: true,
                 line_items: [{
                   price_data: {
                     currency: "eur",

@@ -79,6 +79,7 @@ export async function POST() {
       mode: "subscription",
       locale: "auto",
       adaptive_pricing: { enabled: true },
+      allow_promotion_codes: true,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.AUTH_URL}/dashboard/subscriptions?verified=success`,
       cancel_url: `${process.env.AUTH_URL}/dashboard/subscriptions?verified=canceled`,

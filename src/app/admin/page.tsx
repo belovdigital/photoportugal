@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
 import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeletePhotographer, AdminNotificationEmail, AdminBanToggle } from "./AdminControls";
 import { LocationsManager } from "./LocationsManager";
+import { PromoCodesManager } from "./PromoCodesManager";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
@@ -189,6 +190,9 @@ export default async function AdminPage() {
           </table>
         </div>
       </section>
+
+      {/* Promo Codes */}
+      <PromoCodesManager />
 
       {/* Clients */}
       <section className="mt-10 mb-12">
