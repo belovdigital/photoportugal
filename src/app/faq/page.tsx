@@ -12,27 +12,27 @@ const faqs = [
   {
     question: "How does Photo Portugal work?",
     answer:
-      "Browse our curated selection of professional photographers across Portugal. View their portfolios, read verified reviews, and book a photoshoot directly through our platform. After booking, you can message your photographer to discuss details.",
+      'Browse our curated selection of professional <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographers</a> across Portugal. View their portfolios, read verified reviews, and book a photoshoot directly through our platform. Learn more on our <a href="/how-it-works" class="text-primary-600 underline hover:text-primary-700">How It Works</a> page.',
   },
   {
     question: "How much does a photoshoot cost?",
     answer:
-      "Prices vary by photographer and package, typically ranging from €120 for a 30-minute quick session to €500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page.",
+      'Prices vary by photographer and package, typically ranging from \u20ac120 for a 30-minute quick session to \u20ac500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page. See our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for an overview.',
   },
   {
     question: "How do I book a photographer?",
     answer:
-      "Find a photographer you like, choose a package, select your preferred date and time, and send a booking request. The photographer will review your request and confirm within 24 hours. You can also include a message with any special requests.",
+      'Find a <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographer</a> you like, choose a package, select your preferred date and time, and send a booking request. The photographer will review your request and confirm within 24 hours. See our step-by-step guide on the <a href="/how-it-works" class="text-primary-600 underline hover:text-primary-700">How It Works</a> page.',
   },
   {
     question: "Can I cancel or reschedule my booking?",
     answer:
-      "Yes. You can cancel or request a reschedule through your dashboard. Cancellation policies vary by photographer — most offer free cancellation up to 48 hours before the shoot. Contact your photographer directly through our messaging system for reschedule requests.",
+      "Yes. You can cancel or request a reschedule through your dashboard. Cancellation policies vary by photographer \u2014 most offer free cancellation up to 48 hours before the shoot. Contact your photographer directly through our messaging system for reschedule requests.",
   },
   {
     question: "How long until I receive my photos?",
     answer:
-      "Delivery time varies by photographer, but most deliver edited photos within 3-7 business days after your session. Some offer rush delivery for an additional fee. Check the photographer's profile for their specific turnaround time.",
+      'Delivery time varies by photographer, but most deliver edited photos within 3\u20137 business days after your session. Some offer rush delivery for an additional fee. Check the <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographer\'s profile</a> for their specific turnaround time.',
   },
   {
     question: "Are the reviews verified?",
@@ -42,12 +42,12 @@ const faqs = [
   {
     question: "What locations are available?",
     answer:
-      "We cover 23+ locations across Portugal, including Lisbon, Porto, Algarve, Sintra, Madeira, Azores, Douro Valley, Cascais, Lagos, Nazaré, Évora, and many more. Each location page shows available photographers and popular photoshoot spots.",
+      'We cover 23+ <a href="/locations" class="text-primary-600 underline hover:text-primary-700">locations</a> across Portugal, including <a href="/locations/lisbon" class="text-primary-600 underline hover:text-primary-700">Lisbon</a>, <a href="/locations/porto" class="text-primary-600 underline hover:text-primary-700">Porto</a>, <a href="/locations/algarve" class="text-primary-600 underline hover:text-primary-700">Algarve</a>, <a href="/locations/sintra" class="text-primary-600 underline hover:text-primary-700">Sintra</a>, <a href="/locations/madeira" class="text-primary-600 underline hover:text-primary-700">Madeira</a>, <a href="/locations/azores" class="text-primary-600 underline hover:text-primary-700">Azores</a>, and many more. Each location page shows available <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographers</a> and popular photoshoot spots.',
   },
   {
     question: "Do photographers speak English?",
     answer:
-      "Most photographers on our platform speak English. You can filter photographers by language on the catalog page. Many also speak Portuguese, Spanish, French, and German.",
+      'Most <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographers</a> on our platform speak English. You can filter photographers by language on the catalog page. Many also speak Portuguese, Spanish, French, and German.',
   },
   {
     question: "What if it rains on my photoshoot day?",
@@ -57,17 +57,17 @@ const faqs = [
   {
     question: "How do I become a photographer on Photo Portugal?",
     answer:
-      "Click 'Join as Photographer' and create your account. You can then set up your profile, upload portfolio photos, create packages, and start receiving booking requests. We offer Free, Pro, and Premium plans with different features and visibility levels.",
+      "Click \u2018Join as Photographer\u2019 and create your account. You can then set up your profile, upload portfolio photos, create packages, and start receiving booking requests. We offer Free, Pro, and Premium plans with different features and visibility levels.",
   },
   {
     question: "What are the photographer plans?",
     answer:
-      "We offer three plans — Free, Pro, and Premium — each with different portfolio limits, location slots, and visibility features. Visit our pricing page for current rates and a full feature comparison.",
+      'We offer three plans \u2014 Free, Pro, and Premium \u2014 each with different portfolio limits, location slots, and visibility features. Visit our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for current rates and a full feature comparison.',
   },
   {
     question: "Is my payment secure?",
     answer:
-      "Payment details are arranged directly between you and the photographer after booking confirmation. We're working on integrating secure escrow payments through Stripe Connect, which will hold funds until the session is completed.",
+      "Payment details are arranged directly between you and the photographer after booking confirmation. We\u2019re working on integrating secure escrow payments through Stripe Connect, which will hold funds until the session is completed.",
   },
 ];
 
@@ -127,7 +127,7 @@ export default function FAQPage() {
                 </svg>
               </summary>
               <div className="px-6 pb-5">
-                <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                <p className="text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: faq.answer }} />
               </div>
             </details>
           ))}

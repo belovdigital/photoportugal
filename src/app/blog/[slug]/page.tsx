@@ -78,6 +78,21 @@ function renderContent(content: string) {
     const trimmed = block.trim();
     if (!trimmed) return null;
 
+    // Image: ![alt text](url)
+    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imageMatch) {
+      return (
+        <figure key={i} className="my-8">
+          <img
+            src={imageMatch[2]}
+            alt={imageMatch[1]}
+            className="w-full rounded-xl"
+            loading="lazy"
+          />
+        </figure>
+      );
+    }
+
     // H2
     if (trimmed.startsWith("## ")) {
       return (

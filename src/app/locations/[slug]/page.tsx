@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { locations, getLocationBySlug, getNearbyLocations } from "@/lib/locations-data";
+import { photoSpots } from "@/lib/photo-spots-data";
 import { locationImage } from "@/lib/unsplash-images";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
@@ -45,7 +46,7 @@ export default async function LocationPage({
 
   const nearby = getNearbyLocations(slug);
 
-  const jsonLd = {
+  const jsonLdDestination = {
     "@context": "https://schema.org",
     "@type": "TouristDestination",
     name: `${location.name}, Portugal`,
@@ -57,11 +58,42 @@ export default async function LocationPage({
     },
   };
 
+  const jsonLdService = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    serviceType: "Vacation Photography",
+    provider: {
+      "@type": "Organization",
+      name: "Photo Portugal",
+      url: "https://photoportugal.com",
+    },
+    areaServed: {
+      "@type": "City",
+      name: location.name,
+      containedInPlace: {
+        "@type": "Country",
+        name: "Portugal",
+      },
+    },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "EUR",
+      price: "150",
+      url: `https://photoportugal.com/photographers?location=${slug}`,
+    },
+  };
+
+  const spots = photoSpots[slug] || [];
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdDestination) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdService) }}
       />
 
       <Breadcrumbs
@@ -77,7 +109,7 @@ export default async function LocationPage({
         <div className="absolute inset-0">
           <img
             src={locationImage(location.slug, "hero")}
-            alt={`${location.name}, Portugal`}
+            alt={`Vacation photography session in ${location.name}, Portugal`}
             className="h-full w-full object-cover"
             fetchPriority="high"
           />
@@ -183,6 +215,52 @@ export default async function LocationPage({
         </div>
       </section>
 
+      {/* Top Photo Spots */}
+      {spots.length > 0 && (
+        <section className="border-t border-warm-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-gray-900">
+              Top Photo Spots in {location.name}
+            </h2>
+            <p className="mt-2 text-gray-500">
+              The most photogenic locations for your {location.name} photoshoot
+            </p>
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {spots.map((spot) => (
+                <div
+                  key={spot.name}
+                  className="rounded-xl border border-warm-200 bg-warm-50 p-5 transition hover:border-primary-200"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{spot.name}</h3>
+                      <p className="mt-1 text-sm text-gray-500 leading-relaxed">{spot.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8">
+              <Link
+                href={`/photographers?location=${slug}`}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition"
+              >
+                Find photographers who shoot at these spots
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Nearby Locations */}
       {nearby.length > 0 && (
         <section className="border-t border-warm-200 bg-warm-50">
@@ -224,7 +302,7 @@ export default async function LocationPage({
         <div className="absolute inset-0">
           <img
             src={locationImage(location.slug, "card")}
-            alt=""
+            alt={`Professional vacation photoshoot in ${location.name}, Portugal`}
             className="h-full w-full object-cover"
             loading="lazy"
             decoding="async"

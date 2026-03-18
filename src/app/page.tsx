@@ -12,11 +12,11 @@ export const revalidate = 300; // ISR: revalidate every 5 minutes
 
 // Hero gallery photos — real Portugal moments with people
 const heroPhotos = [
-  { id: "LOCAL:/hero-family.webp", alt: "Family photoshoot on Algarve beach" },
-  { id: "photo-1536663060084-a0d9eeeaf44b", alt: "Lisbon tram streets" },
-  { id: "photo-1560242374-7befcc667b39", alt: "Benagil cave Algarve" },
-  { id: "photo-1542575749037-7ef4545e897d", alt: "Sete Cidades Azores" },
-  { id: "photo-1697394494123-c6c1323a14f7", alt: "Pena Palace Sintra" },
+  { id: "LOCAL:/hero-family.webp", alt: "Family vacation photoshoot on a golden Algarve beach in Portugal" },
+  { id: "photo-1536663060084-a0d9eeeaf44b", alt: "Couple photography session in Lisbon's historic tram streets, Portugal" },
+  { id: "photo-1560242374-7befcc667b39", alt: "Vacation photoshoot at Benagil sea cave in the Algarve, Portugal" },
+  { id: "photo-1542575749037-7ef4545e897d", alt: "Travel photography at Sete Cidades crater lakes in the Azores, Portugal" },
+  { id: "photo-1697394494123-c6c1323a14f7", alt: "Romantic photoshoot at Pena Palace in Sintra, Portugal" },
 ];
 
 export default function HomePage() {

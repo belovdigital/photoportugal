@@ -182,6 +182,17 @@ export default async function PhotographerProfilePage({
           bestRating: 5,
         }
       : undefined,
+    ...(reviews.length > 0
+      ? {
+          review: reviews.map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.client_name },
+            reviewRating: { "@type": "Rating", ratingValue: r.rating },
+            reviewBody: r.text || r.title || "",
+            datePublished: new Date(r.created_at).toISOString().split("T")[0],
+          })),
+        }
+      : {}),
     address: {
       "@type": "PostalAddress",
       addressLocality: photographer.locations?.[0]?.name,
@@ -194,12 +205,35 @@ export default async function PhotographerProfilePage({
     })),
   };
 
+  const productJsonLd = (photographer.packages || []).map(
+    (pkg: { name: string; description: string | null; price: number }) => ({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: pkg.name,
+      description: pkg.description || `${pkg.name} photography package by ${photographer.display_name}`,
+      offers: {
+        "@type": "Offer",
+        price: String(pkg.price),
+        priceCurrency: "EUR",
+        availability: "https://schema.org/InStock",
+        url: `https://photoportugal.com/photographers/${slug}`,
+      },
+    })
+  );
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {productJsonLd.map((product: Record<string, unknown>, idx: number) => (
+        <script
+          key={`product-${idx}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(product) }}
+        />
+      ))}
 
       {/* Cover */}
       <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-700 sm:h-80 overflow-hidden">

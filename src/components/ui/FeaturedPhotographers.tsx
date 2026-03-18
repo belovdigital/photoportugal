@@ -65,7 +65,7 @@ export async function FeaturedPhotographers() {
             {/* Cover / gradient */}
             <div className="relative h-36 bg-gradient-to-br from-primary-400 to-primary-700">
               {p.cover_url && (
-                <img src={p.cover_url} alt="" className="h-full w-full object-cover" />
+                <img src={p.cover_url} alt={`${p.display_name} — professional photographer portfolio in Portugal`} className="h-full w-full object-cover" />
               )}
               <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-bold text-yellow-900">
                 Featured
