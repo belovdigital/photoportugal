@@ -19,6 +19,7 @@ async function getPhotographer(slug: string) {
       bio: string | null;
       avatar_url: string | null;
       cover_url: string | null;
+      cover_position_y: number;
       languages: string[];
       shoot_types: string[];
       hourly_rate: number | null;
@@ -32,7 +33,7 @@ async function getPhotographer(slug: string) {
       session_count: number;
       last_seen_at: string | null;
     }>(
-      `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.languages, p.shoot_types,
+      `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               p.hourly_rate, p.experience_years, p.is_verified, p.is_featured, p.is_approved, p.plan,
               p.rating, p.review_count, p.session_count, u.last_seen_at
        FROM photographer_profiles p
@@ -236,9 +237,9 @@ export default async function PhotographerProfilePage({
       ))}
 
       {/* Cover */}
-      <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-700 sm:h-80 overflow-hidden">
+      <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-700 sm:h-80 lg:h-96 overflow-hidden">
         {photographer.cover_url && (
-          <img src={photographer.cover_url} alt={`${photographer.display_name} — photography portfolio cover`} className="h-full w-full object-cover" />
+          <img src={photographer.cover_url} alt={`${photographer.display_name} — photography portfolio cover`} className="h-full w-full object-cover" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
         )}
       </div>
 

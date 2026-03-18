@@ -49,6 +49,7 @@ export interface PhotographerProfile {
   bio: string;
   avatar_url: string | null;
   cover_url: string | null;
+  cover_position_y: number;
   languages: string[];
   hourly_rate: number;
   currency: string;

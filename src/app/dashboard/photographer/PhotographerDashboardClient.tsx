@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Cropper from "react-easy-crop";
 import { useRouter } from "next/navigation";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
@@ -31,6 +31,7 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
   cover_url: string | null;
+  cover_position_y: number;
   languages: string[];
   shoot_types: string[];
   hourly_rate: number | null;
@@ -472,7 +473,7 @@ export function PhotographerDashboardClient({
             <AvatarUpload initialUrl={profile.avatar_url} fallbackChar={profile.display_name.charAt(0)} onMessage={showMessage} />
 
             {/* Cover Image */}
-            <CoverUpload initialUrl={profile.cover_url} onMessage={showMessage} />
+            <CoverUpload initialUrl={profile.cover_url} initialPositionY={profile.cover_position_y ?? 50} onMessage={showMessage} />
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Display Name</label>
@@ -1303,11 +1304,58 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
   );
 }
 
-function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onMessage: (msg: string) => void }) {
+function CoverUpload({ initialUrl, initialPositionY, onMessage }: { initialUrl: string | null; initialPositionY: number; onMessage: (msg: string) => void }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const [uploading, setUploading] = useState(false);
+  const [positionY, setPositionY] = useState(initialPositionY);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const dragStartPos = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => { setPreviewUrl(initialUrl); }, [initialUrl]);
+  useEffect(() => { setPositionY(initialPositionY); }, [initialPositionY]);
+
+  function savePosition(y: number) {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/dashboard/cover-position", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cover_position_y: y }),
+        });
+        if (res.ok) onMessage("Cover position saved!");
+        else onMessage("Failed to save position");
+      } catch {
+        onMessage("Failed to save position");
+      }
+    }, 600);
+  }
+
+  function handlePointerDown(e: React.PointerEvent) {
+    if (!previewUrl) return;
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartY.current = e.clientY;
+    dragStartPos.current = positionY;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }
+
+  function handlePointerMove(e: React.PointerEvent) {
+    if (!isDragging || !containerRef.current) return;
+    const containerHeight = containerRef.current.offsetHeight;
+    const deltaPct = ((e.clientY - dragStartY.current) / containerHeight) * 50;
+    setPositionY(Math.round(Math.min(100, Math.max(0, dragStartPos.current + deltaPct))));
+  }
+
+  function handlePointerUp() {
+    if (isDragging) {
+      setIsDragging(false);
+      savePosition(positionY);
+    }
+  }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -1316,6 +1364,7 @@ function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onM
     if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage("Only images allowed"); e.target.value = ""; return; }
 
     setPreviewUrl(URL.createObjectURL(file));
+    setPositionY(50);
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", "cover");
@@ -1327,14 +1376,16 @@ function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onM
       if (res.ok) {
         const data = await res.json();
         setPreviewUrl(data.url);
-        onMessage("Cover updated!");
+        onMessage("Cover uploaded! Drag the image up or down to adjust the visible area.");
       } else {
         const err = await res.json().catch(() => null);
         setPreviewUrl(initialUrl);
+        setPositionY(initialPositionY);
         onMessage(err?.error || "Upload failed");
       }
     } catch {
       setPreviewUrl(initialUrl);
+      setPositionY(initialPositionY);
       onMessage("Upload failed — check your connection");
     }
     setUploading(false);
@@ -1344,19 +1395,41 @@ function CoverUpload({ initialUrl, onMessage }: { initialUrl: string | null; onM
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
-      <p className="text-xs text-gray-400 mb-2">Landscape photo, min 1200px wide. Will be displayed responsively on your public profile.</p>
-      <div className="flex items-center gap-4">
-        {previewUrl ? (
-          <div className="h-20 w-40 overflow-hidden rounded-lg bg-warm-100">
-            <img src={previewUrl} alt="Cover" className="h-full w-full object-cover" />
-          </div>
-        ) : (
-          <div className="flex h-20 w-40 items-center justify-center rounded-lg bg-gradient-to-br from-primary-300 to-primary-600 text-xs text-white/60">No cover</div>
-        )}
-        <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-          {uploading ? "Uploading..." : "Upload Cover"}
-          <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleUpload} disabled={uploading} />
-        </label>
+      <p className="text-xs text-gray-400 mb-2">
+        Landscape photo, min 1200px wide.{previewUrl ? " Drag the preview up or down to set the focal point." : ""}
+      </p>
+      <div className="flex items-start gap-4">
+        <div
+          ref={containerRef}
+          className={`relative h-28 w-56 overflow-hidden rounded-lg bg-warm-100 touch-none ${previewUrl ? (isDragging ? "cursor-grabbing" : "cursor-grab") : ""}`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt="Cover"
+              className="h-full w-full object-cover pointer-events-none select-none"
+              style={{ objectPosition: `center ${positionY}%` }}
+              draggable={false}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-300 to-primary-600 text-xs text-white/60">
+              No cover
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 text-center">
+            {uploading ? "Uploading..." : "Upload Cover"}
+            <input type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleUpload} disabled={uploading} />
+          </label>
+          {previewUrl && (
+            <p className="text-[10px] text-gray-400 text-center">↕ Drag to reposition</p>
+          )}
+        </div>
       </div>
     </div>
   );

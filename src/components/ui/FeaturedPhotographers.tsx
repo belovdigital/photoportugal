@@ -7,6 +7,7 @@ interface FeaturedPhotographer {
   tagline: string | null;
   avatar_url: string | null;
   cover_url: string | null;
+  cover_position_y: number;
   is_verified: boolean;
   rating: number;
   review_count: number;
@@ -21,7 +22,7 @@ export async function FeaturedPhotographers() {
   try {
     photographers = await query<FeaturedPhotographer>(
       `SELECT pp.slug, pp.display_name, pp.tagline,
-              u.avatar_url, pp.cover_url, pp.is_verified,
+              u.avatar_url, pp.cover_url, pp.cover_position_y, pp.is_verified,
               pp.rating, pp.review_count, pp.hourly_rate,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as min_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
@@ -65,7 +66,7 @@ export async function FeaturedPhotographers() {
             {/* Cover / gradient */}
             <div className="relative h-36 bg-gradient-to-br from-primary-400 to-primary-700">
               {p.cover_url && (
-                <img src={p.cover_url} alt={`${p.display_name} — professional photographer portfolio in Portugal`} className="h-full w-full object-cover" />
+                <img src={p.cover_url} alt={`${p.display_name} — professional photographer portfolio in Portugal`} className="h-full w-full object-cover" style={{ objectPosition: `center ${p.cover_position_y ?? 50}%` }} />
               )}
               <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-bold text-yellow-900">
                 Featured

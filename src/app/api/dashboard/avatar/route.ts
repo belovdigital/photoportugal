@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     if (type === "cover") {
       await queryOne(
-        "UPDATE photographer_profiles SET cover_url = $1 WHERE user_id = $2 RETURNING id",
+        "UPDATE photographer_profiles SET cover_url = $1, cover_position_y = 50 WHERE user_id = $2 RETURNING id",
         [url, userId]
       );
     } else {

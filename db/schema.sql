@@ -46,6 +46,7 @@ CREATE TABLE photographer_profiles (
   tagline VARCHAR(500),
   bio TEXT,
   cover_url TEXT,
+  cover_position_y INTEGER DEFAULT 50,
   languages TEXT[] DEFAULT '{}',
   shoot_types TEXT[] DEFAULT '{}',
   hourly_rate INTEGER, -- in EUR (whole euros)
