@@ -151,6 +151,9 @@ CREATE TABLE bookings (
   delivery_accepted_at TIMESTAMPTZ,
   payout_transferred BOOLEAN DEFAULT FALSE,
   reminder_sent BOOLEAN DEFAULT FALSE,
+  payment_reminder_sent BOOLEAN DEFAULT FALSE,
+  shoot_reminder_sent BOOLEAN DEFAULT FALSE,
+  delivery_reminder_sent BOOLEAN DEFAULT FALSE,
   review_requested BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

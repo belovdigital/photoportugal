@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
-import { sendBookingNotification } from "@/lib/email";
+import { sendBookingNotification, sendAdminNewBookingNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
 
@@ -77,6 +77,16 @@ export async function POST(req: NextRequest) {
           photographerInfo.email,
           photographerInfo.display_name,
           clientInfo.name,
+          pkgInfo?.name || null,
+          shoot_date || null
+        );
+      }
+
+      // Notify admin about new booking
+      if (photographerInfo && clientInfo) {
+        sendAdminNewBookingNotification(
+          clientInfo.name,
+          photographerInfo.display_name,
           pkgInfo?.name || null,
           shoot_date || null
         );

@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { queryOne } from "@/lib/db";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.migadu.com",
@@ -12,6 +13,17 @@ const transporter = nodemailer.createTransport({
 
 const FROM = "Photo Portugal <info@photoportugal.com>";
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+
+export async function getAdminEmail(): Promise<string> {
+  try {
+    const setting = await queryOne<{ value: string }>(
+      "SELECT value FROM platform_settings WHERE key = 'admin_notification_email'"
+    );
+    return setting?.value || "info@photoportugal.com";
+  } catch {
+    return "info@photoportugal.com";
+  }
+}
 
 export async function sendEmail(to: string, subject: string, html: string) {
   if (!process.env.SMTP_PASS) {
@@ -318,5 +330,154 @@ export async function sendSubscriptionEmail(
       <p style="color: #999; font-size: 12px;">Invoices are available in your Stripe billing portal.</p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>`
+  );
+}
+
+// === Admin notification emails ===
+
+export async function sendAdminNewPhotographerNotification(
+  photographerName: string,
+  photographerEmail: string
+) {
+  const adminEmail = await getAdminEmail();
+  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+  for (const email of emails) {
+    await sendEmail(
+      email,
+      `[New Photographer] ${photographerName} is waiting for approval`,
+      `
+      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+        <h2 style="color: #C94536;">New Photographer Registration</h2>
+        <p>A new photographer has registered and is waiting for approval:</p>
+        <ul style="line-height: 1.8;">
+          <li><strong>Name:</strong> ${photographerName}</li>
+          <li><strong>Email:</strong> ${photographerEmail}</li>
+        </ul>
+        <p><a href="${BASE_URL}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
+        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+      </div>
+      `
+    );
+  }
+}
+
+export async function sendAdminNewBookingNotification(
+  clientName: string,
+  photographerName: string,
+  packageName: string | null,
+  shootDate: string | null
+) {
+  const adminEmail = await getAdminEmail();
+  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+  for (const email of emails) {
+    await sendEmail(
+      email,
+      `[New Booking] ${clientName} \u2192 ${photographerName}`,
+      `
+      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+        <h2 style="color: #C94536;">New Booking Created</h2>
+        <ul style="line-height: 1.8;">
+          <li><strong>Client:</strong> ${clientName}</li>
+          <li><strong>Photographer:</strong> ${photographerName}</li>
+          ${packageName ? `<li><strong>Package:</strong> ${packageName}</li>` : ""}
+          ${shootDate ? `<li><strong>Date:</strong> ${shootDate}</li>` : ""}
+        </ul>
+        <p><a href="${BASE_URL}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
+        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+      </div>
+      `
+    );
+  }
+}
+
+export async function sendPaymentReminderToClient(
+  clientEmail: string,
+  clientName: string,
+  photographerName: string,
+  paymentUrl: string | null,
+  totalPrice: number | null
+) {
+  const ctaSection = paymentUrl && totalPrice
+    ? `<p><a href="${paymentUrl}" style="display: inline-block; background: #16a34a; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay Now &mdash; &euro;${totalPrice}</a></p>`
+    : `<p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>`;
+
+  await sendEmail(
+    clientEmail,
+    `Reminder: Complete your payment for the session with ${photographerName}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Payment Reminder</h2>
+      <p>Hi ${clientName},</p>
+      <p>Your booking with <strong>${photographerName}</strong> has been confirmed, but we haven't received your payment yet.</p>
+      <p>Please complete your payment to secure your photoshoot session.</p>
+      ${ctaSection}
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
+export async function sendShootReminderToClient(
+  clientEmail: string,
+  clientName: string,
+  photographerName: string,
+  shootDate: string
+) {
+  await sendEmail(
+    clientEmail,
+    `Tomorrow: Your photoshoot with ${photographerName}!`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Your Photoshoot is Tomorrow!</h2>
+      <p>Hi ${clientName},</p>
+      <p>Just a reminder that your photoshoot with <strong>${photographerName}</strong> is scheduled for <strong>${shootDate}</strong>.</p>
+      <p>Make sure to confirm the meeting point and any last-minute details with your photographer.</p>
+      <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Messages</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
+export async function sendShootReminderToPhotographer(
+  photographerEmail: string,
+  photographerName: string,
+  clientName: string,
+  shootDate: string
+) {
+  await sendEmail(
+    photographerEmail,
+    `Tomorrow: Photoshoot with ${clientName}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Photoshoot Tomorrow!</h2>
+      <p>Hi ${photographerName},</p>
+      <p>Reminder: you have a photoshoot with <strong>${clientName}</strong> scheduled for <strong>${shootDate}</strong>.</p>
+      <p>Make sure to confirm the meeting point and any details with your client.</p>
+      <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Messages</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
+export async function sendDeliveryReminderToPhotographer(
+  photographerEmail: string,
+  photographerName: string,
+  clientName: string
+) {
+  await sendEmail(
+    photographerEmail,
+    `Reminder: ${clientName} is waiting for their photos`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Delivery Reminder</h2>
+      <p>Hi ${photographerName},</p>
+      <p>Your client <strong>${clientName}</strong> is waiting for their photos. The expected delivery time has passed.</p>
+      <p>Please upload and deliver the photos as soon as possible.</p>
+      <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Bookings</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
   );
 }

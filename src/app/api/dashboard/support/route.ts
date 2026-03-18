@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { queryOne } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, getAdminEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -18,18 +17,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Subject and message are required" }, { status: 400 });
     }
 
-    // Get admin notification email: first check platform_settings, fallback to default
-    let adminEmail = "info@photoportugal.com";
-    try {
-      const setting = await queryOne<{ value: string }>(
-        "SELECT value FROM platform_settings WHERE key = 'admin_notification_email'"
-      );
-      if (setting?.value) {
-        adminEmail = setting.value;
-      }
-    } catch {
-      // Table might not exist yet, use fallback
-    }
+    // Get admin notification email from platform_settings
+    const adminEmail = await getAdminEmail();
 
     const html = `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { queryOne } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { sendWelcomeEmail } from "@/lib/email";
+import { sendWelcomeEmail, sendAdminNewPhotographerNotification } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -70,6 +70,13 @@ export async function POST(req: NextRequest) {
       sendWelcomeEmail(user.email, user.name, user.role as "client" | "photographer").catch((err) =>
         console.error("Failed to send welcome email:", err)
       );
+
+      // Notify admin about new photographer registration (pending approval)
+      if (validRole === "photographer") {
+        sendAdminNewPhotographerNotification(user.name, user.email).catch((err) =>
+          console.error("Failed to send admin photographer notification:", err)
+        );
+      }
     }
 
     return NextResponse.json({ success: true, user });
