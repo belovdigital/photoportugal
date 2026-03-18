@@ -41,6 +41,17 @@
   --font-display: "Playfair Display", ui-serif, Georgia, serif;
 }
 
+@keyframes checkPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes celebrateFadeIn {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

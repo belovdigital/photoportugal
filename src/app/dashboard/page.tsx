@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
-import { query, queryOne } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 import Link from "next/link";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 
 export const dynamic = "force-dynamic";
 
@@ -25,15 +26,37 @@ export default async function DashboardOverview() {
 }
 
 async function ClientOverview({ userId, name }: { userId: string; name: string }) {
-  const bookingCount = await queryOne<{ count: string }>(
-    "SELECT COUNT(*) as count FROM bookings WHERE client_id = $1",
-    [userId]
-  );
+  const [bookingCount, clientUser] = await Promise.all([
+    queryOne<{ count: string }>(
+      "SELECT COUNT(*) as count FROM bookings WHERE client_id = $1",
+      [userId]
+    ),
+    queryOne<{ avatar_url: string | null }>(
+      "SELECT avatar_url FROM users WHERE id = $1",
+      [userId]
+    ),
+  ]);
 
   return (
     <div className="p-6 sm:p-8">
       <h1 className="font-display text-2xl font-bold text-gray-900">Welcome back, {name}</h1>
       <p className="mt-1 text-gray-500">Find your perfect photographer in Portugal</p>
+
+      <div className="mt-6 mb-8">
+        <OnboardingChecklist
+          role="client"
+          checks={{
+            avatar: !!clientUser?.avatar_url,
+            cover: false,
+            bio: false,
+            portfolio: 0,
+            packages: 0,
+            locations: 0,
+            stripeConnected: false,
+            bookings: parseInt(bookingCount?.count || "0", 10),
+          }}
+        />
+      </div>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <OverviewCard
@@ -78,8 +101,14 @@ async function ClientOverview({ userId, name }: { userId: string; name: string }
 async function PhotographerOverview({ userId, name }: { userId: string; name: string }) {
   const profile = await queryOne<{
     id: string; rating: number; review_count: number; session_count: number; plan: string; slug: string; is_approved: boolean;
+    avatar_url: string | null; cover_url: string | null; bio: string | null;
+    stripe_account_id: string | null; stripe_onboarding_complete: boolean;
   }>(
-    "SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved FROM photographer_profiles pp WHERE pp.user_id = $1",
+    `SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved,
+            u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete
+     FROM photographer_profiles pp
+     JOIN users u ON u.id = pp.user_id
+     WHERE pp.user_id = $1`,
     [userId]
   );
 
@@ -91,15 +120,38 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     );
   }
 
-  const pendingBookings = await queryOne<{ count: string }>(
-    "SELECT COUNT(*) as count FROM bookings WHERE photographer_id = $1 AND status = 'pending'",
-    [profile.id]
-  );
+  const [pendingBookings, totalBookings, portfolioCount, packageCount, locationCount] = await Promise.all([
+    queryOne<{ count: string }>(
+      "SELECT COUNT(*) as count FROM bookings WHERE photographer_id = $1 AND status = 'pending'",
+      [profile.id]
+    ),
+    queryOne<{ count: string }>(
+      "SELECT COUNT(*) as count FROM bookings WHERE photographer_id = $1",
+      [profile.id]
+    ),
+    queryOne<{ count: string }>(
+      "SELECT COUNT(*) as count FROM portfolio_items WHERE photographer_id = $1",
+      [profile.id]
+    ),
+    queryOne<{ count: string }>(
+      "SELECT COUNT(*) as count FROM packages WHERE photographer_id = $1",
+      [profile.id]
+    ),
+    queryOne<{ count: string }>(
+      "SELECT COUNT(*) as count FROM photographer_locations WHERE photographer_id = $1",
+      [profile.id]
+    ),
+  ]);
 
-  const totalBookings = await queryOne<{ count: string }>(
-    "SELECT COUNT(*) as count FROM bookings WHERE photographer_id = $1",
-    [profile.id]
-  );
+  const onboardingChecks = {
+    avatar: !!profile.avatar_url,
+    cover: !!profile.cover_url,
+    bio: !!profile.bio && profile.bio.length > 10,
+    portfolio: parseInt(portfolioCount?.count || "0", 10),
+    packages: parseInt(packageCount?.count || "0", 10),
+    locations: parseInt(locationCount?.count || "0", 10),
+    stripeConnected: !!profile.stripe_account_id && !!profile.stripe_onboarding_complete,
+  };
 
   return (
     <div className="p-6 sm:p-8">
@@ -108,6 +160,11 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
           <h1 className="font-display text-2xl font-bold text-gray-900">Welcome back, {name}</h1>
           <p className="mt-1 text-gray-500">Manage your photography business</p>
         </div>
+      </div>
+
+      {/* Onboarding Checklist */}
+      <div className="mt-6">
+        <OnboardingChecklist role="photographer" checks={onboardingChecks} />
       </div>
 
       {/* Approval notice */}
