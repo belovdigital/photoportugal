@@ -84,75 +84,74 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-120px)] max-w-screen-xl">
-      {/* Mobile toggle */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg md:hidden"
-      >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          {sidebarOpen ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          )}
-        </svg>
-      </button>
-
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar — same style as DashboardSidebar */}
-      <aside className={`
-        fixed left-0 top-0 z-30 h-full w-56 shrink-0 bg-warm-50 pt-[100px] transition-transform
-        md:sticky md:top-[100px] md:h-auto md:translate-x-0 md:bg-transparent md:pt-0
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `} style={{ maxHeight: "calc(100vh - 100px)" }}>
-        <nav className="flex flex-col gap-0.5 p-3">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.key;
-            const badge = getBadge(tab.key);
-
-            return (
-              <button
-                key={tab.key}
-                onClick={() => { setActiveTab(tab.key); setSidebarOpen(false); }}
-                className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-white text-primary-700 shadow-sm"
-                    : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                <span className="flex items-center gap-3">
-                  <SidebarIcon type={tab.icon} active={isActive} />
-                  {tab.label}
-                </span>
-                {badge > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[10px] font-bold text-white">
-                    {badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
-      {/* Main content */}
-      <div className="flex-1 p-6 sm:p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl font-bold text-gray-900">Admin Panel</h1>
-            <p className="mt-1 text-gray-500">Platform overview and management</p>
-          </div>
-          {logoutButton}
+    <div className="mx-auto max-w-screen-xl px-6 sm:px-8">
+      {/* Header — full width above sidebar */}
+      <div className="flex items-center justify-between pt-6 sm:pt-8">
+        <div>
+          <h1 className="font-display text-3xl font-bold text-gray-900">Admin Panel</h1>
+          <p className="mt-1 text-gray-500">Platform overview and management</p>
         </div>
+        {logoutButton}
+      </div>
 
-        {/* Content by tab */}
-        <div className="mt-6">
+      <div className="mt-6 flex min-h-[calc(100vh-200px)]">
+        {/* Mobile toggle */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg md:hidden"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {sidebarOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* Sidebar */}
+        <aside className={`
+          fixed left-0 top-0 z-30 h-full w-56 shrink-0 bg-warm-50 pt-[100px] transition-transform
+          md:sticky md:top-0 md:h-auto md:translate-x-0 md:bg-transparent md:pt-0
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        `}>
+          <nav className="flex flex-col gap-0.5 pr-3">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.key;
+              const badge = getBadge(tab.key);
+
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => { setActiveTab(tab.key); setSidebarOpen(false); }}
+                  className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                    isActive
+                      ? "bg-white text-primary-700 shadow-sm"
+                      : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <SidebarIcon type={tab.icon} active={isActive} />
+                    {tab.label}
+                  </span>
+                  {badge > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[10px] font-bold text-white">
+                      {badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
           {activeTab === "overview" && (
             <div>
               {/* Stats */}
