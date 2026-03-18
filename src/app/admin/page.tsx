@@ -47,7 +47,9 @@ export default async function AdminPage() {
       "SELECT value FROM platform_settings WHERE key = 'admin_notification_email'"
     );
     if (setting?.value) adminNotificationEmail = setting.value;
-  } catch {}
+  } catch (e) {
+    console.error("[admin] Failed to load platform settings:", e);
+  }
 
   const clients = await query<{
     id: string; email: string; name: string; created_at: string; avatar_url: string | null; is_banned: boolean;
