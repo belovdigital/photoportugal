@@ -34,7 +34,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           );
 
           if (!user || !user.password_hash) return null;
-          if (user.is_banned) return null;
+          if (user.is_banned) {
+            throw new Error("Your account has been deactivated. Please contact support at info@photoportugal.com");
+          }
 
           const passwordMatch = await compare(
             credentials.password as string,

@@ -58,6 +58,19 @@ export async function PATCH(req: NextRequest) {
       values
     );
 
+    // If deactivating, also ban the user so their session is invalidated
+    if ("is_deactivated" in updates) {
+      const profile = await queryOne<{ user_id: string }>(
+        "SELECT user_id FROM photographer_profiles WHERE id = $1", [id]
+      );
+      if (profile) {
+        await query(
+          "UPDATE users SET is_banned = $1 WHERE id = $2",
+          [updates.is_deactivated, profile.user_id]
+        );
+      }
+    }
+
     // Bust ISR cache on homepage, photographers list, and profile page
     revalidatePath("/");
     revalidatePath("/photographers");

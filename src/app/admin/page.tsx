@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
-import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeletePhotographer, AdminNotificationEmail, AdminBanToggle } from "./AdminControls";
+import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeactivatePhotographer, AdminNotificationEmail, AdminBanToggle } from "./AdminControls";
 import { LocationsManager } from "./LocationsManager";
 import { PromoCodesManager } from "./PromoCodesManager";
 import { verifyToken } from "@/app/api/admin/login/route";
@@ -148,7 +148,7 @@ export default async function AdminPage() {
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_verified" value={p.is_verified} /></td>
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_featured" value={p.is_featured} /></td>
                   <td className="px-4 py-3"><AdminPlanSelectClient id={p.id} currentPlan={p.plan} /></td>
-                  <td className="px-4 py-3"><AdminDeletePhotographer id={p.id} name={p.display_name} /></td>
+                  <td className="px-4 py-3"><AdminDeactivatePhotographer id={p.id} name={p.display_name} isActive={p.is_approved} /></td>
                 </tr>
               ))}
             </tbody>

@@ -120,27 +120,36 @@ export function AdminToggleClient({ id, field, value }: { id: string; field: str
   );
 }
 
-export function AdminDeletePhotographer({ id, name }: { id: string; name: string }) {
+export function AdminDeactivatePhotographer({ id, name, isActive }: { id: string; name: string; isActive: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [active, setActive] = useState(isActive);
 
-  async function handleDelete() {
-    if (!confirm(`Delete photographer "${name}" and their entire account? This cannot be undone.`)) return;
-    if (!confirm(`Are you SURE? All their bookings, messages, portfolio, and packages will be permanently deleted.`)) return;
+  async function handleToggle() {
+    const action = active ? "deactivate" : "reactivate";
+    if (active && !confirm(`Deactivate photographer "${name}"? They won't be able to log in and their profile will be hidden.`)) return;
     setLoading(true);
-    const res = await fetch(`/api/admin/photographer?id=${id}`, { method: "DELETE" });
+    const res = await fetch("/api/admin/photographer", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_approved: !active, is_deactivated: active }),
+    });
     setLoading(false);
-    if (res.ok) router.refresh();
-    else alert("Failed to delete");
+    if (res.ok) {
+      setActive(!active);
+      router.refresh();
+    } else {
+      alert(`Failed to ${action}`);
+    }
   }
 
   return (
     <button
-      onClick={handleDelete}
+      onClick={handleToggle}
       disabled={loading}
-      className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
+      className={`rounded px-2 py-1 text-xs font-medium ${active ? "text-red-500 hover:bg-red-50" : "text-accent-600 hover:bg-accent-50"} disabled:opacity-50`}
     >
-      {loading ? "..." : "Delete"}
+      {loading ? "..." : active ? "Deactivate" : "Reactivate"}
     </button>
   );
 }
