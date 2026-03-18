@@ -5,6 +5,7 @@ import { AdminLoginForm } from "./AdminControls";
 import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeactivatePhotographer, AdminNotificationEmail, AdminBanToggle } from "./AdminControls";
 import { LocationsManager } from "./LocationsManager";
 import { PromoCodesManager } from "./PromoCodesManager";
+import { BlogManager } from "./BlogManager";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
@@ -195,6 +196,9 @@ export default async function AdminPage() {
 
       {/* Promo Codes */}
       <PromoCodesManager />
+
+      {/* Blog Posts */}
+      <BlogManager />
 
       {/* Clients */}
       <section className="mt-10 mb-12">

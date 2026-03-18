@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "FAQ — Frequently Asked Questions",
+  title: "Vacation Photoshoot Portugal FAQ — Pricing, Booking & More",
   description:
-    "Find answers to common questions about booking photographers in Portugal, pricing, cancellation policy, and more.",
+    "Find answers to common questions about booking a vacation photographer in Portugal. Pricing, cancellation policy, delivery times, locations, and more.",
   alternates: { canonical: "https://photoportugal.com/faq" },
 };
 
@@ -91,13 +92,20 @@ export default function FAQPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      <Breadcrumbs
+        items={[
+          { name: "Home", href: "/" },
+          { name: "FAQ", href: "/faq" },
+        ]}
+      />
+
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
         <div className="text-center">
           <h1 className="font-display text-4xl font-bold text-gray-900">
             Frequently Asked Questions
           </h1>
           <p className="mt-4 text-lg text-gray-500">
-            Everything you need to know about booking a photographer in Portugal
+            Vacation Photoshoot in Portugal — Pricing, Booking, Delivery & More
           </p>
         </div>
 

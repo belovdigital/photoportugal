@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { locations, getLocationBySlug } from "@/lib/locations-data";
+import { locations, getLocationBySlug, getNearbyLocations } from "@/lib/locations-data";
 import { locationImage } from "@/lib/unsplash-images";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -42,6 +43,8 @@ export default async function LocationPage({
     notFound();
   }
 
+  const nearby = getNearbyLocations(slug);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TouristDestination",
@@ -59,6 +62,14 @@ export default async function LocationPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      <Breadcrumbs
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Locations", href: "/locations" },
+          { name: location.name, href: `/locations/${slug}` },
+        ]}
       />
 
       {/* Hero */}
@@ -171,6 +182,42 @@ export default async function LocationPage({
           </div>
         </div>
       </section>
+
+      {/* Nearby Locations */}
+      {nearby.length > 0 && (
+        <section className="border-t border-warm-200 bg-warm-50">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-2xl font-bold text-gray-900">
+              Nearby Locations
+            </h2>
+            <p className="mt-2 text-gray-500">
+              Explore more photoshoot destinations near {location.name}
+            </p>
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {nearby.map((loc) => (
+                <Link
+                  key={loc.slug}
+                  href={`/locations/${loc.slug}`}
+                  className="group rounded-xl border border-warm-200 bg-white p-6 transition hover:border-primary-200 hover:shadow-md"
+                >
+                  <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition">
+                    {loc.name}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-500 line-clamp-2">
+                    {loc.description}
+                  </p>
+                  <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary-600">
+                    View photographers
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="relative overflow-hidden">

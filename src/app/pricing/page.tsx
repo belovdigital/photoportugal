@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COMMISSION_RATES, SERVICE_FEE_RATE, PLAN_PRICES } from "@/lib/stripe";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "Pricing Plans for Photographers",
+  title: "Photography Packages & Pricing — Vacation Photoshoots in Portugal",
   description:
-    "Choose the right plan for your photography business on Photo Portugal. Free, Pro, and Premium plans available.",
+    "Vacation photoshoot packages in Portugal from EUR150. Couples, family, solo & proposal photography. Compare photographers, read verified reviews. Free cancellation available.",
   alternates: { canonical: "https://photoportugal.com/pricing" },
 };
 
@@ -62,6 +63,13 @@ const plans = [
 
 export default function PricingPage() {
   return (
+    <>
+    <Breadcrumbs
+      items={[
+        { name: "Home", href: "/" },
+        { name: "Pricing", href: "/pricing" },
+      ]}
+    />
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
       <div className="text-center">
         <h1 className="font-display text-4xl font-bold text-gray-900">
@@ -215,5 +223,6 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

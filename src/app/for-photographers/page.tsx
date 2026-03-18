@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "For Photographers — Join Photo Portugal",
-  description: "Join Portugal's growing photographer marketplace. Connect with travelers, manage bookings, and grow your business.",
+  title: "Join Photo Portugal — Earn Money as a Vacation Photographer in Portugal",
+  description: "Join Portugal's growing photographer marketplace. Connect with international travelers, manage bookings, and grow your photography business. Free to get started.",
   alternates: { canonical: "https://photoportugal.com/for-photographers" },
 };
 
 export default function ForPhotographersPage() {
   return (
     <>
+      <Breadcrumbs
+        items={[
+          { name: "Home", href: "/" },
+          { name: "For Photographers", href: "/for-photographers" },
+        ]}
+      />
       {/* Hero */}
       <section className="bg-gray-900 py-16 sm:py-24">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">

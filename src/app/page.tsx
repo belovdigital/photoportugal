@@ -69,9 +69,9 @@ export default function HomePage() {
 
               {/* Headline */}
               <h1 className="mt-6 font-display text-4xl font-bold leading-[1.1] text-gray-900 sm:text-5xl lg:text-[3.5rem]">
-                Your Portugal trip deserves
+                Book a Vacation Photographer in
                 <span className="relative inline-block text-primary-600">
-                  {" "}stunning photos
+                  {" "}Portugal
                   <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1 5.5C47 2.5 153 2.5 199 5.5" stroke="#C94536" strokeWidth="2.5" strokeLinecap="round" opacity="0.4"/>
                   </svg>

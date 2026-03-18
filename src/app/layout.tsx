@@ -20,11 +20,11 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Photo Portugal — Find Your Perfect Photographer in Portugal",
+    default: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
     template: "%s | Photo Portugal",
   },
   description:
-    "Book professional photographers across Portugal for vacation photoshoots, couples sessions, family portraits & more. Verified reviews, instant booking.",
+    "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 20+ locations. Verified reviews, instant booking, photos in 3-7 days. From EUR150.",
   keywords: [
     "photographer portugal",
     "vacation photographer lisbon",
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Photo Portugal",
-    title: "Photo Portugal — Find Your Perfect Photographer in Portugal",
-    description: "Book professional photographers across Portugal for vacation photoshoots, couples sessions, family portraits & more.",
+    title: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
+    description: "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 20+ locations. Verified reviews, instant booking, photos in 3-7 days. From EUR150.",
     url: "https://photoportugal.com",
     images: [
       {
@@ -80,6 +80,27 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="flex min-h-screen flex-col font-sans">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Photo Portugal",
+              url: "https://photoportugal.com",
+              logo: "https://photoportugal.com/logo.svg",
+              sameAs: [
+                "https://instagram.com/photoportugal",
+                "https://facebook.com/photoportugal",
+              ],
+              contactPoint: {
+                "@type": "ContactPoint",
+                contactType: "customer service",
+                email: "hello@photoportugal.com",
+              },
+            }),
+          }}
+        />
         <SessionProvider>
           <NotificationProvider>
             <Header />

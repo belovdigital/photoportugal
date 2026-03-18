@@ -264,3 +264,26 @@ CREATE TRIGGER photographer_profiles_updated_at
 
 CREATE TRIGGER bookings_updated_at
   BEFORE UPDATE ON bookings FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================================
+-- BLOG POSTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug VARCHAR(255) UNIQUE NOT NULL,
+  title VARCHAR(500) NOT NULL,
+  excerpt TEXT,
+  content TEXT NOT NULL,
+  cover_image_url TEXT,
+  meta_title VARCHAR(200),
+  meta_description VARCHAR(300),
+  target_keywords TEXT,
+  author VARCHAR(200) DEFAULT 'Photo Portugal',
+  is_published BOOLEAN DEFAULT FALSE,
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TRIGGER blog_posts_updated_at
+  BEFORE UPDATE ON blog_posts FOR EACH ROW EXECUTE FUNCTION update_updated_at();

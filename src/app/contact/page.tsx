@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -9,6 +10,13 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
+    <>
+    <Breadcrumbs
+      items={[
+        { name: "Home", href: "/" },
+        { name: "Contact", href: "/contact" },
+      ]}
+    />
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
       <div className="text-center">
         <h1 className="font-display text-4xl font-bold text-gray-900">
@@ -82,5 +90,6 @@ export default function ContactPage() {
         </p>
       </div>
     </div>
+    </>
   );
 }

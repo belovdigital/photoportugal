@@ -1,21 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 
 export const metadata: Metadata = {
-  title: "How It Works",
+  title: "How to Book a Photographer in Portugal — 4 Simple Steps",
   description:
-    "Learn how to book a professional photographer in Portugal with Photo Portugal. Three simple steps to your perfect vacation photoshoot.",
+    "Book a professional photographer in Portugal in 4 simple steps. Browse portfolios, book instantly, enjoy your photoshoot, receive edited photos in 3-7 days. From EUR150/session.",
   alternates: { canonical: "https://photoportugal.com/how-it-works" },
 };
 
 export default function HowItWorksPage() {
   return (
     <>
+      <Breadcrumbs
+        items={[
+          { name: "Home", href: "/" },
+          { name: "How It Works", href: "/how-it-works" },
+        ]}
+      />
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className="max-w-3xl">
           <h1 className="font-display text-4xl font-bold text-gray-900 sm:text-5xl">
-            How It Works
+            How to Book a Photographer in Portugal
           </h1>
           <p className="mt-4 text-lg text-gray-500">
             Booking a professional photographer in Portugal is simple, safe, and

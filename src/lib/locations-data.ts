@@ -16,9 +16,9 @@ export const locations: Location[] = [
     lat: 38.7223,
     lng: -9.1393,
     photographer_count: 0,
-    seo_title: "Photographer in Lisbon, Portugal | Book a Professional Photoshoot",
+    seo_title: "Photographer in Lisbon — Book a Vacation Photoshoot from EUR150",
     seo_description:
-      "Find the best photographers in Lisbon, Portugal. Book a professional vacation photoshoot in iconic locations — Alfama, Belém, Pink Street & more. Verified reviews.",
+      "Book a professional photographer in Lisbon, Portugal. Vacation photoshoots at Alfama, Belem, Pink Street & more. Verified reviews, instant booking. From EUR150.",
   },
   {
     id: "sintra",
@@ -34,9 +34,9 @@ export const locations: Location[] = [
     lat: 38.7874,
     lng: -9.3903,
     photographer_count: 0,
-    seo_title: "Photographer in Sintra, Portugal | Fairytale Palace Photoshoots",
+    seo_title: "Sintra Photographer — Pena Palace & Fairytale Photoshoots",
     seo_description:
-      "Book a photographer in Sintra, Portugal. Magical photoshoots at Pena Palace, Quinta da Regaleira & enchanted forests. Professional vacation photography.",
+      "Book a photographer in Sintra, Portugal. Magical photoshoots at Pena Palace, Quinta da Regaleira & enchanted forests. Professional vacation photography. From EUR150.",
   },
   {
     id: "cascais",
@@ -145,9 +145,9 @@ export const locations: Location[] = [
     lat: 41.1579,
     lng: -8.6291,
     photographer_count: 0,
-    seo_title: "Photographer in Porto, Portugal | Professional Vacation Photoshoots",
+    seo_title: "Photographer in Porto — Couples, Family & Vacation Photoshoots",
     seo_description:
-      "Book a professional photographer in Porto, Portugal. Capture memories at Ribeira, Dom Luís Bridge, and along the Douro River. Verified local photographers.",
+      "Book a professional photographer in Porto, Portugal. Couples, family & vacation photoshoots at Ribeira, Dom Luis Bridge & Douro River. Verified reviews. From EUR150.",
   },
   {
     id: "braga",
@@ -350,9 +350,9 @@ export const locations: Location[] = [
     lat: 37.0179,
     lng: -7.9304,
     photographer_count: 0,
-    seo_title: "Photographer in Algarve, Portugal | Beach & Cliff Photoshoots",
+    seo_title: "Algarve Photographer — Beach, Cliff & Cave Photoshoots",
     seo_description:
-      "Book a professional photographer in the Algarve, Portugal. Stunning beach, cliff, and cave photoshoots at Benagil, Lagos, and Praia da Marinha. Book today.",
+      "Book a professional photographer in the Algarve, Portugal. Stunning beach, cliff & cave photoshoots at Benagil, Lagos & Praia da Marinha. Verified reviews. From EUR150.",
   },
   {
     id: "lagos",
@@ -438,4 +438,39 @@ export function getLocationBySlug(slug: string): Location | undefined {
 
 export function getLocationsByRegion(region: string): Location[] {
   return locations.filter((l) => l.region === region);
+}
+
+/** Mapping of location slugs to their nearby location slugs */
+export const nearbyLocationsMap: Record<string, string[]> = {
+  lisbon: ["sintra", "cascais", "caparica", "setubal"],
+  sintra: ["lisbon", "cascais", "peniche"],
+  cascais: ["lisbon", "sintra"],
+  caparica: ["lisbon", "setubal", "comporta"],
+  setubal: ["lisbon", "caparica", "comporta"],
+  comporta: ["setubal", "caparica", "evora"],
+  porto: ["douro-valley", "braga", "guimaraes", "aveiro"],
+  braga: ["porto", "guimaraes", "geres"],
+  guimaraes: ["porto", "braga"],
+  "douro-valley": ["porto", "braga", "guimaraes"],
+  aveiro: ["porto", "coimbra"],
+  geres: ["braga", "porto"],
+  algarve: ["lagos", "tavira"],
+  lagos: ["algarve", "tavira"],
+  tavira: ["algarve", "lagos"],
+  coimbra: ["aveiro", "tomar", "obidos"],
+  tomar: ["coimbra", "obidos", "nazare"],
+  obidos: ["peniche", "nazare", "tomar"],
+  nazare: ["obidos", "peniche", "coimbra"],
+  peniche: ["obidos", "nazare", "sintra"],
+  evora: ["comporta", "setubal", "lisbon"],
+  madeira: [],
+  azores: [],
+};
+
+/** Get nearby Location objects for a given slug */
+export function getNearbyLocations(slug: string): Location[] {
+  const slugs = nearbyLocationsMap[slug] || [];
+  return slugs
+    .map((s) => locations.find((l) => l.slug === s))
+    .filter((l): l is Location => l !== undefined);
 }
