@@ -84,7 +84,7 @@ export function HowItWorksSection() {
                 <div className="absolute -right-3 top-10 hidden h-0.5 w-6 bg-warm-300 lg:block" />
               )}
 
-              <div className="rounded-2xl border border-warm-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+              <div className="flex h-full flex-col rounded-2xl border border-warm-200 bg-white p-6 shadow-sm transition hover:shadow-md">
                 {/* Step icon */}
                 <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${step.iconBg} shadow-lg`}>
                   {step.icon}
@@ -99,13 +99,13 @@ export function HowItWorksSection() {
                   {step.title}
                 </h3>
 
-                <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-500">
                   {step.description}
                 </p>
 
                 {/* Detail tag */}
                 <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-gray-400">
-                  <svg className="h-3.5 w-3.5 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-3.5 w-3.5 shrink-0 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   {step.detail}
