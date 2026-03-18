@@ -84,7 +84,7 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-120px)]">
+    <div className="mx-auto flex min-h-[calc(100vh-120px)] max-w-screen-xl">
       {/* Mobile toggle */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
