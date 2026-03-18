@@ -93,3 +93,22 @@ export async function POST() {
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
+
+// Remove verified badge
+export async function DELETE() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const userId = (session.user as { id?: string }).id;
+
+  try {
+    await queryOne(
+      "UPDATE photographer_profiles SET is_verified = FALSE, phone_verified = FALSE, phone_number = NULL WHERE user_id = $1 RETURNING id",
+      [userId]
+    );
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[stripe/verified] delete error:", error);
+    return NextResponse.json({ error: "Failed" }, { status: 500 });
+  }
+}

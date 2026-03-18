@@ -133,6 +133,21 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
               {initialPhone && (
                 <p className="mt-2 text-xs text-gray-400">Phone: {initialPhone}</p>
               )}
+              <button
+                onClick={async () => {
+                  if (!confirm("Remove your Verified badge? This cannot be undone — you will need to pay again to re-verify.")) return;
+                  setLoading("remove-verified");
+                  try {
+                    const res = await fetch("/api/stripe/verified", { method: "DELETE" });
+                    if (res.ok) window.location.reload();
+                  } catch {}
+                  setLoading("");
+                }}
+                disabled={!!loading}
+                className="mt-2 w-full rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
+              >
+                {loading === "remove-verified" ? "Removing..." : "Remove Verified Badge"}
+              </button>
             </div>
           ) : !phoneVerified ? (
             /* Step 1: Phone verification */
