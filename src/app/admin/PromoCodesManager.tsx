@@ -142,7 +142,7 @@ export function PromoCodesManager() {
   };
 
   return (
-    <section className="mt-10">
+    <section>
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">Promo Codes</h2>
         <button

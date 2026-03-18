@@ -193,7 +193,7 @@ export function BlogManager() {
   };
 
   return (
-    <section className="mt-10">
+    <section>
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">Blog Posts</h2>
         <button
