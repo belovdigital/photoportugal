@@ -113,12 +113,31 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
   }
 }
 
+// Map shoot type slug (from location pages) or display name (from header) to canonical display name
+function resolveShootType(param?: string): string | undefined {
+  if (!param) return undefined;
+  // Exact match (from header links: "Couples", "Solo Portrait")
+  const exact = (SHOOT_TYPES as readonly string[]).find((t) => t === param);
+  if (exact) return exact;
+  // Slug match (from location pages: "couples", "solo", "content-creator")
+  const slugMatch = (SHOOT_TYPES as readonly string[]).find(
+    (t) => t.toLowerCase().replace(/\s+/g, "-") === param.toLowerCase()
+  );
+  if (slugMatch) return slugMatch;
+  // Partial/prefix match (e.g. "solo" → "Solo Portrait")
+  const partial = (SHOOT_TYPES as readonly string[]).find(
+    (t) => t.toLowerCase().startsWith(param.toLowerCase())
+  );
+  return partial;
+}
+
 export default async function PhotographersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ location?: string; shoot?: string }>;
+  searchParams: Promise<{ location?: string; shoot?: string; shootType?: string }>;
 }) {
-  const { location: initialLocation, shoot: initialShootType } = await searchParams;
+  const { location: initialLocation, shoot, shootType } = await searchParams;
+  const initialShootType = shoot || shootType;
   const dbPhotographers = await getDbPhotographers();
 
   return (
@@ -127,7 +146,7 @@ export default async function PhotographersPage({
       locations={locations}
       shootTypes={SHOOT_TYPES as unknown as string[]}
       initialLocation={initialLocation}
-      initialShootType={initialShootType}
+      initialShootType={resolveShootType(initialShootType)}
     />
   );
 }
