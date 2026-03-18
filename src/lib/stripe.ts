@@ -4,21 +4,21 @@ export const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null as unknown as Stripe;
 
-// Commission rates by plan
+// Commission rates by plan (whole percentages)
 export const COMMISSION_RATES: Record<string, number> = {
-  free: 0.20,     // 20%
-  pro: 0.15,      // 15%
-  premium: 0.10,  // 10%
+  free: 20,
+  pro: 15,
+  premium: 10,
 };
 
-// Plan prices (monthly)
+// Plan prices (monthly, in EUR)
 export const PLAN_PRICES: Record<string, number> = {
   free: 0,
   pro: 29,
   premium: 59,
 };
 
-export const SERVICE_FEE_RATE = 0.10; // 10% client service fee
+export const SERVICE_FEE_RATE = 0.10; // 10%
 
 /**
  * Calculate payment breakdown
@@ -26,7 +26,8 @@ export const SERVICE_FEE_RATE = 0.10; // 10% client service fee
 export function calculatePayment(packagePrice: number, plan: string) {
   const serviceFee = Math.round(packagePrice * SERVICE_FEE_RATE * 100) / 100;
   const totalClientPays = packagePrice + serviceFee;
-  const commissionRate = COMMISSION_RATES[plan] || COMMISSION_RATES.free;
+  const commissionPct = COMMISSION_RATES[plan] ?? COMMISSION_RATES.free;
+  const commissionRate = commissionPct / 100;
   const platformFee = Math.round(packagePrice * commissionRate * 100) / 100;
   const photographerPayout = packagePrice - platformFee;
 

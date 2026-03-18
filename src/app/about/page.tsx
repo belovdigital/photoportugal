@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "About Photo Portugal — Our Story & Mission",
   description:
     "Photo Portugal connects tourists with talented local photographers across Portugal. Learn about our mission and why travelers trust us.",
+  alternates: { canonical: "https://photoportugal.com/about" },
 };
 
 export default function AboutPage() {

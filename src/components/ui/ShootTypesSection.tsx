@@ -6,37 +6,37 @@ const shootTypes = [
     title: "Couples",
     description: "Romantic moments in stunning settings",
     image: "photo-1529634597503-139d3726fed5",
-    slug: "couple",
+    shoot: "Couples",
   },
   {
     title: "Family",
     description: "Natural, joyful family memories",
     image: "photo-1609220136736-443140cffec6",
-    slug: "family",
+    shoot: "Family",
   },
   {
     title: "Honeymoon",
     description: "Celebrate your love story in Portugal",
     image: "photo-1519741497674-611481863552",
-    slug: "honeymoon",
+    shoot: "Honeymoon",
   },
   {
     title: "Solo",
     description: "Stunning portraits, zero selfie struggle",
     image: "photo-1494790108377-be9c29b29330",
-    slug: "solo",
+    shoot: "Solo Portrait",
   },
   {
     title: "Engagement",
     description: "Say yes with Portugal as your backdrop",
     image: "photo-1522673607200-164d1b6ce486",
-    slug: "engagement",
+    shoot: "Engagement",
   },
   {
     title: "Friends",
     description: "Group trips deserve great photos",
     image: "photo-1529156069898-49953e39b3ac",
-    slug: "friends",
+    shoot: "Friends Trip",
   },
 ];
 
@@ -59,8 +59,8 @@ export function ShootTypesSection() {
         <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:gap-6">
           {shootTypes.map((type) => (
             <Link
-              key={type.slug}
-              href={`/photographers?type=${type.slug}`}
+              key={type.shoot}
+              href={`/photographers?shoot=${type.shoot}`}
               className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-gray-900 sm:aspect-[4/5]"
             >
               <img

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
+import { COMMISSION_RATES, PLAN_PRICES } from "@/lib/stripe";
 import { StripeConnectSection } from "./StripeConnectSection";
 import { SubscriptionManager } from "./SubscriptionManager";
 import { AddOnsSection } from "./AddOnsSection";
@@ -28,16 +29,16 @@ export default async function SubscriptionPage() {
 
   const plans = [
     {
-      name: "Free", price: "0", current: currentPlan === "free",
-      features: ["10 portfolio photos", "1 location", "Basic visibility", "20% commission"],
+      name: "Free", price: String(PLAN_PRICES.free), current: currentPlan === "free",
+      features: ["10 portfolio photos", "1 location", "Basic visibility", `${COMMISSION_RATES.free}% commission`],
     },
     {
-      name: "Pro", price: "29", current: currentPlan === "pro",
-      features: ["30 portfolio photos", "5 locations", "Priority ranking", "Profile analytics", "15% commission"],
+      name: "Pro", price: String(PLAN_PRICES.pro), current: currentPlan === "pro",
+      features: ["30 portfolio photos", "5 locations", "Priority ranking", "Profile analytics", `${COMMISSION_RATES.pro}% commission`],
     },
     {
-      name: "Premium", price: "59", current: currentPlan === "premium",
-      features: ["Unlimited photos", "All locations", "Top ranking", "Full analytics", "10% commission", "Priority support"],
+      name: "Premium", price: String(PLAN_PRICES.premium), current: currentPlan === "premium",
+      features: ["Unlimited photos", "All locations", "Top ranking", "Full analytics", `${COMMISSION_RATES.premium}% commission`, "Priority support"],
     },
   ];
 

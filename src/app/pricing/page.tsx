@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { COMMISSION_RATES, SERVICE_FEE_RATE, PLAN_PRICES } from "@/lib/stripe";
 
 export const metadata: Metadata = {
   title: "Pricing Plans for Photographers",
@@ -11,13 +12,13 @@ export const metadata: Metadata = {
 const plans = [
   {
     name: "Free",
-    price: "0",
+    price: String(PLAN_PRICES.free),
     description: "Get started and test the platform",
     features: [
       "Up to 10 portfolio photos",
       "1 location",
       "Basic search visibility",
-      "20% platform commission",
+      `${COMMISSION_RATES.free}% platform commission`,
     ],
     cta: "Get Started Free",
     href: "/auth/signup?role=photographer",
@@ -26,14 +27,14 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "29",
+    price: String(PLAN_PRICES.pro),
     description: "For photographers ready to grow their business",
     features: [
       "Up to 30 portfolio photos",
       "5 locations",
       "Priority search ranking",
       "Profile analytics",
-      "15% platform commission",
+      `${COMMISSION_RATES.pro}% platform commission`,
     ],
     cta: "Upgrade to Pro",
     href: "/dashboard/subscription",
@@ -42,14 +43,14 @@ const plans = [
   },
   {
     name: "Premium",
-    price: "59",
+    price: String(PLAN_PRICES.premium),
     description: "Maximum visibility and lowest commission",
     features: [
       "Unlimited portfolio photos",
       "All locations",
       "Top search ranking",
       "Full analytics dashboard",
-      "10% platform commission",
+      `${COMMISSION_RATES.premium}% platform commission`,
       "Priority support",
     ],
     cta: "Go Premium",
@@ -184,7 +185,7 @@ export default function PricingPage() {
           <div>
             <p className="text-sm font-semibold text-gray-900">For clients</p>
             <p className="mt-1 text-sm text-gray-500">
-              Pay the package price + 10% service fee. Secure payment via Stripe with support for cards, Apple Pay, and Google Pay.
+              Pay the package price + {SERVICE_FEE_RATE * 100}% service fee. Secure payment via Stripe with support for cards, Apple Pay, and Google Pay.
             </p>
           </div>
           <div>
@@ -206,9 +207,9 @@ export default function PricingPage() {
             </thead>
             <tbody className="text-gray-600">
               <tr><td className="py-1">Client pays</td><td className="py-1 text-right">€330</td><td className="py-1 text-right">€330</td><td className="py-1 text-right">€330</td></tr>
-              <tr><td className="py-1">Service fee (10%)</td><td className="py-1 text-right">€30</td><td className="py-1 text-right">€30</td><td className="py-1 text-right">€30</td></tr>
-              <tr><td className="py-1">Platform commission</td><td className="py-1 text-right text-red-500">-€60 (20%)</td><td className="py-1 text-right text-red-500">-€45 (15%)</td><td className="py-1 text-right text-red-500">-€30 (10%)</td></tr>
-              <tr className="border-t border-warm-200 font-semibold text-gray-900"><td className="pt-2">You receive</td><td className="pt-2 text-right text-accent-600">€240</td><td className="pt-2 text-right text-accent-600">€255</td><td className="pt-2 text-right text-accent-600">€270</td></tr>
+              <tr><td className="py-1">Service fee ({SERVICE_FEE_RATE * 100}%)</td><td className="py-1 text-right">&euro;{300 * SERVICE_FEE_RATE}</td><td className="py-1 text-right">&euro;{300 * SERVICE_FEE_RATE}</td><td className="py-1 text-right">&euro;{300 * SERVICE_FEE_RATE}</td></tr>
+              <tr><td className="py-1">Platform commission</td><td className="py-1 text-right text-red-500">-&euro;{300 * COMMISSION_RATES.free / 100} ({COMMISSION_RATES.free}%)</td><td className="py-1 text-right text-red-500">-&euro;{300 * COMMISSION_RATES.pro / 100} ({COMMISSION_RATES.pro}%)</td><td className="py-1 text-right text-red-500">-&euro;{300 * COMMISSION_RATES.premium / 100} ({COMMISSION_RATES.premium}%)</td></tr>
+              <tr className="border-t border-warm-200 font-semibold text-gray-900"><td className="pt-2">You receive</td><td className="pt-2 text-right text-accent-600">&euro;{300 - 300 * COMMISSION_RATES.free / 100}</td><td className="pt-2 text-right text-accent-600">&euro;{300 - 300 * COMMISSION_RATES.pro / 100}</td><td className="pt-2 text-right text-accent-600">&euro;{300 - 300 * COMMISSION_RATES.premium / 100}</td></tr>
             </tbody>
           </table>
         </div>

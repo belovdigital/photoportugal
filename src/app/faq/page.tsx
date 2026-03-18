@@ -61,7 +61,7 @@ const faqs = [
   {
     question: "What are the photographer plans?",
     answer:
-      "Free: 10 portfolio photos, 1 location, basic visibility. Pro ($19/mo): 50 photos, 3 locations, priority search ranking, analytics. Premium ($39/mo): unlimited photos, all locations, top ranking, Featured badge, dedicated SEO page.",
+      "We offer three plans — Free, Pro, and Premium — each with different portfolio limits, location slots, and visibility features. Visit our pricing page for current rates and a full feature comparison.",
   },
   {
     question: "Is my payment secure?",

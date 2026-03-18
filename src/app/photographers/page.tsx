@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { locations, regions } from "@/lib/locations-data";
+import { locations } from "@/lib/locations-data";
 import { SHOOT_TYPES, PhotographerProfile } from "@/types";
 import { PhotographerCatalog } from "./PhotographerCatalog";
 import { query } from "@/lib/db";
@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Find Photographers in Portugal",
   description:
     "Browse professional photographers across Portugal. View portfolios, read verified reviews, and book your perfect vacation photoshoot.",
+  alternates: { canonical: "https://photoportugal.com/photographers" },
 };
 
 async function getDbPhotographers(): Promise<PhotographerProfile[]> {
@@ -124,7 +125,6 @@ export default async function PhotographersPage({
     <PhotographerCatalog
       photographers={dbPhotographers}
       locations={locations}
-      regions={regions}
       shootTypes={SHOOT_TYPES as unknown as string[]}
       initialLocation={initialLocation}
       initialShootType={initialShootType}

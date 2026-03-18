@@ -56,6 +56,9 @@ CREATE TABLE photographer_profiles (
   phone_verification_code VARCHAR(6),
   phone_verification_sent_at TIMESTAMP,
   plan plan_type DEFAULT 'free',
+  stripe_account_id VARCHAR(255),
+  stripe_onboarding_complete BOOLEAN DEFAULT FALSE,
+  verification_requested_at TIMESTAMPTZ,
   rating NUMERIC(2,1) DEFAULT 0,
   review_count INTEGER DEFAULT 0,
   session_count INTEGER DEFAULT 0,
@@ -208,6 +211,18 @@ CREATE TABLE delivery_photos (
 );
 
 CREATE INDEX idx_delivery_photos_booking ON delivery_photos(booking_id);
+
+-- ============================================================
+-- NOTIFICATION PREFERENCES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id SERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+  email_bookings BOOLEAN DEFAULT TRUE,
+  email_messages BOOLEAN DEFAULT TRUE,
+  email_reviews BOOLEAN DEFAULT TRUE,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- ============================================================
 -- TRIGGER: auto-update updated_at

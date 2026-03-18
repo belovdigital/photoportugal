@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { SERVICE_FEE_RATE } from "@/lib/stripe";
 
 interface Package {
   id: string;
@@ -36,7 +37,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [selectedPackage, setSelectedPackage] = useState<string>("");
   const [selectedLocation, setSelectedLocation] = useState<string>("");
   const [shootDate, setShootDate] = useState("");
-  const [shootTime, setShootTime] = useState("");
+  const [shootTime, setShootTime] = useState("flexible");
+  const [flexibleDate, setFlexibleDate] = useState(false);
   const [groupSize, setGroupSize] = useState("2");
   const [occasion, setOccasion] = useState("");
   const [message, setMessage] = useState("");
@@ -74,6 +76,12 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!photographer) return;
+
+    if (!flexibleDate && !shootDate) {
+      setError("Please select a date or check \"I'm flexible with dates\"");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -84,7 +92,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         photographer_id: photographer.id,
         package_id: selectedPackage || null,
         location_slug: selectedLocation || null,
-        shoot_date: shootDate || null,
+        shoot_date: flexibleDate ? "flexible" : shootDate,
         shoot_time: shootTime || null,
         group_size: parseInt(groupSize) || 2,
         occasion: occasion || null,
@@ -233,33 +241,50 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         )}
 
         {/* Date & Time */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Preferred date</label>
+        <div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {!flexibleDate && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Preferred date</label>
+                <input
+                  type="date"
+                  value={shootDate}
+                  onChange={(e) => setShootDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  required={!flexibleDate}
+                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+                />
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Preferred time</label>
+              <select
+                value={shootTime}
+                onChange={(e) => setShootTime(e.target.value)}
+                className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+              >
+                <option value="flexible">I&apos;m flexible</option>
+                <option value="sunrise">Sunrise (6-8 AM)</option>
+                <option value="morning">Morning (8-11 AM)</option>
+                <option value="midday">Midday (11 AM-2 PM)</option>
+                <option value="afternoon">Afternoon (2-5 PM)</option>
+                <option value="golden_hour">Golden Hour (5-7 PM)</option>
+                <option value="sunset">Sunset (7-9 PM)</option>
+              </select>
+            </div>
+          </div>
+          <label className="mt-3 flex items-center gap-2 cursor-pointer">
             <input
-              type="date"
-              value={shootDate}
-              onChange={(e) => setShootDate(e.target.value)}
-              min={new Date().toISOString().split("T")[0]}
-              className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+              type="checkbox"
+              checked={flexibleDate}
+              onChange={(e) => {
+                setFlexibleDate(e.target.checked);
+                if (e.target.checked) setShootDate("");
+              }}
+              className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Preferred time</label>
-            <select
-              value={shootTime}
-              onChange={(e) => setShootTime(e.target.value)}
-              className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
-            >
-              <option value="">Flexible</option>
-              <option value="sunrise">Sunrise (6-8 AM)</option>
-              <option value="morning">Morning (8-11 AM)</option>
-              <option value="midday">Midday (11 AM-2 PM)</option>
-              <option value="afternoon">Afternoon (2-5 PM)</option>
-              <option value="golden_hour">Golden Hour (5-7 PM)</option>
-              <option value="sunset">Sunset (7-9 PM)</option>
-            </select>
-          </div>
+            <span className="text-sm text-gray-600">I&apos;m flexible with dates</span>
+          </label>
         </div>
 
         {/* Group & Occasion */}
@@ -323,13 +348,13 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 <span className="text-gray-900">&euro;{Number(selectedPkg.price).toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">Service fee (10%)</span>
-                <span className="text-gray-900">&euro;{(Number(selectedPkg.price) * 0.1).toFixed(2)}</span>
+                <span className="text-gray-600">Service fee ({SERVICE_FEE_RATE * 100}%)</span>
+                <span className="text-gray-900">&euro;{(Number(selectedPkg.price) * SERVICE_FEE_RATE).toFixed(2)}</span>
               </div>
               <hr className="border-warm-200" />
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-900">Total</span>
-                <span className="text-xl font-bold text-gray-900">&euro;{(Number(selectedPkg.price) * 1.1).toFixed(2)}</span>
+                <span className="text-xl font-bold text-gray-900">&euro;{(Number(selectedPkg.price) * (1 + SERVICE_FEE_RATE)).toFixed(2)}</span>
               </div>
             </div>
             <p className="mt-3 text-xs text-gray-400">Payment is processed securely after the photographer confirms your booking.</p>

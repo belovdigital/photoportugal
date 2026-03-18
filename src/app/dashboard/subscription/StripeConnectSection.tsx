@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { COMMISSION_RATES, SERVICE_FEE_RATE } from "@/lib/stripe";
 
 export function StripeConnectSection() {
   const [status, setStatus] = useState<{ connected: boolean; onboarded: boolean } | null>(null);
@@ -69,9 +70,9 @@ export function StripeConnectSection() {
       <div className="mt-4 rounded-lg bg-warm-50 p-4">
         <h3 className="text-sm font-semibold text-gray-900">How payments work</h3>
         <ul className="mt-2 space-y-1 text-xs text-gray-500">
-          <li>Client pays package price + 10% service fee at booking confirmation</li>
+          <li>Client pays package price + {SERVICE_FEE_RATE * 100}% service fee at booking confirmation</li>
           <li>Payment is held securely until the session is marked as delivered</li>
-          <li>Platform commission depends on your plan (Free: 20%, Pro: 15%, Premium: 10%)</li>
+          <li>Platform commission depends on your plan (Free: {COMMISSION_RATES.free}%, Pro: {COMMISSION_RATES.pro}%, Premium: {COMMISSION_RATES.premium}%)</li>
           <li>Payouts are processed automatically to your connected bank account</li>
         </ul>
       </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
@@ -21,7 +20,6 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
 
 export default function SettingsPage() {
   const { data: session } = useSession();
-  const router = useRouter();
   const user = session?.user;
   const role = (user as { role?: string })?.role;
   const isPhotographer = role === "photographer";

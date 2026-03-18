@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -80,9 +81,11 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="flex min-h-screen flex-col font-sans">
         <SessionProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <NotificationProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </NotificationProvider>
         </SessionProvider>
       </body>
     </html>

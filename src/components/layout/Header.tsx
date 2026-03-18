@@ -4,20 +4,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { unsplashUrl } from "@/lib/unsplash-images";
-
-function useNotifications(loggedIn: boolean) {
-  const [data, setData] = useState({ unread_messages: 0, pending_bookings: 0 });
-  useEffect(() => {
-    if (!loggedIn) return;
-    function fetch_() {
-      fetch("/api/notifications").then(r => r.json()).then(setData).catch(() => {});
-    }
-    fetch_();
-    const i = setInterval(fetch_, 8000);
-    return () => clearInterval(i);
-  }, [loggedIn]);
-  return data;
-}
+import { useNotifications } from "@/contexts/NotificationContext";
 
 const TOP_DESTINATIONS = [
   { slug: "lisbon", name: "Lisbon", img: "photo-1536663060084-a0d9eeeaf44b" },
@@ -48,7 +35,7 @@ export function Header() {
   const role = (user as { role?: string } | undefined)?.role;
   const isPhotographer = role === "photographer";
   const isLoading = status === "loading";
-  const notifications = useNotifications(!!user);
+  const notifications = useNotifications();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

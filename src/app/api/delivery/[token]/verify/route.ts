@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { queryOne, query } from "@/lib/db";
+import crypto from "crypto";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // POST: Verify password and return gallery data
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(`delivery-verify:${ip}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   const { token } = await params;
   const { password } = await req.json();
 
@@ -46,8 +53,9 @@ export async function POST(
     return NextResponse.json({ error: "This gallery has expired" }, { status: 410 });
   }
 
-  // Check password
-  if (booking.delivery_password !== password) {
+  // Check password (compare SHA256 hashes)
+  const hashedInput = crypto.createHash("sha256").update(password).digest("hex");
+  if (booking.delivery_password !== hashedInput) {
     return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
   }
 

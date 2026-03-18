@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { compare } from "bcryptjs";
 import { queryOne } from "@/lib/db";
 import crypto from "crypto";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 function signToken(payload: string): string {
   const secret = process.env.NEXTAUTH_SECRET || "fallback-secret";
@@ -29,6 +30,11 @@ export function verifyToken(token: string): { email: string; timestamp: number }
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(`admin-login:${ip}`, 5, 60_000)) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   try {
     const { email, password } = await req.json();
 

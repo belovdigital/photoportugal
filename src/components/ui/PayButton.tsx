@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SERVICE_FEE_RATE } from "@/lib/stripe";
 
 export function PayButton({ bookingId, amount }: { bookingId: string; amount: number }) {
   const [loading, setLoading] = useState(false);
@@ -35,8 +36,8 @@ export function PayButton({ bookingId, amount }: { bookingId: string; amount: nu
     setLoading(false);
   }
 
-  const serviceFee = (amount * 0.1).toFixed(2);
-  const total = (amount * 1.1).toFixed(2);
+  const serviceFee = (amount * SERVICE_FEE_RATE).toFixed(2);
+  const total = (amount * (1 + SERVICE_FEE_RATE)).toFixed(2);
 
   return (
     <div className="flex items-center gap-2">

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 interface NavItem {
   href: string;
@@ -17,21 +18,8 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role || "client";
-  const [notifications, setNotifications] = useState({ unread_messages: 0, pending_bookings: 0 });
+  const notifications = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Fetch notification counts
-  useEffect(() => {
-    function fetchNotifications() {
-      fetch("/api/notifications")
-        .then((r) => r.json())
-        .then(setNotifications)
-        .catch(() => {});
-    }
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 8000);
-    return () => clearInterval(interval);
-  }, []);
 
   const navItems: NavItem[] = [
     { href: "/dashboard", label: "Overview", icon: "home", roles: ["client", "photographer"] },

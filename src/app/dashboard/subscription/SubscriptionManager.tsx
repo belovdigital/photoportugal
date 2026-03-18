@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PLAN_PRICES } from "@/lib/stripe";
 
 export function SubscriptionManager({ currentPlan }: { currentPlan: string }) {
   const [loading, setLoading] = useState("");
@@ -35,11 +36,11 @@ export function SubscriptionManager({ currentPlan }: { currentPlan: string }) {
         <div className="flex gap-3">
           <button onClick={() => handleSubscribe("pro")} disabled={!!loading}
             className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
-            {loading === "pro" ? "Redirecting..." : "Upgrade to Pro — €29/mo"}
+            {loading === "pro" ? "Redirecting..." : `Upgrade to Pro — €${PLAN_PRICES.pro}/mo`}
           </button>
           <button onClick={() => handleSubscribe("premium")} disabled={!!loading}
             className="rounded-xl border border-primary-300 px-5 py-2.5 text-sm font-semibold text-primary-600 hover:bg-primary-50 disabled:opacity-50">
-            {loading === "premium" ? "Redirecting..." : "Upgrade to Premium — €59/mo"}
+            {loading === "premium" ? "Redirecting..." : `Upgrade to Premium — €${PLAN_PRICES.premium}/mo`}
           </button>
         </div>
       )}
@@ -47,7 +48,7 @@ export function SubscriptionManager({ currentPlan }: { currentPlan: string }) {
         <div className="flex gap-3">
           <button onClick={() => handleSubscribe("premium")} disabled={!!loading}
             className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
-            {loading === "premium" ? "Redirecting..." : "Upgrade to Premium — €59/mo"}
+            {loading === "premium" ? "Redirecting..." : `Upgrade to Premium — €${PLAN_PRICES.premium}/mo`}
           </button>
           <button onClick={handlePortal} disabled={!!loading}
             className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
