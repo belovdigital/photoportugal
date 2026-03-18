@@ -98,8 +98,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         try {
-          const dbUser = await queryOne<{ id: string; role: string }>(
-            "SELECT id, role FROM users WHERE email = $1",
+          const dbUser = await queryOne<{ id: string; role: string; is_banned: boolean }>(
+            "SELECT id, role, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE email = $1",
             [user.email!]
           );
           if (dbUser) {
@@ -111,12 +111,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.role = "client";
         }
       }
+      // Periodically verify user still exists and isn't banned
+      if (token.id && !user) {
+        try {
+          const exists = await queryOne<{ id: string; is_banned: boolean }>(
+            "SELECT id, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE id = $1",
+            [token.id as string]
+          );
+          if (!exists || exists.is_banned) {
+            return { ...token, expired: true };
+          }
+        } catch {}
+      }
       if (trigger === "update" && session?.role) {
         token.role = session.role;
       }
       return token;
     },
     async session({ session, token }) {
+      if ((token as { expired?: boolean }).expired) {
+        return { ...session, user: undefined } as unknown as typeof session;
+      }
       if (session.user) {
         (session.user as { role?: string }).role = token.role as string;
         (session.user as { id?: string }).id = token.id as string;
