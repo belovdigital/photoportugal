@@ -113,6 +113,15 @@
   @apply my-8 border-warm-200;
 }
 
+/* Hide main site header/footer on admin pages */
+body:has(.admin-layout) header:first-of-type,
+body:has(.admin-layout) footer {
+  display: none;
+}
+body:has(.admin-layout) main.flex-1 {
+  padding: 0;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
