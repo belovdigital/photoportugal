@@ -201,11 +201,24 @@ export function PhotographerDashboardClient({
     setLocalItems(portfolioItems);
   }
 
-  function handleDragStart(id: string) {
+  function handleDragStart(e: React.DragEvent, id: string) {
     setDragId(id);
+    e.dataTransfer.effectAllowed = "move";
+    // Set drag data so the browser knows this is a valid drag
+    e.dataTransfer.setData("text/plain", id);
   }
 
-  function handleDrop(targetId: string) {
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }
+
+  function handleDragEnd() {
+    setDragId(null);
+  }
+
+  function handleDrop(e: React.DragEvent, targetId: string) {
+    e.preventDefault();
     if (!dragId || dragId === targetId) { setDragId(null); return; }
     const items = [...localItems];
     const fromIdx = items.findIndex((p) => p.id === dragId);
@@ -577,9 +590,10 @@ export function PhotographerDashboardClient({
                 <div
                   key={item.id}
                   draggable
-                  onDragStart={() => handleDragStart(item.id)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => handleDrop(item.id)}
+                  onDragStart={(e) => handleDragStart(e, item.id)}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                  onDrop={(e) => handleDrop(e, item.id)}
                   className={`group cursor-grab overflow-hidden rounded-xl border bg-white transition active:cursor-grabbing ${
                     dragId === item.id ? "border-primary-400 opacity-50 ring-2 ring-primary-200" : "border-warm-200"
                   }`}
@@ -589,7 +603,8 @@ export function PhotographerDashboardClient({
                     <img
                       src={item.url}
                       alt={item.caption || "Portfolio photo"}
-                      className="h-full w-full object-cover pointer-events-none"
+                      className="h-full w-full object-cover pointer-events-none select-none"
+                      draggable={false}
                       loading="lazy"
                     />
                     <button
@@ -608,11 +623,11 @@ export function PhotographerDashboardClient({
                     </div>
                   </div>
                   {/* Tags */}
-                  <div className="flex gap-2 p-2.5">
+                  <div className="flex flex-col gap-1.5 p-2.5">
                     <select
                       value={item.location_slug || ""}
                       onChange={(e) => updatePhotoTag(item.id, "location_slug", e.target.value)}
-                      className="flex-1 truncate rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+                      className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
                     >
                       <option value="">Location</option>
                       {allLocations.map((l) => (
@@ -622,7 +637,7 @@ export function PhotographerDashboardClient({
                     <select
                       value={item.shoot_type || ""}
                       onChange={(e) => updatePhotoTag(item.id, "shoot_type", e.target.value)}
-                      className="flex-1 truncate rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+                      className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
                     >
                       <option value="">Shoot type</option>
                       {SHOOT_TYPES.map((t) => (
