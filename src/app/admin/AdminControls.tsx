@@ -120,6 +120,31 @@ export function AdminToggleClient({ id, field, value }: { id: string; field: str
   );
 }
 
+export function AdminDeletePhotographer({ id, name }: { id: string; name: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function handleDelete() {
+    if (!confirm(`Delete photographer "${name}" and their entire account? This cannot be undone.`)) return;
+    if (!confirm(`Are you SURE? All their bookings, messages, portfolio, and packages will be permanently deleted.`)) return;
+    setLoading(true);
+    const res = await fetch(`/api/admin/photographer?id=${id}`, { method: "DELETE" });
+    setLoading(false);
+    if (res.ok) router.refresh();
+    else alert("Failed to delete");
+  }
+
+  return (
+    <button
+      onClick={handleDelete}
+      disabled={loading}
+      className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
+    >
+      {loading ? "..." : "Delete"}
+    </button>
+  );
+}
+
 export function AdminPlanSelectClient({ id, currentPlan }: { id: string; currentPlan: string }) {
   const router = useRouter();
   const [plan, setPlan] = useState(currentPlan);

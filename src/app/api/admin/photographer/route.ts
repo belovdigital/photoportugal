@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { queryOne } from "@/lib/db";
+import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 async function verifyAdmin(): Promise<boolean> {
@@ -66,5 +66,35 @@ export async function PATCH(req: NextRequest) {
   } catch (error) {
     console.error("[admin] update error:", error);
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+  }
+}
+
+// Delete photographer (and their user account)
+export async function DELETE(req: NextRequest) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+    // Get user_id before deleting profile
+    const profile = await queryOne<{ user_id: string }>(
+      "SELECT user_id FROM photographer_profiles WHERE id = $1", [id]
+    );
+    if (!profile) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    // CASCADE will handle photographer_profiles, packages, portfolio_items, etc.
+    await query("DELETE FROM users WHERE id = $1", [profile.user_id]);
+
+    revalidatePath("/");
+    revalidatePath("/photographers");
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[admin] delete error:", error);
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

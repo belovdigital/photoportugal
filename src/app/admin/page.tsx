@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
-import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton } from "./AdminControls";
+import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeletePhotographer } from "./AdminControls";
 import { LocationsManager } from "./LocationsManager";
 import { verifyToken } from "@/app/api/admin/login/route";
 
@@ -39,9 +39,9 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM messages"),
   ]);
 
-  const recentUsers = await query<{
-    id: string; email: string; name: string; role: string; created_at: string; avatar_url: string | null;
-  }>("SELECT id, email, name, role, created_at, avatar_url FROM users ORDER BY created_at DESC LIMIT 20");
+  const clients = await query<{
+    id: string; email: string; name: string; created_at: string; avatar_url: string | null;
+  }>("SELECT id, email, name, created_at, avatar_url FROM users WHERE role = 'client' ORDER BY created_at DESC LIMIT 50");
 
   const photographers = await query<{
     id: string; display_name: string; slug: string; plan: string; rating: number;
@@ -107,20 +107,26 @@ export default async function AdminPage() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Verified</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Featured</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Plan</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-warm-100">
               {photographers.map((p) => (
-                <tr key={p.id}>
-                  <td className="px-4 py-3 font-medium text-gray-900">
-                    <Link href={`/photographers/${p.slug}`} className="hover:text-primary-600">{p.display_name}</Link>
+                <tr key={p.id} className={!p.is_approved ? "bg-red-50/30" : ""}>
+                  <td className="px-4 py-3">
+                    <Link href={`/photographers/${p.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-primary-600">{p.display_name}</Link>
+                    <p className="text-xs text-gray-400">{p.email}</p>
                   </td>
                   <td className="px-4 py-3 text-gray-500">{p.email}</td>
-                  <td className="px-4 py-3 text-gray-700">{p.rating || "—"}</td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {p.rating ? `${p.rating}` : "—"}
+                    <span className="text-xs text-gray-400 ml-1">({p.review_count})</span>
+                  </td>
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_approved" value={p.is_approved} /></td>
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_verified" value={p.is_verified} /></td>
                   <td className="px-4 py-3"><AdminToggleClient id={p.id} field="is_featured" value={p.is_featured} /></td>
                   <td className="px-4 py-3"><AdminPlanSelectClient id={p.id} currentPlan={p.plan} /></td>
+                  <td className="px-4 py-3"><AdminDeletePhotographer id={p.id} name={p.display_name} /></td>
                 </tr>
               ))}
             </tbody>
@@ -165,21 +171,20 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      {/* Users */}
+      {/* Clients */}
       <section className="mt-10 mb-12">
-        <h2 className="text-xl font-bold text-gray-900">Users ({recentUsers.length})</h2>
+        <h2 className="text-xl font-bold text-gray-900">Clients ({clients.length})</h2>
         <div className="mt-4 overflow-x-auto rounded-xl border border-warm-200 bg-white">
-          <table className="w-full min-w-[700px] text-sm">
+          <table className="w-full min-w-[500px] text-sm">
             <thead className="border-b border-warm-200 bg-warm-50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Email</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Role</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Joined</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-warm-100">
-              {recentUsers.map((u) => (
+              {clients.map((u) => (
                 <tr key={u.id}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -192,14 +197,10 @@ export default async function AdminPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-gray-500">{u.email}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      u.role === "admin" ? "bg-red-100 text-red-700" : u.role === "photographer" ? "bg-primary-100 text-primary-700" : "bg-warm-100 text-warm-700"
-                    }`}>{u.role}</span>
-                  </td>
                   <td className="px-4 py-3 text-gray-500">{new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
                 </tr>
               ))}
+              {clients.length === 0 && <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">No clients yet</td></tr>}
             </tbody>
           </table>
         </div>
