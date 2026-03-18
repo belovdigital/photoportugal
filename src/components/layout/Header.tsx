@@ -149,10 +149,6 @@ export function Header() {
               How It Works
             </Link>
 
-            <Link href="/blog" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
-              Blog
-            </Link>
-
             <Link href="/faq" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
               FAQ
             </Link>
@@ -323,7 +319,6 @@ export function Header() {
               <MobileLink href="/photographers" label="Find Photographers" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/locations" label="All Destinations" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/how-it-works" label="How It Works" onClick={() => setMobileOpen(false)} />
-              <MobileLink href="/blog" label="Blog" onClick={() => setMobileOpen(false)} />
               <MobileLink href="/faq" label="FAQ" onClick={() => setMobileOpen(false)} />
               {!user && (
                 <>
