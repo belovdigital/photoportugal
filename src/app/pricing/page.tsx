@@ -136,7 +136,7 @@ export default function PricingPage() {
             <p className="mt-3 text-sm text-gray-600">
               Get a verified badge by confirming your phone number via SMS. Builds trust with clients and boosts your booking rate.
             </p>
-            <p className="mt-2 text-sm font-semibold text-gray-900">&euro;19 one-time payment</p>
+            <p className="mt-2 text-sm font-semibold text-gray-900">&euro;19/year</p>
           </div>
 
           <div className="rounded-xl border border-warm-200 bg-white p-6">

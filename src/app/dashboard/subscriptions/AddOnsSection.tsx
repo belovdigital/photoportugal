@@ -117,7 +117,7 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">Verified Badge</h3>
-              <p className="text-xs text-gray-500">&euro;19 one-time — Phone verification</p>
+              <p className="text-xs text-gray-500">&euro;19/year — Phone verification</p>
             </div>
           </div>
 
@@ -133,20 +133,13 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
               {initialPhone && (
                 <p className="mt-2 text-xs text-gray-400">Phone: {initialPhone}</p>
               )}
+              <p className="mt-2 text-xs text-gray-400">Renews yearly. Cancel anytime from the billing portal.</p>
               <button
-                onClick={async () => {
-                  if (!confirm("Remove your Verified badge? This cannot be undone — you will need to pay again to re-verify.")) return;
-                  setLoading("remove-verified");
-                  try {
-                    const res = await fetch("/api/stripe/verified", { method: "DELETE" });
-                    if (res.ok) window.location.reload();
-                  } catch {}
-                  setLoading("");
-                }}
+                onClick={handlePortal}
                 disabled={!!loading}
                 className="mt-2 w-full rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 disabled:opacity-50"
               >
-                {loading === "remove-verified" ? "Removing..." : "Remove Verified Badge"}
+                {loading === "portal" ? "Loading..." : "Cancel Verified Subscription"}
               </button>
             </div>
           ) : !phoneVerified ? (
@@ -241,7 +234,7 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
                 disabled={!!loading}
                 className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading === "buy-verified" ? "Redirecting..." : "Get Verified — \u20AC19"}
+                {loading === "buy-verified" ? "Redirecting..." : "Get Verified — \u20AC19/year"}
               </button>
             </div>
           )}

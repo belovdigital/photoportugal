@@ -22,17 +22,17 @@ async function getVerifiedPriceId(): Promise<string> {
     if (prices.data.length > 0) return prices.data[0].id;
   }
 
-  // Create product + price (one-time, not recurring)
+  // Create product + price (yearly subscription)
   const product = await stripe.products.create({
     name: "Photo Portugal — Verified Badge",
-    description: "Identity-verified badge with phone number confirmation",
+    description: "Identity-verified badge with phone number confirmation — annual subscription",
     metadata: { type: "verified" },
   });
   const price = await stripe.prices.create({
     product: product.id,
     unit_amount: VERIFIED_PRICE,
     currency: "eur",
-    // No recurring — one-time payment
+    recurring: { interval: "year" },
   });
 
   console.log(`[verified] Created Stripe product: ${product.id}, price: ${price.id} — add STRIPE_VERIFIED_PRICE_ID=${price.id} to env`);
@@ -75,15 +75,14 @@ export async function POST() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkoutSession = await (stripe.checkout.sessions.create as any)({
       customer: customerId,
-      mode: "payment",
+      mode: "subscription",
       locale: "auto",
       adaptive_pricing: { enabled: true },
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.AUTH_URL}/dashboard/subscriptions?verified=success`,
       cancel_url: `${process.env.AUTH_URL}/dashboard/subscriptions?verified=canceled`,
-      metadata: {
-        photographer_id: profile.id,
-        type: "verified",
+      subscription_data: {
+        metadata: { photographer_id: profile.id, type: "verified" },
       },
     });
 
