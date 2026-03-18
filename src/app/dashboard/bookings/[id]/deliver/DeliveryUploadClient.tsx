@@ -32,6 +32,27 @@ export function DeliveryUploadClient({
   const [dragOver, setDragOver] = useState(false);
   const [galleryPassword, setGalleryPassword] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} photo${selectedIds.size !== 1 ? "s" : ""}?`)) return;
+    for (const id of selectedIds) {
+      await fetch(`/api/bookings/${bookingId}/delivery?photoId=${id}`, { method: "DELETE" });
+    }
+    setPhotos((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+    setSelectedIds(new Set());
+    setSelectMode(false);
+  }
 
   async function handleUpload(files: FileList | File[]) {
     const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
@@ -158,11 +179,23 @@ export function DeliveryUploadClient({
             {totalSize > 1024 * 1024
               ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
               : `${(totalSize / 1024).toFixed(0)} KB`}
+            {selectMode && selectedIds.size > 0 && ` \u00B7 ${selectedIds.size} selected`}
           </p>
           {!delivered && photos.length > 0 && (
-            <button onClick={() => fileRef.current?.click()} className="text-sm font-medium text-primary-600 hover:text-primary-700">
-              + Add more
-            </button>
+            <div className="flex items-center gap-2">
+              {selectMode ? (
+                <>
+                  <button onClick={() => setSelectedIds(new Set(photos.map((p) => p.id)))} className="text-xs font-medium text-gray-600 hover:text-gray-800">Select All</button>
+                  <button onClick={deleteSelected} disabled={selectedIds.size === 0} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-40">Delete ({selectedIds.size})</button>
+                  <button onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }} className="text-xs font-medium text-gray-500 hover:text-gray-700">Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setSelectMode(true)} className="text-sm font-medium text-gray-500 hover:text-gray-700">Select</button>
+                  <button onClick={() => fileRef.current?.click()} className="text-sm font-medium text-primary-600 hover:text-primary-700">+ Add more</button>
+                </>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -171,13 +204,25 @@ export function DeliveryUploadClient({
       {photos.length > 0 && (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {photos.map((photo) => (
-            <div key={photo.id} className="group relative aspect-square overflow-hidden rounded-lg bg-warm-100">
+            <div
+              key={photo.id}
+              className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""}`}
+              onClick={selectMode ? () => toggleSelect(photo.id) : undefined}
+            >
               <img
                 src={photo.url}
                 alt={photo.filename}
                 className="h-full w-full object-cover"
               />
-              {!delivered && (
+              {selectMode ? (
+                <div className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md border-2 ${selectedIds.has(photo.id) ? "border-primary-500 bg-primary-500" : "border-white bg-white/70"}`}>
+                  {selectedIds.has(photo.id) && (
+                    <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              ) : !delivered ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete(photo.id); }}
                   className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-500"
@@ -186,7 +231,7 @@ export function DeliveryUploadClient({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              )}
+              ) : null}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-2 pb-1.5 pt-4 opacity-0 transition group-hover:opacity-100">
                 <p className="truncate text-xs text-white">{photo.filename}</p>
               </div>

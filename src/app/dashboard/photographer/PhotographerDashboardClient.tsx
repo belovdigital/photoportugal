@@ -221,6 +221,28 @@ export function PhotographerDashboardClient({
 
   const [portfolioFilter, setPortfolioFilter] = useState<{ location: string; shootType: string }>({ location: "", shootType: "" });
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} photo${selectedIds.size !== 1 ? "s" : ""}?`)) return;
+    for (const id of selectedIds) {
+      await fetch(`/api/dashboard/portfolio?id=${id}`, { method: "DELETE" });
+    }
+    setLocalItems((prev) => prev.filter((p) => !selectedIds.has(p.id)));
+    showMessage(`${selectedIds.size} photo${selectedIds.size !== 1 ? "s" : ""} deleted`);
+    setSelectedIds(new Set());
+    setSelectMode(false);
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -583,14 +605,51 @@ export function PhotographerDashboardClient({
         {activeTab === "portfolio" && (
           <div>
             {/* Header + Upload */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <p className="text-sm text-gray-500">
-                {localItems.length} photo{localItems.length !== 1 ? "s" : ""} &middot; Drag to reorder
+                {localItems.length} photo{localItems.length !== 1 ? "s" : ""}{!selectMode && " \u00B7 Drag to reorder"}
+                {selectMode && selectedIds.size > 0 && ` \u00B7 ${selectedIds.size} selected`}
               </p>
-              <label className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${uploadingPortfolio ? "cursor-not-allowed bg-primary-400" : "cursor-pointer bg-primary-600 hover:bg-primary-700"}`}>
-                {uploadingPortfolio ? "Uploading..." : "Upload Photos"}
-                <input type="file" accept="image/*" multiple onChange={uploadPhoto} className="hidden" disabled={uploadingPortfolio} />
-              </label>
+              <div className="flex items-center gap-2">
+                {localItems.length > 0 && (
+                  selectMode ? (
+                    <>
+                      <button
+                        onClick={() => setSelectedIds(new Set(filteredPortfolio.map((p) => p.id)))}
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        onClick={deleteSelected}
+                        disabled={selectedIds.size === 0}
+                        className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-40"
+                      >
+                        Delete ({selectedIds.size})
+                      </button>
+                      <button
+                        onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }}
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setSelectMode(true)}
+                      className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      Select
+                    </button>
+                  )
+                )}
+                {!selectMode && (
+                  <label className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition ${uploadingPortfolio ? "cursor-not-allowed bg-primary-400" : "cursor-pointer bg-primary-600 hover:bg-primary-700"}`}>
+                    {uploadingPortfolio ? "Uploading..." : "Upload Photos"}
+                    <input type="file" accept="image/*" multiple onChange={uploadPhoto} className="hidden" disabled={uploadingPortfolio} />
+                  </label>
+                )}
+              </div>
             </div>
 
             {/* Filters — only show if there are tagged photos */}
@@ -648,6 +707,9 @@ export function PhotographerDashboardClient({
                       allLocations={allLocations}
                       onDelete={deletePhoto}
                       onUpdateTag={updatePhotoTag}
+                      selectMode={selectMode}
+                      selected={selectedIds.has(item.id)}
+                      onToggleSelect={toggleSelect}
                     />
                   ))}
                   {localItems.length === 0 && (
@@ -874,13 +936,19 @@ function SortablePhotoCard({
   allLocations,
   onDelete,
   onUpdateTag,
+  selectMode = false,
+  selected = false,
+  onToggleSelect,
 }: {
   item: PortfolioItem;
   allLocations: LocationOption[];
   onDelete: (id: string) => void;
   onUpdateTag: (id: string, field: "location_slug" | "shoot_type", value: string) => void;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: selectMode });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -890,12 +958,11 @@ function SortablePhotoCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="group overflow-hidden rounded-xl border border-warm-200 bg-white">
-      {/* Image — drag handle */}
+    <div ref={setNodeRef} style={style} className={`group overflow-hidden rounded-xl border bg-white ${selected ? "border-primary-500 ring-2 ring-primary-300" : "border-warm-200"}`}>
+      {/* Image — drag handle or select */}
       <div
-        className="relative aspect-square cursor-grab bg-warm-100 active:cursor-grabbing"
-        {...attributes}
-        {...listeners}
+        className={`relative aspect-square bg-warm-100 ${selectMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}`}
+        {...(selectMode ? { onClick: () => onToggleSelect?.(item.id) } : { ...attributes, ...listeners })}
       >
         <img
           src={item.url}
@@ -904,20 +971,32 @@ function SortablePhotoCard({
           draggable={false}
           loading="lazy"
         />
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
-        >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <div className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition group-hover:opacity-100">
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-          </svg>
-        </div>
+        {selectMode ? (
+          <div className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md border-2 ${selected ? "border-primary-500 bg-primary-500" : "border-white bg-white/70"}`}>
+            {selected && (
+              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition hover:bg-red-600 group-hover:opacity-100"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition group-hover:opacity-100">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+              </svg>
+            </div>
+          </>
+        )}
       </div>
       {/* Tags — not draggable */}
       <div className="flex flex-col gap-1.5 p-2.5">
