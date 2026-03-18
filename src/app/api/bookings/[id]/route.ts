@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { sendBookingConfirmationWithPayment } from "@/lib/email";
+import { sendBookingConfirmationWithPayment, sendEmail } from "@/lib/email";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
+
+const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
 export async function PATCH(
   req: NextRequest,
@@ -50,7 +52,10 @@ export async function PATCH(
     }
 
     // Validate status transitions
-    const currentBooking = await queryOne<{ status: string }>("SELECT status FROM bookings WHERE id = $1", [id]);
+    const currentBooking = await queryOne<{ status: string; payment_status: string | null; stripe_payment_intent_id: string | null; delivery_accepted: boolean }>(
+      "SELECT status, payment_status, stripe_payment_intent_id, COALESCE(delivery_accepted, FALSE) as delivery_accepted FROM bookings WHERE id = $1",
+      [id]
+    );
     const validTransitions: Record<string, string[]> = {
       inquiry: ["pending", "cancelled"],
       pending: ["confirmed", "cancelled"],
@@ -61,7 +66,138 @@ export async function PATCH(
       return NextResponse.json({ error: `Cannot change from ${currentBooking.status} to ${status}` }, { status: 400 });
     }
 
+    // Check: photographer must have Stripe connected before confirming a paid booking
+    if (status === "confirmed") {
+      const photographerProfile = await queryOne<{ stripe_account_id: string | null; stripe_onboarding_complete: boolean }>(
+        `SELECT pp.stripe_account_id, pp.stripe_onboarding_complete
+         FROM photographer_profiles pp
+         JOIN bookings b ON b.photographer_id = pp.id
+         WHERE b.id = $1`,
+        [id]
+      );
+      const bookingPrice = await queryOne<{ total_price: number | null }>("SELECT total_price FROM bookings WHERE id = $1", [id]);
+
+      if (bookingPrice?.total_price && (!photographerProfile?.stripe_account_id || !photographerProfile?.stripe_onboarding_complete)) {
+        return NextResponse.json(
+          { error: "Please connect your Stripe account before confirming bookings. Go to Dashboard → Subscription → Stripe Connect to set up payments." },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Handle cancellation with refund when booking is paid
+    if (status === "cancelled" && currentBooking?.payment_status === "paid" && currentBooking.stripe_payment_intent_id && !currentBooking.delivery_accepted) {
+      try {
+        const stripeClient = requireStripe();
+
+        // Issue Stripe refund
+        await stripeClient.refunds.create({
+          payment_intent: currentBooking.stripe_payment_intent_id,
+        });
+
+        // Update booking status and payment status
+        await queryOne(
+          "UPDATE bookings SET status = 'cancelled', payment_status = 'refunded' WHERE id = $1 RETURNING id",
+          [id]
+        );
+
+        // Get details for emails
+        const cancelInfo = await queryOne<{
+          client_email: string; client_name: string;
+          photographer_email: string; photographer_name: string;
+          total_price: number;
+        }>(
+          `SELECT cu.email as client_email, cu.name as client_name,
+                  pu.email as photographer_email, pp.display_name as photographer_name,
+                  b.total_price
+           FROM bookings b
+           JOIN users cu ON cu.id = b.client_id
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
+           WHERE b.id = $1`,
+          [id]
+        );
+
+        if (cancelInfo) {
+          const cancelledBy = isClient ? "client" : "photographer";
+
+          // Email to photographer
+          sendEmail(
+            cancelInfo.photographer_email,
+            `Booking cancelled — payment of €${cancelInfo.total_price} refunded`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Booking Cancelled</h2>
+              <p>Hi ${cancelInfo.photographer_name},</p>
+              <p>A booking with <strong>${cancelInfo.client_name}</strong> has been cancelled by the ${cancelledBy}.</p>
+              <p>The payment of <strong>&euro;${cancelInfo.total_price}</strong> has been refunded to the client.</p>
+              <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          );
+
+          // Email to client
+          sendEmail(
+            cancelInfo.client_email,
+            `Booking cancelled — your payment of €${cancelInfo.total_price} has been refunded`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Booking Cancelled</h2>
+              <p>Hi ${cancelInfo.client_name},</p>
+              <p>Your booking with <strong>${cancelInfo.photographer_name}</strong> has been cancelled.</p>
+              <p>Your payment of <strong>&euro;${cancelInfo.total_price}</strong> has been refunded. The refund should appear in your account within 5-10 business days.</p>
+              <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          );
+        }
+
+        return NextResponse.json({ success: true, refunded: true });
+      } catch (refundErr) {
+        console.error("[bookings] refund error:", refundErr);
+        return NextResponse.json({ error: "Failed to process refund. Please contact support." }, { status: 500 });
+      }
+    }
+
     await queryOne("UPDATE bookings SET status = $1 WHERE id = $2 RETURNING id", [status, id]);
+
+    // Send cancellation emails for unpaid cancellations
+    if (status === "cancelled") {
+      try {
+        const cancelInfo = await queryOne<{
+          client_email: string; client_name: string;
+          photographer_email: string; photographer_name: string;
+        }>(
+          `SELECT cu.email as client_email, cu.name as client_name,
+                  pu.email as photographer_email, pp.display_name as photographer_name
+           FROM bookings b
+           JOIN users cu ON cu.id = b.client_id
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
+           WHERE b.id = $1`,
+          [id]
+        );
+
+        if (cancelInfo) {
+          const cancelledBy = isClient ? "client" : "photographer";
+          const otherEmail = isClient ? cancelInfo.photographer_email : cancelInfo.client_email;
+          const otherName = isClient ? cancelInfo.photographer_name : cancelInfo.client_name;
+          const cancellerName = isClient ? cancelInfo.client_name : cancelInfo.photographer_name;
+
+          sendEmail(
+            otherEmail,
+            `Booking cancelled by ${cancellerName}`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Booking Cancelled</h2>
+              <p>Hi ${otherName},</p>
+              <p>The booking with <strong>${cancellerName}</strong> has been cancelled by the ${cancelledBy}.</p>
+              <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          );
+        }
+      } catch (emailErr) {
+        console.error("[bookings] cancellation email error:", emailErr);
+      }
+    }
 
     // Increment session_count when completed
     if (status === "completed") {
@@ -115,8 +251,6 @@ export async function PATCH(
                 customerId = customer.id;
                 await queryOne("UPDATE users SET stripe_customer_id = $1 WHERE id = $2 RETURNING id", [customerId, bookingDetails.client_id]);
               }
-
-              const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const checkoutSession = await (stripeClient.checkout.sessions.create as any)({

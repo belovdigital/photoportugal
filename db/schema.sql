@@ -23,6 +23,8 @@ CREATE TABLE users (
   avatar_url TEXT,
   google_id VARCHAR(255) UNIQUE,
   email_verified BOOLEAN DEFAULT FALSE,
+  password_reset_token VARCHAR(255),
+  password_reset_expires TIMESTAMPTZ,
   stripe_customer_id VARCHAR(255),
   is_banned BOOLEAN DEFAULT FALSE,
   last_seen_at TIMESTAMPTZ,

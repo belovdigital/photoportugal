@@ -244,6 +244,58 @@ export async function sendReviewNotification(
   );
 }
 
+export async function sendPasswordResetEmail(
+  to: string,
+  name: string,
+  token: string
+) {
+  const resetUrl = `${BASE_URL}/auth/reset-password?token=${token}`;
+  await sendEmail(
+    to,
+    "Reset your Photo Portugal password",
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Reset Your Password</h2>
+      <p>Hi ${name},</p>
+      <p>We received a request to reset your password. Click the button below to set a new one:</p>
+      <p><a href="${resetUrl}" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reset Password</a></p>
+      <p style="color: #666; font-size: 13px;">This link expires in 30 minutes. If you didn't request a password reset, you can safely ignore this email.</p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
+export async function sendWelcomeEmail(
+  to: string,
+  name: string,
+  role: "client" | "photographer"
+) {
+  const isPhotographer = role === "photographer";
+  const subject = "Welcome to Photo Portugal!";
+  const message = isPhotographer
+    ? "Welcome to Photo Portugal! Complete your profile to start receiving bookings from tourists visiting Portugal."
+    : "Welcome to Photo Portugal! Browse our talented photographers and book your perfect photo session in Portugal.";
+  const ctaText = isPhotographer ? "Complete Your Profile" : "Browse Photographers";
+  const ctaUrl = isPhotographer
+    ? `${BASE_URL}/dashboard/profile`
+    : `${BASE_URL}/photographers`;
+
+  await sendEmail(
+    to,
+    subject,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Welcome to Photo Portugal!</h2>
+      <p>Hi ${name},</p>
+      <p>${message}</p>
+      <p><a href="${ctaUrl}" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">${ctaText}</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
 export async function sendSubscriptionEmail(
   email: string, name: string, plan: string, action: "upgraded" | "downgraded" | "cancelled"
 ) {

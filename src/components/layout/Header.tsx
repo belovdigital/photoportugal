@@ -108,6 +108,7 @@ export function Header() {
                                 alt={d.name}
                                 className="h-full w-full object-cover transition group-hover:scale-105"
                                 loading="lazy"
+                                decoding="async"
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                               <p className="absolute bottom-1.5 left-2 text-xs font-semibold text-white">{d.name}</p>

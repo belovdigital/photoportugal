@@ -125,6 +125,7 @@ export default function HomePage() {
                     alt={heroPhotos[1].alt}
                     className="h-full w-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 {/* Bottom left */}
@@ -134,6 +135,7 @@ export default function HomePage() {
                     alt={heroPhotos[2].alt}
                     className="h-full w-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 {/* Bottom center */}
@@ -143,6 +145,7 @@ export default function HomePage() {
                     alt={heroPhotos[3].alt}
                     className="h-full w-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 {/* Bottom right */}
@@ -152,6 +155,7 @@ export default function HomePage() {
                     alt={heroPhotos[4].alt}
                     className="h-full w-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                 </div>
               </div>

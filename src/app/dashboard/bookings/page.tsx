@@ -130,7 +130,10 @@ export default async function BookingsPage() {
                   {booking.payment_status === "paid" && (
                     <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">Paid</span>
                   )}
-                  {booking.status !== "cancelled" && booking.total_price && booking.payment_status !== "paid" && booking.status !== "pending" && (
+                  {booking.payment_status === "refunded" && (
+                    <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">Refunded</span>
+                  )}
+                  {booking.status !== "cancelled" && booking.total_price && booking.payment_status !== "paid" && booking.payment_status !== "refunded" && booking.status !== "pending" && (
                     <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-700">Unpaid</span>
                   )}
                   {booking.delivery_accepted && (
@@ -165,10 +168,22 @@ export default async function BookingsPage() {
                   Message
                 </Link>
                 {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
-                  <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />
+                  booking.payment_url ? (
+                    <a
+                      href={booking.payment_url}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-green-700 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      Pay Now
+                    </a>
+                  ) : (
+                    <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />
+                  )
                 )}
                 {!isPhotographer && (booking.status === "pending" || booking.status === "confirmed") && (
-                  <BookingStatusButtons bookingId={booking.id} currentStatus="cancel-only" />
+                  <BookingStatusButtons bookingId={booking.id} currentStatus="cancel-only" paymentStatus={booking.payment_status} />
                 )}
                 {!isPhotographer && booking.status === "delivered" && booking.delivery_token && (
                   <Link

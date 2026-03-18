@@ -18,6 +18,54 @@ function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean
   );
 }
 
+function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: string | null; fallbackChar: string; onMessage: (msg: string) => void }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { onMessage("File too large (max 2MB)"); return; }
+    if (!file.type.startsWith("image/")) { onMessage("Only images allowed"); return; }
+    setPreviewUrl(URL.createObjectURL(file));
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploading(true);
+    onMessage("Uploading photo...");
+    try {
+      const res = await fetch("/api/dashboard/avatar", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewUrl(data.url);
+        onMessage("Photo updated!");
+      } else {
+        setPreviewUrl(initialUrl);
+        onMessage("Upload failed");
+      }
+    } catch {
+      setPreviewUrl(initialUrl);
+      onMessage("Upload failed");
+    }
+    setUploading(false);
+    e.target.value = "";
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+      <div className="flex items-center gap-4">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-600 overflow-hidden">
+          {previewUrl ? <img src={previewUrl} alt="" className="h-full w-full object-cover" /> : fallbackChar}
+        </div>
+        <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+          {uploading ? "Uploading..." : "Upload Photo"}
+          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+        </label>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const { data: session } = useSession();
   const user = session?.user;
@@ -101,6 +149,11 @@ export default function SettingsPage() {
       <section className="mt-8">
         <h2 className="text-lg font-bold text-gray-900">Account</h2>
         <form onSubmit={saveAccount} className="mt-4 rounded-xl border border-warm-200 bg-white p-6 space-y-4">
+          <AvatarUpload
+            initialUrl={(user as { image?: string | null })?.image || null}
+            fallbackChar={user.name?.charAt(0) || "U"}
+            onMessage={showMessage}
+          />
           <div>
             <label className="block text-sm font-medium text-gray-700">Name</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)}

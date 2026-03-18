@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { queryOne } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -61,6 +62,13 @@ export async function POST(req: NextRequest) {
          VALUES ($1, $2, $3)
          RETURNING id`,
         [user.id, slug + "-" + user.id.slice(0, 4), name]
+      );
+    }
+
+    // Send welcome email (non-blocking)
+    if (user) {
+      sendWelcomeEmail(user.email, user.name, user.role as "client" | "photographer").catch((err) =>
+        console.error("Failed to send welcome email:", err)
       );
     }
 
