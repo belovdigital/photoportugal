@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s | Photo Portugal",
   },
   description:
-    "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 20+ locations. Verified reviews, instant booking, photos in 3-7 days. From EUR150.",
+    "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 25+ locations. Verified reviews, secure Stripe payments, private photo gallery. From EUR150.",
   keywords: [
     "photographer portugal",
     "vacation photographer lisbon",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Photo Portugal",
     title: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
-    description: "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 20+ locations. Verified reviews, instant booking, photos in 3-7 days. From EUR150.",
+    description: "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 25+ locations. Verified reviews, secure Stripe payments, private photo gallery. From EUR150.",
     url: "https://photoportugal.com",
     images: [
       {

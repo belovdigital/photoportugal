@@ -20,6 +20,7 @@ export const SHOOT_TYPES = [
   "Anniversary",
   "Elopement",
   "Birthday",
+  "Kids Birthday",
   "Studio Portrait",
   "Content Creator",
 ] as const;

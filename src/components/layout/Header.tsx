@@ -117,7 +117,7 @@ export function Header() {
                         ))}
                       </div>
                       <Link href="/locations" onClick={() => setActiveMenu(null)} className="mt-3 inline-flex text-sm font-semibold text-primary-600 hover:text-primary-700">
-                        All 23 locations &rarr;
+                        All 25 locations &rarr;
                       </Link>
                     </div>
                     {/* Occasion list */}

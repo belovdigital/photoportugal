@@ -153,7 +153,7 @@ export default async function ShootTypePage({
               {
                 step: "4",
                 title: "Get your photos",
-                desc: "Receive professionally edited, high-resolution photos in your private gallery within 3-7 days.",
+                desc: "Receive professionally edited, high-resolution photos in your private, password-protected gallery.",
               },
             ].map((item) => (
               <div key={item.step} className="text-center">

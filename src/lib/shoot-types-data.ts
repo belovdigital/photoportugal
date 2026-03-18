@@ -96,7 +96,7 @@ export const shootTypes: ShootType[] = [
     ],
     faqs: [
       { question: "How far in advance should we book our engagement photoshoot?", answer: "We recommend booking 2-4 weeks in advance, especially during peak season (May-September). However, some photographers accept bookings with shorter notice depending on availability." },
-      { question: "Can we use engagement photos for our save-the-dates?", answer: "Yes! You'll receive high-resolution digital files that are perfect for save-the-dates, wedding websites, invitations, and social media announcements. Most photographers deliver within 3-7 days." },
+      { question: "Can we use engagement photos for our save-the-dates?", answer: "Yes! You'll receive high-resolution digital files that are perfect for save-the-dates, wedding websites, invitations, and social media announcements. Delivery time depends on the photographer and package you choose." },
       { question: "What's the difference between an engagement and couples session?", answer: "The shoot itself is similar, but engagement sessions often focus on creating formal photos for wedding-related stationery and announcements. Many couples also dress slightly more formally. The pricing and duration are typically the same." },
       { question: "Can we combine our engagement session with wedding scouting?", answer: "Absolutely! If you're planning a destination wedding in Portugal, your photographer can help you explore potential venues and ceremony locations during the session." },
     ],
@@ -119,7 +119,7 @@ export const shootTypes: ShootType[] = [
     ],
     faqs: [
       { question: "When should we schedule our honeymoon photoshoot?", answer: "Many couples book their photoshoot for the second or third day of their honeymoon, once they've settled in and explored a bit. This also gives you a buffer in case of weather issues." },
-      { question: "What's included in a honeymoon photoshoot package?", answer: "Most packages include 1-2 hours of photography, 50-100+ professionally edited photos delivered digitally within 3-7 days, and a pre-shoot consultation to plan locations and styling. Some photographers offer add-ons like photo books or prints." },
+      { question: "What's included in a honeymoon photoshoot package?", answer: "Most packages include 1-2 hours of photography, 50-100+ professionally edited photos delivered digitally to your private gallery, and a pre-shoot consultation to plan locations and styling. Some photographers offer add-ons like photo books or prints. Delivery time is shown on each package." },
       { question: "Can we bring props like champagne or flowers?", answer: "Absolutely! Props add a personal touch. Popular honeymoon props include champagne, flower bouquets, 'Just Married' signs, and picnic setups. Your photographer can advise on what works best for your chosen location." },
       { question: "Do you offer sunrise sessions?", answer: "Yes! Sunrise sessions are stunning in Portugal and come with the bonus of having famous locations nearly to yourselves. In Lisbon, the sunrise light over the Tagus River is magical. Your photographer will meet you at the agreed time." },
     ],
