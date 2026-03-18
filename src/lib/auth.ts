@@ -27,12 +27,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             password_hash: string;
             role: string;
             avatar_url: string | null;
+            is_banned: boolean;
           }>(
-            "SELECT id, email, name, password_hash, role, avatar_url FROM users WHERE email = $1",
+            "SELECT id, email, name, password_hash, role, avatar_url, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE email = $1",
             [credentials.email]
           );
 
           if (!user || !user.password_hash) return null;
+          if (user.is_banned) return null;
 
           const passwordMatch = await compare(
             credentials.password as string,
@@ -69,12 +71,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!email) return false;
 
         try {
-          const existing = await queryOne<{ id: string; role: string }>(
-            "SELECT id, role FROM users WHERE email = $1",
+          const existing = await queryOne<{ id: string; role: string; is_banned: boolean }>(
+            "SELECT id, role, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE email = $1",
             [email]
           );
 
           if (existing) {
+            if (existing.is_banned) return false;
             await query(
               "UPDATE users SET google_id = COALESCE(google_id, $1), avatar_url = COALESCE(avatar_url, $2), email_verified = TRUE WHERE email = $3",
               [account.providerAccountId, user.image, email]

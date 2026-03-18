@@ -22,17 +22,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, description, duration_minutes, num_photos, price, is_popular } = await req.json();
+    const { name, description, duration_minutes, num_photos, price, is_popular, delivery_days } = await req.json();
 
     if (!name || !duration_minutes || !num_photos || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const pkg = await queryOne(
-      `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
-      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false]
+      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7]
     );
 
     return NextResponse.json({ success: true, id: (pkg as { id: string }).id });
@@ -55,13 +55,13 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const { id, name, description, duration_minutes, num_photos, price, is_popular } = await req.json();
+    const { id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days } = await req.json();
 
     const pkg = await queryOne(
-      `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6
-       WHERE id = $7 AND photographer_id = $8
+      `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7
+       WHERE id = $8 AND photographer_id = $9
        RETURNING id`,
-      [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, id, profile.id]
+      [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, id, profile.id]
     );
 
     if (!pkg) {

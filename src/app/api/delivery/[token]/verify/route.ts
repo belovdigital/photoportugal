@@ -31,11 +31,15 @@ export async function POST(
     client_name: string;
     shoot_date: string | null;
     location_slug: string | null;
+    delivery_accepted: boolean;
+    payment_status: string;
   }>(
     `SELECT b.id, b.delivery_password, b.delivery_expires_at,
             pp.display_name as photographer_name, u.avatar_url as photographer_avatar,
             pp.slug as photographer_slug, cu.name as client_name,
-            b.shoot_date, b.location_slug
+            b.shoot_date, b.location_slug,
+            COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
+            b.payment_status
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -74,5 +78,7 @@ export async function POST(
     expires_at: booking.delivery_expires_at,
     photos,
     photo_count: photos.length,
+    delivery_accepted: booking.delivery_accepted,
+    payment_status: booking.payment_status,
   });
 }

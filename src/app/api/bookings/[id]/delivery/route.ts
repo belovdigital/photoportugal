@@ -144,7 +144,9 @@ export async function POST(
               <p><strong>${details.photographer_name}</strong> has delivered your photos from the photoshoot.</p>
               <p>The gallery password has been sent to you in your chat. Open the gallery below and enter the password to view and download your photos.</p>
               <p><a href="${deliveryUrl}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Open Photo Gallery</a></p>
-              <p style="color: #999; font-size: 12px;">This link expires on ${expiresAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.</p>
+              <p style="margin-top: 16px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px; color: #5f4a3d;">
+                <strong>Important:</strong> Please review your photos and click "Accept Delivery" in the gallery. Your photos will be available for download for <strong>60 days</strong> after acceptance.
+              </p>
               <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
             </div>`
           );

@@ -192,6 +192,42 @@ export function AdminNotificationEmail({ initialValue }: { initialValue: string 
   );
 }
 
+export function AdminBanToggle({ id, value }: { id: string; value: boolean }) {
+  const router = useRouter();
+  const [banned, setBanned] = useState(value);
+  const [loading, setLoading] = useState(false);
+
+  async function toggle() {
+    const newValue = !banned;
+    if (newValue && !confirm("Are you sure you want to ban this user? They will not be able to log in.")) return;
+    setLoading(true);
+    const res = await fetch("/api/admin/user", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_banned: newValue }),
+    });
+    setLoading(false);
+    if (res.ok) {
+      setBanned(newValue);
+      router.refresh();
+    }
+  }
+
+  return (
+    <button
+      onClick={toggle}
+      disabled={loading}
+      className={`rounded px-2 py-1 text-xs font-medium transition ${
+        banned
+          ? "bg-red-100 text-red-700 hover:bg-red-200"
+          : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+      } ${loading ? "opacity-50" : ""}`}
+    >
+      {loading ? "..." : banned ? "Banned" : "Active"}
+    </button>
+  );
+}
+
 export function AdminPlanSelectClient({ id, currentPlan }: { id: string; currentPlan: string }) {
   const router = useRouter();
   const [plan, setPlan] = useState(currentPlan);

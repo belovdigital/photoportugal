@@ -61,6 +61,7 @@ interface Package {
   num_photos: number;
   price: number;
   is_popular: boolean;
+  delivery_days: number;
 }
 
 interface Booking {
@@ -77,6 +78,8 @@ interface Booking {
   total_price: number | null;
   message: string | null;
   created_at: string;
+  payment_status: string | null;
+  delivery_accepted: boolean;
 }
 
 interface LocationOption {
@@ -126,6 +129,7 @@ export function PhotographerDashboardClient({
   const [pkgPhotos, setPkgPhotos] = useState("");
   const [pkgPrice, setPkgPrice] = useState("");
   const [pkgPopular, setPkgPopular] = useState(false);
+  const [pkgDeliveryDays, setPkgDeliveryDays] = useState("7");
 
   function showMessage(msg: string) {
     setMessage(msg);
@@ -296,6 +300,7 @@ export function PhotographerDashboardClient({
     setPkgPhotos("30");
     setPkgPrice("");
     setPkgPopular(false);
+    setPkgDeliveryDays("7");
     setShowPackageForm(true);
   }
 
@@ -307,6 +312,7 @@ export function PhotographerDashboardClient({
     setPkgPhotos(pkg.num_photos.toString());
     setPkgPrice(pkg.price.toString());
     setPkgPopular(pkg.is_popular);
+    setPkgDeliveryDays((pkg.delivery_days || 7).toString());
     setShowPackageForm(true);
   }
 
@@ -322,6 +328,7 @@ export function PhotographerDashboardClient({
       num_photos: parseInt(pkgPhotos),
       price: parseFloat(pkgPrice),
       is_popular: pkgPopular,
+      delivery_days: parseInt(pkgDeliveryDays) || 7,
     };
 
     const res = await fetch("/api/dashboard/packages", {
@@ -744,6 +751,18 @@ export function PhotographerDashboardClient({
                     />
                     <p className="mt-1 text-xs text-gray-400">Whole euros, any amount</p>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Delivery Time (days)</label>
+                    <input
+                      type="number"
+                      value={pkgDeliveryDays}
+                      onChange={(e) => setPkgDeliveryDays(e.target.value)}
+                      min="1"
+                      max="90"
+                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                    />
+                    <p className="mt-1 text-xs text-gray-400">How many days to deliver edited photos</p>
+                  </div>
                   <div className="flex items-end">
                     <label className="flex cursor-pointer items-center gap-2 rounded-xl px-4 py-3">
                       <input
@@ -793,7 +812,7 @@ export function PhotographerDashboardClient({
                         <p className="mt-1 text-sm text-gray-500">{pkg.description}</p>
                       )}
                       <p className="mt-2 text-xs text-gray-400">
-                        {pkg.duration_minutes} min &middot; {pkg.num_photos} photos
+                        {pkg.duration_minutes} min &middot; {pkg.num_photos} photos &middot; {pkg.delivery_days || 7} day delivery
                       </p>
                     </div>
                     <div className="text-right">
@@ -929,6 +948,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
   confirmed: "bg-green-100 text-green-700",
   completed: "bg-blue-100 text-blue-700",
+  delivered: "bg-accent-100 text-accent-700",
   cancelled: "bg-gray-100 text-gray-500",
 };
 
@@ -971,9 +991,20 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
             <p className="text-sm text-gray-500">{booking.client_email}</p>
           </div>
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLORS[booking.status] || STATUS_COLORS.pending}`}>
-          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_COLORS[booking.status] || STATUS_COLORS.pending}`}>
+            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+          </span>
+          {booking.payment_status === "paid" && (
+            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">Paid</span>
+          )}
+          {booking.status !== "cancelled" && booking.total_price && booking.payment_status !== "paid" && booking.status !== "pending" && (
+            <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-700">Unpaid</span>
+          )}
+          {booking.delivery_accepted && (
+            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">Accepted</span>
+          )}
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">

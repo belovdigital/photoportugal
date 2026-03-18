@@ -9,10 +9,11 @@ export function PhotographerCard({
   const popularPackage = photographer.packages.find((p) => p.is_popular);
 
   return (
-    <Link
-      href={`/photographers/${photographer.slug}`}
-      className="group overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
-    >
+    <div className="group relative overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg">
+      <Link
+        href={`/photographers/${photographer.slug}`}
+        className="block"
+      >
       {/* Cover */}
       <div className="relative h-48 bg-gradient-to-br from-primary-300 to-primary-600">
         {photographer.cover_url && (
@@ -109,11 +110,24 @@ export function PhotographerCard({
               <span className="text-sm text-gray-400">Contact for pricing</span>
             )}
           </div>
-          <span className="rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white">
-            View Profile
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white">
+              View Profile
+            </span>
+          </div>
         </div>
       </div>
-    </Link>
+      </Link>
+      {/* Message icon - positioned over the card, outside the Link to avoid nested <a> */}
+      <Link
+        href={`/photographers/${photographer.slug}#message`}
+        className="absolute bottom-[22px] right-[108px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-warm-200 bg-white text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
+        title={`Message ${photographer.display_name}`}
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </Link>
+    </div>
   );
 }

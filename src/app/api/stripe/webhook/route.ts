@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { requireStripe } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { sendSubscriptionEmail } from "@/lib/email";
+import { sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
             );
             console.log(`[webhook] Verified badge activated for photographer ${photographerId}`);
           }
-        } else if (bookingId && checkoutSession.payment_intent) {
+        } else if ((checkoutType === "booking" || bookingId) && checkoutSession.payment_intent) {
           // Booking payment completed
           await queryOne(
             `UPDATE bookings SET stripe_payment_intent_id = $1, payment_status = 'paid'
@@ -50,6 +50,42 @@ export async function POST(req: NextRequest) {
             [checkoutSession.payment_intent, bookingId]
           );
           console.log(`[webhook] Checkout completed for booking ${bookingId}, PI: ${checkoutSession.payment_intent}`);
+
+          // Send payment notification emails
+          try {
+            const bookingInfo = await queryOne<{
+              client_email: string; client_name: string;
+              photographer_email: string; photographer_name: string;
+              total_price: number;
+            }>(
+              `SELECT cu.email as client_email, cu.name as client_name,
+                      pu.email as photographer_email, pp.display_name as photographer_name,
+                      b.total_price
+               FROM bookings b
+               JOIN users cu ON cu.id = b.client_id
+               JOIN photographer_profiles pp ON pp.id = b.photographer_id
+               JOIN users pu ON pu.id = pp.user_id
+               WHERE b.id = $1`,
+              [bookingId]
+            );
+            if (bookingInfo) {
+              sendPaymentReceivedToPhotographer(
+                bookingInfo.photographer_email,
+                bookingInfo.photographer_name,
+                bookingInfo.client_name,
+                bookingId!,
+                bookingInfo.total_price
+              );
+              sendPaymentConfirmedToClient(
+                bookingInfo.client_email,
+                bookingInfo.client_name,
+                bookingInfo.photographer_name,
+                bookingInfo.total_price
+              );
+            }
+          } catch (emailErr) {
+            console.error("[webhook] payment email error:", emailErr);
+          }
         }
         break;
       }

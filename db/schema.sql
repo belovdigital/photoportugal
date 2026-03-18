@@ -24,6 +24,7 @@ CREATE TABLE users (
   google_id VARCHAR(255) UNIQUE,
   email_verified BOOLEAN DEFAULT FALSE,
   stripe_customer_id VARCHAR(255),
+  is_banned BOOLEAN DEFAULT FALSE,
   last_seen_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -94,6 +95,7 @@ CREATE TABLE packages (
   num_photos INTEGER NOT NULL,
   price INTEGER NOT NULL, -- in EUR (whole euros)
   is_popular BOOLEAN DEFAULT FALSE,
+  delivery_days INTEGER DEFAULT 7,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -139,9 +141,13 @@ CREATE TABLE bookings (
   service_fee NUMERIC,
   platform_fee NUMERIC,
   payout_amount NUMERIC,
+  payment_url TEXT,
   delivery_token VARCHAR(64) UNIQUE,
   delivery_password VARCHAR(64),
   delivery_expires_at TIMESTAMPTZ,
+  delivery_accepted BOOLEAN DEFAULT FALSE,
+  delivery_accepted_at TIMESTAMPTZ,
+  payout_transferred BOOLEAN DEFAULT FALSE,
   reminder_sent BOOLEAN DEFAULT FALSE,
   review_requested BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),

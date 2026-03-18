@@ -70,8 +70,7 @@ export async function POST(req: NextRequest) {
 
     const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
-    // Create Stripe Checkout Session with automatic_payment_methods
-    // This supports: Cards, Apple Pay, Google Pay, Link, bank transfers
+    // Create Stripe Checkout Session — payment collected on platform, transferred to photographer on delivery acceptance
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
       customer: customerId,
@@ -90,10 +89,6 @@ export async function POST(req: NextRequest) {
         quantity: 1,
       }],
       payment_intent_data: {
-        application_fee_amount: Math.round((payment.serviceFee + payment.platformFee) * 100),
-        transfer_data: {
-          destination: booking.photographer_stripe_id,
-        },
         metadata: {
           booking_id: booking.id,
           photographer_name: booking.photographer_name,
@@ -104,6 +99,7 @@ export async function POST(req: NextRequest) {
       cancel_url: `${BASE_URL}/dashboard/bookings?payment=cancelled`,
       metadata: {
         booking_id: booking.id,
+        type: "booking",
       },
     });
 

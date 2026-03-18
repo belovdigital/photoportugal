@@ -50,6 +50,8 @@ export default async function BookingsPage() {
     has_review: boolean;
     payment_status: string | null;
     delivery_token: string | null;
+    delivery_accepted: boolean;
+    payment_url: string | null;
   }[] = [];
 
   try {
@@ -59,7 +61,8 @@ export default async function BookingsPage() {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
                   p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
-                  FALSE as has_review, b.delivery_token
+                  FALSE as has_review, b.delivery_token,
+                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            LEFT JOIN packages p ON p.id = b.package_id
@@ -72,7 +75,8 @@ export default async function BookingsPage() {
       bookings = await query(
         `SELECT b.id, pp.display_name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
-                (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token
+                (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
+                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users u ON u.id = pp.user_id
@@ -119,9 +123,20 @@ export default async function BookingsPage() {
                     )}
                   </div>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[booking.status] || STATUS_STYLES.pending}`}>
-                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[booking.status] || STATUS_STYLES.pending}`}>
+                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  </span>
+                  {booking.payment_status === "paid" && (
+                    <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">Paid</span>
+                  )}
+                  {booking.status !== "cancelled" && booking.total_price && booking.payment_status !== "paid" && booking.status !== "pending" && (
+                    <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-700">Unpaid</span>
+                  )}
+                  {booking.delivery_accepted && (
+                    <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">Accepted</span>
+                  )}
+                </div>
               </div>
 
               <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-500">

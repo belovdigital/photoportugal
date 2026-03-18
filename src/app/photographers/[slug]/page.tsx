@@ -58,8 +58,9 @@ async function getPhotographer(slug: string) {
       num_photos: number;
       price: number;
       is_popular: boolean;
+      delivery_days: number;
     }>(
-      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular FROM packages WHERE photographer_id = $1 ORDER BY price",
+      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 ORDER BY price",
       [profile.id]
     );
 
@@ -371,7 +372,7 @@ export default async function PhotographerProfilePage({
               {photographer.packages && photographer.packages.length > 0 && (
                 <>
                   <h2 className="text-xl font-bold text-gray-900">Packages</h2>
-                  {photographer.packages.map((pkg: { id: string; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean }) => (
+                  {photographer.packages.map((pkg: { id: string; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean; delivery_days?: number }) => (
                     <div
                       key={pkg.id}
                       className={`rounded-xl border p-6 ${
@@ -396,6 +397,10 @@ export default async function PhotographerProfilePage({
                         <li className="flex items-center gap-2">
                           <svg className="h-4 w-4 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                           {pkg.num_photos} edited photos
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <svg className="h-4 w-4 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                          {pkg.delivery_days || 7}-day delivery
                         </li>
                       </ul>
                       <Link href={`/book/${photographer.slug}`} className="mt-6 block w-full rounded-xl bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-primary-700">

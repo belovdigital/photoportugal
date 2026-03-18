@@ -18,6 +18,8 @@ interface GalleryData {
   photos: Photo[];
   photo_count: number;
   expires_at: string;
+  delivery_accepted: boolean;
+  payment_status: string;
 }
 
 export function DeliveryPageClient({
@@ -33,6 +35,9 @@ export function DeliveryPageClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [gallery, setGallery] = useState<GalleryData | null>(null);
+  const [accepting, setAccepting] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [acceptError, setAcceptError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,6 +56,7 @@ export function DeliveryPageClient({
       if (res.ok) {
         const data = await res.json();
         setGallery(data);
+        if (data.delivery_accepted) setAccepted(true);
       } else if (res.status === 401) {
         setError("Incorrect password. Please check your messages for the correct password.");
       } else if (res.status === 410) {
@@ -62,6 +68,35 @@ export function DeliveryPageClient({
       setError("Connection error. Please try again.");
     }
     setLoading(false);
+  }
+
+  async function handleAcceptDelivery() {
+    if (!confirm("Accept this photo delivery? This will release the payment to the photographer.")) return;
+
+    setAccepting(true);
+    setAcceptError("");
+
+    try {
+      const res = await fetch(`/api/delivery/${token}/accept`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password.trim() }),
+      });
+
+      if (res.ok) {
+        setAccepted(true);
+      } else {
+        const data = await res.json();
+        if (data.already_accepted) {
+          setAccepted(true);
+        } else {
+          setAcceptError(data.error || "Failed to accept delivery. Please try again.");
+        }
+      }
+    } catch {
+      setAcceptError("Connection error. Please try again.");
+    }
+    setAccepting(false);
   }
 
   // Password gate
@@ -152,7 +187,7 @@ export function DeliveryPageClient({
           {totalSize > 1024 * 1024
             ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
             : `${(totalSize / 1024).toFixed(0)} KB`}
-          <span className="ml-3 text-xs text-gray-400">Expires {expiresDate}</span>
+          <span className="ml-3 text-xs text-gray-400">Available until {expiresDate}</span>
         </div>
         <a
           href={`/api/delivery/${token}/download?password=${encodeURIComponent(password)}`}
@@ -163,6 +198,46 @@ export function DeliveryPageClient({
           </svg>
           Download All (ZIP)
         </a>
+      </div>
+
+      {/* Accept Delivery Section */}
+      <div className="mt-6">
+        {accepted ? (
+          <div className="rounded-xl border border-green-200 bg-green-50 p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                <svg className="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-semibold text-green-700">Delivery accepted</p>
+                <p className="text-sm text-green-600">Thank you! Your photos will be available for download for 60 days.</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-amber-800">Happy with your photos?</p>
+                <p className="mt-1 text-sm text-amber-700">
+                  Accept the delivery to confirm you&apos;ve received your photos. {gallery.payment_status === "paid" ? "This will release the payment to your photographer." : ""}
+                </p>
+              </div>
+              <button
+                onClick={handleAcceptDelivery}
+                disabled={accepting}
+                className="shrink-0 rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {accepting ? "Accepting..." : "Accept Delivery"}
+              </button>
+            </div>
+            {acceptError && (
+              <p className="mt-3 text-sm text-red-600">{acceptError}</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Gallery */}

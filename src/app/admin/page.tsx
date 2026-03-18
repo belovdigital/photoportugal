@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
-import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeletePhotographer, AdminNotificationEmail } from "./AdminControls";
+import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeletePhotographer, AdminNotificationEmail, AdminBanToggle } from "./AdminControls";
 import { LocationsManager } from "./LocationsManager";
 import { verifyToken } from "@/app/api/admin/login/route";
 
@@ -49,8 +49,8 @@ export default async function AdminPage() {
   } catch {}
 
   const clients = await query<{
-    id: string; email: string; name: string; created_at: string; avatar_url: string | null;
-  }>("SELECT id, email, name, created_at, avatar_url FROM users WHERE role = 'client' ORDER BY created_at DESC LIMIT 50");
+    id: string; email: string; name: string; created_at: string; avatar_url: string | null; is_banned: boolean;
+  }>("SELECT id, email, name, created_at, avatar_url, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE role = 'client' ORDER BY created_at DESC LIMIT 50");
 
   const photographers = await query<{
     id: string; display_name: string; slug: string; plan: string; rating: number;
@@ -200,11 +200,12 @@ export default async function AdminPage() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Email</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Joined</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-warm-100">
               {clients.map((u) => (
-                <tr key={u.id}>
+                <tr key={u.id} className={u.is_banned ? "bg-red-50/30" : ""}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {u.avatar_url ? (
@@ -217,9 +218,10 @@ export default async function AdminPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-500">{u.email}</td>
                   <td className="px-4 py-3 text-gray-500">{new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
+                  <td className="px-4 py-3"><AdminBanToggle id={u.id} value={u.is_banned} /></td>
                 </tr>
               ))}
-              {clients.length === 0 && <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">No clients yet</td></tr>}
+              {clients.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No clients yet</td></tr>}
             </tbody>
           </table>
         </div>
