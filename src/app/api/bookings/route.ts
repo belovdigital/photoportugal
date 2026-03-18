@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, shoot_date, shoot_time, group_size, occasion, message, total_price, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
        RETURNING id`,
-      [userId, photographer_id, package_id || null, location_slug || null, shoot_date || null, shoot_time || null, group_size || 2, occasion || null, message || null, totalPrice]
+      [userId, photographer_id, package_id || null, location_slug || null, (shoot_date && shoot_date !== "flexible") ? shoot_date : null, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, group_size || 2, occasion || null, message || null, totalPrice]
     );
 
     // Send email notification to photographer (if enabled)
