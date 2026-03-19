@@ -10,7 +10,7 @@ interface Plan {
   features: string[];
 }
 
-export function PlanCard({ plan, currentPlan }: { plan: Plan; currentPlan: string }) {
+export function PlanCard({ plan, currentPlan, earlyBirdActive }: { plan: Plan; currentPlan: string; earlyBirdActive?: boolean }) {
   const [loading, setLoading] = useState(false);
 
   const planOrder = ["free", "pro", "premium"];
@@ -78,8 +78,10 @@ export function PlanCard({ plan, currentPlan }: { plan: Plan; currentPlan: strin
       <div className="mt-6">
         {plan.current ? (
           <>
-            <p className="text-center text-sm font-semibold text-primary-600">Current Plan</p>
-            {currentPlan !== "free" && (
+            <p className="text-center text-sm font-semibold text-primary-600">
+              {earlyBirdActive ? "Active (Early Bird)" : "Current Plan"}
+            </p>
+            {currentPlan !== "free" && !earlyBirdActive && (
               <button
                 onClick={handleManage}
                 disabled={loading}
@@ -89,6 +91,8 @@ export function PlanCard({ plan, currentPlan }: { plan: Plan; currentPlan: strin
               </button>
             )}
           </>
+        ) : earlyBirdActive && planIdx <= planOrder.indexOf(currentPlan) ? (
+          <p className="text-center text-xs text-gray-400">Included in your Early Bird plan</p>
         ) : isUpgrade ? (
           <button
             onClick={handleAction}

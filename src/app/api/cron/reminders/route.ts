@@ -157,10 +157,35 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Delivery reminders query: ${err}`);
   }
 
-  console.log("[cron/reminders]", results);
+  // === Early Bird tier expiration ===
+  let earlyBirdExpired = 0;
+  try {
+    const expired = await query<{ id: string; early_bird_tier: string }>(
+      `SELECT id, early_bird_tier FROM photographer_profiles
+       WHERE early_bird_expires_at IS NOT NULL
+       AND early_bird_expires_at < NOW()
+       AND early_bird_tier IS NOT NULL
+       AND is_founding = FALSE`
+    );
+    for (const p of expired) {
+      // Downgrade to free plan
+      await queryOne(
+        `UPDATE photographer_profiles
+         SET plan = 'free', early_bird_tier = NULL, early_bird_expires_at = NULL
+         WHERE id = $1 RETURNING id`,
+        [p.id]
+      );
+      earlyBirdExpired++;
+    }
+  } catch (err) {
+    results.errors.push(`Early bird expiration: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired });
 
   return NextResponse.json({
     success: true,
     ...results,
+    earlyBirdExpired,
   });
 }
