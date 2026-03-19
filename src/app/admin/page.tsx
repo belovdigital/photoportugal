@@ -132,6 +132,13 @@ export default async function AdminPage() {
     reviews: parseInt(reviewCount?.count || "0"),
     messages: parseInt(messageCount?.count || "0"),
     disputesOpen: parseInt(disputeCount?.count || "0"),
+    // Funnel data from DB
+    funnelMessages: parseInt(messageCount?.count || "0"),
+    funnelBookings: parseInt(bookingsTotal?.count || "0"),
+    funnelPaid: parseInt((await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.count || "0"),
+    funnelDelivered: parseInt((await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status IN ('delivered', 'completed')").catch(() => null))?.count || "0"),
+    funnelAccepted: parseInt((await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE delivery_accepted = TRUE").catch(() => null))?.count || "0"),
+    funnelReviewed: parseInt(reviewCount?.count || "0"),
   };
 
   // Render sections as server components passed to client

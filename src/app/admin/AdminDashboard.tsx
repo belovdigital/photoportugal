@@ -15,6 +15,13 @@ interface AdminStats {
   reviews: number;
   messages: number;
   disputesOpen: number;
+  // Funnel
+  funnelMessages: number;
+  funnelBookings: number;
+  funnelPaid: number;
+  funnelDelivered: number;
+  funnelAccepted: number;
+  funnelReviewed: number;
 }
 
 const tabs = [
@@ -205,6 +212,44 @@ export function AdminDashboard({
                     <p className="text-xs text-gray-500">{s.label}</p>
                   </div>
                 ))}
+              </div>
+
+              {/* Conversion Funnel */}
+              <h2 className="mt-8 text-lg font-bold text-gray-900">Conversion Funnel</h2>
+              <p className="mt-1 text-sm text-gray-400">Client journey from first contact to review (all time)</p>
+              <div className="mt-4 space-y-2">
+                {[
+                  { label: "Messages sent", value: stats.funnelMessages, color: "bg-blue-400" },
+                  { label: "Bookings created", value: stats.funnelBookings, color: "bg-yellow-500" },
+                  { label: "Paid", value: stats.funnelPaid, color: "bg-orange-500" },
+                  { label: "Photos delivered", value: stats.funnelDelivered, color: "bg-primary-500" },
+                  { label: "Accepted by client", value: stats.funnelAccepted, color: "bg-accent-500" },
+                  { label: "Review left", value: stats.funnelReviewed, color: "bg-green-500" },
+                ].map((step, i, arr) => {
+                  const maxVal = arr[0].value || 1;
+                  const barWidth = Math.max((step.value / maxVal) * 100, 4);
+                  const prevVal = i > 0 ? arr[i - 1].value : step.value;
+                  const convRate = prevVal > 0 ? Math.round((step.value / prevVal) * 100) : 0;
+
+                  return (
+                    <div key={step.label} className="flex items-center gap-3">
+                      <div className="w-36 text-right text-xs font-medium text-gray-500 shrink-0">{step.label}</div>
+                      <div className="flex-1">
+                        <div className="h-8 overflow-hidden rounded-lg bg-warm-100">
+                          <div
+                            className={`flex h-full items-center rounded-lg px-3 text-xs font-bold text-white ${step.color} transition-all`}
+                            style={{ width: `${barWidth}%` }}
+                          >
+                            {step.value > 0 ? step.value : ""}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="w-14 text-right text-xs text-gray-400 shrink-0">
+                        {i > 0 && prevVal > 0 ? `${convRate}%` : ""}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Quick actions */}

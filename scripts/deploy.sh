@@ -15,7 +15,7 @@ git push origin main
 
 # Deploy on server
 echo "→ Pulling on server and rebuilding..."
-ssh $SERVER "cd $APP_DIR && git pull origin main && npm install && npm run build && pm2 restart photoportugal"
+ssh $SERVER "cd $APP_DIR && git pull origin main && npm install && NODE_OPTIONS='--max-old-space-size=3072' npm run build && pm2 restart photoportugal"
 
 echo "→ Checking health..."
 sleep 3
