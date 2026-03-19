@@ -70,6 +70,7 @@ export async function POST(
   );
 
   return NextResponse.json({
+    booking_id: booking.id,
     photographer_name: booking.photographer_name,
     photographer_avatar: booking.photographer_avatar,
     client_name: booking.client_name,

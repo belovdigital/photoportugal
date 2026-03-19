@@ -1,0 +1,100 @@
+import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { queryOne, query } from "@/lib/db";
+import { verifyToken } from "@/app/api/admin/login/route";
+
+const VALID_STATUSES = ["under_review", "resolved", "rejected"] as const;
+const VALID_RESOLUTIONS = ["reshoot", "partial_refund", "full_refund", "rejected"] as const;
+
+async function isAdmin(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
+  if (!token) return false;
+  const data = verifyToken(token);
+  if (!data) return false;
+  const user = await queryOne<{ role: string }>("SELECT role FROM users WHERE email = $1", [data.email]);
+  return user?.role === "admin";
+}
+
+// PATCH - Update dispute (admin only, resolve/reject)
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const { status, resolution, resolution_note, refund_amount } = await req.json();
+
+    // Verify dispute exists
+    const dispute = await queryOne<{ id: string; booking_id: string; status: string }>(
+      "SELECT id, booking_id, status FROM disputes WHERE id = $1",
+      [id]
+    );
+
+    if (!dispute) {
+      return NextResponse.json({ error: "Dispute not found" }, { status: 404 });
+    }
+
+    if (dispute.status === "resolved" || dispute.status === "rejected") {
+      return NextResponse.json({ error: "This dispute has already been closed" }, { status: 400 });
+    }
+
+    if (status && !VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) {
+      return NextResponse.json(
+        { error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    if (resolution && !VALID_RESOLUTIONS.includes(resolution as typeof VALID_RESOLUTIONS[number])) {
+      return NextResponse.json(
+        { error: `Invalid resolution. Must be one of: ${VALID_RESOLUTIONS.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    const isClosing = status === "resolved" || status === "rejected";
+
+    // Update dispute record
+    await query(
+      `UPDATE disputes
+       SET status = COALESCE($1, status),
+           resolution = COALESCE($2, resolution),
+           resolution_note = COALESCE($3, resolution_note),
+           refund_amount = COALESCE($4, refund_amount),
+           resolved_at = CASE WHEN $5 THEN NOW() ELSE resolved_at END
+       WHERE id = $6`,
+      [status || null, resolution || null, resolution_note || null, refund_amount ?? null, isClosing, id]
+    );
+
+    // If resolution involves a refund, update booking payment info
+    if (resolution === "full_refund" || resolution === "partial_refund") {
+      const booking = await queryOne<{ total_price: number }>(
+        "SELECT total_price FROM bookings WHERE id = $1",
+        [dispute.booking_id]
+      );
+
+      const amount = resolution === "full_refund"
+        ? booking?.total_price ?? 0
+        : refund_amount ?? 0;
+
+      await query(
+        `UPDATE bookings
+         SET refund_amount = $1,
+             status = 'refunded'
+         WHERE id = $2`,
+        [amount, dispute.booking_id]
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error updating dispute:", error);
+    return NextResponse.json({ error: "Failed to update dispute" }, { status: 500 });
+  }
+}

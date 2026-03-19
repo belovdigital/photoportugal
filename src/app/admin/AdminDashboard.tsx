@@ -14,6 +14,7 @@ interface AdminStats {
   revenueThisMonth: number;
   reviews: number;
   messages: number;
+  disputesOpen: number;
 }
 
 const tabs = [
@@ -21,6 +22,8 @@ const tabs = [
   { key: "photographers", label: "Photographers", icon: "camera" },
   { key: "clients", label: "Clients", icon: "users" },
   { key: "bookings", label: "Bookings", icon: "calendar" },
+  { key: "disputes", label: "Disputes", icon: "flag" },
+  { key: "reviews", label: "Reviews", icon: "star" },
   { key: "blog", label: "Blog", icon: "document" },
   { key: "promos", label: "Promo Codes", icon: "tag" },
   { key: "locations", label: "Locations", icon: "map" },
@@ -44,6 +47,10 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>;
     case "tag":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>;
+    case "flag":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>;
+    case "star":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>;
     case "map":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
     case "settings":
@@ -59,6 +66,8 @@ export function AdminDashboard({
   photographersSection,
   clientsSection,
   bookingsSection,
+  disputesSection,
+  reviewsSection,
   blogSection,
   promosSection,
   locationsSection,
@@ -69,6 +78,8 @@ export function AdminDashboard({
   photographersSection: ReactNode;
   clientsSection: ReactNode;
   bookingsSection: ReactNode;
+  disputesSection: ReactNode;
+  reviewsSection: ReactNode;
   blogSection: ReactNode;
   promosSection: ReactNode;
   locationsSection: ReactNode;
@@ -80,6 +91,7 @@ export function AdminDashboard({
   function getBadge(key: string): number {
     if (key === "photographers") return stats.photographersPending;
     if (key === "bookings") return stats.bookingsPending;
+    if (key === "disputes") return stats.disputesOpen;
     return 0;
   }
 
@@ -162,6 +174,7 @@ export function AdminDashboard({
                   { label: "Bookings", value: stats.bookingsTotal, sub: stats.bookingsPending > 0 ? `${stats.bookingsPending} pending` : undefined },
                   { label: "Revenue", value: `\u20ac${stats.revenue.toLocaleString()}`, sub: `\u20ac${stats.revenueThisMonth.toLocaleString()} this month` },
                   { label: "Reviews", value: stats.reviews },
+                  { label: "Disputes", value: stats.disputesOpen, sub: stats.disputesOpen > 0 ? "open" : undefined },
                   { label: "Messages", value: stats.messages },
                 ].map((stat) => (
                   <div key={stat.label} className="rounded-xl border border-warm-200 bg-white p-4 text-center">
@@ -216,6 +229,8 @@ export function AdminDashboard({
           {activeTab === "photographers" && photographersSection}
           {activeTab === "clients" && clientsSection}
           {activeTab === "bookings" && bookingsSection}
+          {activeTab === "disputes" && disputesSection}
+          {activeTab === "reviews" && reviewsSection}
           {activeTab === "blog" && blogSection}
           {activeTab === "promos" && promosSection}
           {activeTab === "locations" && locationsSection}

@@ -8,6 +8,8 @@ import { LocationsManager } from "./LocationsManager";
 import { PromoCodesManager } from "./PromoCodesManager";
 import { BlogManager } from "./BlogManager";
 import { AdminDashboard } from "./AdminDashboard";
+import { DisputesManager } from "./DisputesManager";
+import { ReviewsManager } from "./ReviewsManager";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
@@ -98,6 +100,22 @@ export default async function AdminPage() {
      ORDER BY b.created_at DESC LIMIT 30`
   );
 
+  // Disputes count
+  const disputeCount = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM disputes WHERE status IN ('open', 'under_review')").catch(() => null);
+
+  // Reviews for admin moderation
+  const allReviews = await query<{
+    id: string; rating: number; title: string | null; text: string | null; created_at: string;
+    client_name: string; photographer_name: string; photographer_slug: string;
+  }>(
+    `SELECT r.id, r.rating, r.title, r.text, r.created_at,
+            u.name as client_name, pp.display_name as photographer_name, pp.slug as photographer_slug
+     FROM reviews r
+     JOIN users u ON u.id = r.client_id
+     JOIN photographer_profiles pp ON pp.id = r.photographer_id
+     ORDER BY r.created_at DESC`
+  ).catch(() => []);
+
   const stats = {
     clients: parseInt(clientCount?.count || "0"),
     photographersApproved: parseInt(photographersApproved?.count || "0"),
@@ -110,6 +128,7 @@ export default async function AdminPage() {
     revenueThisMonth: parseFloat(revenueThisMonth?.total || "0"),
     reviews: parseInt(reviewCount?.count || "0"),
     messages: parseInt(messageCount?.count || "0"),
+    disputesOpen: parseInt(disputeCount?.count || "0"),
   };
 
   // Render sections as server components passed to client
@@ -239,6 +258,8 @@ export default async function AdminPage() {
       photographersSection={photographersSection}
       clientsSection={clientsSection}
       bookingsSection={bookingsSection}
+      disputesSection={<DisputesManager />}
+      reviewsSection={<ReviewsManager initialReviews={allReviews} />}
       blogSection={<BlogManager />}
       promosSection={<PromoCodesManager />}
       locationsSection={<LocationsManager />}

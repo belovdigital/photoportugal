@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { DeliveryGalleryClient } from "./DeliveryGalleryClient";
 import { Avatar } from "@/components/ui/Avatar";
+import { DisputeForm } from "@/components/ui/DisputeForm";
 
 interface Photo {
   id: string;
@@ -12,6 +13,7 @@ interface Photo {
 }
 
 interface GalleryData {
+  booking_id: string;
   photographer_name: string;
   photographer_avatar: string | null;
   client_name: string;
@@ -220,13 +222,16 @@ export function DeliveryPageClient({
                   Accept the delivery to confirm you&apos;ve received your photos. {gallery.payment_status === "paid" ? "This will release the payment to your photographer." : ""}
                 </p>
               </div>
-              <button
-                onClick={handleAcceptDelivery}
-                disabled={accepting}
-                className="shrink-0 rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
-              >
-                {accepting ? "Accepting..." : "Accept Delivery"}
-              </button>
+              <div className="flex items-center gap-4">
+                <DisputeForm bookingId={gallery.booking_id} />
+                <button
+                  onClick={handleAcceptDelivery}
+                  disabled={accepting}
+                  className="shrink-0 rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  {accepting ? "Accepting..." : "Accept Delivery"}
+                </button>
+              </div>
             </div>
             {acceptError && (
               <p className="mt-3 text-sm text-red-600">{acceptError}</p>
