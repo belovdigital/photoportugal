@@ -10,6 +10,7 @@ import { BlogManager } from "./BlogManager";
 import { AdminDashboard } from "./AdminDashboard";
 import { DisputesManager } from "./DisputesManager";
 import { ReviewsManager } from "./ReviewsManager";
+import { AnalyticsDashboard } from "./AnalyticsDashboard";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
@@ -282,6 +283,7 @@ export default async function AdminPage() {
     <AdminDashboard
       stats={stats}
       logoutButton={<AdminLogoutButton />}
+      analyticsSection={<AnalyticsDashboard />}
       photographersSection={photographersSection}
       clientsSection={clientsSection}
       bookingsSection={bookingsSection}
