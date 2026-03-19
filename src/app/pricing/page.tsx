@@ -22,7 +22,7 @@ const plans = [
       `${COMMISSION_RATES.free}% platform commission`,
     ],
     cta: "Get Started Free",
-    href: "/auth/signup?role=photographer",
+    href: "/join",
     highlighted: false,
     available: true,
   },

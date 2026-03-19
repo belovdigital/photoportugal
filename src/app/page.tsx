@@ -288,7 +288,7 @@ export default function HomePage() {
               Browse Photographers
             </Link>
             <Link
-              href="/auth/signup?role=photographer"
+              href="/join"
               className="rounded-xl border-2 border-white/20 px-8 py-4 text-base font-semibold text-white transition hover:border-white/40 hover:bg-white/5"
             >
               Join as a Photographer

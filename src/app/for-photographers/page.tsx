@@ -29,7 +29,7 @@ export default function ForPhotographersPage() {
             handle payments, and let you do what you love.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/auth/signup?role=photographer" className="rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-700">
+            <Link href="/join" className="rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-700">
               Join for Free
             </Link>
             <Link href="/pricing" className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white hover:bg-white/5">
@@ -103,7 +103,7 @@ export default function ForPhotographersPage() {
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="font-display text-3xl font-bold text-gray-900">Ready to get started?</h2>
           <p className="mt-4 text-gray-500">Join for free, set up your profile, and start receiving bookings.</p>
-          <Link href="/auth/signup?role=photographer" className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-700">
+          <Link href="/join" className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-700">
             Create Your Photographer Profile
           </Link>
         </div>

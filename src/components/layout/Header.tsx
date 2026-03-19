@@ -186,7 +186,7 @@ export function Header() {
                   </p>
                   <div className="mt-4 space-y-1">
                     <Link
-                      href="/auth/signup?role=photographer"
+                      href="/join"
                       onClick={() => setActiveMenu(null)}
                       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600"
                     >
@@ -336,7 +336,7 @@ export function Header() {
                 <>
                   <hr className="my-2 border-warm-200" />
                   <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">For Photographers</p>
-                  <MobileLink href="/auth/signup?role=photographer" label="Join as Photographer" onClick={() => setMobileOpen(false)} />
+                  <MobileLink href="/join" label="Join as Photographer" onClick={() => setMobileOpen(false)} />
                   <MobileLink href="/pricing" label="Pricing Plans" onClick={() => setMobileOpen(false)} />
                 </>
               )}
