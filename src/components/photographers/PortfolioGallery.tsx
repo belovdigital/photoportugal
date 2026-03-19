@@ -115,7 +115,8 @@ export function PortfolioGallery({
             <OptimizedImage
               src={item.thumbnail_url || item.url}
               alt={item.caption || "Portfolio photo"}
-              width={400}
+              width={600}
+              quality={88}
               className="w-full"
             />
           </div>

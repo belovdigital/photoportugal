@@ -240,7 +240,7 @@ export default async function PhotographerProfilePage({
       {/* Cover */}
       <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-700 sm:h-80 lg:h-96 overflow-hidden">
         {photographer.cover_url && (
-          <OptimizedImage src={photographer.cover_url} alt={`${photographer.display_name} — photography portfolio cover`} width={1600} priority className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
+          <OptimizedImage src={photographer.cover_url} alt={`${photographer.display_name} — photography portfolio cover`} width={2000} quality={90} priority className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
         )}
       </div>
 

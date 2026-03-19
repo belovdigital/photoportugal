@@ -67,7 +67,7 @@ export async function FeaturedPhotographers() {
             {/* Cover / gradient */}
             <div className="relative h-36 bg-gradient-to-br from-primary-400 to-primary-700">
               {p.cover_url && (
-                <OptimizedImage src={p.cover_url} alt={`${p.display_name} — professional photographer portfolio in Portugal`} width={400} className="h-full w-full" style={{ objectPosition: `center ${p.cover_position_y ?? 50}%` }} />
+                <OptimizedImage src={p.cover_url} alt={`${p.display_name} — professional photographer portfolio in Portugal`} width={600} quality={88} className="h-full w-full" style={{ objectPosition: `center ${p.cover_position_y ?? 50}%` }} />
               )}
               <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-bold text-yellow-900">
                 Featured

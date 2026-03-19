@@ -8,7 +8,7 @@ const CACHE_DIR = path.join(UPLOAD_DIR, ".cache");
 
 // Allowed widths to prevent abuse (cache explosion)
 const ALLOWED_WIDTHS = [200, 400, 600, 800, 1200, 1600, 2000];
-const DEFAULT_QUALITY = 80;
+const DEFAULT_QUALITY = 85;
 const MAX_QUALITY = 95;
 
 function closestWidth(requested: number): number {
