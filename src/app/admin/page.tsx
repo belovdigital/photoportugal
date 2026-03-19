@@ -82,9 +82,11 @@ export default async function AdminPage() {
     id: string; display_name: string; slug: string; plan: string; rating: number;
     review_count: number; session_count: number; is_verified: boolean; is_featured: boolean;
     is_approved: boolean; created_at: string; email: string;
+    is_founding: boolean; early_bird_tier: string | null; early_bird_expires_at: string | null; registration_number: number | null;
   }>(
     `SELECT pp.id, pp.display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
-            pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, pp.created_at, u.email
+            pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, pp.created_at, u.email,
+            COALESCE(pp.is_founding, FALSE) as is_founding, pp.early_bird_tier, pp.early_bird_expires_at, pp.registration_number
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
      ORDER BY pp.is_approved ASC, pp.created_at DESC`
   );
@@ -138,6 +140,7 @@ export default async function AdminPage() {
         <thead className="border-b border-warm-200 bg-warm-50">
           <tr>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
+            <th className="px-4 py-3 text-left font-medium text-gray-500">Early Bird</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Rating</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Approved</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Verified</th>
@@ -152,6 +155,30 @@ export default async function AdminPage() {
               <td className="px-4 py-3">
                 <Link href={`/photographers/${p.slug}`} target="_blank" className="font-medium text-gray-900 hover:text-primary-600">{p.display_name}</Link>
                 <p className="text-xs text-gray-400">{p.email}</p>
+              </td>
+              <td className="px-4 py-3">
+                {p.registration_number && p.registration_number > 0 ? (
+                  <div>
+                    <span className="text-xs font-bold text-gray-900">#{p.registration_number}</span>
+                    {p.early_bird_tier && (
+                      <span className={`ml-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        p.is_founding ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white" :
+                        p.early_bird_tier === "early50" ? "bg-primary-100 text-primary-700" :
+                        "bg-accent-50 text-accent-700"
+                      }`}>
+                        {p.is_founding ? "Founding" : p.early_bird_tier === "early50" ? "Early 50" : "First 100"}
+                      </span>
+                    )}
+                    {p.early_bird_expires_at && (
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        expires {new Date(p.early_bird_expires_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                      </p>
+                    )}
+                    {p.is_founding && <p className="text-[10px] text-amber-600 mt-0.5">Forever</p>}
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-300">—</span>
+                )}
               </td>
               <td className="px-4 py-3 text-gray-700">
                 {p.rating ? `${p.rating}` : "—"}

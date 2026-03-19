@@ -56,11 +56,12 @@ export async function GET(request: NextRequest) {
             slug = `${slug}-${Date.now().toString(36)}`;
           }
 
-          // Determine early bird tier
+          // Determine early bird tier (count only real photographers, not test accounts)
           const photographerCount = await queryOne<{ count: string }>(
-            "SELECT COUNT(*) as count FROM photographer_profiles"
+            "SELECT COUNT(*) as count FROM photographer_profiles WHERE registration_number > 0"
           );
           const count = parseInt(photographerCount?.count || "0");
+          const nextNumber = count + 1;
 
           let earlyBirdTier: string | null = null;
           let earlyBirdExpires: string | null = null;
@@ -85,10 +86,10 @@ export async function GET(request: NextRequest) {
           }
 
           await query(
-            `INSERT INTO photographer_profiles (user_id, slug, display_name, plan, is_founding, early_bird_tier, early_bird_expires_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `INSERT INTO photographer_profiles (user_id, slug, display_name, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              ON CONFLICT (user_id) DO NOTHING`,
-            [user.id, slug, session.user.name, plan, isFounding, earlyBirdTier, earlyBirdExpires]
+            [user.id, slug, session.user.name, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
           );
         }
       }

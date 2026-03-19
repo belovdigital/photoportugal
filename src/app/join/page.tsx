@@ -26,7 +26,7 @@ const TIERS = [
 export default async function JoinPage() {
   let totalPhotographers = 0;
   try {
-    const row = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles");
+    const row = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles WHERE registration_number > 0");
     totalPhotographers = parseInt(row?.count || "0");
   } catch {}
 
