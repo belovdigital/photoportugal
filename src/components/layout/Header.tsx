@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { unsplashUrl } from "@/lib/unsplash-images";
+import { locations } from "@/lib/locations-data";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
@@ -67,7 +68,7 @@ export function Header() {
       <div className="bg-gray-900 text-center text-xs sm:text-sm">
         <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
           <p className="text-gray-300">
-            <span className="text-white font-semibold">Professional vacation photography</span> across 25+ stunning locations in Portugal
+            <span className="text-white font-semibold">Professional vacation photography</span> across {locations.length}+ stunning locations in Portugal
             <Link href="/photographers" className="ml-2 text-primary-400 hover:text-primary-300 font-medium">
               Browse now &rarr;
             </Link>
