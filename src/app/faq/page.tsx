@@ -17,27 +17,52 @@ const faqs = [
   {
     question: "How much does a photoshoot cost?",
     answer:
-      'Prices vary by photographer and package, typically ranging from \u20ac120 for a 30-minute quick session to \u20ac500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page. See our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for an overview.',
+      'Prices vary by photographer and package, typically ranging from €120 for a 30-minute quick session to €500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page. See our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for an overview.',
   },
   {
     question: "How do I book a photographer?",
     answer:
-      'Find a <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographer</a> you like, choose a package, select your preferred date and time, and send a booking request. The photographer will review your request and confirm within 24 hours. See our step-by-step guide on the <a href="/how-it-works" class="text-primary-600 underline hover:text-primary-700">How It Works</a> page.',
+      'Find a <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographer</a> you like, choose a package, select your preferred date and time, and send a booking request. The photographer will review your request and confirm within 24 hours. Your payment is collected at booking and held securely until your photos are delivered.',
   },
   {
-    question: "Can I cancel or reschedule my booking?",
+    question: "How does payment work? Is it secure?",
     answer:
-      "Yes. You can cancel or request a reschedule through your dashboard. Free cancellation is available up to <strong>7 days</strong> before the shoot. Reschedules within 7 days are handled directly with your photographer through our messaging system \u2014 most photographers are flexible and happy to find an alternative date. If a paid booking is cancelled before photo delivery, you receive a full refund.",
+      'All payments are processed securely through <strong>Stripe</strong>, trusted by millions of businesses worldwide. Your payment is held in escrow — we don\'t release it to the photographer until you receive and accept your photos. This means you\'re always protected. You can pay with credit/debit cards, Apple Pay, or Google Pay.',
+  },
+  {
+    question: "Can I cancel my booking?",
+    answer:
+      'Yes, you can cancel through your dashboard. Cancellation <strong>7+ days</strong> before the shoot gives you a full refund. Between 3–7 days: 50% refund. Less than 3 days: no refund (the photographer reserved their time for you). See our <a href="/terms" class="text-primary-600 underline hover:text-primary-700">Terms of Service</a> for full details.',
+  },
+  {
+    question: "Can I reschedule my booking?",
+    answer:
+      "Yes. One free reschedule is included if you request it <strong>48+ hours</strong> before the shoot. Rescheduling due to bad weather is always free for both parties. For changes within 48 hours, contact your photographer directly — most are flexible and happy to find an alternative time.",
+  },
+  {
+    question: "What happens if the photographer cancels?",
+    answer:
+      "You receive a <strong>100% refund</strong>, always. If the cancellation is last-minute (less than 48 hours), we'll also try to find a replacement photographer for you. Photographers who cancel repeatedly may be removed from the platform.",
   },
   {
     question: "How long until I receive my photos?",
     answer:
-      'Delivery time depends on the photographer and package you choose \u2014 each package shows the estimated delivery days on the photographer\'s profile. Once ready, you\u2019ll receive a link to a <strong>private, password-protected gallery</strong> where you can view, download individually, or grab the full collection as a ZIP archive. Your gallery stays accessible for 90 days.',
+      'Delivery time depends on the package you choose — each package shows the estimated delivery days on the photographer\'s profile (typically 3–14 days). Once ready, you\'ll receive a link to a <strong>private, password-protected gallery</strong> where you can view, download individually, or grab the full collection as a ZIP archive.',
   },
   {
-    question: "How does the photo delivery work?",
+    question: "What if I'm not happy with the photos?",
     answer:
-      "After your shoot, the photographer edits your photos and uploads them to a <strong>private, password-protected gallery</strong>. You\u2019ll receive a notification with a link and password. Once you view and accept the delivery, the photographer receives their payment. You can download photos individually in high resolution or grab the entire collection as a ZIP archive. Your gallery stays accessible for 90 days after acceptance.",
+      'You have <strong>7 days</strong> after delivery to accept your photos or open a dispute. Valid reasons for a dispute include: significantly fewer photos than promised, wrong location, severe technical issues, or photographer no-show. We\'ll work with both parties to find a fair resolution — reshoot, partial refund, or full refund. Note that subjective style preferences are not grounds for a refund, so review portfolios carefully before booking. See our <a href="/terms" class="text-primary-600 underline hover:text-primary-700">Terms of Service</a> for details.',
+  },
+  {
+    question: "How long can I access my photo gallery?",
+    answer:
+      "Your private gallery stays accessible for <strong>90 days</strong> after delivery. We recommend downloading all your photos within this period. You can download them individually or as a complete ZIP archive.",
+  },
+  {
+    question: "What if it rains on my photoshoot day?",
+    answer:
+      "Weather rescheduling is always <strong>free</strong> for both parties — no penalties, no fees. Either you or the photographer can request a reschedule due to weather conditions unsuitable for outdoor photography. Discuss a backup plan with your photographer when you book.",
   },
   {
     question: "Are the reviews verified?",
@@ -47,7 +72,7 @@ const faqs = [
   {
     question: "What locations are available?",
     answer:
-      'We cover 25+ <a href="/locations" class="text-primary-600 underline hover:text-primary-700">locations</a> across Portugal, including <a href="/locations/lisbon" class="text-primary-600 underline hover:text-primary-700">Lisbon</a>, <a href="/locations/porto" class="text-primary-600 underline hover:text-primary-700">Porto</a>, <a href="/locations/algarve" class="text-primary-600 underline hover:text-primary-700">Algarve</a>, <a href="/locations/sintra" class="text-primary-600 underline hover:text-primary-700">Sintra</a>, <a href="/locations/madeira" class="text-primary-600 underline hover:text-primary-700">Madeira</a>, <a href="/locations/azores" class="text-primary-600 underline hover:text-primary-700">Azores</a>, and many more. Each location page shows available <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographers</a> and popular photoshoot spots.',
+      'We cover 25+ <a href="/locations" class="text-primary-600 underline hover:text-primary-700">locations</a> across Portugal, including <a href="/locations/lisbon" class="text-primary-600 underline hover:text-primary-700">Lisbon</a>, <a href="/locations/porto" class="text-primary-600 underline hover:text-primary-700">Porto</a>, <a href="/locations/algarve" class="text-primary-600 underline hover:text-primary-700">Algarve</a>, <a href="/locations/sintra" class="text-primary-600 underline hover:text-primary-700">Sintra</a>, <a href="/locations/madeira" class="text-primary-600 underline hover:text-primary-700">Madeira</a>, <a href="/locations/azores" class="text-primary-600 underline hover:text-primary-700">Azores</a>, and many more.',
   },
   {
     question: "Do photographers speak English?",
@@ -55,24 +80,14 @@ const faqs = [
       'Most <a href="/photographers" class="text-primary-600 underline hover:text-primary-700">photographers</a> on our platform speak English. You can filter photographers by language on the catalog page. Many also speak Portuguese, Spanish, French, and German.',
   },
   {
-    question: "What if it rains on my photoshoot day?",
-    answer:
-      "Most photographers are flexible and will offer to reschedule for free in case of bad weather. Discuss weather contingency plans with your photographer before the shoot through our messaging system.",
-  },
-  {
     question: "How do I become a photographer on Photo Portugal?",
     answer:
-      "Click \u2018Join as Photographer\u2019 and create your account. You can then set up your profile, upload portfolio photos, create packages, and start receiving booking requests. We offer Free, Pro, and Premium plans with different features and visibility levels.",
+      "Click 'Join as Photographer' and create your account. Set up your profile, upload portfolio photos, create packages, and start receiving booking requests. We offer Free, Pro, and Premium plans with different features and commission rates.",
   },
   {
     question: "What are the photographer plans?",
     answer:
-      'We offer three plans: <strong>Free</strong> (20% commission, 1 location, 10 portfolio photos), <strong>Pro</strong> at \u20ac29/month (15% commission, 5 locations, 30 portfolio photos), and <strong>Premium</strong> at \u20ac59/month (10% commission, unlimited locations, 100 portfolio photos). All plans include booking management, client messaging, verified reviews, and secure Stripe payments. Visit our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for a full comparison.',
-  },
-  {
-    question: "Is my payment secure?",
-    answer:
-      "Absolutely. All payments are processed securely through <strong>Stripe</strong>, trusted by millions of businesses worldwide. You can pay with credit/debit cards, Apple Pay, or Google Pay. Your payment is held safely until your photographer delivers your photos and you accept them \u2014 so you\u2019re always protected. If a booking is cancelled before delivery, you receive a full refund.",
+      'We offer three plans: <strong>Free</strong> (20% commission, 1 location, 10 portfolio photos), <strong>Pro</strong> at €29/month (15% commission, 5 locations, 30 portfolio photos), and <strong>Premium</strong> at €59/month (10% commission, unlimited locations, 100 portfolio photos). Visit our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for a full comparison.',
   },
 ];
 
@@ -110,7 +125,7 @@ export default function FAQPage() {
             Frequently Asked Questions
           </h1>
           <p className="mt-4 text-lg text-gray-500">
-            Vacation Photoshoot in Portugal — Pricing, Booking, Delivery & More
+            Vacation Photoshoot in Portugal — Pricing, Booking, Delivery &amp; More
           </p>
         </div>
 

@@ -98,11 +98,11 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <svg className="h-4 w-4 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <span>Secure payments via Stripe</span>
+                  <span>Pay after you&apos;re happy</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <svg className="h-4 w-4 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  <span>Free cancellation</span>
+                  <span>Secure Stripe payments</span>
                 </div>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function HomePage() {
 
       {/* ===== STATS ===== */}
       <section className="border-y border-warm-200 bg-white">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:gap-8 lg:px-8">
+        <div className="mx-auto grid max-w-5xl grid-cols-3 gap-6 px-4 py-10 sm:px-6 lg:gap-8 lg:px-8">
           {[
             {
               value: `${locations.length}+`,
@@ -206,15 +206,9 @@ export default function HomePage() {
             },
             {
               value: "100%",
-              label: "Money-Back Guarantee",
+              label: "Payment Protection",
               icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
               color: "text-accent-500 bg-accent-50",
-            },
-            {
-              value: "Free",
-              label: "Cancellation",
-              icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
-              color: "text-blue-500 bg-blue-50",
             },
           ].map((stat) => (
             <div key={stat.label} className="flex flex-col items-center text-center">
