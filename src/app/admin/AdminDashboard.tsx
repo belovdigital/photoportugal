@@ -192,74 +192,80 @@ export function AdminDashboard({
           {activeTab === "analytics" && analyticsSection}
           {activeTab === "overview" && (
             <div>
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                {[
-                  { label: "Photographers", value: stats.photographersApproved, sub: stats.photographersPending > 0 ? `${stats.photographersPending} pending` : undefined },
-                  { label: "Clients", value: stats.clients },
-                  { label: "Bookings", value: stats.bookingsTotal, sub: stats.bookingsPending > 0 ? `${stats.bookingsPending} pending` : undefined },
-                  { label: "Revenue", value: `\u20ac${stats.revenue.toLocaleString()}`, sub: `\u20ac${stats.revenueThisMonth.toLocaleString()} this month` },
-                  { label: "Reviews", value: stats.reviews },
-                  { label: "Disputes", value: stats.disputesOpen, sub: stats.disputesOpen > 0 ? "open" : undefined },
-                  { label: "Messages", value: stats.messages },
-                ].map((stat) => (
-                  <div key={stat.label} className="rounded-xl border border-warm-200 bg-white p-4 text-center">
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    <p className="text-sm text-gray-500">{stat.label}</p>
-                    {stat.sub && <p className="text-xs text-gray-400">{stat.sub}</p>}
-                  </div>
-                ))}
-              </div>
-
-              {/* Booking breakdown */}
-              <h2 className="mt-8 text-lg font-bold text-gray-900">Booking Breakdown</h2>
-              <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                {[
-                  { label: "Total", value: stats.bookingsTotal },
-                  { label: "Pending", value: stats.bookingsPending },
-                  { label: "Confirmed", value: stats.bookingsConfirmed },
-                  { label: "Completed", value: stats.bookingsCompleted },
-                ].map((s) => (
-                  <div key={s.label} className="rounded-xl border border-warm-200 bg-white p-4 text-center">
-                    <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-                    <p className="text-xs text-gray-500">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Conversion Funnel teaser */}
-              <button
-                onClick={() => setActiveTab("analytics")}
-                className="mt-8 flex w-full items-center justify-between rounded-xl border border-warm-200 bg-white p-5 text-left transition hover:border-primary-200 hover:shadow-sm"
-              >
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Conversion Funnel</h2>
-                  <p className="mt-0.5 text-sm text-gray-500">View traffic, search queries, and client conversion funnel</p>
+              {/* Key metrics — 2 rows */}
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div className="rounded-xl border border-warm-200 bg-white p-5">
+                  <p className="text-sm font-medium text-gray-500">Revenue</p>
+                  <p className="mt-1 text-3xl font-bold text-gray-900">&euro;{stats.revenue.toLocaleString()}</p>
+                  <p className="mt-1 text-xs text-gray-400">&euro;{stats.revenueThisMonth.toLocaleString()} this month</p>
                 </div>
-                <span className="shrink-0 rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-600">
-                  Open Analytics
-                </span>
-              </button>
+                <div className="rounded-xl border border-warm-200 bg-white p-5">
+                  <p className="text-sm font-medium text-gray-500">Bookings</p>
+                  <p className="mt-1 text-3xl font-bold text-gray-900">{stats.bookingsTotal}</p>
+                  <div className="mt-1 flex gap-2 text-xs">
+                    {stats.bookingsPending > 0 && <span className="text-yellow-600">{stats.bookingsPending} pending</span>}
+                    {stats.bookingsConfirmed > 0 && <span className="text-blue-600">{stats.bookingsConfirmed} confirmed</span>}
+                    {stats.bookingsCompleted > 0 && <span className="text-green-600">{stats.bookingsCompleted} done</span>}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-warm-200 bg-white p-5">
+                  <p className="text-sm font-medium text-gray-500">Photographers</p>
+                  <p className="mt-1 text-3xl font-bold text-gray-900">{stats.photographersApproved}</p>
+                  {stats.photographersPending > 0 && <p className="mt-1 text-xs text-yellow-600">{stats.photographersPending} awaiting approval</p>}
+                </div>
+                <div className="rounded-xl border border-warm-200 bg-white p-5">
+                  <p className="text-sm font-medium text-gray-500">Clients</p>
+                  <p className="mt-1 text-3xl font-bold text-gray-900">{stats.clients}</p>
+                  <p className="mt-1 text-xs text-gray-400">{stats.reviews} reviews &middot; {stats.disputesOpen > 0 ? <span className="text-red-500">{stats.disputesOpen} disputes</span> : "0 disputes"}</p>
+                </div>
+              </div>
 
-              {/* Quick actions */}
-              <h2 className="mt-8 text-lg font-bold text-gray-900">Quick Actions</h2>
-              <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {/* Action items — what needs attention */}
+              {(stats.bookingsPending > 0 || stats.photographersPending > 0 || stats.disputesOpen > 0) && (
+                <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5">
+                  <h3 className="font-semibold text-amber-800">Needs Attention</h3>
+                  <div className="mt-3 space-y-2">
+                    {stats.bookingsPending > 0 && (
+                      <button onClick={() => setActiveTab("bookings")} className="flex w-full items-center justify-between rounded-lg bg-white px-4 py-2.5 text-sm transition hover:shadow-sm">
+                        <span className="text-gray-700"><strong>{stats.bookingsPending}</strong> booking{stats.bookingsPending !== 1 ? "s" : ""} waiting for response</span>
+                        <span className="text-xs text-primary-600">View &rarr;</span>
+                      </button>
+                    )}
+                    {stats.photographersPending > 0 && (
+                      <button onClick={() => setActiveTab("photographers")} className="flex w-full items-center justify-between rounded-lg bg-white px-4 py-2.5 text-sm transition hover:shadow-sm">
+                        <span className="text-gray-700"><strong>{stats.photographersPending}</strong> photographer{stats.photographersPending !== 1 ? "s" : ""} awaiting approval</span>
+                        <span className="text-xs text-primary-600">Review &rarr;</span>
+                      </button>
+                    )}
+                    {stats.disputesOpen > 0 && (
+                      <button onClick={() => setActiveTab("disputes")} className="flex w-full items-center justify-between rounded-lg bg-white px-4 py-2.5 text-sm transition hover:shadow-sm">
+                        <span className="text-gray-700"><strong>{stats.disputesOpen}</strong> open dispute{stats.disputesOpen !== 1 ? "s" : ""}</span>
+                        <span className="text-xs text-red-600">Resolve &rarr;</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick navigation */}
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
-                  { label: "Bookings", sub: "View and manage requests", icon: "calendar", tab: "bookings" as TabKey },
-                  { label: "Blog", sub: "Write a new post", icon: "document", tab: "blog" as TabKey },
-                  { label: "Promo Codes", sub: "Create discount codes", icon: "tag", tab: "promos" as TabKey },
+                  { label: "Analytics", sub: "Traffic & search data", icon: "chart", tab: "analytics" as TabKey },
+                  { label: "Bookings", sub: "Manage requests", icon: "calendar", tab: "bookings" as TabKey },
+                  { label: "Blog", sub: `${stats.messages > 0 ? "34" : "0"} posts`, icon: "document", tab: "blog" as TabKey },
+                  { label: "Promo Codes", sub: "Create discounts", icon: "tag", tab: "promos" as TabKey },
                 ].map((action) => (
                   <button
                     key={action.tab}
                     onClick={() => setActiveTab(action.tab)}
-                    className="flex items-start gap-4 rounded-xl border border-warm-200 bg-white p-5 text-left transition hover:border-primary-200 hover:shadow-sm"
+                    className="flex items-center gap-3 rounded-xl border border-warm-200 bg-white p-4 text-left transition hover:border-primary-200 hover:shadow-sm"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warm-100">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warm-100">
                       <SidebarIcon type={action.icon} active={false} />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{action.label}</p>
-                      <p className="text-xs text-gray-500">{action.sub}</p>
+                      <p className="text-sm font-semibold text-gray-900">{action.label}</p>
+                      <p className="text-[11px] text-gray-400">{action.sub}</p>
                     </div>
                   </button>
                 ))}
