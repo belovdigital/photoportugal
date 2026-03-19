@@ -79,9 +79,9 @@ export function HowItWorksSection() {
         <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, i) => (
             <div key={step.number} className="group relative">
-              {/* Connector line (desktop only) */}
+              {/* Connector line (desktop only) — vertically centered with icon */}
               {i < steps.length - 1 && (
-                <div className="absolute -right-3 top-10 hidden h-0.5 w-6 bg-warm-300 lg:block" />
+                <div className="absolute -right-3 top-[54px] hidden h-0.5 w-6 bg-warm-300 lg:block" />
               )}
 
               <div className="flex h-full flex-col rounded-2xl border border-warm-200 bg-white p-6 shadow-sm transition hover:shadow-md">
