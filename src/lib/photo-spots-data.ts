@@ -1,6 +1,8 @@
 export interface PhotoSpot {
   name: string;
   description: string;
+  best_time?: string;
+  tips?: string;
 }
 
 /** Top photography spots per location slug */

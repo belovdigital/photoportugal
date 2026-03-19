@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
@@ -33,11 +34,19 @@ export function Header() {
   const profileRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const user = session?.user;
   const role = (user as { role?: string } | undefined)?.role;
   const isPhotographer = role === "photographer";
   const isLoading = status === "loading";
   const notifications = useNotifications();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+    setActiveMenu(null);
+    setProfileOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

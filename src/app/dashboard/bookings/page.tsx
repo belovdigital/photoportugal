@@ -205,16 +205,20 @@ export default async function BookingsPage() {
           ))}
         </div>
       ) : (
-        <div className="mt-8 rounded-xl border-2 border-dashed border-warm-300 p-12 text-center">
-          <p className="text-gray-400">
+        <div className="mt-6 flex flex-col items-center py-16 text-center">
+          <svg className="h-12 w-12 text-warm-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h3 className="mt-4 text-lg font-semibold text-gray-900">
+            {isPhotographer ? "No booking requests yet" : "No bookings yet"}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
             {isPhotographer
-              ? "No booking requests yet. Make sure your profile and packages are set up!"
-              : "No bookings yet."}
+              ? "Make sure your profile and packages are set up to start receiving requests."
+              : "When you book a photographer, your sessions will appear here."}
           </p>
           {!isPhotographer && (
-            <Link href="/photographers" className="mt-4 inline-flex rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700">
-              Browse Photographers
-            </Link>
+            <a href="/photographers" className="mt-4 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700">Browse Photographers</a>
           )}
         </div>
       )}

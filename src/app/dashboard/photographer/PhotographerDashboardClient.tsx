@@ -415,15 +415,13 @@ export function PhotographerDashboardClient({
           <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-600 uppercase">
             {profile.plan} plan
           </span>
-          {profile.is_approved && (
-            <a
-              href={`/photographers/${profile.slug}`}
-              target="_blank"
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-            >
-              View Public Profile
-            </a>
-          )}
+          <a
+            href={`/photographers/${profile.slug}`}
+            target="_blank"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+          >
+            {profile.is_approved ? "View Public Profile" : "Preview Profile"}
+          </a>
         </div>
       </div>
 
@@ -739,8 +737,12 @@ export function PhotographerDashboardClient({
                     />
                   ))}
                   {localItems.length === 0 && (
-                    <div className="col-span-full rounded-xl border-2 border-dashed border-warm-300 p-12 text-center">
-                      <p className="text-gray-400">No photos yet. Upload your first photo to get started!</p>
+                    <div className="col-span-full flex flex-col items-center py-12 text-center">
+                      <svg className="h-12 w-12 text-warm-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <h3 className="mt-4 font-semibold text-gray-900">No portfolio photos yet</h3>
+                      <p className="mt-1 text-sm text-gray-500">Upload your best work to attract clients.</p>
                     </div>
                   )}
                   {localItems.length > 0 && filteredPortfolio.length === 0 && (

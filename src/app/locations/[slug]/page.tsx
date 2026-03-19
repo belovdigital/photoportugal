@@ -7,6 +7,7 @@ import { getLocationServices } from "@/lib/location-services-data";
 import { locationImage } from "@/lib/unsplash-images";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { queryOne } from "@/lib/db";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -88,6 +89,18 @@ export default async function LocationPage({
   const spots = photoSpots[slug] || [];
   const services = getLocationServices(slug);
 
+  // Get real photographer count for this location
+  let photographerCount = 0;
+  try {
+    const row = await queryOne<{ count: string }>(
+      `SELECT COUNT(DISTINCT pp.id) as count FROM photographer_locations pl
+       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+       WHERE pl.location_slug = $1 AND pp.is_approved = TRUE`,
+      [slug]
+    );
+    photographerCount = parseInt(row?.count || "0");
+  } catch {}
+
   return (
     <>
       <script
@@ -129,13 +142,18 @@ export default async function LocationPage({
             <p className="mt-6 text-lg text-primary-100/90">
               {location.description}
             </p>
-            <div className="mt-8">
+            <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
                 href={`/photographers?location=${location.slug}`}
                 className="inline-flex rounded-xl bg-white px-8 py-4 text-base font-semibold text-primary-700 shadow-lg transition hover:bg-primary-50 hover:shadow-xl"
               >
                 View Photographers in {location.name}
               </Link>
+              {photographerCount > 0 && (
+                <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
+                  {photographerCount} photographer{photographerCount !== 1 ? "s" : ""} available
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -293,6 +311,12 @@ export default async function LocationPage({
                     <div>
                       <h3 className="font-semibold text-gray-900">{spot.name}</h3>
                       <p className="mt-1 text-sm text-gray-500 leading-relaxed">{spot.description}</p>
+                      {spot.best_time && (
+                        <p className="mt-2 text-xs text-gray-400">Best time: {spot.best_time}</p>
+                      )}
+                      {spot.tips && (
+                        <p className="mt-1 text-xs text-primary-600">{spot.tips}</p>
+                      )}
                     </div>
                   </div>
                 </div>

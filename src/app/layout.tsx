@@ -80,6 +80,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+      <head>
+        <link rel="alternate" hrefLang="x-default" href="https://photoportugal.com" />
+        <link rel="alternate" hrefLang="en" href="https://photoportugal.com" />
+      </head>
       <body className="flex min-h-screen flex-col font-sans">
         <script
           type="application/ld+json"

@@ -95,7 +95,8 @@ export async function POST(
       // Generate delivery token and mark as delivered
       const token = crypto.randomBytes(32).toString("hex");
       const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 90 days
-      const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
+      const { hash: bcryptHash } = await import("bcryptjs");
+      const hashedPassword = await bcryptHash(password, 10);
 
       // Add 'delivered' to enum if not exists
       try {

@@ -38,7 +38,14 @@ export async function GET(
     return NextResponse.json({ error: "Gallery not found" }, { status: 404 });
   }
 
-  if (booking.delivery_password !== password) {
+  // Verify password (bcrypt, with SHA256 fallback for old deliveries)
+  const { compare: bcryptCompare } = await import("bcryptjs");
+  const crypto = await import("crypto");
+  const isBcrypt = booking.delivery_password.startsWith("$2");
+  const passwordMatch = isBcrypt
+    ? await bcryptCompare(password, booking.delivery_password)
+    : crypto.createHash("sha256").update(password).digest("hex") === booking.delivery_password;
+  if (!passwordMatch) {
     return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
   }
 

@@ -19,6 +19,7 @@ interface Step {
   href: string;
   complete: boolean;
   detail?: string;
+  tip?: string;
 }
 
 function getPhotographerSteps(checks: OnboardingChecks): Step[] {
@@ -27,37 +28,44 @@ function getPhotographerSteps(checks: OnboardingChecks): Step[] {
       label: "Add profile photo",
       href: "/dashboard/profile",
       complete: !!checks.avatar,
+      tip: "A friendly headshot helps clients trust you",
     },
     {
       label: "Upload cover image",
       href: "/dashboard/profile",
       complete: !!checks.cover,
+      tip: "Use your best wide landscape shot",
     },
     {
       label: "Write your bio & tagline",
       href: "/dashboard/profile",
       complete: !!checks.bio,
+      tip: "Mention your experience, style, and what makes you unique",
     },
     {
       label: "Upload at least 5 portfolio photos",
       href: "/dashboard/portfolio",
       complete: checks.portfolio >= 5,
       detail: `${Math.min(checks.portfolio, 5)}/5`,
+      tip: "Upload at least 10 diverse photos showing your range",
     },
     {
       label: "Create your first package",
       href: "/dashboard/packages",
       complete: checks.packages >= 1,
+      tip: "Start with 2-3 packages at different price points",
     },
     {
       label: "Select your locations",
       href: "/dashboard/profile",
       complete: checks.locations >= 1,
+      tip: "Add all areas where you're available to shoot",
     },
     {
       label: "Connect Stripe for payments",
       href: "/dashboard/payouts",
       complete: checks.stripeConnected,
+      tip: "Required to receive payments from bookings",
     },
   ];
 }
@@ -256,15 +264,20 @@ export function OnboardingChecklist({
               </div>
 
               {/* Label */}
-              <span
-                className={`flex-1 text-sm transition ${
-                  step.complete
-                    ? "text-gray-400 line-through decoration-gray-300"
-                    : "font-medium text-gray-700 group-hover:text-gray-900"
-                }`}
-              >
-                {step.label}
-              </span>
+              <div className="flex-1 min-w-0">
+                <span
+                  className={`text-sm transition ${
+                    step.complete
+                      ? "text-gray-400 line-through decoration-gray-300"
+                      : "font-medium text-gray-700 group-hover:text-gray-900"
+                  }`}
+                >
+                  {step.label}
+                </span>
+                {step.tip && !step.complete && (
+                  <p className="text-xs text-gray-400 mt-0.5">{step.tip}</p>
+                )}
+              </div>
 
               {/* Detail badge (e.g., "3/5") */}
               {step.detail && !step.complete && (

@@ -55,9 +55,13 @@ export async function POST(
     return NextResponse.json({ error: "Delivery not found" }, { status: 404 });
   }
 
-  // Verify password
-  const hashedInput = crypto.createHash("sha256").update(password).digest("hex");
-  if (booking.delivery_password !== hashedInput) {
+  // Verify password (bcrypt, with SHA256 fallback for old deliveries)
+  const { compare: bcryptCompare } = await import("bcryptjs");
+  const isBcrypt = booking.delivery_password.startsWith("$2");
+  const passwordMatch = isBcrypt
+    ? await bcryptCompare(password, booking.delivery_password)
+    : crypto.createHash("sha256").update(password).digest("hex") === booking.delivery_password;
+  if (!passwordMatch) {
     return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
   }
 
