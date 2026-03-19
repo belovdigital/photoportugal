@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 
 interface AdminStats {
   clients: number;
@@ -97,8 +97,21 @@ export function AdminDashboard({
   locationsSection: ReactNode;
   settingsSection: ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [activeTab, setActiveTabState] = useState<TabKey>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Persist tab in URL hash
+  useEffect(() => {
+    const hash = window.location.hash.slice(1) as TabKey;
+    if (hash && tabs.some((t) => t.key === hash)) {
+      setActiveTabState(hash);
+    }
+  }, []);
+
+  function setActiveTab(tab: TabKey) {
+    setActiveTabState(tab);
+    window.history.replaceState(null, "", `#${tab}`);
+  }
 
   function getBadge(key: string): number {
     if (key === "photographers") return stats.photographersPending;
@@ -214,43 +227,19 @@ export function AdminDashboard({
                 ))}
               </div>
 
-              {/* Conversion Funnel */}
-              <h2 className="mt-8 text-lg font-bold text-gray-900">Conversion Funnel</h2>
-              <p className="mt-1 text-sm text-gray-400">Client journey from first contact to review (all time)</p>
-              <div className="mt-4 space-y-2">
-                {[
-                  { label: "Messages sent", value: stats.funnelMessages, color: "bg-blue-400" },
-                  { label: "Bookings created", value: stats.funnelBookings, color: "bg-yellow-500" },
-                  { label: "Paid", value: stats.funnelPaid, color: "bg-orange-500" },
-                  { label: "Photos delivered", value: stats.funnelDelivered, color: "bg-primary-500" },
-                  { label: "Accepted by client", value: stats.funnelAccepted, color: "bg-accent-500" },
-                  { label: "Review left", value: stats.funnelReviewed, color: "bg-green-500" },
-                ].map((step, i, arr) => {
-                  const maxVal = arr[0].value || 1;
-                  const barWidth = Math.max((step.value / maxVal) * 100, 4);
-                  const prevVal = i > 0 ? arr[i - 1].value : step.value;
-                  const convRate = prevVal > 0 ? Math.round((step.value / prevVal) * 100) : 0;
-
-                  return (
-                    <div key={step.label} className="flex items-center gap-3">
-                      <div className="w-36 text-right text-xs font-medium text-gray-500 shrink-0">{step.label}</div>
-                      <div className="flex-1">
-                        <div className="h-8 overflow-hidden rounded-lg bg-warm-100">
-                          <div
-                            className={`flex h-full items-center rounded-lg px-3 text-xs font-bold text-white ${step.color} transition-all`}
-                            style={{ width: `${barWidth}%` }}
-                          >
-                            {step.value > 0 ? step.value : ""}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="w-14 text-right text-xs text-gray-400 shrink-0">
-                        {i > 0 && prevVal > 0 ? `${convRate}%` : ""}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Conversion Funnel teaser */}
+              <button
+                onClick={() => setActiveTab("analytics")}
+                className="mt-8 flex w-full items-center justify-between rounded-xl border border-warm-200 bg-white p-5 text-left transition hover:border-primary-200 hover:shadow-sm"
+              >
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Conversion Funnel</h2>
+                  <p className="mt-0.5 text-sm text-gray-500">View traffic, search queries, and client conversion funnel</p>
+                </div>
+                <span className="shrink-0 rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-600">
+                  Open Analytics
+                </span>
+              </button>
 
               {/* Quick actions */}
               <h2 className="mt-8 text-lg font-bold text-gray-900">Quick Actions</h2>
