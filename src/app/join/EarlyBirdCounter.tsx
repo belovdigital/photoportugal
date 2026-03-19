@@ -11,7 +11,7 @@ export function EarlyBirdCounter({ totalPhotographers }: { totalPhotographers: n
     spotsLeft = 10 - totalPhotographers;
     totalSpots = 10;
   } else if (totalPhotographers < 60) {
-    tierLabel = "Early Adopter";
+    tierLabel = "Early 50";
     spotsLeft = 60 - totalPhotographers;
     totalSpots = 50;
   } else if (totalPhotographers < 160) {

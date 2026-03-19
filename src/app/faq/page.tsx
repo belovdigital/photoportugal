@@ -89,6 +89,11 @@ const faqs = [
     answer:
       'We offer three plans: <strong>Free</strong> (20% commission, 1 location, 10 portfolio photos), <strong>Pro</strong> at €29/month (15% commission, 5 locations, 30 portfolio photos), and <strong>Premium</strong> at €59/month (10% commission, unlimited locations and portfolio photos). Visit our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for a full comparison.',
   },
+  {
+    question: "What is the Early Bird program?",
+    answer:
+      'We\'re offering exclusive benefits to our first photographers. The <strong>first 10 photographers</strong> (Founding tier) get the Premium plan free forever with an exclusive "Founding Photographer" badge. The <strong>next 50</strong> get Premium free for 6 months, and the <strong>next 100</strong> get Pro free for 3 months. Spots are limited and first-come-first-served. <a href="/join" class="text-primary-600 underline hover:text-primary-700">Check available spots</a>.',
+  },
 ];
 
 export default function FAQPage() {

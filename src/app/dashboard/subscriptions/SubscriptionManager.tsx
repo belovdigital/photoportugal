@@ -91,8 +91,10 @@ export function PlanCard({ plan, currentPlan, earlyBirdActive }: { plan: Plan; c
               </button>
             )}
           </>
-        ) : earlyBirdActive && planIdx <= planOrder.indexOf(currentPlan) ? (
-          <p className="text-center text-xs text-gray-400">Included in your Early Bird plan</p>
+        ) : earlyBirdActive ? (
+          <p className="text-center text-xs text-gray-400">
+            {planIdx < planOrder.indexOf(currentPlan) ? "Included in your plan" : ""}
+          </p>
         ) : isUpgrade ? (
           <button
             onClick={handleAction}

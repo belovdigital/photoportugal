@@ -29,13 +29,16 @@ export default function ForPhotographersPage() {
             handle payments, and let you do what you love.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/join" className="rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-700">
-              Join for Free
+            <Link href="/join" className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-base font-bold text-white hover:from-amber-600 hover:to-orange-600 shadow-lg">
+              Join Early Bird Program
             </Link>
             <Link href="/pricing" className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white hover:bg-white/5">
               View Plans
             </Link>
           </div>
+          <p className="mt-4 text-sm text-gray-400">
+            First 10 photographers get Premium free forever
+          </p>
         </div>
       </section>
 

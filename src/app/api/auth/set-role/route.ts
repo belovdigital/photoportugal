@@ -57,11 +57,12 @@ export async function GET(request: NextRequest) {
           }
 
           // Determine early bird tier (count only real photographers, not test accounts)
-          const photographerCount = await queryOne<{ count: string }>(
-            "SELECT COUNT(*) as count FROM photographer_profiles WHERE registration_number > 0"
+          // Use MAX to avoid race conditions with concurrent signups
+          const photographerCount = await queryOne<{ count: string; next_num: string }>(
+            "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0"
           );
           const count = parseInt(photographerCount?.count || "0");
-          const nextNumber = count + 1;
+          const nextNumber = parseInt(photographerCount?.next_num || "1");
 
           let earlyBirdTier: string | null = null;
           let earlyBirdExpires: string | null = null;
