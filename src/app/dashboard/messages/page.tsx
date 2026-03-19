@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { trackSendMessage } from "@/lib/analytics";
 
 interface Conversation {
   booking_id: string;
@@ -91,6 +92,7 @@ function MessagesContent() {
     setMessages((prev) => [...prev, tempMsg]);
     setNewMessage("");
     setTimeout(scrollToBottom, 10);
+    if (messages.length === 0) trackSendMessage(activeChat);
     setSending(true);
     const res = await fetch("/api/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ booking_id: activeChat, text }) });
     setSending(false);

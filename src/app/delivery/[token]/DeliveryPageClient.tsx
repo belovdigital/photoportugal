@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DeliveryGalleryClient } from "./DeliveryGalleryClient";
 import { Avatar } from "@/components/ui/Avatar";
 import { DisputeForm } from "@/components/ui/DisputeForm";
+import { trackDeliveryAccepted } from "@/lib/analytics";
 
 interface Photo {
   id: string;
@@ -88,6 +89,7 @@ export function DeliveryPageClient({
 
       if (res.ok) {
         setAccepted(true);
+        trackDeliveryAccepted();
       } else {
         const data = await res.json();
         if (data.already_accepted) {

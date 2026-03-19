@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { trackReviewSubmitted } from "@/lib/analytics";
 
 export function ReviewForm({ bookingId, photographerName }: { bookingId: string; photographerName: string }) {
   const router = useRouter();
@@ -27,6 +28,7 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
 
     setSubmitting(false);
     if (res.ok) {
+      trackReviewSubmitted(bookingId, rating);
       setSuccess(true);
       setTimeout(() => {
         setOpen(false);

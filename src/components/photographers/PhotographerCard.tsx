@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PhotographerProfile } from "@/types";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { trackViewPhotographer } from "@/lib/analytics";
 
 export function PhotographerCard({
   photographer,
@@ -10,7 +11,10 @@ export function PhotographerCard({
   const popularPackage = photographer.packages.find((p) => p.is_popular);
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg">
+    <div
+      className="group relative overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
+      onClick={() => trackViewPhotographer(photographer.slug, photographer.display_name)}
+    >
       <Link
         href={`/photographers/${photographer.slug}`}
         className="block"

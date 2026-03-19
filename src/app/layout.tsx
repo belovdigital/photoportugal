@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CookieConsent } from "@/components/ui/CookieConsent";
+import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -113,6 +114,7 @@ export default function RootLayout({
             <Footer />
           </NotificationProvider>
           <CookieConsent />
+          <GoogleAnalytics />
         </SessionProvider>
       </body>
     </html>

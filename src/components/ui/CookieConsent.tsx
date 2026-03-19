@@ -17,6 +17,7 @@ export function CookieConsent() {
 
   function accept() {
     localStorage.setItem("cookie-consent", "accepted");
+    window.dispatchEvent(new Event("cookie-consent-update"));
     setVisible(false);
   }
 

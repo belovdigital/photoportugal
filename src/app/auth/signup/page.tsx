@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { trackSignUp } from "@/lib/analytics";
 
 function SignUpForm() {
   const router = useRouter();
@@ -64,6 +65,7 @@ function SignUpForm() {
       if (result?.error) {
         setError("Account created but could not sign in automatically");
       } else {
+        trackSignUp("credentials", role);
         router.push("/dashboard");
         router.refresh();
       }

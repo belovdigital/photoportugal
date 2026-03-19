@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
+import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
 
 interface Package {
   id: string;
@@ -102,6 +103,11 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
 
     setSubmitting(false);
     if (res.ok) {
+      const pkg = photographer.packages.find((p) => p.id === selectedPackage);
+      if (pkg) {
+        trackStartBooking(photographer.slug, pkg.name, pkg.price);
+        trackBookingSubmitted(photographer.slug, pkg.price);
+      }
       setSuccess(true);
     } else {
       const data = await res.json();

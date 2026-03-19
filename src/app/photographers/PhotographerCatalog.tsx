@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
+import { trackSearch } from "@/lib/analytics";
 
 interface Props {
   photographers: PhotographerProfile[];
@@ -35,6 +36,13 @@ export function PhotographerCatalog({
     photographers.forEach((p) => p.languages.forEach((l) => langs.add(l)));
     return Array.from(langs).sort();
   }, [photographers]);
+
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    const locationName = locationFilters.map((s) => locations.find((l) => l.slug === s)?.name).filter(Boolean).join(", ");
+    trackSearch({ location: locationName || undefined, shootType: shootTypeFilters.join(", ") || undefined });
+  }, [locationFilters, shootTypeFilters, locations]);
 
   const filteredLocations = useMemo(() => {
     if (!locationSearch) return locations;
