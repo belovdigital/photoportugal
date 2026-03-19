@@ -28,6 +28,7 @@ async function getPhotographer(slug: string) {
       experience_years: number;
       is_verified: boolean;
       is_featured: boolean;
+      is_founding: boolean;
       is_approved: boolean;
       plan: string;
       rating: number;
@@ -36,7 +37,7 @@ async function getPhotographer(slug: string) {
       last_seen_at: string | null;
     }>(
       `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
-              p.hourly_rate, p.experience_years, p.is_verified, p.is_featured, p.is_approved, p.plan,
+              p.hourly_rate, p.experience_years, p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding, p.is_approved, p.plan,
               p.rating, p.review_count, p.session_count, u.last_seen_at
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
@@ -275,6 +276,9 @@ export default async function PhotographerProfilePage({
                 )}
                 {photographer.is_featured && (
                   <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-700">Featured</span>
+                )}
+                {photographer.is_founding && (
+                  <span className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white">Founding Photographer</span>
                 )}
               </div>
               {photographer.tagline && (

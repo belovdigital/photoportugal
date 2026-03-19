@@ -28,6 +28,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
       experience_years: number;
       is_verified: boolean;
       is_featured: boolean;
+      is_founding: boolean;
       plan: string;
       rating: number;
       review_count: number;
@@ -35,7 +36,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
     }>(
       `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio,
               u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
-              p.hourly_rate, p.experience_years, p.is_verified, p.is_featured,
+              p.hourly_rate, p.experience_years, p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
               p.plan, p.rating, p.review_count, p.session_count
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
@@ -102,6 +103,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
         experience_years: p.experience_years,
         is_verified: p.is_verified,
         is_featured: p.is_featured,
+        is_founding: p.is_founding,
         plan: p.plan,
         rating: Number(p.rating),
         review_count: p.review_count,

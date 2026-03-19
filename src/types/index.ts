@@ -59,6 +59,7 @@ export interface PhotographerProfile {
   experience_years: number;
   is_verified: boolean;
   is_featured: boolean;
+  is_founding: boolean;
   plan: "free" | "pro" | "premium";
   rating: number;
   review_count: number;

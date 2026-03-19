@@ -20,11 +20,15 @@ export function PhotographerCard({
         {photographer.cover_url && (
           <OptimizedImage src={photographer.cover_url} alt={`${photographer.display_name} — vacation photographer in Portugal`} width={800} quality={88} className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
         )}
-        {photographer.is_featured && (
+        {photographer.is_founding ? (
+          <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow">
+            Founding
+          </span>
+        ) : photographer.is_featured ? (
           <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900">
             Featured
           </span>
-        )}
+        ) : null}
         {/* Avatar */}
         <div className="absolute -bottom-6 left-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-primary-100 text-xl font-bold text-primary-600 shadow-md overflow-hidden">

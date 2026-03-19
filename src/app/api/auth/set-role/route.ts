@@ -56,11 +56,39 @@ export async function GET(request: NextRequest) {
             slug = `${slug}-${Date.now().toString(36)}`;
           }
 
+          // Determine early bird tier
+          const photographerCount = await queryOne<{ count: string }>(
+            "SELECT COUNT(*) as count FROM photographer_profiles"
+          );
+          const count = parseInt(photographerCount?.count || "0");
+
+          let earlyBirdTier: string | null = null;
+          let earlyBirdExpires: string | null = null;
+          let isFounding = false;
+          let plan = "free";
+
+          if (count < 10) {
+            // Founding 10: Premium forever
+            earlyBirdTier = "founding";
+            isFounding = true;
+            plan = "premium";
+          } else if (count < 60) {
+            // Early 50: Premium for 6 months
+            earlyBirdTier = "early50";
+            plan = "premium";
+            earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+          } else if (count < 160) {
+            // First 100: Pro for 3 months
+            earlyBirdTier = "first100";
+            plan = "pro";
+            earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+          }
+
           await query(
-            `INSERT INTO photographer_profiles (user_id, slug, display_name)
-             VALUES ($1, $2, $3)
+            `INSERT INTO photographer_profiles (user_id, slug, display_name, plan, is_founding, early_bird_tier, early_bird_expires_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              ON CONFLICT (user_id) DO NOTHING`,
-            [user.id, slug, session.user.name]
+            [user.id, slug, session.user.name, plan, isFounding, earlyBirdTier, earlyBirdExpires]
           );
         }
       }
