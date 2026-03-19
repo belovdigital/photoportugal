@@ -136,8 +136,6 @@ export function TestimonialsSection() {
         </div>
         <span className="hidden sm:inline text-warm-300">&bull;</span>
         <span>All reviews verified from real bookings</span>
-        <span className="hidden sm:inline text-warm-300">&bull;</span>
-        <span>No fake or incentivized reviews</span>
       </div>
     </section>
   );
