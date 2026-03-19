@@ -52,7 +52,7 @@ export default async function AdminPage() {
   ] = await Promise.all([
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM users WHERE role = 'client'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles WHERE is_approved = TRUE"),
-    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles WHERE is_approved = FALSE"),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp WHERE pp.is_approved = FALSE AND NOT EXISTS (SELECT 1 FROM users u WHERE u.id = pp.user_id AND u.is_banned = TRUE)"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'pending'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'confirmed'"),
@@ -88,7 +88,7 @@ export default async function AdminPage() {
             pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, pp.created_at, u.email,
             COALESCE(pp.is_founding, FALSE) as is_founding, pp.early_bird_tier, pp.early_bird_expires_at, pp.registration_number
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
-     ORDER BY pp.is_approved ASC, pp.created_at DESC`
+     ORDER BY pp.is_approved DESC, COALESCE(u.is_banned, FALSE) ASC, pp.created_at DESC`
   );
 
   const bookings = await query<{
