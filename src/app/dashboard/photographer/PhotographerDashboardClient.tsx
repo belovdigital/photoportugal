@@ -22,6 +22,8 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Avatar } from "@/components/ui/Avatar";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 interface Profile {
   id: string;
@@ -752,7 +754,7 @@ export function PhotographerDashboardClient({
                 {activeDragItem && (
                   <div className="rounded-xl border-2 border-primary-400 bg-white shadow-2xl ring-4 ring-primary-200/50" style={{ width: 200 }}>
                     <div className="aspect-square overflow-hidden rounded-t-xl bg-warm-100">
-                      <img src={activeDragItem.url} alt="" className="h-full w-full object-cover" />
+                      <OptimizedImage src={activeDragItem.thumbnail_url || activeDragItem.url} alt="" width={200} className="h-full w-full" />
                     </div>
                   </div>
                 )}
@@ -988,12 +990,11 @@ function SortablePhotoCard({
         className={`relative aspect-square bg-warm-100 ${selectMode ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"}`}
         {...(selectMode ? { onClick: () => onToggleSelect?.(item.id) } : { ...attributes, ...listeners })}
       >
-        <img
-          src={item.url}
+        <OptimizedImage
+          src={item.thumbnail_url || item.url}
           alt={item.caption || "Portfolio photo"}
-          className="h-full w-full object-cover pointer-events-none select-none"
-          draggable={false}
-          loading="lazy"
+          width={400}
+          className="h-full w-full pointer-events-none select-none"
         />
         {selectMode ? (
           <div className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md border-2 ${selected ? "border-primary-500 bg-primary-500" : "border-white bg-white/70"}`}>
@@ -1086,13 +1087,7 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
     <div className="rounded-xl border border-warm-200 bg-white p-6">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-lg font-bold text-primary-600 overflow-hidden">
-            {booking.client_avatar ? (
-              <img src={booking.client_avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              booking.client_name.charAt(0)
-            )}
-          </div>
+          <Avatar src={booking.client_avatar} fallback={booking.client_name} size="md" />
           <div>
             <p className="font-semibold text-gray-900">{booking.client_name}</p>
             <p className="text-sm text-gray-500">{booking.client_email}</p>
@@ -1408,12 +1403,12 @@ function CoverUpload({ initialUrl, initialPositionY, onMessage }: { initialUrl: 
           onPointerCancel={handlePointerUp}
         >
           {previewUrl ? (
-            <img
+            <OptimizedImage
               src={previewUrl}
               alt="Cover"
-              className="h-full w-full object-cover pointer-events-none select-none"
+              width={800}
+              className="h-full w-full pointer-events-none select-none"
               style={{ objectPosition: `center ${positionY}%` }}
-              draggable={false}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-300 to-primary-600 text-xs text-white/60">

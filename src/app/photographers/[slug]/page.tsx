@@ -5,6 +5,7 @@ import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -239,7 +240,7 @@ export default async function PhotographerProfilePage({
       {/* Cover */}
       <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-700 sm:h-80 lg:h-96 overflow-hidden">
         {photographer.cover_url && (
-          <img src={photographer.cover_url} alt={`${photographer.display_name} — photography portfolio cover`} className="h-full w-full object-cover" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
+          <OptimizedImage src={photographer.cover_url} alt={`${photographer.display_name} — photography portfolio cover`} width={1600} priority className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
         )}
       </div>
 
@@ -250,7 +251,7 @@ export default async function PhotographerProfilePage({
             <div className="relative shrink-0">
               <div className="flex h-32 w-32 items-center justify-center rounded-full ring-[5px] ring-white bg-primary-100 text-4xl font-bold text-primary-600 sm:h-40 sm:w-40 overflow-hidden">
                 {photographer.avatar_url ? (
-                  <img src={photographer.avatar_url} alt={photographer.display_name} className="h-full w-full object-cover" />
+                  <OptimizedImage src={photographer.avatar_url} alt={photographer.display_name} width={400} priority className="h-full w-full" />
                 ) : (
                   photographer.display_name.charAt(0)
                 )}

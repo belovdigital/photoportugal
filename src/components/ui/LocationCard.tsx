@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Location } from "@/types";
 import { locationImage } from "@/lib/unsplash-images";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export function LocationCard({ location }: { location: Location }) {
   const imageUrl = locationImage(location.slug, "card");
@@ -12,14 +13,11 @@ export function LocationCard({ location }: { location: Location }) {
     >
       <div className="aspect-[4/3] w-full overflow-hidden">
         {imageUrl ? (
-          <img
+          <OptimizedImage
             src={imageUrl}
             alt={`Photography in ${location.name}, Portugal`}
             width={400}
-            height={300}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-primary-400 to-primary-700" />

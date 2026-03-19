@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { query, queryOne } from "@/lib/db";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export const dynamic = "force-dynamic";
 
@@ -99,11 +100,11 @@ function renderMarkdownContent(content: string) {
     if (imageMatch) {
       return (
         <figure key={i} className="my-8">
-          <img
+          <OptimizedImage
             src={imageMatch[2]}
             alt={imageMatch[1]}
+            width={800}
             className="w-full rounded-xl"
-            loading="lazy"
           />
         </figure>
       );
@@ -306,10 +307,12 @@ export default async function BlogPostPage({ params }: PageProps) {
         {/* Cover image hero */}
         {post.cover_image_url && (
           <div className="relative h-[300px] sm:h-[400px] lg:h-[480px] w-full overflow-hidden bg-gray-900">
-            <img
+            <OptimizedImage
               src={post.cover_image_url}
               alt={post.title}
-              className="h-full w-full object-cover opacity-80"
+              width={1200}
+              priority
+              className="h-full w-full opacity-80"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           </div>
@@ -386,11 +389,11 @@ export default async function BlogPostPage({ params }: PageProps) {
                 >
                   {related.cover_image_url ? (
                     <div className="aspect-[16/9] overflow-hidden">
-                      <img
+                      <OptimizedImage
                         src={related.cover_image_url}
                         alt={related.title}
-                        className="h-full w-full object-cover transition group-hover:scale-105"
-                        loading="lazy"
+                        width={400}
+                        className="h-full w-full transition group-hover:scale-105"
                       />
                     </div>
                   ) : (

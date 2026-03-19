@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DeliveryGalleryClient } from "./DeliveryGalleryClient";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface Photo {
   id: string;
@@ -105,13 +106,7 @@ export function DeliveryPageClient({
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="w-full max-w-sm">
           <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-primary-100">
-              {photographerAvatar ? (
-                <img src={photographerAvatar} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-2xl font-bold text-primary-600">{photographerName.charAt(0)}</span>
-              )}
-            </div>
+            <Avatar src={photographerAvatar} fallback={photographerName} size="lg" className="mx-auto" />
             <h1 className="mt-4 font-display text-xl font-bold text-gray-900">{photographerName}</h1>
             <p className="mt-1 text-sm text-gray-500">has shared photos with you</p>
           </div>

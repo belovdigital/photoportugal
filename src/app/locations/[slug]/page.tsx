@@ -6,6 +6,7 @@ import { photoSpots } from "@/lib/photo-spots-data";
 import { getLocationServices } from "@/lib/location-services-data";
 import { locationImage } from "@/lib/unsplash-images";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -109,11 +110,11 @@ export default async function LocationPage({
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img
+          <OptimizedImage
             src={locationImage(location.slug, "hero")}
             alt={`Vacation photography session in ${location.name}, Portugal`}
-            className="h-full w-full object-cover"
-            fetchPriority="high"
+            priority
+            className="h-full w-full"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary-950/85 via-primary-900/70 to-primary-800/50" />
         </div>
@@ -351,12 +352,11 @@ export default async function LocationPage({
       {/* CTA */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img
+          <OptimizedImage
             src={locationImage(location.slug, "card")}
             alt={`Professional vacation photoshoot in ${location.name}, Portugal`}
-            className="h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
+            width={600}
+            className="h-full w-full"
           />
           <div className="absolute inset-0 bg-white/90 backdrop-blur-sm" />
         </div>

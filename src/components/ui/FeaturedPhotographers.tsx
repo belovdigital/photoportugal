@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { query } from "@/lib/db";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 interface FeaturedPhotographer {
   slug: string;
@@ -66,7 +67,7 @@ export async function FeaturedPhotographers() {
             {/* Cover / gradient */}
             <div className="relative h-36 bg-gradient-to-br from-primary-400 to-primary-700">
               {p.cover_url && (
-                <img src={p.cover_url} alt={`${p.display_name} — professional photographer portfolio in Portugal`} className="h-full w-full object-cover" style={{ objectPosition: `center ${p.cover_position_y ?? 50}%` }} />
+                <OptimizedImage src={p.cover_url} alt={`${p.display_name} — professional photographer portfolio in Portugal`} width={400} className="h-full w-full" style={{ objectPosition: `center ${p.cover_position_y ?? 50}%` }} />
               )}
               <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-bold text-yellow-900">
                 Featured
@@ -75,7 +76,7 @@ export async function FeaturedPhotographers() {
               <div className="absolute -bottom-5 left-4">
                 <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-3 border-white bg-primary-100 text-sm font-bold text-primary-600 shadow">
                   {p.avatar_url ? (
-                    <img src={p.avatar_url} alt={p.display_name} className="h-full w-full object-cover" />
+                    <OptimizedImage src={p.avatar_url} alt={p.display_name} width={200} className="h-full w-full" />
                   ) : (
                     p.display_name.charAt(0)
                   )}

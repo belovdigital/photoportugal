@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { Avatar } from "@/components/ui/Avatar";
 
 const TOP_DESTINATIONS = [
   { slug: "lisbon", name: "Lisbon", img: "photo-1536663060084-a0d9eeeaf44b" },
@@ -103,12 +105,10 @@ export function Header() {
                             className="group overflow-hidden rounded-lg"
                           >
                             <div className="relative aspect-[4/3]">
-                              <img
+                              <OptimizedImage
                                 src={unsplashUrl(d.img, 200, 70)}
                                 alt={d.name}
-                                className="h-full w-full object-cover transition group-hover:scale-105"
-                                loading="lazy"
-                                decoding="async"
+                                className="h-full w-full transition group-hover:scale-105"
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                               <p className="absolute bottom-1.5 left-2 text-xs font-semibold text-white">{d.name}</p>
@@ -253,7 +253,7 @@ export function Header() {
                     className="flex items-center rounded-full p-1 transition hover:bg-warm-50"
                   >
                     {user.image ? (
-                      <img src={user.image} alt="" className="h-8 w-8 rounded-full object-cover" />
+                      <Avatar src={user.image} fallback={user.name ?? "U"} size="sm" />
                     ) : (
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
                         {user.name?.charAt(0) ?? "U"}

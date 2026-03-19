@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { OptimizedImage, LightboxImage } from "@/components/ui/OptimizedImage";
 
 interface PortfolioItem {
   url: string;
+  thumbnail_url?: string | null;
   caption: string | null;
   location_slug: string | null;
   shoot_type: string | null;
@@ -110,11 +112,11 @@ export function PortfolioGallery({
             className="mb-3 cursor-pointer overflow-hidden rounded-xl bg-warm-100 break-inside-avoid transition hover:opacity-90"
             onClick={() => setLightbox(i)}
           >
-            <img
-              src={item.url}
+            <OptimizedImage
+              src={item.thumbnail_url || item.url}
               alt={item.caption || "Portfolio photo"}
+              width={400}
               className="w-full"
-              loading="lazy"
             />
           </div>
         ))}
@@ -153,7 +155,7 @@ export function PortfolioGallery({
           )}
 
           {/* Image */}
-          <img
+          <LightboxImage
             src={filtered[lightbox].url}
             alt={filtered[lightbox].caption || "Portfolio photo"}
             className="max-h-[90vh] max-w-[90vw] object-contain"

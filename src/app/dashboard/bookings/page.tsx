@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ReviewForm } from "@/components/ui/ReviewForm";
 import { PayButton } from "@/components/ui/PayButton";
 import { BookingStatusButtons } from "./BookingStatusButtons";
+import { Avatar } from "@/components/ui/Avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -103,13 +104,7 @@ export default async function BookingsPage() {
             <div key={booking.id} className="rounded-xl border border-warm-200 bg-white p-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-sm font-bold text-primary-600">
-                    {booking.other_avatar ? (
-                      <img src={booking.other_avatar} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      booking.other_name.charAt(0)
-                    )}
-                  </div>
+                  <Avatar src={booking.other_avatar} fallback={booking.other_name} size="md" />
                   <div>
                     {booking.other_slug ? (
                       <Link href={`/photographers/${booking.other_slug}`} className="font-semibold text-gray-900 hover:text-primary-600">

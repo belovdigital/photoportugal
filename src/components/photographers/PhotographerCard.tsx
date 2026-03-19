@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PhotographerProfile } from "@/types";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export function PhotographerCard({
   photographer,
@@ -17,7 +18,7 @@ export function PhotographerCard({
       {/* Cover */}
       <div className="relative h-48 bg-gradient-to-br from-primary-300 to-primary-600">
         {photographer.cover_url && (
-          <img src={photographer.cover_url} alt={`${photographer.display_name} — vacation photographer in Portugal`} className="h-full w-full object-cover" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
+          <OptimizedImage src={photographer.cover_url} alt={`${photographer.display_name} — vacation photographer in Portugal`} width={600} className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
         )}
         {photographer.is_featured && (
           <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900">
@@ -28,7 +29,7 @@ export function PhotographerCard({
         <div className="absolute -bottom-6 left-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-primary-100 text-xl font-bold text-primary-600 shadow-md overflow-hidden">
             {photographer.avatar_url ? (
-              <img src={photographer.avatar_url} alt={photographer.display_name} className="h-full w-full object-cover" />
+              <OptimizedImage src={photographer.avatar_url} alt={photographer.display_name} width={200} className="h-full w-full" />
             ) : (
               photographer.display_name.charAt(0)
             )}

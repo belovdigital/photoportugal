@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { unsplashUrl } from "@/lib/unsplash-images";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const shootTypes = [
   {
@@ -63,11 +64,10 @@ export function ShootTypesSection() {
               href={`/photographers?shoot=${type.shoot}`}
               className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-gray-900 sm:aspect-[4/5]"
             >
-              <img
+              <OptimizedImage
                 src={unsplashUrl(type.image, 400)}
                 alt={`${type.title} photoshoot in Portugal`}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
+                className="h-full w-full transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">

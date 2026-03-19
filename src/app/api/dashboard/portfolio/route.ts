@@ -4,6 +4,7 @@ import { queryOne, query } from "@/lib/db";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import sharp from "sharp";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per portfolio photo
@@ -65,15 +66,30 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(portfolioDir, filename), buffer);
 
+    // Generate thumbnail (400px wide, WebP, quality 75)
+    const thumbFilename = `thumb_${crypto.randomUUID()}.webp`;
+    let thumbnailUrl: string | null = null;
+    try {
+      const thumbBuffer = await sharp(buffer)
+        .rotate()
+        .resize(400, undefined, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 75 })
+        .toBuffer();
+      await writeFile(path.join(portfolioDir, thumbFilename), thumbBuffer);
+      thumbnailUrl = `/uploads/portfolio/${profile.id}/${thumbFilename}`;
+    } catch {
+      // Thumbnail generation failed — not critical, will fallback to API optimization
+    }
+
     const url = `/uploads/portfolio/${profile.id}/${filename}`;
     const locationSlug = (formData.get("location_slug") as string) || null;
     const shootType = (formData.get("shoot_type") as string) || null;
 
     const item = await queryOne<{ id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number }>(
-      `INSERT INTO portfolio_items (photographer_id, type, url, location_slug, shoot_type, sort_order)
-       VALUES ($1, 'photo', $2, $3, $4, $5)
+      `INSERT INTO portfolio_items (photographer_id, type, url, thumbnail_url, location_slug, shoot_type, sort_order)
+       VALUES ($1, 'photo', $2, $3, $4, $5, $6)
        RETURNING id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order`,
-      [profile.id, url, locationSlug, shootType, count]
+      [profile.id, url, thumbnailUrl, locationSlug, shootType, count]
     );
 
     return NextResponse.json({ success: true, item });

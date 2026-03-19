@@ -3,6 +3,7 @@ import { query, queryOne } from "@/lib/db";
 import Link from "next/link";
 import { AdminLoginForm } from "./AdminControls";
 import { AdminToggleClient, AdminPlanSelectClient, AdminLogoutButton, AdminDeactivatePhotographer, AdminNotificationEmail, AdminBanToggle } from "./AdminControls";
+import { Avatar } from "@/components/ui/Avatar";
 import { LocationsManager } from "./LocationsManager";
 import { PromoCodesManager } from "./PromoCodesManager";
 import { BlogManager } from "./BlogManager";
@@ -165,11 +166,7 @@ export default async function AdminPage() {
             <tr key={u.id} className={u.is_banned ? "bg-red-50/30" : ""}>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
-                  {u.avatar_url ? (
-                    <img src={u.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">{u.name.charAt(0)}</div>
-                  )}
+                  <Avatar src={u.avatar_url} fallback={u.name} size="xs" />
                   <span className="font-medium text-gray-900">{u.name}</span>
                 </div>
               </td>

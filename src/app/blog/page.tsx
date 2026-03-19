@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { query } from "@/lib/db";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export const dynamic = "force-dynamic";
 
@@ -95,11 +96,11 @@ export default async function BlogPage() {
                 <Link href={`/blog/${post.slug}`}>
                   {post.cover_image_url ? (
                     <div className="aspect-[16/9] overflow-hidden">
-                      <img
+                      <OptimizedImage
                         src={post.cover_image_url}
                         alt={post.title}
-                        className="h-full w-full object-cover transition group-hover:scale-105"
-                        loading="lazy"
+                        width={400}
+                        className="h-full w-full transition group-hover:scale-105"
                       />
                     </div>
                   ) : (

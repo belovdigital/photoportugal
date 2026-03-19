@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface Conversation {
   booking_id: string;
@@ -140,9 +141,7 @@ function MessagesContent() {
                   }`}
                 >
                   <div className="relative shrink-0">
-                    <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-xs font-bold text-primary-600">
-                      {convo.other_avatar ? <img src={convo.other_avatar} alt="" className="h-full w-full object-cover" /> : convo.other_name.charAt(0)}
-                    </div>
+                    <Avatar src={convo.other_avatar} fallback={convo.other_name} size="sm" />
                     {convo.unread_count > 0 && <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-primary-600" />}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -167,9 +166,7 @@ function MessagesContent() {
                 <button onClick={() => setActiveChat(null)} className="text-gray-400 hover:text-gray-600 sm:hidden">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                 </button>
-                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-xs font-bold text-primary-600">
-                  {activeConvo.other_avatar ? <img src={activeConvo.other_avatar} alt="" className="h-full w-full object-cover" /> : activeConvo.other_name.charAt(0)}
-                </div>
+                <Avatar src={activeConvo.other_avatar} fallback={activeConvo.other_name} size="sm" />
                 <span className="text-sm font-semibold text-gray-900">{activeConvo.other_name}</span>
               </div>
 

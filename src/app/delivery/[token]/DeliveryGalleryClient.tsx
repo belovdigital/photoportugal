@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { OptimizedImage, LightboxImage } from "@/components/ui/OptimizedImage";
 
 interface Photo {
   id: string;
@@ -38,11 +39,11 @@ export function DeliveryGalleryClient({ photos }: { photos: Photo[] }) {
             className="mb-3 cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90"
             onClick={() => openLightbox(index)}
           >
-            <img
+            <OptimizedImage
               src={photo.url}
               alt={photo.filename}
+              width={400}
               className="w-full"
-              loading="lazy"
             />
           </div>
         ))}
@@ -76,7 +77,7 @@ export function DeliveryGalleryClient({ photos }: { photos: Photo[] }) {
             </button>
           )}
 
-          {/* Image */}
+          {/* Image — show full original in lightbox */}
           <img
             src={photos[lightboxIndex].url}
             alt={photos[lightboxIndex].filename}

@@ -7,6 +7,7 @@ import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
 import { ShootTypesSection } from "@/components/ui/ShootTypesSection";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { unsplashUrl } from "@/lib/unsplash-images";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export const revalidate = 300; // ISR: revalidate every 5 minutes
 
@@ -111,51 +112,43 @@ export default function HomePage() {
               <div className="grid grid-cols-6 grid-rows-6 gap-3" style={{ height: "520px" }}>
                 {/* Main large photo */}
                 <div className="col-span-4 row-span-4 overflow-hidden rounded-2xl shadow-xl">
-                  <img
+                  <OptimizedImage
                     src="/hero-family.webp"
                     alt={heroPhotos[0].alt}
-                    className="h-full w-full object-cover"
-                    fetchPriority="high"
+                    priority
+                    className="h-full w-full"
                   />
                 </div>
                 {/* Top right */}
                 <div className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg">
-                  <img
+                  <OptimizedImage
                     src={unsplashUrl(heroPhotos[1].id, 400)}
                     alt={heroPhotos[1].alt}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
+                    className="h-full w-full"
                   />
                 </div>
                 {/* Bottom left */}
                 <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg">
-                  <img
+                  <OptimizedImage
                     src={unsplashUrl(heroPhotos[2].id, 400)}
                     alt={heroPhotos[2].alt}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
+                    className="h-full w-full"
                   />
                 </div>
                 {/* Bottom center */}
                 <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg">
-                  <img
+                  <OptimizedImage
                     src={unsplashUrl(heroPhotos[3].id, 400)}
                     alt={heroPhotos[3].alt}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
+                    className="h-full w-full"
                   />
                 </div>
                 {/* Bottom right */}
                 <div className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg">
-                  <img
+                  <OptimizedImage
                     src={unsplashUrl(heroPhotos[4].id, 400)}
                     alt={heroPhotos[4].alt}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                    decoding="async"
+                    className="h-full w-full"
                   />
                 </div>
               </div>
@@ -182,11 +175,11 @@ export default function HomePage() {
             {/* Mobile hero image */}
             <div className="relative -mx-4 overflow-hidden rounded-2xl sm:mx-0 lg:hidden">
               <div className="aspect-[4/3]">
-                <img
+                <OptimizedImage
                   src="/hero-family.webp"
                   alt={heroPhotos[0].alt}
-                  className="h-full w-full object-cover"
-                  fetchPriority="high"
+                  priority
+                  className="h-full w-full"
                 />
               </div>
             </div>
