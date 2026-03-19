@@ -5,7 +5,8 @@ import crypto from "crypto";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 function signToken(payload: string): string {
-  const secret = process.env.NEXTAUTH_SECRET || "fallback-secret";
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("NEXTAUTH_SECRET environment variable is required");
   const hmac = crypto.createHmac("sha256", secret).update(payload).digest("hex");
   return Buffer.from(`${payload}:${hmac}`).toString("base64");
 }
@@ -16,7 +17,8 @@ export function verifyToken(token: string): { email: string; timestamp: number }
     const parts = decoded.split(":");
     const hmac = parts.pop()!;
     const payload = parts.join(":");
-    const secret = process.env.NEXTAUTH_SECRET || "fallback-secret";
+    const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("NEXTAUTH_SECRET environment variable is required");
     const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
     if (hmac !== expected) return null;
 

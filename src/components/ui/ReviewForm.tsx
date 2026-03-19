@@ -54,7 +54,7 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Leave a review">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-bold text-gray-900">

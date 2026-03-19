@@ -87,7 +87,7 @@ const faqs = [
   {
     question: "What are the photographer plans?",
     answer:
-      'We offer three plans: <strong>Free</strong> (20% commission, 1 location, 10 portfolio photos), <strong>Pro</strong> at €29/month (15% commission, 5 locations, 30 portfolio photos), and <strong>Premium</strong> at €59/month (10% commission, unlimited locations, 100 portfolio photos). Visit our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for a full comparison.',
+      'We offer three plans: <strong>Free</strong> (20% commission, 1 location, 10 portfolio photos), <strong>Pro</strong> at €29/month (15% commission, 5 locations, 30 portfolio photos), and <strong>Premium</strong> at €59/month (10% commission, unlimited locations and portfolio photos). Visit our <a href="/pricing" class="text-primary-600 underline hover:text-primary-700">pricing page</a> for a full comparison.',
   },
 ];
 

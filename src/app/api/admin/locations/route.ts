@@ -56,7 +56,9 @@ export async function POST(req: NextRequest) {
 
     let coverUrl: string | null = null;
     if (file && file.size > 0) {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "gif"];
+      const rawExt = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const ext = ALLOWED_EXT.includes(rawExt) ? rawExt : "jpg";
       const filename = `${crypto.randomUUID()}.${ext}`;
       const dir = path.join(UPLOAD_DIR, "locations");
       await mkdir(dir, { recursive: true });
@@ -108,7 +110,9 @@ export async function PUT(req: NextRequest) {
       seo_title || null, seo_description || null, is_active !== "false"];
 
     if (file && file.size > 0) {
-      const ext = file.name.split(".").pop() || "jpg";
+      const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "gif"];
+      const rawExt = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const ext = ALLOWED_EXT.includes(rawExt) ? rawExt : "jpg";
       const filename = `${crypto.randomUUID()}.${ext}`;
       const dir = path.join(UPLOAD_DIR, "locations");
       await mkdir(dir, { recursive: true });

@@ -53,11 +53,14 @@ export function DeliveryGalleryClient({ photos }: { photos: Photo[] }) {
       {lightboxIndex !== null && photos[lightboxIndex] && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          role="dialog"
+          aria-label="Photo viewer"
           onClick={closeLightbox}
         >
           {/* Close button */}
           <button
             onClick={closeLightbox}
+            aria-label="Close"
             className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,6 +72,7 @@ export function DeliveryGalleryClient({ photos }: { photos: Photo[] }) {
           {lightboxIndex > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+              aria-label="Previous"
               className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -89,6 +93,7 @@ export function DeliveryGalleryClient({ photos }: { photos: Photo[] }) {
           {lightboxIndex < photos.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(1); }}
+              aria-label="Next"
               className="absolute right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

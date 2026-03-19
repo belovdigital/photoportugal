@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
@@ -82,6 +82,12 @@ export default function SettingsPage() {
   const [emailReviews, setEmailReviews] = useState(true);
   const [smsBookings, setSmsBookings] = useState(true);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // Delete account
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // Load preferences from DB
   useEffect(() => {
@@ -226,18 +232,84 @@ export default function SettingsPage() {
       <section className="mt-8 mb-12">
         <h2 className="text-lg font-bold text-red-600">Danger Zone</h2>
         <div className="mt-4 rounded-xl border border-red-200 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-900">Delete Account</p>
-              <p className="text-xs text-gray-500">Permanently delete your account and all data.</p>
+          {!showDeleteDialog ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900">Delete Account</p>
+                <p className="text-xs text-gray-500">Permanently delete your account and all data.</p>
+              </div>
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+              >
+                Delete Account
+              </button>
             </div>
-            <button
-              onClick={() => { if (confirm("Are you sure? This cannot be undone.")) alert("Please contact info@photoportugal.com to delete your account."); }}
-              className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
-            >
-              Delete Account
-            </button>
-          </div>
+          ) : (
+            <div>
+              <p className="text-sm font-medium text-gray-900">Are you sure?</p>
+              <p className="mt-1 text-xs text-gray-500">
+                This will permanently delete your account, all bookings, messages, reviews, and any other data.
+                This action cannot be undone.
+              </p>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Type <span className="font-mono font-bold text-red-600">DELETE</span> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmation}
+                  onChange={(e) => { setDeleteConfirmation(e.target.value); setDeleteError(""); }}
+                  placeholder="DELETE"
+                  className="mt-1 block w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                  disabled={deleting}
+                />
+              </div>
+              {deleteError && (
+                <p className="mt-2 text-sm text-red-600">{deleteError}</p>
+              )}
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={async () => {
+                    if (deleteConfirmation !== "DELETE") {
+                      setDeleteError("Please type DELETE to confirm.");
+                      return;
+                    }
+                    setDeleting(true);
+                    setDeleteError("");
+                    try {
+                      const res = await fetch("/api/dashboard/account", {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ confirmation: "DELETE" }),
+                      });
+                      if (res.ok) {
+                        signOut({ callbackUrl: "/" });
+                      } else {
+                        const data = await res.json();
+                        setDeleteError(data.error || "Failed to delete account. Please try again.");
+                        setDeleting(false);
+                      }
+                    } catch {
+                      setDeleteError("Failed to delete account. Please try again.");
+                      setDeleting(false);
+                    }
+                  }}
+                  disabled={deleting || deleteConfirmation !== "DELETE"}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deleting ? "Deleting..." : "Permanently Delete Account"}
+                </button>
+                <button
+                  onClick={() => { setShowDeleteDialog(false); setDeleteConfirmation(""); setDeleteError(""); }}
+                  disabled={deleting}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

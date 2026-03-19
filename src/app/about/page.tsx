@@ -162,6 +162,21 @@ export default function AboutPage() {
           </p>
         </div>
       </section>
+
+      {/* Company Info */}
+      <section className="border-t border-warm-200 bg-warm-50">
+        <div className="mx-auto max-w-3xl px-4 py-10 text-center text-xs text-gray-400 sm:px-6">
+          <p className="font-medium text-gray-500">Ekaterina Belova &middot; Empresária em Nome Individual</p>
+          <p className="mt-1">Lisbon, Portugal</p>
+          <p className="mt-1">
+            <a href="mailto:info@photoportugal.com" className="hover:text-primary-600">info@photoportugal.com</a>
+            {" "}&middot;{" "}
+            <Link href="/terms" className="hover:text-primary-600">Terms</Link>
+            {" "}&middot;{" "}
+            <Link href="/privacy" className="hover:text-primary-600">Privacy</Link>
+          </p>
+        </div>
+      </section>
     </>
   );
 }

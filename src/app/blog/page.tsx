@@ -3,7 +3,7 @@ import Link from "next/link";
 import { query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: refresh every 5 minutes
 
 export const metadata: Metadata = {
   title: "Travel Photography Blog",

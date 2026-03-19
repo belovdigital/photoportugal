@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: refresh every 5 minutes
 
 interface BlogPost {
   id: string;
@@ -79,11 +79,29 @@ function isHtmlContent(content: string): boolean {
   );
 }
 
+function sanitizeHtml(html: string): string {
+  return html
+    // Remove script tags and content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    // Remove event handlers (onclick, onerror, onload, etc.)
+    .replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, "")
+    .replace(/\s+on\w+\s*=\s*\S+/gi, "")
+    // Remove javascript: URLs
+    .replace(/href\s*=\s*["']javascript:[^"']*["']/gi, 'href="#"')
+    .replace(/src\s*=\s*["']javascript:[^"']*["']/gi, 'src=""')
+    // Remove data: URLs in src (potential XSS vector)
+    .replace(/src\s*=\s*["']data:text\/html[^"']*["']/gi, 'src=""')
+    // Remove iframe, object, embed tags
+    .replace(/<\s*\/?\s*(iframe|object|embed|form|input|button)\b[^>]*>/gi, "")
+    // Remove style attributes with expression/url (IE XSS vectors)
+    .replace(/style\s*=\s*["'][^"']*expression\s*\([^"']*["']/gi, "");
+}
+
 function renderHtmlContent(content: string) {
   return (
     <div
       className="blog-html-content"
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
     />
   );
 }

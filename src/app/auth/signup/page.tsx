@@ -25,9 +25,19 @@ function SignUpForm() {
     });
   }
 
+  const passwordStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 8 ? 2 : /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password) ? 4 : 3;
+  const strengthLabel = ["", "Too short", "Weak", "Good", "Strong"][passwordStrength];
+  const strengthColor = ["", "bg-red-500", "bg-yellow-500", "bg-blue-500", "bg-green-500"][passwordStrength];
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -196,6 +206,18 @@ function SignUpForm() {
                   )}
                 </button>
               </div>
+              {password.length > 0 && (
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="flex flex-1 gap-1">
+                    {[1, 2, 3, 4].map((level) => (
+                      <div key={level} className={`h-1 flex-1 rounded-full ${level <= passwordStrength ? strengthColor : "bg-gray-200"}`} />
+                    ))}
+                  </div>
+                  <span className={`text-xs ${passwordStrength >= 3 ? "text-green-600" : passwordStrength >= 2 ? "text-yellow-600" : "text-red-600"}`}>
+                    {strengthLabel}
+                  </span>
+                </div>
+              )}
             </div>
             <button
               type="submit"

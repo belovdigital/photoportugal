@@ -192,7 +192,9 @@ export async function POST(
       if (file.size > MAX_FILE_SIZE) continue;
       if (!file.type.startsWith("image/")) continue;
 
-      const ext = file.name.split(".").pop() || "jpg";
+      const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "gif", "heic", "heif"];
+      const rawExt = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const ext = ALLOWED_EXT.includes(rawExt) ? rawExt : "jpg";
       const filename = `${crypto.randomUUID()}.${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
       await writeFile(path.join(deliveryDir, filename), buffer);

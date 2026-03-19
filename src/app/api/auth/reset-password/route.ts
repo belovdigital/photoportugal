@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { queryOne } from "@/lib/db";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(`reset-password:${ip}`, 5, 60_000)) {
+    return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
+  }
+
   try {
     const { token, password } = await req.json();
 

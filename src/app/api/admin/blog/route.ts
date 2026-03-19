@@ -98,6 +98,10 @@ export async function POST(req: NextRequest) {
 
     const title = formData.get("title") as string;
     const slug = formData.get("slug") as string;
+
+    if (!slug || !/^[a-z0-9][a-z0-9-]{1,98}[a-z0-9]$/.test(slug)) {
+      return NextResponse.json({ error: "Invalid slug format. Use lowercase letters, numbers, and hyphens (3-100 chars)." }, { status: 400 });
+    }
     const excerpt = (formData.get("excerpt") as string) || null;
     const content = formData.get("content") as string;
     const metaTitle = (formData.get("meta_title") as string) || null;

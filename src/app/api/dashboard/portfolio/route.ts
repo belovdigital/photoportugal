@@ -58,7 +58,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Only images are allowed" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop() || "jpg";
+    const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif", "heic", "heif"];
+    const rawExt = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const ext = ALLOWED_EXTENSIONS.includes(rawExt) ? rawExt : "jpg";
     const filename = `${crypto.randomUUID()}.${ext}`;
     const portfolioDir = path.join(UPLOAD_DIR, "portfolio", profile.id);
     await mkdir(portfolioDir, { recursive: true });

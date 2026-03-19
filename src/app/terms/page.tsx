@@ -178,7 +178,7 @@ export default function TermsPage() {
           <h2 className="text-xl font-bold text-gray-900">11. Disputes &amp; Quality Guarantee</h2>
           <p className="mt-3">
             If you are unsatisfied with the delivered photos, you may open a dispute within 7 days of delivery.
-            Photo Portugal will review the dispute and work with both parties to reach a fair resolution.
+            Photo Portugal will review the dispute and respond within <strong>5 business days</strong>, working with both parties to reach a fair resolution.
           </p>
           <p className="mt-3 font-medium text-gray-900">Grounds for a valid dispute:</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
@@ -214,10 +214,21 @@ export default function TermsPage() {
           <h2 className="text-xl font-bold text-gray-900">13. Intellectual Property</h2>
           <p className="mt-3">
             Photographers retain copyright of all images they create. Clients receive a personal-use
-            license for the photos from their session. This includes sharing on social media, printing
-            for personal display, and other non-commercial uses. Commercial use requires the photographer&apos;s
-            written consent.
+            license for the photos from their session.
           </p>
+          <p className="mt-3 font-medium text-gray-900">Personal use includes:</p>
+          <ul className="mt-2 list-disc pl-6 space-y-1">
+            <li>Sharing on personal social media accounts (Instagram, Facebook, etc.)</li>
+            <li>Printing for personal display (home, gifts)</li>
+            <li>Using as phone/desktop wallpaper or profile photos</li>
+          </ul>
+          <p className="mt-3 font-medium text-gray-900">Not permitted without photographer&apos;s written consent:</p>
+          <ul className="mt-2 list-disc pl-6 space-y-1">
+            <li>Commercial use (advertising, product packaging, resale)</li>
+            <li>Stock photography licensing</li>
+            <li>Use in AI/ML training datasets</li>
+            <li>Editing or altering photos beyond basic cropping and filters</li>
+          </ul>
         </section>
 
         {/* 14. Prohibited Content */}
@@ -244,9 +255,34 @@ export default function TermsPage() {
           </p>
         </section>
 
-        {/* 16. Contact */}
+        {/* 16. Dispute Resolution & Arbitration */}
         <section>
-          <h2 className="text-xl font-bold text-gray-900">16. Contact</h2>
+          <h2 className="text-xl font-bold text-gray-900">16. Dispute Resolution &amp; Governing Law</h2>
+          <p className="mt-3">
+            All disputes between users shall first be resolved through Photo Portugal&apos;s internal dispute resolution process
+            as described in Section 11. If the internal process does not lead to a satisfactory resolution, parties agree
+            to attempt mediation before pursuing legal action.
+          </p>
+          <p className="mt-3">
+            These terms are governed by the laws of Portugal. Any legal proceedings shall be brought
+            in the courts of Lisbon, Portugal.
+          </p>
+        </section>
+
+        {/* 17. Payment Chargebacks */}
+        <section>
+          <h2 className="text-xl font-bold text-gray-900">17. Payment Chargebacks</h2>
+          <p className="mt-3">
+            If a client initiates a chargeback through their bank or credit card provider instead of using
+            Photo Portugal&apos;s dispute process, we reserve the right to suspend their account pending investigation.
+            Photographers affected by chargebacks will be notified and may provide evidence to contest the chargeback.
+            Fraudulent chargebacks may result in permanent account suspension.
+          </p>
+        </section>
+
+        {/* 18. Contact */}
+        <section>
+          <h2 className="text-xl font-bold text-gray-900">18. Contact</h2>
           <p className="mt-3">
             Questions about these terms? Contact us at{" "}
             <a href="mailto:info@photoportugal.com" className="text-primary-600 hover:underline">info@photoportugal.com</a>{" "}

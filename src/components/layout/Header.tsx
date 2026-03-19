@@ -58,7 +58,7 @@ export function Header() {
       <div className="bg-gray-900 text-center text-xs sm:text-sm">
         <div className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
           <p className="text-gray-300">
-            <span className="text-white font-semibold">Professional vacation photography</span> across 23 stunning locations in Portugal
+            <span className="text-white font-semibold">Professional vacation photography</span> across 25+ stunning locations in Portugal
             <Link href="/photographers" className="ml-2 text-primary-400 hover:text-primary-300 font-medium">
               Browse now &rarr;
             </Link>
@@ -80,6 +80,7 @@ export function Header() {
             <div className="relative">
               <button
                 onClick={() => toggleMenu("destinations")}
+                aria-expanded={activeMenu === "destinations"}
                 className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
                   activeMenu === "destinations" ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50"
                 }`}
@@ -223,7 +224,7 @@ export function Header() {
             ) : user ? (
               <div className="flex items-center gap-1">
                 {/* Bookings icon with pending badge */}
-                <Link href="/dashboard/bookings" className="relative rounded-lg p-2 text-gray-500 transition hover:bg-warm-50 hover:text-gray-700">
+                <Link href="/dashboard/bookings" aria-label="Bookings" className="relative rounded-lg p-2 text-gray-500 transition hover:bg-warm-50 hover:text-gray-700">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -235,7 +236,7 @@ export function Header() {
                 </Link>
 
                 {/* Messages icon with unread badge */}
-                <Link href="/dashboard/messages" className="relative rounded-lg p-2 text-gray-500 transition hover:bg-warm-50 hover:text-gray-700">
+                <Link href="/dashboard/messages" aria-label="Messages" className="relative rounded-lg p-2 text-gray-500 transition hover:bg-warm-50 hover:text-gray-700">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
@@ -250,6 +251,7 @@ export function Header() {
                 <div className="relative" ref={profileRef}>
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
+                    aria-label="Account menu"
                     className="flex items-center rounded-full p-1 transition hover:bg-warm-50"
                   >
                     {user.image ? (
@@ -299,7 +301,7 @@ export function Header() {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="p-2 text-gray-600 lg:hidden"
-              aria-label="Menu"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {mobileOpen ? (
