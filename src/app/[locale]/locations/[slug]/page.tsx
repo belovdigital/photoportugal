@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { locations, getLocationBySlug, getNearbyLocations } from "@/lib/locations-data";
+import { locations, getLocationBySlug, getNearbyLocations, locationFaqs } from "@/lib/locations-data";
 import { photoSpots } from "@/lib/photo-spots-data";
 import { getLocationServices } from "@/lib/location-services-data";
 import { locationImage } from "@/lib/unsplash-images";
@@ -173,6 +173,30 @@ export default async function LocationPage({
     };
   }
 
+  const faqs = locationFaqs[slug] || [];
+  const jsonLdFaq = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  } : null;
+
+  // Shoot types available for internal linking
+  const shootTypeLinks = [
+    { slug: "couples", label: "Couples Photoshoots" },
+    { slug: "family", label: "Family Photoshoots" },
+    { slug: "proposal", label: "Proposal Photoshoots" },
+    { slug: "solo", label: "Solo Portrait Photoshoots" },
+    { slug: "engagement", label: "Engagement Photoshoots" },
+    { slug: "honeymoon", label: "Honeymoon Photoshoots" },
+  ];
+
   return (
     <>
       <script
@@ -187,6 +211,12 @@ export default async function LocationPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdLocalBusiness) }}
       />
+      {jsonLdFaq && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+        />
+      )}
 
       <Breadcrumbs
         items={[
@@ -353,6 +383,42 @@ export default async function LocationPage({
         </section>
       )}
 
+      {/* Explore Photoshoot Types — internal links to /photoshoots/{type} */}
+      <section className="border-t border-warm-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <h2 className="font-display text-2xl font-bold text-gray-900">
+            Explore Photoshoot Types in {location.name}
+          </h2>
+          <p className="mt-2 text-gray-500">
+            Learn more about the different photography experiences we offer in {location.name}.
+          </p>
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {shootTypeLinks.map((st) => (
+              <Link
+                key={st.slug}
+                href={`/photoshoots/${st.slug}`}
+                className="flex items-center gap-3 rounded-xl border border-warm-200 bg-warm-50 p-5 transition hover:border-primary-200 hover:shadow-md"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 group-hover:text-primary-600">
+                    {st.label}
+                  </h3>
+                  <p className="mt-0.5 text-xs text-primary-600">
+                    Learn more &rarr;
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Top Photo Spots */}
       {spots.length > 0 && (
         <section className="border-t border-warm-200 bg-white">
@@ -400,6 +466,40 @@ export default async function LocationPage({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FAQ Section — only for top locations with FAQ data */}
+      {faqs.length > 0 && (
+        <section className="border-t border-warm-200 bg-white">
+          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-gray-900">
+              Frequently Asked Questions About Photography in {location.name}
+            </h2>
+            <div className="mt-8 space-y-4">
+              {faqs.map((faq, i) => (
+                <details
+                  key={i}
+                  className="group rounded-xl border border-warm-200 bg-warm-50"
+                >
+                  <summary className="flex items-center justify-between px-6 py-5 font-semibold text-gray-900 cursor-pointer">
+                    {faq.question}
+                    <svg
+                      className="h-5 w-5 shrink-0 text-gray-400 transition group-open:rotate-180"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <div className="px-6 pb-5">
+                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                  </div>
+                </details>
+              ))}
             </div>
           </div>
         </section>

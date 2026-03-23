@@ -16,9 +16,9 @@ export const locations: Location[] = [
     lat: 38.7223,
     lng: -9.1393,
     photographer_count: 0,
-    seo_title: "Photographer in Lisbon — Book a Vacation Photoshoot from EUR150",
+    seo_title: "Photographer in Lisbon — Book Professional Vacation Photoshoots",
     seo_description:
-      "Book a professional photographer in Lisbon, Portugal. Vacation photoshoots at Alfama, Belem, Pink Street & more. Verified reviews, instant booking. From EUR150.",
+      "Book a professional photographer in Lisbon, Portugal. Couples, family, proposal & solo photoshoots at Alfama, Belém, Tram 28 & more. Verified reviews. From €150.",
     description_pt:
       "Capture momentos inesquecíveis na capital mais soalheira da Europa — ruas empedradas, azulejos coloridos e vistas deslumbrantes sobre o rio.",
     long_description_pt:
@@ -635,3 +635,95 @@ export function getNearbyLocations(slug: string): Location[] {
     .map((s) => locations.find((l) => l.slug === s))
     .filter((l): l is Location => l !== undefined);
 }
+
+/** FAQ data for top location pages — used for FAQPage JSON-LD schema */
+export const locationFaqs: Record<string, { question: string; answer: string }[]> = {
+  lisbon: [
+    {
+      question: "How much does a photoshoot in Lisbon cost?",
+      answer: "Professional photoshoots in Lisbon start from €150 for a 30-minute session. Most photographers offer packages ranging from €150 to €450 depending on duration, number of edited photos, and locations covered.",
+    },
+    {
+      question: "What are the best locations for a photoshoot in Lisbon?",
+      answer: "The most popular Lisbon photo spots include Alfama's cobblestone streets, Belém Tower, Jerónimos Monastery, Tram 28, the miradouros (viewpoints) like Miradouro da Graça and Portas do Sol, Pink Street, and the vibrant LX Factory.",
+    },
+    {
+      question: "How do I book a photographer in Lisbon?",
+      answer: "Browse verified photographers on Photo Portugal, check their portfolios and reviews, then send a booking request with your preferred date, time, and photoshoot type. Most photographers confirm within 24 hours.",
+    },
+    {
+      question: "What's the best time of day for photos in Lisbon?",
+      answer: "Golden hour — the first hour after sunrise and the last hour before sunset — offers the most beautiful light in Lisbon. Morning sessions (around 8–9 AM) also mean fewer crowds at popular spots like Alfama and Belém.",
+    },
+    {
+      question: "Do photographers in Lisbon speak English?",
+      answer: "Yes, all photographers on Photo Portugal speak English fluently. Many also speak other languages including Portuguese, Spanish, French, and German. Language skills are listed on each photographer's profile.",
+    },
+  ],
+  porto: [
+    {
+      question: "How much does a photoshoot in Porto cost?",
+      answer: "Professional photoshoots in Porto start from €150 for a 30-minute session. Prices vary from €150 to €450 depending on the package, duration, and number of locations included.",
+    },
+    {
+      question: "What are the best locations for a photoshoot in Porto?",
+      answer: "Top Porto photo spots include the Ribeira waterfront, Dom Luís I Bridge, Livraria Lello, São Bento Railway Station, the colorful streets of Miragaia, Clérigos Tower, and the Douro River banks at sunset.",
+    },
+    {
+      question: "How do I book a photographer in Porto?",
+      answer: "Browse Porto photographers on Photo Portugal, review their portfolios and client ratings, then request a booking with your preferred date and shoot type. Confirmation typically comes within 24 hours.",
+    },
+    {
+      question: "What's the best time of day for photos in Porto?",
+      answer: "Sunrise sessions at Ribeira are magical with soft light and no crowds. Sunset over the Douro River from the Dom Luís Bridge is iconic. For the famous azulejo churches, overcast mornings provide even, flattering light.",
+    },
+    {
+      question: "Can I combine a Porto and Douro Valley photoshoot?",
+      answer: "Yes, many Porto photographers offer half-day or full-day sessions that include both Porto city and the nearby Douro Valley wine region. The valley is about 90 minutes from Porto and offers stunning vineyard landscapes.",
+    },
+  ],
+  algarve: [
+    {
+      question: "How much does a photoshoot in the Algarve cost?",
+      answer: "Professional photoshoots in the Algarve start from €150 for a 30-minute session. Beach, cliff, and cave photoshoots typically range from €150 to €450 depending on duration and locations visited.",
+    },
+    {
+      question: "What are the best locations for a photoshoot in the Algarve?",
+      answer: "The Algarve's most photogenic spots include Benagil Sea Cave, Praia da Marinha, Ponta da Piedade in Lagos, Praia dos Três Irmãos, Praia do Camilo, and the dramatic cliffs of Carvoeiro and Albufeira.",
+    },
+    {
+      question: "How do I book a photographer in the Algarve?",
+      answer: "Search Algarve photographers on Photo Portugal, view their portfolios and verified reviews, and send a booking request with your preferred date, location, and photoshoot type. Most respond within 24 hours.",
+    },
+    {
+      question: "What's the best time of year for photos in the Algarve?",
+      answer: "The Algarve enjoys 300+ days of sunshine per year. Spring (April–June) and autumn (September–October) offer warm weather with fewer tourists. Summer is peak season with the best beach weather but bigger crowds.",
+    },
+    {
+      question: "Can we do a boat or cave photoshoot in the Algarve?",
+      answer: "Yes, some Algarve photographers offer boat trip photoshoots that include the famous Benagil Cave and other sea caves. These are usually available as add-ons to standard beach and cliff sessions.",
+    },
+  ],
+  sintra: [
+    {
+      question: "How much does a photoshoot in Sintra cost?",
+      answer: "Professional photoshoots in Sintra start from €150 for a 30-minute session. Palace and garden sessions typically range from €150 to €450. Note that some palace locations may require entrance tickets.",
+    },
+    {
+      question: "What are the best locations for a photoshoot in Sintra?",
+      answer: "Sintra's top photo spots include the colorful Pena Palace, the mystical Quinta da Regaleira (including the Initiation Well), Monserrate Palace gardens, the Moorish Castle, and the enchanted forest trails connecting them.",
+    },
+    {
+      question: "How do I book a photographer in Sintra?",
+      answer: "Browse Sintra photographers on Photo Portugal, check their portfolios and reviews, then send a booking request. Many Lisbon-based photographers also cover Sintra as it's just 30 minutes away.",
+    },
+    {
+      question: "What's the best time of day for photos in Sintra?",
+      answer: "Early morning (8–9 AM) is ideal for Sintra photography — you'll beat the tourist crowds at the palaces and catch the misty, fairy-tale atmosphere the town is famous for. The forests look especially magical in soft morning light.",
+    },
+    {
+      question: "Can I combine a Sintra and Lisbon photoshoot?",
+      answer: "Yes, many photographers offer combined Lisbon and Sintra sessions. A popular option is a morning shoot in Sintra's palaces followed by an afternoon or sunset session in Lisbon. Half-day packages work well for this.",
+    },
+  ],
+};

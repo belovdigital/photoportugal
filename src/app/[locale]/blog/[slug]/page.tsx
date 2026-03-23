@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { localeAlternates } from "@/lib/seo";
+import { locations } from "@/lib/locations-data";
 import sanitize from "sanitize-html";
 
 export const revalidate = 300; // ISR: refresh every 5 minutes
@@ -274,6 +275,13 @@ export default async function BlogPostPage({ params }: PageProps) {
     [post.id]
   );
 
+  // Find locations mentioned in post title or content for internal linking
+  const mentionedLocations = locations.filter(
+    (loc) =>
+      post.title.toLowerCase().includes(loc.name.toLowerCase()) ||
+      post.content.toLowerCase().includes(loc.name.toLowerCase())
+  ).slice(0, 4);
+
   const publishedDate = new Date(post.published_at);
 
   const breadcrumbJsonLd = {
@@ -391,6 +399,30 @@ export default async function BlogPostPage({ params }: PageProps) {
           <div className="mt-8 text-base sm:text-lg">
             {renderContent(post.content)}
           </div>
+
+          {/* Related Locations — internal links based on location mentions */}
+          {mentionedLocations.length > 0 && (
+            <div className="mt-12 border-t border-warm-200 pt-8">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+                {t("relatedLocations")}
+              </h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {mentionedLocations.map((loc) => (
+                  <Link
+                    key={loc.slug}
+                    href={`/locations/${loc.slug}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-medium text-primary-700 transition hover:bg-primary-100 hover:border-primary-300"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {loc.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </article>
 
