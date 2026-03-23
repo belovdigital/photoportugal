@@ -227,16 +227,13 @@ export function AnalyticsDashboard() {
       {/* Client Funnel */}
       {data.funnel && Object.keys(data.funnel).length > 0 && (
         <>
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-gray-900">Client Funnel (30 days)</h3>
-            <p className="text-[10px] text-gray-400">Excludes internal/test traffic from GA4</p>
-          </div>
+          <h3 className="text-lg font-bold text-gray-900">Client Funnel (30 days)</h3>
           <div className="space-y-1">
             {FUNNEL_STEPS.map((step, i) => {
               const count = data.funnel![step.key] || 0;
               const prevCount = i > 0 ? (data.funnel![FUNNEL_STEPS[i - 1].key] || 0) : count;
               const firstCount = data.funnel![FUNNEL_STEPS[0].key] || 1;
-              const stepRate = i > 0 && prevCount > 0 ? Math.round((count / prevCount) * 100) : 100;
+              const stepRate = i === 0 ? 100 : prevCount > 0 ? Math.round((count / prevCount) * 100) : 0;
               const totalRate = i > 0 ? Math.round((count / firstCount) * 100) : 100;
               const barWidth = Math.max((count / firstCount) * 100, count > 0 ? 3 : 1);
 
