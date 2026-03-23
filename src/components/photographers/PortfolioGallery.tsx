@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { OptimizedImage, LightboxImage } from "@/components/ui/OptimizedImage";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 interface PortfolioItem {
   url: string;
@@ -27,22 +27,6 @@ export function PortfolioGallery({
   const t = useTranslations("photographers.portfolioGallery");
   const [filter, setFilter] = useState({ location: "", shootType: "" });
   const [lightbox, setLightbox] = useState<number | null>(null);
-
-  // Prefetch hi-res images in background to warm the server cache
-  useEffect(() => {
-    const prefetch = () => {
-      items.forEach((item) => {
-        const url = item.url;
-        if (url.startsWith("/uploads/")) {
-          const img = new Image();
-          img.src = `/api/img/${url.replace("/uploads/", "")}?w=1400&q=85&f=webp`;
-        }
-      });
-    };
-    // Delay prefetch to not compete with page load
-    const timer = setTimeout(prefetch, 2000);
-    return () => clearTimeout(timer);
-  }, [items]);
 
   const usedLocations = [...new Set(items.map((p) => p.location_slug).filter(Boolean))] as string[];
   const usedShootTypes = [...new Set(items.map((p) => p.shoot_type).filter(Boolean))] as string[];
@@ -133,8 +117,8 @@ export function PortfolioGallery({
             <OptimizedImage
               src={item.thumbnail_url || item.url}
               alt={item.caption || t("photoAlt")}
-              width={600}
-              quality={88}
+              width={1200}
+              quality={85}
               className="w-full"
             />
           </div>
@@ -177,14 +161,21 @@ export function PortfolioGallery({
             </button>
           )}
 
-          {/* Image */}
-          <LightboxImage
-            src={filtered[lightbox].url}
-            thumbnailSrc={filtered[lightbox].thumbnail_url || undefined}
-            alt={filtered[lightbox].caption || t("photoAlt")}
-            className="max-h-[90vh] max-w-[90vw] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {/* Image — reuses same 1200px version already cached from the grid */}
+          {(() => {
+            const imgSrc = filtered[lightbox].thumbnail_url || filtered[lightbox].url;
+            const url = imgSrc.startsWith("/uploads/")
+              ? `/api/img/${imgSrc.replace("/uploads/", "")}?w=1200&q=85&f=webp`
+              : imgSrc;
+            return (
+              <img
+                src={url}
+                alt={filtered[lightbox].caption || t("photoAlt")}
+                className="max-h-[90vh] max-w-[90vw] object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            );
+          })()}
 
           {/* Next */}
           {lightbox < filtered.length - 1 && (
