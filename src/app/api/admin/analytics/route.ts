@@ -118,11 +118,26 @@ export async function GET() {
       dimensions: [{ name: "eventName" }],
       metrics: [{ name: "eventCount" }],
       dimensionFilter: {
-        filter: {
-          fieldName: "eventName",
-          inListFilter: {
-            values: ["page_view", "search", "view_item", "add_to_cart", "begin_checkout", "purchase", "delivery_accepted", "review_submitted", "sign_up"],
-          },
+        andGroup: {
+          expressions: [
+            {
+              filter: {
+                fieldName: "eventName",
+                inListFilter: {
+                  values: ["page_view", "search", "view_item", "add_to_cart", "begin_checkout", "purchase", "delivery_accepted", "review_submitted", "sign_up"],
+                },
+              },
+            },
+            {
+              filter: {
+                fieldName: "hostName",
+                stringFilter: {
+                  value: "photoportugal.com",
+                  matchType: "EXACT",
+                },
+              },
+            },
+          ],
         },
       },
     });

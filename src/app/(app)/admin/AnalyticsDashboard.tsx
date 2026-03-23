@@ -227,31 +227,64 @@ export function AnalyticsDashboard() {
       {/* Client Funnel */}
       {data.funnel && Object.keys(data.funnel).length > 0 && (
         <>
-          <h3 className="text-lg font-bold text-gray-900">Client Funnel (30 days)</h3>
-          <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-gray-900">Client Funnel (30 days)</h3>
+            <p className="text-[10px] text-gray-400">Excludes internal/test traffic from GA4</p>
+          </div>
+          <div className="space-y-1">
             {FUNNEL_STEPS.map((step, i) => {
               const count = data.funnel![step.key] || 0;
               const prevCount = i > 0 ? (data.funnel![FUNNEL_STEPS[i - 1].key] || 0) : count;
-              const rate = prevCount > 0 ? Math.round((count / prevCount) * 100) : 0;
-              const maxCount = data.funnel![FUNNEL_STEPS[0].key] || 1;
-              const barWidth = Math.max((count / maxCount) * 100, 2);
+              const firstCount = data.funnel![FUNNEL_STEPS[0].key] || 1;
+              const stepRate = i > 0 && prevCount > 0 ? Math.round((count / prevCount) * 100) : 100;
+              const totalRate = i > 0 ? Math.round((count / firstCount) * 100) : 100;
+              const barWidth = Math.max((count / firstCount) * 100, count > 0 ? 3 : 1);
+
+              // Color based on funnel position
+              const barColor = i === 0 ? "bg-primary-500" :
+                stepRate >= 30 ? "bg-green-500" :
+                stepRate >= 10 ? "bg-amber-500" :
+                count > 0 ? "bg-red-400" : "bg-gray-300";
 
               return (
-                <div key={step.key} className="flex items-center gap-2 sm:gap-4">
-                  <div className="w-20 sm:w-36 shrink-0 text-right text-[10px] sm:text-xs font-medium text-gray-500">{step.label}</div>
-                  <div className="flex-1">
-                    <div className="h-7 overflow-hidden rounded-full bg-warm-100">
-                      <div
-                        className="flex h-full items-center rounded-full bg-primary-500 px-3 text-xs font-bold text-white transition-all"
-                        style={{ width: `${barWidth}%` }}
-                      >
-                        {count > 0 ? count : ""}
+                <div key={step.key}>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-20 sm:w-32 shrink-0 text-right">
+                      <span className="text-[10px] sm:text-xs font-medium text-gray-600">{step.label}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="h-8 overflow-hidden rounded-lg bg-warm-100">
+                        <div
+                          className={`flex h-full items-center rounded-lg px-3 text-xs font-bold text-white transition-all ${barColor}`}
+                          style={{ width: `${barWidth}%`, minWidth: count > 0 ? 40 : 20 }}
+                        >
+                          {count}
+                        </div>
                       </div>
                     </div>
+                    <div className="w-16 sm:w-20 shrink-0 text-right">
+                      {i > 0 ? (
+                        <div>
+                          <span className={`text-xs font-semibold ${stepRate >= 30 ? "text-green-600" : stepRate >= 10 ? "text-amber-600" : "text-red-500"}`}>
+                            {stepRate}%
+                          </span>
+                          <p className="text-[9px] text-gray-400">{totalRate}% total</p>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-gray-400">100%</span>
+                      )}
+                    </div>
                   </div>
-                  <div className="w-12 text-right text-xs text-gray-400">
-                    {i > 0 && rate > 0 ? `${rate}%` : ""}
-                  </div>
+                  {/* Drop-off arrow between steps */}
+                  {i < FUNNEL_STEPS.length - 1 && (
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-20 sm:w-32" />
+                      <div className="flex-1 flex justify-center">
+                        <svg className="h-3 w-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7" /></svg>
+                      </div>
+                      <div className="w-16 sm:w-20" />
+                    </div>
+                  )}
                 </div>
               );
             })}
