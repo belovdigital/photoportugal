@@ -560,12 +560,19 @@ function MessagesContent() {
                               }`}
                             >
                               {msg.media_url && (
-                                <a href={msg.media_url} target="_blank" rel="noopener noreferrer">
+                                <a href={msg.media_url} target="_blank" rel="noopener noreferrer" className="block relative">
+                                  <div className="rounded-lg bg-warm-200 animate-pulse" style={{ width: 200, height: 150 }} />
                                   <img
                                     src={msg.media_url}
                                     alt="Shared photo"
                                     style={{ maxWidth: 240, maxHeight: 300 }}
-                                    className="rounded-lg object-cover"
+                                    className="rounded-lg object-cover absolute inset-0"
+                                    onLoad={(e) => {
+                                      const img = e.currentTarget;
+                                      const placeholder = img.previousElementSibling as HTMLElement;
+                                      if (placeholder) placeholder.style.display = "none";
+                                      img.style.position = "relative";
+                                    }}
                                   />
                                 </a>
                               )}
