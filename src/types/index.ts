@@ -102,6 +102,11 @@ export interface Location {
   photographer_count: number;
   seo_title: string;
   seo_description: string;
+  /** Portuguese (pt-PT) translations */
+  description_pt?: string;
+  long_description_pt?: string;
+  seo_title_pt?: string;
+  seo_description_pt?: string;
 }
 
 export interface Booking {

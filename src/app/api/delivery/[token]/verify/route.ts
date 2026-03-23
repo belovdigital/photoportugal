@@ -9,12 +9,19 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  const { token } = await params;
+
+  // Rate limit by IP (general abuse prevention)
   const ip = req.headers.get("x-forwarded-for") || "unknown";
   if (!checkRateLimit(`delivery-verify:${ip}`, 10, 60_000)) {
     return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
   }
 
-  const { token } = await params;
+  // Rate limit by token: max 5 password attempts per token per 15 minutes
+  if (!checkRateLimit(`delivery-token:${token}`, 5, 15 * 60_000)) {
+    return NextResponse.json({ error: "Too many password attempts for this gallery. Please try again in 15 minutes." }, { status: 429 });
+  }
+
   const { password } = await req.json();
 
   if (!password) {

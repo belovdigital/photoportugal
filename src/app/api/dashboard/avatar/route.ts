@@ -7,7 +7,7 @@ import crypto from "crypto";
 import sharp from "sharp";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB raw (will be compressed)
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB raw (will be compressed)
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     try {
       finalBuffer = await sharp(rawBuffer)
         .rotate() // auto-rotate based on EXIF
-        .resize(type === "cover" ? 1600 : 800, type === "cover" ? 900 : 800, {
+        .resize(type === "cover" ? 1200 : 800, type === "cover" ? 600 : 800, {
           fit: "inside",
           withoutEnlargement: true,
         })

@@ -1,10 +1,13 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Location } from "@/types";
 import { locationImage } from "@/lib/unsplash-images";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { useTranslations } from "next-intl";
 
-export function LocationCard({ location }: { location: Location }) {
+export function LocationCard({ location, locale }: { location: Location; locale?: string }) {
+  const tc = useTranslations("common");
   const imageUrl = locationImage(location.slug, "card");
+  const description = locale === "pt" && location.description_pt ? location.description_pt : location.description;
 
   return (
     <Link
@@ -15,7 +18,7 @@ export function LocationCard({ location }: { location: Location }) {
         {imageUrl ? (
           <OptimizedImage
             src={imageUrl}
-            alt={`Photography in ${location.name}, Portugal`}
+            alt={tc("photographyIn", { location: location.name })}
             width={400}
             className="h-full w-full transition-transform duration-500 group-hover:scale-105"
           />
@@ -34,7 +37,7 @@ export function LocationCard({ location }: { location: Location }) {
           {location.name}
         </h3>
         <p className="mt-1 text-sm text-gray-200 line-clamp-2">
-          {location.description}
+          {description}
         </p>
       </div>
     </Link>

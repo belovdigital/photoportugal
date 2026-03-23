@@ -18,6 +18,8 @@ CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
   password_hash VARCHAR(255), -- null if Google-only
   role user_role NOT NULL DEFAULT 'client',
   avatar_url TEXT,
@@ -135,6 +137,9 @@ CREATE TABLE bookings (
   status booking_status DEFAULT 'pending',
   shoot_date DATE,
   shoot_time VARCHAR(50),
+  proposed_date DATE, -- date proposed by one party during negotiation
+  proposed_by VARCHAR(20), -- 'photographer' or 'client'
+  date_note TEXT, -- reason/comment for date change
   message TEXT, -- initial message from client
   total_price INTEGER, -- in EUR (whole euros)
   payment_status payment_status DEFAULT 'pending',

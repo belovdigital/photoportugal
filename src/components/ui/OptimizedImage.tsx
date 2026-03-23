@@ -105,49 +105,52 @@ function getOptimizedSrc(src: string, width: number, quality: number): string {
 }
 
 /**
- * Lightbox-optimized image — no skeleton, just loads full-res
- * Used in lightbox/slider where we want the original quality
+ * Lightbox image — shows thumbnail instantly, loads full-res in background
  */
 export function LightboxImage({
   src,
+  thumbnailSrc,
   alt,
   className = "",
   onClick,
 }: {
   src: string;
+  thumbnailSrc?: string;
   alt: string;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
 }) {
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const [hiResLoaded, setHiResLoaded] = useState(false);
 
-  useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
-      setLoaded(true);
-    }
-  }, [src]);
+  // Thumbnail: already loaded on the page, show immediately
+  const thumbUrl = thumbnailSrc
+    ? isLocalUpload(thumbnailSrc)
+      ? `/api/img/${thumbnailSrc.replace("/uploads/", "")}?w=600&q=88&f=webp`
+      : thumbnailSrc
+    : isLocalUpload(src)
+      ? `/api/img/${src.replace("/uploads/", "")}?w=600&q=80&f=webp`
+      : src;
 
-  // For lightbox, serve at max quality but still convert to WebP
-  const optimizedSrc = isLocalUpload(src)
+  // High-res: load in background
+  const hiResSrc = isLocalUpload(src)
     ? `/api/img/${src.replace("/uploads/", "")}?w=2000&q=90&f=webp`
     : src;
 
   return (
-    <>
-      {!loaded && (
-        <div className="flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-        </div>
-      )}
+    <div className="relative flex items-center justify-center" onClick={onClick}>
+      {/* Thumbnail shown instantly */}
       <img
-        ref={imgRef}
-        src={optimizedSrc}
+        src={thumbUrl}
         alt={alt}
-        onLoad={() => setLoaded(true)}
-        onClick={onClick}
-        className={`${className} transition-opacity duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`${className} ${hiResLoaded ? "hidden" : ""}`}
       />
-    </>
+      {/* Hi-res loads in background, replaces thumbnail when ready */}
+      <img
+        src={hiResSrc}
+        alt={alt}
+        onLoad={() => setHiResLoaded(true)}
+        className={`${className} transition-opacity duration-300 ${hiResLoaded ? "opacity-100" : "absolute inset-0 m-auto opacity-0"}`}
+      />
+    </div>
   );
 }

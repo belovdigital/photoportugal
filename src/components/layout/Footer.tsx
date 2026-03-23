@@ -1,10 +1,14 @@
-import Link from "next/link";
+"use client";
+
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { locations } from "@/lib/locations-data";
 
 const TOP_LOCATIONS = ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"];
 
 export function Footer() {
+  const t = useTranslations("footer");
   const topLocations = locations.filter((l) => TOP_LOCATIONS.includes(l.slug));
 
   return (
@@ -23,15 +27,14 @@ export function Footer() {
               />
             </Link>
             <p className="mt-3 text-sm text-gray-500">
-              Connecting travelers with talented local photographers across
-              Portugal. Capture your perfect moments.
+              {t("tagline")}
             </p>
           </div>
 
           {/* Locations */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900">
-              Top Locations
+              {t("topLocations")}
             </h3>
             <ul className="mt-3 space-y-2">
               {topLocations.map((loc) => (
@@ -40,7 +43,7 @@ export function Footer() {
                     href={`/locations/${loc.slug}`}
                     className="text-sm text-gray-500 transition hover:text-primary-600"
                   >
-                    Photographers in {loc.name}
+                    {t("photographersIn", { location: loc.name })}
                   </Link>
                 </li>
               ))}
@@ -49,7 +52,7 @@ export function Footer() {
                   href="/locations"
                   className="text-sm font-medium text-primary-600 transition hover:text-primary-700"
                 >
-                  View all {locations.length} locations
+                  {t("viewAllLocations", { count: locations.length })}
                 </Link>
               </li>
             </ul>
@@ -58,7 +61,7 @@ export function Footer() {
           {/* For Photographers */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900">
-              For Photographers
+              {t("forPhotographers")}
             </h3>
             <ul className="mt-3 space-y-2">
               <li>
@@ -66,7 +69,7 @@ export function Footer() {
                   href="/join"
                   className="text-sm text-gray-500 transition hover:text-primary-600"
                 >
-                  Join as Photographer
+                  {t("joinAsPhotographer")}
                 </Link>
               </li>
               <li>
@@ -74,7 +77,7 @@ export function Footer() {
                   href="/pricing"
                   className="text-sm text-gray-500 transition hover:text-primary-600"
                 >
-                  Pricing Plans
+                  {t("pricingPlans")}
                 </Link>
               </li>
               <li>
@@ -82,7 +85,7 @@ export function Footer() {
                   href="/how-it-works"
                   className="text-sm text-gray-500 transition hover:text-primary-600"
                 >
-                  How It Works
+                  {t("howItWorks")}
                 </Link>
               </li>
             </ul>
@@ -90,36 +93,41 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Company</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t("company")}</h3>
             <ul className="mt-3 space-y-2">
               <li>
                 <Link href="/about" className="text-sm text-gray-500 transition hover:text-primary-600">
-                  About Us
+                  {t("aboutUs")}
                 </Link>
               </li>
               <li>
                 <Link href="/blog" className="text-sm text-gray-500 transition hover:text-primary-600">
-                  Blog
+                  {t("blog")}
                 </Link>
               </li>
               <li>
                 <Link href="/faq" className="text-sm text-gray-500 transition hover:text-primary-600">
-                  FAQ
+                  {t("faq")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/support" className="text-sm text-gray-500 transition hover:text-primary-600">
+                  {t("helpCenter")}
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="text-sm text-gray-500 transition hover:text-primary-600">
-                  Contact
+                  {t("contact")}
                 </Link>
               </li>
               <li>
                 <Link href="/privacy" className="text-sm text-gray-500 transition hover:text-primary-600">
-                  Privacy Policy
+                  {t("privacyPolicy")}
                 </Link>
               </li>
               <li>
                 <Link href="/terms" className="text-sm text-gray-500 transition hover:text-primary-600">
-                  Terms of Service
+                  {t("termsOfService")}
                 </Link>
               </li>
             </ul>
@@ -128,10 +136,13 @@ export function Footer() {
 
         <div className="mt-10 border-t border-warm-200 pt-6">
           <p className="text-center text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Photo Portugal. All rights reserved.
+            &copy; {new Date().getFullYear()} {t("copyright")}
           </p>
           <p className="mt-1 text-center text-xs text-gray-300">
-            Ekaterina Belova &middot; Empresária em Nome Individual &middot; Lisbon, Portugal
+            {t("legalEntity")} &middot; {t("legalEntityType")} &middot; {t("legalEntityNif")} &middot; {t("legalEntityLocation")}
+          </p>
+          <p className="mt-0.5 text-center text-[10px] text-gray-400">
+            {t("legalEntityVat")}
           </p>
         </div>
       </div>

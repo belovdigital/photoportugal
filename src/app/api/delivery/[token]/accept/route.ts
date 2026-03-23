@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
-import { queryOne } from "@/lib/db";
+import { queryOne, withTransaction } from "@/lib/db";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { sendDeliveryAcceptedToPhotographer, sendDeliveryAcceptedToClient } from "@/lib/email";
 import crypto from "crypto";
@@ -24,6 +24,7 @@ export async function POST(
     delivery_expires_at: string;
     delivery_accepted: boolean;
     payment_status: string;
+    stripe_payment_intent_id: string | null;
     total_price: number | null;
     payout_amount: number | null;
     payout_transferred: boolean;
@@ -35,8 +36,8 @@ export async function POST(
     client_name: string;
   }>(
     `SELECT b.id, b.delivery_password, b.delivery_expires_at,
-            b.delivery_accepted, b.payment_status, b.total_price,
-            b.payout_amount, b.payout_transferred,
+            b.delivery_accepted, b.payment_status, b.stripe_payment_intent_id,
+            b.total_price, b.payout_amount, b.payout_transferred,
             pp.stripe_account_id as photographer_stripe_id,
             pp.plan as photographer_plan,
             pu.email as photographer_email,
@@ -65,26 +66,47 @@ export async function POST(
     return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
   }
 
-  // Check if already accepted
+  // Check if already accepted (early check before transaction)
   if (booking.delivery_accepted) {
     return NextResponse.json({ error: "Delivery already accepted", already_accepted: true }, { status: 400 });
   }
 
-  // Mark delivery as accepted
-  await queryOne(
-    "UPDATE bookings SET delivery_accepted = TRUE, delivery_accepted_at = NOW() WHERE id = $1 RETURNING id",
-    [booking.id]
-  );
+  // Use a transaction with FOR UPDATE to prevent double-payout race condition
+  let payoutSuccess = false;
 
-  // Update delivery expiry to 60 days from acceptance
-  const newExpiry = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
-  await queryOne(
-    "UPDATE bookings SET delivery_expires_at = $1 WHERE id = $2 RETURNING id",
-    [newExpiry.toISOString(), booking.id]
-  );
+  const accepted = await withTransaction(async (client) => {
+    // Lock the booking row to prevent concurrent acceptance
+    await client.query(
+      "SELECT id FROM bookings WHERE id = $1 FOR UPDATE",
+      [booking.id]
+    );
+
+    // Conditionally mark delivery as accepted — only if not already accepted
+    const acceptResult = await client.query(
+      "UPDATE bookings SET delivery_accepted = TRUE, delivery_accepted_at = NOW() WHERE id = $1 AND delivery_accepted = FALSE RETURNING id",
+      [booking.id]
+    );
+
+    if (acceptResult.rowCount === 0) {
+      // Already accepted by a concurrent request
+      return false;
+    }
+
+    // Update delivery expiry to 60 days from acceptance
+    const newExpiry = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+    await client.query(
+      "UPDATE bookings SET delivery_expires_at = $1 WHERE id = $2",
+      [newExpiry.toISOString(), booking.id]
+    );
+
+    return true;
+  });
+
+  if (!accepted) {
+    return NextResponse.json({ success: true, already_accepted: true, payout_transferred: false });
+  }
 
   // Trigger payout if payment was made and not already transferred
-  let payoutSuccess = false;
   if (booking.payment_status === "paid" && !booking.payout_transferred && booking.photographer_stripe_id) {
     try {
       const stripeClient = requireStripe();
@@ -102,9 +124,15 @@ export async function POST(
           amount: Math.round(payoutAmount * 100), // Convert to cents
           currency: "eur",
           destination: booking.photographer_stripe_id,
+          ...(booking.stripe_payment_intent_id
+            ? { transfer_group: booking.stripe_payment_intent_id }
+            : {}),
           metadata: {
             booking_id: booking.id,
             type: "delivery_payout",
+            ...(booking.stripe_payment_intent_id
+              ? { payment_intent_id: booking.stripe_payment_intent_id }
+              : {}),
           },
         });
 

@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { PhotographerProfile } from "@/types";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { trackViewPhotographer } from "@/lib/analytics";
@@ -8,7 +11,11 @@ export function PhotographerCard({
 }: {
   photographer: PhotographerProfile;
 }) {
-  const popularPackage = photographer.packages.find((p) => p.is_popular);
+  const t = useTranslations("photographers.card");
+  const tc = useTranslations("common");
+  const minPrice = photographer.packages?.length > 0
+    ? Math.min(...photographer.packages.map(p => p.price))
+    : null;
 
   return (
     <div
@@ -22,15 +29,15 @@ export function PhotographerCard({
       {/* Cover */}
       <div className="relative h-48 bg-gradient-to-br from-primary-300 to-primary-600">
         {photographer.cover_url && (
-          <OptimizedImage src={photographer.cover_url} alt={`${photographer.display_name} — vacation photographer in Portugal`} width={800} quality={88} className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
+          <OptimizedImage src={photographer.cover_url} alt={t("coverAlt", { name: photographer.display_name })} width={800} quality={88} className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
         )}
         {photographer.is_founding ? (
           <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow">
-            Founding
+            {t("founding")}
           </span>
         ) : photographer.is_featured ? (
           <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900">
-            Featured
+            {t("featured")}
           </span>
         ) : null}
         {/* Avatar */}
@@ -54,7 +61,7 @@ export function PhotographerCard({
             <p className="text-sm text-gray-500">{photographer.tagline}</p>
           </div>
           {photographer.is_verified && (
-            <span className="shrink-0 text-accent-500" title="Verified">
+            <span className="shrink-0 text-accent-500" title={t("verified")}>
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
@@ -84,7 +91,7 @@ export function PhotographerCard({
             {photographer.rating}
           </span>
           <span className="text-sm text-gray-400">
-            ({photographer.review_count} reviews)
+            ({photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")})
           </span>
         </div>
 
@@ -103,7 +110,7 @@ export function PhotographerCard({
         {/* Languages */}
         {photographer.languages.length > 0 && (
           <p className="mt-2 text-xs text-gray-400">
-            Speaks {photographer.languages.join(", ")}
+            {t("speaks", { languages: photographer.languages.join(", ") })}
           </p>
         )}
       </div>
@@ -112,22 +119,22 @@ export function PhotographerCard({
       {/* Price & actions — outside main Link to avoid nested <a> */}
       <div className="flex items-center justify-between border-t border-warm-100 mx-6 py-4">
         <div>
-          {(popularPackage?.price || photographer.packages[0]?.price || photographer.hourly_rate) ? (
+          {minPrice ? (
             <>
-              <span className="text-sm text-gray-400">From </span>
+              <span className="text-sm text-gray-400">{t("from")} </span>
               <span className="text-lg font-bold text-gray-900">
-                &euro;{popularPackage?.price ?? photographer.packages[0]?.price ?? photographer.hourly_rate}
+                &euro;{minPrice}
               </span>
             </>
           ) : (
-            <span className="text-sm text-gray-400">Contact for pricing</span>
+            <span className="text-sm text-gray-400">{t("contactForPricing")}</span>
           )}
         </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/photographers/${photographer.slug}#message`}
             className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
-            title={`Message ${photographer.display_name}`}
+            title={t("messagePhotographer", { name: photographer.display_name })}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -137,7 +144,7 @@ export function PhotographerCard({
             href={`/photographers/${photographer.slug}`}
             className="rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white"
           >
-            View Profile
+            {t("viewProfile")}
           </Link>
         </div>
       </div>

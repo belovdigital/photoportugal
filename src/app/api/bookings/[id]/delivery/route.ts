@@ -125,7 +125,7 @@ export async function POST(
         console.error("[delivery] chat message error:", e);
       }
 
-      // Send email to client (link only, password is in chat)
+      // Send email to client with gallery link and password
       try {
         const details = await queryOne<{ client_email: string; client_name: string; photographer_name: string }>(
           `SELECT u.email as client_email, u.name as client_name, pp.display_name as photographer_name
@@ -143,7 +143,11 @@ export async function POST(
               <h2 style="color: #C94536;">Your Photos Are Ready!</h2>
               <p>Hi ${details.client_name},</p>
               <p><strong>${details.photographer_name}</strong> has delivered your photos from the photoshoot.</p>
-              <p>The gallery password has been sent to you in your chat. Open the gallery below and enter the password to view and download your photos.</p>
+              <p>Open the gallery below and enter the password to view and download your photos.</p>
+              <div style="margin: 16px 0; padding: 16px; background: #faf8f5; border-radius: 8px; border: 1px solid #e8e0d8;">
+                <p style="margin: 0 0 4px 0; font-size: 13px; color: #5f4a3d;"><strong>Gallery Password:</strong></p>
+                <p style="margin: 0; font-size: 18px; font-family: monospace; color: #C94536; letter-spacing: 1px;"><strong>${password}</strong></p>
+              </div>
               <p><a href="${deliveryUrl}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Open Photo Gallery</a></p>
               <p style="margin-top: 16px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px; color: #5f4a3d;">
                 <strong>Important:</strong> Please review your photos and click "Accept Delivery" in the gallery. Your photos will be available for download for <strong>60 days</strong> after acceptance.

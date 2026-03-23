@@ -14,9 +14,8 @@ export async function GET(
       slug: string;
       display_name: string;
       avatar_url: string | null;
-      hourly_rate: number | null;
     }>(
-      `SELECT p.id, p.slug, p.display_name, u.avatar_url, p.hourly_rate
+      `SELECT p.id, p.slug, p.display_name, u.avatar_url
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.slug = $1 AND p.is_approved = TRUE`,

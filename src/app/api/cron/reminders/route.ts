@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import {
+  sendEmail,
   sendPaymentReminderToClient,
   sendShootReminderToClient,
   sendShootReminderToPhotographer,
   sendDeliveryReminderToPhotographer,
+  sendTrustpilotFollowUpToClient,
+  sendTrustpilotFollowUpToPhotographer,
 } from "@/lib/email";
+import { rm } from "fs/promises";
+import path from "path";
+
+const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 
 export async function GET(req: NextRequest) {
   // Verify cron secret
@@ -15,8 +22,10 @@ export async function GET(req: NextRequest) {
 
   const results = {
     paymentReminders: 0,
+    autoCancelled: 0,
     shootReminders: 0,
     deliveryReminders: 0,
+    trustpilotFollowUps: 0,
     errors: [] as string[],
   };
 
@@ -49,7 +58,7 @@ export async function GET(req: NextRequest) {
           booking.client_email,
           booking.client_name,
           booking.photographer_name,
-          booking.payment_url,
+          null, // Don't use stored payment_url — Stripe checkout sessions expire after 24h
           booking.total_price
         );
         await queryOne(
@@ -63,6 +72,69 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Payment reminders query: ${err}`);
+  }
+
+  // === 1b. Auto-cancel unpaid bookings (48h after confirmation) ===
+  try {
+    const staleUnpaid = await query<{
+      id: string;
+      client_email: string;
+      client_name: string;
+      photographer_email: string;
+      photographer_name: string;
+    }>(
+      `SELECT b.id, cu.email as client_email, cu.name as client_name,
+              pu.email as photographer_email, pp.display_name as photographer_name
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.status = 'confirmed'
+         AND b.payment_status IS DISTINCT FROM 'paid'
+         AND b.updated_at < NOW() - INTERVAL '48 hours'`
+    );
+
+    for (const booking of staleUnpaid) {
+      try {
+        await queryOne(
+          "UPDATE bookings SET status = 'cancelled' WHERE id = $1 RETURNING id",
+          [booking.id]
+        );
+
+        // Notify client
+        sendEmail(
+          booking.client_email,
+          `Booking cancelled — payment not received`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Booking Auto-Cancelled</h2>
+            <p>Hi ${booking.client_name},</p>
+            <p>Your booking with <strong>${booking.photographer_name}</strong> has been automatically cancelled because payment was not received within 48 hours.</p>
+            <p>If you'd still like to book, feel free to submit a new request.</p>
+            <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Browse Photographers</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        // Notify photographer
+        sendEmail(
+          booking.photographer_email,
+          `Booking auto-cancelled — client did not pay`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Booking Auto-Cancelled</h2>
+            <p>Hi ${booking.photographer_name},</p>
+            <p>The booking with <strong>${booking.client_name}</strong> has been automatically cancelled because payment was not received within 48 hours.</p>
+            <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        results.autoCancelled++;
+      } catch (err) {
+        results.errors.push(`Auto-cancel booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Auto-cancel unpaid query: ${err}`);
   }
 
   // === 2. Shoot reminders (24h before shoot_date) ===
@@ -157,6 +229,52 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Delivery reminders query: ${err}`);
   }
 
+  // === 4. Trustpilot follow-up (3 days after delivery accepted) ===
+  try {
+    const recentlyAccepted = await query<{
+      id: string;
+      client_email: string;
+      client_name: string;
+      photographer_email: string;
+      photographer_name: string;
+    }>(
+      `SELECT b.id, cu.email as client_email, cu.name as client_name,
+              pu.email as photographer_email, pp.display_name as photographer_name
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.status = 'delivered'
+         AND b.delivery_accepted = TRUE
+         AND b.delivery_accepted_at < NOW() - INTERVAL '3 days'
+         AND b.delivery_accepted_at > NOW() - INTERVAL '4 days'
+         AND b.trustpilot_sent = FALSE`
+    );
+
+    for (const booking of recentlyAccepted) {
+      try {
+        await sendTrustpilotFollowUpToClient(
+          booking.client_email,
+          booking.client_name,
+          booking.photographer_name
+        );
+        await sendTrustpilotFollowUpToPhotographer(
+          booking.photographer_email,
+          booking.photographer_name
+        );
+        await queryOne(
+          "UPDATE bookings SET trustpilot_sent = TRUE WHERE id = $1 RETURNING id",
+          [booking.id]
+        );
+        results.trustpilotFollowUps++;
+      } catch (err) {
+        results.errors.push(`Trustpilot follow-up for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Trustpilot follow-ups query: ${err}`);
+  }
+
   // === Early Bird tier expiration ===
   let earlyBirdExpired = 0;
   try {
@@ -181,11 +299,47 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Early bird expiration: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired });
+  // === 5. Expired delivery file cleanup ===
+  let expiredDeliveriesCleaned = 0;
+  try {
+    const expiredDeliveries = await query<{ id: string }>(
+      `SELECT b.id FROM bookings b
+       WHERE b.delivery_expires_at < NOW()
+         AND EXISTS (SELECT 1 FROM delivery_photos dp WHERE dp.booking_id = b.id)`
+    );
+
+    for (const booking of expiredDeliveries) {
+      try {
+        // Delete delivery_photos records from DB
+        const deleted = await queryOne<{ count: string }>(
+          "WITH d AS (DELETE FROM delivery_photos WHERE booking_id = $1 RETURNING id) SELECT COUNT(*) as count FROM d",
+          [booking.id]
+        );
+
+        // Delete physical files from disk
+        const deliveryDir = path.join(UPLOAD_DIR, "delivery", booking.id);
+        try {
+          await rm(deliveryDir, { recursive: true, force: true });
+        } catch {
+          // Directory may not exist, that's fine
+        }
+
+        expiredDeliveriesCleaned++;
+        console.log(`[cron/reminders] cleaned expired delivery for booking ${booking.id} (${deleted?.count || 0} photos)`);
+      } catch (err) {
+        results.errors.push(`Expired delivery cleanup for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Expired delivery cleanup query: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned });
 
   return NextResponse.json({
     success: true,
     ...results,
     earlyBirdExpired,
+    expiredDeliveriesCleaned,
   });
 }

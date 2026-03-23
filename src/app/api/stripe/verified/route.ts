@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
@@ -41,7 +41,10 @@ async function getVerifiedPriceId(): Promise<string> {
 }
 
 // Create checkout session for verified badge (one-time payment)
-export async function POST() {
+export async function POST(req: NextRequest) {
+  let locale = "en";
+  try { const b = await req.clone().json(); locale = b.locale || "en"; } catch {}
+  const lp = locale === "pt" ? "/pt" : "";
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -77,12 +80,12 @@ export async function POST() {
     const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
       customer: customerId,
       mode: "subscription",
-      locale: "auto",
+      locale: locale === "pt" ? "pt-PT" : "en",
       adaptive_pricing: { enabled: true },
       allow_promotion_codes: true,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.AUTH_URL}/dashboard/subscriptions?verified=success`,
-      cancel_url: `${process.env.AUTH_URL}/dashboard/subscriptions?verified=canceled`,
+      success_url: `${process.env.AUTH_URL}${lp}/dashboard/subscriptions?verified=success`,
+      cancel_url: `${process.env.AUTH_URL}${lp}/dashboard/subscriptions?verified=canceled`,
       subscription_data: {
         metadata: { photographer_id: profile.id, type: "verified" },
       },

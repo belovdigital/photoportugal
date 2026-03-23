@@ -75,6 +75,27 @@ export async function PUT(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const userId = (session.user as { id?: string }).id;
+  const profile = await getProfile(userId!);
+  if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+
+  const { items } = await req.json();
+  if (!Array.isArray(items)) return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+
+  for (const item of items) {
+    await queryOne(
+      'UPDATE packages SET "order" = $1 WHERE id = $2 AND photographer_id = $3',
+      [item.order, item.id, profile.id]
+    );
+  }
+
+  return NextResponse.json({ success: true });
+}
+
 export async function DELETE(req: NextRequest) {
   const session = await auth();
   if (!session?.user) {

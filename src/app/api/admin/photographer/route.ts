@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
+import { sendEmail } from "@/lib/email";
 
 async function verifyAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -57,6 +58,53 @@ export async function PATCH(req: NextRequest) {
       `UPDATE photographer_profiles SET ${fields.join(", ")} WHERE id = $${paramIndex} RETURNING id`,
       values
     );
+
+    // Send approval email when photographer is approved
+    if (updates.is_approved === true) {
+      try {
+        const photographer = await queryOne<{ email: string; display_name: string; slug: string }>(
+          `SELECT u.email, pp.display_name, pp.slug
+           FROM photographer_profiles pp
+           JOIN users u ON u.id = pp.user_id
+           WHERE pp.id = $1`,
+          [id]
+        );
+        if (photographer?.email) {
+          const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+          const profileUrl = `${BASE_URL}/photographers/${photographer.slug}`;
+          sendEmail(
+            photographer.email,
+            "Your profile is now live on Photo Portugal!",
+            `
+            <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Congratulations, ${photographer.display_name}!</h2>
+              <p>Great news — your photographer profile has been reviewed and approved. You're now live on Photo Portugal and visible to thousands of tourists planning their trips to Portugal.</p>
+
+              <div style="margin: 24px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
+                <p style="margin: 0 0 8px; font-weight: bold; color: #166534;">Your profile is live:</p>
+                <p style="margin: 0;"><a href="${profileUrl}" style="color: #C94536; font-weight: bold;">${profileUrl}</a></p>
+              </div>
+
+              <p style="font-weight: bold; color: #333;">Tips to get your first booking:</p>
+              <ul style="line-height: 1.8; color: #555;">
+                <li><strong>Complete your portfolio</strong> — Profiles with 10+ photos get 3x more enquiries</li>
+                <li><strong>Set competitive prices</strong> — Start with an attractive intro rate to build reviews</li>
+                <li><strong>Add multiple locations</strong> — The more places you cover, the more clients find you</li>
+                <li><strong>Write a compelling bio</strong> — Tell clients what makes your style unique</li>
+                <li><strong>Connect Stripe</strong> — Required to accept paid bookings and receive payouts</li>
+              </ul>
+
+              <p><a href="${BASE_URL}/dashboard/profile" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Your Dashboard</a></p>
+
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>
+            `
+          ).catch((err) => console.error("[admin] Failed to send approval email:", err));
+        }
+      } catch (emailErr) {
+        console.error("[admin] Error sending approval email:", emailErr);
+      }
+    }
 
     // If deactivating, also ban the user so their session is invalidated
     if ("is_deactivated" in updates) {

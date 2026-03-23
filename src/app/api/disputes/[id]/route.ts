@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
+import { requireStripe } from "@/lib/stripe";
 
 const VALID_STATUSES = ["under_review", "resolved", "rejected"] as const;
 const VALID_RESOLUTIONS = ["reshoot", "partial_refund", "full_refund", "rejected"] as const;
@@ -72,10 +73,10 @@ export async function PATCH(
       [status || null, resolution || null, resolution_note || null, refund_amount ?? null, isClosing, id]
     );
 
-    // If resolution involves a refund, update booking payment info
+    // If resolution involves a refund, issue actual Stripe refund then update booking
     if (resolution === "full_refund" || resolution === "partial_refund") {
-      const booking = await queryOne<{ total_price: number }>(
-        "SELECT total_price FROM bookings WHERE id = $1",
+      const booking = await queryOne<{ total_price: number; stripe_payment_intent_id: string | null }>(
+        "SELECT total_price, stripe_payment_intent_id FROM bookings WHERE id = $1",
         [dispute.booking_id]
       );
 
@@ -83,10 +84,46 @@ export async function PATCH(
         ? booking?.total_price ?? 0
         : refund_amount ?? 0;
 
+      // Issue actual Stripe refund
+      if (booking?.stripe_payment_intent_id) {
+        try {
+          const stripeClient = requireStripe();
+          if (resolution === "full_refund") {
+            await stripeClient.refunds.create({
+              payment_intent: booking.stripe_payment_intent_id,
+            });
+          } else {
+            // Partial refund — amount is in EUR, Stripe expects cents
+            await stripeClient.refunds.create({
+              payment_intent: booking.stripe_payment_intent_id,
+              amount: Math.round(amount * 100),
+            });
+          }
+        } catch (stripeErr) {
+          console.error("[disputes] Stripe refund failed:", stripeErr);
+          // Roll back the dispute update — don't mark as resolved if refund failed
+          await query(
+            `UPDATE disputes
+             SET status = 'under_review',
+                 resolution = NULL,
+                 resolution_note = NULL,
+                 refund_amount = NULL,
+                 resolved_at = NULL
+             WHERE id = $1`,
+            [id]
+          );
+          return NextResponse.json(
+            { error: "Stripe refund failed. Dispute was not resolved. Please try again or process the refund manually." },
+            { status: 500 }
+          );
+        }
+      }
+
       await query(
         `UPDATE bookings
          SET refund_amount = $1,
-             status = 'refunded'
+             status = 'refunded',
+             payment_status = 'refunded'
          WHERE id = $2`,
         [amount, dispute.booking_id]
       );

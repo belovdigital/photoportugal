@@ -1,13 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 
 // Create Stripe Connect Express account for photographer
-export async function POST() {
+export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let locale = "en";
+  let country = "PT";
+  try { const body = await req.json(); locale = body.locale || "en"; country = body.country || "PT"; } catch {}
 
   const userId = (session.user as { id?: string }).id;
 
@@ -33,7 +37,7 @@ export async function POST() {
     if (!accountId) {
       const account = await stripeClient.accounts.create({
         type: "express",
-        country: "PT",
+        country,
         email: session.user.email!,
         capabilities: {
           card_payments: { requested: true },
@@ -52,8 +56,8 @@ export async function POST() {
     // Create onboarding link
     const accountLink = await stripeClient.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.AUTH_URL}/dashboard/subscriptions?stripe=refresh`,
-      return_url: `${process.env.AUTH_URL}/dashboard/subscriptions?stripe=success`,
+      refresh_url: `${process.env.AUTH_URL}${locale === "pt" ? "/pt" : ""}/dashboard/subscriptions?stripe=refresh`,
+      return_url: `${process.env.AUTH_URL}${locale === "pt" ? "/pt" : ""}/dashboard/subscriptions?stripe=success`,
       type: "account_onboarding",
     });
 

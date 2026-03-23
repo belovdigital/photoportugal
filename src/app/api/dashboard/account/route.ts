@@ -7,12 +7,15 @@ export async function PUT(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = (session.user as { id?: string }).id;
-  const { name } = await req.json();
+  const { first_name, last_name, name: legacyName } = await req.json();
+  const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
+  const lastName = (last_name ?? legacyName?.split(" ").slice(1).join(" ") ?? "").trim();
+  const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
-  if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
+  if (!firstName) return NextResponse.json({ error: "First name required" }, { status: 400 });
 
   try {
-    await queryOne("UPDATE users SET name = $1 WHERE id = $2 RETURNING id", [name.trim(), userId]);
+    await queryOne("UPDATE users SET name = $1, first_name = $2, last_name = $3 WHERE id = $4 RETURNING id", [fullName, firstName, lastName, userId]);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });

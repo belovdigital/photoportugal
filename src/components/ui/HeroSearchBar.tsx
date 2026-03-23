@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 interface LocationOption {
   slug: string;
@@ -10,6 +11,7 @@ interface LocationOption {
 
 export function HeroSearchBar({ locations }: { locations: LocationOption[] }) {
   const router = useRouter();
+  const t = useTranslations("heroSearch");
   const [selected, setSelected] = useState("");
 
   function handleSearch() {
@@ -48,7 +50,7 @@ export function HeroSearchBar({ locations }: { locations: LocationOption[] }) {
             onChange={(e) => setSelected(e.target.value)}
             className="w-full appearance-none bg-transparent text-gray-700 outline-none text-base"
           >
-            <option value="">Where in Portugal?</option>
+            <option value="">{t("placeholder")}</option>
             {locations.map((loc) => (
               <option key={loc.slug} value={loc.slug}>
                 {loc.name}
@@ -63,7 +65,7 @@ export function HeroSearchBar({ locations }: { locations: LocationOption[] }) {
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <span className="hidden sm:inline">Search</span>
+          <span className="hidden sm:inline">{t("search")}</span>
         </button>
       </div>
     </div>

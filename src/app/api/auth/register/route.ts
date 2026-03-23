@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
+import crypto from "crypto";
 import { queryOne } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { sendWelcomeEmail, sendAdminNewPhotographerNotification } from "@/lib/email";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -11,11 +12,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, email, password, role } = await req.json();
+    const { first_name, last_name, name: legacyName, email, password, role } = await req.json();
+    const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
+    const lastName = (last_name || legacyName?.split(" ").slice(1).join(" ") || "").trim();
+    const name = lastName ? `${firstName} ${lastName}` : firstName;
 
-    if (!name || !email || !password) {
+    if (!firstName || !email || !password) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "First name, email, and password are required" },
         { status: 400 }
       );
     }
@@ -44,39 +48,66 @@ export async function POST(req: NextRequest) {
     const passwordHash = await hash(password, 12);
 
     const user = await queryOne<{ id: string; email: string; name: string; role: string }>(
-      `INSERT INTO users (email, name, password_hash, role)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO users (email, name, first_name, last_name, password_hash, role)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, email, name, role`,
-      [email, name, passwordHash, validRole]
+      [email, name, firstName, lastName, passwordHash, validRole]
     );
 
-    // If photographer, create empty profile
+    // If photographer, create profile with early bird logic
     if (validRole === "photographer" && user) {
-      const slug = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
+      const shortId = user.id.replace(/-/g, "").slice(0, 7);
+      const slug = `p-${shortId}`;
+
+      // Determine early bird tier
+      const photographerCount = await queryOne<{ count: string; next_num: string }>(
+        "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0"
+      );
+      const count = parseInt(photographerCount?.count || "0");
+      const nextNumber = parseInt(photographerCount?.next_num || "1");
+
+      let earlyBirdTier: string | null = null;
+      let earlyBirdExpires: string | null = null;
+      let isFounding = false;
+      let plan = "free";
+
+      if (count < 10) {
+        earlyBirdTier = "founding";
+        isFounding = true;
+        plan = "premium";
+      } else if (count < 35) {
+        earlyBirdTier = "early50";
+        plan = "premium";
+        earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+      } else if (count < 60) {
+        earlyBirdTier = "first100";
+        plan = "pro";
+        earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+      }
 
       await queryOne(
-        `INSERT INTO photographer_profiles (user_id, slug, display_name)
-         VALUES ($1, $2, $3)
+        `INSERT INTO photographer_profiles (user_id, slug, display_name, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING id`,
-        [user.id, slug + "-" + user.id.slice(0, 4), name]
+        [user.id, slug, name, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
       );
     }
 
-    // Send welcome email (non-blocking)
+    // Generate verification token and send email
     if (user) {
-      sendWelcomeEmail(user.email, user.name, user.role as "client" | "photographer").catch((err) =>
-        console.error("Failed to send welcome email:", err)
+      const token = crypto.randomBytes(32).toString("hex");
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      await queryOne(
+        "UPDATE users SET email_verification_token = $1, email_verification_expires = $2 WHERE id = $3 RETURNING id",
+        [token, expires.toISOString(), user.id]
       );
 
-      // Notify admin about new photographer registration (pending approval)
-      if (validRole === "photographer") {
-        sendAdminNewPhotographerNotification(user.name, user.email).catch((err) =>
-          console.error("Failed to send admin photographer notification:", err)
-        );
-      }
+      sendVerificationEmail(user.email, user.name, token).catch((err) =>
+        console.error("Failed to send verification email:", err)
+      );
+
+      // Admin notification sent after email verification (verify-email/route.ts)
     }
 
     return NextResponse.json({ success: true, user });

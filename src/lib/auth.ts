@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { queryOne, query } from "./db";
+import { sendWelcomeEmail } from "./email";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -28,14 +29,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: string;
             avatar_url: string | null;
             is_banned: boolean;
+            email_verified: boolean;
           }>(
-            "SELECT id, email, name, password_hash, role, avatar_url, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE email = $1",
+            "SELECT id, email, name, password_hash, role, avatar_url, COALESCE(is_banned, FALSE) as is_banned, COALESCE(email_verified, FALSE) as email_verified FROM users WHERE email = $1",
             [credentials.email]
           );
 
           if (!user || !user.password_hash) return null;
           if (user.is_banned) {
             throw new Error("Your account has been deactivated. Please contact support at info@photoportugal.com");
+          }
+          if (!user.email_verified) {
+            throw new Error("Please verify your email address. Check your inbox for the verification link.");
           }
 
           const passwordMatch = await compare(
@@ -85,9 +90,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               [account.providerAccountId, user.image, email]
             );
           } else {
+            const nameParts = (user.name || "").split(" ");
+            const firstName = nameParts[0] || "";
+            const lastName = nameParts.slice(1).join(" ") || "";
             await query(
-              "INSERT INTO users (email, name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, 'client', TRUE)",
-              [email, user.name, account.providerAccountId, user.image]
+              "INSERT INTO users (email, name, first_name, last_name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, $5, $6, 'client', TRUE)",
+              [email, user.name, firstName, lastName, account.providerAccountId, user.image]
+            );
+            // Send welcome email for new Google sign-ups (non-blocking)
+            sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
+              console.error("[auth] Failed to send welcome email:", err)
             );
           }
         } catch (error) {
@@ -143,6 +155,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: "/auth/signin",
+    error: "/auth/error",
   },
   session: {
     strategy: "jwt",

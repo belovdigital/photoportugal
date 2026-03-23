@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
+  const t = useTranslations("cookie");
 
   useEffect(() => {
     const consent = localStorage.getItem("cookie-consent");
@@ -33,10 +35,9 @@ export function CookieConsent() {
       <div className="mx-auto flex max-w-5xl flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-gray-600">
           <p>
-            We use essential cookies for authentication and analytics cookies to improve our service.
-            No advertising cookies are used.{" "}
+            {t("message")}{" "}
             <Link href="/privacy" className="text-primary-600 underline hover:text-primary-700">
-              Privacy Policy
+              {t("privacyPolicy")}
             </Link>
           </p>
         </div>
@@ -45,13 +46,13 @@ export function CookieConsent() {
             onClick={decline}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
           >
-            Essential Only
+            {t("essentialOnly")}
           </button>
           <button
             onClick={accept}
             className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700"
           >
-            Accept All
+            {t("acceptAll")}
           </button>
         </div>
       </div>

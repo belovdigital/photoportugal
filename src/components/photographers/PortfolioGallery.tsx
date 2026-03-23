@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { OptimizedImage, LightboxImage } from "@/components/ui/OptimizedImage";
 
 interface PortfolioItem {
@@ -23,6 +24,7 @@ export function PortfolioGallery({
   items: PortfolioItem[];
   locations: LocationOption[];
 }) {
+  const t = useTranslations("photographers.portfolioGallery");
   const [filter, setFilter] = useState({ location: "", shootType: "" });
   const [lightbox, setLightbox] = useState<number | null>(null);
 
@@ -63,7 +65,7 @@ export function PortfolioGallery({
 
   return (
     <section>
-      <h2 className="text-xl font-bold text-gray-900">Portfolio</h2>
+      <h2 className="text-xl font-bold text-gray-900">{t("title")}</h2>
 
       {/* Filter pills */}
       {hasFilters && (
@@ -75,7 +77,7 @@ export function PortfolioGallery({
                 ? "bg-gray-900 text-white" : "bg-warm-100 text-gray-500 hover:bg-warm-200"
             }`}
           >
-            All ({items.length})
+            {t("all", { count: items.length })}
           </button>
           {usedLocations.map((slug) => (
             <button
@@ -114,7 +116,7 @@ export function PortfolioGallery({
           >
             <OptimizedImage
               src={item.thumbnail_url || item.url}
-              alt={item.caption || "Portfolio photo"}
+              alt={item.caption || t("photoAlt")}
               width={600}
               quality={88}
               className="w-full"
@@ -124,7 +126,7 @@ export function PortfolioGallery({
       </div>
 
       {filtered.length === 0 && items.length > 0 && (
-        <p className="mt-4 text-sm text-gray-400">No photos match this filter.</p>
+        <p className="mt-4 text-sm text-gray-400">{t("noPhotosMatch")}</p>
       )}
 
       {/* Lightbox / Slider */}
@@ -132,13 +134,13 @@ export function PortfolioGallery({
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
           role="dialog"
-          aria-label="Photo viewer"
+          aria-label={t("photoViewer")}
           onClick={() => setLightbox(null)}
         >
           {/* Close */}
           <button
             onClick={() => setLightbox(null)}
-            aria-label="Close lightbox"
+            aria-label={t("closeLightbox")}
             className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,7 +152,7 @@ export function PortfolioGallery({
           {lightbox > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-              aria-label="Previous photo"
+              aria-label={t("previousPhoto")}
               className="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,7 +164,8 @@ export function PortfolioGallery({
           {/* Image */}
           <LightboxImage
             src={filtered[lightbox].url}
-            alt={filtered[lightbox].caption || "Portfolio photo"}
+            thumbnailSrc={filtered[lightbox].thumbnail_url || undefined}
+            alt={filtered[lightbox].caption || t("photoAlt")}
             className="max-h-[90vh] max-w-[90vw] object-contain"
             onClick={(e) => e.stopPropagation()}
           />
@@ -171,7 +174,7 @@ export function PortfolioGallery({
           {lightbox < filtered.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(1); }}
-              aria-label="Next photo"
+              aria-label={t("nextPhoto")}
               className="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -187,7 +190,7 @@ export function PortfolioGallery({
             )}
             <div className="flex items-center gap-3 text-sm text-white/50">
               <span>{lightbox + 1} / {filtered.length}</span>
-              <span className="text-white/30">Use arrow keys to navigate</span>
+              <span className="text-white/30">{t("arrowKeysHint")}</span>
             </div>
           </div>
         </div>

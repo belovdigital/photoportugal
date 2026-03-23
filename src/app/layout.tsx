@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { SessionProvider } from "@/components/providers/SessionProvider";
-import { NotificationProvider } from "@/contexts/NotificationContext";
-import { CookieConsent } from "@/components/ui/CookieConsent";
-import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,26 +36,11 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Photo Portugal",
     title: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
-    description: "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 25+ locations. Verified reviews, secure Stripe payments, private photo gallery. From EUR150.",
+    description: "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 25+ locations.",
     url: "https://photoportugal.com",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Photo Portugal — Find Your Perfect Photographer in Portugal",
-      },
-    ],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal" }],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Photo Portugal — Find Your Perfect Photographer in Portugal",
-    description: "Book professional photographers across Portugal.",
-    images: ["/og-image.png"],
-  },
-  alternates: {
-    canonical: "https://photoportugal.com",
-  },
+  twitter: { card: "summary_large_image" },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32" },
@@ -68,23 +48,17 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-      <head>
-        <link rel="alternate" hrefLang="x-default" href="https://photoportugal.com" />
-        <link rel="alternate" hrefLang="en" href="https://photoportugal.com" />
-      </head>
+    <html lang={locale} className={`${inter.variable} ${playfair.variable}`}>
       <body className="flex min-h-screen flex-col font-sans">
         <script
           type="application/ld+json"
@@ -107,15 +81,7 @@ export default function RootLayout({
             }),
           }}
         />
-        <SessionProvider>
-          <NotificationProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </NotificationProvider>
-          <CookieConsent />
-          <GoogleAnalytics />
-        </SessionProvider>
+        {children}
       </body>
     </html>
   );

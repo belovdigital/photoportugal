@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 export interface BreadcrumbItem {
   name: string;
@@ -10,6 +11,7 @@ interface BreadcrumbsProps {
 }
 
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
+  const t = useTranslations("common");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -27,7 +29,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <nav aria-label="Breadcrumb" className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+      <nav aria-label={t("breadcrumb")} className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
         <ol className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
           {items.map((item, index) => (
             <li key={item.href} className="flex items-center gap-1.5">

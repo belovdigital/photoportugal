@@ -47,22 +47,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Already reviewed" }, { status: 400 });
     }
 
-    // Create review
+    // Create review (pending approval)
     const review = await queryOne<{ id: string }>(
-      `INSERT INTO reviews (booking_id, client_id, photographer_id, rating, title, text)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO reviews (booking_id, client_id, photographer_id, rating, title, text, is_approved)
+       VALUES ($1, $2, $3, $4, $5, $6, false)
        RETURNING id`,
       [booking_id, userId, booking.photographer_id, rating, title || null, text || null]
     );
 
-    // Update photographer rating
-    await query(
-      `UPDATE photographer_profiles SET
-        review_count = (SELECT COUNT(*) FROM reviews WHERE photographer_id = $1),
-        rating = (SELECT ROUND(AVG(rating)::numeric, 1) FROM reviews WHERE photographer_id = $1)
-       WHERE id = $1`,
-      [booking.photographer_id]
-    );
+    // Don't update photographer rating yet — admin must approve first
 
     // Notify photographer
     try {

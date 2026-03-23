@@ -90,26 +90,16 @@ export async function PATCH(
       try {
         const stripeClient = requireStripe();
 
-        // Issue Stripe refund
-        await stripeClient.refunds.create({
-          payment_intent: currentBooking.stripe_payment_intent_id,
-        });
-
-        // Update booking status and payment status
-        await queryOne(
-          "UPDATE bookings SET status = 'cancelled', payment_status = 'refunded' WHERE id = $1 RETURNING id",
-          [id]
-        );
-
-        // Get details for emails
+        // Get booking details including shoot_date for refund calculation
         const cancelInfo = await queryOne<{
           client_email: string; client_name: string;
           photographer_email: string; photographer_name: string;
-          total_price: number;
+          total_price: number; service_fee: number | null;
+          shoot_date: string | null;
         }>(
           `SELECT cu.email as client_email, cu.name as client_name,
                   pu.email as photographer_email, pp.display_name as photographer_name,
-                  b.total_price
+                  b.total_price, b.service_fee, b.shoot_date
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -118,18 +108,70 @@ export async function PATCH(
           [id]
         );
 
+        // Calculate refund percentage based on cancellation policy:
+        // - 7+ days before shoot: 100% refund
+        // - 3-7 days before shoot: 50% refund
+        // - <3 days before shoot: no refund
+        // - No shoot_date set (flexible booking): 100% refund
+        let refundPercent = 100;
+        if (cancelInfo?.shoot_date) {
+          const shootDate = new Date(cancelInfo.shoot_date);
+          const now = new Date();
+          const daysUntilShoot = Math.ceil((shootDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysUntilShoot < 3) {
+            refundPercent = 0;
+          } else if (daysUntilShoot < 7) {
+            refundPercent = 50;
+          }
+        }
+
+        const totalPaid = (cancelInfo?.total_price ?? 0) + (cancelInfo?.service_fee ?? 0);
+        const refundAmount = Math.round((totalPaid * refundPercent) / 100 * 100) / 100; // round to cents
+
+        // Issue Stripe refund (skip if no refund due)
+        if (refundPercent === 100) {
+          await stripeClient.refunds.create({
+            payment_intent: currentBooking.stripe_payment_intent_id,
+          });
+        } else if (refundPercent > 0) {
+          await stripeClient.refunds.create({
+            payment_intent: currentBooking.stripe_payment_intent_id,
+            amount: Math.round(refundAmount * 100), // Stripe uses cents
+          });
+        }
+
+        // Update booking status and payment status
+        const paymentStatus = refundPercent === 100 ? "refunded" : refundPercent > 0 ? "partially_refunded" : "no_refund";
+        await queryOne(
+          "UPDATE bookings SET status = 'cancelled', payment_status = $1 WHERE id = $2 RETURNING id",
+          [paymentStatus, id]
+        );
+
         if (cancelInfo) {
           const cancelledBy = isClient ? "client" : "photographer";
+          const refundText = refundPercent === 100
+            ? `The full payment of <strong>&euro;${totalPaid.toFixed(2)}</strong> has been refunded to the client.`
+            : refundPercent > 0
+            ? `A partial refund of <strong>&euro;${refundAmount.toFixed(2)}</strong> (${refundPercent}%) has been issued to the client (cancellation within 3-7 days of shoot date).`
+            : `No refund has been issued (cancellation less than 3 days before shoot date).`;
+
+          const clientRefundText = refundPercent === 100
+            ? `Your payment of <strong>&euro;${totalPaid.toFixed(2)}</strong> has been refunded. The refund should appear in your account within 5-10 business days.`
+            : refundPercent > 0
+            ? `A partial refund of <strong>&euro;${refundAmount.toFixed(2)}</strong> (${refundPercent}%) has been issued per our cancellation policy (3-7 days before shoot date). The refund should appear in your account within 5-10 business days.`
+            : `Per our cancellation policy, no refund is available for cancellations less than 3 days before the shoot date.`;
 
           // Email to photographer
           sendEmail(
             cancelInfo.photographer_email,
-            `Booking cancelled — payment of €${cancelInfo.total_price} refunded`,
+            refundPercent > 0
+              ? `Booking cancelled — €${refundAmount.toFixed(2)} refunded to client`
+              : `Booking cancelled — no refund issued`,
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2 style="color: #C94536;">Booking Cancelled</h2>
               <p>Hi ${cancelInfo.photographer_name},</p>
               <p>A booking with <strong>${cancelInfo.client_name}</strong> has been cancelled by the ${cancelledBy}.</p>
-              <p>The payment of <strong>&euro;${cancelInfo.total_price}</strong> has been refunded to the client.</p>
+              <p>${refundText}</p>
               <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
               <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
             </div>`
@@ -138,26 +180,39 @@ export async function PATCH(
           // Email to client
           sendEmail(
             cancelInfo.client_email,
-            `Booking cancelled — your payment of €${cancelInfo.total_price} has been refunded`,
+            refundPercent > 0
+              ? `Booking cancelled — €${refundAmount.toFixed(2)} refunded`
+              : `Booking cancelled — no refund per cancellation policy`,
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2 style="color: #C94536;">Booking Cancelled</h2>
               <p>Hi ${cancelInfo.client_name},</p>
               <p>Your booking with <strong>${cancelInfo.photographer_name}</strong> has been cancelled.</p>
-              <p>Your payment of <strong>&euro;${cancelInfo.total_price}</strong> has been refunded. The refund should appear in your account within 5-10 business days.</p>
+              <p>${clientRefundText}</p>
               <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
               <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
             </div>`
           );
         }
 
-        return NextResponse.json({ success: true, refunded: true });
+        return NextResponse.json({ success: true, refunded: refundPercent > 0, refundPercent });
       } catch (refundErr) {
         console.error("[bookings] refund error:", refundErr);
         return NextResponse.json({ error: "Failed to process refund. Please contact support." }, { status: 500 });
       }
     }
 
-    await queryOne("UPDATE bookings SET status = $1 WHERE id = $2 RETURNING id", [status, id]);
+    // Conditional update: only transition if status hasn't changed since we read it
+    const updateResult = await queryOne<{ id: string }>(
+      "UPDATE bookings SET status = $1 WHERE id = $2 AND status = $3 RETURNING id",
+      [status, id, currentBooking!.status]
+    );
+
+    if (!updateResult) {
+      return NextResponse.json(
+        { error: "Booking status was changed by another request. Please refresh and try again." },
+        { status: 409 }
+      );
+    }
 
     // Send cancellation emails for unpaid cancellations
     if (status === "cancelled") {
@@ -234,12 +289,14 @@ export async function PATCH(
 
         if (bookingDetails) {
           let paymentUrl: string | null = null;
+          let clientTotal: number | null = null;
 
           // Create Stripe Checkout Session if there's a price and photographer has Stripe connected
           if (bookingDetails.total_price && bookingDetails.photographer_stripe_id) {
             try {
               const stripeClient = requireStripe();
               const payment = calculatePayment(bookingDetails.total_price, bookingDetails.photographer_plan);
+              clientTotal = payment.totalClientPays;
 
               // Get or create Stripe customer
               let customerId = bookingDetails.stripe_customer_id;
@@ -297,14 +354,14 @@ export async function PATCH(
             }
           }
 
-          // Send confirmation email with payment link
+          // Send confirmation email with payment link (show fee-inclusive total)
           sendBookingConfirmationWithPayment(
             bookingDetails.client_email,
             bookingDetails.client_name,
             bookingDetails.photographer_name,
             bookingDetails.shoot_date,
             paymentUrl,
-            bookingDetails.total_price
+            clientTotal ?? bookingDetails.total_price
           );
         }
       } catch (emailErr) {

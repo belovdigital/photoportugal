@@ -183,6 +183,8 @@ export async function sendDeliveryAcceptedToPhotographer(
       <p><strong>${clientName}</strong> has accepted the photo delivery. A payment of <strong>&euro;${payoutAmount.toFixed(2)}</strong> has been transferred to your Stripe account.</p>
       <p>The funds should arrive in your bank account within 2-7 business days, depending on your Stripe payout schedule.</p>
       <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Dashboard</a></p>
+      <p style="margin-top: 16px;">Enjoyed working with this client? Leave a quick review to help build your reputation on the platform:</p>
+      <p><a href="${BASE_URL}/dashboard/bookings" style="color: #C94536; font-weight: bold; text-decoration: none;">Leave a Review</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
     `
@@ -205,8 +207,55 @@ export async function sendDeliveryAcceptedToClient(
       <p style="margin-top: 12px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px; color: #5f4a3d;">
         Your photos will be available for download for <strong>60 days</strong>. Make sure to download them before then!
       </p>
-      <p>If you enjoyed your experience, please consider leaving a review.</p>
+      <p>If you enjoyed your experience, we'd love to hear from you! A quick review helps other travelers find great photographers:</p>
       <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Leave a Review</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
+export async function sendTrustpilotFollowUpToClient(
+  clientEmail: string,
+  clientName: string,
+  photographerName: string
+) {
+  await sendEmail(
+    clientEmail,
+    `One last thing, ${clientName} — it means a lot to us`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Thank you for your review! 🙏</h2>
+      <p>Hi ${clientName},</p>
+      <p>We really appreciate you sharing your experience with <strong>${photographerName}</strong> on our platform.</p>
+      <p>We have one small favour to ask — it would mean the world to our small business if you could also leave a quick review on Trustpilot. It takes less than a minute and helps other travelers discover Photo Portugal:</p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="https://www.trustpilot.com/evaluate/photoportugal.com" style="display: inline-block; background: #00b67a; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">⭐ Review us on Trustpilot</a>
+      </p>
+      <p style="color: #666; font-size: 13px;">Even a few words make a huge difference. Thank you for supporting independent photography in Portugal!</p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
+export async function sendTrustpilotFollowUpToPhotographer(
+  photographerEmail: string,
+  photographerName: string
+) {
+  await sendEmail(
+    photographerEmail,
+    `Quick favour, ${photographerName}?`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Help us grow! 🙏</h2>
+      <p>Hi ${photographerName},</p>
+      <p>Thank you for being part of Photo Portugal. Your work is what makes this platform great.</p>
+      <p>We'd love it if you could share your experience as a photographer on Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:</p>
+      <p style="text-align: center; margin: 24px 0;">
+        <a href="https://www.trustpilot.com/evaluate/photoportugal.com" style="display: inline-block; background: #00b67a; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">⭐ Review us on Trustpilot</a>
+      </p>
+      <p style="color: #666; font-size: 13px;">It takes less than a minute. Thank you for your support!</p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
     `
@@ -278,34 +327,86 @@ export async function sendPasswordResetEmail(
   );
 }
 
+export async function sendVerificationEmail(to: string, name: string, token: string) {
+  const verifyUrl = `${BASE_URL}/api/auth/verify-email?token=${token}`;
+  await sendEmail(
+    to,
+    "Verify your email — Photo Portugal",
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Verify Your Email</h2>
+      <p>Hi ${name},</p>
+      <p>Thank you for signing up! Please verify your email address to activate your account:</p>
+      <p style="margin: 24px 0; text-align: center;">
+        <a href="${verifyUrl}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px;">Verify Email Address</a>
+      </p>
+      <p style="color: #666; font-size: 13px;">This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.</p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
 export async function sendWelcomeEmail(
   to: string,
   name: string,
   role: "client" | "photographer"
 ) {
   const isPhotographer = role === "photographer";
-  const subject = "Welcome to Photo Portugal!";
-  const message = isPhotographer
-    ? "Welcome to Photo Portugal! Complete your profile to start receiving bookings from tourists visiting Portugal."
-    : "Welcome to Photo Portugal! Browse our talented photographers and book your perfect photo session in Portugal.";
-  const ctaText = isPhotographer ? "Complete Your Profile" : "Browse Photographers";
-  const ctaUrl = isPhotographer
-    ? `${BASE_URL}/dashboard/profile`
-    : `${BASE_URL}/photographers`;
 
-  await sendEmail(
-    to,
-    subject,
-    `
-    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-      <h2 style="color: #C94536;">Welcome to Photo Portugal!</h2>
-      <p>Hi ${name},</p>
-      <p>${message}</p>
-      <p><a href="${ctaUrl}" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">${ctaText}</a></p>
-      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
-    </div>
-    `
-  );
+  if (isPhotographer) {
+    await sendEmail(
+      to,
+      "Welcome to Photo Portugal — Let's get you started!",
+      `
+      <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+        <h2 style="color: #C94536;">Welcome to Photo Portugal!</h2>
+        <p>Hi ${name},</p>
+        <p>Thank you for joining Photo Portugal! We're excited to have you on the platform. Here's how to get your profile live and start receiving bookings:</p>
+
+        <div style="margin: 24px 0; padding: 20px; background: #faf8f5; border-radius: 12px;">
+          <p style="margin: 0 0 12px; font-weight: bold; color: #333;">Your setup checklist:</p>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 6px 0; color: #666;">1.</td><td style="padding: 6px 8px;"><strong>Complete your profile</strong> — Add a photo, bio, and tagline</td></tr>
+            <tr><td style="padding: 6px 0; color: #666;">2.</td><td style="padding: 6px 8px;"><strong>Upload a cover image</strong> — This appears on your card</td></tr>
+            <tr><td style="padding: 6px 0; color: #666;">3.</td><td style="padding: 6px 8px;"><strong>Add portfolio photos</strong> — At least 5, we recommend 10+</td></tr>
+            <tr><td style="padding: 6px 0; color: #666;">4.</td><td style="padding: 6px 8px;"><strong>Create packages</strong> — Set up 2–3 at different price points</td></tr>
+            <tr><td style="padding: 6px 0; color: #666;">5.</td><td style="padding: 6px 8px;"><strong>Select your locations</strong> — Where you're available to shoot</td></tr>
+            <tr><td style="padding: 6px 0; color: #666;">6.</td><td style="padding: 6px 8px;"><strong>Connect Stripe</strong> — Required to receive payments</td></tr>
+          </table>
+        </div>
+
+        <p>Once your profile is complete and approved by our team, you'll appear in search results and can start receiving bookings.</p>
+
+        <p><a href="${BASE_URL}/dashboard/profile" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Complete Your Profile</a></p>
+
+        <p style="margin-top: 20px; font-size: 13px; color: #666;">
+          <strong>Helpful links:</strong><br>
+          <a href="${BASE_URL}/support" style="color: #C94536;">Help Center</a> — answers to common questions<br>
+          <a href="${BASE_URL}/pricing" style="color: #C94536;">Pricing & Plans</a> — commission rates and features<br>
+          <a href="${BASE_URL}/contact" style="color: #C94536;">Contact Us</a> — we're here to help
+        </p>
+
+        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+      </div>
+      `
+    );
+  } else {
+    await sendEmail(
+      to,
+      "Welcome to Photo Portugal!",
+      `
+      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+        <h2 style="color: #C94536;">Welcome to Photo Portugal!</h2>
+        <p>Hi ${name},</p>
+        <p>Thank you for joining Photo Portugal! Browse our talented local photographers and book your perfect photo session anywhere in Portugal — Lisbon, Porto, Algarve, Sintra, and 20+ more locations.</p>
+        <p>Your payment is always protected: we hold your money in escrow until you receive and approve your photos.</p>
+        <p><a href="${BASE_URL}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Browse Photographers</a></p>
+        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+      </div>
+      `
+    );
+  }
 }
 
 export async function sendSubscriptionEmail(

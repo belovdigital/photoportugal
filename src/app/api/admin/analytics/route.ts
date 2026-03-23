@@ -172,24 +172,40 @@ export async function GET() {
       position: Math.round((row0?.position || 0) * 10) / 10,
     };
 
-    // Top queries
+    // Top queries (fetch more for position distribution)
     const { data: queries } = await searchConsole.searchanalytics.query({
       siteUrl: GSC_SITE,
       requestBody: {
         startDate: fmt(startDate),
         endDate: fmt(endDate),
         dimensions: ["query"],
-        rowLimit: 20,
+        rowLimit: 500,
       },
     });
 
-    result.topQueries = (queries.rows || []).map((r) => ({
+    const allQueries = (queries.rows || []).map((r) => ({
       query: r.keys?.[0],
-      clicks: r.clicks,
-      impressions: r.impressions,
+      clicks: r.clicks || 0,
+      impressions: r.impressions || 0,
       ctr: Math.round((r.ctr || 0) * 1000) / 10,
       position: Math.round((r.position || 0) * 10) / 10,
     }));
+
+    // Position distribution (like Semrush)
+    const top3 = allQueries.filter((q) => q.position <= 3);
+    const top10 = allQueries.filter((q) => q.position <= 10);
+    const top20 = allQueries.filter((q) => q.position <= 20);
+    const top100 = allQueries.filter((q) => q.position <= 100);
+
+    result.positionDistribution = {
+      top3: { count: top3.length, queries: top3.slice(0, 10) },
+      top10: { count: top10.length, queries: top10.slice(0, 15) },
+      top20: { count: top20.length, queries: top20.filter((q) => q.position > 10).slice(0, 10) },
+      top100: { count: top100.length, queries: top100.filter((q) => q.position > 20).slice(0, 10) },
+      total: allQueries.length,
+    };
+
+    result.topQueries = allQueries.slice(0, 20);
 
     // Top pages in search
     const { data: pages } = await searchConsole.searchanalytics.query({

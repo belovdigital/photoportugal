@@ -1,14 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useTranslations } from "next-intl";
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: string;
   badge?: number;
   roles: string[];
@@ -20,18 +21,19 @@ export function DashboardSidebar() {
   const role = (session?.user as { role?: string })?.role || "client";
   const notifications = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const t = useTranslations("dashboard");
 
   const navItems: NavItem[] = [
-    { href: "/dashboard", label: "Overview", icon: "home", roles: ["client", "photographer"] },
-    { href: "/dashboard/bookings", label: "Bookings", icon: "calendar", roles: ["client", "photographer"], badge: notifications.pending_bookings },
-    { href: "/dashboard/messages", label: "Messages", icon: "chat", roles: ["client", "photographer"], badge: notifications.unread_messages },
-    { href: "/dashboard/profile", label: "Profile", icon: "user", roles: ["photographer"] },
-    { href: "/dashboard/portfolio", label: "Portfolio", icon: "image", roles: ["photographer"] },
-    { href: "/dashboard/packages", label: "Packages", icon: "package", roles: ["photographer"] },
-    { href: "/dashboard/subscriptions", label: "Subscriptions", icon: "credit-card", roles: ["photographer"] },
-    { href: "/dashboard/payouts", label: "Payouts", icon: "banknotes", roles: ["photographer"] },
-    { href: "/dashboard/settings", label: "Settings", icon: "settings", roles: ["client", "photographer"] },
-    { href: "/dashboard/support", label: "Support", icon: "help-circle", roles: ["photographer"] },
+    { href: "/dashboard", labelKey: "sidebarOverview", icon: "home", roles: ["client", "photographer"] },
+    { href: "/dashboard/bookings", labelKey: "sidebarBookings", icon: "calendar", roles: ["client", "photographer"], badge: notifications.pending_bookings },
+    { href: "/dashboard/messages", labelKey: "sidebarMessages", icon: "chat", roles: ["client", "photographer"], badge: notifications.unread_messages },
+    { href: "/dashboard/profile", labelKey: "sidebarProfile", icon: "user", roles: ["photographer"] },
+    { href: "/dashboard/portfolio", labelKey: "sidebarPortfolio", icon: "image", roles: ["photographer"] },
+    { href: "/dashboard/packages", labelKey: "sidebarPackages", icon: "package", roles: ["photographer"] },
+    { href: "/dashboard/subscriptions", labelKey: "sidebarSubscriptions", icon: "credit-card", roles: ["photographer"] },
+    { href: "/dashboard/payouts", labelKey: "sidebarPayouts", icon: "banknotes", roles: ["photographer"] },
+    { href: "/dashboard/settings", labelKey: "sidebarSettings", icon: "settings", roles: ["client", "photographer"] },
+    { href: "/dashboard/support", labelKey: "sidebarSupport", icon: "help-circle", roles: ["photographer"] },
   ];
 
   const filteredItems = navItems.filter((item) => item.roles.includes(role));
@@ -70,7 +72,7 @@ export function DashboardSidebar() {
       `} style={{ maxHeight: "calc(100vh - 100px)" }}>
         <nav className="flex flex-col gap-0.5 p-3">
           {filteredItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+            const isActive = pathname === item.href || pathname.endsWith(item.href) || (item.href !== "/dashboard" && pathname.includes(item.href));
 
             return (
               <Link
@@ -85,7 +87,7 @@ export function DashboardSidebar() {
               >
                 <span className="flex items-center gap-3">
                   <SidebarIcon type={item.icon} active={isActive} />
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
                 {item.badge && item.badge > 0 ? (
                   <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[10px] font-bold text-white">

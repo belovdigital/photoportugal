@@ -4,8 +4,8 @@ import { queryOne } from "@/lib/db";
 // Tier thresholds
 const TIERS = [
   { key: "founding", label: "Founding Photographer", limit: 10, planReward: "premium", duration: null, badge: "Founding Photographer" },
-  { key: "early50", label: "Early Adopter", limit: 60, planReward: "premium", duration: 180, badge: null }, // 6 months
-  { key: "first100", label: "First 100", limit: 160, planReward: "pro", duration: 90, badge: null }, // 3 months
+  { key: "early50", label: "Early Adopter", limit: 35, planReward: "premium", duration: 180, badge: null }, // 6 months — spots 11-35
+  { key: "first100", label: "First 50", limit: 60, planReward: "pro", duration: 90, badge: null }, // 3 months — spots 36-60
 ] as const;
 
 export async function GET() {

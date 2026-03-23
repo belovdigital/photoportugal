@@ -7,7 +7,7 @@ import crypto from "crypto";
 import sharp from "sharp";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per portfolio photo
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per portfolio photo
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -51,21 +51,33 @@ export async function POST(req: NextRequest) {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
-    }
-
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Only images are allowed" }, { status: 400 });
+      return NextResponse.json({ error: "File too large (max 15MB)" }, { status: 400 });
     }
 
     const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "gif", "heic", "heif"];
-    const rawExt = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const rawExt = (file.name.split(".").pop() || "").toLowerCase();
+    const isImage = file.type.startsWith("image/") || ALLOWED_EXTENSIONS.includes(rawExt);
+    if (!isImage) {
+      return NextResponse.json({ error: "Only images are allowed" }, { status: 400 });
+    }
     const ext = ALLOWED_EXTENSIONS.includes(rawExt) ? rawExt : "jpg";
     const filename = `${crypto.randomUUID()}.${ext}`;
     const portfolioDir = path.join(UPLOAD_DIR, "portfolio", profile.id);
     await mkdir(portfolioDir, { recursive: true });
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const rawBuffer = Buffer.from(await file.arrayBuffer());
+
+    // Resize main image to max 2000px wide, JPEG quality 85
+    let buffer: Buffer;
+    try {
+      buffer = await sharp(rawBuffer)
+        .rotate()
+        .resize(2000, undefined, { fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+    } catch {
+      buffer = rawBuffer;
+    }
     await writeFile(path.join(portfolioDir, filename), buffer);
 
     // Generate thumbnail (400px wide, WebP, quality 75)

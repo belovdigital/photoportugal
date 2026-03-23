@@ -161,6 +161,10 @@ export async function POST(req: NextRequest) {
           // Featured add-on cancelled
           await queryOne("UPDATE photographer_profiles SET is_featured = FALSE WHERE id = $1 RETURNING id", [photographerId]);
           console.log(`[webhook] Featured subscription cancelled for photographer ${photographerId}`);
+        } else if (photographerId && subType === "verified") {
+          // Verified badge subscription cancelled
+          await queryOne("UPDATE photographer_profiles SET is_verified = FALSE WHERE id = $1 RETURNING id", [photographerId]);
+          console.log(`[webhook] Verified subscription cancelled for photographer ${photographerId}`);
         } else if (photographerId) {
           // Plan subscription cancelled
           await queryOne("UPDATE photographer_profiles SET plan = 'free' WHERE id = $1 RETURNING id", [photographerId]);
@@ -189,6 +193,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error("[stripe/webhook] Error processing event:", error);
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 
   // Revalidate public pages after any subscription/payment change

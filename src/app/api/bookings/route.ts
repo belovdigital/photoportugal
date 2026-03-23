@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification, sendAdminNewBookingNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
-import { SERVICE_FEE_RATE } from "@/lib/stripe";
 
 // Create a booking request
 export async function POST(req: NextRequest) {
@@ -48,7 +47,7 @@ export async function POST(req: NextRequest) {
         "SELECT price FROM packages WHERE id = $1 AND photographer_id = $2",
         [package_id, photographer_id]
       );
-      if (pkg) totalPrice = Math.round(pkg.price * (1 + SERVICE_FEE_RATE));
+      if (pkg) totalPrice = pkg.price;
     }
 
     const booking = await queryOne<{ id: string }>(

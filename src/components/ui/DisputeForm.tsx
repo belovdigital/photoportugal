@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 
-const REASONS = [
-  { value: "fewer_photos", label: "Fewer photos than promised" },
-  { value: "wrong_location", label: "Wrong location or subjects" },
-  { value: "technical_issues", label: "Severe technical issues (blur, overexposure)" },
-  { value: "no_show", label: "Photographer no-show or incomplete session" },
-  { value: "other", label: "Other issue" },
+const REASON_KEYS = [
+  "fewer_photos",
+  "wrong_location",
+  "technical_issues",
+  "no_show",
+  "other",
 ] as const;
 
 export function DisputeForm({ bookingId }: { bookingId: string }) {
   const router = useRouter();
+  const t = useTranslations("dispute");
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
@@ -39,7 +41,7 @@ export function DisputeForm({ bookingId }: { bookingId: string }) {
       setTimeout(() => router.refresh(), 1500);
     } else {
       const data = await res.json();
-      setError(data.error || "Failed to submit dispute");
+      setError(data.error || t("failedToSubmit"));
     }
   }
 
@@ -51,8 +53,8 @@ export function DisputeForm({ bookingId }: { bookingId: string }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <p className="font-semibold text-blue-700">Dispute submitted</p>
-            <p className="text-sm text-blue-600">Our team will review your case and get back to you within 48 hours.</p>
+            <p className="font-semibold text-blue-700">{t("submitted")}</p>
+            <p className="text-sm text-blue-600">{t("submittedDesc")}</p>
           </div>
         </div>
       </div>
@@ -65,16 +67,16 @@ export function DisputeForm({ bookingId }: { bookingId: string }) {
         onClick={() => setOpen(true)}
         className="text-sm font-medium text-gray-500 underline underline-offset-2 transition hover:text-red-600"
       >
-        Report an issue
+        {t("reportIssue")}
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label="Report an issue">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={t("reportIssue")}>
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-gray-900">Report an Issue</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t("dialogTitle")}</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Tell us what went wrong. Our team will review and respond within 48 hours.
+              {t("dialogSubtitle")}
             </p>
 
             {error && (
@@ -83,32 +85,32 @@ export function DisputeForm({ bookingId }: { bookingId: string }) {
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">What happened?</label>
+                <label className="block text-sm font-medium text-gray-700">{t("whatHappened")}</label>
                 <div className="mt-2 space-y-2">
-                  {REASONS.map((r) => (
-                    <label key={r.value} className="flex items-center gap-3 cursor-pointer">
+                  {REASON_KEYS.map((key) => (
+                    <label key={key} className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="radio"
                         name="reason"
-                        value={r.value}
-                        checked={reason === r.value}
-                        onChange={() => setReason(r.value)}
+                        value={key}
+                        checked={reason === key}
+                        onChange={() => setReason(key)}
                         className="h-4 w-4 text-primary-600"
                       />
-                      <span className="text-sm text-gray-700">{r.label}</span>
+                      <span className="text-sm text-gray-700">{t(`reasons.${key}`)}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Describe the issue</label>
+                <label className="block text-sm font-medium text-gray-700">{t("describeIssue")}</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
                   required
-                  placeholder="Please provide details about what went wrong..."
+                  placeholder={t("descriptionPlaceholder")}
                   className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
                 />
               </div>
@@ -119,14 +121,14 @@ export function DisputeForm({ bookingId }: { bookingId: string }) {
                   disabled={submitting || !reason || !description.trim()}
                   className="rounded-xl bg-red-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
                 >
-                  {submitting ? "Submitting..." : "Submit Dispute"}
+                  {submitting ? t("submitting") : t("submitDispute")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
                   className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               </div>
             </form>

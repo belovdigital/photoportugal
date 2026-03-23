@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = (session.user as { id?: string }).id;
-  const { plan, action } = await req.json();
+  const { plan, action, locale } = await req.json();
+  const lp = locale === "pt" ? "/pt" : "";
 
   try {
     const profile = await queryOne<{ id: string; stripe_account_id: string | null }>(
@@ -44,23 +45,41 @@ export async function POST(req: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const portalSession = await (requireStripe().billingPortal.sessions.create as any)({
         customer: customerId,
-        return_url: `${process.env.AUTH_URL}/dashboard/subscriptions`,
+        return_url: `${process.env.AUTH_URL}${lp}/dashboard/subscriptions`,
       });
       return NextResponse.json({ url: portalSession.url });
     }
 
     if (action === "subscribe" && plan && PRICE_IDS[plan]) {
+      // Cancel any existing plan subscription before creating a new one
+      const existingProfile = await queryOne<{ stripe_subscription_id: string | null }>(
+        "SELECT stripe_subscription_id FROM photographer_profiles WHERE id = $1", [profile.id]
+      );
+      if (existingProfile?.stripe_subscription_id) {
+        try {
+          await requireStripe().subscriptions.cancel(existingProfile.stripe_subscription_id);
+          await queryOne(
+            "UPDATE photographer_profiles SET stripe_subscription_id = NULL WHERE id = $1 RETURNING id",
+            [profile.id]
+          );
+          console.log(`[stripe/subscription] Cancelled existing subscription ${existingProfile.stripe_subscription_id} for photographer ${profile.id}`);
+        } catch (cancelErr) {
+          // Subscription may already be cancelled/invalid — log and continue
+          console.warn(`[stripe/subscription] Failed to cancel existing subscription ${existingProfile.stripe_subscription_id}:`, cancelErr);
+        }
+      }
+
       // Create checkout session for subscription
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
         customer: customerId,
         mode: "subscription",
-        locale: "auto",
+        locale: locale === "pt" ? "pt" : "auto",
         adaptive_pricing: { enabled: true },
         allow_promotion_codes: true,
         line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
-        success_url: `${process.env.AUTH_URL}/dashboard/subscriptions?success=true`,
-        cancel_url: `${process.env.AUTH_URL}/dashboard/subscriptions?canceled=true`,
+        success_url: `${process.env.AUTH_URL}${lp}/dashboard/subscriptions?success=true`,
+        cancel_url: `${process.env.AUTH_URL}${lp}/dashboard/subscriptions?canceled=true`,
         subscription_data: { metadata: { photographer_id: profile.id, plan } },
       });
       return NextResponse.json({ url: checkoutSession.url });

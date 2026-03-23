@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 interface OnboardingChecks {
   avatar: boolean;
@@ -22,86 +23,94 @@ interface Step {
   tip?: string;
 }
 
-function getPhotographerSteps(checks: OnboardingChecks): Step[] {
+function getPhotographerSteps(
+  checks: OnboardingChecks,
+  t: (key: string) => string,
+): Step[] {
   return [
     {
-      label: "Add profile photo",
+      label: t("photographer.addProfilePhoto"),
       href: "/dashboard/profile",
       complete: !!checks.avatar,
-      tip: "A friendly headshot helps clients trust you",
+      tip: t("photographer.addProfilePhotoTip"),
     },
     {
-      label: "Upload cover image",
+      label: t("photographer.uploadCoverImage"),
       href: "/dashboard/profile",
       complete: !!checks.cover,
-      tip: "Use your best wide landscape shot",
+      tip: t("photographer.uploadCoverImageTip"),
     },
     {
-      label: "Write your bio & tagline",
+      label: t("photographer.writeBioTagline"),
       href: "/dashboard/profile",
       complete: !!checks.bio,
-      tip: "Mention your experience, style, and what makes you unique",
+      tip: t("photographer.writeBioTaglineTip"),
     },
     {
-      label: "Upload at least 5 portfolio photos",
+      label: t("photographer.uploadPortfolioPhotos"),
       href: "/dashboard/portfolio",
       complete: checks.portfolio >= 5,
       detail: `${Math.min(checks.portfolio, 5)}/5`,
-      tip: "Upload at least 10 diverse photos showing your range",
+      tip: t("photographer.uploadPortfolioPhotosTip"),
     },
     {
-      label: "Create your first package",
+      label: t("photographer.createFirstPackage"),
       href: "/dashboard/packages",
       complete: checks.packages >= 1,
-      tip: "Start with 2-3 packages at different price points",
+      tip: t("photographer.createFirstPackageTip"),
     },
     {
-      label: "Select your locations",
+      label: t("photographer.selectLocations"),
       href: "/dashboard/profile",
       complete: checks.locations >= 1,
-      tip: "Add all areas where you're available to shoot",
+      tip: t("photographer.selectLocationsTip"),
     },
     {
-      label: "Connect Stripe for payments",
+      label: t("photographer.connectStripe"),
       href: "/dashboard/payouts",
       complete: checks.stripeConnected,
-      tip: "Required to receive payments from bookings",
+      tip: t("photographer.connectStripeTip"),
     },
   ];
 }
 
-function getClientSteps(checks: OnboardingChecks): Step[] {
+function getClientSteps(
+  checks: OnboardingChecks,
+  t: (key: string) => string,
+): Step[] {
   return [
     {
-      label: "Add profile photo",
+      label: t("client.addProfilePhoto"),
       href: "/dashboard/settings",
       complete: !!checks.avatar,
     },
     {
-      label: "Find your photographer",
+      label: t("client.findPhotographer"),
       href: "/photographers",
       complete: (checks.bookings ?? 0) >= 1,
     },
   ];
 }
 
-const DISMISS_KEY = "onboarding-checklist-dismissed";
-
 export function OnboardingChecklist({
   role,
   checks,
+  userId,
 }: {
   role: string;
   checks: OnboardingChecks;
+  userId?: string;
 }) {
+  const DISMISS_KEY = userId ? `onboarding-dismissed-${userId}` : "onboarding-checklist-dismissed";
+  const t = useTranslations("onboarding");
   const [dismissed, setDismissed] = useState(true); // start hidden to avoid flash
   const [celebrateVisible, setCelebrateVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const steps =
     role === "photographer"
-      ? getPhotographerSteps(checks)
-      : getClientSteps(checks);
+      ? getPhotographerSteps(checks, t)
+      : getClientSteps(checks, t);
 
   const completedCount = steps.filter((s) => s.complete).length;
   const totalSteps = steps.length;
@@ -111,12 +120,17 @@ export function OnboardingChecklist({
   useEffect(() => {
     setMounted(true);
     const stored = localStorage.getItem(DISMISS_KEY);
-    if (stored === "true") {
+    // Only respect dismiss if all steps are done — otherwise always show
+    if (stored === "true" && allDone) {
       setDismissed(true);
     } else {
       setDismissed(false);
+      // Clear stale dismiss if steps are incomplete
+      if (stored === "true" && !allDone) {
+        localStorage.removeItem(DISMISS_KEY);
+      }
     }
-  }, []);
+  }, [allDone, DISMISS_KEY]);
 
   // Show celebration when all done, then auto-hide after 4 seconds
   useEffect(() => {
@@ -128,7 +142,7 @@ export function OnboardingChecklist({
       }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [allDone, mounted, dismissed]);
+  }, [allDone, mounted, dismissed, DISMISS_KEY]);
 
   if (!mounted || dismissed) return null;
 
@@ -142,18 +156,17 @@ export function OnboardingChecklist({
           <span role="img" aria-label="celebration">🎉</span>
         </div>
         <h2 className="font-display text-2xl font-bold text-gray-900">
-          {"You're all set!"}
+          {t("allSet")}
         </h2>
         <p className="mt-2 text-gray-500">
-          Your profile is complete. You&apos;re ready to{" "}
-          {role === "photographer" ? "start receiving bookings" : "find your perfect photographer"}!
+          {role === "photographer" ? t("allSetDescriptionPhotographer") : t("allSetDescriptionClient")}
         </p>
       </div>
     );
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-warm-200 bg-gradient-to-br from-warm-50 via-white to-primary-50/30 shadow-sm">
+    <div className="relative overflow-hidden rounded-r-2xl border border-warm-200 border-l-0 bg-gradient-to-br from-warm-50 via-white to-primary-50/30 shadow-sm">
       {/* Left accent bar */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary-400 via-primary-500 to-accent-500" />
 
@@ -162,11 +175,16 @@ export function OnboardingChecklist({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h2 className="font-display text-xl font-bold text-gray-900">
-              Complete your profile
+              {t("completeYourProfile")}
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              {completedCount} of {totalSteps} steps done
+              {t("stepsProgress", { completed: completedCount, total: totalSteps })}
             </p>
+            {role === "photographer" && !allDone && (
+              <p className="mt-1 text-xs text-gray-400">
+                {t("completeAllForApproval")}
+              </p>
+            )}
           </div>
 
           {/* Circular progress */}
@@ -209,7 +227,7 @@ export function OnboardingChecklist({
               localStorage.setItem(DISMISS_KEY, "true");
             }}
             className="ml-3 rounded-lg p-1.5 text-gray-400 transition hover:bg-warm-100 hover:text-gray-600"
-            aria-label="Dismiss checklist"
+            aria-label={t("dismissChecklist")}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

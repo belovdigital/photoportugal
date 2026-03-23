@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
+import { sendWelcomeEmail, sendAdminNewPhotographerNotification } from "@/lib/email";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   try {
     if (role === "photographer" || role === "client") {
-      // Only allow role change for users created in the last 5 minutes (fresh signups)
+      // Only allow role change for users created in the last 2 minutes (fresh signups)
       const user = await queryOne<{ id: string; role: string; created_at: string }>(
         "SELECT id, role, created_at FROM users WHERE email = $1",
         [session.user.email]
@@ -36,25 +37,15 @@ export async function GET(request: NextRequest) {
       }
 
       const createdAt = new Date(user.created_at);
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
 
-      // Only set role if user was just created (within 5 min)
-      if (createdAt > fiveMinutesAgo) {
+      // Only set role if user was just created (within 2 min)
+      if (createdAt > twoMinutesAgo) {
         await query("UPDATE users SET role = $1 WHERE id = $2", [role, user.id]);
 
         if (role === "photographer") {
-          let slug = session.user.name
-            ?.toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "") || `photographer-${Date.now()}`;
-
-          const existing = await queryOne(
-            "SELECT id FROM photographer_profiles WHERE slug = $1 AND user_id != $2",
-            [slug, user.id]
-          );
-          if (existing) {
-            slug = `${slug}-${Date.now().toString(36)}`;
-          }
+          const shortId = user.id.replace(/-/g, "").slice(0, 7);
+          const slug = `p-${shortId}`;
 
           // Determine early bird tier (count only real photographers, not test accounts)
           // Use MAX to avoid race conditions with concurrent signups
@@ -74,12 +65,12 @@ export async function GET(request: NextRequest) {
             earlyBirdTier = "founding";
             isFounding = true;
             plan = "premium";
-          } else if (count < 60) {
+          } else if (count < 35) {
             // Early 50: Premium for 6 months
             earlyBirdTier = "early50";
             plan = "premium";
             earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-          } else if (count < 160) {
+          } else if (count < 60) {
             // First 100: Pro for 3 months
             earlyBirdTier = "first100";
             plan = "pro";
@@ -91,6 +82,14 @@ export async function GET(request: NextRequest) {
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              ON CONFLICT (user_id) DO NOTHING`,
             [user.id, slug, session.user.name, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
+          );
+
+          // Send photographer welcome email (non-blocking)
+          sendWelcomeEmail(session.user.email!, session.user.name || "there", "photographer").catch((err) =>
+            console.error("[set-role] Failed to send photographer welcome email:", err)
+          );
+          sendAdminNewPhotographerNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
+            console.error("[set-role] Failed to send admin notification:", err)
           );
         }
       }

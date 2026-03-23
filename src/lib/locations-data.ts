@@ -19,6 +19,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Lisbon — Book a Vacation Photoshoot from EUR150",
     seo_description:
       "Book a professional photographer in Lisbon, Portugal. Vacation photoshoots at Alfama, Belem, Pink Street & more. Verified reviews, instant booking. From EUR150.",
+    description_pt:
+      "Capture momentos inesquecíveis na capital mais soalheira da Europa — ruas empedradas, azulejos coloridos e vistas deslumbrantes sobre o rio.",
+    long_description_pt:
+      "Lisboa é um sonho para qualquer fotógrafo. Desde as ruelas sinuosas de Alfama, decoradas com azulejos tradicionais, até aos miradouros panorâmicos com vistas deslumbrantes sobre o Rio Tejo, cada esquina conta uma história. Entre os locais mais procurados estão a icónica Torre de Belém, a romântica Rua Cor-de-Rosa, o histórico Mosteiro dos Jerónimos e a vibrante LX Factory. A luz dourada de Lisboa — tantas vezes chamada 'a cidade da luz' — cria uma atmosfera quente e mágica, perfeita para casais, famílias e viajantes que procuram fotografias verdadeiramente memoráveis.",
+    seo_title_pt: "Fotógrafo em Lisboa — Reserve a Sua Sessão Fotográfica desde 150€",
+    seo_description_pt:
+      "Reserve um fotógrafo profissional em Lisboa, Portugal. Sessões fotográficas em Alfama, Belém, Rua Cor-de-Rosa e mais. Avaliações verificadas, reserva imediata. Desde 150€.",
   },
   {
     id: "sintra",
@@ -37,6 +44,13 @@ export const locations: Location[] = [
     seo_title: "Sintra Photographer — Pena Palace & Fairytale Photoshoots",
     seo_description:
       "Book a photographer in Sintra, Portugal. Magical photoshoots at Pena Palace, Quinta da Regaleira & enchanted forests. Professional vacation photography. From EUR150.",
+    description_pt:
+      "Um mundo de conto de fadas com palácios encantados, florestas místicas e jardins românticos, a poucos minutos de Lisboa.",
+    long_description_pt:
+      "Sintra é como entrar num conto de fadas. Esta vila classificada como Património Mundial da UNESCO alberga o colorido Palácio da Pena, empoleirado em colinas envoltas em nevoeiro, a misteriosa Quinta da Regaleira com o seu poço iniciático e o romântico Palácio de Monserrate rodeado de jardins exóticos. As florestas exuberantes, os caminhos cobertos de musgo e a arquitetura fantástica criam uma atmosfera de outro mundo, perfeita para sessões fotográficas românticas, pedidos de casamento e retratos de família inesquecíveis. Sintra fica a apenas 30 minutos de Lisboa, tornando-a um destino ideal para um passeio de um dia.",
+    seo_title_pt: "Fotógrafo em Sintra — Sessões no Palácio da Pena e Quinta da Regaleira",
+    seo_description_pt:
+      "Reserve um fotógrafo em Sintra, Portugal. Sessões fotográficas mágicas no Palácio da Pena, Quinta da Regaleira e florestas encantadas. Desde 150€.",
   },
   {
     id: "cascais",
@@ -55,6 +69,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Cascais, Portugal | Coastal Photoshoots Near Lisbon",
     seo_description:
       "Book a professional photographer in Cascais, Portugal. Stunning beach, coastal cliff, and town photoshoots near Lisbon. Verified local photographers.",
+    description_pt:
+      "Uma vila costeira elegante com praias de areia, falésias dramáticas do Atlântico e arquitetura sofisticada do século XIX.",
+    long_description_pt:
+      "Cascais combina charme balnear com elegância cosmopolita. Este antigo refúgio da realeza oferece belas praias de areia, a selvagem e dramática Boca do Inferno e um centro histórico pitoresco com edifícios em tons pastel. A vizinha Praia do Guincho, com as suas dunas varridas pelo vento e ondas atlânticas, é um local de eleição para sessões fotográficas ao pôr do sol. Cascais é facilmente acessível a partir de Lisboa pelo cénico comboio costeiro, ideal para uma sessão fotográfica de meio dia ou dia inteiro que combine praia, vila e natureza.",
+    seo_title_pt: "Fotógrafo em Cascais, Portugal | Sessões Fotográficas na Costa de Lisboa",
+    seo_description_pt:
+      "Reserve um fotógrafo profissional em Cascais, Portugal. Sessões fotográficas deslumbrantes na praia, falésias e centro histórico. Fotógrafos locais verificados.",
   },
   {
     id: "caparica",
@@ -73,6 +94,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Costa da Caparica, Portugal | Beach Sunset Photoshoots",
     seo_description:
       "Book a photographer in Costa da Caparica, Portugal. Golden beach, surf, and sunset photoshoots just minutes from Lisbon.",
+    description_pt:
+      "Praias douradas intermináveis, ambiente de surf e pores do sol dramáticos, mesmo ao lado de Lisboa.",
+    long_description_pt:
+      "A Costa da Caparica oferece 30 quilómetros de praias de areia dourada ininterrupta a sul de Lisboa. Cada praia tem a sua personalidade — desde a animada praia da vila com bares e restaurantes até às dunas selvagens da Fonte da Telha. A zona é um paraíso para surfistas com ondulação atlântica consistente, e as vistas do topo da Arriba Fóssil são espetaculares. O pôr do sol sobre o Atlântico aqui é um dos mais belos perto de Lisboa, tornando este local perfeito para sessões fotográficas na hora dourada com um ambiente descontraído e balnear.",
+    seo_title_pt: "Fotógrafo na Costa da Caparica | Sessões na Praia ao Pôr do Sol",
+    seo_description_pt:
+      "Reserve um fotógrafo na Costa da Caparica, Portugal. Sessões fotográficas na praia dourada, surf e pôr do sol a poucos minutos de Lisboa.",
   },
   {
     id: "setubal",
@@ -91,6 +119,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Setúbal, Portugal | Arrábida Coast Photoshoots",
     seo_description:
       "Book a photographer in Setúbal and Arrábida, Portugal. Stunning coastal cliffs, hidden beaches, and natural beauty near Lisbon.",
+    description_pt:
+      "A costa selvagem da Arrábida, golfinhos no estuário do Sado e beleza natural intocada a sul de Lisboa.",
+    long_description_pt:
+      "Setúbal é uma pérola escondida a apenas 45 minutos a sul de Lisboa. O Parque Natural da Arrábida oferece algumas das paisagens costeiras mais dramáticas de Portugal — falésias calcárias imponentes que mergulham em águas cristalinas de tons turquesa, praias isoladas acessíveis apenas de barco e florestas mediterrânicas exuberantes. O Estuário do Sado é lar de uma população residente de golfinhos-roazes, e a cidade piscatória de Setúbal oferece autêntico charme português. A Península de Tróia, do outro lado do estuário, apresenta praias de areia branca intermináveis, perfeitas para sessões na hora dourada.",
+    seo_title_pt: "Fotógrafo em Setúbal, Portugal | Sessões na Costa da Arrábida",
+    seo_description_pt:
+      "Reserve um fotógrafo em Setúbal e Arrábida, Portugal. Falésias costeiras deslumbrantes, praias escondidas e beleza natural perto de Lisboa.",
   },
 
   {
@@ -110,6 +145,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Comporta, Portugal | Luxury Beach Photoshoots",
     seo_description:
       "Book a photographer in Comporta, Portugal. Stunning beach, rice field, and bohemian luxury photoshoots on the Tróia coast.",
+    description_pt:
+      "O paraíso secreto de praia de Portugal — arrozais, pinhais e areia branca imaculada.",
+    long_description_pt:
+      "Comporta é os Hamptons de Portugal — um destino balnear chique e discreto, adorado por celebridades e viajantes informados. Localizada na Península de Tróia, a sul de Lisboa, apresenta quilómetros de praias de areia branca imaculada, enquadradas por pinhais mansos e arrozais. A paisagem é invulgarmente plana para Portugal, criando uma estética serena e minimalista, perfeita para sessões fotográficas editoriais e de inspiração fashion. Ninhos de cegonhas salpicam os arrozais, cabanas de pescadores alinham-se pela costa e a luz tem uma qualidade suave e sonhadora. Comporta oferece uma vibração completamente diferente de qualquer outro lugar em Portugal — luxo boémio em contacto com a natureza.",
+    seo_title_pt: "Fotógrafo em Comporta, Portugal | Sessões de Luxo na Praia",
+    seo_description_pt:
+      "Reserve um fotógrafo em Comporta, Portugal. Sessões fotográficas deslumbrantes na praia, arrozais e luxo boémio na costa de Tróia.",
   },
 
   // Northern Portugal
@@ -130,6 +172,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Guimarães, Portugal | Medieval Castle Photoshoots",
     seo_description:
       "Book a photographer in Guimarães, the birthplace of Portugal. Historic castle, medieval streets, and UNESCO World Heritage photoshoots.",
+    description_pt:
+      "O berço de Portugal — castelo medieval, centro histórico e profundo orgulho nacional.",
+    long_description_pt:
+      "Guimarães é onde Portugal nasceu. O castelo medieval e o Paço dos Duques de Bragança dominam o horizonte desta cidade classificada como Património Mundial da UNESCO. O centro histórico apresenta ruas estreitas em calçada, praças medievais como o Largo da Oliveira e edifícios de granito lindamente preservados. A inscrição 'Aqui nasceu Portugal' nas muralhas da cidade antiga define o tom de uma cidade profundamente ligada à identidade nacional. Guimarães oferece um cenário íntimo e autenticamente português, menos turístico do que Lisboa ou Porto — perfeito para casais que procuram um cenário histórico único.",
+    seo_title_pt: "Fotógrafo em Guimarães, Portugal | Sessões no Castelo Medieval",
+    seo_description_pt:
+      "Reserve um fotógrafo em Guimarães, o berço de Portugal. Sessões fotográficas no castelo histórico, ruas medievais e Património Mundial da UNESCO.",
   },
   {
     id: "porto",
@@ -148,6 +197,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Porto — Couples, Family & Vacation Photoshoots",
     seo_description:
       "Book a professional photographer in Porto, Portugal. Couples, family & vacation photoshoots at Ribeira, Dom Luis Bridge & Douro River. Verified reviews. From EUR150.",
+    description_pt:
+      "A joia romântica do Norte — arquitetura barroca, pores do sol sobre o Douro e a icónica Ribeira.",
+    long_description_pt:
+      "O Porto encanta com o seu cenário dramático à beira-rio, arquitetura medieval e mundialmente famosas caves de vinho do Porto. O bairro da Ribeira, Património Mundial da UNESCO, oferece um cenário deslumbrante com os seus edifícios coloridos em cascata até ao Rio Douro. Os locais de fotografia mais procurados incluem a Ponte D. Luís I, a ornamentada Estação de São Bento, a Livraria Lello e a Torre dos Clérigos. O charme cru e autêntico da cidade torna-a ideal para sessões íntimas de casal, pedidos de casamento e retratos artísticos.",
+    seo_title_pt: "Fotógrafo no Porto — Sessões para Casais, Famílias e Férias",
+    seo_description_pt:
+      "Reserve um fotógrafo profissional no Porto, Portugal. Sessões fotográficas para casais, famílias e férias na Ribeira, Ponte D. Luís e Rio Douro. Avaliações verificadas. Desde 150€.",
   },
   {
     id: "braga",
@@ -166,6 +222,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Braga, Portugal | Historic & Religious Site Photoshoots",
     seo_description:
       "Book a photographer in Braga, Portugal. Beautiful photoshoots at Bom Jesus do Monte, baroque churches, and Peneda-Gerês National Park.",
+    description_pt:
+      "O coração religioso de Portugal — igrejas barrocas, a icónica escadaria do Bom Jesus e séculos de história.",
+    long_description_pt:
+      "Braga é uma das cidades mais antigas da Europa e a capital religiosa de Portugal. O monumental Bom Jesus do Monte com a sua escadaria barroca é um dos marcos mais fotografados do país — os degraus em ziguezague ladeados por fontes ornamentadas criam um cenário inesquecível. O centro histórico apresenta impressionantes igrejas barrocas e românicas, praças encantadoras e a catedral mais antiga de Portugal. O vizinho Parque Nacional da Peneda-Gerês oferece paisagens montanhosas selvagens para sessões fotográficas de estilo aventura.",
+    seo_title_pt: "Fotógrafo em Braga, Portugal | Sessões em Locais Históricos e Religiosos",
+    seo_description_pt:
+      "Reserve um fotógrafo em Braga, Portugal. Sessões fotográficas no Bom Jesus do Monte, igrejas barrocas e Parque Nacional da Peneda-Gerês.",
   },
   {
     id: "douro-valley",
@@ -184,6 +247,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Douro Valley, Portugal | Wine Country Photoshoots",
     seo_description:
       "Book a photographer in the Douro Valley, Portugal. Stunning vineyard, river, and wine estate photoshoots in UNESCO World Heritage wine country.",
+    description_pt:
+      "Vinhas em socalcos classificadas pela UNESCO, vistas sinuosas do rio e a alma da região vinícola portuguesa.",
+    long_description_pt:
+      "O Vale do Douro é uma das regiões vinícolas visualmente mais deslumbrantes do mundo. Vinhas em socalcos esculpidas em encostas íngremes ao longo do sinuoso Rio Douro criam uma paisagem que tem sido moldada pela mão humana há mais de 2.000 anos. Este Património Mundial da UNESCO oferece cenários incríveis para sessões fotográficas — desde encostas cobertas de videiras e quintas rústicas até miradouros panorâmicos e aldeias ribeirinhas encantadoras. A luz quente e dourada do vale faz com que cada fotografia pareça uma pintura. Perfeito para sessões românticas de casal, pedidos de casamento e sessões de estilo editorial.",
+    seo_title_pt: "Fotógrafo no Vale do Douro, Portugal | Sessões na Região Vinícola",
+    seo_description_pt:
+      "Reserve um fotógrafo no Vale do Douro, Portugal. Sessões fotográficas deslumbrantes nas vinhas, rio e quintas vinícolas, Património Mundial da UNESCO.",
   },
   {
     id: "aveiro",
@@ -202,6 +272,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Aveiro, Portugal | Canal & Art Nouveau Photoshoots",
     seo_description:
       "Book a photographer in Aveiro, Portugal. Colorful canal boats, Art Nouveau architecture, and Costa Nova beach photoshoots.",
+    description_pt:
+      "A 'Veneza de Portugal' — barcos moliceiros coloridos, fachadas Art Nouveau e charme à beira dos canais.",
+    long_description_pt:
+      "Aveiro é uma das cidades mais encantadoras e fotogénicas de Portugal. Conhecida como a 'Veneza de Portugal', o seu canal central é ladeado por coloridos barcos moliceiros (embarcações tradicionais de fundo plano) pintados com cenas de arte popular. A cidade possui uma impressionante coleção de arquitetura Art Nouveau, as vibrantes casas de praia às riscas da Costa Nova e a serena Ria de Aveiro. A combinação de água, cor e detalhe arquitetónico torna Aveiro um local de sonho para fotografia lifestyle, sessões de casal e retratos criativos.",
+    seo_title_pt: "Fotógrafo em Aveiro, Portugal | Sessões nos Canais e Art Nouveau",
+    seo_description_pt:
+      "Reserve um fotógrafo em Aveiro, Portugal. Barcos moliceiros coloridos, arquitetura Art Nouveau e sessões fotográficas na Costa Nova.",
   },
 
   {
@@ -221,6 +298,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Peneda-Gerês, Portugal | National Park Photoshoots",
     seo_description:
       "Book a photographer in Peneda-Gerês National Park, Portugal. Waterfalls, mountain lakes, and wild nature photoshoots.",
+    description_pt:
+      "O único parque nacional de Portugal — montanhas selvagens, cascatas e aldeias ancestrais de granito.",
+    long_description_pt:
+      "Peneda-Gerês é o único parque nacional de Portugal e um dos últimos lugares verdadeiramente selvagens da Europa Ocidental. Picos de montanha em granito, florestas ancestrais de carvalhos, cascatas e piscinas naturais de águas turquesa criam uma paisagem natural épica. O parque é lar dos garranos selvagens, antigas estradas romanas e aldeias de granito que parecem paradas no tempo. Os locais de fotografia mais procurados incluem a dramática Cascata do Tahiti, as águas esmeraldinas da Albufeira da Caniçada e a aldeia ancestral de Lindoso com o seu castelo no cimo da colina e os tradicionais espigueiros. Para casais e famílias que adoram natureza e aventura, Gerês oferece os cenários selvagens mais dramáticos de Portugal.",
+    seo_title_pt: "Fotógrafo em Peneda-Gerês, Portugal | Sessões no Parque Nacional",
+    seo_description_pt:
+      "Reserve um fotógrafo no Parque Nacional da Peneda-Gerês, Portugal. Sessões fotográficas em cascatas, lagos de montanha e natureza selvagem.",
   },
 
   // Central Portugal
@@ -241,6 +325,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Tomar, Portugal | Knights Templar Photoshoots",
     seo_description:
       "Book a photographer in Tomar, Portugal. Stunning photoshoots at the Convent of Christ, Templar castle, and historic riverside town.",
+    description_pt:
+      "A cidade dos Templários — um deslumbrante convento fortificado e séculos de mistério.",
+    long_description_pt:
+      "Tomar é uma das pequenas cidades mais fascinantes e fotogénicas de Portugal. O Convento de Cristo, Património Mundial da UNESCO fundado pelos Cavaleiros Templários no século XII, é uma obra-prima arquitetónica que abrange os estilos Românico, Gótico, Manuelino e Renascentista. A sua famosa janela Manuelina é uma das mais ornamentadas do mundo. Abaixo do castelo, o encantador centro histórico apresenta uma sinagoga renascentista (a mais antiga de Portugal), jardins ribeirinhos ao longo do Rio Nabão e o belo parque da Mata Nacional dos Sete Montes. Tomar oferece uma atmosfera mística e dramática como nenhum outro lugar.",
+    seo_title_pt: "Fotógrafo em Tomar, Portugal | Sessões no Convento de Cristo",
+    seo_description_pt:
+      "Reserve um fotógrafo em Tomar, Portugal. Sessões fotográficas deslumbrantes no Convento de Cristo, castelo templário e centro histórico.",
   },
   {
     id: "peniche",
@@ -259,6 +350,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Peniche, Portugal | Surf & Coastal Photoshoots",
     seo_description:
       "Book a photographer in Peniche, Portugal. Dramatic surf, cliff, and Berlengas Island photoshoots on the Atlantic coast.",
+    description_pt:
+      "Surf de classe mundial, as místicas Ilhas Berlengas e uma costa atlântica agreste.",
+    long_description_pt:
+      "Peniche é uma dramática península atlântica famosa pelo surf de classe mundial nos Supertubos (palco do WSL Championship Tour), pela fortaleza medieval sobre o porto e pelas deslumbrantes Ilhas Berlengas — uma reserva natural acessível de barco com águas cristalinas e um forte insular do século XVII. A costa agreste apresenta formações rochosas dramáticas, praias escondidas e a força das ondas que cria oportunidades fotográficas espetaculares. O porto de pesca com barcos coloridos e as vistas do pôr do sol a partir do Farol do Cabo Carvoeiro são particularmente fotogénicas.",
+    seo_title_pt: "Fotógrafo em Peniche, Portugal | Sessões de Surf e Costa Atlântica",
+    seo_description_pt:
+      "Reserve um fotógrafo em Peniche, Portugal. Sessões fotográficas de surf, falésias e Ilhas Berlengas na costa atlântica.",
   },
   {
     id: "coimbra",
@@ -277,6 +375,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Coimbra, Portugal | University City Photoshoots",
     seo_description:
       "Book a photographer in Coimbra, Portugal. Beautiful photoshoots at the historic university, Joanina Library, and Mondego River.",
+    description_pt:
+      "Uma das cidades universitárias mais antigas da Europa — a deslumbrante Biblioteca Joanina, vistas panorâmicas e tradições académicas.",
+    long_description_pt:
+      "Coimbra está impregnada de história e tradição académica. Sede de uma das universidades mais antigas da Europa (fundada em 1290), a cidade apresenta a deslumbrante Biblioteca Joanina — uma obra-prima barroca que rivaliza com qualquer outra na Europa. O campus universitário, empoleirado numa colina sobre o Rio Mondego, oferece vistas panorâmicas que criam cenários dramáticos para retratos. As ruas medievais estreitas da cidade velha, os românticos jardins da Quinta das Lágrimas (ligados à trágica história de amor de Pedro e Inês) e o Mosteiro de Santa Clara oferecem cenários fotográficos diversos e deslumbrantes.",
+    seo_title_pt: "Fotógrafo em Coimbra, Portugal | Sessões na Cidade Universitária",
+    seo_description_pt:
+      "Reserve um fotógrafo em Coimbra, Portugal. Sessões fotográficas na universidade histórica, Biblioteca Joanina e Rio Mondego.",
   },
   {
     id: "obidos",
@@ -295,6 +400,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Óbidos, Portugal | Medieval Town Photoshoots",
     seo_description:
       "Book a photographer in Óbidos, Portugal. Romantic photoshoots in a medieval walled town with castle views and cobblestone streets.",
+    description_pt:
+      "Uma vila medieval muralhada perfeitamente preservada — casas caiadas de branco, ruelas empedradas e vistas do castelo.",
+    long_description_pt:
+      "Óbidos é como entrar numa pintura medieval. Esta vila muralhada perfeitamente preservada apresenta ruas estreitas em calçada ladeadas de casas caiadas de branco adornadas com vibrantes buganvílias e barras pintadas de azul. É possível caminhar ao longo das muralhas do castelo para vistas panorâmicas da paisagem circundante. A escala íntima da vila, a atmosfera romântica e os ricos detalhes arquitetónicos tornam-na ideal para sessões de casal e pedidos de casamento. Óbidos é famosa pela sua ginjinha servida em copos de chocolate — um adereço divertido para fotografias lifestyle!",
+    seo_title_pt: "Fotógrafo em Óbidos, Portugal | Sessões na Vila Medieval",
+    seo_description_pt:
+      "Reserve um fotógrafo em Óbidos, Portugal. Sessões fotográficas românticas numa vila medieval muralhada com vistas do castelo e ruas empedradas.",
   },
   {
     id: "nazare",
@@ -313,6 +425,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Nazaré, Portugal | Ocean & Cliff Photoshoots",
     seo_description:
       "Book a photographer in Nazaré, Portugal. Dramatic ocean, cliff, and fishing village photoshoots at one of Portugal's most iconic coastal towns.",
+    description_pt:
+      "O lar das maiores ondas do mundo, falésias dramáticas e uma autêntica vila piscatória portuguesa.",
+    long_description_pt:
+      "A Nazaré é mundialmente famosa pelas suas ondas gigantes recordistas na Praia do Norte, onde os surfistas enfrentam ondulações de mais de 20 metros de altura. Mas para além do surf, a Nazaré oferece oportunidades fotográficas incríveis — o dramático penhasco do Sítio com a sua fortaleza e farol, os coloridos barcos de pesca tradicionais na praia principal e as mulheres locais com os tradicionais trajes de sete saias. A força bruta do Atlântico combinada com o carácter autêntico da vila cria um cenário singularmente dramático para fotografia. O miradouro do Farol da Nazaré é um dos panoramas costeiros mais espetaculares da Europa.",
+    seo_title_pt: "Fotógrafo na Nazaré, Portugal | Sessões no Oceano e Falésias",
+    seo_description_pt:
+      "Reserve um fotógrafo na Nazaré, Portugal. Sessões fotográficas dramáticas no oceano, falésias e vila piscatória, uma das localidades costeiras mais icónicas de Portugal.",
   },
 
   // Alentejo
@@ -333,6 +452,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Évora, Portugal | Historic & Countryside Photoshoots",
     seo_description:
       "Book a photographer in Évora, Portugal. Beautiful photoshoots at Roman ruins, medieval streets, and golden Alentejo landscapes.",
+    description_pt:
+      "Uma joia da UNESCO no coração do Alentejo — templo romano, catedral medieval e planícies douradas.",
+    long_description_pt:
+      "Évora é uma das cidades mais belas e historicamente ricas de Portugal. Este Património Mundial da UNESCO apresenta uma extraordinária fusão de arquitetura romana, mourisca e medieval dentro das suas muralhas ancestrais. O Templo Romano de Diana com 2.000 anos, a catedral gótica com as suas vistas do terraço e a arrepiante Capela dos Ossos oferecem cenários extraordinários para sessões fotográficas. Para além da cidade, a vasta paisagem alentejana — campos de trigo dourados, montados de sobreiros e colinas salpicadas de olivais — oferece uma estética completamente diferente. Os tons quentes e terrosos de Évora brilham lindamente ao pôr do sol.",
+    seo_title_pt: "Fotógrafo em Évora, Portugal | Sessões Históricas e no Campo Alentejano",
+    seo_description_pt:
+      "Reserve um fotógrafo em Évora, Portugal. Sessões fotográficas em ruínas romanas, ruas medievais e paisagens douradas do Alentejo.",
   },
 
   // Southern Portugal
@@ -353,6 +479,13 @@ export const locations: Location[] = [
     seo_title: "Algarve Photographer — Beach, Cliff & Cave Photoshoots",
     seo_description:
       "Book a professional photographer in the Algarve, Portugal. Stunning beach, cliff & cave photoshoots at Benagil, Lagos & Praia da Marinha. Verified reviews. From EUR150.",
+    description_pt:
+      "Falésias douradas dramáticas, águas turquesa e grutas marinhas escondidas — o Algarve é o estúdio fotográfico perfeito da natureza.",
+    long_description_pt:
+      "A costa algarvia é um dos destinos mais fotogénicos da Europa. Imponentes falésias de calcário dourado, grutas secretas e praias imaculadas criam cenários naturais de cortar a respiração. Os locais imperdíveis incluem a Gruta de Benagil, as formações rochosas da Ponta da Piedade em Lagos, as falésias dramáticas da Praia da Marinha e o encantador centro histórico de Faro. Quer esteja a celebrar uma lua de mel, férias em família ou um pedido de casamento, os cenários espetaculares do Algarve garantem imagens inesquecíveis.",
+    seo_title_pt: "Fotógrafo no Algarve — Sessões na Praia, Falésias e Grutas",
+    seo_description_pt:
+      "Reserve um fotógrafo profissional no Algarve, Portugal. Sessões fotográficas deslumbrantes na praia, falésias e grutas em Benagil, Lagos e Praia da Marinha. Avaliações verificadas. Desde 150€.",
   },
   {
     id: "lagos",
@@ -371,6 +504,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Lagos, Portugal | Ponta da Piedade & Beach Photoshoots",
     seo_description:
       "Book a photographer in Lagos, Portugal. Stunning Ponta da Piedade, cliff, and beach photoshoots in the western Algarve.",
+    description_pt:
+      "Onde as falésias douradas encontram o Atlântico — Ponta da Piedade, grutas escondidas e um centro histórico animado.",
+    long_description_pt:
+      "Lagos é a joia da coroa do Algarve ocidental. As formações rochosas da Ponta da Piedade — pilares imponentes de arenito, arcos e grutas esculpidos pelo mar — estão entre as maravilhas naturais mais fotografadas de Portugal. O centro histórico dentro das muralhas do século XVI oferece ruas coloridas, praças animadas e restaurantes à beira-mar. A Meia Praia estende-se por 4 quilómetros de areia dourada, enquanto as praias mais pequenas (Praia do Camilo, Dona Ana) são emolduradas por paredes de falésia dramáticas. Lagos combina drama natural com charme urbano, tornando-a um dos locais mais versáteis para sessões fotográficas no Algarve.",
+    seo_title_pt: "Fotógrafo em Lagos, Portugal | Sessões na Ponta da Piedade e Praia",
+    seo_description_pt:
+      "Reserve um fotógrafo em Lagos, Portugal. Sessões fotográficas deslumbrantes na Ponta da Piedade, falésias e praias no Algarve ocidental.",
   },
   {
     id: "tavira",
@@ -389,6 +529,13 @@ export const locations: Location[] = [
     seo_title: "Photographer in Tavira, Portugal | Elegant Algarve Photoshoots",
     seo_description:
       "Book a photographer in Tavira, Portugal. Beautiful photoshoots in the Algarve's most elegant town and Ria Formosa Natural Park.",
+    description_pt:
+      "A vila mais elegante do Algarve — ponte romana, charme caiado de branco e a lagoa da Ria Formosa.",
+    long_description_pt:
+      "Tavira é frequentemente considerada a vila mais bonita do Algarve, e com razão. Atravessada pelo Rio Gilão, a sua antiga ponte romana, igrejas renascentistas (a vila tem 37!) e casas caiadas de branco com os tradicionais telhados em tesoura criam uma atmosfera de elegância intemporal. O vizinho Parque Natural da Ria Formosa — um sistema lagunar protegido — oferece praias imaculadas em ilhas-barreira acessíveis apenas de barco, sapais ricos em avifauna e vistas deslumbrantes do pôr do sol. Tavira é perfeita para casais que procuram uma experiência fotográfica mais tranquila e refinada, longe das multidões turísticas.",
+    seo_title_pt: "Fotógrafo em Tavira, Portugal | Sessões Elegantes no Algarve",
+    seo_description_pt:
+      "Reserve um fotógrafo em Tavira, Portugal. Sessões fotográficas na vila mais elegante do Algarve e no Parque Natural da Ria Formosa.",
   },
 
   // Islands
@@ -408,7 +555,14 @@ export const locations: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in Madeira, Portugal | Nature & Adventure Photoshoots",
     seo_description:
-      "Find professional photographers in Madeira, Portugal. Capture stunning nature, mountain, and coastal photos. Book your Madeira photoshoot today.",
+      "Find professional photographers in Madeira & Funchal, Portugal. Capture stunning nature, mountain, and coastal photos. Book your Madeira photoshoot today.",
+    description_pt:
+      "O jardim flutuante do Atlântico — picos vulcânicos, trilhos de levadas e paisagens tropicais exuberantes.",
+    long_description_pt:
+      "A Ilha da Madeira é um paraíso para amantes da natureza e aventureiros. Paisagens vulcânicas dramáticas, florestas ancestrais de laurissilva (Património Mundial da UNESCO) e trilhos panorâmicos de levadas oferecem oportunidades fotográficas extraordinárias. Os destaques incluem o imponente Cabo Girão, o cénico cume do Pico do Arieiro acima das nuvens, a encantadora vila piscatória de Câmara de Lobos e o vibrante Mercado dos Lavradores no Funchal. O clima ameno durante todo o ano e as paisagens diversificadas da Madeira tornam-na perfeita para sessões fotográficas ao ar livre em qualquer estação.",
+    seo_title_pt: "Fotógrafo na Madeira, Portugal | Sessões de Natureza e Aventura",
+    seo_description_pt:
+      "Encontre fotógrafos profissionais na Madeira, Portugal. Capture fotografias deslumbrantes de natureza, montanha e costa. Reserve a sua sessão fotográfica na Madeira.",
   },
   {
     id: "azores",
@@ -426,7 +580,14 @@ export const locations: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in the Azores, Portugal | Volcanic Island Photoshoots",
     seo_description:
-      "Find professional photographers in the Azores, Portugal. Book unique photoshoots at Sete Cidades, volcanic lakes & dramatic island landscapes.",
+      "Find professional photographers in the Azores & São Miguel, Portugal. Book unique photoshoots at Sete Cidades, volcanic lakes & dramatic island landscapes.",
+    description_pt:
+      "Ilhas vulcânicas remotas com lagos de cratera esmeralda, nascentes termais e as paisagens mais dramáticas da Europa.",
+    long_description_pt:
+      "O arquipélago dos Açores é um dos segredos mais bem guardados da Europa. Estas nove ilhas vulcânicas no meio do Oceano Atlântico oferecem paisagens de outro mundo — lagos de cratera verde-esmeralda (Sete Cidades), nascentes termais fumegantes, exuberantes plantações de chá e falésias costeiras dramáticas. São Miguel, a maior ilha, é a mais procurada para fotografia, com os seus icónicos lagos gémeos de Sete Cidades, as piscinas termais das Furnas e pastagens verdejantes salpicadas de hortênsias. Os Açores oferecem um cenário verdadeiramente único e fora dos roteiros habituais para sessões fotográficas memoráveis.",
+    seo_title_pt: "Fotógrafo nos Açores, Portugal | Sessões nas Ilhas Vulcânicas",
+    seo_description_pt:
+      "Encontre fotógrafos profissionais nos Açores, Portugal. Reserve sessões fotográficas únicas em Sete Cidades, lagos vulcânicos e paisagens insulares dramáticas.",
   },
 ];
 

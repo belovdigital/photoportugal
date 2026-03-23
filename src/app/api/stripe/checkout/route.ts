@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as { id?: string }).id;
 
   try {
-    const { booking_id } = await req.json();
+    const { booking_id, locale } = await req.json();
+    const localePrefix = locale === "pt" ? "/pt" : "";
 
     if (!booking_id) return NextResponse.json({ error: "Booking ID required" }, { status: 400 });
 
@@ -72,10 +73,10 @@ export async function POST(req: NextRequest) {
 
     // Create Stripe Checkout Session — payment collected on platform, transferred to photographer on delivery acceptance
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
+    const stripeSessionParams: any = {
       customer: customerId,
       mode: "payment",
-      locale: "auto",
+      locale: locale === "pt" ? "pt" : "auto",
       adaptive_pricing: { enabled: true },
       allow_promotion_codes: true,
       line_items: [{
@@ -96,13 +97,32 @@ export async function POST(req: NextRequest) {
           package_name: booking.package_name || "Custom",
         },
       },
-      success_url: `${BASE_URL}/dashboard/bookings?payment=success&booking=${booking.id}`,
-      cancel_url: `${BASE_URL}/dashboard/bookings?payment=cancelled`,
+      success_url: `${BASE_URL}${localePrefix}/dashboard/bookings?payment=success&booking=${booking.id}`,
+      cancel_url: `${BASE_URL}${localePrefix}/dashboard/bookings?payment=cancelled`,
       metadata: {
         booking_id: booking.id,
         type: "booking",
       },
-    });
+    };
+
+    const idempotencyKey = `checkout_${booking.id}`;
+
+    let checkoutSession;
+    try {
+      checkoutSession = await requireStripe().checkout.sessions.create(stripeSessionParams, { idempotencyKey });
+    } catch (stripeError) {
+      console.warn("[stripe/checkout] first attempt failed, retrying in 1s:", stripeError);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        checkoutSession = await requireStripe().checkout.sessions.create(stripeSessionParams, { idempotencyKey });
+      } catch (retryError) {
+        console.error("[stripe/checkout] retry also failed:", retryError);
+        return NextResponse.json(
+          { error: "Payment service temporarily unavailable. Please try again in a moment." },
+          { status: 503 }
+        );
+      }
+    }
 
     // Save fee breakdown
     await queryOne(
