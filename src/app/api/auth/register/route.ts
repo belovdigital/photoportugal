@@ -56,8 +56,14 @@ export async function POST(req: NextRequest) {
 
     // If photographer, create profile with early bird logic
     if (validRole === "photographer" && user) {
-      const shortId = user.id.replace(/-/g, "").slice(0, 7);
-      const slug = `p-${shortId}`;
+      const shortId = user.id.replace(/-/g, "").slice(0, 10);
+      let slug = `p-${shortId}`;
+
+      // Uniqueness check — append random chars if collision
+      const existing_slug = await queryOne("SELECT id FROM photographer_profiles WHERE slug = $1", [slug]);
+      if (existing_slug) {
+        slug = `${slug}${crypto.randomBytes(2).toString("hex").slice(0, 3)}`;
+      }
 
       // Determine early bird tier
       const photographerCount = await queryOne<{ count: string; next_num: string }>(

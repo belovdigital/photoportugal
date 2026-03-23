@@ -44,8 +44,15 @@ export async function GET(request: NextRequest) {
         await query("UPDATE users SET role = $1 WHERE id = $2", [role, user.id]);
 
         if (role === "photographer") {
-          const shortId = user.id.replace(/-/g, "").slice(0, 7);
-          const slug = `p-${shortId}`;
+          const shortId = user.id.replace(/-/g, "").slice(0, 10);
+          let slug = `p-${shortId}`;
+
+          // Uniqueness check — append random chars if collision
+          const existingSlug = await queryOne("SELECT id FROM photographer_profiles WHERE slug = $1", [slug]);
+          if (existingSlug) {
+            const crypto = await import("crypto");
+            slug = `${slug}${crypto.randomBytes(2).toString("hex").slice(0, 3)}`;
+          }
 
           // Determine early bird tier (count only real photographers, not test accounts)
           // Use MAX to avoid race conditions with concurrent signups

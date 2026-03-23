@@ -9,7 +9,7 @@ import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per delivery photo
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per delivery photo (high-res)
 const MAX_DELIVERY_PHOTOS = 200; // max photos per delivery
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
@@ -209,6 +209,34 @@ export async function POST(
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
     }
 
+    // Validate all files upfront before writing any to disk
+    const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "heic", "heif", "tiff"];
+    const ALLOWED_MIME_PREFIXES = ["image/"];
+    const rejectedFiles: string[] = [];
+
+    for (const file of files) {
+      if (!file.type || !ALLOWED_MIME_PREFIXES.some(prefix => file.type.startsWith(prefix))) {
+        rejectedFiles.push(`"${file.name}" — not an image file (type: ${file.type || "unknown"})`);
+        continue;
+      }
+      const rawExt = (file.name.split(".").pop() || "").toLowerCase();
+      if (!rawExt || !ALLOWED_EXT.includes(rawExt)) {
+        rejectedFiles.push(`"${file.name}" — unsupported file type (.${rawExt || "unknown"}). Allowed: ${ALLOWED_EXT.join(", ")}`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        rejectedFiles.push(`"${file.name}" — file too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+        continue;
+      }
+    }
+
+    if (rejectedFiles.length === files.length) {
+      return NextResponse.json({
+        error: "All files were rejected",
+        details: rejectedFiles,
+      }, { status: 400 });
+    }
+
     const deliveryDir = path.join(UPLOAD_DIR, "delivery", id);
     await mkdir(deliveryDir, { recursive: true });
 
@@ -223,12 +251,13 @@ export async function POST(
 
     const uploaded = [];
     for (const file of files) {
+      // Skip files that fail validation
+      if (!file.type || !file.type.startsWith("image/")) continue;
+      const rawExt = (file.name.split(".").pop() || "").toLowerCase();
+      if (!rawExt || !ALLOWED_EXT.includes(rawExt)) continue;
       if (file.size > MAX_FILE_SIZE) continue;
-      if (!file.type.startsWith("image/")) continue;
 
-      const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "gif", "heic", "heif"];
-      const rawExt = (file.name.split(".").pop() || "jpg").toLowerCase();
-      const ext = ALLOWED_EXT.includes(rawExt) ? rawExt : "jpg";
+      const ext = rawExt;
       const filename = `${crypto.randomUUID()}.${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
       await writeFile(path.join(deliveryDir, filename), buffer);
@@ -243,7 +272,12 @@ export async function POST(
       uploaded.push({ id: item?.id, url, filename: file.name, file_size: file.size });
     }
 
-    return NextResponse.json({ success: true, uploaded, count: uploaded.length });
+    return NextResponse.json({
+      success: true,
+      uploaded,
+      count: uploaded.length,
+      ...(rejectedFiles.length > 0 ? { rejected: rejectedFiles } : {}),
+    });
   } catch (error) {
     console.error("[delivery] upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

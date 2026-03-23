@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import {
   sendEmail,
+  getAdminEmail,
   sendPaymentReminderToClient,
   sendShootReminderToClient,
   sendShootReminderToPhotographer,
@@ -10,6 +11,7 @@ import {
   sendTrustpilotFollowUpToPhotographer,
 } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
+import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { rm } from "fs/promises";
 import path from "path";
 
@@ -26,6 +28,9 @@ export async function GET(req: NextRequest) {
     autoCancelled: 0,
     shootReminders: 0,
     deliveryReminders: 0,
+    deliveryEscalations: 0,
+    deliveryAutoRefunds: 0,
+    autoReleasedPayments: 0,
     trustpilotFollowUps: 0,
     errors: [] as string[],
   };
@@ -277,6 +282,286 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Delivery reminders query: ${err}`);
   }
 
+  // === 3b. Delivery escalation: 14-day second reminder + admin alert ===
+  try {
+    const overdueEscalations = await query<{
+      id: string;
+      photographer_email: string;
+      photographer_name: string;
+      client_name: string;
+      client_email: string;
+    }>(
+      `SELECT b.id, pu.email as photographer_email, pp.display_name as photographer_name,
+              cu.name as client_name, cu.email as client_email
+       FROM bookings b
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       JOIN users cu ON cu.id = b.client_id
+       LEFT JOIN packages p ON p.id = b.package_id
+       WHERE b.status = 'completed'
+         AND b.delivery_token IS NULL
+         AND b.updated_at < NOW() - INTERVAL '14 days'
+         AND b.delivery_reminder_sent = TRUE
+         AND NOT EXISTS (
+           SELECT 1 FROM bookings b2 WHERE b2.id = b.id AND b2.updated_at < NOW() - INTERVAL '21 days'
+         )`
+    );
+
+    for (const booking of overdueEscalations) {
+      try {
+        // Second reminder to photographer
+        await sendEmail(
+          booking.photographer_email,
+          `Urgent: ${booking.client_name} is still waiting for their photos (14 days overdue)`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Second Delivery Reminder</h2>
+            <p>Hi ${booking.photographer_name},</p>
+            <p>Your client <strong>${booking.client_name}</strong> has been waiting for their photos for over 14 days. Please deliver the photos as soon as possible.</p>
+            <p style="padding: 12px; background: #fef2f2; border-radius: 8px; color: #991b1b; font-size: 13px;">
+              <strong>Warning:</strong> If photos are not delivered within 21 days, the booking will be automatically cancelled and the client will receive a full refund.
+            </p>
+            <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Bookings</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        // Alert admin
+        const adminEmail = await getAdminEmail();
+        const adminEmails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+        for (const email of adminEmails) {
+          await sendEmail(
+            email,
+            `[Alert] Photographer ${booking.photographer_name} overdue on delivery for 14 days`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Delivery Overdue — 14 Days</h2>
+              <p>Photographer <strong>${booking.photographer_name}</strong> (${booking.photographer_email}) has not delivered photos for booking ${booking.id}.</p>
+              <p>Client: <strong>${booking.client_name}</strong> (${booking.client_email})</p>
+              <p>The booking will be auto-refunded at 21 days if not resolved.</p>
+              <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin</a></p>
+            </div>`
+          );
+        }
+
+        results.deliveryEscalations++;
+      } catch (err) {
+        results.errors.push(`Delivery escalation for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Delivery escalation query: ${err}`);
+  }
+
+  // === 3c. Delivery auto-refund: 21 days overdue, auto-cancel and refund ===
+  try {
+    const overdueAutoRefunds = await query<{
+      id: string;
+      photographer_email: string;
+      photographer_name: string;
+      client_email: string;
+      client_name: string;
+      payment_status: string | null;
+      stripe_payment_intent_id: string | null;
+      total_price: number | null;
+      service_fee: number | null;
+    }>(
+      `SELECT b.id, pu.email as photographer_email, pp.display_name as photographer_name,
+              cu.email as client_email, cu.name as client_name,
+              b.payment_status, b.stripe_payment_intent_id, b.total_price, b.service_fee
+       FROM bookings b
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       JOIN users cu ON cu.id = b.client_id
+       WHERE b.status = 'completed'
+         AND b.delivery_token IS NULL
+         AND b.updated_at < NOW() - INTERVAL '21 days'`
+    );
+
+    for (const booking of overdueAutoRefunds) {
+      try {
+        // Refund if paid
+        if (booking.payment_status === "paid" && booking.stripe_payment_intent_id) {
+          try {
+            const stripeClient = requireStripe();
+            await stripeClient.refunds.create({
+              payment_intent: booking.stripe_payment_intent_id,
+            });
+            await queryOne(
+              "UPDATE bookings SET payment_status = 'refunded' WHERE id = $1 RETURNING id",
+              [booking.id]
+            );
+          } catch (stripeErr) {
+            console.error(`[cron] auto-refund stripe error for booking ${booking.id}:`, stripeErr);
+          }
+        }
+
+        // Cancel the booking
+        await queryOne(
+          "UPDATE bookings SET status = 'cancelled' WHERE id = $1 RETURNING id",
+          [booking.id]
+        );
+
+        const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+
+        // Email client
+        sendEmail(
+          booking.client_email,
+          `Booking cancelled — photographer did not deliver photos`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Booking Auto-Cancelled</h2>
+            <p>Hi ${booking.client_name},</p>
+            <p>Your booking with <strong>${booking.photographer_name}</strong> has been automatically cancelled because the photos were not delivered within 21 days.</p>
+            ${booking.payment_status === "paid" ? `<p>A full refund has been issued. The refund should appear in your account within 5-10 business days.</p>` : ""}
+            <p><a href="${baseUrl}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Browse Photographers</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        // Email photographer
+        sendEmail(
+          booking.photographer_email,
+          `Booking cancelled — photos not delivered within 21 days`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Booking Auto-Cancelled</h2>
+            <p>Hi ${booking.photographer_name},</p>
+            <p>Your booking with <strong>${booking.client_name}</strong> has been automatically cancelled because photos were not delivered within 21 days.</p>
+            ${booking.payment_status === "paid" ? `<p>The client's payment has been refunded.</p>` : ""}
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        results.deliveryAutoRefunds++;
+      } catch (err) {
+        results.errors.push(`Delivery auto-refund for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Delivery auto-refund query: ${err}`);
+  }
+
+  // === 3d. Auto-release payment: 14 days after delivery without client acceptance ===
+  try {
+    const autoReleaseBookings = await query<{
+      id: string;
+      total_price: number | null;
+      payout_amount: number | null;
+      payout_transferred: boolean;
+      stripe_payment_intent_id: string | null;
+      photographer_stripe_id: string | null;
+      photographer_plan: string;
+      photographer_email: string;
+      photographer_name: string;
+      client_email: string;
+      client_name: string;
+    }>(
+      `SELECT b.id, b.total_price, b.payout_amount, b.payout_transferred,
+              b.stripe_payment_intent_id,
+              pp.stripe_account_id as photographer_stripe_id,
+              pp.plan as photographer_plan,
+              pu.email as photographer_email,
+              pp.display_name as photographer_name,
+              cu.email as client_email,
+              cu.name as client_name
+       FROM bookings b
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       JOIN users cu ON cu.id = b.client_id
+       WHERE b.status = 'delivered'
+         AND COALESCE(b.delivery_accepted, FALSE) = FALSE
+         AND b.payment_status = 'paid'
+         AND b.updated_at < NOW() - INTERVAL '14 days'`
+    );
+
+    for (const booking of autoReleaseBookings) {
+      try {
+        // Mark as accepted
+        await queryOne(
+          "UPDATE bookings SET delivery_accepted = TRUE, delivery_accepted_at = NOW() WHERE id = $1 AND COALESCE(delivery_accepted, FALSE) = FALSE RETURNING id",
+          [booking.id]
+        );
+
+        // Transfer payout to photographer (same logic as delivery accept)
+        if (!booking.payout_transferred && booking.photographer_stripe_id) {
+          try {
+            const stripeClient = requireStripe();
+
+            let payoutAmount = booking.payout_amount ? Number(booking.payout_amount) : null;
+            if (!payoutAmount && booking.total_price) {
+              const payment = calculatePayment(booking.total_price, booking.photographer_plan);
+              payoutAmount = payment.photographerPayout;
+            }
+
+            if (payoutAmount && payoutAmount > 0) {
+              await stripeClient.transfers.create({
+                amount: Math.round(payoutAmount * 100),
+                currency: "eur",
+                destination: booking.photographer_stripe_id,
+                ...(booking.stripe_payment_intent_id
+                  ? { transfer_group: booking.stripe_payment_intent_id }
+                  : {}),
+                metadata: {
+                  booking_id: booking.id,
+                  type: "auto_release_payout",
+                  ...(booking.stripe_payment_intent_id
+                    ? { payment_intent_id: booking.stripe_payment_intent_id }
+                    : {}),
+                },
+              });
+
+              await queryOne(
+                "UPDATE bookings SET payout_transferred = TRUE WHERE id = $1 RETURNING id",
+                [booking.id]
+              );
+            }
+          } catch (stripeErr) {
+            console.error(`[cron] auto-release payout error for booking ${booking.id}:`, stripeErr);
+          }
+        }
+
+        // Update delivery expiry to 60 days from now
+        const newExpiry = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+        await queryOne(
+          "UPDATE bookings SET delivery_expires_at = $1 WHERE id = $2 RETURNING id",
+          [newExpiry.toISOString(), booking.id]
+        );
+
+        const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+
+        // Email client
+        sendEmail(
+          booking.client_email,
+          `Photos auto-accepted after 14 days`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Photos Auto-Accepted</h2>
+            <p>Hi ${booking.client_name},</p>
+            <p>Your photos from <strong>${booking.photographer_name}</strong> have been automatically accepted after 14 days. The payment has been released to the photographer.</p>
+            <p>Your photos are still available for download for 60 days.</p>
+            <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        // Email photographer
+        sendEmail(
+          booking.photographer_email,
+          `Photos auto-accepted after 14 days — payment released`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Payment Released!</h2>
+            <p>Hi ${booking.photographer_name},</p>
+            <p>The photos for <strong>${booking.client_name}</strong> have been automatically accepted after 14 days. Your payment has been transferred to your Stripe account.</p>
+            <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Dashboard</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        results.autoReleasedPayments++;
+      } catch (err) {
+        results.errors.push(`Auto-release payment for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Auto-release payments query: ${err}`);
+  }
+
   // === 4. Trustpilot follow-up (3 days after delivery accepted) ===
   try {
     const recentlyAccepted = await query<{
@@ -390,4 +675,5 @@ export async function GET(req: NextRequest) {
     earlyBirdExpired,
     expiredDeliveriesCleaned,
   });
+
 }

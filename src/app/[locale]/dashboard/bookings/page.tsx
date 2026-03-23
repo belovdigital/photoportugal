@@ -70,6 +70,7 @@ export default async function BookingsPage() {
     delivery_token: string | null;
     delivery_accepted: boolean;
     payment_url: string | null;
+    updated_at: string;
   }[] = [];
 
   try {
@@ -80,7 +81,7 @@ export default async function BookingsPage() {
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
                   p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
-                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url
+                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            LEFT JOIN packages p ON p.id = b.package_id
@@ -94,7 +95,7 @@ export default async function BookingsPage() {
         `SELECT b.id, pp.display_name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
-                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url
+                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users u ON u.id = pp.user_id
@@ -168,6 +169,27 @@ export default async function BookingsPage() {
               {booking.message && (
                 <p className="mt-3 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
               )}
+
+              {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (() => {
+                const confirmedAt = new Date(booking.updated_at);
+                const deadline = new Date(confirmedAt.getTime() + 48 * 60 * 60 * 1000);
+                const now = new Date();
+                const hoursRemaining = Math.max(0, Math.round((deadline.getTime() - now.getTime()) / (1000 * 60 * 60)));
+                if (hoursRemaining > 0) {
+                  return (
+                    <div className="mt-3 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                      <strong>{t("paymentDueLabel") || "Payment due"}</strong>{" "}
+                      {t("paymentDueMessage", { hours: hoursRemaining }) || `within ${hoursRemaining} hours. Your booking will be automatically cancelled if not paid.`}
+                    </div>
+                  );
+                }
+                return (
+                  <div className="mt-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <strong>{t("paymentOverdueLabel") || "Payment overdue"}</strong>{" "}
+                    {t("paymentOverdueMessage") || "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation."}
+                  </div>
+                );
+              })()}
 
               {(booking.status === "pending" || booking.status === "inquiry") && (
                 <DateNegotiation

@@ -2,12 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
 
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = (session.user as { id?: string }).id;
+  try {
+    const user = await queryOne<{ phone: string | null }>("SELECT phone FROM users WHERE id = $1", [userId]);
+    return NextResponse.json({ phone: user?.phone || null });
+  } catch {
+    return NextResponse.json({ phone: null });
+  }
+}
+
 export async function PUT(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = (session.user as { id?: string }).id;
-  const { first_name, last_name, name: legacyName } = await req.json();
+  const { first_name, last_name, name: legacyName, phone } = await req.json();
   const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
   const lastName = (last_name ?? legacyName?.split(" ").slice(1).join(" ") ?? "").trim();
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
@@ -15,7 +27,7 @@ export async function PUT(req: NextRequest) {
   if (!firstName) return NextResponse.json({ error: "First name required" }, { status: 400 });
 
   try {
-    await queryOne("UPDATE users SET name = $1, first_name = $2, last_name = $3 WHERE id = $4 RETURNING id", [fullName, firstName, lastName, userId]);
+    await queryOne("UPDATE users SET name = $1, first_name = $2, last_name = $3, phone = $4 WHERE id = $5 RETURNING id", [fullName, firstName, lastName, phone || null, userId]);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
@@ -39,94 +51,48 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    // Get all booking IDs where user is the client
-    const clientBookings = await query<{ id: string }>(
-      "SELECT id FROM bookings WHERE client_id = $1",
-      [userId]
+    // Soft-delete: anonymize user data instead of hard-deleting
+    // This preserves bookings, reviews, and messages for data integrity
+    const deletedEmail = `deleted_${userId}@deleted.photoportugal.com`;
+
+    await queryOne(
+      `UPDATE users SET
+        name = 'Deleted User',
+        first_name = 'Deleted',
+        last_name = 'User',
+        email = $1,
+        password_hash = NULL,
+        avatar_url = NULL,
+        google_id = NULL,
+        phone = NULL,
+        is_banned = TRUE
+      WHERE id = $2 RETURNING id`,
+      [deletedEmail, userId]
     );
-    const clientBookingIds = clientBookings.map((b) => b.id);
 
-    // 1. Delete delivery_photos for user's bookings
-    if (clientBookingIds.length > 0) {
-      await query(
-        `DELETE FROM delivery_photos WHERE booking_id = ANY($1)`,
-        [clientBookingIds]
-      );
-    }
-
-    // 2. Delete messages for user's bookings (as client) + messages sent by user
-    if (clientBookingIds.length > 0) {
-      await query(
-        `DELETE FROM messages WHERE booking_id = ANY($1)`,
-        [clientBookingIds]
-      );
-    }
-    await query("DELETE FROM messages WHERE sender_id = $1", [userId]);
-
-    // 3. Delete review_photos for user's reviews, then reviews
-    const userReviews = await query<{ id: string }>(
-      "SELECT id FROM reviews WHERE client_id = $1",
-      [userId]
-    );
-    const reviewIds = userReviews.map((r) => r.id);
-    if (reviewIds.length > 0) {
-      await query(
-        `DELETE FROM review_photos WHERE review_id = ANY($1)`,
-        [reviewIds]
-      );
-    }
-    await query("DELETE FROM reviews WHERE client_id = $1", [userId]);
-
-    // 4. Delete disputes by user
-    await query("DELETE FROM disputes WHERE client_id = $1", [userId]);
-
-    // 5. Delete bookings where client_id = userId
-    if (clientBookingIds.length > 0) {
-      await query(
-        `DELETE FROM bookings WHERE id = ANY($1)`,
-        [clientBookingIds]
-      );
-    }
-
-    // 6. If user is photographer: delete photographer-related data
+    // If photographer: anonymize profile but keep the row
     const profile = await queryOne<{ id: string }>(
       "SELECT id FROM photographer_profiles WHERE user_id = $1",
       [userId]
     );
     if (profile) {
-      // Get bookings where this photographer is involved
-      const photoBookings = await query<{ id: string }>(
-        "SELECT id FROM bookings WHERE photographer_id = $1",
+      await queryOne(
+        `UPDATE photographer_profiles SET
+          display_name = 'Deleted Photographer',
+          is_approved = FALSE,
+          tagline = NULL,
+          bio = NULL,
+          cover_url = NULL,
+          phone_number = NULL,
+          stripe_account_id = NULL,
+          stripe_onboarding_complete = FALSE
+        WHERE id = $1 RETURNING id`,
         [profile.id]
       );
-      const photoBookingIds = photoBookings.map((b) => b.id);
-
-      if (photoBookingIds.length > 0) {
-        await query(`DELETE FROM delivery_photos WHERE booking_id = ANY($1)`, [photoBookingIds]);
-        await query(`DELETE FROM messages WHERE booking_id = ANY($1)`, [photoBookingIds]);
-        // Delete reviews + review_photos for photographer bookings
-        const photoReviews = await query<{ id: string }>(
-          `SELECT id FROM reviews WHERE booking_id = ANY($1)`,
-          [photoBookingIds]
-        );
-        const photoReviewIds = photoReviews.map((r) => r.id);
-        if (photoReviewIds.length > 0) {
-          await query(`DELETE FROM review_photos WHERE review_id = ANY($1)`, [photoReviewIds]);
-          await query(`DELETE FROM reviews WHERE id = ANY($1)`, [photoReviewIds]);
-        }
-        await query(`DELETE FROM disputes WHERE booking_id = ANY($1)`, [photoBookingIds]);
-        await query(`DELETE FROM bookings WHERE id = ANY($1)`, [photoBookingIds]);
-      }
-
-      // Delete photographer-specific tables (cascade handles portfolio_items, packages, photographer_locations)
-      await query("DELETE FROM portfolio_items WHERE photographer_id = $1", [profile.id]);
-      await query("DELETE FROM packages WHERE photographer_id = $1", [profile.id]);
-      await query("DELETE FROM photographer_locations WHERE photographer_id = $1", [profile.id]);
-      await query("DELETE FROM photographer_profiles WHERE id = $1", [profile.id]);
     }
 
-    // 7. Delete the user record (notification_preferences cascades automatically)
-    await query("DELETE FROM users WHERE id = $1", [userId]);
+    // Clear notification preferences
+    await query("DELETE FROM notification_preferences WHERE user_id = $1", [userId]);
 
     return NextResponse.json({ success: true });
   } catch (err) {

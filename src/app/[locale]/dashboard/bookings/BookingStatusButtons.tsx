@@ -34,17 +34,20 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus }
 
   if (currentStatus === "inquiry") {
     return (
-      <>
-        <button onClick={() => updateStatus("pending")} disabled={updating}
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
-          {t("convertToBooking")}
-        </button>
-        <button onClick={() => updateStatus("cancelled")} disabled={updating}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
-          {t("decline")}
-        </button>
+      <div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => updateStatus("pending")} disabled={updating}
+            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
+            {t("convertToBooking")}
+          </button>
+          <button onClick={() => updateStatus("cancelled")} disabled={updating}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
+            {t("decline")}
+          </button>
+        </div>
+        <p className="mt-1.5 text-[11px] text-gray-400">{t("acceptInquiryHint")}</p>
         {errorBanner}
-      </>
+      </div>
     );
   }
 

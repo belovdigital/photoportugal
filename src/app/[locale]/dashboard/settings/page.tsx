@@ -80,6 +80,8 @@ export default function SettingsPage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phoneCode, setPhoneCode] = useState("+351");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [nameLoaded, setNameLoaded] = useState(false);
 
   useEffect(() => {
@@ -118,6 +120,18 @@ export default function SettingsPage() {
         setPrefsLoaded(true);
       })
       .catch(() => setPrefsLoaded(true));
+    // Load phone
+    fetch("/api/dashboard/account")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.phone) {
+          // Split phone into code + number (e.g. "+351912345678" → "+351" + "912345678")
+          const match = data.phone.match(/^(\+\d{1,4})(.+)$/);
+          if (match) { setPhoneCode(match[1]); setPhoneNumber(match[2]); }
+          else setPhoneNumber(data.phone);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   function showMessage(msg: string) {
@@ -132,7 +146,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/dashboard/account", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+        body: JSON.stringify({ first_name: firstName, last_name: lastName, phone: phoneNumber ? `${phoneCode}${phoneNumber}` : null }),
       });
       if (res.ok) showMessage(t("settingsSaved"));
       else showMessage(t("failedToSave"));
@@ -198,6 +212,33 @@ export default function SettingsPage() {
             <input type="email" value={user.email || ""} disabled
               className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500" />
             <p className="mt-1 text-xs text-gray-400">{t("emailCannotBeChanged")}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">{t("phone")}</label>
+            <div className="mt-1 flex gap-2">
+              <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
+                className="rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-primary-500 w-24">
+                <option value="+351">🇵🇹 +351</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+49">🇩🇪 +49</option>
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+34">🇪🇸 +34</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+31">🇳🇱 +31</option>
+                <option value="+7">🇷🇺 +7</option>
+                <option value="+380">🇺🇦 +380</option>
+                <option value="+55">🇧🇷 +55</option>
+                <option value="+81">🇯🇵 +81</option>
+                <option value="+86">🇨🇳 +86</option>
+                <option value="+91">🇮🇳 +91</option>
+                <option value="+61">🇦🇺 +61</option>
+              </select>
+              <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
+                placeholder="912 345 678"
+                className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500" />
+            </div>
+            <p className="mt-1 text-xs text-gray-400">{t("phoneHint")}</p>
           </div>
           {!isPhotographer && (
             <button type="submit" disabled={saving}

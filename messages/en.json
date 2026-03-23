@@ -1568,6 +1568,8 @@
     "firstName": "First Name",
     "lastName": "Last Name",
     "displayName": "Display Name",
+    "phone": "Phone Number",
+    "phoneHint": "Used for SMS booking notifications",
     "displayNameHint": "This is the name shown publicly on your profile",
     "profileUrl": "Profile URL",
     "premiumBadge": "Premium",
@@ -1986,7 +1988,8 @@
     "next": "Next"
   },
   "bookingActions": {
-    "convertToBooking": "Convert to Booking",
+    "convertToBooking": "Accept Inquiry",
+    "acceptInquiryHint": "This moves the inquiry to a booking request. You can still discuss details and decline later.",
     "decline": "Decline",
     "confirm": "Confirm",
     "confirming": "Confirming...",
@@ -2028,6 +2031,8 @@
     "lastName": "Last Name",
     "email": "Email",
     "emailCannotBeChanged": "Email cannot be changed",
+    "phone": "Phone Number",
+    "phoneHint": "Used for SMS booking notifications",
     "saveChanges": "Save Changes",
     "savingChanges": "Saving...",
     "settingsSaved": "Settings saved!",

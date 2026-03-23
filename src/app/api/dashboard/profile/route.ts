@@ -16,6 +16,7 @@ export async function PUT(req: NextRequest) {
     const {
       first_name,
       last_name,
+      phone,
       display_name,
       tagline,
       bio,
@@ -34,9 +35,11 @@ export async function PUT(req: NextRequest) {
     if (first_name) {
       const fullName = last_name ? `${first_name} ${last_name}` : first_name;
       await queryOne(
-        "UPDATE users SET name = $1, first_name = $2, last_name = $3 WHERE id = $4",
-        [fullName, first_name.trim(), (last_name || "").trim(), userId]
+        "UPDATE users SET name = $1, first_name = $2, last_name = $3, phone = $4 WHERE id = $5",
+        [fullName, first_name.trim(), (last_name || "").trim(), phone || null, userId]
       );
+    } else if (phone !== undefined) {
+      await queryOne("UPDATE users SET phone = $1 WHERE id = $2", [phone || null, userId]);
     }
 
     const profile = await queryOne<{ id: string; plan: string; slug: string }>(

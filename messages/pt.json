@@ -1568,6 +1568,8 @@
     "firstName": "Nome",
     "lastName": "Apelido",
     "displayName": "Nome de Exibição",
+    "phone": "Número de Telefone",
+    "phoneHint": "Usado para notificações SMS de reservas",
     "displayNameHint": "Este é o nome exibido publicamente no seu perfil",
     "profileUrl": "URL do Perfil",
     "premiumBadge": "Premium",
@@ -1858,7 +1860,8 @@
     "next": "Seguinte"
   },
   "bookingActions": {
-    "convertToBooking": "Converter em Reserva",
+    "convertToBooking": "Aceitar Consulta",
+    "acceptInquiryHint": "Isto move a consulta para um pedido de reserva. Ainda pode discutir detalhes e recusar mais tarde.",
     "decline": "Recusar",
     "confirm": "Confirmar",
     "confirming": "A confirmar...",
@@ -1900,6 +1903,8 @@
     "lastName": "Apelido",
     "email": "Email",
     "emailCannotBeChanged": "O email não pode ser alterado",
+    "phone": "Número de Telefone",
+    "phoneHint": "Usado para notificações SMS de reservas",
     "saveChanges": "Guardar Alterações",
     "savingChanges": "A guardar...",
     "settingsSaved": "Definições guardadas!",
