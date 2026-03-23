@@ -122,18 +122,18 @@ export function LightboxImage({
 }) {
   const [hiResLoaded, setHiResLoaded] = useState(false);
 
-  // Thumbnail: already loaded on the page, show immediately
+  // Thumbnail: slightly larger than grid thumbnail for instant sharp preview
   const thumbUrl = thumbnailSrc
     ? isLocalUpload(thumbnailSrc)
-      ? `/api/img/${thumbnailSrc.replace("/uploads/", "")}?w=600&q=88&f=webp`
+      ? `/api/img/${thumbnailSrc.replace("/uploads/", "")}?w=800&q=80&f=webp`
       : thumbnailSrc
     : isLocalUpload(src)
-      ? `/api/img/${src.replace("/uploads/", "")}?w=600&q=80&f=webp`
+      ? `/api/img/${src.replace("/uploads/", "")}?w=800&q=80&f=webp`
       : src;
 
-  // High-res: load in background
+  // High-res: max viewport size, good quality but not oversized
   const hiResSrc = isLocalUpload(src)
-    ? `/api/img/${src.replace("/uploads/", "")}?w=2000&q=90&f=webp`
+    ? `/api/img/${src.replace("/uploads/", "")}?w=1400&q=85&f=webp`
     : src;
 
   return (

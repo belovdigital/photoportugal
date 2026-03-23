@@ -28,6 +28,22 @@ export function PortfolioGallery({
   const [filter, setFilter] = useState({ location: "", shootType: "" });
   const [lightbox, setLightbox] = useState<number | null>(null);
 
+  // Prefetch hi-res images in background to warm the server cache
+  useEffect(() => {
+    const prefetch = () => {
+      items.forEach((item) => {
+        const url = item.url;
+        if (url.startsWith("/uploads/")) {
+          const img = new Image();
+          img.src = `/api/img/${url.replace("/uploads/", "")}?w=1400&q=85&f=webp`;
+        }
+      });
+    };
+    // Delay prefetch to not compete with page load
+    const timer = setTimeout(prefetch, 2000);
+    return () => clearTimeout(timer);
+  }, [items]);
+
   const usedLocations = [...new Set(items.map((p) => p.location_slug).filter(Boolean))] as string[];
   const usedShootTypes = [...new Set(items.map((p) => p.shoot_type).filter(Boolean))] as string[];
   const hasFilters = usedLocations.length > 0 || usedShootTypes.length > 0;
