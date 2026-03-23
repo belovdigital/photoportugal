@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     }
 
     const messages = await query(
-      `SELECT m.id, m.text, m.sender_id, m.created_at, m.read_at,
+      `SELECT m.id, m.text, m.media_url, m.sender_id, m.created_at, m.read_at,
               u.name as sender_name, u.avatar_url as sender_avatar
        FROM messages m
        JOIN users u ON u.id = m.sender_id
@@ -70,20 +70,22 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as { id?: string }).id;
 
   try {
-    const { booking_id, text } = await req.json();
+    const { booking_id, text, media_url } = await req.json();
 
-    if (!booking_id || !text?.trim()) {
-      return NextResponse.json({ error: "booking_id and text required" }, { status: 400 });
+    if (!booking_id || (!text?.trim() && !media_url)) {
+      return NextResponse.json({ error: "booking_id and text or media_url required" }, { status: 400 });
     }
 
     // Check for contact info sharing — soft warning, still send
-    const contactType = detectContactInfo(text);
     let contactWarning: string | null = null;
-    if (contactType) {
-      // Allow photoportugal.com links
-      const isInternalLink = /photoportugal\.com/i.test(text);
-      if (!isInternalLink) {
-        contactWarning = `For your safety, we recommend keeping all communication on Photo Portugal. Sharing ${contactType}s may put your booking protection at risk.`;
+    if (text?.trim()) {
+      const contactType = detectContactInfo(text);
+      if (contactType) {
+        // Allow photoportugal.com links
+        const isInternalLink = /photoportugal\.com/i.test(text);
+        if (!isInternalLink) {
+          contactWarning = `For your safety, we recommend keeping all communication on Photo Portugal. Sharing ${contactType}s may put your booking protection at risk.`;
+        }
       }
     }
 
@@ -106,10 +108,10 @@ export async function POST(req: NextRequest) {
     }
 
     const message = await queryOne(
-      `INSERT INTO messages (booking_id, sender_id, text)
-       VALUES ($1, $2, $3)
-       RETURNING id, created_at`,
-      [booking_id, userId, text.trim()]
+      `INSERT INTO messages (booking_id, sender_id, text, media_url)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, created_at, media_url`,
+      [booking_id, userId, text?.trim() || null, media_url || null]
     );
 
     // Send email notification to the other person (if they have it enabled)

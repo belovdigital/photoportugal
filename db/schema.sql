@@ -207,9 +207,11 @@ CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
   sender_id UUID NOT NULL REFERENCES users(id),
-  text TEXT NOT NULL,
+  text TEXT,
+  media_url TEXT,
   read_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT messages_content_check CHECK (text IS NOT NULL OR media_url IS NOT NULL)
 );
 
 CREATE INDEX idx_messages_booking ON messages(booking_id);
