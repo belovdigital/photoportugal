@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 
 const BASE_URL = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
 
@@ -76,6 +77,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
       </div>`
     ).catch(console.error);
+
+    // SMS to the other party
+    try {
+      const recipientUserId = isPhotographer ? booking.client_id : booking.photographer_user_id;
+      const recipientPhone = await queryOne<{ phone: string | null }>(
+        "SELECT phone FROM users WHERE id = $1",
+        [recipientUserId]
+      );
+      if (recipientPhone?.phone) {
+        const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+          "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+          [recipientUserId]
+        );
+        if (smsPrefs?.sms_bookings !== false) {
+          sendSMS(
+            recipientPhone.phone,
+            `Photo Portugal: ${senderName} proposed a new date (${formattedDate}) for your photoshoot. Log in to respond.`
+          ).catch(err => console.error("[sms] error:", err));
+        }
+      }
+    } catch (smsErr) {
+      console.error("[propose-date] sms error:", smsErr);
+    }
 
     return NextResponse.json({ success: true, action: "proposed" });
   }

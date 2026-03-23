@@ -27,6 +27,7 @@ CREATE TABLE users (
   email_verified BOOLEAN DEFAULT FALSE,
   password_reset_token VARCHAR(255),
   password_reset_expires TIMESTAMPTZ,
+  phone VARCHAR(20),
   stripe_customer_id VARCHAR(255),
   is_banned BOOLEAN DEFAULT FALSE,
   last_seen_at TIMESTAMPTZ,

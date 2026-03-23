@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
@@ -352,6 +353,28 @@ export async function PATCH(
             } catch (stripeErr) {
               console.error("[bookings] stripe checkout error:", stripeErr);
             }
+          }
+
+          // SMS to client about confirmation
+          try {
+            const clientPhone = await queryOne<{ phone: string | null }>(
+              "SELECT phone FROM users WHERE id = $1",
+              [bookingDetails.client_id]
+            );
+            if (clientPhone?.phone) {
+              const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+                "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+                [bookingDetails.client_id]
+              );
+              if (smsPrefs?.sms_bookings !== false) {
+                sendSMS(
+                  clientPhone.phone,
+                  `Photo Portugal: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`
+                ).catch(err => console.error("[sms] error:", err));
+              }
+            }
+          } catch (smsErr) {
+            console.error("[bookings] confirmation sms error:", smsErr);
           }
 
           // Send confirmation email with payment link (show fee-inclusive total)

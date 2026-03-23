@@ -9,6 +9,7 @@ import {
   sendTrustpilotFollowUpToClient,
   sendTrustpilotFollowUpToPhotographer,
 } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 import { rm } from "fs/promises";
 import path from "path";
 
@@ -175,6 +176,53 @@ export async function GET(req: NextRequest) {
           booking.client_name,
           booking.shoot_date
         );
+        // SMS reminders to both parties
+        try {
+          const smsInfo = await queryOne<{
+            photographer_phone: string | null; photographer_user_id: string;
+            client_phone: string | null; client_id: string;
+          }>(
+            `SELECT pu.phone as photographer_phone, pu.id as photographer_user_id,
+                    cu.phone as client_phone, cu.id as client_id
+             FROM bookings b
+             JOIN users cu ON cu.id = b.client_id
+             JOIN photographer_profiles pp ON pp.id = b.photographer_id
+             JOIN users pu ON pu.id = pp.user_id
+             WHERE b.id = $1`,
+            [booking.id]
+          );
+          if (smsInfo) {
+            // Photographer SMS
+            if (smsInfo.photographer_phone) {
+              const pPrefs = await queryOne<{ sms_bookings: boolean }>(
+                "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+                [smsInfo.photographer_user_id]
+              );
+              if (pPrefs?.sms_bookings !== false) {
+                sendSMS(
+                  smsInfo.photographer_phone,
+                  `Photo Portugal: Reminder — you have a photoshoot with ${booking.client_name} tomorrow. Check your dashboard for details.`
+                ).catch(err => console.error("[sms] error:", err));
+              }
+            }
+            // Client SMS
+            if (smsInfo.client_phone) {
+              const cPrefs = await queryOne<{ sms_bookings: boolean }>(
+                "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+                [smsInfo.client_id]
+              );
+              if (cPrefs?.sms_bookings !== false) {
+                sendSMS(
+                  smsInfo.client_phone,
+                  `Photo Portugal: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`
+                ).catch(err => console.error("[sms] error:", err));
+              }
+            }
+          }
+        } catch (smsErr) {
+          console.error("[cron] shoot reminder sms error:", smsErr);
+        }
+
         await queryOne(
           "UPDATE bookings SET shoot_reminder_sent = TRUE WHERE id = $1 RETURNING id",
           [booking.id]

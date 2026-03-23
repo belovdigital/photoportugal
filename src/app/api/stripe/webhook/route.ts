@@ -4,6 +4,7 @@ import { requireStripe } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -82,6 +83,30 @@ export async function POST(req: NextRequest) {
                 bookingInfo.photographer_name,
                 bookingInfo.total_price
               );
+              // SMS to photographer
+              try {
+                const photographerUser = await queryOne<{ phone: string | null; id: string }>(
+                  `SELECT u.phone, u.id FROM users u
+                   JOIN photographer_profiles pp ON pp.user_id = u.id
+                   JOIN bookings b ON b.photographer_id = pp.id
+                   WHERE b.id = $1`,
+                  [bookingId]
+                );
+                if (photographerUser?.phone) {
+                  const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+                    "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+                    [photographerUser.id]
+                  );
+                  if (smsPrefs?.sms_bookings !== false) {
+                    sendSMS(
+                      photographerUser.phone,
+                      `Photo Portugal: Payment of €${bookingInfo.total_price} received for your booking with ${bookingInfo.client_name}. Log in to view details.`
+                    ).catch(err => console.error("[sms] error:", err));
+                  }
+                }
+              } catch (smsErr) {
+                console.error("[webhook] payment sms error:", smsErr);
+              }
             }
           } catch (emailErr) {
             console.error("[webhook] payment email error:", emailErr);

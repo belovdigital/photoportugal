@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 
 async function verifyAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -100,6 +101,30 @@ export async function PATCH(req: NextRequest) {
             </div>
             `
           ).catch((err) => console.error("[admin] Failed to send approval email:", err));
+
+          // SMS to photographer about approval
+          try {
+            const photographerPhone = await queryOne<{ phone: string | null; user_id: string }>(
+              `SELECT u.phone, u.id as user_id FROM users u
+               JOIN photographer_profiles pp ON pp.user_id = u.id
+               WHERE pp.id = $1`,
+              [id]
+            );
+            if (photographerPhone?.phone) {
+              const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+                "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+                [photographerPhone.user_id]
+              );
+              if (smsPrefs?.sms_bookings !== false) {
+                sendSMS(
+                  photographerPhone.phone,
+                  `Photo Portugal: Congratulations! Your profile is now live. Clients can find and book you at photoportugal.com`
+                ).catch(err => console.error("[sms] error:", err));
+              }
+            }
+          } catch (smsErr) {
+            console.error("[admin] approval sms error:", smsErr);
+          }
         }
       } catch (emailErr) {
         console.error("[admin] Error sending approval email:", emailErr);

@@ -6,6 +6,7 @@ import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per delivery photo
@@ -158,6 +159,34 @@ export async function POST(
         }
       } catch (e) {
         console.error("[delivery] email error:", e);
+      }
+
+      // SMS to client about delivery
+      try {
+        const deliveryDetails = await queryOne<{
+          client_id: string; client_phone: string | null; photographer_name: string;
+        }>(
+          `SELECT b.client_id, cu.phone as client_phone, pp.display_name as photographer_name
+           FROM bookings b
+           JOIN users cu ON cu.id = b.client_id
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           WHERE b.id = $1`,
+          [id]
+        );
+        if (deliveryDetails?.client_phone) {
+          const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+            "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+            [deliveryDetails.client_id]
+          );
+          if (smsPrefs?.sms_bookings !== false) {
+            sendSMS(
+              deliveryDetails.client_phone,
+              `Photo Portugal: Your photos from ${deliveryDetails.photographer_name} are ready! Check your email for the gallery link.`
+            ).catch(err => console.error("[sms] error:", err));
+          }
+        }
+      } catch (smsErr) {
+        console.error("[delivery] sms error:", smsErr);
       }
 
       return NextResponse.json({ success: true, token, deliveryUrl });
