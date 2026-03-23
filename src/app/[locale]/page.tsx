@@ -32,12 +32,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   }
 
   return {
-    title: "Vacation Photographer Portugal — Book Professional Photoshoots",
-    description: "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 25+ locations. Verified reviews, secure Stripe payments, private photo gallery. From EUR150.",
+    title: "Vacation Photographer Portugal — Book Now",
+    description: "Book a professional vacation photographer in Portugal. Couples, family & solo photoshoots in Lisbon, Porto, Algarve, Sintra & 20+ locations. From €150.",
     alternates: localeAlternates("/", locale),
     openGraph: {
-      title: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
-      description: "Book a professional vacation photographer in Portugal. 25+ stunning locations.",
+      title: "Vacation Photographer Portugal — Book Now | Photo Portugal",
+      description: "Book a professional vacation photographer in Portugal. Couples, family & solo photoshoots in 23+ locations. From €150.",
       url: base,
     },
   };
