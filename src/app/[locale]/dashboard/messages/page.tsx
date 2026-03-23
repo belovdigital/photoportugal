@@ -374,8 +374,8 @@ function MessagesContent() {
       </p>
 
       <div
-        className="mt-6 flex gap-4 rounded-xl border border-warm-200 bg-white"
-        style={{ height: "min(520px, calc(100vh - 220px))" }}
+        className="mt-4 flex gap-4 rounded-xl border border-warm-200 bg-white"
+        style={{ height: "calc(100vh - 180px)" }}
       >
         {/* Conversations sidebar */}
         <div
