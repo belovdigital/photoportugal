@@ -194,20 +194,25 @@ export default async function PhotographerProfilePage({
   }
 
   // Fetch similar photographers who serve the same locations
-  let similarPhotographers: { id: string; slug: string; display_name: string; avatar_url: string | null; tagline: string | null; rating: number; review_count: number }[] = [];
+  let similarPhotographers: {
+    id: string; slug: string; display_name: string; avatar_url: string | null;
+    cover_url: string | null; tagline: string | null; rating: number; review_count: number;
+    starting_price: number | null; languages: string[];
+    location_names: string[];
+  }[] = [];
   const primaryLocation = photographer.locations?.[0];
   if (result.type === "db") {
     try {
       similarPhotographers = await query<{
-        id: string;
-        slug: string;
-        display_name: string;
-        avatar_url: string | null;
-        tagline: string | null;
-        rating: number;
-        review_count: number;
+        id: string; slug: string; display_name: string; avatar_url: string | null;
+        cover_url: string | null; tagline: string | null; rating: number; review_count: number;
+        starting_price: number | null; languages: string[];
+        location_names: string[];
       }>(
-        `SELECT DISTINCT pp.id, pp.slug, pp.display_name, u.avatar_url, pp.tagline, pp.rating, pp.review_count
+        `SELECT DISTINCT pp.id, pp.slug, pp.display_name, u.avatar_url, pp.cover_url,
+                pp.tagline, pp.rating, pp.review_count, pp.languages,
+                (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price,
+                ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
          WHERE pp.is_approved = TRUE
@@ -502,32 +507,56 @@ export default async function PhotographerProfilePage({
                 <Link
                   key={sp.id}
                   href={`/photographers/${sp.slug}`}
-                  className="group flex items-start gap-4 rounded-xl border border-warm-200 bg-white p-5 transition hover:border-primary-200 hover:shadow-md"
+                  className="group overflow-hidden rounded-xl border border-warm-200 bg-white transition hover:border-primary-200 hover:shadow-md"
                 >
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-100 text-lg font-bold text-primary-600 overflow-hidden">
-                    {sp.avatar_url ? (
-                      <OptimizedImage src={sp.avatar_url} alt={sp.display_name} width={200} className="h-full w-full" />
+                  {/* Cover */}
+                  <div className="relative h-36 bg-warm-100">
+                    {sp.cover_url ? (
+                      <OptimizedImage src={sp.cover_url} alt={sp.display_name} width={400} className="h-full w-full object-cover" />
                     ) : (
-                      sp.display_name.charAt(0)
+                      <div className="h-full w-full bg-gradient-to-br from-warm-100 to-warm-200" />
                     )}
+                    {/* Avatar overlay */}
+                    <div className="absolute -bottom-5 left-4 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary-100 text-sm font-bold text-primary-600 overflow-hidden shadow-sm">
+                      {sp.avatar_url ? (
+                        <OptimizedImage src={sp.avatar_url} alt={sp.display_name} width={80} className="h-full w-full object-cover" />
+                      ) : (
+                        sp.display_name.charAt(0)
+                      )}
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
+                  {/* Info */}
+                  <div className="px-4 pb-4 pt-7">
                     <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
                       {sp.display_name}
                     </h3>
                     {sp.tagline && (
-                      <p className="mt-1 text-sm text-gray-500 line-clamp-1">{sp.tagline}</p>
+                      <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{sp.tagline}</p>
                     )}
-                    {sp.review_count > 0 && (
-                      <div className="mt-1.5 flex items-center gap-1 text-sm">
-                        <span className="flex items-center gap-0.5 text-amber-500">
-                          <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </span>
-                        <span className="font-semibold text-gray-900">{Number(sp.rating).toFixed(1)}</span>
-                        <span className="text-gray-400">({sp.review_count})</span>
+                    {/* Rating */}
+                    <div className="mt-2 flex items-center gap-1 text-sm">
+                      <span className="text-amber-500">
+                        <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      </span>
+                      <span className="font-semibold text-gray-900">{sp.review_count > 0 ? Number(sp.rating).toFixed(1) : "New"}</span>
+                      {sp.review_count > 0 && <span className="text-gray-400">({sp.review_count})</span>}
+                    </div>
+                    {/* Locations */}
+                    {sp.location_names.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {sp.location_names.map((loc) => (
+                          <span key={loc} className="rounded-full bg-warm-100 px-2 py-0.5 text-[10px] text-gray-500 capitalize">{loc.replace(/-/g, " ")}</span>
+                        ))}
                       </div>
+                    )}
+                    {/* Price */}
+                    {sp.starting_price && (
+                      <p className="mt-2 text-sm">
+                        <span className="text-gray-400">{t("from")}</span>{" "}
+                        <span className="font-bold text-gray-900">&euro;{sp.starting_price}</span>
+                      </p>
                     )}
                   </div>
                 </Link>
