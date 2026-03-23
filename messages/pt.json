@@ -437,7 +437,7 @@
       },
       "photographerPlans": {
         "question": "Quais são os planos para fotógrafos?",
-        "answer": "Oferecemos três planos: Gratuito (comissão de 20%, 1 localização, 10 fotos de portfólio), Pro a €29/mês (comissão de 15%, 5 localizações, 30 fotos de portfólio) e Premium a €59/mês (comissão de 10%, localizações e fotos de portfólio ilimitadas, URL de perfil personalizado, suporte prioritário). Visite a nossa página de preços para uma comparação completa."
+        "answer": "Oferecemos três planos: Gratuito (comissão de 20%, 1 localização, 10 fotos de portfólio), Pro a €29/mês (comissão de 15%, 5 localizações, 30 fotos de portfólio) e Premium a €59/mês (comissão de 10%, todas as localizações, até 100 fotos de portfólio, URL de perfil personalizado, suporte prioritário). Visite a nossa página de preços para uma comparação completa."
       },
       "earlyBird": {
         "question": "O que é o programa Early Bird?",
@@ -580,7 +580,7 @@
         "name": "Premium",
         "description": "Máxima visibilidade e comissão mais baixa",
         "features": {
-          "portfolioPhotos": "Fotos de portfólio ilimitadas",
+          "portfolioPhotos": "Até 100 fotos de portfólio",
           "locations": "Todas as localizações",
           "searchRanking": "Posição de topo na pesquisa",
           "analytics": "Painel de análise completo",
@@ -1767,7 +1767,7 @@
     "planPremium": "Premium",
     "feat10Photos": "10 fotos de portfólio",
     "feat30Photos": "30 fotos de portfólio",
-    "featUnlimitedPhotos": "Fotos ilimitadas",
+    "featUnlimitedPhotos": "100 fotos de portfólio",
     "feat1Location": "1 localização",
     "feat5Locations": "5 localizações",
     "featAllLocations": "Todas as localizações",
@@ -2148,6 +2148,22 @@
         "paymentReleased": {
           "question": "Quando é libertado o pagamento ao fotógrafo?",
           "answer": "O pagamento é libertado ao fotógrafo após aceitar a entrega das fotos. Depois de receber a galeria, tem 7 dias para rever as imagens e decidir se aceita ou abre uma disputa. Se não tomar nenhuma ação dentro de 14 dias após a entrega, o pagamento é automaticamente libertado ao fotógrafo. Recomendamos que reveja as suas fotos assim que possível para garantir a sua satisfação."
+        },
+        "dateNegotiation": {
+          "question": "Posso alterar a data depois de reservar?",
+          "answer": "Sim. Tanto você como o fotógrafo podem propor uma nova data a qualquer momento enquanto a reserva está pendente. Quando uma nova data é proposta, a outra parte recebe uma notificação por email e SMS. Podem aceitar a data proposta ou sugerir uma diferente. A reserva mantém-se no estado 'pendente' até ambas as partes concordarem com uma data."
+        },
+        "messagingPhotos": {
+          "question": "Posso enviar fotos nas mensagens?",
+          "answer": "Sim. Pode anexar fotos às mensagens clicando no ícone de imagem junto ao campo de texto. Selecione uma foto, adicione opcionalmente uma legenda e envie. A foto aparecerá no chat tanto para si como para o fotógrafo."
+        },
+        "promoCodes": {
+          "question": "Como uso um código promocional?",
+          "answer": "Se tiver um código promocional, pode aplicá-lo durante o checkout. O desconto será aplicado ao total da sua reserva antes do pagamento. Os códigos promocionais podem oferecer um desconto percentual ou um valor fixo de desconto."
+        },
+        "smsNotifications": {
+          "question": "Vou receber notificações por SMS?",
+          "answer": "Sim, se adicionar o seu número de telefone nas Definições. Receberá SMS para: confirmações de reserva, lembretes de sessão (24 horas antes), notificações de entrega de fotos e propostas de alteração de data. Pode gerir as suas preferências de SMS nas definições de notificações."
         }
       },
       "photographers": {
@@ -2157,7 +2173,7 @@
         },
         "subscriptionPlans": {
           "question": "Que planos de subscrição estão disponíveis?",
-          "answer": "Oferecemos três planos para fotógrafos: Gratuito — sem custos mensais, comissão de 25% por reserva, funcionalidades básicas, ideal para experimentar a plataforma. Pro — comissão reduzida de 15%, perfil destacado nos resultados de pesquisa, estatísticas avançadas e suporte prioritário. Premium — comissão mínima de apenas 10%, posição de topo nos resultados, selo verificado, acesso a funcionalidades exclusivas e suporte dedicado. Pode alterar ou cancelar o seu plano a qualquer momento. Visite a nossa página de preços para os valores atuais dos planos."
+          "answer": "Oferecemos três planos para fotógrafos: Gratuito — sem custos mensais, comissão de 20% por reserva, até 10 fotos de portfólio, ideal para experimentar a plataforma. Pro — comissão reduzida de 15%, até 30 fotos de portfólio, 10 pacotes, estatísticas avançadas e suporte prioritário. Premium — comissão mínima de apenas 10%, até 100 fotos de portfólio e pacotes, URL de perfil personalizado, estatísticas completas e opções de destaque. Pode alterar ou cancelar o seu plano a qualquer momento. Visite a nossa página de preços para os valores atuais dos planos."
         },
         "getPaid": {
           "question": "Como e quando recebo os pagamentos?",
@@ -2178,6 +2194,22 @@
         "externalLinks": {
           "question": "Posso adicionar o meu Instagram ou website ao perfil?",
           "answer": "Não. Não é permitido incluir URLs de websites pessoais, links de redes sociais (Instagram, Facebook, TikTok, etc.), endereços de email ou números de telefone em qualquer parte do perfil — incluindo bio, tagline, descrições de pacotes e legendas do portfólio.\n\nToda a comunicação com clientes deve ser feita através do sistema de mensagens integrado do Photo Portugal. Isto protege ambas as partes, mantendo as conversas documentadas, os pagamentos seguros e as disputas resolúveis.\n\nPerfis que contenham links externos ou informações de contacto serão solicitados a removê-los. Violações repetidas podem resultar em suspensão da conta."
+        },
+        "phoneRequired": {
+          "question": "Porque preciso de adicionar um número de telefone?",
+          "answer": "Um número de telefone verificado é obrigatório para completar o seu perfil e ser aprovado. É utilizado para notificações SMS importantes sobre reservas, pagamentos e lembretes de sessões. Adicione o seu número de telefone na página de Perfil com o indicativo do seu país."
+        },
+        "dateNegotiationPhotographer": {
+          "question": "Como proponho uma data diferente a um cliente?",
+          "answer": "Na sua página de Reservas, encontre a reserva pendente e clique em 'Propor data diferente'. Selecione a sua data preferida, adicione opcionalmente uma nota a explicar o motivo e submeta. O cliente receberá uma notificação por email e SMS e pode aceitar ou sugerir outra data."
+        },
+        "videoReviews": {
+          "question": "O que são avaliações em vídeo?",
+          "answer": "Os clientes podem deixar avaliações em vídeo além das avaliações em texto. As avaliações em vídeo devem ter pelo menos 10 segundos, mostrar o cliente na câmara e partilhar a sua experiência genuína. As avaliações em vídeo são revistas pela nossa equipa antes da publicação. Clientes que deixarem avaliações em vídeo aprovadas podem receber um código de desconto para futuras reservas."
+        },
+        "realTimeChat": {
+          "question": "Como funcionam as mensagens?",
+          "answer": "As mensagens são entregues em tempo real — verá novas mensagens aparecer instantaneamente sem precisar de atualizar a página. Um ponto verde indica uma ligação ativa. Pode enviar mensagens de texto e fotos. Também receberá notificações por email e SMS para novas mensagens (se ativado nas definições)."
         }
       },
       "payments": {
@@ -2187,7 +2219,7 @@
         },
         "serviceFees": {
           "question": "Quais são as taxas de serviço?",
-          "answer": "As nossas taxas são transparentes e sem surpresas. Para clientes: é aplicada uma taxa de serviço de 10% sobre o valor do pacote, apresentada antes da confirmação do pagamento. Para fotógrafos: a comissão varia conforme o plano de subscrição — 25% no plano Gratuito, 15% no plano Pro e 10% no plano Premium. Não existem taxas ocultas, custos de adesão nem cobranças adicionais. O preço que vê é o preço que paga. Visite a nossa página de preços para os valores atuais dos planos."
+          "answer": "As nossas taxas são transparentes e sem surpresas. Para clientes: é aplicada uma taxa de serviço de 10% sobre o valor do pacote, apresentada antes da confirmação do pagamento. Para fotógrafos: a comissão varia conforme o plano de subscrição — 20% no plano Gratuito, 15% no plano Pro e 10% no plano Premium. Não existem taxas ocultas, custos de adesão nem cobranças adicionais. O preço que vê é o preço que paga. Visite a nossa página de preços para os valores atuais dos planos."
         },
         "refundPolicy": {
           "question": "Qual é a política de reembolso?",

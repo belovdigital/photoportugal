@@ -437,7 +437,7 @@
       },
       "photographerPlans": {
         "question": "What are the photographer plans?",
-        "answer": "We offer three plans: Free (20% commission, 1 location, 10 portfolio photos), Pro at €29/month (15% commission, 5 locations, 30 portfolio photos), and Premium at €59/month (10% commission, unlimited locations and portfolio photos, custom profile URL, priority support). Visit our pricing page for a full comparison."
+        "answer": "We offer three plans: Free (20% commission, 1 location, 10 portfolio photos), Pro at €29/month (15% commission, 5 locations, 30 portfolio photos), and Premium at €59/month (10% commission, all locations, up to 100 portfolio photos, custom profile URL, priority support). Visit our pricing page for a full comparison."
       },
       "earlyBird": {
         "question": "What is the Early Bird program?",
@@ -580,7 +580,7 @@
         "name": "Premium",
         "description": "Maximum visibility and lowest commission",
         "features": {
-          "portfolioPhotos": "Unlimited portfolio photos",
+          "portfolioPhotos": "Up to 100 portfolio photos",
           "locations": "All locations",
           "searchRanking": "Top search ranking",
           "analytics": "Full analytics dashboard",
@@ -1767,7 +1767,7 @@
     "planPremium": "Premium",
     "feat10Photos": "10 portfolio photos",
     "feat30Photos": "30 portfolio photos",
-    "featUnlimitedPhotos": "Unlimited photos",
+    "featUnlimitedPhotos": "100 portfolio photos",
     "feat1Location": "1 location",
     "feat5Locations": "5 locations",
     "featAllLocations": "All locations",
@@ -1853,6 +1853,22 @@
         "paymentReleased": {
           "question": "When is my payment released to the photographer?",
           "answer": "Your payment is released to the photographer only after you accept the photo delivery in your dashboard. You have 7 days to review and either accept or open a dispute.\n\nIf you don't respond within 14 days after delivery, the payment is automatically released to the photographer. This ensures photographers are fairly compensated even if clients forget to click 'accept'."
+        },
+        "dateNegotiation": {
+          "question": "Can I change the date after booking?",
+          "answer": "Yes. Both you and the photographer can propose a new date at any time while the booking is pending. When a new date is proposed, the other party receives an email and SMS notification. They can accept the proposed date or suggest a different one. The booking stays in 'pending' status until both sides agree on a date."
+        },
+        "messagingPhotos": {
+          "question": "Can I send photos in messages?",
+          "answer": "Yes. You can attach photos to messages by clicking the image icon next to the text input. Select a photo, optionally add a text caption, and send. The photo will appear in the chat for both you and the photographer."
+        },
+        "promoCodes": {
+          "question": "How do I use a promo code?",
+          "answer": "If you have a promo code, you can apply it during checkout. The discount will be applied to your booking total before payment. Promo codes may offer a percentage discount or a fixed amount off."
+        },
+        "smsNotifications": {
+          "question": "Will I receive SMS notifications?",
+          "answer": "Yes, if you add your phone number in Settings. You'll receive SMS for: booking confirmations, shoot reminders (24 hours before), photo delivery notifications, and date change proposals. You can manage SMS preferences in your notification settings."
         }
       },
       "photographers": {
@@ -1862,7 +1878,7 @@
         },
         "subscriptionPlans": {
           "question": "What subscription plans are available?",
-          "answer": "We offer three plans:\n\n**Free** — No monthly fee, 25% commission per booking. Basic listing with up to 15 portfolio photos and 3 packages.\n\n**Pro** — 15% commission. Up to 40 portfolio photos, 10 packages, analytics dashboard, and priority support.\n\n**Premium** — 10% commission. Unlimited portfolio photos and packages, custom profile URL, full analytics, and featured placement options.\n\nAll plans include Stripe payment processing, client messaging, and access to the booking system. Visit our pricing page for current plan prices."
+          "answer": "We offer three plans:\n\n**Free** — No monthly fee, 20% commission per booking. Basic listing with up to 10 portfolio photos.\n\n**Pro** — 15% commission. Up to 30 portfolio photos, 10 packages, analytics dashboard, and priority support.\n\n**Premium** — 10% commission. Up to 100 portfolio photos and packages, custom profile URL, full analytics, and featured placement options.\n\nAll plans include Stripe payment processing, client messaging, and access to the booking system. Visit our pricing page for current plan prices."
         },
         "getPaid": {
           "question": "How and when do I get paid?",
@@ -1883,6 +1899,22 @@
         "externalLinks": {
           "question": "Can I add my Instagram or website to my profile?",
           "answer": "No. Photographers are not allowed to include personal website URLs, social media links (Instagram, Facebook, TikTok, etc.), email addresses, or phone numbers anywhere on their profile — including bio, tagline, package descriptions, and portfolio captions.\n\nAll communication with clients must go through Photo Portugal's built-in messaging system. This protects both parties by keeping conversations documented, payments secure, and disputes resolvable.\n\nProfiles found to contain external links or contact information will be asked to remove them. Repeated violations may result in account suspension."
+        },
+        "phoneRequired": {
+          "question": "Why do I need to add a phone number?",
+          "answer": "A verified phone number is required to complete your profile and get approved. It's used for important SMS notifications about bookings, payments, and shoot reminders. Add your phone number in your Profile page with your country code."
+        },
+        "dateNegotiationPhotographer": {
+          "question": "How do I propose a different date to a client?",
+          "answer": "On your Bookings page, find the pending booking and click 'Propose different date'. Select your preferred date, optionally add a note explaining why, and submit. The client will receive an email and SMS notification and can accept or suggest another date."
+        },
+        "videoReviews": {
+          "question": "What are video reviews?",
+          "answer": "Clients can leave video reviews in addition to text reviews. Video reviews must be at least 10 seconds long, show the client on camera, and share their genuine experience. Video reviews are reviewed by our team before publishing. Clients who leave approved video reviews may receive a discount code for future bookings."
+        },
+        "realTimeChat": {
+          "question": "How does messaging work?",
+          "answer": "Messages are delivered in real-time — you'll see new messages appear instantly without refreshing the page. A green dot indicates an active connection. You can send text messages and photos. You'll also receive email and SMS notifications for new messages (if enabled in settings)."
         }
       },
       "payments": {
@@ -1892,7 +1924,7 @@
         },
         "serviceFees": {
           "question": "What are the service fees?",
-          "answer": "**For clients:** A 10% service fee is added on top of the package price. For example, a €300 package costs €330 total. This fee covers payment processing, platform maintenance, and client support.\n\n**For photographers:** A commission is deducted from each booking based on your plan:\n• Free plan — 25% commission\n• Pro plan — 15% commission\n• Premium plan — 10% commission\n\nThere are no hidden fees. All fees are displayed transparently before any transaction."
+          "answer": "**For clients:** A 10% service fee is added on top of the package price. For example, a €300 package costs €330 total. This fee covers payment processing, platform maintenance, and client support.\n\n**For photographers:** A commission is deducted from each booking based on your plan:\n• Free plan — 20% commission\n• Pro plan — 15% commission\n• Premium plan — 10% commission\n\nThere are no hidden fees. All fees are displayed transparently before any transaction."
         },
         "refundPolicy": {
           "question": "What is the refund policy?",
