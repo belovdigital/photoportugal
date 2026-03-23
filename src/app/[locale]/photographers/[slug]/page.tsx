@@ -283,6 +283,46 @@ export default async function PhotographerProfilePage({
     })
   );
 
+  const avatarAbsoluteUrl = photographer.avatar_url
+    ? (photographer.avatar_url.startsWith("http") ? photographer.avatar_url : `https://photoportugal.com${photographer.avatar_url}`)
+    : undefined;
+
+  const personJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: photographer.display_name,
+    ...(avatarAbsoluteUrl && { image: avatarAbsoluteUrl }),
+    jobTitle: "Photographer",
+    url: `https://photoportugal.com/photographers/${slug}`,
+    ...(photographer.locations && photographer.locations.length > 0 && {
+      workLocation: photographer.locations.map((l: { name: string }) => ({
+        "@type": "City",
+        name: l.name,
+        addressCountry: "PT",
+      })),
+    }),
+    ...(photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "" && {
+      knowsLanguage: photographer.languages,
+    }),
+    ...(photographer.review_count > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: photographer.rating,
+        reviewCount: photographer.review_count,
+        bestRating: 5,
+      },
+    }),
+    ...(photographer.packages && photographer.packages.length > 0 && {
+      makesOffer: photographer.packages.map((pkg: { name: string; price: number; description: string | null; duration_minutes: number; num_photos: number }) => ({
+        "@type": "Offer",
+        name: pkg.name,
+        priceCurrency: "EUR",
+        price: String(pkg.price),
+        description: pkg.description || `${pkg.duration_minutes} min session, ${pkg.num_photos} photos`,
+      })),
+    }),
+  };
+
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -302,6 +342,10 @@ export default async function PhotographerProfilePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
       />
       {productJsonLd.map((product: Record<string, unknown>, idx: number) => (
         <script

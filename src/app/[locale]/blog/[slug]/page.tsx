@@ -21,6 +21,7 @@ interface BlogPost {
   target_keywords: string | null;
   author: string;
   published_at: string;
+  updated_at: string | null;
   created_at: string;
 }
 
@@ -302,12 +303,13 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   const articleJsonLd = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: post.title,
     description: post.meta_description || post.excerpt || "",
     author: {
-      "@type": "Person",
-      name: post.author,
+      "@type": "Organization",
+      name: "Photo Portugal",
+      url: "https://photoportugal.com",
     },
     publisher: {
       "@type": "Organization",
@@ -318,7 +320,7 @@ export default async function BlogPostPage({ params }: PageProps) {
       },
     },
     datePublished: post.published_at,
-    dateModified: post.published_at,
+    dateModified: post.updated_at || post.published_at,
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": `https://photoportugal.com/blog/${post.slug}`,

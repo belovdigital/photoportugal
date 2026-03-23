@@ -70,8 +70,48 @@ export default async function PricingPage({
     },
   ];
 
+  const pricingJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: [
+      {
+        "@type": "Offer",
+        name: "Free Plan",
+        price: "0",
+        priceCurrency: "EUR",
+        description: `10 portfolio images, ${COMMISSION_RATES.free}% commission`,
+      },
+      {
+        "@type": "Offer",
+        name: "Pro Plan",
+        price: String(PLAN_PRICES.pro),
+        priceCurrency: "EUR",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          billingDuration: "P1M",
+        },
+        description: `50 portfolio images, ${COMMISSION_RATES.pro}% commission`,
+      },
+      {
+        "@type": "Offer",
+        name: "Premium Plan",
+        price: String(PLAN_PRICES.premium),
+        priceCurrency: "EUR",
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          billingDuration: "P1M",
+        },
+        description: `Unlimited portfolio images, ${COMMISSION_RATES.premium}% commission`,
+      },
+    ],
+  };
+
   return (
     <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }}
+    />
     <Breadcrumbs
       items={[
         { name: tc("home"), href: "/" },
