@@ -67,9 +67,8 @@ export async function GET(req: NextRequest) {
              JOIN users u ON u.id = m.sender_id
              WHERE m.booking_id = $1
                AND m.created_at > $2
-               AND m.sender_id != $3
              ORDER BY m.created_at ASC`,
-            [bookingId, lastCheck, userId]
+            [bookingId, lastCheck]
           );
 
           if (newMessages.length > 0) {

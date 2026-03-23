@@ -43,7 +43,12 @@ function MessagesContent() {
   const userId = (session?.user as { id?: string })?.id;
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeChat, setActiveChat] = useState<string | null>(initialChat);
+  const [activeChat, setActiveChatRaw] = useState<string | null>(initialChat);
+  function setActiveChat(chatId: string | null) {
+    setActiveChatRaw(chatId);
+    const url = chatId ? `?chat=${chatId}` : window.location.pathname;
+    window.history.replaceState(null, "", url);
+  }
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -154,16 +159,18 @@ function MessagesContent() {
           const newMessages: Message[] = JSON.parse(event.data);
           if (newMessages.length > 0) {
             setMessages((prev) => {
-              // Deduplicate: only add messages not already in the list
-              const existingIds = new Set(prev.map((m) => m.id));
-              const toAdd = newMessages.filter(
-                (m) => !existingIds.has(m.id)
-              );
-              if (toAdd.length === 0) return prev;
+              // Remove temp messages (optimistic) and deduplicate
+              const realIds = new Set(newMessages.map((m) => m.id));
+              const filtered = prev.filter((m) => {
+                if (m.id.startsWith("temp-")) {
+                  // Remove temp if a real message from same sender arrived
+                  return !newMessages.some((n) => n.sender_id === m.sender_id);
+                }
+                return !realIds.has(m.id);
+              });
               setTimeout(scrollToBottom, 30);
-              return [...prev, ...toAdd];
+              return [...filtered, ...newMessages];
             });
-            // Refresh the conversation list to update last message preview / unread counts
             fetchConversations();
           }
         } catch {
