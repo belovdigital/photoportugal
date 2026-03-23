@@ -445,11 +445,11 @@ export async function sendAdminNewPhotographerNotification(
   for (const email of emails) {
     await sendEmail(
       email,
-      `[New Photographer] ${photographerName} is waiting for approval`,
+      `[New Photographer] ${photographerName} has joined`,
       `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2 style="color: #C94536;">New Photographer Registration</h2>
-        <p>A new photographer has registered and is waiting for approval:</p>
+        <p>A new photographer has registered and is setting up their profile:</p>
         <ul style="line-height: 1.8;">
           <li><strong>Name:</strong> ${photographerName}</li>
           <li><strong>Email:</strong> ${photographerEmail}</li>
