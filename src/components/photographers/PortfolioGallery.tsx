@@ -114,11 +114,10 @@ export function PortfolioGallery({
             className="mb-3 cursor-pointer overflow-hidden rounded-xl bg-warm-100 break-inside-avoid transition hover:opacity-90"
             onClick={() => setLightbox(i)}
           >
-            <OptimizedImage
-              src={item.thumbnail_url || item.url}
+            <img
+              src={item.url.startsWith("/uploads/") ? `/api/img/${item.url.replace("/uploads/", "")}?w=1200&q=85&f=webp` : item.url}
               alt={item.caption || t("photoAlt")}
-              width={1200}
-              quality={85}
+              loading="lazy"
               className="w-full"
             />
           </div>
@@ -163,7 +162,7 @@ export function PortfolioGallery({
 
           {/* Image — reuses same 1200px version already cached from the grid */}
           {(() => {
-            const imgSrc = filtered[lightbox].thumbnail_url || filtered[lightbox].url;
+            const imgSrc = filtered[lightbox].url;
             const url = imgSrc.startsWith("/uploads/")
               ? `/api/img/${imgSrc.replace("/uploads/", "")}?w=1200&q=85&f=webp`
               : imgSrc;
