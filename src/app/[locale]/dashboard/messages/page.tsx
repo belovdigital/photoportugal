@@ -48,6 +48,8 @@ function MessagesContent() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingPreview, setPendingPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -214,13 +216,14 @@ function MessagesContent() {
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     const text = newMessage.trim();
-    if (!text || !activeChat) return;
+    const hasMedia = !!pendingFile;
+    if (!activeChat || (!text && !hasMedia)) return;
 
     const tempId = `temp-${Date.now()}`;
     const tempMsg: Message = {
       id: tempId,
-      text,
-      media_url: null,
+      text: text || null,
+      media_url: pendingPreview,
       sender_id: userId || "",
       sender_name: session?.user?.name || "",
       sender_avatar: session?.user?.image || null,
@@ -229,31 +232,51 @@ function MessagesContent() {
     };
     setMessages((prev) => [...prev, tempMsg]);
     setNewMessage("");
+    const fileToSend = pendingFile;
+    clearPendingMedia();
     setTimeout(scrollToBottom, 10);
     if (messages.length === 0) trackSendMessage(activeChat);
 
     setSending(true);
     try {
+      // Upload media first if attached
+      let mediaUrl: string | null = null;
+      if (fileToSend) {
+        setUploadingMedia(true);
+        const formData = new FormData();
+        formData.append("file", fileToSend);
+        formData.append("booking_id", activeChat);
+        const uploadRes = await fetch("/api/messages/upload", { method: "POST", body: formData });
+        setUploadingMedia(false);
+        if (uploadRes.ok) {
+          const data = await uploadRes.json();
+          mediaUrl = data.url;
+        }
+      }
+
       const res = await fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ booking_id: activeChat, text }),
+        body: JSON.stringify({
+          booking_id: activeChat,
+          ...(text ? { text } : {}),
+          ...(mediaUrl ? { media_url: mediaUrl } : {}),
+        }),
       });
       setSending(false);
 
       if (res.ok) {
         const data = await res.json();
-        // Replace temp message with real one via a full refresh
         await fetchMessages(activeChat);
         if (data.warning) alert(data.warning);
       } else {
-        // Mark the optimistic message as failed instead of removing it
         setMessages((prev) =>
           prev.map((m) => (m.id === tempId ? { ...m, failed: true } : m))
         );
       }
     } catch {
       setSending(false);
+      setUploadingMedia(false);
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, failed: true } : m))
       );
@@ -262,7 +285,7 @@ function MessagesContent() {
     setConversations((prev) =>
       prev.map((c) =>
         c.booking_id === activeChat
-          ? { ...c, last_message: text, last_message_at: new Date().toISOString() }
+          ? { ...c, last_message: text || "📷 Photo", last_message_at: new Date().toISOString() }
           : c
       )
     );
@@ -304,30 +327,20 @@ function MessagesContent() {
     }
   }
 
-  async function handleMediaUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleMediaSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !activeChat) return;
+    if (!file) return;
     if (file.size > 10 * 1024 * 1024) { alert("Max 10MB"); e.target.value = ""; return; }
-
-    setUploadingMedia(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("booking_id", activeChat);
-      const uploadRes = await fetch("/api/messages/upload", { method: "POST", body: formData });
-      if (!uploadRes.ok) { alert("Upload failed"); setUploadingMedia(false); e.target.value = ""; return; }
-      const { url } = await uploadRes.json();
-
-      await fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ booking_id: activeChat, media_url: url }),
-      });
-      await fetchMessages(activeChat);
-      setTimeout(scrollToBottom, 10);
-    } catch { alert("Upload failed"); }
-    setUploadingMedia(false);
+    setPendingFile(file);
+    setPendingPreview(URL.createObjectURL(file));
     e.target.value = "";
+    inputRef.current?.focus();
+  }
+
+  function clearPendingMedia() {
+    if (pendingPreview) URL.revokeObjectURL(pendingPreview);
+    setPendingFile(null);
+    setPendingPreview(null);
   }
 
   const activeConvo = conversations.find((c) => c.booking_id === activeChat);
@@ -588,11 +601,27 @@ function MessagesContent() {
               </div>
 
               {/* Input */}
+              {/* Pending media preview */}
+              {pendingPreview && (
+                <div className="flex items-center gap-2 border-t border-warm-100 bg-warm-50 px-3 py-2">
+                  <div className="relative">
+                    <img src={pendingPreview} alt="" className="h-14 w-14 rounded-lg object-cover" />
+                    <button
+                      type="button"
+                      onClick={clearPendingMedia}
+                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-700 text-white text-xs hover:bg-gray-900"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <span className="text-xs text-gray-400">{pendingFile?.name}</span>
+                </div>
+              )}
               <form
                 onSubmit={handleSend}
                 className="flex items-center gap-2 border-t border-warm-100 px-3 py-2.5"
               >
-                <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleMediaUpload} />
+                <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleMediaSelect} />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -616,7 +645,7 @@ function MessagesContent() {
                 />
                 <button
                   type="submit"
-                  disabled={sending || !newMessage.trim()}
+                  disabled={sending || uploadingMedia || (!newMessage.trim() && !pendingFile)}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white disabled:opacity-30 sm:h-8 sm:w-8"
                 >
                   <svg
