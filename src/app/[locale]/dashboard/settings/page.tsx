@@ -255,7 +255,7 @@ export default function SettingsPage() {
                 <option value="+1">🇺🇸 +1</option>
               </select>
               <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
-                placeholder="912 345 678"
+                placeholder=""
                 className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500" />
             </div>
             <p className="mt-1 text-xs text-gray-400">{t("phoneHint")}</p>

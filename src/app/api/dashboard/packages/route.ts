@@ -115,14 +115,18 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Package ID required" }, { status: 400 });
   }
 
-  const pkg = await queryOne(
-    "DELETE FROM packages WHERE id = $1 AND photographer_id = $2 RETURNING id",
-    [packageId, profile.id]
-  );
+  try {
+    const pkg = await queryOne(
+      "DELETE FROM packages WHERE id = $1 AND photographer_id = $2 RETURNING id",
+      [packageId, profile.id]
+    );
 
-  if (!pkg) {
-    return NextResponse.json({ error: "Package not found" }, { status: 404 });
+    if (!pkg) {
+      return NextResponse.json({ error: "Package not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Cannot delete this package — it has active bookings. You can edit it instead." }, { status: 409 });
   }
-
-  return NextResponse.json({ success: true });
 }
