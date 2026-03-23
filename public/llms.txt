@@ -1,0 +1,58 @@
+# Photo Portugal - Vacation Photographer Marketplace
+
+> Professional photographer marketplace connecting tourists with local photographers across Portugal for vacation photoshoots. Book experienced photographers for couples, families, proposals, honeymoons, solo travel, elopements, and group trips.
+
+## Key Pages
+
+- [Homepage](https://photoportugal.com): Search photographers by location and type
+- [Photographers](https://photoportugal.com/photographers): Browse all approved photographers with portfolios and reviews
+- [How It Works](https://photoportugal.com/how-it-works): 4-step booking process explained
+- [Pricing](https://photoportugal.com/pricing): Photographer plans and commission structure
+- [FAQ](https://photoportugal.com/faq): 20+ frequently asked questions
+- [Blog](https://photoportugal.com/blog): 39 photography and travel guides
+- [Join as Photographer](https://photoportugal.com/join): Photographer registration with early bird tiers
+
+## 23 Locations Across Portugal
+
+Lisbon, Sintra, Cascais, Costa da Caparica, Setubal, Comporta, Guimaraes, Porto, Braga, Douro Valley, Aveiro, Peneda-Geres, Tomar, Peniche, Coimbra, Obidos, Nazare, Evora, Algarve, Lagos, Tavira, Madeira, Azores
+
+## 8 Photoshoot Types
+
+1. Couples - Romantic vacation photography
+2. Family - Kid-friendly vacation sessions
+3. Proposal - Surprise proposal documentation
+4. Engagement - Pre-wedding sessions
+5. Honeymoon - Newlywed romantic photography
+6. Solo Travel - Solo traveler portraits
+7. Elopement - Intimate ceremony documentation
+8. Friends Trip - Group travel photography
+
+## Pricing
+
+- Photoshoot packages start from EUR 90
+- 10% platform service fee paid by client
+- Photographer plans: Free (20% commission), Pro EUR 29/mo (15%), Premium EUR 59/mo (10%)
+
+## How Booking Works
+
+1. Browse photographers by location, type, language, price
+2. Select photographer and package
+3. Pay securely via Stripe
+4. Photographer confirms and coordinates via real-time chat
+5. Photoshoot happens at chosen location
+6. Photos delivered within 3-14 days via private gallery
+
+## Differentiators
+
+- 23 Portuguese locations (vs 5-10 for competitors like Flytographer/Localgrapher)
+- Verified local photographers with real client reviews
+- Transparent pricing with no hidden fees
+- Real-time messaging between client and photographer
+- Multiple photoshoot types for every occasion
+- Bilingual platform (English + Portuguese)
+
+## Contact
+
+- Email: info@photoportugal.com
+- Website: https://photoportugal.com
+- Support: https://photoportugal.com/support

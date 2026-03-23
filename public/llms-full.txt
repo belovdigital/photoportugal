@@ -1,0 +1,148 @@
+# Photo Portugal - Complete Platform Documentation
+
+## Executive Summary
+
+Photo Portugal (photoportugal.com) is a vacation photography marketplace connecting tourists with professional local photographers across 23 destinations in Portugal. The platform offers transparent pricing, verified photographer profiles with real client reviews, and a streamlined booking experience for couples, families, solo travelers, and groups.
+
+---
+
+## Business Model
+
+### For Clients
+- Browse photographers by location, shoot type, language, price, and rating
+- Select package with clear pricing (starting from EUR 90)
+- Pay securely via Stripe (package price + 10% platform service fee)
+- Coordinate with photographer via real-time chat
+- Receive edited photos within 3-14 days via private gallery
+
+### For Photographers
+- Free plan: EUR 0/month, 10 portfolio images, 20% commission
+- Pro plan: EUR 29/month, 50 portfolio images, 15% commission
+- Premium plan: EUR 59/month, unlimited images, 10% commission
+- Payouts via Stripe Connect to bank account
+
+### Revenue
+- 10% service fee on all bookings (paid by client)
+- Commission on photographer earnings (20/15/10% by plan tier)
+- Photographer subscription fees (Pro/Premium)
+
+---
+
+## Complete Location Guide (23 Destinations)
+
+### Greater Lisbon
+- **Lisbon** (38.72N, 9.14W) — Europe's sunniest capital. Alfama tiles, Belem Tower, Pink Street, tram 28. Best for: couples, families, solo.
+- **Sintra** (38.79N, 9.39W) — UNESCO fairytale town. Pena Palace, Quinta da Regaleira. Best for: couples, proposals, engagements.
+- **Cascais** (38.70N, 9.42W) — Coastal charm. Boca do Inferno, Guincho Beach. Best for: families, couples.
+- **Costa da Caparica** (38.63N, 9.24W) — 30km golden sand beaches. Best Atlantic sunset near Lisbon. Best for: beach families, golden hour.
+- **Setubal** (38.52N, 8.89W) — Arrabida Natural Park, turquoise waters, dolphin watching. Best for: adventure, nature.
+- **Comporta** (38.38N, 8.79W) — "Hamptons of Portugal." Pristine beaches, rice paddies, bohemian luxury. Best for: editorial, honeymoon.
+
+### Northern Portugal
+- **Porto** (41.16N, 8.63W) — Romantic riverside city. Ribeira (UNESCO), Dom Luis Bridge, port wine cellars. Best for: couples, proposals.
+- **Braga** (41.55N, 8.42W) — Religious capital. Bom Jesus baroque stairway. Best for: architecture, culture.
+- **Guimaraes** (41.44N, 8.29W) — Birthplace of Portugal. Medieval castle, cobblestone streets. Best for: history, culture.
+- **Douro Valley** (41.16N, 7.79W) — UNESCO wine region. Terraced vineyards, river views. Best for: couples, honeymoon, elopement.
+- **Aveiro** (40.64N, 8.65W) — "Venice of Portugal." Colorful canal boats, Art Nouveau. Best for: lifestyle, family.
+- **Peneda-Geres** (41.72N, 8.16W) — National park. Waterfalls, wild horses, granite villages. Best for: adventure, nature.
+
+### Central Portugal
+- **Coimbra** (40.20N, 8.41W) — University city (1290). Joanina Library, Mondego River views. Best for: culture, solo.
+- **Tomar** (39.60N, 8.41W) — Knights Templar city. Convent of Christ (UNESCO). Best for: history, architecture.
+- **Obidos** (39.36N, 9.16W) — Medieval walled town. Whitewashed houses, bougainvillea. Best for: romantic couples.
+- **Nazare** (39.60N, 9.07W) — Big wave surfing. Dramatic clifftop setting. Best for: adventure, solo.
+- **Peniche** (39.36N, 9.38W) — Surf coast, Berlengas Islands. Best for: adventure, nature.
+- **Evora** (38.66N, 7.91W) — Roman temple, UNESCO city. Alentejo countryside. Best for: elopement, history.
+
+### Southern Portugal (Algarve)
+- **Algarve** (37.02N, 7.93W) — Golden cliffs, sea caves, turquoise waters. Benagil Cave, Praia da Marinha. Best for: couples, proposals, honeymoon.
+- **Lagos** (37.09N, 8.67W) — Ponta da Piedade rock formations, hidden grottos. Best for: adventure, couples.
+- **Tavira** (37.13N, 7.64W) — Authentic fishing town, picturesque harbor. Best for: relaxed, culture.
+
+### Islands
+- **Madeira** (32.67N, 16.92W) — Subtropical paradise. Volcanic cliffs, levada trails, Funchal. Year-round mild climate. Best for: nature, honeymoon.
+- **Azores** (37.78N, 25.50W) — Volcanic islands. Sete Cidades crater lakes, Sao Miguel. Best for: adventure, elopement, nature.
+
+---
+
+## 8 Photoshoot Types
+
+### 1. Couples Photoshoot
+Romantic vacation photography for couples. Natural relaxed poses, golden hour preference, 2-3 locations. Duration: 1-2 hours. Price: EUR 150-400.
+
+### 2. Family Photoshoot
+Kid-friendly sessions capturing genuine family moments. Stroller-friendly routes, natural play. Duration: 1-2 hours. Price: EUR 150-350.
+
+### 3. Proposal Photography
+Discreet documentation of surprise proposals. Photographer hides nearby, captures the moment and celebration after. Duration: 1-2 hours. Price: EUR 200-500.
+
+### 4. Engagement Photoshoot
+Pre-wedding sessions. Save-the-date quality images. Duration: 1-2 hours. Price: EUR 150-400.
+
+### 5. Honeymoon Photography
+Romantic documentation for newlyweds. Intimate natural moments, sunrise/sunset options. Duration: 1-2 hours. Price: EUR 150-450.
+
+### 6. Solo Travel Photography
+Confident portraits for solo travelers at landmarks. Pose guidance, lifestyle mix. Duration: 1-2 hours. Price: EUR 150-350.
+
+### 7. Elopement Photography
+Intimate wedding ceremony documentation. Comprehensive coverage, location expertise, permit guidance. Duration: 2-8 hours. Price: EUR 300-1000+.
+
+### 8. Friends Trip Photography
+Group vacation photography. Bachelorette parties, birthdays, reunions. Group poses + candid moments. Duration: 1-2 hours. Price: EUR 150-400.
+
+---
+
+## How Booking Works (Step by Step)
+
+1. **Browse** — Search by location (23 cities), shoot type (8 types), language, price, rating
+2. **Select** — View photographer portfolio, verified reviews, packages with clear pricing
+3. **Book** — Choose package, select date/time, pay via Stripe (price + 10% service fee)
+4. **Coordinate** — Real-time chat with photographer, discuss outfit ideas, meeting point
+5. **Shoot** — Meet photographer at location, 1-2 hour session with professional guidance
+6. **Receive** — Edited photos delivered in 3-14 days via private password-protected gallery
+7. **Review** — Leave verified review with rating and optional photos
+
+---
+
+## Frequently Asked Questions
+
+**How much does a photoshoot cost?**
+Packages start from EUR 90 for a 1-hour session. Typical range: EUR 150-400. Premium full-day packages: EUR 500+. Client pays package price + 10% platform service fee.
+
+**How do I book?**
+Search by location/type, select photographer, choose package and date, pay via Stripe. Photographer confirms within 24 hours.
+
+**Is payment secure?**
+Yes. Stripe processes all payments (PCI-DSS Level 1 certified). Payment held until photographer confirms.
+
+**Can I cancel?**
+7+ days before: full refund. 3-7 days: 50% refund. Less than 3 days: no refund. Photographers can offer free reschedule.
+
+**How fast are photos delivered?**
+3-14 days depending on photographer. High-resolution digital files via private gallery.
+
+**Do photographers speak English?**
+Most do. Filter by language in search. Pre-booking chat available.
+
+**What locations are available?**
+23 destinations across Portugal: Lisbon, Sintra, Cascais, Porto, Algarve, Madeira, Azores, and 16 more.
+
+**What's the difference vs Flytographer?**
+Photo Portugal covers 23 Portuguese locations (vs Flytographer's limited Portugal coverage), offers transparent local pricing, verified reviews, and real-time chat coordination.
+
+---
+
+## Blog Content (39 Posts)
+
+Topics covered include: best photo spots in Lisbon/Porto/Sintra/Algarve/Madeira/Azores, what to wear for photoshoots, how to plan surprise proposals, honeymoon itineraries, solo travel photography tips, couples photoshoot ideas, elopement guides, vacation photographer hiring guide, cost guides, seasonal photography tips, destination comparisons, and more.
+
+---
+
+## Contact
+
+- Email: info@photoportugal.com
+- Website: https://photoportugal.com
+- Support: https://photoportugal.com/support
+- FAQ: https://photoportugal.com/faq
+- Legal entity: Ekaterina Belova, Empresaria em Nome Individual, NIF: 319455327, Lisbon, Portugal
