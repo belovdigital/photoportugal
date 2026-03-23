@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { trackSendMessage } from "@/lib/analytics";
+import { convertHeicIfNeeded } from "@/lib/convert-heic";
 
 interface Conversation {
   booking_id: string;
@@ -250,8 +251,10 @@ function MessagesContent() {
       let mediaUrl: string | null = null;
       if (fileToSend) {
         setUploadingMedia(true);
+        let processedFile = fileToSend;
+        try { processedFile = await convertHeicIfNeeded(fileToSend); } catch { /* use original */ }
         const formData = new FormData();
-        formData.append("file", fileToSend);
+        formData.append("file", processedFile);
         formData.append("booking_id", activeChat);
         const uploadRes = await fetch("/api/messages/upload", { method: "POST", body: formData });
         setUploadingMedia(false);
@@ -557,12 +560,12 @@ function MessagesContent() {
                               }`}
                             >
                               {msg.media_url && (
-                                <a href={`/api/img/${msg.media_url.replace("/uploads/", "")}?w=1200&f=jpeg`} target="_blank" rel="noopener noreferrer">
+                                <a href={msg.media_url} target="_blank" rel="noopener noreferrer">
                                   <img
-                                    src={`/api/img/${msg.media_url.replace("/uploads/", "")}?w=400&q=75&f=webp`}
-                                    alt=""
-                                    className="rounded-lg max-w-[240px] max-h-[300px] object-cover"
-                                    loading="lazy"
+                                    src={msg.media_url}
+                                    alt="Shared photo"
+                                    style={{ maxWidth: 240, maxHeight: 300 }}
+                                    className="rounded-lg object-cover"
                                   />
                                 </a>
                               )}

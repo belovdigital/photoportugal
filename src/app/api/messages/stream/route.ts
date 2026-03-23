@@ -23,11 +23,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Verify user is part of this booking
-  const booking = await queryOne<{
-    client_id: string;
-    photographer_user_id: string;
-  }>(
+  const booking = await queryOne<{ client_id: string; photographer_user_id: string }>(
     `SELECT b.client_id, u.id as photographer_user_id
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -37,25 +33,16 @@ export async function GET(req: NextRequest) {
   );
 
   if (!booking) {
-    return new Response(JSON.stringify({ error: "Booking not found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: "Booking not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
   }
-
   if (booking.client_id !== userId && booking.photographer_user_id !== userId) {
-    return new Response(JSON.stringify({ error: "Not authorized" }), {
-      status: 403,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: { "Content-Type": "application/json" } });
   }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       let lastCheck = new Date().toISOString();
-
-      // Send an initial keepalive so the client knows the connection is open
       controller.enqueue(encoder.encode(": connected\n\n"));
 
       const interval = setInterval(async () => {
@@ -65,41 +52,27 @@ export async function GET(req: NextRequest) {
                     u.name as sender_name, u.avatar_url as sender_avatar
              FROM messages m
              JOIN users u ON u.id = m.sender_id
-             WHERE m.booking_id = $1
-               AND m.created_at > $2
+             WHERE m.booking_id = $1 AND m.created_at > $2
              ORDER BY m.created_at ASC`,
             [bookingId, lastCheck]
           );
 
           if (newMessages.length > 0) {
-            lastCheck = (
-              newMessages[newMessages.length - 1] as { created_at: string }
-            ).created_at;
-
-            // Mark these new messages as read since the user has the chat open
+            lastCheck = (newMessages[newMessages.length - 1] as { created_at: string }).created_at;
             await query(
               "UPDATE messages SET read_at = NOW() WHERE booking_id = $1 AND sender_id != $2 AND read_at IS NULL",
               [bookingId, userId]
             );
-
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify(newMessages)}\n\n`)
-            );
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(newMessages)}\n\n`));
           }
         } catch (err) {
-          // Log but don't crash the stream — next tick will retry
           console.error("[messages/stream] poll error:", err);
         }
       }, 1000);
 
-      // Clean up when the client disconnects
       req.signal.addEventListener("abort", () => {
         clearInterval(interval);
-        try {
-          controller.close();
-        } catch {
-          // Already closed
-        }
+        try { controller.close(); } catch {}
       });
     },
   });
