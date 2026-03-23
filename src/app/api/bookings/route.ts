@@ -93,15 +93,15 @@ export async function POST(req: NextRequest) {
 
       // Send SMS notification to photographer (if enabled and phone number exists)
       if (photographerInfo && clientInfo && prefs?.sms_bookings !== false) {
-        const profile = await queryOne<{ phone_number: string | null }>(
-          "SELECT phone_number FROM photographer_profiles WHERE id = $1",
-          [photographer_id]
+        const photographerPhone = await queryOne<{ phone: string | null }>(
+          "SELECT phone FROM users WHERE id = $1",
+          [photographerInfo.user_id]
         );
-        if (profile?.phone_number) {
+        if (photographerPhone?.phone) {
           sendSMS(
-            profile.phone_number,
+            photographerPhone.phone,
             `New booking request on Photo Portugal from ${clientInfo.name}. Log in to review: https://photoportugal.com/dashboard/bookings`
-          );
+          ).catch(err => console.error("[sms] new booking error:", err));
         }
       }
     } catch {}

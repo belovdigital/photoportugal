@@ -2210,7 +2210,9 @@
       "selectLocations": "Select your locations",
       "selectLocationsTip": "Add all areas where you're available to shoot",
       "connectStripe": "Connect Stripe for payments",
-      "connectStripeTip": "Required to receive payments from bookings"
+      "connectStripeTip": "Required to receive payments from bookings",
+      "addPhoneNumber": "Add phone number",
+      "addPhoneNumberTip": "Required for SMS booking notifications"
     },
     "client": {
       "addProfilePhoto": "Add profile photo",

@@ -2082,7 +2082,9 @@
       "selectLocations": "Selecionar as suas localizações",
       "selectLocationsTip": "Adicione todas as áreas onde está disponível para fotografar",
       "connectStripe": "Ligar Stripe para pagamentos",
-      "connectStripeTip": "Necessário para receber pagamentos de reservas"
+      "connectStripeTip": "Necessário para receber pagamentos de reservas",
+      "addPhoneNumber": "Adicionar número de telefone",
+      "addPhoneNumberTip": "Necessário para notificações SMS de reservas"
     },
     "client": {
       "addProfilePhoto": "Adicionar foto de perfil",

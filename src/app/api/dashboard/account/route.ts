@@ -19,12 +19,26 @@ export async function PUT(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = (session.user as { id?: string }).id;
-  const { first_name, last_name, name: legacyName, phone } = await req.json();
+  const { first_name, last_name, name: legacyName, phone: rawPhone } = await req.json();
   const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
   const lastName = (last_name ?? legacyName?.split(" ").slice(1).join(" ") ?? "").trim();
   const fullName = lastName ? `${firstName} ${lastName}` : firstName;
 
   if (!firstName) return NextResponse.json({ error: "First name required" }, { status: 400 });
+
+  // Validate and normalize phone number (E.164 format)
+  let phone: string | null = null;
+  if (rawPhone) {
+    const cleaned = rawPhone.replace(/[\s\-]/g, "");
+    if (!cleaned.startsWith("+")) {
+      return NextResponse.json({ error: "Phone number must start with + (country code)" }, { status: 400 });
+    }
+    const digits = cleaned.slice(1);
+    if (!/^\d{7,15}$/.test(digits)) {
+      return NextResponse.json({ error: "Phone number must be 7-15 digits after the country code" }, { status: 400 });
+    }
+    phone = cleaned;
+  }
 
   try {
     await queryOne("UPDATE users SET name = $1, first_name = $2, last_name = $3, phone = $4 WHERE id = $5 RETURNING id", [fullName, firstName, lastName, phone || null, userId]);

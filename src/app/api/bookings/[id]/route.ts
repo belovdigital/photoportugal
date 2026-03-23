@@ -202,7 +202,9 @@ export async function PATCH(
       }
     }
 
-    // Conditional update: only transition if status hasn't changed since we read it
+    // Conditional update: only transition if status hasn't changed since we read it.
+    // This is also our idempotency guard — if the update returns null, a concurrent
+    // request already changed the status, so we skip all side-effects (emails, SMS).
     const updateResult = await queryOne<{ id: string }>(
       "UPDATE bookings SET status = $1 WHERE id = $2 AND status = $3 RETURNING id",
       [status, id, currentBooking!.status]

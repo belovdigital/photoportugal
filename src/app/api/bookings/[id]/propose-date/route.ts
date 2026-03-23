@@ -78,7 +78,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       </div>`
     ).catch(console.error);
 
-    // SMS to the other party
+    // SMS to the other party.
+    // NOTE: This SMS is intentionally NOT idempotent — each date proposal is a distinct
+    // user action, so sending one SMS per proposal is correct behavior.
     try {
       const recipientUserId = isPhotographer ? booking.client_id : booking.photographer_user_id;
       const recipientPhone = await queryOne<{ phone: string | null }>(

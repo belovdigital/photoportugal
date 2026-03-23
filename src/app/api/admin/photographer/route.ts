@@ -54,14 +54,24 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No valid fields" }, { status: 400 });
     }
 
+    // Check previous approval status BEFORE the update so we can detect first-time approval
+    let wasAlreadyApproved = false;
+    if (updates.is_approved === true) {
+      const prev = await queryOne<{ is_approved: boolean }>(
+        "SELECT is_approved FROM photographer_profiles WHERE id = $1",
+        [id]
+      );
+      wasAlreadyApproved = !!prev?.is_approved;
+    }
+
     values.push(id);
     await queryOne(
       `UPDATE photographer_profiles SET ${fields.join(", ")} WHERE id = $${paramIndex} RETURNING id`,
       values
     );
 
-    // Send approval email when photographer is approved
-    if (updates.is_approved === true) {
+    // Send approval email only when photographer is newly approved (was not approved before)
+    if (updates.is_approved === true && !wasAlreadyApproved) {
       try {
         const photographer = await queryOne<{ email: string; display_name: string; slug: string }>(
           `SELECT u.email, pp.display_name, pp.slug

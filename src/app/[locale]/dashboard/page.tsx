@@ -113,9 +113,11 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     id: string; rating: number; review_count: number; session_count: number; plan: string; slug: string; is_approved: boolean;
     avatar_url: string | null; cover_url: string | null; bio: string | null;
     stripe_account_id: string | null; stripe_onboarding_complete: boolean;
+    phone: string | null;
   }>(
     `SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved,
-            u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete
+            u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete,
+            u.phone
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      WHERE pp.user_id = $1`,
@@ -161,11 +163,12 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     packages: parseInt(packageCount?.count || "0", 10),
     locations: parseInt(locationCount?.count || "0", 10),
     stripeConnected: !!profile.stripe_account_id && !!profile.stripe_onboarding_complete,
+    phone: !!profile.phone,
   };
 
   const allStepsComplete = onboardingChecks.avatar && onboardingChecks.cover && onboardingChecks.bio
     && onboardingChecks.portfolio >= 5 && onboardingChecks.packages >= 1
-    && onboardingChecks.locations >= 1 && onboardingChecks.stripeConnected;
+    && onboardingChecks.locations >= 1 && onboardingChecks.stripeConnected && onboardingChecks.phone;
 
   return (
     <div className="p-6 sm:p-8">

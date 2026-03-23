@@ -93,7 +93,8 @@ export default async function AdminPage() {
              AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
              AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
              AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
-             AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as checklist_complete
+             AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
+             AND u.phone IS NOT NULL) as checklist_complete
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
      ORDER BY pp.is_approved DESC, COALESCE(u.is_banned, FALSE) ASC, pp.created_at DESC`
   );

@@ -16,7 +16,7 @@ export async function PUT(req: NextRequest) {
     const {
       first_name,
       last_name,
-      phone,
+      phone: rawPhone,
       display_name,
       tagline,
       bio,
@@ -29,6 +29,20 @@ export async function PUT(req: NextRequest) {
 
     if (!Array.isArray(languages) || languages.length === 0) {
       return NextResponse.json({ error: "At least one language is required" }, { status: 400 });
+    }
+
+    // Validate and normalize phone number (E.164 format)
+    let phone: string | null = null;
+    if (rawPhone) {
+      const cleaned = rawPhone.replace(/[\s\-]/g, "");
+      if (!cleaned.startsWith("+")) {
+        return NextResponse.json({ error: "Phone number must start with + (country code)" }, { status: 400 });
+      }
+      const digits = cleaned.slice(1);
+      if (!/^\d{7,15}$/.test(digits)) {
+        return NextResponse.json({ error: "Phone number must be 7-15 digits after the country code" }, { status: 400 });
+      }
+      phone = cleaned;
     }
 
     // Update user's first/last name if provided

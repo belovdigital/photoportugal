@@ -12,6 +12,7 @@ interface OnboardingChecks {
   packages: number;
   locations: number;
   stripeConnected: boolean;
+  phone?: boolean;
   bookings?: number;
 }
 
@@ -70,6 +71,12 @@ function getPhotographerSteps(
       href: "/dashboard/payouts",
       complete: checks.stripeConnected,
       tip: t("photographer.connectStripeTip"),
+    },
+    {
+      label: t("photographer.addPhoneNumber"),
+      href: "/dashboard/settings",
+      complete: !!checks.phone,
+      tip: t("photographer.addPhoneNumberTip"),
     },
   ];
 }
