@@ -216,7 +216,7 @@ export default async function AdminPage() {
                 ) : (
                   <span className="group/tip relative cursor-help text-[10px] text-gray-400">
                     Incomplete
-                    <span className="pointer-events-none absolute left-0 top-full z-50 mt-1 hidden w-52 rounded-lg border border-warm-200 bg-white p-3 text-left shadow-lg group-hover/tip:block">
+                    <span className="pointer-events-none absolute left-0 bottom-full z-50 mb-1 hidden w-52 rounded-lg border border-warm-200 bg-white p-3 text-left shadow-lg group-hover/tip:block">
                       <span className="block text-[11px] font-semibold text-gray-700 mb-1.5">Missing steps:</span>
                       {!p.has_avatar && <span className="block text-[11px] text-red-500">Profile photo</span>}
                       {!p.has_cover && <span className="block text-[11px] text-red-500">Cover image</span>}
