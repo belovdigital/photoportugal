@@ -198,10 +198,10 @@ export async function GET() {
     const top100 = allQueries.filter((q) => q.position <= 100);
 
     result.positionDistribution = {
-      top3: { count: top3.length, queries: top3.slice(0, 10) },
-      top10: { count: top10.length, queries: top10.slice(0, 15) },
-      top20: { count: top20.length, queries: top20.filter((q) => q.position > 10).slice(0, 10) },
-      top100: { count: top100.length, queries: top100.filter((q) => q.position > 20).slice(0, 10) },
+      top3: { count: top3.length, queries: top3 },
+      top10: { count: top10.length, queries: top10.filter((q) => q.position > 3) },
+      top20: { count: top20.length, queries: top20.filter((q) => q.position > 10) },
+      top100: { count: top100.length, queries: top100.filter((q) => q.position > 20) },
       total: allQueries.length,
     };
 
