@@ -19,7 +19,7 @@ export function PhotographerCard({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
       onClick={() => trackViewPhotographer(photographer.slug, photographer.display_name)}
     >
       <Link
@@ -52,7 +52,7 @@ export function PhotographerCard({
         </div>
       </div>
 
-      <div className="p-6 pt-10 pb-3">
+      <div className="flex-1 p-6 pt-10 pb-3">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition">
