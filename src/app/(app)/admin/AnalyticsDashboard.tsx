@@ -1,6 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+type SortDir = "asc" | "desc";
+function useSortable<T>(initial: keyof T, initialDir: SortDir = "asc") {
+  const [sort, setSort] = useState<{ key: keyof T; dir: SortDir }>({ key: initial, dir: initialDir });
+  const toggle = useCallback((key: keyof T) => {
+    setSort((s) => s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
+  }, []);
+  const sorted = useCallback(<R extends T>(arr: R[]) => [...arr].sort((a, b) => {
+    const av = a[sort.key], bv = b[sort.key];
+    const cmp = typeof av === "string" ? (av as string).localeCompare(bv as string) : (av as number) - (bv as number);
+    return sort.dir === "asc" ? cmp : -cmp;
+  }), [sort]);
+  return { sort, toggle, sorted };
+}
+
+function SortTh({ label, col, sort, toggle, right }: { label: string; col: string; sort: { key: string; dir: SortDir }; toggle: (k: string) => void; right?: boolean }) {
+  const active = sort.key === col;
+  return (
+    <th
+      onClick={() => toggle(col)}
+      className={`px-4 py-3 font-medium text-gray-500 bg-warm-50 cursor-pointer select-none hover:text-gray-800 whitespace-nowrap ${right ? "text-right" : "text-left"}`}
+    >
+      {label}
+      <span className="ml-1 inline-block w-3 text-center">
+        {active ? (sort.dir === "asc" ? "↑" : "↓") : <span className="text-gray-300">↕</span>}
+      </span>
+    </th>
+  );
+}
 
 interface AnalyticsData {
   ga4?: {
@@ -56,6 +85,7 @@ const FUNNEL_STEPS = [
 
 function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["positionDistribution"]> }) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const { sort, toggle, sorted } = useSortable<{ query: string; clicks: number; impressions: number; position: number }>("position");
 
   const buckets = [
     { key: "top3", label: "TOP 3", count: dist.top3.count, queries: dist.top3.queries, color: "bg-green-500", textColor: "text-green-700", bgColor: "bg-green-50", borderColor: "border-green-200", icon: "🏆" },
@@ -100,14 +130,14 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
           <table className="w-full min-w-[400px] text-xs sm:text-sm">
             <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
               <tr>
-                <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 bg-warm-50">Query</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 bg-warm-50">Pos.</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 bg-warm-50">Clicks</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 bg-warm-50">Impr.</th>
+                <SortTh label="Query" col="query" sort={sort as { key: string; dir: SortDir }} toggle={toggle as (k: string) => void} />
+                <SortTh label="Pos." col="position" sort={sort as { key: string; dir: SortDir }} toggle={toggle as (k: string) => void} right />
+                <SortTh label="Clicks" col="clicks" sort={sort as { key: string; dir: SortDir }} toggle={toggle as (k: string) => void} right />
+                <SortTh label="Impr." col="impressions" sort={sort as { key: string; dir: SortDir }} toggle={toggle as (k: string) => void} right />
               </tr>
             </thead>
             <tbody className="divide-y divide-warm-100">
-              {buckets.find((b) => b.key === expanded)?.queries.map((q) => (
+              {sorted(buckets.find((b) => b.key === expanded)?.queries ?? []).map((q) => (
                 <tr key={q.query}>
                   <td className="px-2 sm:px-4 py-2 font-medium text-gray-900">{q.query}</td>
                   <td className="px-2 sm:px-4 py-2 text-right">
@@ -139,6 +169,8 @@ export function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const queriesSort = useSortable<{ query: string; clicks: number; impressions: number; ctr: number; position: number }>("clicks", "desc");
+  const pagesSort = useSortable<{ path: string; views: number; users: number }>("views", "desc");
 
   useEffect(() => {
     fetch("/api/admin/analytics")
@@ -325,19 +357,19 @@ export function AnalyticsDashboard() {
       {data.topQueries && data.topQueries.length > 0 && (
         <>
           <h3 className="text-lg font-bold text-gray-900">Top Search Queries (GSC)</h3>
-          <div className="overflow-x-auto rounded-xl border border-warm-200 bg-white">
+          <div className="overflow-auto max-h-[500px] rounded-xl border border-warm-200 bg-white">
             <table className="w-full text-xs sm:text-sm">
-              <thead className="border-b border-warm-200 bg-warm-50">
+              <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Query</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Clicks</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Impressions</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">CTR</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Position</th>
+                  <SortTh label="Query" col="query" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} />
+                  <SortTh label="Clicks" col="clicks" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
+                  <SortTh label="Impressions" col="impressions" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
+                  <SortTh label="CTR" col="ctr" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
+                  <SortTh label="Position" col="position" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
                 </tr>
               </thead>
               <tbody className="divide-y divide-warm-100">
-                {data.topQueries.map((q) => (
+                {queriesSort.sorted(data.topQueries).map((q) => (
                   <tr key={q.query}>
                     <td className="px-4 py-2.5 font-medium text-gray-900">{q.query}</td>
                     <td className="px-4 py-2.5 text-right text-gray-500">{q.clicks}</td>
@@ -356,17 +388,17 @@ export function AnalyticsDashboard() {
       {data.topPages && data.topPages.length > 0 && (
         <>
           <h3 className="text-lg font-bold text-gray-900">Top Pages (GA4)</h3>
-          <div className="overflow-x-auto rounded-xl border border-warm-200 bg-white">
+          <div className="overflow-auto max-h-[500px] rounded-xl border border-warm-200 bg-white">
             <table className="w-full text-xs sm:text-sm">
-              <thead className="border-b border-warm-200 bg-warm-50">
+              <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Page</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Views</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Users</th>
+                  <SortTh label="Page" col="path" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} />
+                  <SortTh label="Views" col="views" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} right />
+                  <SortTh label="Users" col="users" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} right />
                 </tr>
               </thead>
               <tbody className="divide-y divide-warm-100">
-                {data.topPages.map((p) => (
+                {pagesSort.sorted(data.topPages).map((p) => (
                   <tr key={p.path}>
                     <td className="px-4 py-2.5 font-medium text-gray-900 max-w-xs truncate">{p.path}</td>
                     <td className="px-4 py-2.5 text-right text-gray-500">{p.views}</td>
