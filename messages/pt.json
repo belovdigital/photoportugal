@@ -880,7 +880,8 @@
       "metaDescription": "Reserve {name}, fotógrafo profissional em {locations}. Veja portfólio, pacotes e avaliações.",
       "packageDescription": "Pacote de fotografia {packageName} por {name}",
       "moreInLocation": "Mais Fotógrafos em {location}",
-      "similarPhotographers": "Fotógrafos Semelhantes"
+      "similarPhotographers": "Fotógrafos Semelhantes",
+      "from": "A partir de"
     },
     "package": {
       "mostPopular": "Mais Popular",

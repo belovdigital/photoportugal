@@ -880,7 +880,8 @@
       "metaDescription": "Book {name}, a professional photographer in {locations}. View portfolio, packages, and reviews.",
       "packageDescription": "{packageName} photography package by {name}",
       "moreInLocation": "More Photographers in {location}",
-      "similarPhotographers": "Similar Photographers"
+      "similarPhotographers": "Similar Photographers",
+      "from": "From"
     },
     "package": {
       "mostPopular": "Most Popular",
