@@ -24,7 +24,7 @@ export function PhotographerCard({
     >
       <Link
         href={`/photographers/${photographer.slug}`}
-        className="block"
+        className="flex flex-1 flex-col"
       >
       {/* Cover */}
       <div className="relative h-48 bg-gradient-to-br from-primary-300 to-primary-600">
