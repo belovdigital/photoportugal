@@ -13,9 +13,9 @@ export const shootTypes: ShootType[] = [
   {
     slug: "couples",
     name: "Couples",
-    title: "Couples Photoshoot in Portugal — Romantic Vacation Photography",
+    title: "Couples Photoshoot Portugal — Romantic Vacation Photography",
     metaDescription:
-      "Book a professional couples photoshoot in Portugal. Romantic sessions in Lisbon, Porto, Sintra & Algarve. Capture your love story with a local photographer. From EUR150.",
+      "Book a couples photoshoot in Portugal. Professional photographers in Lisbon, Porto, Sintra & Algarve. Natural, relaxed sessions. From €150.",
     h1: "Couples Photoshoot in Portugal",
     heroText:
       "Portugal is one of Europe's most romantic destinations, and there's no better way to celebrate your relationship than with a professional couples photoshoot. Whether you're exploring Lisbon's golden-lit streets hand in hand, watching the sunset over Porto's Douro River, or strolling through Sintra's fairytale gardens, our photographers know exactly how to capture the magic between you. No awkward posing -- just natural, beautiful moments guided by someone who knows Portugal's most intimate and photogenic spots.",
@@ -36,9 +36,9 @@ export const shootTypes: ShootType[] = [
   {
     slug: "family",
     name: "Family",
-    title: "Family Photoshoot in Portugal — Vacation Photography with Kids",
+    title: "Family Photographer Portugal — Vacation Photos with Kids",
     metaDescription:
-      "Book a professional family photoshoot in Portugal. Kid-friendly locations in Lisbon, Porto, Algarve & more. Natural, fun family portraits. From EUR150.",
+      "Book a family photoshoot in Portugal. Kid-friendly sessions in Lisbon, Algarve, Porto & more. Relaxed, natural photos. From €150.",
     h1: "Family Photoshoot in Portugal",
     heroText:
       "Family vacations in Portugal create memories that last a lifetime -- but only if you're actually in the photos. Our photographers specialize in natural, relaxed family photography that captures genuine moments of joy, laughter, and connection. They know the best kid-friendly locations, how to keep little ones engaged, and how to make the whole experience feel like an adventure rather than a chore. From building sandcastles on the Algarve to exploring Lisbon's colorful neighborhoods, your family photos will be ones you'll treasure forever.",
@@ -59,9 +59,9 @@ export const shootTypes: ShootType[] = [
   {
     slug: "proposal",
     name: "Proposal",
-    title: "Proposal Photographer in Portugal — Capture the Perfect Moment",
+    title: "Proposal Photographer Portugal — Capture the Perfect Moment",
     metaDescription:
-      "Plan a surprise proposal in Portugal with a professional photographer. Secret photoshoots in Lisbon, Porto, Sintra. We coordinate everything. From EUR200.",
+      "Hire a surprise proposal photographer in Portugal. Discreet photography in Lisbon, Sintra, Porto & Algarve. Verified reviews. From €200.",
     h1: "Surprise Proposal Photography in Portugal",
     heroText:
       "Planning to pop the question in Portugal? Our photographers are experts at capturing surprise proposals -- discreetly positioned to photograph every genuine reaction, tear of joy, and that unforgettable 'yes' moment. From choosing the perfect spot to coordinating timing, our team helps you plan every detail so you can focus on the most important question of your life. Portugal offers some of the most breathtaking proposal backdrops in Europe: Sintra's fairytale palaces, Lisbon's panoramic viewpoints, and the Algarve's dramatic cliffs.",
@@ -81,9 +81,9 @@ export const shootTypes: ShootType[] = [
   {
     slug: "engagement",
     name: "Engagement",
-    title: "Engagement Photographer in Portugal — Pre-Wedding Photoshoots",
+    title: "Engagement Photoshoot Portugal — Pre-Wedding Sessions",
     metaDescription:
-      "Book a professional engagement photoshoot in Portugal. Beautiful pre-wedding sessions in Lisbon, Porto, Sintra & Algarve. Destination engagement photography.",
+      "Book an engagement photoshoot in Portugal. Professional pre-wedding photography in Lisbon, Porto, Sintra & Algarve. From €150.",
     h1: "Engagement Photoshoot in Portugal",
     heroText:
       "You said yes -- now it's time to celebrate with stunning engagement photos in one of Europe's most romantic countries. Portugal offers an incredible variety of backdrops for your pre-wedding photoshoot: from Lisbon's sun-drenched terraces and Porto's historic riverside to Sintra's enchanted palaces and the Algarve's dramatic coastline. Whether you're planning a destination wedding in Portugal or simply want engagement photos in a breathtaking setting, our photographers will create images that capture the joy and excitement of this special chapter.",
@@ -104,9 +104,9 @@ export const shootTypes: ShootType[] = [
   {
     slug: "honeymoon",
     name: "Honeymoon",
-    title: "Honeymoon Photographer in Portugal — Romantic Getaway Photos",
+    title: "Honeymoon Photographer Portugal — Capture Your First Adventure",
     metaDescription:
-      "Book a honeymoon photoshoot in Portugal. Celebrate your new marriage with stunning photos in Lisbon, Algarve, Porto & more. Professional romantic photography.",
+      "Book a honeymoon photoshoot in Portugal. Romantic photography for newlyweds in Lisbon, Algarve, Douro Valley & Madeira. From €150.",
     h1: "Honeymoon Photoshoot in Portugal",
     heroText:
       "Your honeymoon in Portugal deserves to be remembered with more than phone photos. Our photographers capture the romance, joy, and adventure of your first trip as newlyweds. Imagine a sunrise session on the Algarve's golden cliffs, a golden hour stroll through Lisbon's most romantic neighborhoods, or a vineyard photoshoot in the Douro Valley with views that stretch for miles. These are the photos you'll frame, share, and look back on for decades. Relaxed, intimate, and beautifully natural.",
@@ -127,9 +127,9 @@ export const shootTypes: ShootType[] = [
   {
     slug: "solo",
     name: "Solo Travel",
-    title: "Solo Travel Photographer in Portugal — Photos of Your Adventure",
+    title: "Solo Travel Photoshoot Portugal — Professional Portraits",
     metaDescription:
-      "Book a solo travel photoshoot in Portugal. Professional portraits for solo travelers in Lisbon, Porto & beyond. Instagram-worthy vacation photos. From EUR150.",
+      "Book a solo travel photoshoot in Portugal. Confident portraits at iconic locations in Lisbon, Porto & beyond. From €150.",
     h1: "Solo Travel Photography in Portugal",
     heroText:
       "Traveling solo doesn't mean you should be absent from your own vacation photos. Our photographers help solo travelers capture confident, beautiful portraits that tell the story of your Portugal adventure. Whether you want Instagram-worthy shots at iconic landmarks, natural lifestyle photos exploring local neighborhoods, or a mix of both, your photographer will guide you through poses and help you feel relaxed and confident in front of the camera. You'll walk away with professional photos that capture your solo travel experience beautifully.",
@@ -149,9 +149,9 @@ export const shootTypes: ShootType[] = [
   {
     slug: "elopement",
     name: "Elopement",
-    title: "Elopement Photographer in Portugal — Intimate Wedding Photography",
+    title: "Elopement Photographer Portugal — Intimate Ceremony Photography",
     metaDescription:
-      "Book an elopement photographer in Portugal. Intimate weddings and micro-ceremonies in Lisbon, Sintra, Algarve & more. Professional elopement photography packages.",
+      "Hire an elopement photographer in Portugal. Intimate ceremonies in Sintra, Algarve, Lisbon & Douro Valley. From €300.",
     h1: "Elopement Photography in Portugal",
     heroText:
       "Portugal has become one of Europe's most popular elopement destinations, and for good reason. Imagine exchanging vows in a fairytale palace garden in Sintra, on a dramatic Algarve clifftop overlooking the Atlantic, or in a centuries-old Lisbon courtyard bathed in golden light. Our elopement photographers don't just take photos -- they document the intimate, emotional journey of your most special day. From getting-ready moments to the first kiss and celebration dinner, every detail is captured with artistry and heart. Portugal's year-round sunshine, diverse landscapes, and welcoming culture make it the perfect elopement destination.",
@@ -172,9 +172,9 @@ export const shootTypes: ShootType[] = [
   {
     slug: "friends",
     name: "Friends Trip",
-    title: "Friends Trip Photoshoot in Portugal — Group Vacation Photography",
+    title: "Friends Trip Photoshoot Portugal — Group & Bachelorette Photos",
     metaDescription:
-      "Book a group photoshoot for your friends trip in Portugal. Bachelorette parties, birthday trips & group vacations. Fun, natural group photography. From EUR150.",
+      "Book a friends trip photoshoot in Portugal. Bachelorette parties, birthdays & group vacations in Lisbon, Porto & Algarve. From €150.",
     h1: "Friends Trip Photoshoot in Portugal",
     heroText:
       "Traveling with friends to Portugal? Make it unforgettable with a professional group photoshoot. Whether it's a bachelorette weekend in Lisbon, a birthday celebration in Porto, or a reunion trip to the Algarve, our photographers know how to capture the energy, laughter, and connection of your group. From candid moments at a rooftop bar to group portraits with stunning backdrops, you'll leave with photos that everyone in the group will actually want to post. No more awkward group selfies or asking strangers to take your picture.",

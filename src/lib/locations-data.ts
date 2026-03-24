@@ -41,16 +41,16 @@ export const locations: Location[] = [
     lat: 38.7874,
     lng: -9.3903,
     photographer_count: 0,
-    seo_title: "Sintra Photographer — Pena Palace & Fairytale Photoshoots",
+    seo_title: "Photographer in Sintra — Fairytale Photoshoots at Pena Palace",
     seo_description:
-      "Book a photographer in Sintra, Portugal. Magical photoshoots at Pena Palace, Quinta da Regaleira & enchanted forests. Professional vacation photography. From EUR150.",
+      "Book a professional photographer in Sintra, Portugal. Couples, proposal & engagement photoshoots at Pena Palace, Regaleira & more. From €150.",
     description_pt:
       "Um mundo de conto de fadas com palácios encantados, florestas místicas e jardins românticos, a poucos minutos de Lisboa.",
     long_description_pt:
       "Sintra é como entrar num conto de fadas. Esta vila classificada como Património Mundial da UNESCO alberga o colorido Palácio da Pena, empoleirado em colinas envoltas em nevoeiro, a misteriosa Quinta da Regaleira com o seu poço iniciático e o romântico Palácio de Monserrate rodeado de jardins exóticos. As florestas exuberantes, os caminhos cobertos de musgo e a arquitetura fantástica criam uma atmosfera de outro mundo, perfeita para sessões fotográficas românticas, pedidos de casamento e retratos de família inesquecíveis. Sintra fica a apenas 30 minutos de Lisboa, tornando-a um destino ideal para um passeio de um dia.",
-    seo_title_pt: "Fotógrafo em Sintra — Sessões no Palácio da Pena e Quinta da Regaleira",
+    seo_title_pt: "Fotógrafo em Sintra — Sessões de Conto de Fadas no Palácio da Pena",
     seo_description_pt:
-      "Reserve um fotógrafo em Sintra, Portugal. Sessões fotográficas mágicas no Palácio da Pena, Quinta da Regaleira e florestas encantadas. Desde 150€.",
+      "Reserve um fotógrafo profissional em Sintra, Portugal. Sessões para casais, pedidos de casamento e noivados no Palácio da Pena, Regaleira e muito mais. Desde 150€.",
   },
   {
     id: "cascais",
@@ -194,16 +194,16 @@ export const locations: Location[] = [
     lat: 41.1579,
     lng: -8.6291,
     photographer_count: 0,
-    seo_title: "Photographer in Porto — Couples, Family & Vacation Photoshoots",
+    seo_title: "Photographer in Porto — Book Professional Vacation Photoshoots",
     seo_description:
-      "Book a professional photographer in Porto, Portugal. Couples, family & vacation photoshoots at Ribeira, Dom Luis Bridge & Douro River. Verified reviews. From EUR150.",
+      "Book a professional photographer in Porto, Portugal. Couples, family & proposal photoshoots at Ribeira, Dom Luis Bridge & more. Verified reviews. From €90.",
     description_pt:
       "A joia romântica do Norte — arquitetura barroca, pores do sol sobre o Douro e a icónica Ribeira.",
     long_description_pt:
       "O Porto encanta com o seu cenário dramático à beira-rio, arquitetura medieval e mundialmente famosas caves de vinho do Porto. O bairro da Ribeira, Património Mundial da UNESCO, oferece um cenário deslumbrante com os seus edifícios coloridos em cascata até ao Rio Douro. Os locais de fotografia mais procurados incluem a Ponte D. Luís I, a ornamentada Estação de São Bento, a Livraria Lello e a Torre dos Clérigos. O charme cru e autêntico da cidade torna-a ideal para sessões íntimas de casal, pedidos de casamento e retratos artísticos.",
-    seo_title_pt: "Fotógrafo no Porto — Sessões para Casais, Famílias e Férias",
+    seo_title_pt: "Fotógrafo no Porto — Reserve Sessões Fotográficas Profissionais de Férias",
     seo_description_pt:
-      "Reserve um fotógrafo profissional no Porto, Portugal. Sessões fotográficas para casais, famílias e férias na Ribeira, Ponte D. Luís e Rio Douro. Avaliações verificadas. Desde 150€.",
+      "Reserve um fotógrafo profissional no Porto, Portugal. Sessões para casais, famílias e pedidos de casamento na Ribeira, Ponte D. Luís e muito mais. Avaliações verificadas. Desde 90€.",
   },
   {
     id: "braga",
