@@ -153,6 +153,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
+      <link rel="preload" href="/hero-family.webp" as="image" type="image/webp" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -240,7 +241,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {/* Top right */}
                 <div className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg">
                   <OptimizedImage
-                    src={unsplashUrl(heroPhotoIds[1], 400)}
+                    src={unsplashUrl(heroPhotoIds[1], 350)}
                     alt={heroAlts[1]}
                     className="h-full w-full"
                   />
@@ -248,7 +249,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {/* Bottom left */}
                 <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg">
                   <OptimizedImage
-                    src={unsplashUrl(heroPhotoIds[2], 400)}
+                    src={unsplashUrl(heroPhotoIds[2], 350)}
                     alt={heroAlts[2]}
                     className="h-full w-full"
                   />
@@ -256,7 +257,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {/* Bottom center */}
                 <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg">
                   <OptimizedImage
-                    src={unsplashUrl(heroPhotoIds[3], 400)}
+                    src={unsplashUrl(heroPhotoIds[3], 350)}
                     alt={heroAlts[3]}
                     className="h-full w-full"
                   />
@@ -264,7 +265,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {/* Bottom right */}
                 <div className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg">
                   <OptimizedImage
-                    src={unsplashUrl(heroPhotoIds[4], 400)}
+                    src={unsplashUrl(heroPhotoIds[4], 350)}
                     alt={heroAlts[4]}
                     className="h-full w-full"
                   />

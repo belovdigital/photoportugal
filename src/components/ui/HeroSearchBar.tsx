@@ -48,6 +48,7 @@ export function HeroSearchBar({ locations }: { locations: LocationOption[] }) {
           <select
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
+            aria-label={t("placeholder")}
             className="w-full appearance-none bg-transparent text-gray-700 outline-none text-base"
           >
             <option value="">{t("placeholder")}</option>
@@ -60,6 +61,7 @@ export function HeroSearchBar({ locations }: { locations: LocationOption[] }) {
         </div>
         <button
           onClick={handleSearch}
+          aria-label={t("search")}
           className="flex items-center gap-2 bg-primary-600 px-6 sm:px-8 font-semibold text-white transition hover:bg-primary-700"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

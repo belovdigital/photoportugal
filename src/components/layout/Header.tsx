@@ -90,7 +90,7 @@ export function Header() {
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link href="/" className="shrink-0" onClick={() => setActiveMenu(null)}>
-            <img src="/logo.svg" alt="Photo Portugal" className="h-7 w-auto" />
+            <img src="/logo.svg" alt="Photo Portugal" width={140} height={28} className="h-7 w-auto" />
           </Link>
 
           {/* Desktop nav */}
