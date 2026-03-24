@@ -1972,7 +1972,11 @@
     "timeMidday": "Meio-dia (11-14h)",
     "timeAfternoon": "Tarde (14-17h)",
     "timeGoldenHour": "Hora Dourada (17-19h)",
-    "timeSunset": "Pôr do Sol (19-21h)"
+    "timeSunset": "Pôr do Sol (19-21h)",
+    "paymentDueLabel": "Pagamento pendente",
+    "paymentDueMessage": "dentro de {hours} horas. A sua reserva será automaticamente cancelada se não for paga.",
+    "paymentOverdueLabel": "Pagamento em atraso",
+    "paymentOverdueMessage": "A sua reserva pode ser cancelada a qualquer momento. Pague imediatamente para evitar o cancelamento."
   },
   "askQuestion": {
     "message": "Mensagem",

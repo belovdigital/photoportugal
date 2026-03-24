@@ -2132,7 +2132,11 @@
     "timeMidday": "Midday (11 AM-2 PM)",
     "timeAfternoon": "Afternoon (2-5 PM)",
     "timeGoldenHour": "Golden Hour (5-7 PM)",
-    "timeSunset": "Sunset (7-9 PM)"
+    "timeSunset": "Sunset (7-9 PM)",
+    "paymentDueLabel": "Payment due",
+    "paymentDueMessage": "within {hours} hours. Your booking will be automatically cancelled if not paid.",
+    "paymentOverdueLabel": "Payment overdue",
+    "paymentOverdueMessage": "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation."
   },
   "askQuestion": {
     "message": "Message",
