@@ -10,6 +10,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { queryOne, query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
+import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -334,6 +335,9 @@ export default async function LocationPage({
           </div>
         </div>
       </section>
+
+      {/* How It Works */}
+      <HowItWorksSection />
 
       {/* Popular Photoshoot Types */}
       {services.length > 0 && (

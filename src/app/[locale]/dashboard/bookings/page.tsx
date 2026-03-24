@@ -7,6 +7,7 @@ import { PayButton } from "@/components/ui/PayButton";
 import { BookingStatusButtons } from "./BookingStatusButtons";
 import { DateNegotiation } from "./DateNegotiation";
 import { Avatar } from "@/components/ui/Avatar";
+import { PaymentTracker } from "./PaymentTracker";
 
 export const dynamic = "force-dynamic";
 
@@ -107,8 +108,11 @@ export default async function BookingsPage() {
     }
   } catch {}
 
+  const bookingAmounts = Object.fromEntries(bookings.map((b) => [b.id, Number(b.total_price) || 0]));
+
   return (
     <div className="p-6 sm:p-8">
+      <PaymentTracker bookingAmounts={bookingAmounts} />
       <h1 className="font-display text-2xl font-bold text-gray-900">
         {isPhotographer ? t("bookingRequests") : t("myBookings")}
       </h1>
