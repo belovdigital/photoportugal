@@ -96,14 +96,14 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
 
       {/* Expanded query list */}
       {expanded && (
-        <div className="mt-4 rounded-xl border border-warm-200 bg-white overflow-x-auto">
+        <div className="mt-4 rounded-xl border border-warm-200 bg-white overflow-auto max-h-[500px]">
           <table className="w-full min-w-[400px] text-xs sm:text-sm">
-            <thead className="border-b border-warm-200 bg-warm-50">
+            <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
               <tr>
-                <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500">Query</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500">Pos.</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500">Clicks</th>
-                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500">Impr.</th>
+                <th className="px-2 sm:px-4 py-2 text-left font-medium text-gray-500 bg-warm-50">Query</th>
+                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 bg-warm-50">Pos.</th>
+                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 bg-warm-50">Clicks</th>
+                <th className="px-2 sm:px-4 py-2 text-right font-medium text-gray-500 bg-warm-50">Impr.</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-warm-100">
