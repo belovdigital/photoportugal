@@ -36,6 +36,7 @@ export const LANGUAGES = [
   "Italian",
   "Dutch",
   "Russian",
+  "Ukrainian",
   "Chinese",
   "Japanese",
 ] as const;
