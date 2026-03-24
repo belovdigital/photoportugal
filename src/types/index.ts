@@ -37,8 +37,16 @@ export const LANGUAGES = [
   "Dutch",
   "Russian",
   "Ukrainian",
+  "Polish",
+  "Arabic",
+  "Korean",
   "Chinese",
   "Japanese",
+  "Hindi",
+  "Turkish",
+  "Swedish",
+  "Danish",
+  "Norwegian",
 ] as const;
 
 export interface PhotographerProfile {
