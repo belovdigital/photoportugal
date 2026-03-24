@@ -686,16 +686,16 @@ export async function GET(req: NextRequest) {
     );
     for (const p of incompletePhotographers) {
       try {
-        await sendEmail({
-          to: p.email,
-          subject: "Complete your Photo Portugal profile today",
-          html: `<p>Hi ${p.display_name},</p>
+        await sendEmail(
+          p.email,
+          "Complete your Photo Portugal profile today",
+          `<p>Hi ${p.display_name},</p>
 <p>Your photographer profile on Photo Portugal is almost ready, but some steps are still incomplete.</p>
 <p><strong>Please complete your profile today</strong> to avoid account deactivation. Once your checklist is done, our team will review and approve your profile so you can start receiving bookings.</p>
 <p><a href="https://photoportugal.com/dashboard" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Complete My Profile</a></p>
 <p>If you need help, reply to this email or visit our <a href="https://photoportugal.com/support">Help Center</a>.</p>
-<p>Best,<br>Photo Portugal Team</p>`,
-        });
+<p>Best,<br>Photo Portugal Team</p>`
+        );
         checklistDeadlineEmails++;
         console.log(`[cron/reminders] checklist deadline email sent to ${p.email}`);
       } catch (err) {
