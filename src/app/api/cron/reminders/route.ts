@@ -667,13 +667,53 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Expired delivery cleanup query: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned });
+  // === Checklist deadline reminders (last day — 6-7 days after registration) ===
+  let checklistDeadlineEmails = 0;
+  try {
+    const incompletePhotographers = await query<{ email: string; display_name: string; id: string }>(
+      `SELECT u.email, pp.display_name, pp.id
+       FROM photographer_profiles pp
+       JOIN users u ON u.id = pp.user_id
+       WHERE pp.is_approved = FALSE
+         AND pp.created_at >= NOW() - INTERVAL '8 days'
+         AND pp.created_at < NOW() - INTERVAL '6 days'
+         AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
+           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
+           AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
+           AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
+           AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
+           AND u.phone IS NOT NULL)`
+    );
+    for (const p of incompletePhotographers) {
+      try {
+        await sendEmail({
+          to: p.email,
+          subject: "Complete your Photo Portugal profile today",
+          html: `<p>Hi ${p.display_name},</p>
+<p>Your photographer profile on Photo Portugal is almost ready, but some steps are still incomplete.</p>
+<p><strong>Please complete your profile today</strong> to avoid account deactivation. Once your checklist is done, our team will review and approve your profile so you can start receiving bookings.</p>
+<p><a href="https://photoportugal.com/dashboard" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Complete My Profile</a></p>
+<p>If you need help, reply to this email or visit our <a href="https://photoportugal.com/support">Help Center</a>.</p>
+<p>Best,<br>Photo Portugal Team</p>`,
+        });
+        checklistDeadlineEmails++;
+        console.log(`[cron/reminders] checklist deadline email sent to ${p.email}`);
+      } catch (err) {
+        results.errors.push(`Checklist deadline email for ${p.email}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Checklist deadline query: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails });
 
   return NextResponse.json({
     success: true,
     ...results,
     earlyBirdExpired,
     expiredDeliveriesCleaned,
+    checklistDeadlineEmails,
   });
 
 }

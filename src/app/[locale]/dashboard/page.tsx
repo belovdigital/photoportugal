@@ -113,11 +113,11 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     id: string; rating: number; review_count: number; session_count: number; plan: string; slug: string; is_approved: boolean;
     avatar_url: string | null; cover_url: string | null; bio: string | null;
     stripe_account_id: string | null; stripe_onboarding_complete: boolean;
-    phone: string | null;
+    phone: string | null; created_at: string;
   }>(
     `SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved,
             u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete,
-            u.phone
+            u.phone, pp.created_at
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      WHERE pp.user_id = $1`,
@@ -181,7 +181,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
 
       {/* Onboarding Checklist */}
       <div className="mt-6">
-        <OnboardingChecklist role="photographer" checks={onboardingChecks} userId={userId} />
+        <OnboardingChecklist role="photographer" checks={onboardingChecks} userId={userId} createdAt={profile.created_at} isApproved={profile.is_approved} />
       </div>
 
       {/* Approval notice — only show when all checklist steps are complete */}

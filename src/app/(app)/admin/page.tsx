@@ -85,10 +85,20 @@ export default async function AdminPage() {
     is_approved: boolean; created_at: string; email: string;
     is_founding: boolean; early_bird_tier: string | null; early_bird_expires_at: string | null; registration_number: number | null;
     checklist_complete: boolean;
+    has_avatar: boolean; has_cover: boolean; has_bio: boolean; portfolio_count: number;
+    package_count: number; location_count: number; stripe_ready: boolean; has_phone: boolean;
   }>(
     `SELECT pp.id, pp.display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
             pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, pp.created_at, u.email,
             COALESCE(pp.is_founding, FALSE) as is_founding, pp.early_bird_tier, pp.early_bird_expires_at, pp.registration_number,
+            (u.avatar_url IS NOT NULL) as has_avatar,
+            (pp.cover_url IS NOT NULL) as has_cover,
+            (pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10) as has_bio,
+            (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id)::int as portfolio_count,
+            (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id)::int as package_count,
+            (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id)::int as location_count,
+            (pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as stripe_ready,
+            (u.phone IS NOT NULL) as has_phone,
             (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
              AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
              AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
@@ -204,7 +214,20 @@ export default async function AdminPage() {
                 {p.checklist_complete || p.is_approved ? (
                   <AdminToggleClient id={p.id} field="is_approved" value={p.is_approved} />
                 ) : (
-                  <span className="text-[10px] text-gray-400" title="Photographer must complete all checklist steps before approval">Incomplete</span>
+                  <span className="group/tip relative cursor-help text-[10px] text-gray-400">
+                    Incomplete
+                    <span className="pointer-events-none absolute left-0 top-full z-50 mt-1 hidden w-52 rounded-lg border border-warm-200 bg-white p-3 text-left shadow-lg group-hover/tip:block">
+                      <span className="block text-[11px] font-semibold text-gray-700 mb-1.5">Missing steps:</span>
+                      {!p.has_avatar && <span className="block text-[11px] text-red-500">Profile photo</span>}
+                      {!p.has_cover && <span className="block text-[11px] text-red-500">Cover image</span>}
+                      {!p.has_bio && <span className="block text-[11px] text-red-500">Bio &amp; tagline</span>}
+                      {p.portfolio_count < 5 && <span className="block text-[11px] text-red-500">Portfolio ({p.portfolio_count}/5)</span>}
+                      {p.package_count < 1 && <span className="block text-[11px] text-red-500">Package</span>}
+                      {p.location_count < 1 && <span className="block text-[11px] text-red-500">Locations</span>}
+                      {!p.stripe_ready && <span className="block text-[11px] text-red-500">Stripe payments</span>}
+                      {!p.has_phone && <span className="block text-[11px] text-red-500">Phone number</span>}
+                    </span>
+                  </span>
                 )}
               </td>
               <td className="px-2 sm:px-4 py-2 sm:py-3 hidden sm:table-cell"><AdminToggleClient id={p.id} field="is_verified" value={p.is_verified} /></td>

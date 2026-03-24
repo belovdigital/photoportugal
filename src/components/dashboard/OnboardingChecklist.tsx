@@ -103,10 +103,14 @@ export function OnboardingChecklist({
   role,
   checks,
   userId,
+  createdAt,
+  isApproved,
 }: {
   role: string;
   checks: OnboardingChecks;
   userId?: string;
+  createdAt?: string;
+  isApproved?: boolean;
 }) {
   const DISMISS_KEY = userId ? `onboarding-dismissed-${userId}` : "onboarding-checklist-dismissed";
   const t = useTranslations("onboarding");
@@ -252,6 +256,31 @@ export function OnboardingChecklist({
             }}
           />
         </div>
+
+        {/* Deadline countdown */}
+        {role === "photographer" && !allDone && !isApproved && createdAt && (() => {
+          const deadline = new Date(new Date(createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
+          const now = new Date();
+          const daysLeft = Math.max(0, Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+          if (daysLeft > 7) return null;
+          const urgent = daysLeft <= 2;
+          return (
+            <div className={`mt-4 flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm ${
+              urgent ? "border border-red-200 bg-red-50 text-red-700" : "border border-amber-200 bg-amber-50 text-amber-700"
+            }`}>
+              <svg className={`h-4 w-4 shrink-0 ${urgent ? "text-red-500" : "text-amber-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>
+                {daysLeft === 0
+                  ? t("deadlineToday")
+                  : daysLeft === 1
+                    ? t("deadlineTomorrow")
+                    : t("deadlineDays", { days: daysLeft })}
+              </span>
+            </div>
+          );
+        })()}
 
         {/* Steps */}
         <div className="mt-5 space-y-1">
