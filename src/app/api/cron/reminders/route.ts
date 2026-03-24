@@ -706,7 +706,45 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Checklist deadline query: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails });
+  // === Auto-deactivate photographers who didn't complete checklist in 7 days ===
+  let checklistDeactivated = 0;
+  try {
+    const expired = await query<{ id: string; email: string; display_name: string }>(
+      `SELECT pp.id, u.email, pp.display_name
+       FROM photographer_profiles pp
+       JOIN users u ON u.id = pp.user_id
+       WHERE pp.is_approved = FALSE
+         AND pp.created_at < NOW() - INTERVAL '7 days'
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+         AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
+           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
+           AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
+           AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
+           AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
+           AND u.phone IS NOT NULL)`
+    );
+    for (const p of expired) {
+      try {
+        await query("UPDATE users SET is_banned = TRUE WHERE id = (SELECT user_id FROM photographer_profiles WHERE id = $1)", [p.id]);
+        await sendEmail(
+          p.email,
+          "Your Photo Portugal account has been deactivated",
+          `<p>Hi ${p.display_name},</p>
+<p>Your photographer profile on Photo Portugal has been deactivated because the onboarding checklist was not completed within 7 days of registration.</p>
+<p>If you'd like to reactivate your account, please contact us at <a href="mailto:hi@photoportugal.com">hi@photoportugal.com</a> and we'll help you get started again.</p>
+<p>Best,<br>Photo Portugal Team</p>`
+        );
+        checklistDeactivated++;
+        console.log(`[cron/reminders] deactivated incomplete photographer ${p.display_name} (${p.email})`);
+      } catch (err) {
+        results.errors.push(`Checklist deactivation for ${p.email}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Checklist deactivation query: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated });
 
   return NextResponse.json({
     success: true,
@@ -714,6 +752,7 @@ export async function GET(req: NextRequest) {
     earlyBirdExpired,
     expiredDeliveriesCleaned,
     checklistDeadlineEmails,
+    checklistDeactivated,
   });
 
 }
