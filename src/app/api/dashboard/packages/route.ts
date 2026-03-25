@@ -88,7 +88,7 @@ export async function PATCH(req: NextRequest) {
 
   for (const item of items) {
     await queryOne(
-      'UPDATE packages SET "order" = $1 WHERE id = $2 AND photographer_id = $3',
+      'UPDATE packages SET sort_order = $1 WHERE id = $2 AND photographer_id = $3',
       [item.order, item.id, profile.id]
     );
   }

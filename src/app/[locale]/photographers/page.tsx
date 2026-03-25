@@ -67,7 +67,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
       price: number;
       is_popular: boolean;
     }>(
-      "SELECT id, photographer_id, name, description, duration_minutes, num_photos, price, is_popular FROM packages ORDER BY price"
+      "SELECT id, photographer_id, name, description, duration_minutes, num_photos, price, is_popular FROM packages ORDER BY sort_order, price"
     );
 
     return profiles.map((p) => {

@@ -66,7 +66,7 @@ async function getPhotographer(slug: string, isAdmin = false) {
       is_popular: boolean;
       delivery_days: number;
     }>(
-      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 ORDER BY price",
+      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price",
       [profile.id]
     );
 

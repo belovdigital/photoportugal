@@ -46,7 +46,7 @@ export async function GET(
       price: number;
       is_popular: boolean;
     }>(
-      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular FROM packages WHERE photographer_id = $1 ORDER BY price",
+      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price",
       [profile.id]
     );
 

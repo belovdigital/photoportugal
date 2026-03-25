@@ -41,7 +41,7 @@ export default async function ProfilePage() {
 
   const packages = await query<{
     id: string; name: string; description: string | null; duration_minutes: number; num_photos: number; price: number; is_popular: boolean; delivery_days: number;
-  }>("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 ORDER BY price", [profile.id]);
+  }>("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price", [profile.id]);
 
   const bookings = await query<{
     id: string; client_name: string; client_email: string; client_avatar: string | null;

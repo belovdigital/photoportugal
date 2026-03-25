@@ -9,6 +9,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { trackSendMessage } from "@/lib/analytics";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
+import imageCompression from "browser-image-compression";
 
 interface Conversation {
   booking_id: string;
@@ -54,8 +55,9 @@ function MessagesContent() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [pendingPreview, setPendingPreview] = useState<string | null>(null);
+  const [uploadingMsgId, setUploadingMsgId] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -220,48 +222,87 @@ function MessagesContent() {
     if (activeChat && !loadingMessages) inputRef.current?.focus();
   }, [activeChat, loadingMessages]);
 
+  // --- Upload & compress a single file ---
+  async function uploadFile(file: File, bookingId: string): Promise<string | null> {
+    let processedFile = file;
+    try { processedFile = await convertHeicIfNeeded(processedFile); } catch { /* use original */ }
+    if (processedFile.size > 500 * 1024) {
+      try {
+        processedFile = await imageCompression(processedFile, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+      } catch { /* use uncompressed */ }
+    }
+    const formData = new FormData();
+    formData.append("file", processedFile);
+    formData.append("booking_id", bookingId);
+    const res = await fetch("/api/messages/upload", { method: "POST", body: formData });
+    if (res.ok) {
+      const data = await res.json();
+      return data.url;
+    }
+    return null;
+  }
+
   // --- Send message ---
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     const text = newMessage.trim();
-    const hasMedia = !!pendingFile;
+    const hasMedia = pendingFiles.length > 0;
     if (!activeChat || (!text && !hasMedia)) return;
 
-    const tempId = `temp-${Date.now()}`;
-    const tempMsg: Message = {
-      id: tempId,
+    // Create temp messages — first one with text, rest are image-only
+    const filesToSend = [...pendingFiles];
+    const previewsToRevoke = [...pendingPreviews];
+    const tempIds: string[] = [];
+
+    const firstTempId = `temp-${Date.now()}`;
+    tempIds.push(firstTempId);
+    const firstTempMsg: Message = {
+      id: firstTempId,
       text: text || null,
-      media_url: pendingPreview,
+      media_url: previewsToRevoke[0] || null,
       sender_id: userId || "",
       sender_name: session?.user?.name || "",
       sender_avatar: session?.user?.image || null,
       created_at: new Date().toISOString(),
       read_at: null,
     };
-    setMessages((prev) => [...prev, tempMsg]);
+    const tempMsgs: Message[] = [firstTempMsg];
+
+    for (let i = 1; i < filesToSend.length; i++) {
+      const tid = `temp-${Date.now()}-${i}`;
+      tempIds.push(tid);
+      tempMsgs.push({
+        id: tid,
+        text: null,
+        media_url: previewsToRevoke[i],
+        sender_id: userId || "",
+        sender_name: session?.user?.name || "",
+        sender_avatar: session?.user?.image || null,
+        created_at: new Date().toISOString(),
+        read_at: null,
+      });
+    }
+
+    setMessages((prev) => [...prev, ...tempMsgs]);
     setNewMessage("");
-    const fileToSend = pendingFile;
-    clearPendingMedia();
+    setPendingFiles([]);
+    setPendingPreviews([]);
     setTimeout(scrollToBottom, 10);
     if (messages.length === 0) trackSendMessage(activeChat);
 
     setSending(true);
     try {
-      // Upload media first if attached
-      let mediaUrl: string | null = null;
-      if (fileToSend) {
+      // Upload and send first message (text + optional first image)
+      let firstMediaUrl: string | null = null;
+      if (filesToSend.length > 0) {
         setUploadingMedia(true);
-        let processedFile = fileToSend;
-        try { processedFile = await convertHeicIfNeeded(fileToSend); } catch { /* use original */ }
-        const formData = new FormData();
-        formData.append("file", processedFile);
-        formData.append("booking_id", activeChat);
-        const uploadRes = await fetch("/api/messages/upload", { method: "POST", body: formData });
-        setUploadingMedia(false);
-        if (uploadRes.ok) {
-          const data = await uploadRes.json();
-          mediaUrl = data.url;
-        }
+        setUploadingMsgId(firstTempId);
+        firstMediaUrl = await uploadFile(filesToSend[0], activeChat);
+        setUploadingMsgId(null);
       }
 
       const res = await fetch("/api/messages", {
@@ -270,9 +311,26 @@ function MessagesContent() {
         body: JSON.stringify({
           booking_id: activeChat,
           ...(text ? { text } : {}),
-          ...(mediaUrl ? { media_url: mediaUrl } : {}),
+          ...(firstMediaUrl ? { media_url: firstMediaUrl } : {}),
         }),
       });
+
+      // Send remaining images as separate messages
+      for (let i = 1; i < filesToSend.length; i++) {
+        setUploadingMsgId(tempIds[i]);
+        const mediaUrl = await uploadFile(filesToSend[i], activeChat);
+        if (mediaUrl) {
+          await fetch("/api/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ booking_id: activeChat, media_url: mediaUrl }),
+          });
+        }
+      }
+
+      setUploadingMedia(false);
+      setUploadingMsgId(null);
+      previewsToRevoke.forEach((p) => URL.revokeObjectURL(p));
       setSending(false);
 
       if (res.ok) {
@@ -281,14 +339,15 @@ function MessagesContent() {
         if (data.warning) alert(data.warning);
       } else {
         setMessages((prev) =>
-          prev.map((m) => (m.id === tempId ? { ...m, failed: true } : m))
+          prev.map((m) => (m.id === firstTempId ? { ...m, failed: true } : m))
         );
       }
     } catch {
       setSending(false);
       setUploadingMedia(false);
+      setUploadingMsgId(null);
       setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? { ...m, failed: true } : m))
+        prev.map((m) => (m.id === firstTempId ? { ...m, failed: true } : m))
       );
     }
 
@@ -338,19 +397,31 @@ function MessagesContent() {
   }
 
   function handleMediaSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { alert("Max 10MB"); e.target.value = ""; return; }
-    setPendingFile(file);
-    setPendingPreview(URL.createObjectURL(file));
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].size > 10 * 1024 * 1024) { alert(`${files[i].name}: max 10MB`); continue; }
+      newFiles.push(files[i]);
+      newPreviews.push(URL.createObjectURL(files[i]));
+    }
+    setPendingFiles((prev) => [...prev, ...newFiles]);
+    setPendingPreviews((prev) => [...prev, ...newPreviews]);
     e.target.value = "";
     inputRef.current?.focus();
   }
 
   function clearPendingMedia() {
-    if (pendingPreview) URL.revokeObjectURL(pendingPreview);
-    setPendingFile(null);
-    setPendingPreview(null);
+    pendingPreviews.forEach((p) => URL.revokeObjectURL(p));
+    setPendingFiles([]);
+    setPendingPreviews([]);
+  }
+
+  function removePendingFile(index: number) {
+    URL.revokeObjectURL(pendingPreviews[index]);
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+    setPendingPreviews((prev) => prev.filter((_, i) => i !== index));
   }
 
   const activeConvo = conversations.find((c) => c.booking_id === activeChat);
@@ -560,21 +631,28 @@ function MessagesContent() {
                               }`}
                             >
                               {msg.media_url && (
-                                <a href={msg.media_url} target="_blank" rel="noopener noreferrer" className="block relative">
-                                  <div className="rounded-lg bg-warm-200 animate-pulse" style={{ width: 200, height: 150 }} />
-                                  <img
-                                    src={msg.media_url}
-                                    alt="Shared photo"
-                                    style={{ maxWidth: 240, maxHeight: 300 }}
-                                    className="rounded-lg object-cover absolute inset-0"
-                                    onLoad={(e) => {
-                                      const img = e.currentTarget;
-                                      const placeholder = img.previousElementSibling as HTMLElement;
-                                      if (placeholder) placeholder.style.display = "none";
-                                      img.style.position = "relative";
-                                    }}
-                                  />
-                                </a>
+                                <div className="relative inline-block">
+                                  <a href={msg.id.startsWith("temp-") ? undefined : msg.media_url} target="_blank" rel="noopener noreferrer" className="block relative">
+                                    <div className="rounded-lg bg-warm-200 animate-pulse" style={{ width: 200, height: 150 }} />
+                                    <img
+                                      src={msg.media_url}
+                                      alt="Shared photo"
+                                      style={{ maxWidth: 240, maxHeight: 300 }}
+                                      className="rounded-lg object-cover absolute inset-0"
+                                      onLoad={(e) => {
+                                        const img = e.currentTarget;
+                                        const placeholder = img.previousElementSibling as HTMLElement;
+                                        if (placeholder) placeholder.style.display = "none";
+                                        img.style.position = "relative";
+                                      }}
+                                    />
+                                  </a>
+                                  {uploadingMsgId === msg.id && (
+                                    <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30">
+                                      <div className="h-8 w-8 animate-spin rounded-full border-3 border-white/30 border-t-white" />
+                                    </div>
+                                  )}
+                                </div>
                               )}
                               {msg.text && (
                                 <p className="whitespace-pre-wrap break-words">
@@ -619,26 +697,28 @@ function MessagesContent() {
 
               {/* Input */}
               {/* Pending media preview */}
-              {pendingPreview && (
-                <div className="flex items-center gap-2 border-t border-warm-100 bg-warm-50 px-3 py-2">
-                  <div className="relative">
-                    <img src={pendingPreview} alt="" className="h-14 w-14 rounded-lg object-cover" />
-                    <button
-                      type="button"
-                      onClick={clearPendingMedia}
-                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-700 text-white text-xs hover:bg-gray-900"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <span className="text-xs text-gray-400">{pendingFile?.name}</span>
+              {pendingPreviews.length > 0 && (
+                <div className="flex items-center gap-2 border-t border-warm-100 bg-warm-50 px-3 py-2 overflow-x-auto">
+                  {pendingPreviews.map((preview, i) => (
+                    <div key={i} className="relative shrink-0">
+                      <img src={preview} alt="" className="h-14 w-14 rounded-lg object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removePendingFile(i)}
+                        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-700 text-white text-xs hover:bg-gray-900"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <span className="text-xs text-gray-400 shrink-0">{pendingFiles.length} {pendingFiles.length === 1 ? "photo" : "photos"}</span>
                 </div>
               )}
               <form
                 onSubmit={handleSend}
                 className="flex items-center gap-2 border-t border-warm-100 px-3 py-2.5"
               >
-                <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" className="hidden" onChange={handleMediaSelect} />
+                <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" multiple className="hidden" onChange={handleMediaSelect} />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -662,7 +742,7 @@ function MessagesContent() {
                 />
                 <button
                   type="submit"
-                  disabled={sending || uploadingMedia || (!newMessage.trim() && !pendingFile)}
+                  disabled={sending || uploadingMedia || (!newMessage.trim() && pendingFiles.length === 0)}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white disabled:opacity-30 sm:h-8 sm:w-8"
                 >
                   <svg
