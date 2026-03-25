@@ -873,8 +873,8 @@ export function PhotographerDashboardClient({
 
           </form>
 
-          {/* Sticky save bar — spans full width of right content area */}
-          <div className="sticky bottom-0 z-20 -mx-6 mt-6 border-t border-warm-200 bg-white/95 backdrop-blur-sm sm:-mx-8">
+          {/* Fixed save bar — full width */}
+          <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-warm-200 bg-white/95 backdrop-blur-sm">
             <div className="flex items-center justify-center px-6 py-3">
               <button
                 type="button"

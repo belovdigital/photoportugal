@@ -55,7 +55,7 @@ function MessagesContent() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [uploadingMsgId, setUploadingMsgId] = useState<string | null>(null);
+  const [uploadingMsgIds, setUploadingMsgIds] = useState<Set<string>>(new Set());
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -229,9 +229,9 @@ function MessagesContent() {
     if (processedFile.size > 500 * 1024) {
       try {
         processedFile = await imageCompression(processedFile, {
-          maxSizeMB: 0.5,
+          maxSizeMB: 1,
           maxWidthOrHeight: 1600,
-          useWebWorker: true,
+          useWebWorker: false,
         });
       } catch { /* use uncompressed */ }
     }
@@ -294,8 +294,8 @@ function MessagesContent() {
       // Upload all images first
       if (filesToSend.length > 0) {
         setUploadingMedia(true);
+        setUploadingMsgIds(new Set(tempIds));
         for (let i = 0; i < filesToSend.length; i++) {
-          setUploadingMsgId(tempIds[i]);
           const mediaUrl = await uploadFile(filesToSend[i], activeChat);
           if (mediaUrl) {
             await fetch("/api/messages", {
@@ -304,9 +304,10 @@ function MessagesContent() {
               body: JSON.stringify({ booking_id: activeChat, media_url: mediaUrl }),
             });
           }
+          setUploadingMsgIds((prev) => { const next = new Set(prev); next.delete(tempIds[i]); return next; });
         }
         setUploadingMedia(false);
-        setUploadingMsgId(null);
+        setUploadingMsgIds(new Set());
         previewsToRevoke.forEach((p) => URL.revokeObjectURL(p));
       }
 
@@ -330,7 +331,7 @@ function MessagesContent() {
     } catch {
       setSending(false);
       setUploadingMedia(false);
-      setUploadingMsgId(null);
+      setUploadingMsgIds(new Set());
       setMessages((prev) =>
         prev.map((m) => (tempIds.includes(m.id) || m.id === textTempId ? { ...m, failed: true } : m))
       );
@@ -632,7 +633,7 @@ function MessagesContent() {
                                       }}
                                     />
                                   </a>
-                                  {uploadingMsgId === msg.id && (
+                                  {uploadingMsgIds.has(msg.id) && (
                                     <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30">
                                       <div className="h-8 w-8 animate-spin rounded-full border-3 border-white/30 border-t-white" />
                                     </div>

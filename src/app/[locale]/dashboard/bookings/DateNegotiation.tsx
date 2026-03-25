@@ -118,24 +118,27 @@ export function DateNegotiation({
 
   // No active proposal — show "Propose new date" button for pending bookings
   return (
-    <button
-      onClick={() => setShowPropose(!showPropose)}
-      className="mt-2 text-xs text-primary-600 hover:text-primary-700 font-medium"
-    >
-      {showPropose ? "Cancel" : "Propose different date"}
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setShowPropose(!showPropose)}
+        className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+      >
+        {showPropose ? "Cancel" : "Propose different date"}
+      </button>
       {showPropose && (
-        <div className="mt-2 flex flex-wrap items-end gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="mt-2 flex flex-wrap items-end gap-2">
           <div className="w-44">
             <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
           </div>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (optional)"
             className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 flex-1 min-w-[150px]" />
-          <button onClick={(e) => { e.stopPropagation(); handlePropose(); }} disabled={loading || !newDate}
+          <button type="button" onClick={handlePropose} disabled={loading || !newDate}
             className="rounded-lg bg-primary-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
             Propose
           </button>
         </div>
       )}
-    </button>
+    </div>
   );
 }
