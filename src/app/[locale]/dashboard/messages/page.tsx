@@ -253,37 +253,32 @@ function MessagesContent() {
     const hasMedia = pendingFiles.length > 0;
     if (!activeChat || (!text && !hasMedia)) return;
 
-    // Create temp messages — first one with text, rest are image-only
+    // Create temp messages — images first, then text
     const filesToSend = [...pendingFiles];
     const previewsToRevoke = [...pendingPreviews];
     const tempIds: string[] = [];
+    const tempMsgs: Message[] = [];
 
-    const firstTempId = `temp-${Date.now()}`;
-    tempIds.push(firstTempId);
-    const firstTempMsg: Message = {
-      id: firstTempId,
-      text: text || null,
-      media_url: previewsToRevoke[0] || null,
-      sender_id: userId || "",
-      sender_name: session?.user?.name || "",
-      sender_avatar: session?.user?.image || null,
-      created_at: new Date().toISOString(),
-      read_at: null,
-    };
-    const tempMsgs: Message[] = [firstTempMsg];
-
-    for (let i = 1; i < filesToSend.length; i++) {
-      const tid = `temp-${Date.now()}-${i}`;
+    // Image temp messages
+    for (let i = 0; i < filesToSend.length; i++) {
+      const tid = `temp-${Date.now()}-img-${i}`;
       tempIds.push(tid);
       tempMsgs.push({
-        id: tid,
-        text: null,
-        media_url: previewsToRevoke[i],
-        sender_id: userId || "",
-        sender_name: session?.user?.name || "",
+        id: tid, text: null, media_url: previewsToRevoke[i],
+        sender_id: userId || "", sender_name: session?.user?.name || "",
         sender_avatar: session?.user?.image || null,
-        created_at: new Date().toISOString(),
-        read_at: null,
+        created_at: new Date().toISOString(), read_at: null,
+      });
+    }
+
+    // Text temp message (after images)
+    const textTempId = `temp-${Date.now()}-text`;
+    if (text) {
+      tempMsgs.push({
+        id: textTempId, text, media_url: null,
+        sender_id: userId || "", sender_name: session?.user?.name || "",
+        sender_avatar: session?.user?.image || null,
+        created_at: new Date().toISOString(), read_at: null,
       });
     }
 
@@ -296,50 +291,40 @@ function MessagesContent() {
 
     setSending(true);
     try {
-      // Upload and send first message (text + optional first image)
-      let firstMediaUrl: string | null = null;
+      // Upload all images first
       if (filesToSend.length > 0) {
         setUploadingMedia(true);
-        setUploadingMsgId(firstTempId);
-        firstMediaUrl = await uploadFile(filesToSend[0], activeChat);
-        setUploadingMsgId(null);
-      }
-
-      const res = await fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          booking_id: activeChat,
-          ...(text ? { text } : {}),
-          ...(firstMediaUrl ? { media_url: firstMediaUrl } : {}),
-        }),
-      });
-
-      // Send remaining images as separate messages
-      for (let i = 1; i < filesToSend.length; i++) {
-        setUploadingMsgId(tempIds[i]);
-        const mediaUrl = await uploadFile(filesToSend[i], activeChat);
-        if (mediaUrl) {
-          await fetch("/api/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ booking_id: activeChat, media_url: mediaUrl }),
-          });
+        for (let i = 0; i < filesToSend.length; i++) {
+          setUploadingMsgId(tempIds[i]);
+          const mediaUrl = await uploadFile(filesToSend[i], activeChat);
+          if (mediaUrl) {
+            await fetch("/api/messages", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ booking_id: activeChat, media_url: mediaUrl }),
+            });
+          }
         }
+        setUploadingMedia(false);
+        setUploadingMsgId(null);
+        previewsToRevoke.forEach((p) => URL.revokeObjectURL(p));
       }
 
-      setUploadingMedia(false);
-      setUploadingMsgId(null);
-      previewsToRevoke.forEach((p) => URL.revokeObjectURL(p));
-      setSending(false);
+      // Then send text message
+      let res: Response | null = null;
+      if (text) {
+        res = await fetch("/api/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ booking_id: activeChat, text }),
+        });
+      }
 
-      if (res.ok) {
-        const data = await res.json();
-        await fetchMessages(activeChat);
-        if (data.warning) alert(data.warning);
-      } else {
+      setSending(false);
+      await fetchMessages(activeChat);
+      if (res && !res.ok) {
         setMessages((prev) =>
-          prev.map((m) => (m.id === firstTempId ? { ...m, failed: true } : m))
+          prev.map((m) => (m.id === textTempId ? { ...m, failed: true } : m))
         );
       }
     } catch {
@@ -347,7 +332,7 @@ function MessagesContent() {
       setUploadingMedia(false);
       setUploadingMsgId(null);
       setMessages((prev) =>
-        prev.map((m) => (m.id === firstTempId ? { ...m, failed: true } : m))
+        prev.map((m) => (tempIds.includes(m.id) || m.id === textTempId ? { ...m, failed: true } : m))
       );
     }
 

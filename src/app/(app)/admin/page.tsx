@@ -77,7 +77,13 @@ export default async function AdminPage() {
 
   const clients = await query<{
     id: string; email: string; name: string; created_at: string; avatar_url: string | null; is_banned: boolean;
-  }>("SELECT id, email, name, created_at, avatar_url, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE role = 'client' ORDER BY created_at DESC LIMIT 50");
+    phone: string | null; booking_count: number; total_spent: number; last_booking_at: string | null;
+  }>(`SELECT u.id, u.email, u.name, u.created_at, u.avatar_url, COALESCE(u.is_banned, FALSE) as is_banned,
+      u.phone,
+      (SELECT COUNT(*) FROM bookings WHERE client_id = u.id)::int as booking_count,
+      COALESCE((SELECT SUM(total_price) FROM bookings WHERE client_id = u.id AND payment_status = 'paid'), 0)::int as total_spent,
+      (SELECT MAX(created_at) FROM bookings WHERE client_id = u.id)::text as last_booking_at
+    FROM users u WHERE u.role = 'client' ORDER BY u.created_at DESC LIMIT 50`);
 
   const photographers = await query<{
     id: string; display_name: string; slug: string; plan: string; rating: number;
@@ -243,11 +249,14 @@ export default async function AdminPage() {
 
   const clientsSection = (
     <div className="overflow-x-auto rounded-xl border border-warm-200 bg-white">
-      <table className="w-full min-w-[400px] text-xs sm:text-sm">
+      <table className="w-full min-w-[650px] text-xs sm:text-sm">
         <thead className="border-b border-warm-200 bg-warm-50">
           <tr>
             <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500">Name</th>
             <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500">Email</th>
+            <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500">Phone</th>
+            <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500">Bookings</th>
+            <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500">Spent</th>
             <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500">Joined</th>
             <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-500">Status</th>
           </tr>
@@ -261,12 +270,15 @@ export default async function AdminPage() {
                   <span className="font-medium text-gray-900">{u.name}</span>
                 </div>
               </td>
-              <td className="px-4 py-3 text-gray-500">{u.email}</td>
-              <td className="px-4 py-3 text-gray-500">{new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
+              <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-500">{u.email}</td>
+              <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-500">{u.phone || <span className="text-gray-300">—</span>}</td>
+              <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-700 font-medium">{u.booking_count || 0}</td>
+              <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-500">{u.total_spent > 0 ? `€${u.total_spent}` : <span className="text-gray-300">—</span>}</td>
+              <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-500">{new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
               <td className="px-2 sm:px-4 py-2 sm:py-3"><AdminBanToggle id={u.id} value={u.is_banned} /></td>
             </tr>
           ))}
-          {clients.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No clients yet</td></tr>}
+          {clients.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No clients yet</td></tr>}
         </tbody>
       </table>
     </div>
