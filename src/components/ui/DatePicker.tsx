@@ -102,7 +102,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`${label ? "mt-1" : ""} flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 text-left text-sm transition hover:border-gray-400 focus:border-primary-500 focus:outline-none ${
+        className={`${label ? "mt-1" : ""} flex w-full items-center justify-between rounded-xl border border-gray-300 px-4 py-3 text-left text-sm transition hover:border-gray-400 focus:border-primary-500 focus:outline-none ${
           !value ? "text-gray-400" : "text-gray-900"
         }`}
       >
