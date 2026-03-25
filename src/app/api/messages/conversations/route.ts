@@ -54,7 +54,7 @@ export async function GET() {
       );
       // Re-sort by last message time (DISTINCT ON requires ORDER BY on the distinct column first)
       (conversations as Array<Record<string, unknown>>).sort((a, b) =>
-        ((b.last_message_at as string) || "").localeCompare((a.last_message_at as string) || "")
+        new Date(b.last_message_at as string || 0).getTime() - new Date(a.last_message_at as string || 0).getTime()
       );
     } else {
       conversations = await query(
@@ -85,7 +85,7 @@ export async function GET() {
         [userId]
       );
       (conversations as Array<Record<string, unknown>>).sort((a, b) =>
-        ((b.last_message_at as string) || "").localeCompare((a.last_message_at as string) || "")
+        new Date(b.last_message_at as string || 0).getTime() - new Date(a.last_message_at as string || 0).getTime()
       );
     }
 
