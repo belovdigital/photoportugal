@@ -218,7 +218,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700">{t("phone")}</label>
               <div className="mt-1 flex gap-2">
                 <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
-                  className="rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-primary-500 w-24">
+                  className="rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-primary-500 w-32">
                   <option value="+1">🇺🇸 +1</option>
                   <option value="+7">🇷🇺 +7</option>
                   <option value="+27">🇿🇦 +27</option>
