@@ -127,8 +127,16 @@ export async function sendPaymentReceivedToPhotographer(
   photographerName: string,
   clientName: string,
   bookingId: string,
-  amount: number
+  amount: number,
+  clientContact?: { email: string; phone?: string | null }
 ) {
+  const contactSection = clientContact
+    ? `<div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 8px; font-size: 13px;">
+        <strong style="color: #166534;">Client contact:</strong><br/>
+        ${clientContact.email}${clientContact.phone ? `<br/>${clientContact.phone}` : ""}
+      </div>`
+    : "";
+
   await sendEmail(
     photographerEmail,
     `Payment received from ${clientName} — &euro;${amount}`,
@@ -138,7 +146,8 @@ export async function sendPaymentReceivedToPhotographer(
       <p>Hi ${photographerName},</p>
       <p><strong>${clientName}</strong> has paid <strong>&euro;${amount}</strong> for their booking.</p>
       <p>The funds are held securely until the client accepts the photo delivery.</p>
-      <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
+      ${contactSection}
+      <p style="margin-top: 12px;"><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
     `

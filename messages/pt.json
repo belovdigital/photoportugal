@@ -2105,6 +2105,8 @@
     },
     "client": {
       "addProfilePhoto": "Adicionar foto de perfil",
+      "addPhoneNumber": "Adicionar número de telefone",
+      "addPhoneNumberTip": "Para que o fotógrafo possa contactá-lo sobre a sessão",
       "findPhotographer": "Encontrar o seu fotógrafo"
     }
   },

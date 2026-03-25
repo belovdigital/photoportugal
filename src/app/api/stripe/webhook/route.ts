@@ -52,14 +52,33 @@ export async function POST(req: NextRequest) {
           );
           console.log(`[webhook] Checkout completed for booking ${bookingId}, PI: ${checkoutSession.payment_intent}`);
 
+          // Add system message to chat
+          try {
+            const bookingForMsg = await queryOne<{ client_id: string; client_name: string; client_email: string; client_phone: string | null; total_price: number }>(
+              `SELECT b.client_id, cu.name as client_name, cu.email as client_email, cu.phone as client_phone, b.total_price
+               FROM bookings b JOIN users cu ON cu.id = b.client_id WHERE b.id = $1`,
+              [bookingId]
+            );
+            if (bookingForMsg) {
+              const contactLine = [bookingForMsg.client_email, bookingForMsg.client_phone].filter(Boolean).join(" · ");
+              await queryOne(
+                `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE) RETURNING id`,
+                [bookingId, bookingForMsg.client_id,
+                  `✅ Payment of €${bookingForMsg.total_price} received from ${bookingForMsg.client_name}.\n\nClient contact: ${contactLine}`]
+              );
+            }
+          } catch (msgErr) {
+            console.error("[webhook] system message error:", msgErr);
+          }
+
           // Send payment notification emails
           try {
             const bookingInfo = await queryOne<{
-              client_email: string; client_name: string;
+              client_email: string; client_name: string; client_phone: string | null;
               photographer_email: string; photographer_name: string;
               total_price: number;
             }>(
-              `SELECT cu.email as client_email, cu.name as client_name,
+              `SELECT cu.email as client_email, cu.name as client_name, cu.phone as client_phone,
                       pu.email as photographer_email, pp.display_name as photographer_name,
                       b.total_price
                FROM bookings b
@@ -75,7 +94,8 @@ export async function POST(req: NextRequest) {
                 bookingInfo.photographer_name,
                 bookingInfo.client_name,
                 bookingId!,
-                bookingInfo.total_price
+                bookingInfo.total_price,
+                { email: bookingInfo.client_email, phone: bookingInfo.client_phone }
               );
               sendPaymentConfirmedToClient(
                 bookingInfo.client_email,
@@ -179,6 +199,23 @@ export async function POST(req: NextRequest) {
           // Plan subscription
           const plan = subscription.metadata.plan;
           const newPlan = subscription.status === "active" ? plan : "free";
+          // On downgrade from premium: revert custom slug to default
+          if (newPlan === "free") {
+            const currentProfile = await queryOne<{ slug: string; user_id: string }>(
+              "SELECT slug, user_id FROM photographer_profiles WHERE id = $1", [photographerId]
+            );
+            if (currentProfile && !currentProfile.slug.startsWith("p-")) {
+              const defaultSlug = `p-${currentProfile.user_id.replace(/-/g, "").slice(0, 10)}`;
+              await queryOne(
+                "INSERT INTO slug_redirects (old_slug, photographer_id) VALUES ($1, $2) ON CONFLICT (old_slug) DO NOTHING",
+                [currentProfile.slug, photographerId]
+              );
+              await queryOne(
+                "UPDATE photographer_profiles SET slug = $1 WHERE id = $2 RETURNING id",
+                [defaultSlug, photographerId]
+              );
+            }
+          }
           await queryOne(
             "UPDATE photographer_profiles SET plan = $1 WHERE id = $2 RETURNING id",
             [newPlan, photographerId]
@@ -208,7 +245,18 @@ export async function POST(req: NextRequest) {
           await queryOne("UPDATE photographer_profiles SET is_verified = FALSE WHERE id = $1 RETURNING id", [photographerId]);
           console.log(`[webhook] Verified subscription cancelled for photographer ${photographerId}`);
         } else if (photographerId) {
-          // Plan subscription cancelled
+          // Plan subscription cancelled — revert custom slug
+          const cancelledProfile = await queryOne<{ slug: string; user_id: string }>(
+            "SELECT slug, user_id FROM photographer_profiles WHERE id = $1", [photographerId]
+          );
+          if (cancelledProfile && !cancelledProfile.slug.startsWith("p-")) {
+            const defaultSlug = `p-${cancelledProfile.user_id.replace(/-/g, "").slice(0, 10)}`;
+            await queryOne(
+              "INSERT INTO slug_redirects (old_slug, photographer_id) VALUES ($1, $2) ON CONFLICT (old_slug) DO NOTHING",
+              [cancelledProfile.slug, photographerId]
+            );
+            await queryOne("UPDATE photographer_profiles SET slug = $1 WHERE id = $2", [defaultSlug, photographerId]);
+          }
           await queryOne("UPDATE photographer_profiles SET plan = 'free' WHERE id = $1 RETURNING id", [photographerId]);
           console.log(`[webhook] Subscription cancelled for photographer ${photographerId} → free`);
           try {

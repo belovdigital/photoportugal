@@ -92,6 +92,12 @@ function getClientSteps(
       complete: !!checks.avatar,
     },
     {
+      label: t("client.addPhoneNumber"),
+      href: "/dashboard/settings",
+      complete: !!checks.phone,
+      tip: t("client.addPhoneNumberTip"),
+    },
+    {
       label: t("client.findPhotographer"),
       href: "/photographers",
       complete: (checks.bookings ?? 0) >= 1,

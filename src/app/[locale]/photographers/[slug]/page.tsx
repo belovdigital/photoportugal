@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
@@ -138,6 +138,16 @@ export default async function PhotographerProfilePage({
   const result = await getPhotographer(slug, isPreview);
 
   if (!result) {
+    // Check slug_redirects for old slugs
+    const slugRedirect = await queryOne<{ new_slug: string }>(
+      `SELECT pp.slug as new_slug FROM slug_redirects sr
+       JOIN photographer_profiles pp ON pp.id = sr.photographer_id
+       WHERE sr.old_slug = $1`,
+      [slug]
+    ).catch(() => null);
+    if (slugRedirect) {
+      redirect(`/photographers/${slugRedirect.new_slug}`);
+    }
     notFound();
   }
 

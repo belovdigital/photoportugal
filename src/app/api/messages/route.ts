@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
 
     const messages = await query(
       `SELECT m.id, m.text, m.media_url, m.sender_id, m.created_at, m.read_at,
-              u.name as sender_name, u.avatar_url as sender_avatar
+              u.name as sender_name, u.avatar_url as sender_avatar,
+              COALESCE(m.is_system, FALSE) as is_system
        FROM messages m
        JOIN users u ON u.id = m.sender_id
        WHERE m.booking_id = $1

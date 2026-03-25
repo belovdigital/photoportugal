@@ -127,6 +127,14 @@ CREATE TABLE portfolio_items (
 CREATE INDEX idx_portfolio_photographer ON portfolio_items(photographer_id);
 
 -- ============================================================
+-- SLUG REDIRECTS (old photographer slugs → current profile)
+-- ============================================================
+CREATE TABLE slug_redirects (
+  old_slug VARCHAR(255) PRIMARY KEY,
+  photographer_id UUID NOT NULL REFERENCES photographer_profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- PHOTOGRAPHER UNAVAILABILITY
 -- ============================================================
 CREATE TABLE photographer_unavailability (
@@ -227,6 +235,7 @@ CREATE TABLE messages (
   media_url TEXT,
   read_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  is_system BOOLEAN DEFAULT FALSE,
   CONSTRAINT messages_content_check CHECK (text IS NOT NULL OR media_url IS NOT NULL)
 );
 

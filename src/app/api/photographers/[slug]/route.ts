@@ -23,6 +23,16 @@ export async function GET(
     );
 
     if (!profile) {
+      // Check slug redirects
+      const slugRedirect = await queryOne<{ new_slug: string }>(
+        `SELECT pp.slug as new_slug FROM slug_redirects sr
+         JOIN photographer_profiles pp ON pp.id = sr.photographer_id
+         WHERE sr.old_slug = $1`,
+        [slug]
+      );
+      if (slugRedirect) {
+        return NextResponse.json({ redirect: `/photographers/${slugRedirect.new_slug}` }, { status: 301 });
+      }
       return NextResponse.json({ error: "Photographer not found" }, { status: 404 });
     }
 

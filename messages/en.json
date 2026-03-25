@@ -2265,6 +2265,8 @@
     },
     "client": {
       "addProfilePhoto": "Add profile photo",
+      "addPhoneNumber": "Add phone number",
+      "addPhoneNumberTip": "So your photographer can reach you about the shoot",
       "findPhotographer": "Find your photographer"
     }
   }

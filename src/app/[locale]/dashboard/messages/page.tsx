@@ -32,6 +32,7 @@ interface Message {
   created_at: string;
   read_at: string | null;
   failed?: boolean;
+  is_system?: boolean;
 }
 
 type SSEStatus = "connected" | "reconnecting" | "disconnected";
@@ -106,20 +107,19 @@ function MessagesContent() {
       if (res.ok) {
         const data = await res.json();
         setMessages((prev) => {
-          // Preserve any failed messages that are still in the list
-          const failedMsgs = prev.filter((m) => m.failed);
+          // Preserve temp messages (not yet sent to server) and failed messages
+          const keepMsgs = prev.filter((m) => m.id.startsWith("temp-") || m.failed);
           const newIds = new Set(data.map((m: Message) => m.id));
-          // Keep failed messages that haven't been successfully re-sent
-          const remainingFailed = failedMsgs.filter((m) => !newIds.has(m.id));
+          const remainingKeep = keepMsgs.filter((m) => !newIds.has(m.id));
           if (
-            remainingFailed.length === 0 &&
-            JSON.stringify(prev.filter((m) => !m.failed).map((m) => m.id)) ===
+            remainingKeep.length === 0 &&
+            JSON.stringify(prev.filter((m) => !m.id.startsWith("temp-") && !m.failed).map((m) => m.id)) ===
               JSON.stringify(data.map((m: Message) => m.id))
           ) {
             return prev;
           }
           setTimeout(scrollToBottom, 30);
-          return [...data, ...remainingFailed];
+          return [...data, ...remainingKeep];
         });
         setConversations((prev) =>
           prev.map((c) =>
@@ -591,6 +591,18 @@ function MessagesContent() {
                       const isLast =
                         i === messages.length - 1 ||
                         messages[i + 1]?.sender_id !== msg.sender_id;
+
+                      // System messages — centered, different style
+                      if (msg.is_system) {
+                        return (
+                          <div key={msg.id} className="flex justify-center my-3">
+                            <div className="max-w-[85%] rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-center text-xs text-green-800 whitespace-pre-line">
+                              {msg.text}
+                            </div>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={msg.id}

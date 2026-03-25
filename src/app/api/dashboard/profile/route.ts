@@ -87,7 +87,14 @@ export async function PUT(req: NextRequest) {
         if (reserved.includes(cleanSlug)) {
           return NextResponse.json({ error: "This URL is reserved. Try another." }, { status: 400 });
         }
+        // Save old slug as redirect before changing
+        await query(
+          "INSERT INTO slug_redirects (old_slug, photographer_id) VALUES ($1, $2) ON CONFLICT (old_slug) DO NOTHING",
+          [profile.slug, profile.id]
+        );
         await query("UPDATE photographer_profiles SET slug = $1 WHERE id = $2", [cleanSlug, profile.id]);
+        // Remove redirect if new slug matches an old redirect
+        await query("DELETE FROM slug_redirects WHERE old_slug = $1", [cleanSlug]);
         // Revalidate old and new URLs
         revalidatePath(`/photographers/${profile.slug}`);
         revalidatePath(`/photographers/${cleanSlug}`);
