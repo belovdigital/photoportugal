@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { queryOne } from "@/lib/db";
+import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
@@ -369,7 +369,7 @@ export async function PATCH(
                   booking_id: id,
                   type: "booking",
                 },
-              });
+              }, { idempotencyKey: `checkout_${id}` });
 
               paymentUrl = checkoutSession.url;
 

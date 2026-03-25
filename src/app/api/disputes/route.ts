@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
-import { queryOne, query } from "@/lib/db";
+import { queryOne, query, withTransaction } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 const VALID_REASONS = ["fewer_photos", "wrong_location", "technical_issues", "no_show", "other"] as const;
@@ -80,18 +80,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "An open dispute already exists for this booking" }, { status: 409 });
     }
 
-    // Create dispute record
-    const dispute = await queryOne<{ id: string }>(
-      `INSERT INTO disputes (booking_id, client_id, photographer_id, reason, description)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id`,
-      [booking_id, userId, booking.photographer_id, reason, description]
-    );
+    // Create dispute + update booking in transaction
+    const dispute = await withTransaction(async (client) => {
+      const d = await client.query(
+        `INSERT INTO disputes (booking_id, client_id, photographer_id, reason, description)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id`,
+        [booking_id, userId, booking.photographer_id, reason, description]
+      );
+      await client.query("UPDATE bookings SET status = 'disputed' WHERE id = $1", [booking_id]);
+      return d.rows[0];
+    });
 
-    // Update booking status to 'disputed'
-    await query("UPDATE bookings SET status = 'disputed' WHERE id = $1", [booking_id]);
-
-    return NextResponse.json({ success: true, id: dispute!.id });
+    return NextResponse.json({ success: true, id: dispute.id });
   } catch (error) {
     console.error("Error creating dispute:", error);
     return NextResponse.json({ error: "Failed to create dispute" }, { status: 500 });

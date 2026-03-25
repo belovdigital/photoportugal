@@ -79,7 +79,7 @@ export async function GET(
   const usedNames = new Set<string>();
   for (const photo of photos) {
     const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
-    let name = photo.filename || path.basename(photo.url);
+    let name = (photo.filename || path.basename(photo.url)).replace(/[^\w\s.-]/g, "_").replace(/\s+/g, "_");
 
     // Deduplicate filenames
     if (usedNames.has(name)) {

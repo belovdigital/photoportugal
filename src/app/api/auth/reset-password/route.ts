@@ -5,7 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") || "unknown";
-  if (!checkRateLimit(`reset-password:${ip}`, 5, 60_000)) {
+  if (!checkRateLimit(`reset-password:${ip}`, 3, 900_000)) {
     return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
   }
 

@@ -27,6 +27,8 @@ CREATE TABLE users (
   email_verified BOOLEAN DEFAULT FALSE,
   password_reset_token VARCHAR(255),
   password_reset_expires TIMESTAMPTZ,
+  email_verification_token VARCHAR(255),
+  email_verification_expires TIMESTAMPTZ,
   phone VARCHAR(20),
   stripe_customer_id VARCHAR(255),
   is_banned BOOLEAN DEFAULT FALSE,
@@ -63,8 +65,15 @@ CREATE TABLE photographer_profiles (
   phone_verification_code VARCHAR(6),
   phone_verification_sent_at TIMESTAMP,
   plan plan_type DEFAULT 'free',
+  registration_number INTEGER,
+  is_founding BOOLEAN DEFAULT FALSE,
+  early_bird_tier VARCHAR(20), -- 'founding', 'early50', 'first100'
+  early_bird_expires_at TIMESTAMPTZ, -- NULL = never expires (founding)
+  onboarding_completed BOOLEAN DEFAULT FALSE,
+  is_test BOOLEAN DEFAULT FALSE,
   stripe_account_id VARCHAR(255),
   stripe_onboarding_complete BOOLEAN DEFAULT FALSE,
+  stripe_subscription_id VARCHAR(255),
   verification_requested_at TIMESTAMPTZ,
   rating NUMERIC(2,1) DEFAULT 0,
   review_count INTEGER DEFAULT 0,
@@ -185,11 +194,14 @@ CREATE TABLE bookings (
   shoot_reminder_sent BOOLEAN DEFAULT FALSE,
   delivery_reminder_sent BOOLEAN DEFAULT FALSE,
   review_requested BOOLEAN DEFAULT FALSE,
+  trustpilot_sent BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_bookings_client ON bookings(client_id);
+CREATE INDEX idx_bookings_payment_status ON bookings(payment_status);
+CREATE INDEX idx_bookings_delivery_accepted ON bookings(delivery_accepted) WHERE delivery_accepted = FALSE;
 CREATE INDEX idx_bookings_photographer ON bookings(photographer_id);
 CREATE INDEX idx_bookings_status ON bookings(status);
 CREATE UNIQUE INDEX idx_bookings_delivery_token ON bookings(delivery_token) WHERE delivery_token IS NOT NULL;
@@ -199,14 +211,17 @@ CREATE UNIQUE INDEX idx_bookings_delivery_token ON bookings(delivery_token) WHER
 -- ============================================================
 CREATE TABLE reviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  booking_id UUID UNIQUE NOT NULL REFERENCES bookings(id),
-  client_id UUID NOT NULL REFERENCES users(id),
+  booking_id UUID UNIQUE REFERENCES bookings(id), -- NULL for admin-created reviews
+  client_id UUID REFERENCES users(id), -- NULL for admin-created reviews
   photographer_id UUID NOT NULL REFERENCES photographer_profiles(id),
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   title VARCHAR(255),
   text TEXT,
+  video_url TEXT,
   photos_public BOOLEAN DEFAULT FALSE,
   is_verified BOOLEAN DEFAULT TRUE, -- verified because tied to a real booking
+  is_approved BOOLEAN DEFAULT TRUE,
+  client_name_override VARCHAR(255), -- for admin-created reviews without a real client
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -321,3 +336,48 @@ CREATE TABLE IF NOT EXISTS blog_posts (
 
 CREATE TRIGGER blog_posts_updated_at
   BEFORE UPDATE ON blog_posts FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================================
+-- DISPUTES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS disputes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  booking_id UUID NOT NULL REFERENCES bookings(id),
+  client_id UUID NOT NULL REFERENCES users(id),
+  photographer_id UUID NOT NULL REFERENCES photographer_profiles(id),
+  reason VARCHAR(50) NOT NULL, -- 'fewer_photos', 'wrong_location', 'technical_issues', 'no_show', 'other'
+  description TEXT NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'open', -- 'open', 'under_review', 'resolved', 'rejected'
+  resolution VARCHAR(20), -- 'reshoot', 'partial_refund', 'full_refund', 'rejected'
+  resolution_note TEXT,
+  refund_amount NUMERIC(10,2),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_disputes_booking ON disputes(booking_id);
+CREATE INDEX idx_disputes_status ON disputes(status);
+
+-- ============================================================
+-- MANAGED LOCATIONS (admin-managed location pages)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS managed_locations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  slug VARCHAR(255) UNIQUE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  region VARCHAR(100) NOT NULL,
+  description TEXT,
+  long_description TEXT,
+  cover_image_url TEXT,
+  lat NUMERIC(10,6),
+  lng NUMERIC(10,6),
+  seo_title VARCHAR(200),
+  seo_description VARCHAR(500),
+  is_active BOOLEAN DEFAULT TRUE,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TRIGGER managed_locations_updated_at
+  BEFORE UPDATE ON managed_locations FOR EACH ROW EXECUTE FUNCTION update_updated_at();

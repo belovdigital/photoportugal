@@ -125,8 +125,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.role = "client";
         }
       }
-      // Periodically verify user still exists and isn't banned
-      if (token.id && !user) {
+      // Always verify user still exists and isn't banned
+      if (token.id) {
         try {
           const exists = await queryOne<{ id: string; is_banned: boolean }>(
             "SELECT id, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE id = $1",

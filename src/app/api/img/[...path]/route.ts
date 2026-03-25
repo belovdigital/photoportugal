@@ -28,6 +28,10 @@ export async function GET(
   if (filePath.includes("..") || filePath.startsWith("/")) {
     return NextResponse.json({ error: "Invalid path" }, { status: 400 });
   }
+  const resolvedPath = path.resolve(UPLOAD_DIR, filePath);
+  if (!resolvedPath.startsWith(UPLOAD_DIR)) {
+    return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+  }
 
   const { searchParams } = new URL(req.url);
   const requestedWidth = parseInt(searchParams.get("w") || "800");
@@ -91,6 +95,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(outputBuffer), {
       headers: {
         "Content-Type": `image/${format}`,
+        "Content-Disposition": "inline",
         "Cache-Control": "public, max-age=31536000, immutable",
         "X-Cache": "MISS",
       },

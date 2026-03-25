@@ -20,7 +20,7 @@ export function verifyToken(token: string): { email: string; timestamp: number }
     const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) throw new Error("NEXTAUTH_SECRET environment variable is required");
     const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
-    if (hmac !== expected) return null;
+    if (hmac.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expected))) return null;
 
     const [email, ts] = payload.split(":");
     const timestamp = parseInt(ts);
