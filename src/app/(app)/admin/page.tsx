@@ -161,7 +161,7 @@ export default async function AdminPage() {
 
   // Render sections as server components passed to client
   const photographersSection = (
-    <div className="overflow-x-auto -mx-3 sm:mx-0 rounded-xl border border-warm-200 bg-white">
+    <div className="-mx-3 sm:mx-0 rounded-xl border border-warm-200 bg-white" style={{ overflowX: 'clip', overflowY: 'visible' }}>
       <table className="w-full min-w-[600px] text-xs sm:text-sm">
         <thead className="border-b border-warm-200 bg-warm-50">
           <tr>

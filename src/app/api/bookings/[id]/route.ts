@@ -78,11 +78,37 @@ export async function PATCH(
       );
       const bookingPrice = await queryOne<{ total_price: number | null }>("SELECT total_price FROM bookings WHERE id = $1", [id]);
 
-      if (bookingPrice?.total_price && (!photographerProfile?.stripe_account_id || !photographerProfile?.stripe_onboarding_complete)) {
+      if (bookingPrice?.total_price && !photographerProfile?.stripe_account_id) {
         return NextResponse.json(
           { error: "Please connect your Stripe account before confirming bookings. Go to Dashboard → Subscription → Stripe Connect to set up payments." },
           { status: 400 }
         );
+      }
+
+      // If stripe_account_id exists but onboarding flag is stale, verify live with Stripe API and auto-sync
+      if (bookingPrice?.total_price && photographerProfile?.stripe_account_id && !photographerProfile.stripe_onboarding_complete) {
+        try {
+          const stripeClient = requireStripe();
+          const account = await stripeClient.accounts.retrieve(photographerProfile.stripe_account_id);
+          if (account.charges_enabled && account.payouts_enabled) {
+            // Sync the flag — webhook was likely missed
+            await queryOne(
+              `UPDATE photographer_profiles SET stripe_onboarding_complete = TRUE
+               WHERE stripe_account_id = $1 RETURNING id`,
+              [photographerProfile.stripe_account_id]
+            );
+          } else {
+            return NextResponse.json(
+              { error: "Your Stripe account setup is incomplete. Please finish onboarding at Dashboard → Subscription → Stripe Connect." },
+              { status: 400 }
+            );
+          }
+        } catch {
+          return NextResponse.json(
+            { error: "Could not verify your Stripe account. Please try again or contact support." },
+            { status: 500 }
+          );
+        }
       }
     }
 
