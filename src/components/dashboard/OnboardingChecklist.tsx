@@ -74,7 +74,7 @@ function getPhotographerSteps(
     },
     {
       label: t("photographer.addPhoneNumber"),
-      href: "/dashboard/settings",
+      href: "/dashboard/profile#profile",
       complete: !!checks.phone,
       tip: t("photographer.addPhoneNumberTip"),
     },

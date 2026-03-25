@@ -26,6 +26,7 @@ import { CSS } from "@dnd-kit/utilities";
 import imageCompression from "browser-image-compression";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import { Avatar } from "@/components/ui/Avatar";
+import { parsePhone } from "@/lib/phone-codes";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { AvailabilityTab } from "./AvailabilityTab";
 
@@ -134,7 +135,17 @@ export function PhotographerDashboardClient({
   }
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [message, setMessage] = useState("");
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty) { e.preventDefault(); }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   // Profile form state
   const [firstName, setFirstName] = useState(profile.first_name || "");
@@ -147,9 +158,9 @@ export function PhotographerDashboardClient({
   useEffect(() => {
     fetch("/api/dashboard/account").then(r => r.json()).then(d => {
       if (d.phone) {
-        const m = d.phone.match(/^(\+\d{1,4})(.+)$/);
-        if (m) { setPhoneCode(m[1]); setPhoneNumber(m[2]); }
-        else setPhoneNumber(d.phone);
+        const parsed = parsePhone(d.phone);
+        setPhoneCode(parsed.code);
+        setPhoneNumber(parsed.number);
       }
     }).catch(() => {});
   }, []);
@@ -211,6 +222,7 @@ export function PhotographerDashboardClient({
     setSaving(false);
     if (res.ok) {
       setSaved(true);
+      setIsDirty(false);
       showMessage(t("profileSaved"));
       router.refresh();
       // If slug changed, update URL
@@ -620,7 +632,8 @@ export function PhotographerDashboardClient({
       {/* === PROFILE TAB === */}
       <div className="mt-8">
         {activeTab === "profile" && (
-          <form onSubmit={saveProfile} onChange={() => setSaved(false)} className="max-w-2xl space-y-6">
+          <>
+          <form onSubmit={saveProfile} onChange={() => { setSaved(false); setIsDirty(true); }} className="max-w-2xl space-y-6 pb-20">
             {/* Avatar */}
             <AvatarUpload initialUrl={profile.avatar_url} fallbackChar={profile.display_name.charAt(0)} onMessage={showMessage} />
 
@@ -642,50 +655,49 @@ export function PhotographerDashboardClient({
             </div>
 
             {/* Phone */}
-            <div>
+            <div className="max-w-sm">
               <label className="block text-sm font-medium text-gray-700">{t("phone")}</label>
               <div className="mt-1 flex gap-2">
                 <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
-                  className="rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-primary-500 w-28">
-                  <option value="+61">🇦🇺 +61</option>
-                  <option value="+43">🇦🇹 +43</option>
-                  <option value="+32">🇧🇪 +32</option>
-                  <option value="+55">🇧🇷 +55</option>
-                  <option value="+86">🇨🇳 +86</option>
-                  <option value="+45">🇩🇰 +45</option>
-                  <option value="+33">🇫🇷 +33</option>
-                  <option value="+49">🇩🇪 +49</option>
-                  <option value="+30">🇬🇷 +30</option>
-                  <option value="+91">🇮🇳 +91</option>
-                  <option value="+353">🇮🇪 +353</option>
-                  <option value="+972">🇮🇱 +972</option>
-                  <option value="+39">🇮🇹 +39</option>
-                  <option value="+81">🇯🇵 +81</option>
-                  <option value="+60">🇲🇾 +60</option>
-                  <option value="+52">🇲🇽 +52</option>
-                  <option value="+31">🇳🇱 +31</option>
-                  <option value="+64">🇳🇿 +64</option>
-                  <option value="+47">🇳🇴 +47</option>
-                  <option value="+48">🇵🇱 +48</option>
-                  <option value="+351">🇵🇹 +351</option>
-                  <option value="+7">🇷🇺 +7</option>
-                  <option value="+966">🇸🇦 +966</option>
-                  <option value="+65">🇸🇬 +65</option>
-                  <option value="+27">🇿🇦 +27</option>
-                  <option value="+82">🇰🇷 +82</option>
-                  <option value="+34">🇪🇸 +34</option>
-                  <option value="+46">🇸🇪 +46</option>
-                  <option value="+41">🇨🇭 +41</option>
-                  <option value="+66">🇹🇭 +66</option>
-                  <option value="+90">🇹🇷 +90</option>
-                  <option value="+971">🇦🇪 +971</option>
-                  <option value="+44">🇬🇧 +44</option>
-                  <option value="+380">🇺🇦 +380</option>
-                  <option value="+1">🇺🇸 +1</option>
+                  className="rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-primary-500 w-24">
+                  <option value="+1">+1</option>
+                  <option value="+7">+7</option>
+                  <option value="+27">+27</option>
+                  <option value="+30">+30</option>
+                  <option value="+31">+31</option>
+                  <option value="+32">+32</option>
+                  <option value="+33">+33</option>
+                  <option value="+34">+34</option>
+                  <option value="+39">+39</option>
+                  <option value="+41">+41</option>
+                  <option value="+43">+43</option>
+                  <option value="+44">+44</option>
+                  <option value="+45">+45</option>
+                  <option value="+46">+46</option>
+                  <option value="+47">+47</option>
+                  <option value="+48">+48</option>
+                  <option value="+49">+49</option>
+                  <option value="+52">+52</option>
+                  <option value="+55">+55</option>
+                  <option value="+60">+60</option>
+                  <option value="+61">+61</option>
+                  <option value="+65">+65</option>
+                  <option value="+66">+66</option>
+                  <option value="+81">+81</option>
+                  <option value="+82">+82</option>
+                  <option value="+86">+86</option>
+                  <option value="+90">+90</option>
+                  <option value="+91">+91</option>
+                  <option value="+351">+351</option>
+                  <option value="+353">+353</option>
+                  <option value="+380">+380</option>
+                  <option value="+966">+966</option>
+                  <option value="+971">+971</option>
+                  <option value="+972">+972</option>
                 </select>
                 <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
                   placeholder=""
-                  className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+                  className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500" />
               </div>
               <p className="mt-1 text-xs text-gray-400">{t("phoneHint")}</p>
             </div>
@@ -861,14 +873,27 @@ export function PhotographerDashboardClient({
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className={`rounded-xl px-6 py-3 text-sm font-semibold text-white transition disabled:opacity-50 ${saved ? "bg-green-600 hover:bg-green-700" : "bg-primary-600 hover:bg-primary-700"}`}
-            >
-              {saving ? t("saving") : saved ? (<span className="inline-flex items-center gap-1.5">✓ {t("saved")}</span>) : t("saveProfile")}
-            </button>
           </form>
+
+          {/* Sticky save bar */}
+          <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-warm-200 bg-white/95 backdrop-blur-sm md:left-56">
+            <div className="mx-auto flex max-w-5xl items-center justify-center px-6 py-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const form = document.querySelector<HTMLFormElement>("form");
+                  if (form) form.requestSubmit();
+                }}
+                disabled={saving}
+                className={`rounded-xl px-8 py-2.5 text-sm font-semibold text-white transition disabled:opacity-50 ${
+                  saved ? "bg-green-600 hover:bg-green-700" : isDirty ? "bg-primary-600 hover:bg-primary-700 shadow-lg shadow-primary-600/25" : "bg-gray-400"
+                }`}
+              >
+                {saving ? t("saving") : saved ? (<span className="inline-flex items-center gap-1.5">✓ {t("saved")}</span>) : t("saveProfile")}
+              </button>
+            </div>
+          </div>
+          </>
         )}
 
         {/* === PORTFOLIO TAB === */}

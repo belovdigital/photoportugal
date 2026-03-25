@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { Link } from "@/i18n/navigation";
+import { parsePhone } from "@/lib/phone-codes";
 import { useTranslations } from "next-intl";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
 
@@ -125,10 +126,9 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.phone) {
-          // Split phone into code + number (e.g. "+351912345678" → "+351" + "912345678")
-          const match = data.phone.match(/^(\+\d{1,4})(.+)$/);
-          if (match) { setPhoneCode(match[1]); setPhoneNumber(match[2]); }
-          else setPhoneNumber(data.phone);
+          const parsed = parsePhone(data.phone);
+          setPhoneCode(parsed.code);
+          setPhoneNumber(parsed.number);
         }
       })
       .catch(() => {});
@@ -213,53 +213,55 @@ export default function SettingsPage() {
               className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500" />
             <p className="mt-1 text-xs text-gray-400">{t("emailCannotBeChanged")}</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">{t("phone")}</label>
-            <div className="mt-1 flex gap-2">
-              <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
-                className="rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-primary-500 w-28">
-                <option value="+61">🇦🇺 +61</option>
-                <option value="+43">🇦🇹 +43</option>
-                <option value="+32">🇧🇪 +32</option>
-                <option value="+55">🇧🇷 +55</option>
-                <option value="+86">🇨🇳 +86</option>
-                <option value="+45">🇩🇰 +45</option>
-                <option value="+33">🇫🇷 +33</option>
-                <option value="+49">🇩🇪 +49</option>
-                <option value="+30">🇬🇷 +30</option>
-                <option value="+91">🇮🇳 +91</option>
-                <option value="+353">🇮🇪 +353</option>
-                <option value="+972">🇮🇱 +972</option>
-                <option value="+39">🇮🇹 +39</option>
-                <option value="+81">🇯🇵 +81</option>
-                <option value="+60">🇲🇾 +60</option>
-                <option value="+52">🇲🇽 +52</option>
-                <option value="+31">🇳🇱 +31</option>
-                <option value="+64">🇳🇿 +64</option>
-                <option value="+47">🇳🇴 +47</option>
-                <option value="+48">🇵🇱 +48</option>
-                <option value="+351">🇵🇹 +351</option>
-                <option value="+7">🇷🇺 +7</option>
-                <option value="+966">🇸🇦 +966</option>
-                <option value="+65">🇸🇬 +65</option>
-                <option value="+27">🇿🇦 +27</option>
-                <option value="+82">🇰🇷 +82</option>
-                <option value="+34">🇪🇸 +34</option>
-                <option value="+46">🇸🇪 +46</option>
-                <option value="+41">🇨🇭 +41</option>
-                <option value="+66">🇹🇭 +66</option>
-                <option value="+90">🇹🇷 +90</option>
-                <option value="+971">🇦🇪 +971</option>
-                <option value="+44">🇬🇧 +44</option>
-                <option value="+380">🇺🇦 +380</option>
-                <option value="+1">🇺🇸 +1</option>
-              </select>
-              <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
-                placeholder=""
-                className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500" />
+          {!isPhotographer && (
+            <div className="max-w-sm">
+              <label className="block text-sm font-medium text-gray-700">{t("phone")}</label>
+              <div className="mt-1 flex gap-2">
+                <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
+                  className="rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-primary-500 w-24">
+                  <option value="+1">+1</option>
+                  <option value="+7">+7</option>
+                  <option value="+27">+27</option>
+                  <option value="+30">+30</option>
+                  <option value="+31">+31</option>
+                  <option value="+32">+32</option>
+                  <option value="+33">+33</option>
+                  <option value="+34">+34</option>
+                  <option value="+39">+39</option>
+                  <option value="+41">+41</option>
+                  <option value="+43">+43</option>
+                  <option value="+44">+44</option>
+                  <option value="+45">+45</option>
+                  <option value="+46">+46</option>
+                  <option value="+47">+47</option>
+                  <option value="+48">+48</option>
+                  <option value="+49">+49</option>
+                  <option value="+52">+52</option>
+                  <option value="+55">+55</option>
+                  <option value="+60">+60</option>
+                  <option value="+61">+61</option>
+                  <option value="+64">+64</option>
+                  <option value="+65">+65</option>
+                  <option value="+66">+66</option>
+                  <option value="+81">+81</option>
+                  <option value="+82">+82</option>
+                  <option value="+86">+86</option>
+                  <option value="+90">+90</option>
+                  <option value="+91">+91</option>
+                  <option value="+351">+351</option>
+                  <option value="+353">+353</option>
+                  <option value="+380">+380</option>
+                  <option value="+966">+966</option>
+                  <option value="+971">+971</option>
+                  <option value="+972">+972</option>
+                </select>
+                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
+                  placeholder=""
+                  className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500" />
+              </div>
+              <p className="mt-1 text-xs text-gray-400">{t("phoneHint")}</p>
             </div>
-            <p className="mt-1 text-xs text-gray-400">{t("phoneHint")}</p>
-          </div>
+          )}
           {!isPhotographer && (
             <button type="submit" disabled={saving}
               className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50">

@@ -30,6 +30,7 @@ export function DashboardSidebar() {
     { href: "/dashboard/profile", labelKey: "sidebarProfile", icon: "user", roles: ["photographer"] },
     { href: "/dashboard/portfolio", labelKey: "sidebarPortfolio", icon: "image", roles: ["photographer"] },
     { href: "/dashboard/packages", labelKey: "sidebarPackages", icon: "package", roles: ["photographer"] },
+    { href: "/dashboard/profile#availability", labelKey: "sidebarAvailability", icon: "clock", roles: ["photographer"] },
     { href: "/dashboard/subscriptions", labelKey: "sidebarSubscriptions", icon: "credit-card", roles: ["photographer"] },
     { href: "/dashboard/payouts", labelKey: "sidebarPayouts", icon: "banknotes", roles: ["photographer"] },
     { href: "/dashboard/settings", labelKey: "sidebarSettings", icon: "settings", roles: ["client", "photographer"] },
@@ -120,6 +121,8 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
     case "package":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>;
+    case "clock":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
     case "credit-card":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>;
     case "banknotes":
