@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { requireStripe } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient } from "@/lib/email";
+import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 
 export async function POST(req: NextRequest) {
@@ -83,6 +83,23 @@ export async function POST(req: NextRequest) {
                 bookingInfo.photographer_name,
                 bookingInfo.total_price
               );
+              // Admin notification
+              try {
+                const adminEmail = await getAdminEmail();
+                const adminEmails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+                for (const email of adminEmails) {
+                  sendEmail(
+                    email,
+                    `Payment received — €${bookingInfo.total_price} from ${bookingInfo.client_name}`,
+                    `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+                      <h2 style="color: #16a34a;">Payment Received</h2>
+                      <p><strong>${bookingInfo.client_name}</strong> paid <strong>€${bookingInfo.total_price}</strong> for a booking with <strong>${bookingInfo.photographer_name}</strong>.</p>
+                      <p><a href="https://photoportugal.com/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View in Admin</a></p>
+                    </div>`
+                  );
+                }
+              } catch {}
+
               // SMS to photographer
               try {
                 const photographerUser = await queryOne<{ phone: string | null; id: string }>(

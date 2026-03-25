@@ -62,6 +62,31 @@ export function DateNegotiation({
   const formatDate = (d: string) =>
     new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "long", day: "numeric", year: "numeric" });
 
+  const proposeForm = (
+    <div className="mt-3 rounded-lg border border-warm-200 bg-warm-50 p-3 space-y-2">
+      <div className="grid grid-cols-[auto_1fr_auto] items-end gap-2">
+        <div className="w-36">
+          <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
+        </div>
+        <input
+          type="text"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Reason (optional)"
+          className="rounded-lg border border-gray-300 px-3 py-[9px] text-sm text-gray-900"
+        />
+        <button
+          type="button"
+          onClick={handlePropose}
+          disabled={loading || !newDate}
+          className="rounded-lg bg-primary-600 px-4 py-[9px] text-xs font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
+        >
+          Propose
+        </button>
+      </div>
+    </div>
+  );
+
   // Someone proposed a date and we need to respond
   if (waitingForMe) {
     return (
@@ -71,8 +96,9 @@ export function DateNegotiation({
         </p>
         <p className="mt-1 text-sm font-bold text-gray-900">{formatDate(proposedDate!)}</p>
         {dateNote && <p className="mt-1 text-xs text-gray-500 italic">&ldquo;{dateNote}&rdquo;</p>}
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2 flex gap-2">
           <button
+            type="button"
             onClick={handleAccept}
             disabled={loading}
             className="rounded-lg bg-green-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
@@ -80,26 +106,15 @@ export function DateNegotiation({
             Accept Date
           </button>
           <button
-            onClick={() => setShowPropose(true)}
+            type="button"
+            onClick={() => setShowPropose(!showPropose)}
             disabled={loading}
             className="rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
           >
-            Suggest Different Date
+            {showPropose ? "Cancel" : "Suggest Different Date"}
           </button>
         </div>
-        {showPropose && (
-          <div className="mt-3 flex flex-wrap items-end gap-2">
-            <div className="w-44">
-              <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
-            </div>
-            <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (optional)"
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm flex-1 min-w-[150px]" />
-            <button onClick={handlePropose} disabled={loading || !newDate}
-              className="rounded-lg bg-primary-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
-              Propose
-            </button>
-          </div>
-        )}
+        {showPropose && proposeForm}
       </div>
     );
   }
@@ -116,7 +131,7 @@ export function DateNegotiation({
     );
   }
 
-  // No active proposal — show "Propose new date" button for pending bookings
+  // No active proposal
   return (
     <div className="mt-2">
       <button
@@ -126,19 +141,7 @@ export function DateNegotiation({
       >
         {showPropose ? "Cancel" : "Propose different date"}
       </button>
-      {showPropose && (
-        <div className="mt-2 flex flex-wrap items-end gap-2">
-          <div className="w-44">
-            <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
-          </div>
-          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (optional)"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 flex-1 min-w-[150px]" />
-          <button type="button" onClick={handlePropose} disabled={loading || !newDate}
-            className="rounded-lg bg-primary-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
-            Propose
-          </button>
-        </div>
-      )}
+      {showPropose && proposeForm}
     </div>
   );
 }
