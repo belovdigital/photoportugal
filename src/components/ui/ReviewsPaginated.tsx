@@ -109,7 +109,7 @@ export function ReviewsPaginated({
                   <a key={photo.id} href={photo.url} target="_blank" rel="noopener noreferrer" className="block">
                     <img
                       src={photo.url}
-                      alt=""
+                      alt={`Photo from ${review.client_name}'s review`}
                       className="h-20 w-20 rounded-lg object-cover border border-warm-200 transition hover:opacity-90 hover:shadow-md"
                     />
                   </a>

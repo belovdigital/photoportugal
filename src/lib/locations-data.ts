@@ -659,6 +659,18 @@ export const locationFaqs: Record<string, { question: string; answer: string }[]
       question: "Do photographers in Lisbon speak English?",
       answer: "Yes, all photographers on Photo Portugal speak English fluently. Many also speak other languages including Portuguese, Spanish, French, and German. Language skills are listed on each photographer's profile.",
     },
+    {
+      question: "What happens if it rains on my photoshoot day in Lisbon?",
+      answer: "Most photographers offer free rescheduling for bad weather. Lisbon also has beautiful covered locations — the azulejo-tiled halls of São Jorge Castle, Jerónimos Monastery cloisters, and Time Out Market. Some of the most atmospheric Lisbon photos are actually taken on overcast or misty days.",
+    },
+    {
+      question: "How far in advance should I book a Lisbon photographer?",
+      answer: "We recommend booking at least 1-2 weeks in advance, especially during peak season (May–October). For proposal or elopement photography, book 3-4 weeks ahead to secure your preferred photographer and allow time for planning.",
+    },
+    {
+      question: "Can I book a surprise proposal photographer in Lisbon?",
+      answer: "Absolutely! Lisbon is one of the most popular proposal destinations. Your photographer will arrive early, position themselves discreetly, and capture the entire moment. Popular proposal spots include Miradouro da Senhora do Monte, Belém Tower, and the rooftop bars overlooking the city.",
+    },
   ],
   porto: [
     {
@@ -680,6 +692,14 @@ export const locationFaqs: Record<string, { question: string; answer: string }[]
     {
       question: "Can I combine a Porto and Douro Valley photoshoot?",
       answer: "Yes, many Porto photographers offer half-day or full-day sessions that include both Porto city and the nearby Douro Valley wine region. The valley is about 90 minutes from Porto and offers stunning vineyard landscapes.",
+    },
+    {
+      question: "What happens if it rains during my Porto photoshoot?",
+      answer: "Porto has many beautiful covered and indoor locations — São Bento Station's stunning azulejo tile hall, Livraria Lello's ornate interior, the Palácio da Bolsa, and the covered Mercado do Bolhão. Most photographers offer free rescheduling as well.",
+    },
+    {
+      question: "Can I book a surprise proposal photographer in Porto?",
+      answer: "Yes! Porto is a romantic proposal destination. Popular spots include the Dom Luís I Bridge with the Ribeira backdrop, the gardens at Palácio de Cristal, and sunset at the Douro River banks. Your photographer will be positioned discreetly to capture the surprise.",
     },
   ],
   algarve: [
@@ -703,6 +723,14 @@ export const locationFaqs: Record<string, { question: string; answer: string }[]
       question: "Can we do a boat or cave photoshoot in the Algarve?",
       answer: "Yes, some Algarve photographers offer boat trip photoshoots that include the famous Benagil Cave and other sea caves. These are usually available as add-ons to standard beach and cliff sessions.",
     },
+    {
+      question: "How far in advance should I book an Algarve photographer?",
+      answer: "Book at least 2-3 weeks in advance during summer (June–September) as the Algarve is Portugal's busiest tourist region. In spring and autumn, 1 week notice is usually sufficient. For destination weddings or elopements, book 1-2 months ahead.",
+    },
+    {
+      question: "Can I book a proposal photographer on the Algarve cliffs?",
+      answer: "Yes! The Algarve's dramatic cliffs are incredibly popular for surprise proposals. Ponta da Piedade in Lagos and the cliffs above Praia da Marinha are top choices. Your photographer will scout the location beforehand and capture every moment of the surprise.",
+    },
   ],
   sintra: [
     {
@@ -724,6 +752,14 @@ export const locationFaqs: Record<string, { question: string; answer: string }[]
     {
       question: "Can I combine a Sintra and Lisbon photoshoot?",
       answer: "Yes, many photographers offer combined Lisbon and Sintra sessions. A popular option is a morning shoot in Sintra's palaces followed by an afternoon or sunset session in Lisbon. Half-day packages work well for this.",
+    },
+    {
+      question: "What happens if it rains during my Sintra photoshoot?",
+      answer: "Sintra is actually more magical in misty weather — the forests and palaces take on a fairy-tale quality. But if heavy rain occurs, photographers can reschedule or move to covered areas like the Pena Palace terraces, Quinta da Regaleira underground tunnels, and Monserrate Palace interiors.",
+    },
+    {
+      question: "Can I book a proposal photographer in Sintra?",
+      answer: "Yes! Sintra's enchanting atmosphere makes it perfect for proposals. The Initiation Well at Quinta da Regaleira and the colorful terraces of Pena Palace are the most popular proposal locations. Book early morning to avoid crowds during this intimate moment.",
     },
   ],
 };

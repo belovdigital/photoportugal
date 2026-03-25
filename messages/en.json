@@ -938,6 +938,7 @@
         "subtitle": "Browse our verified photographers, check their portfolios, and book your session in minutes.",
         "browsePhotographers": "Browse {location} Photographers"
       },
+      "topPhotographers": "Top Photographers in {location}",
       "relatedArticles": "Related Articles",
       "readMore": "Read more",
       "shootTypes": {

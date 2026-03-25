@@ -58,6 +58,12 @@ export default async function AboutPage({
             logo: "https://photoportugal.com/logo.svg",
             description:
               "Photo Portugal connects tourists visiting Portugal with talented local photographers for professional vacation photoshoots.",
+            founder: {
+              "@type": "Person",
+              name: "Kate Belova",
+              jobTitle: "Founder & Photographer",
+              url: "https://photoportugal.com/photographers/kate-belova",
+            },
             contactPoint: {
               "@type": "ContactPoint",
               email: "info@photoportugal.com",
@@ -134,6 +140,31 @@ export default async function AboutPage({
               <p className="mt-2 text-sm leading-relaxed text-gray-500">{t(`trustPoints.${item.key}.text`)}</p>
             </div>
           ))}
+        </div>
+
+        {/* Founder */}
+        <div className="mt-16 rounded-2xl border border-warm-200 bg-white p-8">
+          <h2 className="font-display text-2xl font-bold text-gray-900">Meet the Founder</h2>
+          <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-start">
+            <Link href="/photographers/kate-belova" className="shrink-0">
+              <img
+                src="/api/img/avatars/686ad75a-fa5b-4dcb-bdd7-7ec30d9e8910.jpg?w=200&q=85&f=webp"
+                alt="Kate Belova, founder of Photo Portugal"
+                className="h-28 w-28 rounded-2xl object-cover"
+              />
+            </Link>
+            <div className="space-y-3 text-gray-600 leading-relaxed">
+              <p>
+                <strong className="text-gray-900">Kate Belova</strong> is a professional portrait and lifestyle photographer with over 10 years of experience, based in Lisbon, Portugal. Known for her &ldquo;soul portrait&rdquo; style, Kate has a rare ability to make people feel completely at ease in front of the camera — revealing authentic emotions and genuine personality in every frame.
+              </p>
+              <p>
+                After years of shooting family and lifestyle sessions across Lisbon, Sintra, and Cascais, Kate realized that tourists visiting Portugal wanted beautiful photos but finding a trustworthy local photographer was surprisingly hard. She created Photo Portugal to solve this — a curated marketplace where every photographer is personally vetted and every session delivers an exceptional experience.
+              </p>
+              <p>
+                Kate personally oversees the <Link href="/how-we-select" className="text-primary-600 hover:underline">photographer selection process</Link>, ensuring that only professionals who share her commitment to authenticity and quality join the platform.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="mt-16 text-center">

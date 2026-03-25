@@ -181,7 +181,7 @@ export function DeliveryPageClient({
       <div className="text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-primary-100">
           {photographerAvatar ? (
-            <img src={photographerAvatar} alt="" className="h-full w-full object-cover" />
+            <img src={photographerAvatar} alt={photographerName} className="h-full w-full object-cover" />
           ) : (
             <span className="text-2xl font-bold text-primary-600">{photographerName.charAt(0)}</span>
           )}

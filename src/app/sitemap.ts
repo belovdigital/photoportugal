@@ -35,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/faq", changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/pricing", changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/for-photographers", changeFrequency: "monthly" as const, priority: 0.7 },
+    { path: "/how-we-select", changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/join", changeFrequency: "daily" as const, priority: 0.9 },
     { path: "/photoshoots", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/blog", changeFrequency: "weekly" as const, priority: 0.8 },
@@ -45,6 +46,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const locationPages = locations.flatMap((loc) =>
     localized(`/locations/${loc.slug}`, { lastModified: now, changeFrequency: "weekly", priority: 0.9 })
+  );
+
+  // Occasion sub-pages for top locations
+  const occasions = ["proposal", "honeymoon", "couples", "family", "solo", "engagement", "elopement"];
+  const occasionPages = locations.flatMap((loc) =>
+    occasions.flatMap((occ) =>
+      localized(`/locations/${loc.slug}/${occ}`, { lastModified: now, changeFrequency: "monthly", priority: 0.7 })
+    )
   );
 
   const shootTypePages = shootTypes.flatMap((type) =>
@@ -83,5 +92,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] Failed to load blog pages:", err);
   }
 
-  return [...staticPages, ...locationPages, ...shootTypePages, ...photographerPages, ...blogPages];
+  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...photographerPages, ...blogPages];
 }

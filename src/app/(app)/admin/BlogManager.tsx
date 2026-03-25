@@ -400,7 +400,7 @@ export function BlogManager() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {post.cover_image_url && (
-                        <img src={post.cover_image_url} alt="" className="h-10 w-14 rounded object-cover" />
+                        <img src={post.cover_image_url} alt={post.title} className="h-10 w-14 rounded object-cover" />
                       )}
                       <div>
                         <p className="font-medium text-gray-900">{post.title}</p>

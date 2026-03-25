@@ -1061,7 +1061,7 @@ export function PhotographerDashboardClient({
                   <div className="rounded-xl border-2 border-primary-400 bg-white shadow-2xl ring-4 ring-primary-200/50" style={{ width: 200 }}>
                     <div className="aspect-square overflow-hidden rounded-t-xl bg-warm-100">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={activeDragItem.thumbnail_url ? `/api/img/${activeDragItem.thumbnail_url.replace("/uploads/", "")}?w=200&q=60&f=webp` : `/api/img/${activeDragItem.url.replace("/uploads/", "")}?w=200&q=60&f=webp`} alt="" className="h-full w-full object-cover" />
+                      <img src={activeDragItem.thumbnail_url ? `/api/img/${activeDragItem.thumbnail_url.replace("/uploads/", "")}?w=200&q=60&f=webp` : `/api/img/${activeDragItem.url.replace("/uploads/", "")}?w=200&q=60&f=webp`} alt={activeDragItem.caption || "Portfolio photo being dragged"} className="h-full w-full object-cover" />
                     </div>
                   </div>
                 )}
@@ -1618,7 +1618,7 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
         <label className="block text-sm font-medium text-gray-700 mb-2">{t("profilePhoto")}</label>
         <div className="flex items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-600 overflow-hidden">
-            {previewUrl ? <img src={previewUrl} alt="" className="h-full w-full object-cover" /> : fallbackChar}
+            {previewUrl ? <img src={previewUrl} alt="Profile photo preview" className="h-full w-full object-cover" /> : fallbackChar}
           </div>
           <label className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
             {uploading ? t("uploading") : t("uploadPhoto")}

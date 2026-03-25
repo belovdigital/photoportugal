@@ -67,15 +67,20 @@ export default async function LocationPage({
   const spots = photoSpots[slug] || [];
   const services = getLocationServices(slug);
 
-  // Get real photographer count, average rating, and total reviews for this location
+  // Get real photographer count, average rating, total reviews, and min price for this location
   let photographerCount = 0;
   let avgRating = 0;
   let totalReviews = 0;
+  let minPrice: number | null = null;
   try {
-    const row = await queryOne<{ count: string; avg_rating: string | null; total_reviews: string }>(
+    const row = await queryOne<{ count: string; avg_rating: string | null; total_reviews: string; min_price: string | null }>(
       `SELECT COUNT(DISTINCT pp.id) as count,
               AVG(pp.rating) FILTER (WHERE pp.rating IS NOT NULL AND pp.review_count > 0) as avg_rating,
-              COALESCE(SUM(pp.review_count), 0) as total_reviews
+              COALESCE(SUM(pp.review_count), 0) as total_reviews,
+              (SELECT MIN(pk.price) FROM packages pk
+               JOIN photographer_locations pl2 ON pl2.photographer_id = pk.photographer_id
+               JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
+               WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE) as min_price
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        WHERE pl.location_slug = $1 AND pp.is_approved = TRUE`,
@@ -84,6 +89,30 @@ export default async function LocationPage({
     photographerCount = parseInt(row?.count || "0");
     avgRating = row?.avg_rating ? parseFloat(parseFloat(row.avg_rating).toFixed(1)) : 0;
     totalReviews = parseInt(row?.total_reviews || "0");
+    minPrice = row?.min_price ? parseFloat(row.min_price) : null;
+  } catch {}
+
+  // Fetch top photographers for this location (max 6)
+  let topPhotographers: {
+    id: string; slug: string; display_name: string; avatar_url: string | null;
+    rating: number; review_count: number; starting_price: number | null;
+  }[] = [];
+  try {
+    topPhotographers = await query<{
+      id: string; slug: string; display_name: string; avatar_url: string | null;
+      rating: number; review_count: number; starting_price: number | null;
+    }>(
+      `SELECT pp.id, pp.slug, pp.display_name, u.avatar_url,
+              pp.rating, pp.review_count,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price
+       FROM photographer_locations pl
+       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
+       ORDER BY pp.is_featured DESC, pp.rating DESC NULLS LAST, pp.review_count DESC
+       LIMIT 6`,
+      [slug]
+    );
   } catch {}
 
   // Fetch related blog posts that mention this location
@@ -139,7 +168,7 @@ export default async function LocationPage({
     offers: {
       "@type": "Offer",
       priceCurrency: "EUR",
-      price: "150",
+      price: String(minPrice ?? 150),
       url: `https://photoportugal.com/photographers?location=${slug}`,
     },
   };
@@ -335,6 +364,81 @@ export default async function LocationPage({
           </div>
         </div>
       </section>
+
+      {/* Featured Photographers */}
+      {topPhotographers.length > 0 && (
+        <section className="border-t border-warm-200 bg-warm-50">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-gray-900">
+              {t("topPhotographers", { location: location.name })}
+            </h2>
+            <p className="mt-2 text-gray-500">
+              {t("dedicatedPhotographers", { location: location.name })}
+            </p>
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {topPhotographers.map((photographer) => (
+                <Link
+                  key={photographer.id}
+                  href={`/photographers/${photographer.slug}`}
+                  className="group flex items-start gap-4 rounded-xl border border-warm-200 bg-white p-5 transition hover:border-primary-200 hover:shadow-md"
+                >
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-lg font-bold text-primary-600">
+                    {photographer.avatar_url ? (
+                      <OptimizedImage
+                        src={photographer.avatar_url}
+                        alt={photographer.display_name}
+                        width={112}
+                        className="h-full w-full"
+                      />
+                    ) : (
+                      photographer.display_name.charAt(0)
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
+                      {photographer.display_name}
+                    </h3>
+                    <div className="mt-1 flex items-center gap-1.5 text-sm">
+                      {photographer.review_count > 0 ? (
+                        <>
+                          <span className="flex items-center gap-0.5 text-amber-500">
+                            <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          </span>
+                          <span className="font-semibold text-gray-900">{Number(photographer.rating).toFixed(1)}</span>
+                          <span className="text-gray-400">({photographer.review_count} {photographer.review_count !== 1 ? tc("reviews") : tc("review")})</span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-400">New</span>
+                      )}
+                    </div>
+                    {photographer.starting_price && (
+                      <p className="mt-1.5 text-sm">
+                        <span className="text-gray-400">{tc("from")}</span>{" "}
+                        <span className="font-bold text-primary-600">&euro;{photographer.starting_price}</span>
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {photographerCount > topPhotographers.length && (
+              <div className="mt-8 text-center">
+                <Link
+                  href={`/photographers?location=${slug}`}
+                  className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-white px-6 py-3 text-sm font-semibold text-primary-600 transition hover:bg-primary-50 hover:shadow-md"
+                >
+                  {t("viewPhotographers", { location: location.name })}
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* How It Works */}
       <HowItWorksSection />

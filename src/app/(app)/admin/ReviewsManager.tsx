@@ -202,7 +202,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
                 <div className="flex gap-2 flex-wrap mb-2">
                   {newPhotoPreviews.map((src, i) => (
                     <div key={i} className="relative h-14 w-14 rounded-lg overflow-hidden border border-gray-200">
-                      <img src={src} alt="" className="h-full w-full object-cover" />
+                      <img src={src} alt="Review photo preview" aria-hidden="true" className="h-full w-full object-cover" />
                       <button onClick={() => { setNewPhotos(p => p.filter((_, j) => j !== i)); setNewPhotoPreviews(p => p.filter((_, j) => j !== i)); }} className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">×</button>
                     </div>
                   ))}

@@ -12,7 +12,7 @@ import { PackageCard } from "@/components/ui/PackageCard";
 import { localeAlternates } from "@/lib/seo";
 
 export const dynamicParams = true;
-export const dynamic = "force-dynamic";
+export const revalidate = 86400; // ISR: revalidate every 24 hours
 
 async function getPhotographer(slug: string, isAdmin = false) {
   try {

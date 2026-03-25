@@ -721,7 +721,7 @@ function MessagesContent() {
                 <div className="flex items-center gap-2 border-t border-warm-100 bg-warm-50 px-3 py-2 overflow-x-auto">
                   {pendingPreviews.map((preview, i) => (
                     <div key={i} className="relative shrink-0">
-                      <img src={preview} alt="" className="h-14 w-14 rounded-lg object-cover" />
+                      <img src={preview} alt="Pending photo attachment" aria-hidden="true" className="h-14 w-14 rounded-lg object-cover" />
                       <button
                         type="button"
                         onClick={() => removePendingFile(i)}
@@ -847,7 +847,7 @@ function MessagesContent() {
             {/* Image */}
             <img
               src={current.media_url!}
-              alt=""
+              alt="Shared photo in conversation"
               className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
               onClick={(e) => e.stopPropagation()}
             />
