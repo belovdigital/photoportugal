@@ -26,8 +26,10 @@ export async function GET(
     photographer_name: string;
     delivery_password: string;
     delivery_expires_at: string;
+    delivery_accepted: boolean;
   }>(
-    `SELECT b.id, pp.display_name as photographer_name, b.delivery_password, b.delivery_expires_at
+    `SELECT b.id, pp.display_name as photographer_name, b.delivery_password, b.delivery_expires_at,
+            COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      WHERE b.delivery_token = $1 AND b.status = 'delivered'`,
@@ -51,6 +53,11 @@ export async function GET(
 
   if (new Date(booking.delivery_expires_at) < new Date()) {
     return NextResponse.json({ error: "Gallery expired" }, { status: 410 });
+  }
+
+  // Only allow download after delivery has been accepted
+  if (!booking.delivery_accepted) {
+    return NextResponse.json({ error: "Delivery must be accepted before downloading. Please accept the delivery in the gallery first." }, { status: 403 });
   }
 
   const photos = await query<{ url: string; filename: string }>(

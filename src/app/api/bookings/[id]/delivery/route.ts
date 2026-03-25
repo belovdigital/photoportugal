@@ -5,6 +5,7 @@ import { queryOne, query } from "@/lib/db";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import sharp from "sharp";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 
@@ -260,13 +261,55 @@ export async function POST(
       const ext = rawExt;
       const filename = `${crypto.randomUUID()}.${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(path.join(deliveryDir, filename), buffer);
+      const originalPath = path.join(deliveryDir, filename);
+      await writeFile(originalPath, buffer);
 
       const url = `/uploads/delivery/${id}/${filename}`;
+
+      // Generate watermarked preview
+      let previewUrl: string | null = null;
+      try {
+        const previewFilename = `preview_${crypto.randomUUID()}.jpg`;
+        const previewPath = path.join(deliveryDir, previewFilename);
+        const watermarkPath = path.join(process.cwd(), "public", "icon-512.png");
+
+        // Resize original for preview
+        const { data: previewBuffer, info: previewInfo } = await sharp(buffer)
+          .resize({ width: 1200, withoutEnlargement: true })
+          .jpeg({ quality: 60 })
+          .toBuffer({ resolveWithObject: true });
+
+        // Prepare watermark: resize to fit and set opacity
+        const previewWidth = previewInfo.width || 1200;
+        const previewHeight = previewInfo.height || 800;
+        const wmSize = Math.min(previewWidth, previewHeight, 256);
+        const watermark = await sharp(watermarkPath)
+          .resize({ width: wmSize, height: wmSize, fit: "inside" })
+          .ensureAlpha()
+          .composite([{
+            input: Buffer.from([255, 255, 255, Math.round(255 * 0.3)]),
+            raw: { width: 1, height: 1, channels: 4 },
+            tile: true,
+            blend: "dest-in",
+          }])
+          .toBuffer();
+
+        // Composite watermark onto preview at center
+        await sharp(previewBuffer)
+          .composite([{ input: watermark, gravity: "centre" }])
+          .jpeg({ quality: 60 })
+          .toFile(previewPath);
+
+        previewUrl = `/uploads/delivery/${id}/${previewFilename}`;
+      } catch (previewErr) {
+        console.error("[delivery] preview generation error:", previewErr);
+        // Continue without preview — full-res will be used as fallback
+      }
+
       const item = await queryOne<{ id: string }>(
-        `INSERT INTO delivery_photos (booking_id, url, filename, file_size, sort_order)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        [id, url, file.name, file.size, sortOrder++]
+        `INSERT INTO delivery_photos (booking_id, url, preview_url, filename, file_size, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [id, url, previewUrl, file.name, file.size, sortOrder++]
       );
 
       uploaded.push({ id: item?.id, url, filename: file.name, file_size: file.size });

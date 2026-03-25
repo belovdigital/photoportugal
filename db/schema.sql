@@ -248,6 +248,7 @@ CREATE TABLE delivery_photos (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
+  preview_url TEXT,
   filename VARCHAR(255) NOT NULL,
   file_size INTEGER DEFAULT 0,
   sort_order INTEGER DEFAULT 0,

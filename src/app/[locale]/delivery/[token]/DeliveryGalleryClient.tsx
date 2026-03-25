@@ -11,7 +11,7 @@ interface Photo {
   file_size: number;
 }
 
-export function DeliveryGalleryClient({ photos }: { photos: Photo[] }) {
+export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Photo[]; deliveryAccepted: boolean }) {
   const t = useTranslations("delivery");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -109,17 +109,26 @@ export function DeliveryGalleryClient({ photos }: { photos: Photo[] }) {
             <span className="text-sm text-white/70">
               {lightboxIndex + 1} / {photos.length}
             </span>
-            <a
-              href={photos[lightboxIndex].url}
-              download={photos[lightboxIndex].filename}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              {t("download")}
-            </a>
+            {deliveryAccepted ? (
+              <a
+                href={photos[lightboxIndex].url}
+                download={photos[lightboxIndex].filename}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                {t("download")}
+              </a>
+            ) : (
+              <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm text-white/50">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                {t("acceptToDownload")}
+              </span>
+            )}
           </div>
         </div>
       )}

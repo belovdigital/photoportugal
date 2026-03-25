@@ -2026,7 +2026,9 @@
     "photoViewer": "Photo viewer",
     "close": "Close",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "acceptToUnlockFullRes": "Accept delivery to unlock full resolution & downloads",
+    "acceptToDownload": "Accept to download"
   },
   "bookingActions": {
     "convertToBooking": "Accept Inquiry",

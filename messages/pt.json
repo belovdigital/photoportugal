@@ -1866,7 +1866,9 @@
     "photoViewer": "Visualizador de fotos",
     "close": "Fechar",
     "previous": "Anterior",
-    "next": "Seguinte"
+    "next": "Seguinte",
+    "acceptToUnlockFullRes": "Aceite a entrega para desbloquear alta qualidade e downloads",
+    "acceptToDownload": "Aceitar para baixar"
   },
   "bookingActions": {
     "convertToBooking": "Aceitar Consulta",

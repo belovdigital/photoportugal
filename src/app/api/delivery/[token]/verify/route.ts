@@ -75,10 +75,20 @@ export async function POST(
   }
 
   // Password correct — return gallery data
-  const photos = await query<{ id: string; url: string; filename: string; file_size: number }>(
-    "SELECT id, url, filename, file_size FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at",
+  const isAccepted = booking.delivery_accepted === true;
+
+  const rawPhotos = await query<{ id: string; url: string; preview_url: string | null; filename: string; file_size: number }>(
+    "SELECT id, url, preview_url, filename, file_size FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at",
     [booking.id]
   );
+
+  // If delivery not yet accepted, return preview URLs instead of full-res URLs
+  const photos = rawPhotos.map((photo) => ({
+    id: photo.id,
+    url: isAccepted ? photo.url : (photo.preview_url || photo.url),
+    filename: photo.filename,
+    file_size: photo.file_size,
+  }));
 
   return NextResponse.json({
     booking_id: booking.id,
@@ -90,7 +100,7 @@ export async function POST(
     expires_at: booking.delivery_expires_at,
     photos,
     photo_count: photos.length,
-    delivery_accepted: booking.delivery_accepted,
+    delivery_accepted: isAccepted,
     payment_status: booking.payment_status,
   });
 }

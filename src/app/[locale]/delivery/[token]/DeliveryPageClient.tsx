@@ -93,6 +93,20 @@ export function DeliveryPageClient({
       if (res.ok) {
         setAccepted(true);
         trackDeliveryAccepted();
+        // Re-fetch gallery to get full-res URLs now that delivery is accepted
+        try {
+          const verifyRes = await fetch(`/api/delivery/${token}/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: password.trim() }),
+          });
+          if (verifyRes.ok) {
+            const updatedData = await verifyRes.json();
+            setGallery(updatedData);
+          }
+        } catch {
+          // Gallery will still show preview URLs but that's acceptable
+        }
       } else {
         const data = await res.json();
         if (data.already_accepted) {
@@ -192,15 +206,24 @@ export function DeliveryPageClient({
             : `${(totalSize / 1024).toFixed(0)} KB`}
           <span className="ml-3 text-xs text-gray-400">{t("availableUntil", { date: expiresDate })}</span>
         </div>
-        <a
-          href={`/api/delivery/${token}/download?password=${encodeURIComponent(password)}`}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          {t("downloadAllZip")}
-        </a>
+        {accepted ? (
+          <a
+            href={`/api/delivery/${token}/download?password=${encodeURIComponent(password)}`}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {t("downloadAllZip")}
+          </a>
+        ) : (
+          <span className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 text-sm font-medium text-amber-800">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            {t("acceptToUnlockFullRes")}
+          </span>
+        )}
       </div>
 
       {/* Accept Delivery Section */}
@@ -247,7 +270,7 @@ export function DeliveryPageClient({
       </div>
 
       {/* Gallery */}
-      <DeliveryGalleryClient photos={gallery.photos} />
+      <DeliveryGalleryClient photos={gallery.photos} deliveryAccepted={accepted} />
 
       {/* Footer */}
       <div className="mt-12 text-center">
