@@ -63,7 +63,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: p.plan === "premium" ? 0.8 : 0.7,
       })
     );
-  } catch {}
+  } catch (err) {
+    console.error("[sitemap] Failed to load photographer pages:", err);
+  }
 
   let blogPages: MetadataRoute.Sitemap = [];
   try {
@@ -77,7 +79,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       })
     );
-  } catch {}
+  } catch (err) {
+    console.error("[sitemap] Failed to load blog pages:", err);
+  }
 
   return [...staticPages, ...locationPages, ...shootTypePages, ...photographerPages, ...blogPages];
 }

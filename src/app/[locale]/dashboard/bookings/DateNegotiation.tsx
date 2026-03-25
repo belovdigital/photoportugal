@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import DatePicker from "@/components/ui/DatePicker";
 
 export function DateNegotiation({
   bookingId,
@@ -88,8 +89,9 @@ export function DateNegotiation({
         </div>
         {showPropose && (
           <div className="mt-3 flex flex-wrap items-end gap-2">
-            <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} min={new Date().toISOString().split("T")[0]}
-              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm" />
+            <div className="w-44">
+              <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
+            </div>
             <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (optional)"
               className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm flex-1 min-w-[150px]" />
             <button onClick={handlePropose} disabled={loading || !newDate}
@@ -123,8 +125,9 @@ export function DateNegotiation({
       {showPropose ? "Cancel" : "Propose different date"}
       {showPropose && (
         <div className="mt-2 flex flex-wrap items-end gap-2" onClick={(e) => e.stopPropagation()}>
-          <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} min={new Date().toISOString().split("T")[0]}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900" />
+          <div className="w-44">
+            <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
+          </div>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason (optional)"
             className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 flex-1 min-w-[150px]" />
           <button onClick={(e) => { e.stopPropagation(); handlePropose(); }} disabled={loading || !newDate}

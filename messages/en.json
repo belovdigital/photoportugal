@@ -978,6 +978,7 @@
       "preferredDate": "Preferred date",
       "preferredTime": "Preferred time",
       "flexibleDates": "I'm flexible with dates",
+      "selectDate": "Select date",
       "selectDateOrFlexible": "Please select a date or check \"I'm flexible with dates\"",
       "selectDateRange": "Please select a date range for your flexible dates",
       "dateFrom": "Available from",

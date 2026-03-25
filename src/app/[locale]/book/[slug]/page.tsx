@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
 import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
+import DatePicker from "@/components/ui/DatePicker";
 
 interface Package {
   id: string;
@@ -262,52 +263,22 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
 
         {/* Date & Time */}
         <div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {!flexibleDate ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">{t("form.preferredDate")}</label>
-                <input
-                  type="date"
-                  value={shootDate}
-                  onChange={(e) => setShootDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                  required={!flexibleDate}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
-                />
-              </div>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">{t("form.dateFrom")}</label>
-                  <input
-                    type="date"
-                    value={flexibleDateFrom}
-                    onChange={(e) => setFlexibleDateFrom(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                    required
-                    className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">{t("form.dateTo")}</label>
-                  <input
-                    type="date"
-                    value={flexibleDateTo}
-                    onChange={(e) => setFlexibleDateTo(e.target.value)}
-                    min={flexibleDateFrom || new Date().toISOString().split("T")[0]}
-                    required
-                    className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
-                  />
-                </div>
-              </>
-            )}
-            {!flexibleDate && (
+          {!flexibleDate && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DatePicker
+                label={t("form.preferredDate")}
+                value={shootDate}
+                onChange={setShootDate}
+                min={new Date().toISOString().split("T")[0]}
+                required={!flexibleDate}
+                placeholder={t("form.selectDate")}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700">{t("form.preferredTime")}</label>
                 <select
                   value={shootTime}
                   onChange={(e) => setShootTime(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-primary-500"
                 >
                   <option value="flexible">{t("time.flexible")}</option>
                   <option value="sunrise">{t("time.sunrise")}</option>
@@ -318,9 +289,9 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                   <option value="sunset">{t("time.sunset")}</option>
                 </select>
               </div>
-            )}
-          </div>
-          <label className="mt-3 flex items-center gap-2 cursor-pointer">
+            </div>
+          )}
+          <label className={`${!flexibleDate ? "mt-3" : ""} flex items-center gap-2 cursor-pointer`}>
             <input
               type="checkbox"
               checked={flexibleDate}
@@ -337,6 +308,26 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             />
             <span className="text-sm text-gray-600">{t("form.flexibleDates")}</span>
           </label>
+          {flexibleDate && (
+            <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DatePicker
+                label={t("form.dateFrom")}
+                value={flexibleDateFrom}
+                onChange={setFlexibleDateFrom}
+                min={new Date().toISOString().split("T")[0]}
+                required
+                placeholder={t("form.selectDate")}
+              />
+              <DatePicker
+                label={t("form.dateTo")}
+                value={flexibleDateTo}
+                onChange={setFlexibleDateTo}
+                min={flexibleDateFrom || new Date().toISOString().split("T")[0]}
+                required
+                placeholder={t("form.selectDate")}
+              />
+            </div>
+          )}
         </div>
 
         {/* Group & Occasion */}
