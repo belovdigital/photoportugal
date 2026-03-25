@@ -44,6 +44,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [shootDate, setShootDate] = useState("");
   const [shootTime, setShootTime] = useState("flexible");
   const [flexibleDate, setFlexibleDate] = useState(false);
+  const [flexibleDateFrom, setFlexibleDateFrom] = useState("");
+  const [flexibleDateTo, setFlexibleDateTo] = useState("");
   const [groupSize, setGroupSize] = useState("2");
   const [occasion, setOccasion] = useState("");
   const [message, setMessage] = useState("");
@@ -88,6 +90,10 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       setError(t("form.selectDateOrFlexible"));
       return;
     }
+    if (flexibleDate && (!flexibleDateFrom || !flexibleDateTo)) {
+      setError(t("form.selectDateRange"));
+      return;
+    }
 
     setSubmitting(true);
     setError("");
@@ -101,6 +107,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         location_slug: selectedLocation || null,
         shoot_date: flexibleDate ? "flexible" : shootDate,
         shoot_time: shootTime || null,
+        flexible_date_from: flexibleDate ? flexibleDateFrom : null,
+        flexible_date_to: flexibleDate ? flexibleDateTo : null,
         group_size: parseInt(groupSize) || 2,
         occasion: occasion || null,
         message,
@@ -255,7 +263,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         {/* Date & Time */}
         <div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {!flexibleDate && (
+            {!flexibleDate ? (
               <div>
                 <label className="block text-sm font-medium text-gray-700">{t("form.preferredDate")}</label>
                 <input
@@ -267,23 +275,50 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                   className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
                 />
               </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">{t("form.dateFrom")}</label>
+                  <input
+                    type="date"
+                    value={flexibleDateFrom}
+                    onChange={(e) => setFlexibleDateFrom(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    required
+                    className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">{t("form.dateTo")}</label>
+                  <input
+                    type="date"
+                    value={flexibleDateTo}
+                    onChange={(e) => setFlexibleDateTo(e.target.value)}
+                    min={flexibleDateFrom || new Date().toISOString().split("T")[0]}
+                    required
+                    className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+                  />
+                </div>
+              </>
             )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">{t("form.preferredTime")}</label>
-              <select
-                value={shootTime}
-                onChange={(e) => setShootTime(e.target.value)}
-                className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
-              >
-                <option value="flexible">{t("time.flexible")}</option>
-                <option value="sunrise">{t("time.sunrise")}</option>
-                <option value="morning">{t("time.morning")}</option>
-                <option value="midday">{t("time.midday")}</option>
-                <option value="afternoon">{t("time.afternoon")}</option>
-                <option value="golden_hour">{t("time.goldenHour")}</option>
-                <option value="sunset">{t("time.sunset")}</option>
-              </select>
-            </div>
+            {!flexibleDate && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">{t("form.preferredTime")}</label>
+                <select
+                  value={shootTime}
+                  onChange={(e) => setShootTime(e.target.value)}
+                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+                >
+                  <option value="flexible">{t("time.flexible")}</option>
+                  <option value="sunrise">{t("time.sunrise")}</option>
+                  <option value="morning">{t("time.morning")}</option>
+                  <option value="midday">{t("time.midday")}</option>
+                  <option value="afternoon">{t("time.afternoon")}</option>
+                  <option value="golden_hour">{t("time.goldenHour")}</option>
+                  <option value="sunset">{t("time.sunset")}</option>
+                </select>
+              </div>
+            )}
           </div>
           <label className="mt-3 flex items-center gap-2 cursor-pointer">
             <input
@@ -291,7 +326,12 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               checked={flexibleDate}
               onChange={(e) => {
                 setFlexibleDate(e.target.checked);
-                if (e.target.checked) setShootDate("");
+                if (e.target.checked) {
+                  setShootDate("");
+                } else {
+                  setFlexibleDateFrom("");
+                  setFlexibleDateTo("");
+                }
               }}
               className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
             />

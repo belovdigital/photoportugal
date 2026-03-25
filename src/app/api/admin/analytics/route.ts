@@ -205,7 +205,7 @@ export async function GET() {
       total: allQueries.length,
     };
 
-    result.topQueries = allQueries.slice(0, 20);
+    result.topQueries = allQueries.slice(0, 50);
 
     // Top pages in search
     const { data: pages } = await searchConsole.searchanalytics.query({
@@ -214,7 +214,7 @@ export async function GET() {
         startDate: fmt(startDate),
         endDate: fmt(endDate),
         dimensions: ["page"],
-        rowLimit: 15,
+        rowLimit: 50,
       },
     });
 

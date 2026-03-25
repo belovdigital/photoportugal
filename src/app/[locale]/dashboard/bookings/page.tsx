@@ -58,6 +58,8 @@ export default async function BookingsPage() {
     status: string;
     shoot_date: string | null;
     shoot_time: string | null;
+    flexible_date_from: string | null;
+    flexible_date_to: string | null;
     proposed_date: string | null;
     proposed_by: string | null;
     date_note: string | null;
@@ -80,7 +82,7 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
+                  p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
                   COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at
            FROM bookings b
@@ -94,7 +96,7 @@ export default async function BookingsPage() {
     } else {
       bookings = await query(
         `SELECT b.id, pp.display_name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
+                p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
                 COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at
          FROM bookings b
@@ -160,9 +162,11 @@ export default async function BookingsPage() {
               </div>
 
               <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-500">
-                {booking.shoot_date && (
+                {booking.shoot_date ? (
                   <span>{new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })}</span>
-                )}
+                ) : booking.flexible_date_from && booking.flexible_date_to ? (
+                  <span>{t("flexibleRange", { from: new Date(booking.flexible_date_from).toLocaleDateString(dateLocale, { month: "short", day: "numeric" }), to: new Date(booking.flexible_date_to).toLocaleDateString(dateLocale, { month: "short", day: "numeric" }) })}</span>
+                ) : null}
                 {booking.shoot_time && <span>{TIME_LABEL_KEYS[booking.shoot_time] ? t(TIME_LABEL_KEYS[booking.shoot_time]) : booking.shoot_time}</span>}
                 {booking.group_size && booking.group_size > 1 && <span>{t("people", { count: booking.group_size })}</span>}
                 {booking.occasion && <span className="capitalize">{booking.occasion}</span>}

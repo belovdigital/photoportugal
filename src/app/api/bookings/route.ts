@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { photographer_id, package_id, location_slug, shoot_date, shoot_time, group_size, occasion, message } = await req.json();
+    const { photographer_id, package_id, location_slug, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message } = await req.json();
 
     if (!photographer_id) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
@@ -50,11 +50,12 @@ export async function POST(req: NextRequest) {
       if (pkg) totalPrice = pkg.price;
     }
 
+    const isFlexible = shoot_date === "flexible";
     const booking = await queryOne<{ id: string }>(
-      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, shoot_date, shoot_time, group_size, occasion, message, total_price, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
+      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending')
        RETURNING id`,
-      [userId, photographer_id, package_id || null, location_slug || null, (shoot_date && shoot_date !== "flexible") ? shoot_date : null, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, group_size || 2, occasion || null, message || null, totalPrice]
+      [userId, photographer_id, package_id || null, location_slug || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, group_size || 2, occasion || null, message || null, totalPrice]
     );
 
     // Send email notification to photographer (if enabled)
@@ -71,13 +72,17 @@ export async function POST(req: NextRequest) {
       const clientInfo = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
       const pkgInfo = package_id ? await queryOne<{ name: string }>("SELECT name FROM packages WHERE id = $1", [package_id]) : null;
 
+      const dateDisplay = isFlexible && flexible_date_from && flexible_date_to
+        ? `flexible (${flexible_date_from} — ${flexible_date_to})`
+        : shoot_date || null;
+
       if (photographerInfo && clientInfo && prefs?.email_bookings !== false) {
         sendBookingNotification(
           photographerInfo.email,
           photographerInfo.display_name,
           clientInfo.name,
           pkgInfo?.name || null,
-          shoot_date || null
+          dateDisplay
         );
       }
 
@@ -87,7 +92,7 @@ export async function POST(req: NextRequest) {
           clientInfo.name,
           photographerInfo.display_name,
           pkgInfo?.name || null,
-          shoot_date || null
+          dateDisplay
         );
       }
 

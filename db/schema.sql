@@ -138,6 +138,8 @@ CREATE TABLE bookings (
   status booking_status DEFAULT 'pending',
   shoot_date DATE,
   shoot_time VARCHAR(50),
+  flexible_date_from DATE, -- when flexible: earliest available date
+  flexible_date_to DATE,   -- when flexible: latest available date
   proposed_date DATE, -- date proposed by one party during negotiation
   proposed_by VARCHAR(20), -- 'photographer' or 'client'
   date_note TEXT, -- reason/comment for date change
