@@ -60,6 +60,20 @@ function MessagesContent() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Lightbox keyboard nav
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    function handleKey(e: KeyboardEvent) {
+      const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-"));
+      if (e.key === "Escape") setLightboxIndex(null);
+      else if (e.key === "ArrowLeft" && lightboxIndex! > 0) setLightboxIndex(lightboxIndex! - 1);
+      else if (e.key === "ArrowRight" && lightboxIndex! < allMedia.length - 1) setLightboxIndex(lightboxIndex! + 1);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [lightboxIndex, messages]);
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sseStatus, setSSEStatus] = useState<SSEStatus>("disconnected");
@@ -628,9 +642,16 @@ function MessagesContent() {
                                     : ""
                               }`}
                             >
-                              {msg.media_url && (
+                              {msg.media_url && (() => {
+                                const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-"));
+                                const mediaIndex = allMedia.findIndex((m) => m.id === msg.id);
+                                return (
                                 <div className="relative inline-block">
-                                  <a href={msg.id.startsWith("temp-") ? undefined : msg.media_url} target="_blank" rel="noopener noreferrer" className="block relative">
+                                  <button
+                                    type="button"
+                                    onClick={() => { if (!msg.id.startsWith("temp-") && mediaIndex >= 0) setLightboxIndex(mediaIndex); }}
+                                    className="block relative cursor-pointer"
+                                  >
                                     <div className="rounded-lg bg-warm-200 animate-pulse" style={{ width: 200, height: 150 }} />
                                     <img
                                       src={msg.media_url}
@@ -644,14 +665,15 @@ function MessagesContent() {
                                         img.style.position = "relative";
                                       }}
                                     />
-                                  </a>
+                                  </button>
                                   {uploadingMsgIds.has(msg.id) && (
                                     <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30">
                                       <div className="h-8 w-8 animate-spin rounded-full border-3 border-white/30 border-t-white" />
                                     </div>
                                   )}
                                 </div>
-                              )}
+                                );
+                              })()}
                               {msg.text && (
                                 <p className="whitespace-pre-wrap break-words">
                                   {msg.text}
@@ -768,6 +790,70 @@ function MessagesContent() {
           )}
         </div>
       </div>
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && (() => {
+        const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-"));
+        const current = allMedia[lightboxIndex];
+        if (!current) return null;
+        const total = allMedia.length;
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+            onClick={() => setLightboxIndex(null)}
+          >
+            {/* Close */}
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(null)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Counter */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">
+              {lightboxIndex + 1} / {total}
+            </div>
+
+            {/* Prev */}
+            {lightboxIndex > 0 && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+                className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Next */}
+            {lightboxIndex < total - 1 && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+                className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Image */}
+            <img
+              src={current.media_url!}
+              alt=""
+              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }
