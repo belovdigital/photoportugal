@@ -278,7 +278,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 <select
                   value={shootTime}
                   onChange={(e) => setShootTime(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-primary-500"
+                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
                 >
                   <option value="flexible">{t("time.flexible")}</option>
                   <option value="sunrise">{t("time.sunrise")}</option>

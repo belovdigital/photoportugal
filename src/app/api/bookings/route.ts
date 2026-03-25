@@ -40,6 +40,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "You cannot book yourself" }, { status: 400 });
     }
 
+    // Check availability for non-flexible bookings
+    const isFlexible = shoot_date === "flexible";
+    if (!isFlexible && shoot_date) {
+      const conflict = await queryOne<{ id: string }>(
+        `SELECT id FROM photographer_unavailability
+         WHERE photographer_id = $1 AND date_from <= $2::date AND date_to >= $2::date`,
+        [photographer_id, shoot_date]
+      );
+      if (conflict) {
+        return NextResponse.json({ error: "This photographer is not available on the selected date. Please choose a different date or check \"I'm flexible with dates\"." }, { status: 400 });
+      }
+    }
+
     // Get package price if selected
     let totalPrice = null;
     if (package_id) {
@@ -50,7 +63,6 @@ export async function POST(req: NextRequest) {
       if (pkg) totalPrice = pkg.price;
     }
 
-    const isFlexible = shoot_date === "flexible";
     const booking = await queryOne<{ id: string }>(
       `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending')

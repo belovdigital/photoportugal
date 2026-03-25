@@ -228,6 +228,35 @@ export default async function PhotographerProfilePage({
     } catch {}
   }
 
+  // Check photographer availability (is today within any unavailability range?)
+  let unavailableUntil: string | null = null;
+  if (result.type === "db") {
+    try {
+      const row = await queryOne<{ next_available: string }>(
+        `SELECT (MAX(date_to) + INTERVAL '1 day')::date::text as next_available
+         FROM photographer_unavailability
+         WHERE photographer_id = $1 AND date_from <= CURRENT_DATE AND date_to >= CURRENT_DATE`,
+        [photographer.id]
+      );
+      if (row?.next_available) {
+        // Check if next_available day also falls within another range (overlapping/adjacent ranges)
+        const check = await queryOne<{ extended_until: string }>(
+          `WITH RECURSIVE chain AS (
+            SELECT date_from, date_to FROM photographer_unavailability
+            WHERE photographer_id = $1 AND date_from <= CURRENT_DATE AND date_to >= CURRENT_DATE
+            UNION
+            SELECT u.date_from, u.date_to FROM photographer_unavailability u
+            JOIN chain c ON u.date_from <= c.date_to + INTERVAL '1 day' AND u.date_to >= c.date_from
+            WHERE u.photographer_id = $1
+          )
+          SELECT (MAX(date_to) + INTERVAL '1 day')::date::text as extended_until FROM chain`,
+          [photographer.id]
+        );
+        unavailableUntil = check?.extended_until || row.next_available;
+      }
+    } catch {}
+  }
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -516,7 +545,7 @@ export default async function PhotographerProfilePage({
                 <>
                   <h2 className="text-xl font-bold text-gray-900">{t("packages")}</h2>
                   {photographer.packages.map((pkg: { id: string; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean; delivery_days?: number }) => (
-                    <PackageCard key={pkg.id} pkg={pkg} photographerSlug={photographer.slug} />
+                    <PackageCard key={pkg.id} pkg={pkg} photographerSlug={photographer.slug} unavailableUntil={unavailableUntil} />
                   ))}
                 </>
               )}

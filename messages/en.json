@@ -887,7 +887,8 @@
       "mostPopular": "Most Popular",
       "hideDetails": "Hide details",
       "viewDetails": "View details",
-      "bookThisPackage": "Book This Package"
+      "bookThisPackage": "Book This Package",
+      "fullyBookedUntil": "Fully booked until {date}"
     },
     "portfolioGallery": {
       "title": "Portfolio",
@@ -1561,6 +1562,7 @@
     "tabProfile": "Profile",
     "tabPortfolio": "Portfolio ({count})",
     "tabPackages": "Packages ({count})",
+    "tabAvailability": "Availability",
     "profilePhoto": "Profile Photo",
     "uploadPhoto": "Upload Photo",
     "uploading": "Uploading...",

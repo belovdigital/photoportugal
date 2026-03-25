@@ -127,6 +127,19 @@ CREATE TABLE portfolio_items (
 CREATE INDEX idx_portfolio_photographer ON portfolio_items(photographer_id);
 
 -- ============================================================
+-- PHOTOGRAPHER UNAVAILABILITY
+-- ============================================================
+CREATE TABLE photographer_unavailability (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  photographer_id UUID NOT NULL REFERENCES photographer_profiles(id) ON DELETE CASCADE,
+  date_from DATE NOT NULL,
+  date_to DATE NOT NULL,
+  reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_unavailability_photographer ON photographer_unavailability(photographer_id);
+CREATE INDEX idx_unavailability_dates ON photographer_unavailability(date_from, date_to);
+
 -- BOOKINGS
 -- ============================================================
 CREATE TABLE bookings (

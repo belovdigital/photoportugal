@@ -27,6 +27,7 @@ import imageCompression from "browser-image-compression";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import { Avatar } from "@/components/ui/Avatar";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { AvailabilityTab } from "./AvailabilityTab";
 
 interface Profile {
   id: string;
@@ -99,7 +100,7 @@ interface LocationOption {
   region: string;
 }
 
-type Tab = "profile" | "portfolio" | "packages" | "bookings";
+type Tab = "profile" | "portfolio" | "packages" | "bookings" | "availability";
 
 export function PhotographerDashboardClient({
   profile,
@@ -122,7 +123,7 @@ export function PhotographerDashboardClient({
   const [activeTab, setActiveTabState] = useState<Tab>(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash.replace("#", "") as Tab;
-      if (["profile", "portfolio", "packages", "bookings"].includes(hash)) return hash;
+      if (["profile", "portfolio", "packages", "bookings", "availability"].includes(hash)) return hash;
     }
     return initialTab || "profile";
   });
@@ -547,6 +548,7 @@ export function PhotographerDashboardClient({
     { key: "profile", label: t("tabProfile") },
     { key: "portfolio", label: t("tabPortfolio", { count: portfolioItems.length }) },
     { key: "packages", label: t("tabPackages", { count: localPackages.length }) },
+    { key: "availability", label: t("tabAvailability") },
   ];
 
   return (
@@ -1228,6 +1230,11 @@ export function PhotographerDashboardClient({
               </div>
             )}
           </div>
+        )}
+
+        {/* === AVAILABILITY TAB === */}
+        {activeTab === "availability" && (
+          <AvailabilityTab />
         )}
       </div>
     </div>
