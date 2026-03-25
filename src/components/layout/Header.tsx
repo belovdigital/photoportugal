@@ -154,13 +154,58 @@ export function Header() {
               {t("photographers")}
             </Link>
 
-            <Link href="/how-it-works" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
-              {t("howItWorks")}
-            </Link>
+            {/* For Clients dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => toggleMenu("forClients")}
+                aria-expanded={activeMenu === "forClients"}
+                className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  activeMenu === "forClients" ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50"
+                }`}
+              >
+                {t("forClients")}
+                <svg className={`h-3.5 w-3.5 transition ${activeMenu === "forClients" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-            <Link href="/faq" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
-              {t("faq")}
-            </Link>
+              {activeMenu === "forClients" && (
+                <div className="absolute left-0 top-full mt-2 w-80 rounded-xl border border-warm-200 bg-white p-4 shadow-xl">
+                  <div className="space-y-0.5">
+                    <Link href="/how-it-works" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <svg className="h-4.5 w-4.5 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{t("howItWorks")}</p>
+                        <p className="text-xs text-gray-400">{t("forClientsHowItWorksDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/faq" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <svg className="h-4.5 w-4.5 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{t("faq")}</p>
+                        <p className="text-xs text-gray-400">{t("forClientsFaqDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/how-we-select" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <svg className="h-4.5 w-4.5 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{t("howWeSelect")}</p>
+                        <p className="text-xs text-gray-400">{t("forClientsHowWeSelectDesc")}</p>
+                      </div>
+                    </Link>
+                    <div className="my-1.5 border-t border-warm-100" />
+                    <Link href="/about" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <svg className="h-4.5 w-4.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <p className="text-sm text-gray-600">{t("about")}</p>
+                    </Link>
+                    <Link href="/contact" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <svg className="h-4.5 w-4.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                      <p className="text-sm text-gray-600">{t("contact")}</p>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {!isLoading && (!user || role === "photographer") && <div className="relative">
               <button

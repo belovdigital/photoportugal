@@ -86,6 +86,11 @@
     "photographers": "Fotógrafos",
     "howItWorks": "Como Funciona",
     "faq": "FAQ",
+    "forClients": "Para Clientes",
+    "forClientsHowItWorksDesc": "Processo de reserva em 4 passos",
+    "forClientsFaqDesc": "Preços, cancelamento, entrega e mais",
+    "howWeSelect": "Como Selecionamos Fotógrafos",
+    "forClientsHowWeSelectDesc": "O nosso processo de seleção rigoroso",
     "forPhotographers": "Para Fotógrafos",
     "becomePhotographer": "Tornar-se fotógrafo",
     "becomePhotographerDesc": "Junte-se à nossa rede e conecte-se com viajantes de todo o mundo",
@@ -405,7 +410,7 @@
       },
       "deliveryTime": {
         "question": "Quanto tempo até receber as minhas fotos?",
-        "answer": "O prazo de entrega depende do pacote escolhido — cada pacote mostra os dias estimados de entrega no perfil do fotógrafo (tipicamente 3 a 14 dias). Quando prontas, receberá um link para uma galeria privada e protegida por palavra-passe onde pode ver, descarregar individualmente ou transferir a coleção completa como ficheiro ZIP."
+        "answer": "O prazo de entrega depende do pacote escolhido — cada pacote mostra os dias estimados de entrega no perfil do fotógrafo (tipicamente 3 a 14 dias). Quando prontas, receberá um link para uma galeria privada e protegida por palavra-passe. Primeiro verá pré-visualizações com marca de água para rever as fotos. Após aprovar a entrega, terá acesso às imagens em resolução total e poderá descarregar tudo como ficheiro ZIP."
       },
       "notHappy": {
         "question": "E se não ficar satisfeito com as fotos?",

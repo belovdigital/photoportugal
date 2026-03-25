@@ -155,7 +155,7 @@ export default async function AboutPage({
             </Link>
             <div className="space-y-3 text-gray-600 leading-relaxed">
               <p>
-                <strong className="text-gray-900">Kate Belova</strong> is a professional portrait and lifestyle photographer with over 10 years of experience, based in Lisbon, Portugal. Known for her &ldquo;soul portrait&rdquo; style, Kate has a rare ability to make people feel completely at ease in front of the camera — revealing authentic emotions and genuine personality in every frame.
+                <strong className="text-gray-900">Kate Belova</strong>{" "}is a professional portrait and lifestyle photographer with over 10 years of experience, based in Lisbon, Portugal. Known for her &ldquo;soul portrait&rdquo; style, Kate has a rare ability to make people feel completely at ease in front of the camera — revealing authentic emotions and genuine personality in every frame.
               </p>
               <p>
                 After years of shooting family and lifestyle sessions across Lisbon, Sintra, and Cascais, Kate realized that tourists visiting Portugal wanted beautiful photos but finding a trustworthy local photographer was surprisingly hard. She created Photo Portugal to solve this — a curated marketplace where every photographer is personally vetted and every session delivers an exceptional experience.
@@ -198,20 +198,6 @@ export default async function AboutPage({
         </div>
       </section>
 
-      {/* Company Info */}
-      <section className="border-t border-warm-200 bg-warm-50">
-        <div className="mx-auto max-w-3xl px-4 py-10 text-center text-xs text-gray-400 sm:px-6">
-          <p className="font-medium text-gray-500">Ekaterina Belova &middot; Empres&aacute;ria em Nome Individual</p>
-          <p className="mt-1">Lisbon, Portugal</p>
-          <p className="mt-1">
-            <a href="mailto:info@photoportugal.com" className="hover:text-primary-600">info@photoportugal.com</a>
-            {" "}&middot;{" "}
-            <Link href="/terms" className="hover:text-primary-600">Terms</Link>
-            {" "}&middot;{" "}
-            <Link href="/privacy" className="hover:text-primary-600">Privacy</Link>
-          </p>
-        </div>
-      </section>
     </>
   );
 }

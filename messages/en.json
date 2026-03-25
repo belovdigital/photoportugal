@@ -86,6 +86,11 @@
     "photographers": "Photographers",
     "howItWorks": "How It Works",
     "faq": "FAQ",
+    "forClients": "For Clients",
+    "forClientsHowItWorksDesc": "4-step booking process explained",
+    "forClientsFaqDesc": "Pricing, cancellation, delivery & more",
+    "howWeSelect": "How We Select Photographers",
+    "forClientsHowWeSelectDesc": "Our rigorous vetting process",
     "forPhotographers": "For Photographers",
     "becomePhotographer": "Become a photographer",
     "becomePhotographerDesc": "Join our network and connect with travelers from around the world",
@@ -405,7 +410,7 @@
       },
       "deliveryTime": {
         "question": "How long until I receive my photos?",
-        "answer": "Delivery time depends on the package you choose — each package shows the estimated delivery days on the photographer's profile (typically 3–14 days). Once ready, you'll receive a link to a private, password-protected gallery where you can view, download individually, or grab the full collection as a ZIP archive."
+        "answer": "Delivery time depends on the package you choose — each package shows the estimated delivery days on the photographer's profile (typically 3–14 days). Once ready, you'll receive a link to a private, password-protected gallery. You'll first see watermarked previews to review the photos. Once you approve the delivery, you'll get access to the full-resolution images and can download everything as a ZIP archive."
       },
       "notHappy": {
         "question": "What if I'm not happy with the photos?",
