@@ -16,7 +16,6 @@ interface PackageProps {
     delivery_days?: number;
   };
   photographerSlug: string;
-  unavailableUntil?: string | null; // YYYY-MM-DD of next available day, null = available
 }
 
 function formatDescription(desc: string) {
@@ -53,7 +52,7 @@ function formatDescription(desc: string) {
   return <p className="text-sm text-gray-500">{desc}</p>;
 }
 
-export function PackageCard({ pkg, photographerSlug, unavailableUntil }: PackageProps) {
+export function PackageCard({ pkg, photographerSlug }: PackageProps) {
   const [expanded, setExpanded] = useState(false);
   const t = useTranslations("photographers.package");
   const tc = useTranslations("common");
@@ -120,27 +119,16 @@ export function PackageCard({ pkg, photographerSlug, unavailableUntil }: Package
         </>
       )}
 
-      {unavailableUntil ? (
-        <div className="mt-4">
-          <span className="block w-full cursor-not-allowed rounded-xl bg-gray-200 px-4 py-2.5 text-center text-sm font-semibold text-gray-400">
-            {t("bookThisPackage")}
-          </span>
-          <p className="mt-1.5 text-center text-xs text-gray-400">
-            {t("fullyBookedUntil", { date: new Date(unavailableUntil + "T12:00:00").toLocaleDateString("en-GB", { month: "short", day: "numeric" }) })}
-          </p>
-        </div>
-      ) : (
-        <Link
-          href={`/book/${photographerSlug}?package=${pkg.id}`}
-          className={`mt-4 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition ${
-            pkg.is_popular
-              ? "bg-primary-600 text-white hover:bg-primary-700"
-              : "bg-gray-900 text-white hover:bg-gray-800"
-          }`}
-        >
-          {t("bookThisPackage")}
-        </Link>
-      )}
+      <Link
+        href={`/book/${photographerSlug}?package=${pkg.id}`}
+        className={`mt-4 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition ${
+          pkg.is_popular
+            ? "bg-primary-600 text-white hover:bg-primary-700"
+            : "bg-gray-900 text-white hover:bg-gray-800"
+        }`}
+      >
+        {t("bookThisPackage")}
+      </Link>
     </div>
   );
 }

@@ -2,6 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 
+export interface UnavailableRange {
+  date_from: string;
+  date_to: string;
+}
+
 interface DatePickerProps {
   value: string; // YYYY-MM-DD
   onChange: (value: string) => void;
@@ -10,6 +15,7 @@ interface DatePickerProps {
   label?: string;
   required?: boolean;
   placeholder?: string;
+  unavailableRanges?: UnavailableRange[];
 }
 
 const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
@@ -37,7 +43,7 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export default function DatePicker({ value, onChange, min, max, label, required, placeholder }: DatePickerProps) {
+export default function DatePicker({ value, onChange, min, max, label, required, placeholder, unavailableRanges }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -82,6 +88,11 @@ export default function DatePicker({ value, onChange, min, max, label, required,
     if (min && dateStr < min) return true;
     if (max && dateStr > max) return true;
     return false;
+  }
+
+  function isUnavailable(dateStr: string) {
+    if (!unavailableRanges) return false;
+    return unavailableRanges.some((r) => dateStr >= r.date_from && dateStr <= r.date_to);
   }
 
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
@@ -146,34 +157,43 @@ export default function DatePicker({ value, onChange, min, max, label, required,
               const isSelected = dateStr === value;
               const isToday = dateStr === todayStr;
               const disabled = isDisabled(dateStr);
+              const unavailable = !disabled && isUnavailable(dateStr);
 
               return (
-                <button
-                  key={dateStr}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => {
-                    onChange(dateStr);
-                    setOpen(false);
-                  }}
-                  className={`relative flex h-10 w-full items-center justify-center rounded-lg text-sm font-medium transition
-                    ${disabled ? "cursor-not-allowed text-gray-200" : "cursor-pointer hover:bg-primary-50"}
-                    ${isSelected ? "bg-primary-600 text-white hover:bg-primary-700" : ""}
-                    ${isToday && !isSelected ? "font-bold text-primary-600" : ""}
-                    ${!isSelected && !disabled && !isToday ? "text-gray-700" : ""}
-                  `}
-                >
-                  {day}
-                  {isToday && !isSelected && (
-                    <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary-500" />
+                <div key={dateStr} className="group/day relative">
+                  <button
+                    type="button"
+                    disabled={disabled || unavailable}
+                    onClick={() => {
+                      onChange(dateStr);
+                      setOpen(false);
+                    }}
+                    className={`relative flex h-10 w-full items-center justify-center rounded-lg text-sm font-medium transition
+                      ${disabled ? "cursor-not-allowed text-gray-200" : ""}
+                      ${unavailable ? "cursor-not-allowed bg-gray-50 text-gray-300 line-through" : ""}
+                      ${!disabled && !unavailable ? "cursor-pointer hover:bg-primary-50" : ""}
+                      ${isSelected ? "bg-primary-600 text-white hover:bg-primary-700" : ""}
+                      ${isToday && !isSelected && !unavailable ? "font-bold text-primary-600" : ""}
+                      ${!isSelected && !disabled && !unavailable && !isToday ? "text-gray-700" : ""}
+                    `}
+                  >
+                    {day}
+                    {isToday && !isSelected && !unavailable && (
+                      <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary-500" />
+                    )}
+                  </button>
+                  {unavailable && (
+                    <div className="pointer-events-none absolute -top-8 left-1/2 z-50 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-[10px] text-white group-hover/day:block">
+                      Unavailable
+                    </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
 
           {/* Today shortcut */}
-          {!isDisabled(todayStr) && (
+          {!isDisabled(todayStr) && !isUnavailable(todayStr) && (
             <button
               type="button"
               onClick={() => {

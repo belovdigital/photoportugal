@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
 import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
-import DatePicker from "@/components/ui/DatePicker";
+import DatePicker, { UnavailableRange } from "@/components/ui/DatePicker";
 
 interface Package {
   id: string;
@@ -47,6 +47,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [flexibleDateFrom, setFlexibleDateFrom] = useState("");
   const [flexibleDateTo, setFlexibleDateTo] = useState("");
+  const [unavailableRanges, setUnavailableRanges] = useState<UnavailableRange[]>([]);
   const [groupSize, setGroupSize] = useState("2");
   const [occasion, setOccasion] = useState("");
   const [message, setMessage] = useState("");
@@ -73,6 +74,11 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             if (data.locations?.length > 0) {
               setSelectedLocation(data.locations[0].slug);
             }
+            // Fetch photographer unavailability
+            fetch(`/api/availability?photographer_id=${data.id}`)
+              .then((r) => r.json())
+              .then((ranges) => setUnavailableRanges(ranges))
+              .catch(() => {});
           }
           setLoading(false);
         })
@@ -271,6 +277,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 onChange={setShootDate}
                 min={new Date().toISOString().split("T")[0]}
                 required={!flexibleDate}
+                unavailableRanges={unavailableRanges}
                 placeholder={t("form.selectDate")}
               />
               <div>

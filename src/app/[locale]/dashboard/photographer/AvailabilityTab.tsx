@@ -64,8 +64,12 @@ export function AvailabilityTab() {
       setReason("");
       fetchRanges();
     } else {
-      const data = await res.json();
-      setError(data.error || "Failed to save");
+      try {
+        const data = await res.json();
+        setError(data.error || "Failed to save");
+      } catch {
+        setError(`Failed to save (${res.status})`);
+      }
     }
   }
 

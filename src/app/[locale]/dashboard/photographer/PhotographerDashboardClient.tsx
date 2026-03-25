@@ -28,7 +28,6 @@ import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import { Avatar } from "@/components/ui/Avatar";
 import { parsePhone } from "@/lib/phone-codes";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { AvailabilityTab } from "./AvailabilityTab";
 
 interface Profile {
   id: string;
@@ -101,7 +100,7 @@ interface LocationOption {
   region: string;
 }
 
-type Tab = "profile" | "portfolio" | "packages" | "bookings" | "availability";
+type Tab = "profile" | "portfolio" | "packages" | "bookings";
 
 export function PhotographerDashboardClient({
   profile,
@@ -124,7 +123,7 @@ export function PhotographerDashboardClient({
   const [activeTab, setActiveTabState] = useState<Tab>(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash.replace("#", "") as Tab;
-      if (["profile", "portfolio", "packages", "bookings", "availability"].includes(hash)) return hash;
+      if (["profile", "portfolio", "packages", "bookings"].includes(hash)) return hash;
     }
     return initialTab || "profile";
   });
@@ -560,7 +559,6 @@ export function PhotographerDashboardClient({
     { key: "profile", label: t("tabProfile") },
     { key: "portfolio", label: t("tabPortfolio", { count: portfolioItems.length }) },
     { key: "packages", label: t("tabPackages", { count: localPackages.length }) },
-    { key: "availability", label: t("tabAvailability") },
   ];
 
   return (
@@ -660,40 +658,40 @@ export function PhotographerDashboardClient({
               <div className="mt-1 flex gap-2">
                 <select value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)}
                   className="rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-primary-500 w-24">
-                  <option value="+1">+1</option>
-                  <option value="+7">+7</option>
-                  <option value="+27">+27</option>
-                  <option value="+30">+30</option>
-                  <option value="+31">+31</option>
-                  <option value="+32">+32</option>
-                  <option value="+33">+33</option>
-                  <option value="+34">+34</option>
-                  <option value="+39">+39</option>
-                  <option value="+41">+41</option>
-                  <option value="+43">+43</option>
-                  <option value="+44">+44</option>
-                  <option value="+45">+45</option>
-                  <option value="+46">+46</option>
-                  <option value="+47">+47</option>
-                  <option value="+48">+48</option>
-                  <option value="+49">+49</option>
-                  <option value="+52">+52</option>
-                  <option value="+55">+55</option>
-                  <option value="+60">+60</option>
-                  <option value="+61">+61</option>
-                  <option value="+65">+65</option>
-                  <option value="+66">+66</option>
-                  <option value="+81">+81</option>
-                  <option value="+82">+82</option>
-                  <option value="+86">+86</option>
-                  <option value="+90">+90</option>
-                  <option value="+91">+91</option>
-                  <option value="+351">+351</option>
-                  <option value="+353">+353</option>
-                  <option value="+380">+380</option>
-                  <option value="+966">+966</option>
-                  <option value="+971">+971</option>
-                  <option value="+972">+972</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+7">🇷🇺 +7</option>
+                  <option value="+27">🇿🇦 +27</option>
+                  <option value="+30">🇬🇷 +30</option>
+                  <option value="+31">🇳🇱 +31</option>
+                  <option value="+32">🇧🇪 +32</option>
+                  <option value="+33">🇫🇷 +33</option>
+                  <option value="+34">🇪🇸 +34</option>
+                  <option value="+39">🇮🇹 +39</option>
+                  <option value="+41">🇨🇭 +41</option>
+                  <option value="+43">🇦🇹 +43</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+45">🇩🇰 +45</option>
+                  <option value="+46">🇸🇪 +46</option>
+                  <option value="+47">🇳🇴 +47</option>
+                  <option value="+48">🇵🇱 +48</option>
+                  <option value="+49">🇩🇪 +49</option>
+                  <option value="+52">🇲🇽 +52</option>
+                  <option value="+55">🇧🇷 +55</option>
+                  <option value="+60">🇲🇾 +60</option>
+                  <option value="+61">🇦🇺 +61</option>
+                  <option value="+65">🇸🇬 +65</option>
+                  <option value="+66">🇹🇭 +66</option>
+                  <option value="+81">🇯🇵 +81</option>
+                  <option value="+82">🇰🇷 +82</option>
+                  <option value="+86">🇨🇳 +86</option>
+                  <option value="+90">🇹🇷 +90</option>
+                  <option value="+91">🇮🇳 +91</option>
+                  <option value="+351">🇵🇹 +351</option>
+                  <option value="+353">🇮🇪 +353</option>
+                  <option value="+380">🇺🇦 +380</option>
+                  <option value="+966">🇸🇦 +966</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+972">🇮🇱 +972</option>
                 </select>
                 <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d]/g, ""))}
                   placeholder=""
@@ -1257,10 +1255,6 @@ export function PhotographerDashboardClient({
           </div>
         )}
 
-        {/* === AVAILABILITY TAB === */}
-        {activeTab === "availability" && (
-          <AvailabilityTab />
-        )}
       </div>
     </div>
   );
