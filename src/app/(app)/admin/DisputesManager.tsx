@@ -108,13 +108,16 @@ export function DisputesManager() {
                     <span className="text-xs text-gray-400">
                       {new Date(d.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </span>
+                    {(d.status === "open" || d.status === "under_review") && (
+                      <SlaTimer createdAt={d.created_at} />
+                    )}
                   </div>
                   <p className="mt-2 text-sm font-semibold text-gray-900">
                     {d.client_name} vs {d.photographer_name}
                   </p>
                   <p className="text-xs text-gray-500">
                     {REASON_LABELS[d.reason] || d.reason}
-                    {d.total_price ? ` — €${d.total_price}` : ""}
+                    {d.total_price ? ` — €${Math.round(Number(d.total_price))}` : ""}
                     {d.shoot_date ? ` — ${new Date(d.shoot_date).toLocaleDateString()}` : ""}
                   </p>
                   <p className="mt-2 text-sm text-gray-600">{d.description}</p>
@@ -177,7 +180,7 @@ export function DisputesManager() {
                     step="0.01"
                     value={refundAmount}
                     onChange={(e) => setRefundAmount(e.target.value)}
-                    placeholder={selected.total_price ? `Max: €${selected.total_price}` : ""}
+                    placeholder={selected.total_price ? `Max: €${Math.round(Number(selected.total_price))}` : ""}
                     className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-primary-500"
                   />
                 </div>
@@ -214,5 +217,25 @@ export function DisputesManager() {
         </div>
       )}
     </div>
+  );
+}
+
+function SlaTimer({ createdAt }: { createdAt: string }) {
+  const hours = Math.floor((Date.now() - new Date(createdAt).getTime()) / 3600000);
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+
+  const label = days > 0 ? `${days}d ${remainingHours}h open` : `${hours}h open`;
+  const isUrgent = hours >= 48;
+  const isWarning = hours >= 24 && hours < 48;
+
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+      isUrgent ? "bg-red-100 text-red-700" :
+      isWarning ? "bg-orange-100 text-orange-700" :
+      "bg-gray-100 text-gray-500"
+    }`}>
+      {label}
+    </span>
   );
 }

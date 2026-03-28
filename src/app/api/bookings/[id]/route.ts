@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, withTransaction } from "@/lib/db";
-import { sendBookingConfirmationWithPayment, sendEmail } from "@/lib/email";
+import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 
@@ -152,7 +152,7 @@ export async function PATCH(
           }
         }
 
-        const totalPaid = (cancelInfo?.total_price ?? 0) + (cancelInfo?.service_fee ?? 0);
+        const totalPaid = Number(cancelInfo?.total_price ?? 0) + Number(cancelInfo?.service_fee ?? 0);
         const refundAmount = Math.round((totalPaid * refundPercent) / 100 * 100) / 100; // round to cents
 
         // Issue Stripe refund (skip if no refund due)
@@ -219,6 +219,11 @@ export async function PATCH(
               <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
             </div>`
           );
+
+          // Notify admin
+          sendAdminBookingCancelledNotification(
+            cancelInfo.client_name, cancelInfo.photographer_name, cancelledBy, refundAmount
+          ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
         }
 
         return NextResponse.json({ success: true, refunded: refundPercent > 0, refundPercent });
@@ -277,6 +282,11 @@ export async function PATCH(
               <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
             </div>`
           );
+
+          // Notify admin
+          sendAdminBookingCancelledNotification(
+            cancelInfo.client_name, cancelInfo.photographer_name, cancelledBy, null
+          ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
         }
       } catch (emailErr) {
         console.error("[bookings] cancellation email error:", emailErr);
@@ -327,6 +337,15 @@ export async function PATCH(
               const payment = calculatePayment(bookingDetails.total_price, bookingDetails.photographer_plan);
               clientTotal = payment.totalClientPays;
 
+              // Safety check: totalClientPays must be greater than package price
+              const stripeAmount = Math.round(payment.totalClientPays * 100);
+              const packageAmount = Math.round(bookingDetails.total_price * 100);
+              console.log(`[bookings] Payment calc: package=${packageAmount}c, serviceFee=${Math.round(payment.serviceFee * 100)}c, total=${stripeAmount}c, plan=${bookingDetails.photographer_plan}`);
+              if (stripeAmount <= packageAmount) {
+                console.error(`[bookings] BUG: Stripe amount ${stripeAmount} should be > package ${packageAmount}. Recalculating...`);
+                clientTotal = bookingDetails.total_price * 1.10;
+              }
+
               // Get or create Stripe customer
               let customerId = bookingDetails.stripe_customer_id;
               if (!customerId) {
@@ -352,7 +371,7 @@ export async function PATCH(
                       name: `${bookingDetails.package_name || "Photoshoot"} with ${bookingDetails.photographer_name}`,
                       description: "Photo Portugal photoshoot session",
                     },
-                    unit_amount: Math.round(payment.totalClientPays * 100),
+                    unit_amount: Math.round(clientTotal! * 100),
                   },
                   quantity: 1,
                 }],
@@ -412,7 +431,7 @@ export async function PATCH(
             bookingDetails.photographer_name,
             bookingDetails.shoot_date,
             paymentUrl,
-            clientTotal ?? bookingDetails.total_price
+            clientTotal ?? Number(bookingDetails.total_price)
           );
         }
       } catch (emailErr) {

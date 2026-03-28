@@ -197,7 +197,21 @@ export function OnboardingChecklist({
             <p className="mt-1 text-sm text-gray-500">
               {t("stepsProgress", { completed: completedCount, total: totalSteps })}
             </p>
-            {role === "photographer" && !allDone && (
+            {role === "photographer" && !allDone && createdAt && (
+              (() => {
+                const daysLeft = Math.max(0, 7 - Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
+                return (
+                  <p className={`mt-1 text-xs font-medium ${daysLeft <= 2 ? "text-red-500" : "text-amber-600"}`}>
+                    {daysLeft <= 0
+                      ? t("deadlineExpired")
+                      : daysLeft === 1
+                        ? t("deadlineTomorrow")
+                        : t("deadlineDays", { days: daysLeft })}
+                  </p>
+                );
+              })()
+            )}
+            {role === "photographer" && !allDone && !createdAt && (
               <p className="mt-1 text-xs text-gray-400">
                 {t("completeAllForApproval")}
               </p>

@@ -6,6 +6,7 @@ import { DeliveryGalleryClient } from "./DeliveryGalleryClient";
 import { Avatar } from "@/components/ui/Avatar";
 import { DisputeForm } from "@/components/ui/DisputeForm";
 import { trackDeliveryAccepted } from "@/lib/analytics";
+import { normalizeName } from "@/lib/format-name";
 
 interface Photo {
   id: string;
@@ -127,8 +128,8 @@ export function DeliveryPageClient({
       <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="w-full max-w-sm">
           <div className="text-center">
-            <Avatar src={photographerAvatar} fallback={photographerName} size="lg" className="mx-auto" />
-            <h1 className="mt-4 font-display text-xl font-bold text-gray-900">{photographerName}</h1>
+            <Avatar src={photographerAvatar} fallback={normalizeName(photographerName)} size="lg" className="mx-auto" />
+            <h1 className="mt-4 font-display text-xl font-bold text-gray-900">{normalizeName(photographerName)}</h1>
             <p className="mt-1 text-sm text-gray-500">{t("sharedPhotosWithYou")}</p>
           </div>
 
@@ -181,16 +182,16 @@ export function DeliveryPageClient({
       <div className="text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-primary-100">
           {photographerAvatar ? (
-            <img src={photographerAvatar} alt={photographerName} className="h-full w-full object-cover" />
+            <img src={photographerAvatar} alt={normalizeName(photographerName)} className="h-full w-full object-cover" />
           ) : (
-            <span className="text-2xl font-bold text-primary-600">{photographerName.charAt(0)}</span>
+            <span className="text-2xl font-bold text-primary-600">{normalizeName(photographerName).charAt(0)}</span>
           )}
         </div>
         <h1 className="mt-4 font-display text-2xl font-bold text-gray-900 sm:text-3xl">
           {t("photosReady")}
         </h1>
         <p className="mt-2 text-gray-500">
-          {gallery.photographer_name} &middot;{" "}
+          {normalizeName(gallery.photographer_name)} &middot;{" "}
           {gallery.shoot_date
             ? new Date(gallery.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })
             : "Photo Portugal"}

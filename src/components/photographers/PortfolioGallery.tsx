@@ -20,9 +20,11 @@ interface LocationOption {
 export function PortfolioGallery({
   items,
   locations,
+  photographerName,
 }: {
   items: PortfolioItem[];
   locations: LocationOption[];
+  photographerName?: string;
 }) {
   const t = useTranslations("photographers.portfolioGallery");
   const [filter, setFilter] = useState({ location: "", shootType: "" });
@@ -30,6 +32,19 @@ export function PortfolioGallery({
 
   const usedLocations = [...new Set(items.map((p) => p.location_slug).filter(Boolean))] as string[];
   const usedShootTypes = [...new Set(items.map((p) => p.shoot_type).filter(Boolean))] as string[];
+
+  function describePhoto(item: PortfolioItem): string {
+    if (item.caption) return item.caption;
+    const parts: string[] = [];
+    if (item.shoot_type) parts.push(item.shoot_type.replace(/-/g, " "));
+    parts.push("photoshoot");
+    if (item.location_slug) {
+      const loc = locations.find((l) => l.slug === item.location_slug);
+      if (loc) parts.push(`in ${loc.name}`);
+    }
+    if (photographerName) parts.push(`by ${photographerName}`);
+    return parts.join(" ");
+  }
   const hasFilters = usedLocations.length > 0 || usedShootTypes.length > 0;
 
   const filtered = items.filter((item) => {
@@ -116,7 +131,7 @@ export function PortfolioGallery({
           >
             <img
               src={item.url.startsWith("/uploads/") ? `/api/img/${item.url.replace("/uploads/", "")}?w=1200&q=85&f=webp` : item.url}
-              alt={item.caption || t("photoAlt")}
+              alt={describePhoto(item)}
               loading="lazy"
               className="w-full"
             />
@@ -169,7 +184,7 @@ export function PortfolioGallery({
             return (
               <img
                 src={url}
-                alt={filtered[lightbox].caption || t("photoAlt")}
+                alt={describePhoto(filtered[lightbox])}
                 className="max-h-[90vh] max-w-[90vw] object-contain"
                 onClick={(e) => e.stopPropagation()}
               />

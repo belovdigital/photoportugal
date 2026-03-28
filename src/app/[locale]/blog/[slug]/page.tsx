@@ -6,6 +6,7 @@ import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { localeAlternates } from "@/lib/seo";
 import { locations } from "@/lib/locations-data";
+import { shootTypes } from "@/lib/shoot-types-data";
 import sanitize from "sanitize-html";
 
 export const revalidate = 300; // ISR: refresh every 5 minutes
@@ -125,17 +126,26 @@ function renderHtmlContent(content: string) {
 }
 
 function renderMarkdownContent(content: string) {
-  const blocks = content.split(/\n\n+/);
+  // Split into lines and process sequentially to handle multi-line structures
+  const lines = content.split("\n");
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  let key = 0;
 
-  return blocks.map((block, i) => {
-    const trimmed = block.trim();
-    if (!trimmed) return null;
+  while (i < lines.length) {
+    const line = lines[i].trimEnd();
+
+    // Skip empty lines
+    if (!line.trim()) {
+      i++;
+      continue;
+    }
 
     // Image: ![alt text](url)
-    const imageMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    const imageMatch = line.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
     if (imageMatch) {
-      return (
-        <figure key={i} className="my-8">
+      elements.push(
+        <figure key={key++} className="my-8">
           <OptimizedImage
             src={imageMatch[2]}
             alt={imageMatch[1]}
@@ -144,51 +154,162 @@ function renderMarkdownContent(content: string) {
           />
         </figure>
       );
+      i++;
+      continue;
     }
 
     // H2
-    if (trimmed.startsWith("## ")) {
-      return (
-        <h2
-          key={i}
-          className="mt-10 mb-4 font-display text-2xl font-bold text-gray-900 sm:text-3xl"
-        >
-          {formatInline(trimmed.slice(3))}
+    if (line.trim().startsWith("## ")) {
+      elements.push(
+        <h2 key={key++} className="mt-10 mb-4 font-display text-2xl font-bold text-gray-900 sm:text-3xl">
+          {formatInline(line.trim().slice(3))}
         </h2>
       );
+      i++;
+      continue;
     }
 
     // H3
-    if (trimmed.startsWith("### ")) {
-      return (
-        <h3
-          key={i}
-          className="mt-8 mb-3 font-display text-xl font-bold text-gray-900"
-        >
-          {formatInline(trimmed.slice(4))}
+    if (line.trim().startsWith("### ")) {
+      elements.push(
+        <h3 key={key++} className="mt-8 mb-3 font-display text-xl font-bold text-gray-900">
+          {formatInline(line.trim().slice(4))}
         </h3>
       );
+      i++;
+      continue;
     }
 
-    // List
-    const lines = trimmed.split("\n");
-    if (lines.every((l) => l.trim().startsWith("- "))) {
-      return (
-        <ul key={i} className="my-4 list-disc space-y-1 pl-6 text-gray-600">
-          {lines.map((line, j) => (
-            <li key={j}>{formatInline(line.trim().slice(2))}</li>
+    // Horizontal rule
+    if (/^---+$/.test(line.trim())) {
+      elements.push(<hr key={key++} className="my-8 border-warm-200" />);
+      i++;
+      continue;
+    }
+
+    // Table: detect header row with pipes
+    if (line.trim().startsWith("|") && lines[i + 1]?.trim().startsWith("|") && /^\|[\s-:|]+\|$/.test(lines[i + 1].trim())) {
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      // Parse header
+      const headerCells = tableLines[0].split("|").filter(c => c.trim()).map(c => c.trim());
+      // Skip separator (tableLines[1])
+      // Parse body rows
+      const bodyRows = tableLines.slice(2).map(row =>
+        row.split("|").filter(c => c.trim() !== "" || c.includes(" ")).map(c => c.trim()).filter(Boolean)
+      );
+
+      elements.push(
+        <div key={key++} className="my-6 overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b-2 border-warm-300">
+                {headerCells.map((cell, ci) => (
+                  <th key={ci} className="px-4 py-3 text-left font-semibold text-gray-900 bg-warm-50">
+                    {formatInline(cell)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {bodyRows.map((row, ri) => (
+                <tr key={ri} className="border-b border-warm-200">
+                  {row.map((cell, ci) => (
+                    <td key={ci} className="px-4 py-3 text-gray-600">
+                      {formatInline(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    // Unordered list: collect consecutive lines starting with -
+    if (line.trim().startsWith("- ")) {
+      const listItems: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("- ")) {
+        listItems.push(lines[i].trim().slice(2));
+        i++;
+      }
+      elements.push(
+        <ul key={key++} className="my-4 list-disc space-y-2 pl-6 text-gray-600">
+          {listItems.map((item, j) => (
+            <li key={j}>{formatInline(item)}</li>
           ))}
         </ul>
       );
+      continue;
     }
 
-    // Paragraph
-    return (
-      <p key={i} className="my-4 text-gray-600 leading-relaxed">
-        {formatInline(trimmed)}
-      </p>
-    );
-  });
+    // Ordered list: collect consecutive lines starting with number.
+    if (/^\d+\.\s/.test(line.trim())) {
+      const listItems: string[] = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
+        listItems.push(lines[i].trim().replace(/^\d+\.\s/, ""));
+        i++;
+      }
+      elements.push(
+        <ol key={key++} className="my-4 list-decimal space-y-2 pl-6 text-gray-600">
+          {listItems.map((item, j) => (
+            <li key={j}>{formatInline(item)}</li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
+
+    // Blockquote
+    if (line.trim().startsWith("> ")) {
+      const quoteLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("> ")) {
+        quoteLines.push(lines[i].trim().slice(2));
+        i++;
+      }
+      elements.push(
+        <blockquote key={key++} className="my-6 border-l-4 border-primary-300 pl-4 text-gray-600 italic">
+          {formatInline(quoteLines.join(" "))}
+        </blockquote>
+      );
+      continue;
+    }
+
+    // Paragraph: collect consecutive non-empty, non-special lines
+    // Lines starting with ** are treated as separate paragraphs (e.g. "**Best for:** ...")
+    const paraLines: string[] = [];
+    while (
+      i < lines.length &&
+      lines[i].trim() &&
+      !lines[i].trim().startsWith("## ") &&
+      !lines[i].trim().startsWith("### ") &&
+      !lines[i].trim().startsWith("- ") &&
+      !lines[i].trim().startsWith("|") &&
+      !lines[i].trim().startsWith("> ") &&
+      !/^\d+\.\s/.test(lines[i].trim()) &&
+      !/^---+$/.test(lines[i].trim()) &&
+      !lines[i].trim().match(/^!\[/) &&
+      // Break paragraph if next line starts with bold (new semantic block)
+      !(paraLines.length > 0 && lines[i].trim().startsWith("**"))
+    ) {
+      paraLines.push(lines[i].trim());
+      i++;
+    }
+    if (paraLines.length > 0) {
+      elements.push(
+        <p key={key++} className="my-4 text-gray-600 leading-relaxed">
+          {formatInline(paraLines.join(" "))}
+        </p>
+      );
+    }
+  }
+
+  return elements;
 }
 
 function renderContent(content: string) {
@@ -224,21 +345,28 @@ function formatInline(text: string): React.ReactNode {
       if (boldIdx > 0) parts.push(remaining.slice(0, boldIdx));
       parts.push(
         <strong key={key++} className="font-semibold text-gray-900">
-          {boldMatch[1]}
+          {formatInline(boldMatch[1])}
         </strong>
       );
       remaining = remaining.slice(boldIdx + boldMatch[0].length);
     } else if (minIdx === linkIdx && linkMatch) {
       if (linkIdx > 0) parts.push(remaining.slice(0, linkIdx));
+      const isInternal = linkMatch[2].startsWith("/");
       parts.push(
-        <a key={key++} href={linkMatch[2]} className="text-primary-600 underline transition hover:text-primary-700">
-          {linkMatch[1]}
-        </a>
+        isInternal ? (
+          <a key={key++} href={linkMatch[2]} className="text-primary-600 underline transition hover:text-primary-700">
+            {formatInline(linkMatch[1])}
+          </a>
+        ) : (
+          <a key={key++} href={linkMatch[2]} className="text-primary-600 underline transition hover:text-primary-700" target="_blank" rel="noopener noreferrer">
+            {formatInline(linkMatch[1])}
+          </a>
+        )
       );
       remaining = remaining.slice(linkIdx + linkMatch[0].length);
     } else if (italicMatch) {
       if (italicIdx > 0) parts.push(remaining.slice(0, italicIdx));
-      parts.push(<em key={key++}>{italicMatch[1]}</em>);
+      parts.push(<em key={key++}>{formatInline(italicMatch[1])}</em>);
       remaining = remaining.slice(italicIdx + italicMatch[0].length);
     }
   }
@@ -262,18 +390,65 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
-  // Fetch related posts (other published posts, exclude current)
-  const relatedPosts = await query<{
+  // Fetch related posts — prefer posts sharing locations/keywords, fallback to recent
+  const allOtherPosts = await query<{
     id: string;
     slug: string;
     title: string;
     excerpt: string | null;
     cover_image_url: string | null;
     published_at: string;
+    target_keywords: string | null;
+    content: string;
   }>(
-    "SELECT id, slug, title, excerpt, cover_image_url, published_at FROM blog_posts WHERE is_published = TRUE AND id != $1 ORDER BY published_at DESC LIMIT 3",
+    "SELECT id, slug, title, excerpt, cover_image_url, published_at, target_keywords, content FROM blog_posts WHERE is_published = TRUE AND id != $1 ORDER BY published_at DESC",
     [post.id]
   );
+
+  // Score each post by relevance to current post
+  const currentText = (post.title + " " + (post.target_keywords || "")).toLowerCase();
+  const currentLocations = locations.filter(
+    (loc) => currentText.includes(loc.name.toLowerCase()) || post.content.toLowerCase().includes(loc.name.toLowerCase())
+  );
+  const currentShootTypes = shootTypes.filter(
+    (st) => currentText.includes(st.name.toLowerCase()) || currentText.includes(st.slug)
+  );
+
+  const scoredPosts = allOtherPosts.map((p) => {
+    let score = 0;
+    const pText = (p.title + " " + (p.target_keywords || "")).toLowerCase();
+
+    // +3 for each shared location
+    for (const loc of currentLocations) {
+      if (pText.includes(loc.name.toLowerCase()) || p.content.toLowerCase().includes(loc.name.toLowerCase())) {
+        score += 3;
+      }
+    }
+
+    // +2 for each shared shoot type
+    for (const st of currentShootTypes) {
+      if (pText.includes(st.name.toLowerCase()) || pText.includes(st.slug)) {
+        score += 2;
+      }
+    }
+
+    // +1 for each shared keyword
+    if (post.target_keywords && p.target_keywords) {
+      const currentKws = post.target_keywords.toLowerCase().split(",").map(k => k.trim());
+      const pKws = p.target_keywords.toLowerCase().split(",").map(k => k.trim());
+      for (const kw of currentKws) {
+        if (kw && pKws.some(pk => pk.includes(kw) || kw.includes(pk))) {
+          score += 1;
+        }
+      }
+    }
+
+    return { ...p, score };
+  });
+
+  // Sort by score desc, then by date desc; pick top 3
+  scoredPosts.sort((a, b) => b.score - a.score || new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+  const relatedPosts = scoredPosts.slice(0, 3).map(({ score, target_keywords, content: _c, ...rest }) => rest);
 
   // Find locations mentioned in post title or content for internal linking
   const mentionedLocations = locations.filter(
@@ -281,6 +456,12 @@ export default async function BlogPostPage({ params }: PageProps) {
       post.title.toLowerCase().includes(loc.name.toLowerCase()) ||
       post.content.toLowerCase().includes(loc.name.toLowerCase())
   ).slice(0, 4);
+
+  // Find shoot types mentioned in post for internal linking
+  const contentLower = (post.title + " " + post.content).toLowerCase();
+  const mentionedShootTypes = shootTypes.filter(
+    (st) => contentLower.includes(st.name.toLowerCase()) || contentLower.includes(st.slug)
+  ).slice(0, 3);
 
   const publishedDate = new Date(post.published_at);
 
@@ -418,6 +599,30 @@ export default async function BlogPostPage({ params }: PageProps) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     {loc.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Related Shoot Types — internal links based on shoot type mentions */}
+          {mentionedShootTypes.length > 0 && (
+            <div className={`${mentionedLocations.length > 0 ? "mt-6" : "mt-12 border-t border-warm-200 pt-8"}`}>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+                Related Photoshoots
+              </h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {mentionedShootTypes.map((st) => (
+                  <Link
+                    key={st.slug}
+                    href={`/photoshoots/${st.slug}`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-accent-200 bg-accent-50 px-4 py-2 text-sm font-medium text-accent-700 transition hover:bg-accent-100 hover:border-accent-300"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {st.name} Photography
                   </Link>
                 ))}
               </div>

@@ -6,10 +6,13 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 const SHOOT_TYPES = [
   { key: "couples", image: "photo-1529634597503-139d3726fed5", shoot: "Couples" },
   { key: "family", image: "photo-1609220136736-443140cffec6", shoot: "Family" },
+  { key: "proposal", image: "photo-1515934751635-c81c6bc9a2d8", shoot: "Proposal" },
   { key: "honeymoon", image: "photo-1519741497674-611481863552", shoot: "Honeymoon" },
+  { key: "elopement", image: "photo-1532712938310-34cb3982ef74", shoot: "Elopement" },
   { key: "solo", image: "photo-1494790108377-be9c29b29330", shoot: "Solo Portrait" },
   { key: "engagement", image: "photo-1522673607200-164d1b6ce486", shoot: "Engagement" },
   { key: "friends", image: "photo-1529156069898-49953e39b3ac", shoot: "Friends Trip" },
+  { key: "wedding", image: "photo-1606216794079-73f85bbd57d5", shoot: "Wedding" },
 ] as const;
 
 export async function ShootTypesSection() {
@@ -34,7 +37,7 @@ export async function ShootTypesSection() {
           {SHOOT_TYPES.map((type) => (
             <Link
               key={type.shoot}
-              href={`/photographers?shoot=${type.shoot}`}
+              href={`/photoshoots/${type.key}`}
               className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-gray-900 sm:aspect-[4/5]"
             >
               <OptimizedImage

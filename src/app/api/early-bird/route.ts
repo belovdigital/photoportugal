@@ -11,7 +11,7 @@ const TIERS = [
 export async function GET() {
   try {
     const countRow = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM photographer_profiles WHERE registration_number > 0"
+      "SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_test = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE"
     );
     const totalPhotographers = parseInt(countRow?.count || "0");
 

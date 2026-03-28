@@ -15,6 +15,7 @@ interface BlogPost {
   author: string;
   is_published: boolean;
   published_at: string | null;
+  scheduled_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -49,6 +50,8 @@ export function BlogManager() {
   const [targetKeywords, setTargetKeywords] = useState("");
   const [author, setAuthor] = useState("Photo Portugal");
   const [isPublished, setIsPublished] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [previewMode, setPreviewMode] = useState(false);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -81,6 +84,8 @@ export function BlogManager() {
     setTargetKeywords("");
     setAuthor("Photo Portugal");
     setIsPublished(false);
+    setScheduledAt("");
+    setPreviewMode(false);
     setError("");
     setEditingPost(null);
   };
@@ -109,6 +114,8 @@ export function BlogManager() {
         setTargetKeywords(fullPost.target_keywords || "");
         setAuthor(fullPost.author || "Photo Portugal");
         setIsPublished(fullPost.is_published);
+        setScheduledAt(fullPost.scheduled_at ? new Date(fullPost.scheduled_at).toISOString().slice(0, 16) : "");
+        setPreviewMode(false);
         setError("");
         setShowEditor(true);
       } else {
@@ -150,6 +157,9 @@ export function BlogManager() {
       formData.append("target_keywords", targetKeywords);
       formData.append("author", author);
       formData.append("is_published", isPublished.toString());
+      if (scheduledAt) {
+        formData.append("scheduled_at", new Date(scheduledAt).toISOString());
+      }
 
       if (coverFile) {
         formData.append("cover_image", coverFile);
@@ -266,18 +276,44 @@ export function BlogManager() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Content *</label>
-            <p className="text-xs text-gray-400 mb-2">
-              Use ## for H2, ### for H3, **bold**, *italic*, - for lists. Separate paragraphs with blank lines.
-            </p>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write your blog post content..."
-              rows={15}
-              required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">Content *</label>
+              <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode(false)}
+                  className={`px-3 py-1 text-xs font-medium ${!previewMode ? "bg-primary-600 text-white" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  Write
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode(true)}
+                  className={`px-3 py-1 text-xs font-medium ${previewMode ? "bg-primary-600 text-white" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  Preview
+                </button>
+              </div>
+            </div>
+            {!previewMode ? (
+              <>
+                <p className="text-xs text-gray-400 mb-2">
+                  Use ## for H2, ### for H3, **bold**, *italic*, - for lists. Separate paragraphs with blank lines.
+                </p>
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Write your blog post content..."
+                  rows={15}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                />
+              </>
+            ) : (
+              <div className="min-h-[360px] rounded-lg border border-gray-300 bg-white p-4 prose prose-sm max-w-none overflow-y-auto">
+                {content ? <MarkdownPreview content={content} /> : <p className="text-gray-400 italic">Nothing to preview</p>}
+              </div>
+            )}
           </div>
 
           <div>
@@ -345,19 +381,35 @@ export function BlogManager() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
-            <label className="relative inline-flex cursor-pointer items-center">
-              <input
-                type="checkbox"
-                checked={isPublished}
-                onChange={(e) => setIsPublished(e.target.checked)}
-                className="peer sr-only"
-              />
-              <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-2 peer-focus:ring-primary-300" />
-            </label>
-            <span className="text-sm font-medium text-gray-700">
-              {isPublished ? "Published" : "Draft"}
-            </span>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  checked={isPublished}
+                  onChange={(e) => { setIsPublished(e.target.checked); if (e.target.checked) setScheduledAt(""); }}
+                  className="peer sr-only"
+                />
+                <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-2 peer-focus:ring-primary-300" />
+              </label>
+              <span className="text-sm font-medium text-gray-700">
+                {isPublished ? "Published" : "Draft"}
+              </span>
+            </div>
+            {!isPublished && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-500">Schedule:</label>
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                />
+                {scheduledAt && (
+                  <button type="button" onClick={() => setScheduledAt("")} className="text-xs text-red-500 hover:text-red-700">Clear</button>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -462,4 +514,82 @@ export function BlogManager() {
       </div>
     </section>
   );
+}
+
+/** Simple markdown-to-HTML preview — covers headings, bold, italic, lists, links, tables, blockquotes, images */
+function MarkdownPreview({ content }: { content: string }) {
+  const html = markdownToHtml(content);
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function markdownToHtml(md: string): string {
+  const lines = md.split("\n");
+  let html = "";
+  let inList = false;
+  let inTable = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Skip table separator rows
+    if (/^\|[\s\-:|]+\|$/.test(line.trim())) {
+      if (!inTable) { inTable = true; html += "<table class='border-collapse w-full text-sm my-3'><tbody>"; }
+      continue;
+    }
+
+    // Table rows
+    if (line.trim().startsWith("|") && line.trim().endsWith("|")) {
+      if (!inTable) { inTable = true; html += "<table class='border-collapse w-full text-sm my-3'><tbody>"; }
+      const cells = line.trim().slice(1, -1).split("|").map((c) => c.trim());
+      html += "<tr>" + cells.map((c) => `<td class='border border-gray-200 px-3 py-1.5'>${inlineMarkdown(c)}</td>`).join("") + "</tr>";
+      continue;
+    }
+    if (inTable) { inTable = false; html += "</tbody></table>"; }
+
+    // Empty line
+    if (line.trim() === "") {
+      if (inList) { inList = false; html += "</ul>"; }
+      continue;
+    }
+
+    // Headings
+    if (line.startsWith("### ")) { html += `<h3 class='text-lg font-bold mt-5 mb-2'>${inlineMarkdown(line.slice(4))}</h3>`; continue; }
+    if (line.startsWith("## ")) { html += `<h2 class='text-xl font-bold mt-6 mb-2'>${inlineMarkdown(line.slice(3))}</h2>`; continue; }
+    if (line.startsWith("# ")) { html += `<h1 class='text-2xl font-bold mt-6 mb-3'>${inlineMarkdown(line.slice(2))}</h1>`; continue; }
+
+    // Blockquote
+    if (line.startsWith("> ")) { html += `<blockquote class='border-l-4 border-primary-300 pl-4 my-3 text-gray-600 italic'>${inlineMarkdown(line.slice(2))}</blockquote>`; continue; }
+
+    // Unordered list
+    if (/^[-*] /.test(line.trim())) {
+      if (!inList) { inList = true; html += "<ul class='list-disc pl-5 my-2 space-y-1'>"; }
+      html += `<li>${inlineMarkdown(line.trim().slice(2))}</li>`;
+      continue;
+    }
+
+    // Numbered list
+    if (/^\d+\.\s/.test(line.trim())) {
+      if (!inList) { inList = true; html += "<ol class='list-decimal pl-5 my-2 space-y-1'>"; }
+      html += `<li>${inlineMarkdown(line.trim().replace(/^\d+\.\s/, ""))}</li>`;
+      continue;
+    }
+
+    if (inList) { inList = false; html += "</ul>"; }
+
+    // Paragraph
+    html += `<p class='my-2'>${inlineMarkdown(line)}</p>`;
+  }
+
+  if (inList) html += "</ul>";
+  if (inTable) html += "</tbody></table>";
+  return html;
+}
+
+function inlineMarkdown(text: string): string {
+  return text
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-lg max-w-full my-2" />')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary-600 underline">$1</a>')
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/`(.+?)`/g, '<code class="rounded bg-gray-100 px-1.5 py-0.5 text-xs">$1</code>');
 }

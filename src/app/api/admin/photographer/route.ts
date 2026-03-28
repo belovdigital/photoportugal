@@ -6,18 +6,28 @@ import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 
-async function verifyAdmin(): Promise<boolean> {
+async function verifyAdmin(): Promise<{ email: string } | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("admin_token")?.value;
-  if (!token) return false;
+  if (!token) return null;
   const data = verifyToken(token);
-  if (!data) return false;
+  if (!data) return null;
   const user = await queryOne<{ role: string }>("SELECT role FROM users WHERE email = $1", [data.email]);
-  return user?.role === "admin";
+  return user?.role === "admin" ? data : null;
+}
+
+async function logAudit(adminEmail: string, action: string, entityType: string, entityId?: string, entityName?: string, details?: string) {
+  try {
+    await queryOne(
+      `INSERT INTO admin_audit_log (action, entity_type, entity_id, entity_name, details, admin_email) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [action, entityType, entityId || null, entityName || null, details || null, adminEmail]
+    );
+  } catch (e) { console.error("[audit] log error:", e); }
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!(await verifyAdmin())) {
+  const admin = await verifyAdmin();
+  if (!admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -166,6 +176,10 @@ export async function PATCH(req: NextRequest) {
     );
     if (slugRow) revalidatePath(`/photographers/${slugRow.slug}`);
 
+    // Audit log
+    const changedFields = Object.entries(updates).filter(([k]) => k !== "is_deactivated").map(([k, v]) => `${k}=${v}`).join(", ");
+    await logAudit(admin.email, "update", "photographer", id, slugRow?.slug, changedFields);
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin] update error:", error);
@@ -175,7 +189,8 @@ export async function PATCH(req: NextRequest) {
 
 // Delete photographer (and their user account)
 export async function DELETE(req: NextRequest) {
-  if (!(await verifyAdmin())) {
+  const admin = await verifyAdmin();
+  if (!admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

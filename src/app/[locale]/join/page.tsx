@@ -2,6 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { queryOne } from "@/lib/db";
 import { StripeLogo } from "@/components/ui/StripeLogo";
 import { EarlyBirdCounter } from "./EarlyBirdCounter";
+import { EarningsCalculator } from "./EarningsCalculator";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import { COMMISSION_RATES, PLAN_PRICES } from "@/lib/stripe";
@@ -41,7 +42,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
 
   let totalPhotographers = 0;
   try {
-    const row = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.onboarding_completed = TRUE AND COALESCE(u.is_banned, FALSE) = FALSE");
+    const row = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_test = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE");
     totalPhotographers = parseInt(row?.count || "0");
   } catch {}
 
@@ -103,7 +104,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
             {t("badge")}
           </span>
           <h1 className="mt-6 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-            {t("heroTitle")}
+            {activeTierIndex === 0 ? t("heroTitle") : activeTierIndex === 1 ? t("heroTitleEarly") : activeTierIndex === 2 ? t("heroTitleFirst") : t("heroTitle")}
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-gray-300">
             {t("heroSubtitle")}
@@ -300,8 +301,38 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
         </p>
       </section>
 
+      {/* Earnings Calculator */}
+      <section className="mx-auto max-w-4xl px-4 pb-16 sm:px-6 sm:pb-24">
+        <div className="text-center">
+          <h2 className="font-display text-3xl font-bold text-gray-900">{t("calculator.title")}</h2>
+          <p className="mt-3 text-gray-500">{t("calculator.subtitle")}</p>
+        </div>
+        <EarningsCalculator />
+      </section>
+
+      {/* Founder testimonial */}
+      <section className="border-y border-warm-200 bg-warm-50">
+        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+          <div className="flex flex-col items-center text-center">
+            <img
+              src="/api/img/avatars/686ad75a-fa5b-4dcb-bdd7-7ec30d9e8910.jpg?w=160&q=85&f=webp"
+              alt="Kate Belova, founder of Photo Portugal"
+              className="h-20 w-20 rounded-full object-cover"
+            />
+            <blockquote className="mt-6 text-lg leading-relaxed text-gray-700 italic max-w-xl">
+              &ldquo;I built Photo Portugal because I know how hard it is for talented photographers to find consistent clients. This platform brings tourists directly to you — no chasing leads, no haggling over prices. You focus on what you love: creating beautiful photos.&rdquo;
+            </blockquote>
+            <p className="mt-4 font-semibold text-gray-900">Kate Belova</p>
+            <p className="text-sm text-gray-500">Founder &amp; Photographer, 10+ years experience</p>
+            <Link href="/photographers/kate-belova" className="mt-2 text-xs text-primary-600 hover:underline">
+              View Kate&apos;s profile →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* How it works */}
-      <section className="border-t border-warm-200 bg-warm-50">
+      <section className="bg-warm-50">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
           <div className="text-center">
             <h2 className="font-display text-3xl font-bold text-gray-900">{t("gettingStarted.title")}</h2>

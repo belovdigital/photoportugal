@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, getAdminEmail } from "@/lib/email";
 
 const TOPIC_LABELS: Record<string, string> = {
   clientSupport: "Client Support",
@@ -11,13 +11,17 @@ const TOPIC_LABELS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { topic, name, email, message, recipients } = await req.json();
+    const { topic, name, email, message } = await req.json();
 
     if (!topic || !name?.trim() || !email?.trim() || !message?.trim()) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
     const topicLabel = TOPIC_LABELS[topic] || topic;
+
+    // Get admin emails from DB settings — never trust client-provided recipients
+    const adminEmailStr = await getAdminEmail();
+    const recipients = adminEmailStr.split(",").map((e: string) => e.trim()).filter(Boolean);
 
     const emailBody = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">

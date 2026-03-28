@@ -10,6 +10,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
 import { PackageCard } from "@/components/ui/PackageCard";
 import { localeAlternates } from "@/lib/seo";
+import { normalizeName } from "@/lib/format-name";
 
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
@@ -38,7 +39,7 @@ async function getPhotographer(slug: string, isAdmin = false) {
       session_count: number;
       last_seen_at: string | null;
     }>(
-      `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
+      `SELECT p.id, p.slug, normalizeName(p.display_name), p.tagline, p.bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               p.experience_years, p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding, p.is_approved, p.plan,
               p.rating, p.review_count, p.session_count, u.last_seen_at
        FROM photographer_profiles p
@@ -70,9 +71,12 @@ async function getPhotographer(slug: string, isAdmin = false) {
       [profile.id]
     );
 
+    const planLimits: Record<string, number> = { free: 10, pro: 30, premium: 100 };
+    const photoLimit = planLimits[profile.plan] || 10;
+
     const portfolioItems = await query<{ url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }>(
-      "SELECT url, thumbnail_url, caption, location_slug, shoot_type FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC",
-      [profile.id]
+      "SELECT url, thumbnail_url, caption, location_slug, shoot_type FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC LIMIT $2",
+      [profile.id, photoLimit]
     );
 
     return {
@@ -102,8 +106,8 @@ export async function generateMetadata({
 
   const p = result.data;
   const locationNames = (p.locations || []).map((l: { name: string }) => l.name).join(", ");
-  const title = t("metaTitle", { name: p.display_name, locations: locationNames || "Portugal" });
-  const description = `${t("metaDescription", { name: p.display_name, locations: locationNames || "Portugal" })} ${p.tagline || ""}`.trim();
+  const title = t("metaTitle", { name: normalizeName(p.display_name), locations: locationNames || "Portugal" });
+  const description = `${t("metaDescription", { name: normalizeName(p.display_name), locations: locationNames || "Portugal" })} ${p.tagline || ""}`.trim();
   const rawImage = p.cover_url || p.avatar_url;
   const ogImage = rawImage ? `https://photoportugal.com/api/img/${rawImage.replace("/uploads/", "")}?w=1200&h=630&f=jpeg&q=80` : "https://photoportugal.com/og-image.png";
   return {
@@ -219,7 +223,7 @@ export default async function PhotographerProfilePage({
         starting_price: number | null; languages: string[];
         location_names: string[];
       }>(
-        `SELECT DISTINCT pp.id, pp.slug, pp.display_name, u.avatar_url, pp.cover_url,
+        `SELECT DISTINCT pp.id, pp.slug, pnormalizeName(p.display_name), u.avatar_url, pp.cover_url,
                 pp.tagline, pp.rating, pp.review_count, pp.languages,
                 (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price,
                 ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
@@ -241,11 +245,11 @@ export default async function PhotographerProfilePage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    name: photographer.display_name,
+    name: normalizeName(photographer.display_name),
     description: photographer.bio || photographer.tagline,
     url: `https://photoportugal.com/photographers/${slug}`,
     image: photographer.cover_url || photographer.avatar_url || undefined,
-    priceRange: photographer.packages?.length > 0 ? `From €${Math.min(...photographer.packages.map((pkg: { price: number }) => pkg.price))}` : undefined,
+    priceRange: photographer.packages?.length > 0 ? `From €${Math.round(Math.min(...photographer.packages.map((pkg: { price: number }) => Number(pkg.price))))}` : undefined,
     aggregateRating: photographer.review_count > 0
       ? {
           "@type": "AggregateRating",
@@ -282,7 +286,7 @@ export default async function PhotographerProfilePage({
       "@context": "https://schema.org",
       "@type": "Product",
       name: pkg.name,
-      description: pkg.description || t("packageDescription", { packageName: pkg.name, name: photographer.display_name }),
+      description: pkg.description || t("packageDescription", { packageName: pkg.name, name: normalizeName(photographer.display_name) }),
       offers: {
         "@type": "Offer",
         price: String(pkg.price),
@@ -300,7 +304,7 @@ export default async function PhotographerProfilePage({
   const personJsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: photographer.display_name,
+    name: normalizeName(photographer.display_name),
     ...(avatarAbsoluteUrl && { image: avatarAbsoluteUrl }),
     jobTitle: "Photographer",
     url: `https://photoportugal.com/photographers/${slug}`,
@@ -339,7 +343,7 @@ export default async function PhotographerProfilePage({
     itemListElement: [
       { "@type": "ListItem", position: 1, name: tc("home"), item: "https://photoportugal.com" },
       { "@type": "ListItem", position: 2, name: tc("photographers"), item: "https://photoportugal.com/photographers" },
-      { "@type": "ListItem", position: 3, name: photographer.display_name, item: `https://photoportugal.com/photographers/${slug}` },
+      { "@type": "ListItem", position: 3, name: normalizeName(photographer.display_name), item: `https://photoportugal.com/photographers/${slug}` },
     ],
   };
 
@@ -373,9 +377,9 @@ export default async function PhotographerProfilePage({
             <div className="relative shrink-0">
               <div className="flex h-24 w-24 items-center justify-center rounded-full ring-4 ring-white bg-primary-100 text-3xl font-bold text-primary-600 sm:h-28 sm:w-28 overflow-hidden shadow-md">
                 {photographer.avatar_url ? (
-                  <OptimizedImage src={photographer.avatar_url} alt={photographer.display_name} width={400} priority className="h-full w-full" />
+                  <OptimizedImage src={photographer.avatar_url} alt={normalizeName(photographer.display_name)} width={400} priority className="h-full w-full" />
                 ) : (
-                  photographer.display_name.charAt(0)
+                  normalizeName(photographer.display_name).charAt(0)
                 )}
               </div>
               {result.type === "db" && (photographer as { last_seen_at?: string }).last_seen_at && (Date.now() - new Date((photographer as { last_seen_at: string }).last_seen_at).getTime()) < 5 * 60 * 1000 && (
@@ -387,7 +391,7 @@ export default async function PhotographerProfilePage({
               {/* Name + badges */}
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-                  {photographer.display_name}
+                  {normalizeName(photographer.display_name)}
                 </h1>
                 {photographer.is_verified && (
                   <span className="text-accent-500" title={t("verifiedPhotographer")}>
@@ -481,7 +485,7 @@ export default async function PhotographerProfilePage({
             {/* Message — top right on desktop */}
             {result.type === "db" && (
               <div id="message" className="shrink-0 sm:ml-auto sm:self-center">
-                <AskQuestionButton photographerId={photographer.id} photographerName={photographer.display_name} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} />
+                <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.display_name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} />
               </div>
             )}
           </div>
@@ -505,6 +509,7 @@ export default async function PhotographerProfilePage({
               <PortfolioGallery
                 items={portfolioItems}
                 locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
+                photographerName={normalizeName(photographer.display_name)}
               />
             )}
 
@@ -514,7 +519,7 @@ export default async function PhotographerProfilePage({
               reviews={reviews}
               reviewCount={photographer.review_count}
               rating={photographer.rating}
-              photographerName={photographer.display_name}
+              photographerName={normalizeName(photographer.display_name)}
               photographerSlug={slug}
             />
           </div>
@@ -566,23 +571,23 @@ export default async function PhotographerProfilePage({
                   {/* Cover */}
                   <div className="relative h-36 bg-warm-100">
                     {sp.cover_url ? (
-                      <OptimizedImage src={sp.cover_url} alt={sp.display_name} width={400} className="h-full w-full object-cover" />
+                      <OptimizedImage src={sp.cover_url} alt={normalizeName(sp.display_name)} width={400} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full bg-gradient-to-br from-warm-100 to-warm-200" />
                     )}
                     {/* Avatar overlay */}
                     <div className="absolute -bottom-5 left-4 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary-100 text-sm font-bold text-primary-600 overflow-hidden shadow-sm">
                       {sp.avatar_url ? (
-                        <OptimizedImage src={sp.avatar_url} alt={sp.display_name} width={80} className="h-full w-full object-cover" />
+                        <OptimizedImage src={sp.avatar_url} alt={normalizeName(sp.display_name)} width={80} className="h-full w-full object-cover" />
                       ) : (
-                        sp.display_name.charAt(0)
+                        normalizeName(sp.display_name).charAt(0)
                       )}
                     </div>
                   </div>
                   {/* Info */}
                   <div className="px-4 pb-4 pt-7">
                     <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-                      {sp.display_name}
+                      {normalizeName(sp.display_name)}
                     </h3>
                     {sp.tagline && (
                       <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{sp.tagline}</p>
@@ -609,7 +614,7 @@ export default async function PhotographerProfilePage({
                     {sp.starting_price && (
                       <p className="mt-2 text-sm">
                         <span className="text-gray-400">{t("from")}</span>{" "}
-                        <span className="font-bold text-gray-900">&euro;{sp.starting_price}</span>
+                        <span className="font-bold text-gray-900">&euro;{Math.round(Number(sp.starting_price))}</span>
                       </p>
                     )}
                   </div>

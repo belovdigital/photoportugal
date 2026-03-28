@@ -2,6 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { normalizeName } from "@/lib/format-name";
 
 interface FeaturedPhotographer {
   slug: string;
@@ -22,7 +23,7 @@ export async function FeaturedPhotographers() {
 
   try {
     photographers = await query<FeaturedPhotographer>(
-      `SELECT pp.slug, pp.display_name, pp.tagline,
+      `SELECT pp.slug, pnormalizeName(p.display_name), pp.tagline,
               u.avatar_url, pp.cover_url, pp.cover_position_y, pp.is_verified,
               pp.rating, pp.review_count,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as min_price,
@@ -70,7 +71,7 @@ export async function FeaturedPhotographers() {
             {/* Cover / gradient */}
             <div className="relative h-36 bg-gradient-to-br from-primary-400 to-primary-700">
               {p.cover_url && (
-                <OptimizedImage src={p.cover_url} alt={t("portfolioAlt", { name: p.display_name })} width={600} quality={88} className="h-full w-full" style={{ objectPosition: `center ${p.cover_position_y ?? 50}%` }} />
+                <OptimizedImage src={p.cover_url} alt={t("portfolioAlt", { name: normalizeName(p.display_name) })} width={600} quality={88} className="h-full w-full" style={{ objectPosition: `center ${p.cover_position_y ?? 50}%` }} />
               )}
               <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-2.5 py-0.5 text-[10px] font-bold text-yellow-900">
                 {t("badge")}
@@ -79,9 +80,9 @@ export async function FeaturedPhotographers() {
               <div className="absolute -bottom-5 left-4">
                 <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-3 border-white bg-primary-100 text-sm font-bold text-primary-600 shadow">
                   {p.avatar_url ? (
-                    <OptimizedImage src={p.avatar_url} alt={p.display_name} width={200} className="h-full w-full" />
+                    <OptimizedImage src={p.avatar_url} alt={normalizeName(p.display_name)} width={200} className="h-full w-full" />
                   ) : (
-                    p.display_name.charAt(0)
+                    normalizeName(p.display_name).charAt(0)
                   )}
                 </div>
               </div>
@@ -90,7 +91,7 @@ export async function FeaturedPhotographers() {
             <div className="p-4 pt-8">
               <div className="flex items-center gap-1.5">
                 <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-                  {p.display_name}
+                  {normalizeName(p.display_name)}
                 </h3>
                 {p.is_verified && (
                   <svg className="h-4 w-4 shrink-0 text-accent-500" fill="currentColor" viewBox="0 0 20 20">
@@ -133,7 +134,7 @@ export async function FeaturedPhotographers() {
                 {p.min_price ? (
                   <span className="text-sm">
                     <span className="text-gray-400">{tc("from")} </span>
-                    <span className="font-bold text-gray-900">&euro;{p.min_price}</span>
+                    <span className="font-bold text-gray-900">&euro;{Math.round(Number(p.min_price))}</span>
                   </span>
                 ) : (
                   <span className="text-xs text-gray-400">{tc("contactForPricing")}</span>

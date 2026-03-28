@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { queryOne, query } from "./db";
-import { sendWelcomeEmail } from "./email";
+
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -97,10 +97,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               "INSERT INTO users (email, name, first_name, last_name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, $5, $6, 'client', TRUE)",
               [email, user.name, firstName, lastName, account.providerAccountId, user.image]
             );
-            // Send welcome email for new Google sign-ups (non-blocking)
-            sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
-              console.error("[auth] Failed to send welcome email:", err)
-            );
+            // Welcome email and admin notification are sent after role is determined
+            // (via set-role for photographers, or on first dashboard visit for clients)
           }
         } catch (error) {
           console.error("[auth] Google signIn DB error:", error);

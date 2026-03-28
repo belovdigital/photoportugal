@@ -55,6 +55,16 @@ export async function POST(req: NextRequest) {
     // Calculate payment split
     const payment = calculatePayment(booking.total_price, booking.photographer_plan);
 
+    // Safety log and verify service fee is included
+    const stripeAmount = Math.round(payment.totalClientPays * 100);
+    const packageAmount = Math.round(booking.total_price * 100);
+    console.log(`[stripe/checkout] Payment calc: package=${packageAmount}c, serviceFee=${Math.round(payment.serviceFee * 100)}c, total=${stripeAmount}c, plan=${booking.photographer_plan}`);
+    if (stripeAmount <= packageAmount) {
+      console.error(`[stripe/checkout] BUG: Stripe amount ${stripeAmount} should be > package ${packageAmount}. Force-fixing.`);
+      payment.totalClientPays = booking.total_price * 1.10;
+      payment.serviceFee = Math.round(booking.total_price * 0.10 * 100) / 100;
+    }
+
     // Get or create Stripe customer for the client
     const user = await queryOne<{ email: string; stripe_customer_id: string | null }>(
       "SELECT email, stripe_customer_id FROM users WHERE id = $1", [userId]

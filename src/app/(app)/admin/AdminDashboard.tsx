@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { AdminToastProvider } from "./AdminToast";
 
 interface AdminStats {
   clients: number;
   photographersApproved: number;
   photographersPending: number;
+  photographersReady: number;
   bookingsTotal: number;
   bookingsPending: number;
   bookingsConfirmed: number;
@@ -14,6 +16,7 @@ interface AdminStats {
   revenueThisMonth: number;
   reviews: number;
   messages: number;
+  blogPosts: number;
   disputesOpen: number;
   // Funnel
   funnelMessages: number;
@@ -101,6 +104,11 @@ export function AdminDashboard({
     if (typeof window !== "undefined") {
       const hash = window.location.hash.slice(1) as TabKey;
       if (hash && tabs.some((t) => t.key === hash)) return hash;
+      // Fallback: sessionStorage preserves tab across router.refresh()
+      try {
+        const stored = sessionStorage.getItem("admin-tab") as TabKey;
+        if (stored && tabs.some((t) => t.key === stored)) return stored;
+      } catch {}
     }
     return "overview";
   });
@@ -123,6 +131,7 @@ export function AdminDashboard({
       const hash = window.location.hash.slice(1) as TabKey;
       if (hash && tabs.some((t) => t.key === hash)) {
         setActiveTabState(hash);
+        try { sessionStorage.setItem("admin-tab", hash); } catch {}
       }
     }
     window.addEventListener("hashchange", syncHash);
@@ -132,10 +141,11 @@ export function AdminDashboard({
   function setActiveTab(tab: TabKey) {
     setActiveTabState(tab);
     window.history.replaceState(null, "", `#${tab}`);
+    try { sessionStorage.setItem("admin-tab", tab); } catch {}
   }
 
   function getBadge(key: string): number {
-    if (key === "photographers") return stats.photographersPending;
+    if (key === "photographers") return stats.photographersReady;
     if (key === "bookings") return stats.bookingsPending;
     if (key === "disputes") return stats.disputesOpen;
     return 0;
@@ -232,7 +242,8 @@ export function AdminDashboard({
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Photographers</p>
                   <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">{stats.photographersApproved}</p>
-                  {stats.photographersPending > 0 && <p className="mt-1 text-xs text-yellow-600">{stats.photographersPending} awaiting approval</p>}
+                  {stats.photographersReady > 0 && <p className="mt-1 text-xs text-green-600">{stats.photographersReady} ready for approval</p>}
+                  {stats.photographersPending > 0 && stats.photographersPending > stats.photographersReady && <p className="text-xs text-gray-400">{stats.photographersPending - stats.photographersReady} filling profile</p>}
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Clients</p>
@@ -242,7 +253,7 @@ export function AdminDashboard({
               </div>
 
               {/* Action items — what needs attention */}
-              {(stats.bookingsPending > 0 || stats.photographersPending > 0 || stats.disputesOpen > 0) && (
+              {(stats.bookingsPending > 0 || stats.photographersReady > 0 || stats.disputesOpen > 0) && (
                 <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5">
                   <h3 className="font-semibold text-amber-800">Needs Attention</h3>
                   <div className="mt-3 space-y-2">
@@ -252,9 +263,9 @@ export function AdminDashboard({
                         <span className="text-xs text-primary-600">View &rarr;</span>
                       </button>
                     )}
-                    {stats.photographersPending > 0 && (
+                    {stats.photographersReady > 0 && (
                       <button onClick={() => setActiveTab("photographers")} className="flex w-full items-center justify-between rounded-lg bg-white px-4 py-2.5 text-sm transition hover:shadow-sm">
-                        <span className="text-gray-700"><strong>{stats.photographersPending}</strong> photographer{stats.photographersPending !== 1 ? "s" : ""} awaiting approval</span>
+                        <span className="text-gray-700"><strong>{stats.photographersReady}</strong> photographer{stats.photographersReady !== 1 ? "s" : ""} ready for approval</span>
                         <span className="text-xs text-primary-600">Review &rarr;</span>
                       </button>
                     )}
@@ -273,7 +284,7 @@ export function AdminDashboard({
                 {[
                   { label: "Analytics", sub: "Traffic & search data", icon: "chart", tab: "analytics" as TabKey },
                   { label: "Bookings", sub: "Manage requests", icon: "calendar", tab: "bookings" as TabKey },
-                  { label: "Blog", sub: `${stats.messages > 0 ? "34" : "0"} posts`, icon: "document", tab: "blog" as TabKey },
+                  { label: "Blog", sub: `${stats.blogPosts} published posts`, icon: "document", tab: "blog" as TabKey },
                   { label: "Promo Codes", sub: "Create discounts", icon: "tag", tab: "promos" as TabKey },
                 ].map((action) => (
                   <button
@@ -304,6 +315,7 @@ export function AdminDashboard({
           {activeTab === "settings" && settingsSection}
         </div>
       </div>
+      <AdminToastProvider />
       {/* PWA refresh button — only visible when saved to home screen */}
       {isStandalone && (
         <button

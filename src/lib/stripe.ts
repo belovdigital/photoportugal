@@ -33,16 +33,17 @@ export const SERVICE_FEE_RATE = 0.10; // 10%
 /**
  * Calculate payment breakdown
  */
-export function calculatePayment(packagePrice: number, plan: string) {
-  const serviceFee = Math.round(packagePrice * SERVICE_FEE_RATE * 100) / 100;
-  const totalClientPays = packagePrice + serviceFee;
+export function calculatePayment(packagePrice: number | string, plan: string) {
+  const price = Number(packagePrice);
+  const serviceFee = Math.round(price * SERVICE_FEE_RATE * 100) / 100;
+  const totalClientPays = price + serviceFee;
   const commissionPct = COMMISSION_RATES[plan] ?? COMMISSION_RATES.free;
   const commissionRate = commissionPct / 100;
-  const platformFee = Math.round(packagePrice * commissionRate * 100) / 100;
-  const photographerPayout = packagePrice - platformFee;
+  const platformFee = Math.round(price * commissionRate * 100) / 100;
+  const photographerPayout = price - platformFee;
 
   return {
-    packagePrice,
+    packagePrice: price,
     serviceFee,
     totalClientPays,
     platformFee,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
-import { sendWelcomeEmail, sendAdminNewPhotographerNotification } from "@/lib/email";
+import { sendWelcomeEmail, sendAdminNewPhotographerNotification, sendAdminNewClientNotification } from "@/lib/email";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
@@ -41,10 +41,14 @@ export async function GET(req: NextRequest) {
       console.error("[verify-email] Failed to send welcome email:", err)
     );
 
-    // Notify admin about new photographer
+    // Notify admin about new user
     if (user.role === "photographer") {
       sendAdminNewPhotographerNotification(user.name, user.email).catch((err) =>
         console.error("[verify-email] Failed to send admin notification:", err)
+      );
+    } else {
+      sendAdminNewClientNotification(user.name, user.email).catch((err) =>
+        console.error("[verify-email] Failed to send admin client notification:", err)
       );
     }
 

@@ -165,10 +165,18 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
   );
 }
 
+const ANALYTICS_TABS = [
+  { key: "traffic", label: "Traffic", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
+  { key: "seo", label: "SEO", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
+  { key: "ads", label: "Ads", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+  { key: "funnel", label: "Funnel", icon: "M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" },
+] as const;
+
 export function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("traffic");
   const queriesSort = useSortable<{ query: string; clicks: number; impressions: number; ctr: number; position: number }>("clicks", "desc");
   const pagesSort = useSortable<{ path: string; views: number; users: number }>("views", "desc");
 
@@ -188,6 +196,26 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-5 sm:space-y-8">
+      {/* Sub-tabs */}
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="inline-flex gap-1 rounded-xl bg-warm-100 p-1 min-w-full sm:min-w-0">
+          {ANALYTICS_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold transition whitespace-nowrap sm:px-4 sm:text-sm ${
+                activeTab === tab.key
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} /></svg>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Smart Insights */}
       {data.insights && data.insights.length > 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
@@ -207,8 +235,8 @@ export function AnalyticsDashboard() {
       {data.ga4Error && <p className="text-xs text-red-500">{data.ga4Error}</p>}
       {data.gscError && <p className="text-xs text-red-500">{data.gscError}</p>}
 
-      {/* GA4 Overview */}
-      {ga4 && (
+      {/* === TRAFFIC TAB === */}
+      {activeTab === "traffic" && ga4 && (
         <>
           <h3 className="text-lg font-bold text-gray-900">Website Traffic (30 days)</h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
@@ -231,8 +259,66 @@ export function AnalyticsDashboard() {
         </>
       )}
 
+      {/* Traffic Sources (in Traffic tab) */}
+      {activeTab === "traffic" && data.trafficSources && data.trafficSources.length > 0 && (
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Traffic Sources</h3>
+            <div className="mt-3 space-y-2">
+              {data.trafficSources.map((s) => (
+                <div key={s.channel} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-4 py-2.5">
+                  <span className="text-sm font-medium text-gray-700">{s.channel}</span>
+                  <span className="text-sm text-gray-500">{s.sessions} sessions</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {data.topCountries && data.topCountries.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Top Countries</h3>
+              <div className="mt-3 space-y-2">
+                {data.topCountries.map((c) => (
+                  <div key={c.country} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-4 py-2.5">
+                    <span className="text-sm font-medium text-gray-700">{c.country}</span>
+                    <span className="text-sm text-gray-500">{c.users} users</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Top Pages (in Traffic tab) */}
+      {activeTab === "traffic" && data.topPages && data.topPages.length > 0 && (
+        <>
+          <h3 className="text-lg font-bold text-gray-900">Top Pages (GA4)</h3>
+          <div className="overflow-auto max-h-[500px] rounded-xl border border-warm-200 bg-white">
+            <table className="w-full text-xs sm:text-sm">
+              <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
+                <tr>
+                  <SortTh label="Page" col="path" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} />
+                  <SortTh label="Views" col="views" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} right />
+                  <SortTh label="Users" col="users" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} right />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-warm-100">
+                {pagesSort.sorted(data.topPages).map((p) => (
+                  <tr key={p.path}>
+                    <td className="px-4 py-2.5 font-medium text-gray-900 max-w-xs truncate">{p.path}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{p.views}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{p.users}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {/* === SEO TAB === */}
       {/* GSC Overview */}
-      {gsc && (
+      {activeTab === "seo" && gsc && (
         <>
           <h3 className="text-lg font-bold text-gray-900">Google Search (30 days)</h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -252,12 +338,44 @@ export function AnalyticsDashboard() {
       )}
 
       {/* Position Distribution */}
-      {data.positionDistribution && data.positionDistribution.total > 0 && (
+      {activeTab === "seo" && data.positionDistribution && data.positionDistribution.total > 0 && (
         <PositionDistribution dist={data.positionDistribution} />
       )}
 
+      {/* Top Search Queries (in SEO tab) */}
+      {activeTab === "seo" && data.topQueries && data.topQueries.length > 0 && (
+        <>
+          <h3 className="text-lg font-bold text-gray-900">Top Search Queries (GSC)</h3>
+          <div className="overflow-auto max-h-[500px] rounded-xl border border-warm-200 bg-white">
+            <table className="w-full text-xs sm:text-sm">
+              <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
+                <tr>
+                  <SortTh label="Query" col="query" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} />
+                  <SortTh label="Clicks" col="clicks" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
+                  <SortTh label="Impressions" col="impressions" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
+                  <SortTh label="CTR" col="ctr" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
+                  <SortTh label="Position" col="position" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-warm-100">
+                {queriesSort.sorted(data.topQueries).map((q) => (
+                  <tr key={q.query}>
+                    <td className="px-4 py-2.5 font-medium text-gray-900">{q.query}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{q.clicks}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{q.impressions}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{q.ctr}%</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{q.position}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {/* === FUNNEL TAB === */}
       {/* Client Funnel */}
-      {data.funnel && Object.keys(data.funnel).length > 0 && (
+      {activeTab === "funnel" && data.funnel && Object.keys(data.funnel).length > 0 && (
         <>
           <h3 className="text-lg font-bold text-gray-900">Client Funnel (30 days)</h3>
           <div className="space-y-1">
@@ -321,94 +439,240 @@ export function AnalyticsDashboard() {
         </>
       )}
 
-      {/* Traffic Sources */}
-      {data.trafficSources && data.trafficSources.length > 0 && (
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Traffic Sources</h3>
-            <div className="mt-3 space-y-2">
-              {data.trafficSources.map((s) => (
-                <div key={s.channel} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-4 py-2.5">
-                  <span className="text-sm font-medium text-gray-700">{s.channel}</span>
-                  <span className="text-sm text-gray-500">{s.sessions} sessions</span>
+      {/* === ADS TAB === */}
+      {activeTab === "ads" && <GoogleAdsSection />}
+    </div>
+  );
+}
+
+function GoogleAdsSection() {
+  const [stats, setStats] = useState<{
+    visits: number;
+    visitsToday: number;
+    visits7d: number;
+    signups: number;
+    bookingsFromAds: number;
+    paidBookings: number;
+    revenueFromAds: number;
+    visitToBookingRate: string;
+    bookingToPayRate: string;
+    topKeywords: { keyword: string; visits: number; bookings: number; revenue: number }[];
+    topLandingPages: { page: string; visits: number }[];
+    dailyVisits: { date: string; visits: number }[];
+    recentVisitors: { keyword: string; campaign: string; landing: string; time: string; pages: string[]; converted: boolean }[];
+    topAdPages: { page: string; views: number }[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/ads-stats")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { setStats(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  function timeAgo(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  }
+
+  return (
+    <div>
+      <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+        <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+        Google Ads
+      </h3>
+
+      {loading ? (
+        <p className="text-sm text-gray-400">Loading ads data...</p>
+      ) : !stats || stats.visits === 0 ? (
+        <div className="rounded-xl border border-warm-200 bg-white p-5">
+          <p className="text-sm text-gray-500">Google Ads tracking active. Waiting for first ad clicks...</p>
+          <div className="mt-3 rounded-lg bg-blue-50 p-3">
+            <p className="text-xs font-semibold text-blue-700 mb-1">Tracking:</p>
+            <ul className="text-xs text-blue-600 space-y-0.5">
+              <li>• Ad clicks + page journeys (UTM)</li>
+              <li>• booking_submitted, payment_completed, client_signup (gtag with value)</li>
+              <li>• AW-18043729532</li>
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Funnel */}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
+            {[
+              { label: "Ad Clicks", value: stats.visits, sub: `${stats.visitsToday} today` },
+              { label: "Signups", value: stats.signups, sub: stats.visits > 0 ? `${((stats.signups / stats.visits) * 100).toFixed(0)}% rate` : "" },
+              { label: "Bookings", value: stats.bookingsFromAds, sub: `${stats.visitToBookingRate}% rate` },
+              { label: "Paid", value: stats.paidBookings, sub: `${stats.bookingToPayRate}% rate` },
+              { label: "Revenue", value: null, sub: stats.revenueFromAds > 0 ? `€${Math.round(stats.revenueFromAds)}` : "€0", isRevenue: true },
+            ].map((item, i) => (
+              <div key={i} className="rounded-xl border border-warm-200 bg-white p-3">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{item.label}</p>
+                {'isRevenue' in item && item.isRevenue ? (
+                  <p className="mt-1 text-xl font-bold text-green-600">{item.sub}</p>
+                ) : (
+                  <>
+                    <p className="mt-1 text-xl font-bold text-gray-900">{item.value}</p>
+                    {item.sub && <p className="text-[10px] text-gray-400">{item.sub}</p>}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Funnel bar */}
+          <div className="rounded-xl border border-warm-200 bg-white p-4">
+            <p className="text-xs font-semibold text-gray-500 mb-2">Conversion Funnel</p>
+            <div className="space-y-1.5">
+              {[
+                { label: "Clicks", count: stats.visits, color: "bg-blue-500" },
+                { label: "Signups", count: stats.signups, color: "bg-purple-500" },
+                { label: "Bookings", count: stats.bookingsFromAds, color: "bg-orange-500" },
+                { label: "Paid", count: stats.paidBookings, color: "bg-green-500" },
+              ].map((step) => (
+                <div key={step.label} className="flex items-center gap-3">
+                  <span className="w-16 text-xs text-gray-500">{step.label}</span>
+                  <div className="flex-1 h-5 rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${step.color} transition-all`}
+                      style={{ width: `${stats.visits > 0 ? Math.max((step.count / stats.visits) * 100, step.count > 0 ? 3 : 0) : 0}%` }}
+                    />
+                  </div>
+                  <span className="w-8 text-xs font-medium text-gray-700 text-right">{step.count}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Top Countries */}
-          {data.topCountries && data.topCountries.length > 0 && (
+          {/* Recent Ad Visitors - the key new section */}
+          {stats.recentVisitors && stats.recentVisitors.length > 0 && (
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Top Countries</h3>
-              <div className="mt-3 space-y-2">
-                {data.topCountries.map((c) => (
-                  <div key={c.country} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-4 py-2.5">
-                    <span className="text-sm font-medium text-gray-700">{c.country}</span>
-                    <span className="text-sm text-gray-500">{c.users} users</span>
+              <p className="text-xs font-semibold text-gray-500 mb-2">Recent Ad Visitors</p>
+              <div className="rounded-xl border border-warm-200 bg-white overflow-hidden">
+                <div className="max-h-72 overflow-y-auto divide-y divide-warm-100">
+                  {stats.recentVisitors.map((v, i) => (
+                    <div key={i} className="px-3 py-2.5 hover:bg-warm-50 transition-colors">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex h-5 items-center rounded-full px-2 text-[10px] font-medium ${v.converted ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                            {v.converted ? "Converted" : "Bounced"}
+                          </span>
+                          <span className="text-xs font-medium text-gray-800">{v.keyword}</span>
+                        </div>
+                        <span className="text-[10px] text-gray-400">{timeAgo(v.time)}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                        <span className="text-gray-500">{v.landing}</span>
+                        {v.pages.length > 1 && (
+                          <>
+                            <span>→</span>
+                            {v.pages.slice(1, 5).map((p, j) => (
+                              <span key={j}>
+                                {j > 0 && <span className="mx-0.5">→</span>}
+                                <span className="text-gray-500">{p.replace(/^\/[a-z]{2}\//, "/")}</span>
+                              </span>
+                            ))}
+                            {v.pages.length > 5 && <span className="text-gray-400">+{v.pages.length - 5} more</span>}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Top keywords */}
+          {stats.topKeywords.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">Top Keywords</p>
+              <div className="rounded-xl border border-warm-200 bg-white overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead className="bg-warm-50 border-b border-warm-200">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium text-gray-500">Keyword</th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-500">Clicks</th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-500">Bookings</th>
+                      <th className="px-3 py-2 text-right font-medium text-gray-500">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-warm-100">
+                    {stats.topKeywords.map((kw) => (
+                      <tr key={kw.keyword}>
+                        <td className="px-3 py-2 text-gray-900">{kw.keyword}</td>
+                        <td className="px-3 py-2 text-right text-gray-500">{kw.visits}</td>
+                        <td className="px-3 py-2 text-right text-gray-700 font-medium">{kw.bookings || "—"}</td>
+                        <td className="px-3 py-2 text-right text-gray-700">{kw.revenue > 0 ? `€${Math.round(kw.revenue)}` : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Top pages viewed by ad visitors */}
+          {stats.topAdPages && stats.topAdPages.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">Pages Viewed by Ad Visitors</p>
+              <div className="space-y-1">
+                {stats.topAdPages.map((p) => (
+                  <div key={p.page} className="flex items-center justify-between rounded-lg bg-white border border-warm-100 px-3 py-1.5">
+                    <span className="text-xs text-gray-700 truncate">{p.page}</span>
+                    <span className="text-xs font-medium text-gray-500 shrink-0 ml-2">{p.views} views</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
+
+          {/* Top landing pages */}
+          {stats.topLandingPages.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">Top Landing Pages</p>
+              <div className="space-y-1">
+                {stats.topLandingPages.map((p) => (
+                  <div key={p.page} className="flex items-center justify-between rounded-lg bg-white border border-warm-100 px-3 py-1.5">
+                    <span className="text-xs text-gray-700 truncate">{p.page}</span>
+                    <span className="text-xs font-medium text-gray-500 shrink-0 ml-2">{p.visits}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Daily chart (simple) */}
+          {stats.dailyVisits.length > 1 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 mb-2">Daily Ad Clicks (14d)</p>
+              <div className="flex items-end gap-1 h-20 rounded-xl border border-warm-200 bg-white p-3">
+                {stats.dailyVisits.map((d) => {
+                  const max = Math.max(...stats.dailyVisits.map(v => v.visits), 1);
+                  return (
+                    <div key={d.date} className="flex-1 flex flex-col items-center gap-0.5" title={`${d.date}: ${d.visits} clicks`}>
+                      <div
+                        className="w-full rounded-sm bg-blue-500 min-h-[2px]"
+                        style={{ height: `${(d.visits / max) * 100}%` }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] text-gray-400">{stats.dailyVisits[0]?.date?.slice(5)}</span>
+                <span className="text-[9px] text-gray-400">{stats.dailyVisits[stats.dailyVisits.length - 1]?.date?.slice(5)}</span>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Top Search Queries */}
-      {data.topQueries && data.topQueries.length > 0 && (
-        <>
-          <h3 className="text-lg font-bold text-gray-900">Top Search Queries (GSC)</h3>
-          <div className="overflow-auto max-h-[500px] rounded-xl border border-warm-200 bg-white">
-            <table className="w-full text-xs sm:text-sm">
-              <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
-                <tr>
-                  <SortTh label="Query" col="query" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} />
-                  <SortTh label="Clicks" col="clicks" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
-                  <SortTh label="Impressions" col="impressions" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
-                  <SortTh label="CTR" col="ctr" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
-                  <SortTh label="Position" col="position" sort={queriesSort.sort as { key: string; dir: SortDir }} toggle={queriesSort.toggle as (k: string) => void} right />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-warm-100">
-                {queriesSort.sorted(data.topQueries).map((q) => (
-                  <tr key={q.query}>
-                    <td className="px-4 py-2.5 font-medium text-gray-900">{q.query}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{q.clicks}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{q.impressions}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{q.ctr}%</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{q.position}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {/* Top Pages */}
-      {data.topPages && data.topPages.length > 0 && (
-        <>
-          <h3 className="text-lg font-bold text-gray-900">Top Pages (GA4)</h3>
-          <div className="overflow-auto max-h-[500px] rounded-xl border border-warm-200 bg-white">
-            <table className="w-full text-xs sm:text-sm">
-              <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
-                <tr>
-                  <SortTh label="Page" col="path" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} />
-                  <SortTh label="Views" col="views" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} right />
-                  <SortTh label="Users" col="users" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} right />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-warm-100">
-                {pagesSort.sorted(data.topPages).map((p) => (
-                  <tr key={p.path}>
-                    <td className="px-4 py-2.5 font-medium text-gray-900 max-w-xs truncate">{p.path}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{p.views}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{p.users}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
       )}
     </div>
   );

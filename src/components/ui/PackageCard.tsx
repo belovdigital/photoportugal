@@ -75,7 +75,7 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
       {/* Header: name + price on one line */}
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-base font-bold text-gray-900">{pkg.name}</h3>
-        <span className="shrink-0 text-2xl font-bold text-gray-900">&euro;{pkg.price}</span>
+        <span className="shrink-0 text-2xl font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</span>
       </div>
 
       {/* Key specs inline */}

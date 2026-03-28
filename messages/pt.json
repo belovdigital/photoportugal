@@ -76,7 +76,7 @@
   },
   "nav": {
     "announcement": "Fotografia profissional de férias",
-    "announcementSuffix": "em {count}+ localizações deslumbrantes em Portugal",
+    "announcementSuffix": "em {count} localizações deslumbrantes em Portugal",
     "browseNow": "Explorar agora →",
     "destinations": "Destinos",
     "popularDestinations": "Destinos Populares",
@@ -116,8 +116,35 @@
       "soloPortrait": "Retrato Individual",
       "engagement": "Noivado",
       "proposal": "Pedido de Casamento",
-      "honeymoon": "Lua de Mel"
-    }
+      "honeymoon": "Lua de Mel",
+      "elopement": "Elopement",
+      "wedding": "Casamento",
+      "birthday": "Aniversário"
+    },
+    "about": "Sobre Nós",
+    "contact": "Contacto",
+    "helpCenter": "Centro de Ajuda",
+    "megaGettingStarted": "Como Começar",
+    "megaTrustQuality": "Confiança e Qualidade",
+    "megaCompany": "Empresa",
+    "megaBrowseDesc": "Pesquisar fotógrafos por localização, estilo e disponibilidade",
+    "megaAboutDesc": "A nossa história e a equipa por detrás do Photo Portugal",
+    "megaContactDesc": "Entre em contacto com a nossa equipa",
+    "megaHelpDesc": "Guias, tutoriais e artigos de suporte",
+    "megaCtaTitle": "Pronto para reservar?",
+    "megaCtaDesc": "Encontre o fotógrafo ideal em minutos.",
+    "megaMoreLocations": "Mais Localizações",
+    "megaJoinUs": "Junte-se",
+    "megaJoinDesc": "Programa early bird com benefícios exclusivos",
+    "megaWhyJoin": "Porquê o Photo Portugal",
+    "megaWhyJoinDesc": "Como a nossa plataforma ajuda-o a crescer",
+    "megaPlansAndPricing": "Planos e Preços",
+    "megaPricingDesc": "Planos Free, Pro e Premium comparados",
+    "megaHowItWorksPhotographer": "Fluxo de reserva da sua perspetiva",
+    "megaResources": "Recursos",
+    "megaFaqPhotographerDesc": "Perguntas frequentes de fotógrafos",
+    "megaBlog": "Blog",
+    "megaBlogDesc": "Dicas, guias e inspiração fotográfica"
   },
   "footer": {
     "tagline": "A conectar viajantes com fotógrafos locais talentosos em todo o Portugal. Capture os seus momentos perfeitos.",
@@ -221,9 +248,37 @@
         "title": "Noivado",
         "description": "Diga sim com Portugal como cenário"
       },
+      "proposal": {
+        "title": "Pedido",
+        "description": "Capture o momento em que dizem sim"
+      },
+      "elopement": {
+        "title": "Elopement",
+        "description": "Cerimónias íntimas em cenários deslumbrantes"
+      },
       "friends": {
         "title": "Amigos",
         "description": "Viagens em grupo merecem ótimas fotos"
+      },
+      "wedding": {
+        "title": "Casamento",
+        "description": "O casamento dos seus sonhos, capturado"
+      },
+      "maternity": {
+        "title": "Maternidade",
+        "description": "Retratos bonitos de gravidez"
+      },
+      "anniversary": {
+        "title": "Aniversário",
+        "description": "Celebre o seu marco em Portugal"
+      },
+      "birthday": {
+        "title": "Aniversário",
+        "description": "Torne a sua celebração inesquecível"
+      },
+      "contentCreator": {
+        "title": "Criador de Conteúdo",
+        "description": "Conteúdo profissional para a sua marca"
       }
     }
   },
@@ -643,6 +698,8 @@
   "join": {
     "badge": "Programa Early Bird",
     "heroTitle": "Seja um Fotógrafo Fundador",
+    "heroTitleEarly": "Junte-se como Fotógrafo Early Bird",
+    "heroTitleFirst": "Junte-se aos Primeiros 50 Fotógrafos",
     "heroSubtitle": "Estamos a construir o principal marketplace de fotografia para turistas em Portugal. Junte-se agora e garanta benefícios exclusivos antes do lançamento público.",
     "claimYourSpot": "Garanta o Seu Lugar",
     "claimYourSpotNow": "Garanta o Seu Lugar Agora",
@@ -727,6 +784,16 @@
         "youEarn": "Ganha numa reserva de €200"
       },
       "earlyBirdNote": "Fotógrafos early bird recebem o upgrade de plano gratuitamente — ainda beneficia de taxas de comissão mais baixas."
+    },
+    "calculator": {
+      "title": "Quanto Pode Ganhar?",
+      "subtitle": "Ajuste os valores para ver os seus ganhos potenciais na Photo Portugal.",
+      "sessionsPerMonth": "Sessões por mês",
+      "avgPackagePrice": "Preço médio do pacote",
+      "yourPlan": "O seu plano",
+      "commission": "comissão",
+      "monthlyEarnings": "Ganhos mensais",
+      "yearlyEarnings": "Ganhos anuais"
     },
     "gettingStarted": {
       "title": "Começar Leva Apenas 10 Minutos",
@@ -1189,8 +1256,8 @@
     "relatedLocations": "Localizações Relacionadas"
   },
   "photographersMeta": {
-    "title": "Encontrar Fotógrafos em Portugal",
-    "description": "Explore fotógrafos profissionais em Portugal. Veja portfólios, leia avaliações verificadas e reserve a sua sessão fotográfica de férias perfeita."
+    "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve | Photo Portugal",
+    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e 20+ localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €150."
   },
   "privacy": {
     "title": "Política de Privacidade",
@@ -1467,7 +1534,7 @@
       },
       "intellectualProperty": {
         "title": "13. Propriedade Intelectual",
-        "intro": "Os fotógrafos mantêm os direitos de autor de todas as imagens que criam. Os clientes recebem uma licença de uso pessoal para as fotos da sua sessão.",
+        "intro": "Os fotógrafos mantêm todos os direitos de autor de todas as imagens que criam. Os clientes recebem uma licença de uso pessoal para as fotos da sua sessão.",
         "personalUseTitle": "O uso pessoal inclui:",
         "personalUse": {
           "socialMedia": "Partilha em contas pessoais de redes sociais (Instagram, Facebook, etc.)",
@@ -1480,7 +1547,10 @@
           "stock": "Licenciamento de fotografia de stock",
           "ai": "Utilização em conjuntos de dados de treino de IA/ML",
           "editing": "Edição ou alteração de fotos para além de recorte básico e filtros"
-        }
+        },
+        "photographerUseTitle": "Direitos de utilização do fotógrafo:",
+        "photographerUse": "Ao reservar uma sessão, o cliente concorda que o fotógrafo pode utilizar as fotos da sessão no seu portfólio, no seu perfil Photo Portugal e para fins de marketing profissional (website, redes sociais, materiais promocionais). Se o cliente não desejar que as suas fotos sejam publicadas, deve informar o fotógrafo antes ou durante a sessão. O fotógrafo é obrigado a respeitar este pedido.",
+        "platformDisclaimer": "A Photo Portugal não reivindica a propriedade de quaisquer fotos criadas durante sessões reservadas através da plataforma. Quaisquer disputas relativas à utilização de imagens são entre o cliente e o fotógrafo. A Photo Portugal pode auxiliar na resolução de tais disputas, mas não é responsável pela utilização não autorizada de imagens por qualquer uma das partes."
       },
       "prohibitedContent": {
         "title": "14. Conteúdo e Comportamento Proibidos",
@@ -1522,6 +1592,8 @@
     "profilePendingApproval": "Perfil pendente de aprovação",
     "profilePendingDescription": "O seu perfil está a ser analisado pela nossa equipa. Assim que for aprovado, ficará visível para os clientes. Entretanto, complete o seu perfil, carregue fotos de portfólio e crie pacotes.",
     "profilePendingDescriptionComplete": "O seu perfil está completo e foi enviado para revisão. A nossa equipa irá aprová-lo em breve e ficará visível para os clientes.",
+    "profileApproved": "O seu perfil está ativo!",
+    "profileApprovedDescription": "Os clientes já podem encontrá-lo e reservar sessões fotográficas. Mantenha o seu calendário atualizado.",
     "viewPublicProfile": "Ver Perfil Público",
     "previewProfile": "Pré-visualizar Perfil",
     "statRating": "Classificação",
@@ -2089,6 +2161,7 @@
     "deadlineToday": "Último dia para completar o seu perfil. A sua conta poderá ser desativada se não for concluído hoje.",
     "deadlineTomorrow": "Falta 1 dia para completar o seu perfil antes da desativação da conta.",
     "deadlineDays": "Faltam {days} dias para completar o seu perfil antes da desativação da conta.",
+    "deadlineExpired": "O prazo do seu perfil expirou. Complete agora para evitar a desativação.",
     "dismissChecklist": "Fechar checklist",
     "allSet": "Está tudo pronto!",
     "allSetDescriptionPhotographer": "O seu perfil está completo. Está pronto para começar a receber reservas!",

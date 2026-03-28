@@ -191,6 +191,118 @@ export const shootTypes: ShootType[] = [
       { question: "Can we combine a photoshoot with a food or wine tour?", answer: "Many photographers offer extended sessions that can incorporate stops at local restaurants, wine bars, or markets. This creates a natural, documentary-style set of photos that captures the full experience of your trip." },
     ],
   },
+  {
+    slug: "wedding",
+    name: "Wedding",
+    title: "Wedding Photographer Portugal — Destination Wedding Photography",
+    metaDescription:
+      "Hire a wedding photographer in Portugal. Destination weddings in Lisbon, Sintra, Algarve, Douro Valley & more. Verified professionals. From €500.",
+    h1: "Wedding Photography in Portugal",
+    heroText:
+      "Portugal has become one of Europe's most sought-after destination wedding locations — and with good reason. From vineyard estates in the Douro Valley to oceanfront venues in the Algarve, historic palaces in Sintra to rooftop celebrations in Lisbon, every setting tells a unique story. Our wedding photographers combine documentary-style storytelling with fine-art portraits, capturing every emotion from the nervous excitement of getting ready to the last dance of the night. They know Portugal's best venues, light conditions, and hidden spots for stunning couple portraits between the celebrations.",
+    bestLocations: [
+      { slug: "sintra", name: "Sintra", reason: "Palace venues, fairytale gardens, magical ceremony backdrops" },
+      { slug: "algarve", name: "Algarve", reason: "Clifftop venues, beach ceremonies, golden sunset receptions" },
+      { slug: "douro-valley", name: "Douro Valley", reason: "Vineyard estates, wine country elegance, panoramic terraces" },
+      { slug: "lisbon", name: "Lisbon", reason: "Historic palaces, rooftop venues, city-view celebrations" },
+      { slug: "comporta", name: "Comporta", reason: "Bohemian beach weddings, rice paddies, barefoot luxury" },
+    ],
+    faqs: [
+      { question: "How far in advance should we book a wedding photographer in Portugal?", answer: "For peak season (May-October), we recommend booking 6-12 months in advance. Popular photographers and dates fill up quickly, especially for Saturday weddings. Off-season weddings have more flexibility." },
+      { question: "How many hours of coverage do we need?", answer: "Most couples book 8-12 hours of coverage to capture everything from getting ready through the first dance. For intimate weddings, 6 hours may be sufficient. Full-day packages (up to 16 hours) are available for extended celebrations." },
+      { question: "Do photographers travel to any venue in Portugal?", answer: "Yes! Our photographers cover weddings across all of Portugal. Travel within the photographer's home region is typically included. For weddings in other regions, a small travel fee may apply — this is shown upfront in each package." },
+      { question: "Can we book a second photographer?", answer: "Absolutely. For weddings with 80+ guests, we strongly recommend a second photographer to capture simultaneous moments (e.g., both getting-ready preparations, guest reactions during the ceremony). Many photographers offer second-shooter add-ons." },
+    ],
+  },
+  {
+    slug: "maternity",
+    name: "Maternity",
+    title: "Maternity Photographer Portugal — Beautiful Pregnancy Photos",
+    metaDescription:
+      "Book a maternity photoshoot in Portugal. Stunning pregnancy photography in Lisbon, Cascais, Sintra & Algarve. Natural, elegant sessions. From €150.",
+    h1: "Maternity Photoshoot in Portugal",
+    heroText:
+      "Pregnancy is one of life's most beautiful chapters, and Portugal provides the perfect backdrop to celebrate it. Whether you're a local expecting parent or visiting Portugal during your pregnancy, our photographers specialize in creating elegant, natural maternity portraits that you'll cherish forever. From the golden beaches of Cascais to Lisbon's sun-drenched gardens, Sintra's romantic palaces to the Algarve's dramatic coastline — every location offers a unique atmosphere for capturing this special moment. Our photographers know how to make you feel comfortable, confident, and radiant.",
+    bestLocations: [
+      { slug: "cascais", name: "Cascais", reason: "Sandy beaches, soft coastal light, relaxed seaside atmosphere" },
+      { slug: "lisbon", name: "Lisbon", reason: "Botanical gardens, golden hour rooftops, elegant urban backdrops" },
+      { slug: "sintra", name: "Sintra", reason: "Romantic forest paths, palace gardens, dreamy natural settings" },
+      { slug: "algarve", name: "Algarve", reason: "Golden cliffs, serene beaches, warm Mediterranean light" },
+    ],
+    faqs: [
+      { question: "When is the best time for a maternity photoshoot?", answer: "Most photographers recommend scheduling between 28-34 weeks of pregnancy, when your bump is beautifully visible but you're still comfortable moving around. However, every pregnancy is different — earlier or later sessions work well too." },
+      { question: "What should I wear for a maternity session?", answer: "Flowing dresses, form-fitting fabrics, and neutral or soft colors photograph beautifully. Many photographers have a small collection of maternity gowns and fabrics you can borrow. Your photographer will send a style guide before the session." },
+      { question: "Can my partner and other children be included?", answer: "Absolutely! Family maternity sessions are wonderful. Your photographer will capture a mix of solo maternity portraits and beautiful family moments. Including siblings makes for especially heartwarming photos." },
+      { question: "What if I'm not feeling well on the day of the shoot?", answer: "Your comfort is the top priority. Free rescheduling is available if you're not feeling up to it. Sessions are also paced gently with plenty of breaks. Photographers are experienced with pregnant clients and prioritize your wellbeing." },
+    ],
+  },
+  {
+    slug: "anniversary",
+    name: "Anniversary",
+    title: "Anniversary Photoshoot Portugal — Celebrate Your Love Story",
+    metaDescription:
+      "Book an anniversary photoshoot in Portugal. Romantic photography for couples celebrating milestones in Lisbon, Porto, Sintra & Algarve. From €150.",
+    h1: "Anniversary Photoshoot in Portugal",
+    heroText:
+      "Whether it's your 1st or your 50th, an anniversary trip to Portugal deserves to be captured beautifully. Our photographers specialize in creating relaxed, romantic portraits that reflect the depth of your relationship. Imagine recreating the magic of your early days together against the backdrop of Lisbon's golden-lit streets, raising a toast in a Douro Valley vineyard, or walking hand-in-hand along the Algarve coast. Anniversary photoshoots are a celebration of where your love has been and where it's going — and Portugal is the perfect place to tell that story.",
+    bestLocations: [
+      { slug: "lisbon", name: "Lisbon", reason: "Romantic rooftop dinners, golden hour walks, intimate Alfama streets" },
+      { slug: "douro-valley", name: "Douro Valley", reason: "Wine tasting sessions, vineyard views, luxurious countryside" },
+      { slug: "sintra", name: "Sintra", reason: "Timeless palace settings, romantic gardens, fairytale atmosphere" },
+      { slug: "porto", name: "Porto", reason: "Riverside romance, port wine cellars, sunset over the Douro" },
+      { slug: "algarve", name: "Algarve", reason: "Beach walks, cliff-top moments, golden coastal light" },
+    ],
+    faqs: [
+      { question: "Can we incorporate a special dinner or activity into the shoot?", answer: "Yes! Many couples combine their anniversary session with a sunset dinner, wine tasting, or boat ride. Extended sessions work perfectly for this — your photographer captures both the portrait session and the celebration naturally." },
+      { question: "We're not used to being photographed — will it feel awkward?", answer: "Not at all. Anniversary sessions are the most relaxed of all — you already know each other perfectly. Your photographer will give gentle direction but mostly capture natural moments: walking together, laughing, sharing a drink. Most couples say it felt like a date, not a photoshoot." },
+      { question: "Can we recreate our wedding photos or a special moment?", answer: "Absolutely! Bring along any meaningful props — your wedding veil, a photo from your wedding day, or even your original outfits if they still fit. Photographers love incorporating personal elements into anniversary sessions." },
+      { question: "Is this a good gift idea?", answer: "Anniversary photoshoots are one of the most popular gift bookings on our platform. You can book and receive a gift voucher to present to your partner. Many couples say it was the most thoughtful anniversary gift they've ever received." },
+    ],
+  },
+  {
+    slug: "birthday",
+    name: "Birthday",
+    title: "Birthday Photoshoot Portugal — Celebrate in Style",
+    metaDescription:
+      "Book a birthday photoshoot in Portugal. Solo or group celebrations in Lisbon, Porto & Algarve. Fun, professional photography. From €150.",
+    h1: "Birthday Photoshoot in Portugal",
+    heroText:
+      "What better way to celebrate your birthday than with a professional photoshoot in one of Europe's most beautiful countries? Whether you're marking a milestone birthday with a solo portrait session, celebrating with your best friends in Lisbon, or having a family birthday getaway in the Algarve, our photographers capture the joy and energy of the occasion. From chic urban settings and rooftop bars to sun-drenched beaches and colorful streets, Portugal offers endless backdrops for birthday photos you'll actually want to frame.",
+    bestLocations: [
+      { slug: "lisbon", name: "Lisbon", reason: "Rooftop bars, vibrant streets, colorful neighborhoods" },
+      { slug: "porto", name: "Porto", reason: "Wine cellars, riverside charm, Instagram-worthy spots" },
+      { slug: "algarve", name: "Algarve", reason: "Beach parties, sunset cliffs, resort celebrations" },
+      { slug: "cascais", name: "Cascais", reason: "Coastal elegance, beachfront restaurants, relaxed vibes" },
+    ],
+    faqs: [
+      { question: "Can we do a photoshoot during a birthday dinner or party?", answer: "Yes! Photographers can cover your birthday dinner, rooftop party, or any celebration. Extended sessions work best for event coverage — typically 2-3 hours to capture the full atmosphere, from arrival through cake and celebrations." },
+      { question: "Is this good for milestone birthdays (30th, 40th, 50th)?", answer: "Milestone birthday photoshoots are among our most popular bookings. Many clients use these photos for social media announcements, party invitations, or simply as a personal celebration of the milestone. Your photographer will make you feel and look amazing." },
+      { question: "Can we bring balloons, cake, or other props?", answer: "Absolutely! Birthday props add personality and fun to the photos. Popular choices include number balloons, confetti, a small cake, champagne, and birthday banners. Your photographer can suggest locations that work well with props." },
+      { question: "Can we combine the photoshoot with a group activity?", answer: "Many birthday groups combine their photoshoot with a walking tour, wine tasting, or boat trip. Your photographer can join for part of the activity and capture candid moments alongside more posed group photos." },
+    ],
+  },
+  {
+    slug: "content-creator",
+    name: "Content Creator",
+    title: "Content Creator Photography Portugal — Professional Content Shoots",
+    metaDescription:
+      "Book a content creator photoshoot in Portugal. Instagram, TikTok & brand content in Lisbon, Porto & Algarve. Professional quality. From €150.",
+    h1: "Content Creator Photography in Portugal",
+    heroText:
+      "Portugal is a content creator's dream — vibrant colors, incredible architecture, golden light, and endless variety within a small area. Our photographers understand the content creation world: they know which angles work for Instagram Reels vs. static posts, how to capture both vertical and horizontal compositions, and how to create a cohesive set of images that elevates your brand. Whether you need a batch of Instagram content, TikTok behind-the-scenes, LinkedIn headshots, or brand photography for your website, our photographers deliver scroll-stopping content that performs.",
+    bestLocations: [
+      { slug: "lisbon", name: "Lisbon", reason: "Colorful tiles, trams, pink streets — the most 'grammable city in Europe" },
+      { slug: "porto", name: "Porto", reason: "Blue azulejos, Lello Bookshop, Ribeira — instantly recognizable backdrops" },
+      { slug: "sintra", name: "Sintra", reason: "Fairytale castles, lush gardens — fantasy content that goes viral" },
+      { slug: "algarve", name: "Algarve", reason: "Benagil Cave, golden cliffs, turquoise water — travel content gold" },
+    ],
+    faqs: [
+      { question: "How many photos will I get for my content?", answer: "For a 1-hour session, expect 50-80+ photos optimized for social media. A 2-hour session yields 100-150+ images. Photographers deliver both original edits and can provide cropped versions for different platforms (Stories, Reels, feed posts)." },
+      { question: "Can the photographer shoot video too?", answer: "Some photographers offer hybrid photo/video packages. When booking, look for photographers who list video in their services, or ask about adding short-form video clips to your session. This is great for Reels and TikTok content." },
+      { question: "Can I get a mix of candid and posed content?", answer: "Absolutely — that's the standard approach. Your photographer will capture a mix of walking shots, laughing candids, and more styled poses. Many creators bring a shot list or mood board, which photographers love working from." },
+      { question: "Do you work with brands and influencers?", answer: "Yes! Many of our photographers have experience with brand campaigns, sponsored content, and influencer collaborations. They understand brand guidelines, shot lists, and deliverable requirements. Contact us for custom brand partnership packages." },
+    ],
+  },
 ];
 
 export function getShootTypeBySlug(slug: string): ShootType | undefined {

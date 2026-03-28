@@ -76,7 +76,7 @@
   },
   "nav": {
     "announcement": "Professional vacation photography",
-    "announcementSuffix": "across {count}+ stunning locations in Portugal",
+    "announcementSuffix": "across {count} stunning locations in Portugal",
     "browseNow": "Browse now →",
     "destinations": "Destinations",
     "popularDestinations": "Popular Destinations",
@@ -91,6 +91,12 @@
     "forClientsFaqDesc": "Pricing, cancellation, delivery & more",
     "howWeSelect": "How We Select Photographers",
     "forClientsHowWeSelectDesc": "Our rigorous vetting process",
+    "about": "About Us",
+    "aboutDesc": "Our story and the team behind Photo Portugal",
+    "helpCenter": "Help Center",
+    "helpCenterDesc": "Guides, tutorials, and support",
+    "contact": "Contact",
+    "contactDesc": "Get in touch with our team",
     "forPhotographers": "For Photographers",
     "becomePhotographer": "Become a photographer",
     "becomePhotographerDesc": "Join our network and connect with travelers from around the world",
@@ -116,8 +122,32 @@
       "soloPortrait": "Solo Portrait",
       "engagement": "Engagement",
       "proposal": "Proposal",
-      "honeymoon": "Honeymoon"
-    }
+      "honeymoon": "Honeymoon",
+      "elopement": "Elopement",
+      "wedding": "Wedding",
+      "birthday": "Birthday"
+    },
+    "megaGettingStarted": "Getting Started",
+    "megaTrustQuality": "Trust & Quality",
+    "megaCompany": "Company",
+    "megaBrowseDesc": "Browse photographers by location, style & availability",
+    "megaAboutDesc": "Our story and the team behind Photo Portugal",
+    "megaContactDesc": "Get in touch with our team",
+    "megaHelpDesc": "Guides, tutorials, and support articles",
+    "megaCtaTitle": "Ready to book?",
+    "megaCtaDesc": "Find your perfect photographer in minutes.",
+    "megaMoreLocations": "More Locations",
+    "megaJoinUs": "Join Us",
+    "megaJoinDesc": "Early bird program with exclusive benefits",
+    "megaWhyJoin": "Why Photo Portugal",
+    "megaWhyJoinDesc": "How our platform helps you grow",
+    "megaPlansAndPricing": "Plans & Pricing",
+    "megaPricingDesc": "Free, Pro, and Premium tiers compared",
+    "megaHowItWorksPhotographer": "Booking flow from your perspective",
+    "megaResources": "Resources",
+    "megaFaqPhotographerDesc": "Common questions from photographers",
+    "megaBlog": "Blog",
+    "megaBlogDesc": "Tips, guides, and photography insights"
   },
   "footer": {
     "tagline": "Connecting travelers with talented local photographers across Portugal. Capture your perfect moments.",
@@ -221,9 +251,37 @@
         "title": "Engagement",
         "description": "Say yes with Portugal as your backdrop"
       },
+      "proposal": {
+        "title": "Proposal",
+        "description": "Capture the moment they say yes"
+      },
+      "elopement": {
+        "title": "Elopement",
+        "description": "Intimate ceremonies in breathtaking settings"
+      },
       "friends": {
         "title": "Friends",
         "description": "Group trips deserve great photos"
+      },
+      "wedding": {
+        "title": "Wedding",
+        "description": "Your dream destination wedding, captured"
+      },
+      "maternity": {
+        "title": "Maternity",
+        "description": "Beautiful pregnancy portraits"
+      },
+      "anniversary": {
+        "title": "Anniversary",
+        "description": "Celebrate your milestone in Portugal"
+      },
+      "birthday": {
+        "title": "Birthday",
+        "description": "Make your celebration unforgettable"
+      },
+      "contentCreator": {
+        "title": "Content Creator",
+        "description": "Scroll-stopping content for your brand"
       }
     }
   },
@@ -643,6 +701,8 @@
   "join": {
     "badge": "Early Bird Program",
     "heroTitle": "Be a Founding Photographer",
+    "heroTitleEarly": "Join as an Early Photographer",
+    "heroTitleFirst": "Join the First 50 Photographers",
     "heroSubtitle": "We're building Portugal's premier photography marketplace for tourists. Join now and lock in exclusive benefits before we launch publicly.",
     "claimYourSpot": "Claim Your Spot",
     "claimYourSpotNow": "Claim Your Spot Now",
@@ -727,6 +787,16 @@
         "youEarn": "You earn on €200 booking"
       },
       "earlyBirdNote": "Early bird photographers get their plan upgrade free — you still benefit from lower commission rates."
+    },
+    "calculator": {
+      "title": "How Much Can You Earn?",
+      "subtitle": "Adjust the sliders to see your potential earnings on Photo Portugal.",
+      "sessionsPerMonth": "Sessions per month",
+      "avgPackagePrice": "Average package price",
+      "yourPlan": "Your plan",
+      "commission": "commission",
+      "monthlyEarnings": "Monthly earnings",
+      "yearlyEarnings": "Yearly earnings"
     },
     "gettingStarted": {
       "title": "Getting Started Takes 10 Minutes",
@@ -1189,8 +1259,8 @@
     "relatedLocations": "Related Locations"
   },
   "photographersMeta": {
-    "title": "Find Photographers in Portugal",
-    "description": "Browse professional photographers across Portugal. View portfolios, read verified reviews, and book your perfect vacation photoshoot."
+    "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve | Photo Portugal",
+    "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 20+ locations across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €150."
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -1467,7 +1537,7 @@
       },
       "intellectualProperty": {
         "title": "13. Intellectual Property",
-        "intro": "Photographers retain copyright of all images they create. Clients receive a personal-use license for the photos from their session.",
+        "intro": "Photographers retain full copyright of all images they create. Clients receive a personal-use license for the photos from their session.",
         "personalUseTitle": "Personal use includes:",
         "personalUse": {
           "socialMedia": "Sharing on personal social media accounts (Instagram, Facebook, etc.)",
@@ -1480,7 +1550,10 @@
           "stock": "Stock photography licensing",
           "ai": "Use in AI/ML training datasets",
           "editing": "Editing or altering photos beyond basic cropping and filters"
-        }
+        },
+        "photographerUseTitle": "Photographer usage rights:",
+        "photographerUse": "By booking a session, the client agrees that the photographer may use photos from the session in their portfolio, on their Photo Portugal profile, and for professional marketing purposes (website, social media, promotional materials). If the client does not wish their photos to be published, they must inform the photographer before or during the session. The photographer is obligated to respect this request.",
+        "platformDisclaimer": "Photo Portugal does not claim ownership of any photos created during sessions booked through the platform. Any disputes regarding image usage are between the client and the photographer. Photo Portugal may assist in resolving such disputes but is not liable for unauthorized use of images by either party."
       },
       "prohibitedContent": {
         "title": "14. Prohibited Content & Behaviour",
@@ -1522,6 +1595,8 @@
     "profilePendingApproval": "Profile pending approval",
     "profilePendingDescription": "Your profile is being reviewed by our team. Once approved, it will be visible to clients. In the meantime, please complete your profile, upload portfolio photos, and create packages.",
     "profilePendingDescriptionComplete": "Your profile is complete and has been submitted for review. Our team will approve it shortly and it will become visible to clients.",
+    "profileApproved": "Your profile is live!",
+    "profileApprovedDescription": "Clients can now find you and book photoshoots. Make sure your calendar is up to date.",
     "viewPublicProfile": "View Public Profile",
     "previewProfile": "Preview Profile",
     "statRating": "Rating",
@@ -2249,6 +2324,7 @@
     "deadlineToday": "Last day to complete your profile. Your account may be deactivated if not finished today.",
     "deadlineTomorrow": "1 day left to complete your profile before your account is deactivated.",
     "deadlineDays": "{days} days left to complete your profile before your account is deactivated.",
+    "deadlineExpired": "Your profile deadline has passed. Complete it now to avoid deactivation.",
     "dismissChecklist": "Dismiss checklist",
     "allSet": "You're all set!",
     "allSetDescriptionPhotographer": "Your profile is complete. You're ready to start receiving bookings!",

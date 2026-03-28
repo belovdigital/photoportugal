@@ -201,6 +201,20 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
         </div>
       )}
 
+      {profile.is_approved && profile.session_count === 0 && (
+        <div className="mt-4 rounded-xl border border-primary-200 bg-primary-50 p-4">
+          <div className="flex items-start gap-3">
+            <svg className="mt-0.5 h-5 w-5 shrink-0 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-primary-800">{t("profileApproved")}</p>
+              <p className="mt-1 text-sm text-primary-700">{t("profileApprovedDescription")}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {profile.is_approved && <div className="mt-2 flex justify-end">
         <Link
           href={`/photographers/${profile.slug}`}

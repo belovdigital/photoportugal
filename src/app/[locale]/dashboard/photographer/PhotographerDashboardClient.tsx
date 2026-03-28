@@ -1307,7 +1307,7 @@ function SortablePackageCard({
 
         {/* Price + actions */}
         <div className="flex shrink-0 items-center gap-3">
-          <p className="text-lg font-bold text-gray-900">&euro;{pkg.price}</p>
+          <p className="text-lg font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</p>
           <button onClick={() => onEdit(pkg)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-warm-100 hover:text-primary-600" title="Edit">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
           </button>
@@ -1491,7 +1491,7 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
           <span>{new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })}</span>
         )}
         {booking.shoot_time && <span>{TIME_LABEL_KEYS[booking.shoot_time] ? t(TIME_LABEL_KEYS[booking.shoot_time]) : booking.shoot_time}</span>}
-        {booking.total_price && <span>&euro;{booking.total_price}</span>}
+        {booking.total_price && <span>&euro;{Math.round(Number(booking.total_price))}</span>}
       </div>
 
       {booking.message && (

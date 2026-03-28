@@ -9,6 +9,17 @@ import crypto from "crypto";
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+// Ping Google to re-crawl sitemap after blog changes
+async function pingSitemap() {
+  try {
+    await fetch(
+      "https://www.google.com/ping?sitemap=https%3A%2F%2Fphotoportugal.com%2Fsitemap.xml"
+    );
+  } catch {
+    // Non-critical — don't block the response
+  }
+}
+
 async function verifyAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
   const token = cookieStore.get("admin_token")?.value;
@@ -109,6 +120,7 @@ export async function POST(req: NextRequest) {
     const targetKeywords = (formData.get("target_keywords") as string) || null;
     const author = (formData.get("author") as string) || "Photo Portugal";
     const isPublished = formData.get("is_published") === "true";
+    const scheduledAt = (formData.get("scheduled_at") as string) || null;
     const coverFile = formData.get("cover_image") as File | null;
 
     if (!title || !slug || !content) {
@@ -145,11 +157,13 @@ export async function POST(req: NextRequest) {
     const publishedAt = isPublished ? new Date().toISOString() : null;
 
     const post = await queryOne<{ id: string }>(
-      `INSERT INTO blog_posts (title, slug, excerpt, content, cover_image_url, meta_title, meta_description, target_keywords, author, is_published, published_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      `INSERT INTO blog_posts (title, slug, excerpt, content, cover_image_url, meta_title, meta_description, target_keywords, author, is_published, published_at, scheduled_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id`,
-      [title, slug, excerpt, content, coverImageUrl, metaTitle, metaDescription, targetKeywords, author, isPublished, publishedAt]
+      [title, slug, excerpt, content, coverImageUrl, metaTitle, metaDescription, targetKeywords, author, isPublished, publishedAt, scheduledAt]
     );
+
+    if (isPublished) pingSitemap();
 
     return NextResponse.json({ success: true, id: post?.id });
   } catch (error) {
@@ -178,6 +192,7 @@ export async function PUT(req: NextRequest) {
     const targetKeywords = (formData.get("target_keywords") as string) || null;
     const author = (formData.get("author") as string) || "Photo Portugal";
     const isPublished = formData.get("is_published") === "true";
+    const scheduledAt = (formData.get("scheduled_at") as string) || null;
     const coverFile = formData.get("cover_image") as File | null;
 
     if (!id || !title || !slug || !content) {
@@ -233,11 +248,13 @@ export async function PUT(req: NextRequest) {
       `UPDATE blog_posts
        SET title = $1, slug = $2, excerpt = $3, content = $4, cover_image_url = $5,
            meta_title = $6, meta_description = $7, target_keywords = $8, author = $9,
-           is_published = $10, published_at = $11
-       WHERE id = $12
+           is_published = $10, published_at = $11, scheduled_at = $12
+       WHERE id = $13
        RETURNING id`,
-      [title, slug, excerpt, content, coverImageUrl, metaTitle, metaDescription, targetKeywords, author, isPublished, publishedAt, id]
+      [title, slug, excerpt, content, coverImageUrl, metaTitle, metaDescription, targetKeywords, author, isPublished, publishedAt, scheduledAt, id]
     );
+
+    if (isPublished) pingSitemap();
 
     return NextResponse.json({ success: true });
   } catch (error) {

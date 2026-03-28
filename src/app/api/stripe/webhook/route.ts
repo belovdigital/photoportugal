@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { requireStripe } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient } from "@/lib/email";
+import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 
 export async function POST(req: NextRequest) {
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
               await queryOne(
                 `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE) RETURNING id`,
                 [bookingId, bookingForMsg.client_id,
-                  `✅ Payment of €${bookingForMsg.total_price} received from ${bookingForMsg.client_name}.\n\nClient contact: ${contactLine}`]
+                  `✅ Payment of €${Number(bookingForMsg.total_price)} received from ${bookingForMsg.client_name}.\n\nClient contact: ${contactLine}`]
               );
             }
           } catch (msgErr) {
@@ -110,14 +110,22 @@ export async function POST(req: NextRequest) {
                 for (const email of adminEmails) {
                   sendEmail(
                     email,
-                    `Payment received — €${bookingInfo.total_price} from ${bookingInfo.client_name}`,
+                    `Payment received — €${Number(bookingInfo.total_price)} from ${bookingInfo.client_name}`,
                     `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
                       <h2 style="color: #16a34a;">Payment Received</h2>
-                      <p><strong>${bookingInfo.client_name}</strong> paid <strong>€${bookingInfo.total_price}</strong> for a booking with <strong>${bookingInfo.photographer_name}</strong>.</p>
+                      <p><strong>${bookingInfo.client_name}</strong> paid <strong>€${Number(bookingInfo.total_price)}</strong> for a booking with <strong>${bookingInfo.photographer_name}</strong>.</p>
                       <p><a href="https://photoportugal.com/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View in Admin</a></p>
                     </div>`
                   );
                 }
+              } catch {}
+
+              // SMS to admin
+              try {
+                sendSMS(
+                  "+351962598883",
+                  `Photo Portugal: €${Number(bookingInfo.total_price)} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
+                ).catch(err => console.error("[sms] admin payment sms error:", err));
               } catch {}
 
               // SMS to photographer
@@ -137,7 +145,7 @@ export async function POST(req: NextRequest) {
                   if (smsPrefs?.sms_bookings !== false) {
                     sendSMS(
                       photographerUser.phone,
-                      `Photo Portugal: Payment of €${bookingInfo.total_price} received for your booking with ${bookingInfo.client_name}. Log in to view details.`
+                      `Photo Portugal: Payment of €${Number(bookingInfo.total_price)} received for your booking with ${bookingInfo.client_name}. Log in to view details.`
                     ).catch(err => console.error("[sms] error:", err));
                   }
                 }
@@ -177,6 +185,22 @@ export async function POST(req: NextRequest) {
             [bookingId]
           );
           console.log(`[webhook] Payment failed for booking ${bookingId}`);
+
+          // Notify client about failed payment
+          try {
+            const failedBooking = await queryOne<{ client_email: string; client_name: string; photographer_name: string }>(
+              `SELECT cu.email as client_email, cu.name as client_name, pp.display_name as photographer_name
+               FROM bookings b JOIN users cu ON cu.id = b.client_id
+               JOIN photographer_profiles pp ON pp.id = b.photographer_id
+               WHERE b.id = $1`, [bookingId]
+            );
+            if (failedBooking) {
+              sendPaymentFailedToClient(failedBooking.client_email, failedBooking.client_name, failedBooking.photographer_name)
+                .catch(err => console.error("[webhook] payment failed email error:", err));
+            }
+          } catch (err) {
+            console.error("[webhook] payment failed notification error:", err);
+          }
         }
         break;
       }

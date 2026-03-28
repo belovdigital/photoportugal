@@ -155,7 +155,23 @@ export default async function PhotographersPage({
   const dbPhotographers = await getDbPhotographers();
   const resolvedShootType = resolveShootType(initialShootType);
 
+  const base = "https://photoportugal.com";
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Professional Photographers in Portugal",
+    numberOfItems: dbPhotographers.length,
+    itemListElement: dbPhotographers.slice(0, 20).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${base}/photographers/${p.slug}`,
+      name: p.display_name,
+    })),
+  };
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
     <PhotographerCatalog
       key={`${initialLocation || ""}_${resolvedShootType || ""}`}
       photographers={dbPhotographers}
@@ -164,5 +180,6 @@ export default async function PhotographersPage({
       initialLocation={initialLocation}
       initialShootType={resolvedShootType}
     />
+    </>
   );
 }

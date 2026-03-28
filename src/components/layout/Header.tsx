@@ -10,6 +10,7 @@ import { locations } from "@/lib/locations-data";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
+import { Compass, Search, ShieldCheck, HelpCircle, Users, Mail, LifeBuoy, MapPin, Heart, UserRound, Baby, Gem, Sparkles, Sun, UserPlus, CreditCard, Camera, BookOpen, TreePine, PartyPopper, Cake } from "lucide-react";
 
 const TOP_DESTINATIONS = [
   { slug: "lisbon", name: "Lisbon", img: "photo-1536663060084-a0d9eeeaf44b" },
@@ -21,12 +22,15 @@ const TOP_DESTINATIONS = [
 ];
 
 const SHOOT_TYPES_DATA = [
-  { key: "couples", href: "/photographers?shoot=Couples" },
-  { key: "family", href: "/photographers?shoot=Family" },
-  { key: "soloPortrait", href: "/photographers?shoot=Solo+Portrait" },
-  { key: "engagement", href: "/photographers?shoot=Engagement" },
-  { key: "proposal", href: "/photographers?shoot=Proposal" },
-  { key: "honeymoon", href: "/photographers?shoot=Honeymoon" },
+  { key: "couples", href: "/photoshoots/couples", icon: Heart },
+  { key: "family", href: "/photoshoots/family", icon: Baby },
+  { key: "proposal", href: "/photoshoots/proposal", icon: Sparkles },
+  { key: "elopement", href: "/photoshoots/elopement", icon: TreePine },
+  { key: "wedding", href: "/photoshoots/wedding", icon: PartyPopper },
+  { key: "honeymoon", href: "/photoshoots/honeymoon", icon: Sun },
+  { key: "soloPortrait", href: "/photoshoots/solo", icon: UserRound },
+  { key: "engagement", href: "/photoshoots/engagement", icon: Gem },
+  { key: "birthday", href: "/photoshoots/birthday", icon: Cake },
 ];
 
 export function Header() {
@@ -35,6 +39,7 @@ export function Header() {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const megaRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const locale = useLocale();
@@ -53,7 +58,7 @@ export function Header() {
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setActiveMenu(null);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node) && (!megaRef.current || !megaRef.current.contains(e.target as Node))) setActiveMenu(null);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -110,44 +115,7 @@ export function Header() {
                 </svg>
               </button>
 
-              {activeMenu === "destinations" && (
-                <div className="absolute left-0 top-full mt-2 w-[640px] rounded-xl border border-warm-200 bg-white p-5 shadow-xl">
-                  <div className="flex gap-6">
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t("popularDestinations")}</p>
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        {TOP_DESTINATIONS.map((d) => (
-                          <Link key={d.slug} href={`/locations/${d.slug}`} onClick={() => setActiveMenu(null)} className="group overflow-hidden rounded-lg">
-                            <div className="relative aspect-[4/3]">
-                              <OptimizedImage src={unsplashUrl(d.img, 200, 70)} alt={d.name} className="h-full w-full transition group-hover:scale-105" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                              <p className="absolute bottom-1.5 left-2 text-xs font-semibold text-white">{d.name}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                      <Link href="/locations" onClick={() => setActiveMenu(null)} className="mt-3 inline-flex text-sm font-semibold text-primary-600 hover:text-primary-700">
-                        {t("allLocations", { count: 25 })}
-                      </Link>
-                    </div>
-                    <div className="w-40 shrink-0 border-l border-warm-100 pl-5">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t("byOccasion")}</p>
-                      <div className="mt-3 space-y-0.5">
-                        {SHOOT_TYPES_DATA.map((s) => (
-                          <Link key={s.key} href={s.href} onClick={() => setActiveMenu(null)}
-                            className="block rounded-lg px-2 py-1.5 text-sm text-gray-600 transition hover:bg-primary-50 hover:text-primary-600">
-                            {t(`shootTypes.${s.key}`)}
-                          </Link>
-                        ))}
-                      </div>
-                      <Link href="/photographers" onClick={() => setActiveMenu(null)}
-                        className="mt-2 block text-xs font-semibold text-primary-600 hover:text-primary-700 px-2">
-                        {t("allTypes")}
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Destinations mega menu rendered below nav */}
             </div>
 
             <Link href="/photographers" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
@@ -169,42 +137,7 @@ export function Header() {
                 </svg>
               </button>
 
-              {activeMenu === "forClients" && (
-                <div className="absolute left-0 top-full mt-2 w-80 rounded-xl border border-warm-200 bg-white p-4 shadow-xl">
-                  <div className="space-y-0.5">
-                    <Link href="/how-it-works" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
-                      <svg className="h-4.5 w-4.5 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{t("howItWorks")}</p>
-                        <p className="text-xs text-gray-400">{t("forClientsHowItWorksDesc")}</p>
-                      </div>
-                    </Link>
-                    <Link href="/faq" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
-                      <svg className="h-4.5 w-4.5 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{t("faq")}</p>
-                        <p className="text-xs text-gray-400">{t("forClientsFaqDesc")}</p>
-                      </div>
-                    </Link>
-                    <Link href="/how-we-select" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
-                      <svg className="h-4.5 w-4.5 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{t("howWeSelect")}</p>
-                        <p className="text-xs text-gray-400">{t("forClientsHowWeSelectDesc")}</p>
-                      </div>
-                    </Link>
-                    <div className="my-1.5 border-t border-warm-100" />
-                    <Link href="/about" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
-                      <svg className="h-4.5 w-4.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      <p className="text-sm text-gray-600">{t("about")}</p>
-                    </Link>
-                    <Link href="/contact" onClick={() => setActiveMenu(null)} className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
-                      <svg className="h-4.5 w-4.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                      <p className="text-sm text-gray-600">{t("contact")}</p>
-                    </Link>
-                  </div>
-                </div>
-              )}
+              {/* Mega menu rendered below nav via portal-like positioning */}
             </div>
 
             {!isLoading && (!user || role === "photographer") && <div className="relative">
@@ -220,29 +153,7 @@ export function Header() {
                 </svg>
               </button>
 
-              {activeMenu === "photographers" && (
-                <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-warm-200 bg-white p-5 shadow-xl">
-                  <p className="text-sm font-semibold text-gray-900">{t("becomePhotographer")}</p>
-                  <p className="mt-1 text-xs text-gray-500">{t("becomePhotographerDesc")}</p>
-                  <div className="mt-4 space-y-1">
-                    <Link href="/join" onClick={() => setActiveMenu(null)}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600">
-                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
-                      {t("joinAsPhotographer")}
-                    </Link>
-                    <Link href="/pricing" onClick={() => setActiveMenu(null)}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600">
-                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      {t("pricingPlans")}
-                    </Link>
-                    <Link href="/for-photographers" onClick={() => setActiveMenu(null)}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-700 transition hover:bg-primary-50 hover:text-primary-600">
-                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      {t("learnMore")}
-                    </Link>
-                  </div>
-                </div>
-              )}
+              {/* Photographers mega menu rendered below nav */}
             </div>}
           </div>
 
@@ -361,6 +272,234 @@ export function Header() {
             </button>
           </div>
         </nav>
+
+        <div ref={megaRef}>
+        {/* Destinations mega menu — overlay */}
+        {activeMenu === "destinations" && (
+          <div className="hidden lg:block absolute left-0 right-0 top-full z-40 border-t border-warm-200 bg-white shadow-xl">
+            <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-[1fr_1fr_200px] gap-8">
+                {/* Column 1: Featured destinations with photos */}
+                <div>
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("popularDestinations")}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {TOP_DESTINATIONS.map((d) => (
+                      <Link key={d.slug} href={`/locations/${d.slug}`} onClick={() => setActiveMenu(null)} className="group overflow-hidden rounded-lg">
+                        <div className="relative aspect-[4/3]">
+                          <OptimizedImage src={unsplashUrl(d.img, 200, 70)} alt={d.name} className="h-full w-full transition group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <p className="absolute bottom-1.5 left-2 text-xs font-semibold text-white">{d.name}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Column 2: All other locations */}
+                <div>
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaMoreLocations")}</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                    {locations
+                      .filter((loc) => !TOP_DESTINATIONS.some((d) => d.slug === loc.slug))
+                      .map((loc) => (
+                        <Link
+                          key={loc.slug}
+                          href={`/locations/${loc.slug}`}
+                          onClick={() => setActiveMenu(null)}
+                          className="group flex items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-warm-50"
+                        >
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-300 group-hover:text-primary-500" strokeWidth={1.5} />
+                          <span className="text-sm text-gray-600 group-hover:text-primary-600">{loc.name}</span>
+                        </Link>
+                      ))}
+                  </div>
+                  <Link href="/locations" onClick={() => setActiveMenu(null)} className="mt-3 inline-flex px-2 text-sm font-semibold text-primary-600 hover:text-primary-700">
+                    {t("allLocations", { count: locations.length })}
+                  </Link>
+                </div>
+
+                {/* Column 3: By Occasion */}
+                <div className="border-l border-warm-100 pl-6">
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("byOccasion")}</p>
+                  <div className="space-y-0.5">
+                    {SHOOT_TYPES_DATA.map((s) => {
+                      const Icon = s.icon;
+                      return (
+                        <Link key={s.key} href={s.href} onClick={() => setActiveMenu(null)}
+                          className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 transition hover:bg-warm-50">
+                          <Icon className="h-4 w-4 shrink-0 text-gray-400 group-hover:text-primary-500" strokeWidth={1.5} />
+                          <span className="text-sm text-gray-600 group-hover:text-primary-600">{t(`shootTypes.${s.key}`)}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* For Clients mega menu — overlay */}
+        {activeMenu === "forClients" && (
+          <div className="hidden lg:block absolute left-0 right-0 top-full z-40 border-t border-warm-200 bg-white shadow-xl">
+            <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-3 gap-10">
+                {/* Column 1: Getting Started */}
+                <div>
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaGettingStarted")}</p>
+                  <div className="space-y-0.5">
+                    <Link href="/how-it-works" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Compass className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("howItWorks")}</p>
+                        <p className="text-xs text-gray-400">{t("forClientsHowItWorksDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/photographers" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Search className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("findPhotographers")}</p>
+                        <p className="text-xs text-gray-400">{t("megaBrowseDesc")}</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Column 2: Trust & Quality */}
+                <div>
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaTrustQuality")}</p>
+                  <div className="space-y-0.5">
+                    <Link href="/how-we-select" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <ShieldCheck className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("howWeSelect")}</p>
+                        <p className="text-xs text-gray-400">{t("forClientsHowWeSelectDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/faq" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <HelpCircle className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("faq")}</p>
+                        <p className="text-xs text-gray-400">{t("forClientsFaqDesc")}</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Column 3: Company */}
+                <div>
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaCompany")}</p>
+                  <div className="space-y-0.5">
+                    <Link href="/about" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Users className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("about")}</p>
+                        <p className="text-xs text-gray-400">{t("megaAboutDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/contact" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Mail className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("contact")}</p>
+                        <p className="text-xs text-gray-400">{t("megaContactDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/support" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <LifeBuoy className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("helpCenter")}</p>
+                        <p className="text-xs text-gray-400">{t("megaHelpDesc")}</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom CTA */}
+              <div className="mt-5 flex items-center justify-center gap-4 rounded-lg bg-warm-50 px-5 py-3">
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold text-gray-900">{t("megaCtaTitle")}</span>{" "}{t("megaCtaDesc")}
+                </p>
+                <Link href="/photographers" onClick={() => setActiveMenu(null)} className="shrink-0 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
+                  {t("bookPhotoshoot")}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* For Photographers mega menu — overlay */}
+        {activeMenu === "photographers" && (
+          <div className="hidden lg:block absolute left-0 right-0 top-full z-40 border-t border-warm-200 bg-white shadow-xl">
+            <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-3 gap-10">
+                {/* Column 1: Join */}
+                <div>
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaJoinUs")}</p>
+                  <div className="space-y-0.5">
+                    <Link href="/join" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <UserPlus className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("joinAsPhotographer")}</p>
+                        <p className="text-xs text-gray-400">{t("megaJoinDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/for-photographers" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Camera className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("megaWhyJoin")}</p>
+                        <p className="text-xs text-gray-400">{t("megaWhyJoinDesc")}</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Column 2: Plans & Pricing */}
+                <div>
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaPlansAndPricing")}</p>
+                  <div className="space-y-0.5">
+                    <Link href="/pricing" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <CreditCard className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("pricingPlans")}</p>
+                        <p className="text-xs text-gray-400">{t("megaPricingDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/how-it-works" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Compass className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("howItWorks")}</p>
+                        <p className="text-xs text-gray-400">{t("megaHowItWorksPhotographer")}</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Column 3: Resources */}
+                <div>
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaResources")}</p>
+                  <div className="space-y-0.5">
+                    <Link href="/faq" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <HelpCircle className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("faq")}</p>
+                        <p className="text-xs text-gray-400">{t("megaFaqPhotographerDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/blog" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <BookOpen className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("megaBlog")}</p>
+                        <p className="text-xs text-gray-400">{t("megaBlogDesc")}</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        </div>
 
         {/* Mobile nav */}
         {mobileOpen && (

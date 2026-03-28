@@ -7,10 +7,34 @@ declare global {
   }
 }
 
+const ADS_ID = "AW-18043729532";
+
 function track(event: string, params?: Record<string, unknown>) {
   if (typeof window !== "undefined" && window.gtag) {
     window.gtag("event", event, params);
   }
+}
+
+function trackAdsConversion(label: string, value?: number) {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "conversion", {
+      send_to: `${ADS_ID}/${label}`,
+      ...(value ? { value, currency: "EUR" } : {}),
+    });
+  }
+}
+
+// ===== PAGE VIEW TRACKING (for ad visitor journeys) =====
+
+export function trackPageView(path: string) {
+  if (typeof window === "undefined") return;
+  const utmSource = sessionStorage.getItem("utm_source");
+  if (!utmSource) return; // only track ad visitors
+  fetch("/api/track-pageview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, utm_source: utmSource }),
+  }).catch(() => {});
 }
 
 // ===== FUNNEL EVENTS =====
@@ -38,22 +62,24 @@ export function trackStartBooking(photographerSlug: string, packageName: string,
   });
 }
 
-// Step 4: Booking submitted
+// Step 4: Booking submitted (with value for Google Ads optimization)
 export function trackBookingSubmitted(photographerSlug: string, price: number) {
   track("begin_checkout", {
     currency: "EUR",
     value: price,
     items: [{ item_id: photographerSlug, price }],
   });
+  trackAdsConversion("booking_submitted", Number(price));
 }
 
-// Step 5: Payment completed
+// Step 5: Payment completed (with value for Google Ads optimization)
 export function trackPaymentCompleted(bookingId: string, amount: number) {
   track("purchase", {
     transaction_id: bookingId,
     currency: "EUR",
     value: amount,
   });
+  trackAdsConversion("payment_completed", Number(amount));
 }
 
 // Step 6: Delivery accepted
@@ -70,6 +96,7 @@ export function trackReviewSubmitted(photographerSlug: string, rating: number) {
 
 export function trackSignUp(method: string, role: string) {
   track("sign_up", { method, role });
+  if (role === "client") trackAdsConversion("client_signup");
 }
 
 export function trackLocationView(slug: string) {

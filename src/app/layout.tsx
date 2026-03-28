@@ -76,7 +76,7 @@ export default async function RootLayout({
               contactPoint: {
                 "@type": "ContactPoint",
                 contactType: "customer service",
-                email: "hello@photoportugal.com",
+                email: "info@photoportugal.com",
               },
             }),
           }}

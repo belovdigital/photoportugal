@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
-import { sendWelcomeEmail, sendAdminNewPhotographerNotification } from "@/lib/email";
+import { sendWelcomeEmail, sendAdminNewPhotographerNotification, sendAdminNewClientNotification } from "@/lib/email";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -97,6 +97,14 @@ export async function GET(request: NextRequest) {
           );
           sendAdminNewPhotographerNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
             console.error("[set-role] Failed to send admin notification:", err)
+          );
+        } else {
+          // Send client welcome email (non-blocking)
+          sendWelcomeEmail(session.user.email!, session.user.name || "there", "client").catch((err) =>
+            console.error("[set-role] Failed to send client welcome email:", err)
+          );
+          sendAdminNewClientNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
+            console.error("[set-role] Failed to send admin client notification:", err)
           );
         }
       }

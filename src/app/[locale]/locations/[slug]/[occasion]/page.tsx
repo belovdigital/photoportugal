@@ -7,6 +7,7 @@ import { localeAlternates } from "@/lib/seo";
 import { query, queryOne } from "@/lib/db";
 import { Avatar } from "@/components/ui/Avatar";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+import { normalizeName } from "@/lib/format-name";
 
 export const revalidate = 86400;
 
@@ -179,15 +180,15 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
                 href={`/photographers/${p.slug}`}
                 className="flex items-center gap-4 rounded-xl border border-warm-200 bg-white p-4 transition hover:shadow-md"
               >
-                <Avatar src={p.avatar_url} fallback={p.display_name} size="lg" />
+                <Avatar src={p.avatar_url} fallback={normalizeName(p.display_name)} size="lg" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900 truncate">{p.display_name}</p>
+                  <p className="font-semibold text-gray-900 truncate">{normalizeName(p.display_name)}</p>
                   <div className="mt-0.5 flex items-center gap-2 text-sm text-gray-500">
                     {p.rating > 0 && <span className="text-amber-500">★ {p.rating.toFixed(1)}</span>}
                     {p.review_count > 0 && <span>({p.review_count} reviews)</span>}
                   </div>
                   {p.starting_price && (
-                    <p className="mt-0.5 text-sm font-medium text-gray-700">From €{p.starting_price}</p>
+                    <p className="mt-0.5 text-sm font-medium text-gray-700">From &euro;{Math.round(Number(p.starting_price))}</p>
                   )}
                 </div>
               </Link>

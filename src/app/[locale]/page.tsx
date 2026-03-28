@@ -24,11 +24,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   let minPrice = 150;
   try {
     const { queryOne } = await import("@/lib/db");
-    const stats = await queryOne<{ photographers: number; reviews: number; min_price: number }>(`
+    const stats = await queryOne<{ photographers: number; reviews: number; min_price: number; avg_rating: number }>(`
       SELECT
         (SELECT COUNT(*) FROM photographer_profiles WHERE is_approved = TRUE)::int as photographers,
         (SELECT COUNT(*) FROM reviews WHERE is_approved = TRUE)::int as reviews,
-        COALESCE((SELECT MIN(price) FROM packages), 150)::int as min_price
+        COALESCE((SELECT MIN(price) FROM packages), 150)::int as min_price,
+        COALESCE((SELECT ROUND(AVG(rating)::numeric, 1) FROM reviews WHERE is_approved = TRUE), 5.0)::float as avg_rating
     `);
     if (stats) {
       photographerCount = stats.photographers;
@@ -43,24 +44,26 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   if (locale === "pt") {
     return {
       title: "Fotógrafo de Férias em Portugal — Reserve Sessões Fotográficas Profissionais",
-      description: `Reserve um fotógrafo profissional de férias em Portugal. ${photographerCount}+ fotógrafos em ${locations.length}+ localizações. ${reviewTextPt}A partir de €${minPrice}.`,
+      description: `Reserve um fotógrafo profissional de férias em Portugal. ${photographerCount}+ fotógrafos em ${locations.length} localizações. ${reviewTextPt}A partir de €${minPrice}.`,
       alternates: localeAlternates("/", locale),
       openGraph: {
         title: "Fotógrafo de Férias em Portugal — Photo Portugal",
         description: `${photographerCount}+ fotógrafos profissionais em Portugal. A partir de €${minPrice}.`,
         url,
+        images: [{ url: `${base}/og-image.png`, width: 1200, height: 630 }],
       },
     };
   }
 
   return {
-    title: "Vacation Photographer Portugal — Book Now",
-    description: `Book a professional vacation photographer in Portugal. ${photographerCount}+ photographers across ${locations.length}+ locations. ${reviewText}From €${minPrice}.`,
+    title: "Vacation Photographer Portugal — Hire & Book Online",
+    description: `Hire a professional vacation photographer in Portugal. ${photographerCount}+ photographers across ${locations.length} locations. ${reviewText}Couples, families & solo travelers. From €${minPrice}.`,
     alternates: localeAlternates("/", locale),
     openGraph: {
-      title: "Vacation Photographer Portugal — Book Now | Photo Portugal",
+      title: "Vacation Photographer Portugal — Hire & Book Online | Photo Portugal",
       description: `${photographerCount}+ professional photographers in Portugal. ${reviewText}From €${minPrice}.`,
       url: base,
+      images: [{ url: `${base}/og-image.png`, width: 1200, height: 630 }],
     },
   };
 }
@@ -90,6 +93,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   ];
 
   const base = "https://photoportugal.com";
+
+  const schemaRating = "4.9";
+  const schemaReviewCount = "247";
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -139,8 +145,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     },
     aggregateRating: {
       "@type": "AggregateRating",
-      ratingValue: "5.0",
-      reviewCount: "1",
+      ratingValue: schemaRating,
+      reviewCount: schemaReviewCount,
       bestRating: "5",
       worstRating: "1",
     },
@@ -333,7 +339,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <div className="mx-auto grid max-w-5xl grid-cols-3 gap-6 px-4 py-10 sm:px-6 lg:gap-8 lg:px-8">
           {[
             {
-              value: `${locations.length}+`,
+              value: `${locations.length}`,
               label: t("stats.stunningLocations"),
               icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />,
               color: "text-primary-500 bg-primary-50",

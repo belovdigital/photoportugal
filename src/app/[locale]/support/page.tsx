@@ -262,7 +262,7 @@ export default async function SupportPage({
           <p className="mt-3 text-gray-500">{t("cta.description")}</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a
-              href="mailto:support@photoportugal.com"
+              href="mailto:info@photoportugal.com"
               className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow transition hover:bg-primary-700"
             >
               <svg

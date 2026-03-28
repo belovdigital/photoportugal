@@ -40,8 +40,8 @@ export function PayButton({ bookingId, amount }: { bookingId: string; amount: nu
     setLoading(false);
   }
 
-  const serviceFee = (amount * SERVICE_FEE_RATE).toFixed(2);
-  const total = (amount * (1 + SERVICE_FEE_RATE)).toFixed(2);
+  const serviceFee = Math.round(Number(amount) * SERVICE_FEE_RATE);
+  const total = Math.round(Number(amount) * (1 + SERVICE_FEE_RATE));
 
   return (
     <div className="flex items-center gap-2">

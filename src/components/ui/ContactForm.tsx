@@ -6,13 +6,7 @@ import { useSearchParams } from "next/navigation";
 
 const TOPIC_KEYS = ["clientSupport", "photographerSupport", "sales", "pr", "other"] as const;
 
-const TOPIC_EMAILS: Record<string, string[]> = {
-  clientSupport: ["kate@belov.pt", "alex@belov.pt"],
-  photographerSupport: ["kate@belov.pt", "alex@belov.pt"],
-  sales: ["alex@belov.pt"],
-  pr: ["alex@belov.pt"],
-  other: ["kate@belov.pt", "alex@belov.pt"],
-};
+// Recipients are resolved server-side from admin settings — not sent from client
 
 export function ContactForm() {
   const t = useTranslations("contact.form");
@@ -42,7 +36,6 @@ export function ContactForm() {
           name: name.trim(),
           email: email.trim(),
           message: message.trim(),
-          recipients: TOPIC_EMAILS[topic] || TOPIC_EMAILS.other,
         }),
       });
 

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { photographer_id, package_id, location_slug, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message } = await req.json();
+    const { photographer_id, package_id, location_slug, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, utm_source, utm_medium, utm_campaign, utm_term } = await req.json();
 
     if (!photographer_id) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
@@ -64,10 +64,10 @@ export async function POST(req: NextRequest) {
     }
 
     const booking = await queryOne<{ id: string }>(
-      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending')
+      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending', $13, $14, $15, $16)
        RETURNING id`,
-      [userId, photographer_id, package_id || null, location_slug || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, group_size || 2, occasion || null, message || null, totalPrice]
+      [userId, photographer_id, package_id || null, location_slug || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, group_size || 2, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null]
     );
 
     // Send email notification to photographer (if enabled)

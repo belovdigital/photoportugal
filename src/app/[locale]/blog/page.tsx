@@ -9,20 +9,42 @@ const POSTS_PER_PAGE = 12;
 
 export const revalidate = 300; // ISR: refresh every 5 minutes
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
   const { locale } = await params;
+  const sp = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("blog");
+
+  const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
+  const base = "https://photoportugal.com";
+  const blogPath = locale === "pt" ? "/pt/blog" : "/blog";
+
+  // Count total pages for prev/next
+  let totalPages = 1;
+  try {
+    const countRow = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE");
+    totalPages = Math.max(1, Math.ceil(parseInt(countRow?.count || "0") / POSTS_PER_PAGE));
+  } catch {}
+
+  const other: Record<string, Array<{ url: string; rel: string }>> = {};
+  const linkHeaders: Array<{ url: string; rel: string }> = [];
+  if (page > 1) linkHeaders.push({ url: `${base}${blogPath}?page=${page - 1}`, rel: "prev" });
+  if (page < totalPages) linkHeaders.push({ url: `${base}${blogPath}?page=${page + 1}`, rel: "next" });
+
   return {
-    title: t("title"),
+    title: page > 1 ? `${t("title")} — Page ${page}` : t("title"),
     description: t("subtitle"),
-    alternates: localeAlternates("/blog", locale),
+    alternates: {
+      ...localeAlternates("/blog", locale),
+      ...(linkHeaders.length > 0 ? { types: Object.fromEntries(linkHeaders.map(l => [l.rel, l.url])) } : {}),
+    },
     openGraph: {
       title: `${t("title")} | Photo Portugal`,
       description: t("subtitle"),
-      url: "https://photoportugal.com/blog",
+      url: page > 1 ? `${base}${blogPath}?page=${page}` : `${base}${blogPath}`,
       type: "website",
     },
+    ...(page > 1 ? { robots: { index: false } } : {}),
   };
 }
 

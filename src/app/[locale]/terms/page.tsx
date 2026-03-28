@@ -195,6 +195,9 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
             <li>{t("sections.intellectualProperty.notPermitted.ai")}</li>
             <li>{t("sections.intellectualProperty.notPermitted.editing")}</li>
           </ul>
+          <p className="mt-3 font-medium text-gray-900">{t("sections.intellectualProperty.photographerUseTitle")}</p>
+          <p className="mt-2">{t("sections.intellectualProperty.photographerUse")}</p>
+          <p className="mt-3">{t("sections.intellectualProperty.platformDisclaimer")}</p>
         </section>
 
         {/* 14. Prohibited Content & Behaviour */}

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { first_name, last_name, name: legacyName, email, password, role } = await req.json();
+    const { first_name, last_name, name: legacyName, email, password, role, utm_source, utm_medium, utm_campaign, utm_term } = await req.json();
     const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
     const lastName = (last_name || legacyName?.split(" ").slice(1).join(" ") || "").trim();
     const name = lastName ? `${firstName} ${lastName}` : firstName;
@@ -48,10 +48,10 @@ export async function POST(req: NextRequest) {
     const passwordHash = await hash(password, 12);
 
     const user = await queryOne<{ id: string; email: string; name: string; role: string }>(
-      `INSERT INTO users (email, name, first_name, last_name, password_hash, role)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO users (email, name, first_name, last_name, password_hash, role, utm_source, utm_medium, utm_campaign, utm_term)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id, email, name, role`,
-      [email, name, firstName, lastName, passwordHash, validRole]
+      [email, name, firstName, lastName, passwordHash, validRole, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null]
     );
 
     // If photographer, create profile with early bird logic

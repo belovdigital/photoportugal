@@ -731,7 +731,7 @@ export async function GET(req: NextRequest) {
           "Your Photo Portugal account has been deactivated",
           `<p>Hi ${p.display_name},</p>
 <p>Your photographer profile on Photo Portugal has been deactivated because the onboarding checklist was not completed within 7 days of registration.</p>
-<p>If you'd like to reactivate your account, please contact us at <a href="mailto:hi@photoportugal.com">hi@photoportugal.com</a> and we'll help you get started again.</p>
+<p>If you'd like to reactivate your account, please contact us at <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> and we'll help you get started again.</p>
 <p>Best,<br>Photo Portugal Team</p>`
         );
         checklistDeactivated++;

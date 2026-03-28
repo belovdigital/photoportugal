@@ -119,6 +119,11 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         group_size: parseInt(groupSize) || 2,
         occasion: occasion || null,
         message,
+        // UTM tracking for ads attribution
+        utm_source: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_source") || sessionStorage.getItem("utm_source")) : null,
+        utm_medium: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_medium") || sessionStorage.getItem("utm_medium")) : null,
+        utm_campaign: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_campaign") || sessionStorage.getItem("utm_campaign")) : null,
+        utm_term: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_term") || sessionStorage.getItem("utm_term")) : null,
       }),
     });
 
@@ -172,7 +177,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             {t("success.message", { photographer: photographer?.display_name || "" })}
           </p>
           <div className="mt-6 flex justify-center gap-3">
-            <Link href="/dashboard" className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
+            <Link href="/dashboard/bookings" className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
               {t("success.myBookings")}
             </Link>
             <Link href="/photographers" className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50">
@@ -244,7 +249,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                       </p>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-gray-900">&euro;{pkg.price}</span>
+                  <span className="text-lg font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</span>
                 </label>
               ))}
             </div>
@@ -395,16 +400,16 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">{selectedPkg.name}</span>
-                <span className="text-gray-900">&euro;{Number(selectedPkg.price).toFixed(2)}</span>
+                <span className="text-gray-900">&euro;{Math.round(Number(selectedPkg.price))}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">{t("summary.serviceFee", { rate: SERVICE_FEE_RATE * 100 })}</span>
-                <span className="text-gray-900">&euro;{(Number(selectedPkg.price) * SERVICE_FEE_RATE).toFixed(2)}</span>
+                <span className="text-gray-900">&euro;{Math.round(Number(selectedPkg.price) * SERVICE_FEE_RATE)}</span>
               </div>
               <hr className="border-warm-200" />
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-900">{t("summary.total")}</span>
-                <span className="text-xl font-bold text-gray-900">&euro;{(Number(selectedPkg.price) * (1 + SERVICE_FEE_RATE)).toFixed(2)}</span>
+                <span className="text-xl font-bold text-gray-900">&euro;{Math.round(Number(selectedPkg.price) * (1 + SERVICE_FEE_RATE))}</span>
               </div>
             </div>
             <p className="mt-3 text-xs text-gray-400">{t("form.paymentNote")}</p>

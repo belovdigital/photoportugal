@@ -5,6 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { shootTypes, getShootTypeBySlug } from "@/lib/shoot-types-data";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
+import { query } from "@/lib/db";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export function generateStaticParams() {
   return shootTypes.map((t) => ({ type: t.slug }));
@@ -48,6 +50,17 @@ export default async function ShootTypePage({
   if (!shootType) {
     notFound();
   }
+
+  // Fetch related blog posts mentioning this shoot type
+  const relatedPosts = await query<{
+    slug: string; title: string; excerpt: string | null; cover_image_url: string | null;
+  }>(
+    `SELECT slug, title, excerpt, cover_image_url FROM blog_posts
+     WHERE is_published = TRUE AND (
+       LOWER(title) LIKE $1 OR LOWER(content) LIKE $1 OR LOWER(title) LIKE $2 OR LOWER(content) LIKE $2
+     ) ORDER BY published_at DESC LIMIT 4`,
+    [`%${shootType.slug}%`, `%${shootType.name.toLowerCase()}%`]
+  ).catch(() => []);
 
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -203,6 +216,43 @@ export default async function ShootTypePage({
           ))}
         </div>
       </section>
+
+      {/* Related Blog Posts */}
+      {relatedPosts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <h2 className="font-display text-3xl font-bold text-gray-900">
+            {shootType.name} Photography Guides
+          </h2>
+          <p className="mt-3 text-gray-500">Tips and inspiration for your {shootType.name.toLowerCase()} photoshoot in Portugal</p>
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedPosts.map((post) => (
+              <Link
+                key={post.slug}
+                href={`/blog/${post.slug}`}
+                className="group overflow-hidden rounded-xl border border-warm-200 bg-white transition hover:shadow-md"
+              >
+                {post.cover_image_url && (
+                  <div className="aspect-[16/10] overflow-hidden">
+                    <OptimizedImage
+                      src={post.cover_image_url}
+                      alt={post.title}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                )}
+                <div className="p-4">
+                  <h3 className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-primary-600 transition">
+                    {post.title}
+                  </h3>
+                  {post.excerpt && (
+                    <p className="mt-2 text-xs text-gray-500 line-clamp-2">{post.excerpt}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="bg-gray-900">

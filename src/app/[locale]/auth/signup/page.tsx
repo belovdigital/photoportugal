@@ -49,7 +49,13 @@ function SignUpForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password, role }),
+        body: JSON.stringify({
+          first_name: firstName, last_name: lastName, email, password, role,
+          utm_source: typeof window !== "undefined" ? sessionStorage.getItem("utm_source") : null,
+          utm_medium: typeof window !== "undefined" ? sessionStorage.getItem("utm_medium") : null,
+          utm_campaign: typeof window !== "undefined" ? sessionStorage.getItem("utm_campaign") : null,
+          utm_term: typeof window !== "undefined" ? sessionStorage.getItem("utm_term") : null,
+        }),
       });
 
       const data = await res.json();

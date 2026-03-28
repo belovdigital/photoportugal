@@ -4,7 +4,7 @@ import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { revalidatePath } from "next/cache";
 import { requireStripe } from "@/lib/stripe";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, sendReviewApprovedToPhotographer } from "@/lib/email";
 
 async function isAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -60,6 +60,29 @@ export async function PATCH(
      WHERE id = $1`,
     [review.photographer_id]
   );
+
+  // Notify photographer that a review was approved
+  if (body.is_approved === true) {
+    try {
+      const reviewDetails = await queryOne<{ rating: number; client_name: string; photographer_email: string; photographer_name: string; slug: string }>(
+        `SELECT r.rating, COALESCE(r.client_name_override, cu.name, 'A client') as client_name,
+                pu.email as photographer_email, pp.display_name as photographer_name, pp.slug
+         FROM reviews r
+         LEFT JOIN users cu ON cu.id = r.client_id
+         JOIN photographer_profiles pp ON pp.id = r.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+         WHERE r.id = $1`, [id]
+      );
+      if (reviewDetails) {
+        sendReviewApprovedToPhotographer(
+          reviewDetails.photographer_email, reviewDetails.photographer_name,
+          reviewDetails.client_name, reviewDetails.rating, reviewDetails.slug
+        ).catch(err => console.error("[reviews] review approved email error:", err));
+      }
+    } catch (err) {
+      console.error("[reviews] review approved notification error:", err);
+    }
+  }
 
   // If approving a VIDEO review, generate discount code and email client
   if (body.is_approved === true && review.video_url && review.client_id) {

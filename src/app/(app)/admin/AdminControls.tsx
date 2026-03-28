@@ -86,14 +86,20 @@ export function AdminLogoutButton() {
   );
 }
 
-export function AdminToggleClient({ id, field, value }: { id: string; field: string; value: boolean }) {
+export function AdminToggleClient({ id, field, value, name }: { id: string; field: string; value: boolean; name?: string }) {
   const router = useRouter();
   const [checked, setChecked] = useState(value);
   const [loading, setLoading] = useState(false);
 
+  const fieldLabel = field === "is_approved" ? "Approved" : field === "is_verified" ? "Verified" : field === "is_featured" ? "Featured" : field;
+
   async function toggle() {
-    setLoading(true);
     const newValue = !checked;
+    const action = newValue ? "enable" : "disable";
+    const target = name ? ` for ${name}` : "";
+    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} "${fieldLabel}"${target}?`)) return;
+
+    setLoading(true);
     const res = await fetch("/api/admin/photographer", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -103,6 +109,9 @@ export function AdminToggleClient({ id, field, value }: { id: string; field: str
     if (res.ok) {
       setChecked(newValue);
       router.refresh();
+      window.dispatchEvent(new CustomEvent("admin-toast", { detail: { message: `${fieldLabel} ${newValue ? "enabled" : "disabled"}${target}`, type: "success" } }));
+    } else {
+      window.dispatchEvent(new CustomEvent("admin-toast", { detail: { message: `Failed to update ${fieldLabel}`, type: "error" } }));
     }
   }
 
@@ -119,7 +128,7 @@ export function AdminToggleClient({ id, field, value }: { id: string; field: str
   );
 }
 
-export function AdminDeactivatePhotographer({ id, name, isActive }: { id: string; name: string; isActive: boolean }) {
+export function AdminDeactivatePhotographer({ id, name, isActive, label }: { id: string; name: string; isActive: boolean; label?: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(isActive);
@@ -137,8 +146,9 @@ export function AdminDeactivatePhotographer({ id, name, isActive }: { id: string
     if (res.ok) {
       setActive(!active);
       router.refresh();
+      window.dispatchEvent(new CustomEvent("admin-toast", { detail: { message: `Photographer ${action}d`, type: "success" } }));
     } else {
-      alert(`Failed to ${action}`);
+      window.dispatchEvent(new CustomEvent("admin-toast", { detail: { message: `Failed to ${action}`, type: "error" } }));
     }
   }
 
@@ -148,15 +158,40 @@ export function AdminDeactivatePhotographer({ id, name, isActive }: { id: string
       disabled={loading}
       className={`rounded px-2 py-1 text-xs font-medium ${active ? "text-red-500 hover:bg-red-50" : "text-accent-600 hover:bg-accent-50"} disabled:opacity-50`}
     >
-      {loading ? "..." : active ? "Deactivate" : "Reactivate"}
+      {loading ? "..." : label ? label : active ? "Deactivate" : "Reactivate"}
     </button>
   );
 }
 
 export function AdminNotificationEmail({ initialValue }: { initialValue: string }) {
-  const [email, setEmail] = useState(initialValue);
+  const [emails, setEmails] = useState<string[]>(() =>
+    initialValue ? initialValue.split(",").map((e) => e.trim()).filter(Boolean) : []
+  );
+  const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  function addEmail() {
+    const trimmed = input.trim().toLowerCase();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return;
+    if (emails.includes(trimmed)) { setInput(""); return; }
+    setEmails([...emails, trimmed]);
+    setInput("");
+  }
+
+  function removeEmail(email: string) {
+    setEmails(emails.filter((e) => e !== email));
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addEmail();
+    }
+    if (e.key === "Backspace" && !input && emails.length > 0) {
+      setEmails(emails.slice(0, -1));
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -165,7 +200,7 @@ export function AdminNotificationEmail({ initialValue }: { initialValue: string 
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "admin_notification_email", value: email.trim() }),
+        body: JSON.stringify({ key: "admin_notification_email", value: emails.join(", ") }),
       });
       if (res.ok) {
         setMessage("Saved!");
@@ -180,22 +215,45 @@ export function AdminNotificationEmail({ initialValue }: { initialValue: string 
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <input
-        type="text"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="admin@photoportugal.com, backup@gmail.com"
-        className="block w-full max-w-sm rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500"
-      />
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="shrink-0 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
-      >
-        {saving ? "..." : "Save"}
-      </button>
-      {message && <span className="text-sm text-green-600">{message}</span>}
+    <div className="space-y-3">
+      <div className="flex min-h-[44px] flex-wrap items-center gap-2 rounded-xl border border-gray-300 px-3 py-2 focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500">
+        {emails.map((email) => (
+          <span
+            key={email}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-3 py-1 text-sm text-primary-700"
+          >
+            {email}
+            <button
+              onClick={() => removeEmail(email)}
+              className="text-primary-400 transition hover:text-red-500"
+              aria-label={`Remove ${email}`}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </span>
+        ))}
+        <input
+          type="email"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={addEmail}
+          placeholder={emails.length === 0 ? "Type email and press Enter" : "Add another..."}
+          className="min-w-[180px] flex-1 border-none bg-transparent text-sm outline-none placeholder:text-gray-400"
+        />
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="shrink-0 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+        >
+          {saving ? "..." : "Save"}
+        </button>
+        {message && <span className="text-sm text-green-600">{message}</span>}
+      </div>
     </div>
   );
 }
@@ -242,6 +300,7 @@ export function AdminPlanSelectClient({ id, currentPlan }: { id: string; current
   const [loading, setLoading] = useState(false);
 
   async function changePlan(newPlan: string) {
+    if (!confirm(`Change plan to "${newPlan}"?`)) { return; }
     setLoading(true);
     const res = await fetch("/api/admin/photographer", {
       method: "PATCH",
@@ -252,6 +311,9 @@ export function AdminPlanSelectClient({ id, currentPlan }: { id: string; current
     if (res.ok) {
       setPlan(newPlan);
       router.refresh();
+      window.dispatchEvent(new CustomEvent("admin-toast", { detail: { message: `Plan changed to ${newPlan}`, type: "success" } }));
+    } else {
+      window.dispatchEvent(new CustomEvent("admin-toast", { detail: { message: "Failed to change plan", type: "error" } }));
     }
   }
 

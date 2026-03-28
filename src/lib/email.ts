@@ -96,11 +96,12 @@ export async function sendBookingConfirmationWithPayment(
   paymentUrl: string | null,
   totalPrice: number | null
 ) {
-  const paymentSection = paymentUrl && totalPrice
+  const price = totalPrice ? Math.round(Number(totalPrice)) : null;
+  const paymentSection = paymentUrl && price
     ? `<p style="margin-top: 16px; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 14px; color: #166534;">
-        <strong>Payment required:</strong> Please pay &euro;${totalPrice} to secure your session. Your payment is held safely until you receive and accept your photos.
+        <strong>Payment required:</strong> Please pay &euro;${price} to secure your session. Your payment is held safely until you receive and accept your photos.
       </p>
-      <p><a href="${paymentUrl}" style="display: inline-block; background: #16a34a; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay Now — &euro;${totalPrice}</a></p>`
+      <p><a href="${paymentUrl}" style="display: inline-block; background: #16a34a; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay Now &mdash; &euro;${price}</a></p>`
     : `<p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>`;
 
   await sendEmail(
@@ -408,9 +409,21 @@ export async function sendWelcomeEmail(
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2 style="color: #C94536;">Welcome to Photo Portugal!</h2>
         <p>Hi ${name},</p>
-        <p>Thank you for joining Photo Portugal! Browse our talented local photographers and book your perfect photo session anywhere in Portugal — Lisbon, Porto, Algarve, Sintra, and 20+ more locations.</p>
-        <p>Your payment is always protected: we hold your money in escrow until you receive and approve your photos.</p>
+        <p>You're all set! Here's how to book your perfect photoshoot in Portugal:</p>
+
+        <div style="margin: 20px 0; padding: 16px; background: #faf8f5; border-radius: 12px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 6px 0; color: #C94536; font-weight: bold; vertical-align: top;">1.</td><td style="padding: 6px 8px;"><strong>Browse photographers</strong> — Find your style in Lisbon, Porto, Algarve, and 20 more locations</td></tr>
+            <tr><td style="padding: 6px 0; color: #C94536; font-weight: bold; vertical-align: top;">2.</td><td style="padding: 6px 8px;"><strong>Pick a package</strong> — Choose the session length and number of photos</td></tr>
+            <tr><td style="padding: 6px 0; color: #C94536; font-weight: bold; vertical-align: top;">3.</td><td style="padding: 6px 8px;"><strong>Book & pay securely</strong> — Your payment is held in escrow until you approve the photos</td></tr>
+          </table>
+        </div>
+
         <p><a href="${BASE_URL}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Browse Photographers</a></p>
+
+        <p style="margin-top: 16px; font-size: 13px; color: #666;">
+          Questions? <a href="${BASE_URL}/support" style="color: #C94536;">Visit our Help Center</a> or <a href="${BASE_URL}/contact" style="color: #C94536;">contact us</a>.
+        </p>
         <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
       </div>
       `
@@ -464,6 +477,32 @@ export async function sendAdminNewPhotographerNotification(
           <li><strong>Email:</strong> ${photographerEmail}</li>
         </ul>
         <p><a href="${BASE_URL}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
+        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+      </div>
+      `
+    );
+  }
+}
+
+export async function sendAdminNewClientNotification(
+  clientName: string,
+  clientEmail: string
+) {
+  const adminEmail = await getAdminEmail();
+  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+  for (const email of emails) {
+    await sendEmail(
+      email,
+      `[New Client] ${clientName} has signed up`,
+      `
+      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+        <h2 style="color: #C94536;">New Client Registration</h2>
+        <p>A new client has signed up:</p>
+        <ul style="line-height: 1.8;">
+          <li><strong>Name:</strong> ${clientName}</li>
+          <li><strong>Email:</strong> ${clientEmail}</li>
+        </ul>
+        <p><a href="${BASE_URL}/admin#clients" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
         <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
       </div>
       `
@@ -589,5 +628,83 @@ export async function sendDeliveryReminderToPhotographer(
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
     `
+  );
+}
+
+// === Additional notifications ===
+
+export async function sendAdminBookingCancelledNotification(
+  clientName: string,
+  photographerName: string,
+  cancelledBy: "client" | "photographer" | "admin",
+  refundAmount: number | null
+) {
+  const adminEmail = await getAdminEmail();
+  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+  const refundLine = refundAmount && refundAmount > 0
+    ? `<li><strong>Refund:</strong> &euro;${refundAmount.toFixed(2)}</li>`
+    : `<li><strong>Refund:</strong> None</li>`;
+  for (const email of emails) {
+    await sendEmail(
+      email,
+      `[Booking Cancelled] ${clientName} \u2194 ${photographerName}`,
+      `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+        <h2 style="color: #C94536;">Booking Cancelled</h2>
+        <ul style="line-height: 1.8;">
+          <li><strong>Client:</strong> ${clientName}</li>
+          <li><strong>Photographer:</strong> ${photographerName}</li>
+          <li><strong>Cancelled by:</strong> ${cancelledBy}</li>
+          ${refundLine}
+        </ul>
+        <p><a href="${BASE_URL}/admin#bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
+        <p style="color: #999; font-size: 12px;">Photo Portugal</p>
+      </div>`
+    );
+  }
+}
+
+export async function sendPaymentFailedToClient(
+  clientEmail: string,
+  clientName: string,
+  photographerName: string
+) {
+  await sendEmail(
+    clientEmail,
+    `Payment failed for your booking with ${photographerName}`,
+    `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Payment Failed</h2>
+      <p>Hi ${clientName},</p>
+      <p>Your payment for the photoshoot with <strong>${photographerName}</strong> could not be processed.</p>
+      <p>Please try again with a different payment method or contact your bank for details.</p>
+      <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Retry Payment</a></p>
+      <p style="margin-top: 16px; font-size: 13px; color: #666;">
+        Need help? <a href="${BASE_URL}/support" style="color: #C94536;">Contact support</a>
+      </p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal</p>
+    </div>`
+  );
+}
+
+export async function sendReviewApprovedToPhotographer(
+  photographerEmail: string,
+  photographerName: string,
+  clientName: string,
+  rating: number,
+  profileSlug: string
+) {
+  const stars = "\u2605".repeat(rating) + "\u2606".repeat(5 - rating);
+  await sendEmail(
+    photographerEmail,
+    `New ${rating}-star review published on your profile!`,
+    `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">New Review Published!</h2>
+      <p>Hi ${photographerName},</p>
+      <p>A review from <strong>${clientName}</strong> has been approved and is now visible on your profile.</p>
+      <div style="margin: 16px 0; padding: 16px; background: #faf8f5; border-radius: 8px;">
+        <p style="margin: 0; font-size: 20px; color: #f59e0b;">${stars}</p>
+      </div>
+      <p><a href="${BASE_URL}/photographers/${profileSlug}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Your Profile</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal</p>
+    </div>`
   );
 }

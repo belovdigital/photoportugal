@@ -8,6 +8,7 @@ import { BookingStatusButtons } from "./BookingStatusButtons";
 import { DateNegotiation } from "./DateNegotiation";
 import { Avatar } from "@/components/ui/Avatar";
 import { PaymentTracker } from "./PaymentTracker";
+import { normalizeName } from "@/lib/format-name";
 
 export const dynamic = "force-dynamic";
 
@@ -128,14 +129,14 @@ export default async function BookingsPage() {
             <div key={booking.id} className="rounded-xl border border-warm-200 bg-white p-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar src={booking.other_avatar} fallback={booking.other_name} size="md" />
+                  <Avatar src={booking.other_avatar} fallback={normalizeName(booking.other_name)} size="md" />
                   <div>
                     {booking.other_slug ? (
                       <Link href={`/photographers/${booking.other_slug}`} className="font-semibold text-gray-900 hover:text-primary-600">
-                        {booking.other_name}
+                        {normalizeName(booking.other_name)}
                       </Link>
                     ) : (
-                      <p className="font-semibold text-gray-900">{booking.other_name}</p>
+                      <p className="font-semibold text-gray-900">{normalizeName(booking.other_name)}</p>
                     )}
                     {booking.package_name && (
                       <p className="text-sm text-gray-500">{booking.package_name}</p>
@@ -170,7 +171,7 @@ export default async function BookingsPage() {
                 {booking.shoot_time && <span>{TIME_LABEL_KEYS[booking.shoot_time] ? t(TIME_LABEL_KEYS[booking.shoot_time]) : booking.shoot_time}</span>}
                 {booking.group_size && booking.group_size > 1 && <span>{t("people", { count: booking.group_size })}</span>}
                 {booking.occasion && <span className="capitalize">{booking.occasion}</span>}
-                {booking.total_price && <span>&euro;{booking.total_price}</span>}
+                {booking.total_price && <span>&euro;{Math.round(Number(booking.total_price))}</span>}
                 <span>{t("requested", { date: new Date(booking.created_at).toLocaleDateString(dateLocale, { month: "short", day: "numeric" }) })}</span>
               </div>
 
@@ -207,7 +208,7 @@ export default async function BookingsPage() {
                   proposedBy={booking.proposed_by}
                   dateNote={booking.date_note}
                   isPhotographer={isPhotographer}
-                  otherName={booking.other_name.split(" ")[0]}
+                  otherName={normalizeName(booking.other_name).split(" ")[0]}
                 />
               )}
 
@@ -239,7 +240,7 @@ export default async function BookingsPage() {
                   </Link>
                 )}
                 {!isPhotographer && (booking.status === "completed" || booking.status === "delivered") && !booking.has_review && (
-                  <ReviewForm bookingId={booking.id} photographerName={booking.other_name} />
+                  <ReviewForm bookingId={booking.id} photographerName={normalizeName(booking.other_name)} />
                 )}
                 {booking.has_review && (
                   <span className="flex items-center gap-1 px-2 text-sm text-green-600">
