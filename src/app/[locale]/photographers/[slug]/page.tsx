@@ -39,7 +39,7 @@ async function getPhotographer(slug: string, isAdmin = false) {
       session_count: number;
       last_seen_at: string | null;
     }>(
-      `SELECT p.id, p.slug, normalizeName(p.display_name), p.tagline, p.bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
+      `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               p.experience_years, p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding, p.is_approved, p.plan,
               p.rating, p.review_count, p.session_count, u.last_seen_at
        FROM photographer_profiles p
@@ -223,7 +223,7 @@ export default async function PhotographerProfilePage({
         starting_price: number | null; languages: string[];
         location_names: string[];
       }>(
-        `SELECT DISTINCT pp.id, pp.slug, pnormalizeName(p.display_name), u.avatar_url, pp.cover_url,
+        `SELECT DISTINCT pp.id, pp.slug, pp.display_name, u.avatar_url, pp.cover_url,
                 pp.tagline, pp.rating, pp.review_count, pp.languages,
                 (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price,
                 ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names

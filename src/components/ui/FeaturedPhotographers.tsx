@@ -23,7 +23,7 @@ export async function FeaturedPhotographers() {
 
   try {
     photographers = await query<FeaturedPhotographer>(
-      `SELECT pp.slug, pnormalizeName(p.display_name), pp.tagline,
+      `SELECT pp.slug, pp.display_name, pp.tagline,
               u.avatar_url, pp.cover_url, pp.cover_position_y, pp.is_verified,
               pp.rating, pp.review_count,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as min_price,
