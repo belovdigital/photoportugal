@@ -134,6 +134,27 @@ export async function POST(req: NextRequest) {
           sendNewMessageNotification(recipient.email, recipient.name, sender.name);
         }
       }
+
+      // Throttled SMS for pending bookings (max once per 10 min per recipient)
+      if (booking.status === "pending") {
+        try {
+          const recipientInfo = await queryOne<{ phone: string | null; last_message_sms_at: string | null }>(
+            "SELECT phone, last_message_sms_at FROM users WHERE id = $1", [recipientId]
+          );
+          if (recipientInfo?.phone) {
+            const lastSms = recipientInfo.last_message_sms_at ? new Date(recipientInfo.last_message_sms_at).getTime() : 0;
+            const tenMinAgo = Date.now() - 10 * 60 * 1000;
+            if (lastSms < tenMinAgo) {
+              const { sendSMS } = await import("@/lib/sms");
+              const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "Someone";
+              sendSMS(recipientInfo.phone, `Photo Portugal: New message from ${senderName}. Open your dashboard to reply: https://photoportugal.com/dashboard/messages`);
+              await queryOne("UPDATE users SET last_message_sms_at = NOW() WHERE id = $1", [recipientId]);
+            }
+          }
+        } catch (smsErr) {
+          console.error("[messages] throttled SMS error:", smsErr);
+        }
+      }
     } catch {}
 
     return NextResponse.json({ success: true, message, warning: contactWarning });
