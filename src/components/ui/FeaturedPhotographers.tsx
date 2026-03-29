@@ -66,7 +66,7 @@ export async function FeaturedPhotographers() {
           <Link
             key={p.slug}
             href={`/photographers/${p.slug}`}
-            className="group overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
+            className="group flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
           >
             {/* Cover / gradient */}
             <div className="relative h-36 bg-gradient-to-br from-primary-400 to-primary-700">
@@ -88,7 +88,7 @@ export async function FeaturedPhotographers() {
               </div>
             </div>
 
-            <div className="p-4 pt-8">
+            <div className="flex flex-1 flex-col p-4 pt-8">
               <div className="flex items-center gap-1.5">
                 <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
                   {normalizeName(p.display_name)}
@@ -129,8 +129,8 @@ export async function FeaturedPhotographers() {
                 <p className="mt-1.5 truncate text-xs text-gray-400">{p.locations}</p>
               )}
 
-              {/* Price */}
-              <div className="mt-3 flex items-center justify-between border-t border-warm-100 pt-3">
+              {/* Price — pinned to bottom */}
+              <div className="mt-auto flex items-center justify-between border-t border-warm-100 pt-3">
                 {p.min_price ? (
                   <span className="text-sm">
                     <span className="text-gray-400">{tc("from")} </span>

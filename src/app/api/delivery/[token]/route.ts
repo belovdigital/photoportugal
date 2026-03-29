@@ -16,7 +16,7 @@ export async function GET(
     `SELECT pp.display_name as photographer_name, b.delivery_expires_at
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
-     WHERE b.delivery_token = $1 AND b.status = 'delivered'`,
+     WHERE b.delivery_token = $1 AND b.delivery_token IS NOT NULL`,
     [token]
   );
 

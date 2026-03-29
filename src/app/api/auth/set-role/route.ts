@@ -98,15 +98,8 @@ export async function GET(request: NextRequest) {
           sendAdminNewPhotographerNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
             console.error("[set-role] Failed to send admin notification:", err)
           );
-        } else {
-          // Send client welcome email (non-blocking)
-          sendWelcomeEmail(session.user.email!, session.user.name || "there", "client").catch((err) =>
-            console.error("[set-role] Failed to send client welcome email:", err)
-          );
-          sendAdminNewClientNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
-            console.error("[set-role] Failed to send admin client notification:", err)
-          );
         }
+        // Client welcome email and admin notification are already sent in auth.ts on Google sign-up
       }
     }
   } catch (error) {

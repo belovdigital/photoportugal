@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
-import { sendBookingNotification, sendAdminNewBookingNotification } from "@/lib/email";
+import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 
 // Create a booking request
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         "SELECT email_bookings, sms_bookings FROM notification_preferences WHERE user_id = $1",
         [photographerInfo?.user_id]
       );
-      const clientInfo = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
+      const clientInfo = await queryOne<{ name: string; email: string }>("SELECT name, email FROM users WHERE id = $1", [userId]);
       const pkgInfo = package_id ? await queryOne<{ name: string }>("SELECT name FROM packages WHERE id = $1", [package_id]) : null;
 
       const dateDisplay = isFlexible && flexible_date_from && flexible_date_to
@@ -93,6 +93,17 @@ export async function POST(req: NextRequest) {
           photographerInfo.email,
           photographerInfo.display_name,
           clientInfo.name,
+          pkgInfo?.name || null,
+          dateDisplay
+        );
+      }
+
+      // Confirm to client that request was sent
+      if (photographerInfo && clientInfo) {
+        sendBookingRequestToClient(
+          clientInfo.email,
+          clientInfo.name,
+          photographerInfo.display_name,
           pkgInfo?.name || null,
           dateDisplay
         );

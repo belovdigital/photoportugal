@@ -38,7 +38,7 @@ interface Message {
 type SSEStatus = "connected" | "reconnecting" | "disconnected";
 
 function MessagesContent() {
-  const { data: session } = useSession();
+  const { data: session, status: authStatus } = useSession();
   const t = useTranslations("messages");
   const locale = useLocale();
   const searchParams = useSearchParams();
@@ -426,6 +426,25 @@ function MessagesContent() {
 
   const activeConvo = conversations.find((c) => c.booking_id === activeChat);
 
+  if (authStatus === "loading")
+    return (
+      <div className="p-6 sm:p-8">
+        <div className="h-8 w-48 animate-pulse rounded-lg bg-warm-200" />
+        <div className="mt-2 h-4 w-64 animate-pulse rounded bg-warm-100" />
+        <div className="mt-6 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-warm-200 bg-white p-4">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-warm-200" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-32 animate-pulse rounded bg-warm-200" />
+                <div className="h-3 w-48 animate-pulse rounded bg-warm-100" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
   if (!session?.user)
     return (
       <div className="flex h-96 items-center justify-center">
@@ -608,6 +627,26 @@ function MessagesContent() {
 
                       // System messages — centered, different style
                       if (msg.is_system) {
+                        // Delivery card
+                        if (msg.text?.startsWith("DELIVERY:")) {
+                          const parts = msg.text!.split(":");
+                          const photoCount = parts[1];
+                          const url = parts.slice(2, -1).join(":");
+                          const pw = parts[parts.length - 1];
+                          return (
+                            <div key={msg.id} className="flex justify-center my-3">
+                              <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-accent-200 bg-gradient-to-br from-accent-50 to-white p-5 text-center shadow-sm">
+                                <div className="text-3xl">📸</div>
+                                <p className="mt-2 text-base font-bold text-gray-900">{photoCount} photo previews ready for review</p>
+                                <p className="mt-1 text-xs text-gray-500">Review the photos and approve the delivery when you&apos;re happy</p>
+                                <a href={url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-xl bg-accent-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-accent-700 transition">
+                                  View Gallery
+                                </a>
+                                <p className="mt-2 text-xs text-gray-400">Password: <span className="font-mono font-medium text-gray-600">{pw}</span></p>
+                              </div>
+                            </div>
+                          );
+                        }
                         return (
                           <div key={msg.id} className="flex justify-center my-3">
                             <div className="max-w-[85%] rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-center text-xs text-green-800 whitespace-pre-line">

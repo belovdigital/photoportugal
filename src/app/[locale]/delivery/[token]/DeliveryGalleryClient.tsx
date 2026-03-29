@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { OptimizedImage, LightboxImage } from "@/components/ui/OptimizedImage";
 
 interface Photo {
   id: string;
@@ -19,33 +18,46 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
     setLightboxIndex(index);
   }
 
-  function closeLightbox() {
+  const closeLightbox = useCallback(() => {
     setLightboxIndex(null);
-  }
+  }, []);
 
-  function navigate(dir: number) {
+  const navigate = useCallback((dir: number) => {
+    setLightboxIndex(prev => {
+      if (prev === null) return null;
+      const next = prev + dir;
+      if (next >= 0 && next < photos.length) return next;
+      return prev;
+    });
+  }, [photos.length]);
+
+  // Keyboard support
+  useEffect(() => {
     if (lightboxIndex === null) return;
-    const next = lightboxIndex + dir;
-    if (next >= 0 && next < photos.length) {
-      setLightboxIndex(next);
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowLeft") navigate(-1);
+      if (e.key === "ArrowRight") navigate(1);
     }
-  }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [lightboxIndex, closeLightbox, navigate]);
 
   return (
     <>
-      {/* Grid */}
-      <div className="mt-6 columns-2 gap-3 sm:columns-3 md:columns-4">
+      {/* Grid — photos load in order, no jumping */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {photos.map((photo, index) => (
           <div
             key={photo.id}
-            className="mb-3 cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90"
+            className="cursor-pointer overflow-hidden rounded-lg bg-warm-100 aspect-square transition hover:opacity-90"
             onClick={() => openLightbox(index)}
           >
-            <OptimizedImage
+            <img
               src={photo.url}
               alt={photo.filename}
-              width={400}
-              className="w-full"
+              loading="lazy"
+              className="h-full w-full object-cover"
             />
           </div>
         ))}
@@ -63,7 +75,7 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
           <button
             onClick={closeLightbox}
             aria-label={t("close")}
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -75,7 +87,7 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
             <button
               onClick={(e) => { e.stopPropagation(); navigate(-1); }}
               aria-label={t("previous")}
-              className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -83,11 +95,12 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
             </button>
           )}
 
-          {/* Image — show full original in lightbox */}
+          {/* Image — same preview URL, already cached by browser */}
           <img
             src={photos[lightboxIndex].url}
             alt={photos[lightboxIndex].filename}
-            className="max-h-[90vh] max-w-[90vw] object-contain"
+            className="max-h-[90vh] max-w-[90vw] object-contain select-none"
+            draggable={false}
             onClick={(e) => e.stopPropagation()}
           />
 
@@ -96,7 +109,7 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
             <button
               onClick={(e) => { e.stopPropagation(); navigate(1); }}
               aria-label={t("next")}
-              className="absolute right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              className="absolute right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 cursor-pointer"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

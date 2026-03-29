@@ -136,8 +136,8 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
   }
 
-  const item = await queryOne<{ url: string }>(
-    "DELETE FROM portfolio_items WHERE id = $1 AND photographer_id = $2 RETURNING url",
+  const item = await queryOne<{ url: string; thumbnail_url: string | null }>(
+    "DELETE FROM portfolio_items WHERE id = $1 AND photographer_id = $2 RETURNING url, thumbnail_url",
     [itemId, profile.id]
   );
 
@@ -145,12 +145,15 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
   }
 
-  // Delete file from disk
+  // Delete original file from disk
   try {
-    const filePath = path.join(UPLOAD_DIR, item.url.replace("/uploads/", ""));
-    await unlink(filePath);
-  } catch {
-    // File may not exist, that's ok
+    await unlink(path.join(UPLOAD_DIR, item.url.replace("/uploads/", "")));
+  } catch {}
+  // Delete thumbnail from disk
+  if (item.thumbnail_url) {
+    try {
+      await unlink(path.join(UPLOAD_DIR, item.thumbnail_url.replace("/uploads/", "")));
+    } catch {}
   }
 
   return NextResponse.json({ success: true });

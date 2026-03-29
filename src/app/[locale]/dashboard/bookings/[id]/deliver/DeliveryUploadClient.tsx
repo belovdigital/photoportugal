@@ -23,6 +23,8 @@ export function DeliveryUploadClient({
 }) {
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, failed: 0 });
+  const [failedFiles, setFailedFiles] = useState<File[]>([]);
   const [sharing, setSharing] = useState(false);
   const [delivered, setDelivered] = useState(initialDelivered);
   const [deliveryToken, setDeliveryToken] = useState(initialToken);
@@ -31,10 +33,12 @@ export function DeliveryUploadClient({
   );
   const [copied, setCopied] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [galleryPassword, setGalleryPassword] = useState("");
+  const [galleryPassword, setGalleryPassword] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
   const fileRef = useRef<HTMLInputElement>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState({ current: 0, total: 0 });
   const t = useTranslations("delivery");
 
   function toggleSelect(id: string) {
@@ -48,12 +52,37 @@ export function DeliveryUploadClient({
   async function deleteSelected() {
     if (selectedIds.size === 0) return;
     if (!confirm(t("deletePhotos", { count: selectedIds.size }))) return;
-    for (const id of selectedIds) {
-      await fetch(`/api/bookings/${bookingId}/delivery?photoId=${id}`, { method: "DELETE" });
+    setDeleting(true);
+    const ids = Array.from(selectedIds);
+    setDeleteProgress({ current: 0, total: ids.length });
+    for (let i = 0; i < ids.length; i++) {
+      await fetch(`/api/bookings/${bookingId}/delivery?photoId=${ids[i]}`, { method: "DELETE" });
+      setPhotos((prev) => prev.filter((p) => p.id !== ids[i]));
+      setDeleteProgress({ current: i + 1, total: ids.length });
     }
-    setPhotos((prev) => prev.filter((p) => !selectedIds.has(p.id)));
     setSelectedIds(new Set());
     setSelectMode(false);
+    setDeleting(false);
+  }
+
+  async function uploadOneFile(file: File): Promise<boolean> {
+    const formData = new FormData();
+    formData.append("files", file);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      if (data.uploaded) {
+        setPhotos(prev => [...prev, ...data.uploaded]);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   }
 
   async function handleUpload(files: FileList | File[]) {
@@ -61,20 +90,33 @@ export function DeliveryUploadClient({
     if (imageFiles.length === 0) return;
 
     setUploading(true);
-    const formData = new FormData();
-    imageFiles.forEach(f => formData.append("files", f));
+    setFailedFiles([]);
+    setUploadProgress({ current: 0, total: imageFiles.length, failed: 0 });
+    let completed = 0;
+    const failedAfterRetry: File[] = [];
 
-    try {
-      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.uploaded) {
-        setPhotos(prev => [...prev, ...data.uploaded]);
+    // Upload in batches of 2 (reduced from 3 to avoid server overload with large files)
+    const BATCH_SIZE = 2;
+    const toUpload = [...imageFiles];
+
+    for (let i = 0; i < toUpload.length; i += BATCH_SIZE) {
+      const batch = toUpload.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(batch.map(async (file) => ({ file, ok: await uploadOneFile(file) })));
+
+      // Auto-retry failed ones immediately (one at a time)
+      for (const r of results) {
+        if (!r.ok) {
+          const retryOk = await uploadOneFile(r.file);
+          if (!retryOk) failedAfterRetry.push(r.file);
+        }
       }
-    } catch {}
+
+      completed += batch.length;
+      setUploadProgress({ current: Math.min(completed, toUpload.length), total: toUpload.length, failed: failedAfterRetry.length });
+    }
+
     setUploading(false);
+    setFailedFiles(failedAfterRetry);
   }
 
   async function handleDelete(photoId: string) {
@@ -166,10 +208,40 @@ export function DeliveryUploadClient({
       {/* Upload progress */}
       {uploading && (
         <div className="mt-4 flex items-center gap-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-warm-200">
-            <div className="h-full animate-pulse rounded-full bg-primary-500" style={{ width: "60%" }} />
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-warm-200">
+            <div className="h-full rounded-full bg-primary-500 transition-all duration-300" style={{ width: `${uploadProgress.total > 0 ? (uploadProgress.current / uploadProgress.total) * 100 : 0}%` }} />
           </div>
-          <span className="text-sm text-gray-500">{t("uploading")}</span>
+          <span className="text-sm font-medium text-gray-600 shrink-0">{uploadProgress.current}/{uploadProgress.total}</span>
+        </div>
+      )}
+
+      {/* Delete progress */}
+      {deleting && (
+        <div className="mt-4 flex items-center gap-3">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-red-100">
+            <div className="h-full rounded-full bg-red-500 transition-all duration-200" style={{ width: `${deleteProgress.total > 0 ? (deleteProgress.current / deleteProgress.total) * 100 : 0}%` }} />
+          </div>
+          <span className="text-sm font-medium text-red-600 shrink-0">Deleting {deleteProgress.current}/{deleteProgress.total}</span>
+        </div>
+      )}
+
+      {/* Failed uploads - retry */}
+      {!uploading && failedFiles.length > 0 && (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-amber-700">
+              {failedFiles.length} photo{failedFiles.length !== 1 ? "s" : ""} failed to upload (likely too large)
+            </p>
+            <button
+              onClick={() => handleUpload(failedFiles)}
+              className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition"
+            >
+              Retry
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-amber-500">
+            {failedFiles.map(f => f.name).join(", ")}
+          </p>
         </div>
       )}
 
@@ -177,7 +249,7 @@ export function DeliveryUploadClient({
       {photos.length > 0 && (
         <div className="mt-6 flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            <strong>{photos.length}</strong> {photos.length !== 1 ? t("photoCountPlural", { count: photos.length }) : t("photoCount", { count: photos.length })} &middot;{" "}
+            <strong>{photos.length}</strong> Photos &middot;{" "}
             {totalSize > 1024 * 1024
               ? `${(totalSize / (1024 * 1024)).toFixed(1)} MB`
               : `${(totalSize / 1024).toFixed(0)} KB`}
@@ -197,6 +269,54 @@ export function DeliveryUploadClient({
                   <button onClick={() => fileRef.current?.click()} className="text-sm font-medium text-primary-600 hover:text-primary-700">{t("addMore")}</button>
                 </>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Share / Deliver section — between stats and grid */}
+      {photos.length > 0 && (
+        <div className="mt-4">
+          {delivered ? (
+            <div className="rounded-xl border border-accent-200 bg-accent-50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-100">
+                  <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-accent-700 text-sm">{t("photosDelivered")}</p>
+                </div>
+                {deliveryUrl && (
+                  <button onClick={copyLink} className="shrink-0 rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700">
+                    {copied ? t("copied") : t("copy")} link
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-end gap-3 rounded-xl border border-warm-200 bg-warm-50 p-4">
+              <div className="flex-1 min-w-[200px]">
+                <label htmlFor="gallery-password" className="block text-sm font-medium text-gray-700">
+                  {t("galleryPassword")}
+                </label>
+                <input
+                  id="gallery-password"
+                  type="text"
+                  value={galleryPassword}
+                  onChange={(e) => setGalleryPassword(e.target.value)}
+                  placeholder={t("galleryPasswordPlaceholder")}
+                  className="mt-1.5 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 sm:w-56"
+                />
+              </div>
+              <button
+                onClick={handleShare}
+                disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4}
+                className="shrink-0 rounded-xl bg-accent-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50"
+              >
+                {sharing ? t("sharing") : `Share ${photos.length} Photos`}
+              </button>
             </div>
           )}
         </div>
@@ -242,68 +362,6 @@ export function DeliveryUploadClient({
         </div>
       )}
 
-      {/* Share / Deliver section */}
-      <div className="mt-8">
-        {delivered ? (
-          <div className="rounded-xl border border-accent-200 bg-accent-50 p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-100">
-                <svg className="h-5 w-5 text-accent-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-semibold text-accent-700">{t("photosDelivered")}</p>
-                <p className="text-sm text-accent-600">{t("clientNotified")}</p>
-              </div>
-            </div>
-
-            {deliveryUrl && (
-              <div className="mt-4">
-                <label className="text-xs font-medium text-gray-600">{t("deliveryLink")}</label>
-                <div className="mt-1 flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={deliveryUrl}
-                    className="flex-1 rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm text-gray-700"
-                  />
-                  <button
-                    onClick={copyLink}
-                    className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
-                  >
-                    {copied ? t("copied") : t("copy")}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="gallery-password" className="block text-sm font-medium text-gray-700">
-                {t("galleryPassword")}
-              </label>
-              <p className="text-xs text-gray-400">{t("galleryPasswordDesc")}</p>
-              <input
-                id="gallery-password"
-                type="text"
-                value={galleryPassword}
-                onChange={(e) => setGalleryPassword(e.target.value)}
-                placeholder={t("galleryPasswordPlaceholder")}
-                className="mt-2 w-full rounded-lg border border-warm-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 sm:w-64"
-              />
-            </div>
-            <button
-              onClick={handleShare}
-              disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4}
-              className="w-full rounded-xl bg-accent-600 px-6 py-3.5 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50 sm:w-auto"
-            >
-              {sharing ? t("sharing") : t("sharePhotos", { count: photos.length })}
-            </button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

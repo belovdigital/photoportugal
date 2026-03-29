@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { DeliveryGalleryClient } from "./DeliveryGalleryClient";
 import { Avatar } from "@/components/ui/Avatar";
@@ -41,11 +41,35 @@ export function DeliveryPageClient({
   const locale = useLocale();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [autoLoading, setAutoLoading] = useState(true);
   const [error, setError] = useState("");
   const [gallery, setGallery] = useState<GalleryData | null>(null);
   const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [acceptError, setAcceptError] = useState("");
+
+  // Auto-login with cached password
+  useEffect(() => {
+    const cached = sessionStorage.getItem(`delivery_pw_${token}`);
+    if (cached) {
+      fetch(`/api/delivery/${token}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: cached }),
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data) {
+            setGallery(data);
+            if (data.delivery_accepted) setAccepted(true);
+          }
+          setAutoLoading(false);
+        })
+        .catch(() => setAutoLoading(false));
+    } else {
+      setAutoLoading(false);
+    }
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,6 +89,7 @@ export function DeliveryPageClient({
         const data = await res.json();
         setGallery(data);
         if (data.delivery_accepted) setAccepted(true);
+        sessionStorage.setItem(`delivery_pw_${token}`, password.trim());
       } else if (res.status === 401) {
         setError(t("incorrectPassword"));
       } else if (res.status === 410) {
@@ -85,10 +110,11 @@ export function DeliveryPageClient({
     setAcceptError("");
 
     try {
+      const cachedPw = sessionStorage.getItem(`delivery_pw_${token}`) || "";
       const res = await fetch(`/api/delivery/${token}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: password.trim() }),
+        body: JSON.stringify({ password: password.trim() || cachedPw }),
       });
 
       if (res.ok) {
@@ -96,10 +122,11 @@ export function DeliveryPageClient({
         trackDeliveryAccepted();
         // Re-fetch gallery to get full-res URLs now that delivery is accepted
         try {
+          const pw = password.trim() || sessionStorage.getItem(`delivery_pw_${token}`) || "";
           const verifyRes = await fetch(`/api/delivery/${token}/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ password: password.trim() }),
+            body: JSON.stringify({ password: pw }),
           });
           if (verifyRes.ok) {
             const updatedData = await verifyRes.json();
@@ -120,6 +147,15 @@ export function DeliveryPageClient({
       setAcceptError(t("connectionError"));
     }
     setAccepting(false);
+  }
+
+  // Loading cached password
+  if (autoLoading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+      </div>
+    );
   }
 
   // Password gate
@@ -209,7 +245,7 @@ export function DeliveryPageClient({
         </div>
         {accepted ? (
           <a
-            href={`/api/delivery/${token}/download?password=${encodeURIComponent(password)}`}
+            href={`/api/delivery/${token}/download?password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
             className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

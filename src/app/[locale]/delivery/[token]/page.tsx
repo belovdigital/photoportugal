@@ -34,7 +34,7 @@ export default async function DeliveryPage({ params }: { params: Promise<{ token
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
-     WHERE b.delivery_token = $1 AND b.status = 'delivered'`, [token]
+     WHERE b.delivery_token = $1 AND b.delivery_token IS NOT NULL`, [token]
   );
 
   if (!booking) notFound();

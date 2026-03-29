@@ -190,9 +190,9 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                     <div>
                       <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Price</label>
                       <p className="mt-1 text-sm font-medium text-gray-700">{b.total_price ? `€${Math.round(Number(b.total_price))}` : "—"}</p>
-                      {b.service_fee != null && b.payout_amount != null && (
+                      {Number(b.service_fee) > 0 || Number(b.payout_amount) > 0 ? (
                         <p className="text-[10px] text-gray-400">Fee: €{Math.round(Number(b.service_fee))} · Payout: €{Math.round(Number(b.payout_amount))}</p>
-                      )}
+                      ) : null}
                     </div>
                     {b.package_name && (
                       <div>

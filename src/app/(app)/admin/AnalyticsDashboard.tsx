@@ -51,11 +51,12 @@ interface AnalyticsData {
   topPages?: { path: string; views: number; users: number }[];
   topQueries?: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
   positionDistribution?: {
-    top3: { count: number; queries: { query: string; clicks: number; impressions: number; position: number }[] };
-    top10: { count: number; queries: { query: string; clicks: number; impressions: number; position: number }[] };
-    top20: { count: number; queries: { query: string; clicks: number; impressions: number; position: number }[] };
-    top100: { count: number; queries: { query: string; clicks: number; impressions: number; position: number }[] };
+    top3: { count: number; prev?: number; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
+    top10: { count: number; prev?: number; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
+    top20: { count: number; prev?: number; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
+    top100: { count: number; prev?: number; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
     total: number;
+    prevTotal?: number;
   };
   topSearchPages?: { page: string; clicks: number; impressions: number; position: number }[];
   trafficSources?: { channel: string; sessions: number; users: number }[];
@@ -88,10 +89,10 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
   const { sort, toggle, sorted } = useSortable<{ query: string; clicks: number; impressions: number; position: number }>("position");
 
   const buckets = [
-    { key: "top3", label: "TOP 3", count: dist.top3.count, queries: dist.top3.queries, color: "bg-green-500", textColor: "text-green-700", bgColor: "bg-green-50", borderColor: "border-green-200", icon: "🏆" },
-    { key: "top10", label: "TOP 10", count: dist.top10.count, queries: dist.top10.queries, color: "bg-blue-500", textColor: "text-blue-700", bgColor: "bg-blue-50", borderColor: "border-blue-200", icon: "🎯" },
-    { key: "top20", label: "TOP 20", count: dist.top20.count, queries: dist.top20.queries, color: "bg-yellow-500", textColor: "text-yellow-700", bgColor: "bg-yellow-50", borderColor: "border-yellow-200", icon: "📈" },
-    { key: "top100", label: "TOP 100", count: dist.top100.count, queries: dist.top100.queries, color: "bg-gray-400", textColor: "text-gray-600", bgColor: "bg-gray-50", borderColor: "border-gray-200", icon: "📊" },
+    { key: "top3", label: "TOP 3", count: dist.top3.count, prev: dist.top3.prev, queries: dist.top3.queries, color: "bg-green-500", textColor: "text-green-700", bgColor: "bg-green-50", borderColor: "border-green-200", icon: "🏆" },
+    { key: "top10", label: "TOP 10", count: dist.top10.count, prev: dist.top10.prev, queries: dist.top10.queries, color: "bg-blue-500", textColor: "text-blue-700", bgColor: "bg-blue-50", borderColor: "border-blue-200", icon: "🎯" },
+    { key: "top20", label: "TOP 20", count: dist.top20.count, prev: dist.top20.prev, queries: dist.top20.queries, color: "bg-yellow-500", textColor: "text-yellow-700", bgColor: "bg-yellow-50", borderColor: "border-yellow-200", icon: "📈" },
+    { key: "top100", label: "TOP 100", count: dist.top100.count, prev: dist.top100.prev, queries: dist.top100.queries, color: "bg-gray-400", textColor: "text-gray-600", bgColor: "bg-gray-50", borderColor: "border-gray-200", icon: "📊" },
   ];
 
   return (
@@ -110,6 +111,11 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
             <span className="text-lg">{b.icon}</span>
             <p className="mt-1 text-2xl font-bold text-gray-900">{b.count}</p>
             <p className="text-xs font-semibold text-gray-500">{b.label}</p>
+            {b.prev !== undefined && b.prev !== null && (
+              <p className={`mt-0.5 text-[10px] font-medium ${b.count > b.prev ? "text-green-500" : b.count < b.prev ? "text-red-500" : "text-gray-400"}`}>
+                {b.count > b.prev ? `+${b.count - b.prev}` : b.count < b.prev ? `${b.count - b.prev}` : "="} vs prev
+              </p>
+            )}
           </button>
         ))}
       </div>
@@ -149,6 +155,11 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
                     }`}>
                       {q.position}
                     </span>
+                    {(q as { positionChange?: number | null }).positionChange != null && (q as { positionChange?: number | null }).positionChange !== 0 && (
+                      <span className={`ml-1 text-[10px] font-medium ${(q as { positionChange: number }).positionChange > 0 ? "text-green-500" : "text-red-500"}`}>
+                        {(q as { positionChange: number }).positionChange > 0 ? `↑${(q as { positionChange: number }).positionChange}` : `↓${Math.abs((q as { positionChange: number }).positionChange)}`}
+                      </span>
+                    )}
                   </td>
                   <td className="px-2 sm:px-4 py-2 text-right text-gray-500">{q.clicks}</td>
                   <td className="px-2 sm:px-4 py-2 text-right text-gray-500">{q.impressions}</td>

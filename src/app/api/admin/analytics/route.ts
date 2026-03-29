@@ -173,23 +173,50 @@ export async function GET() {
     };
 
     // Top queries (fetch more for position distribution)
-    const { data: queries } = await searchConsole.searchanalytics.query({
-      siteUrl: GSC_SITE,
-      requestBody: {
-        startDate: fmt(startDate),
-        endDate: fmt(endDate),
-        dimensions: ["query"],
-        rowLimit: 500,
-      },
-    });
+    // Compare with yesterday vs today for daily progress tracking
+    const prevStart = new Date(endDate.getTime() - 7 * 86400000); // 7 days before end
+    const prevEnd = new Date(endDate.getTime() - 3 * 86400000); // 3 days before end (older window)
 
-    const allQueries = (queries.rows || []).map((r) => ({
-      query: r.keys?.[0],
-      clicks: r.clicks || 0,
-      impressions: r.impressions || 0,
-      ctr: Math.round((r.ctr || 0) * 1000) / 10,
-      position: Math.round((r.position || 0) * 10) / 10,
-    }));
+    const [{ data: queries }, { data: prevQueries }] = await Promise.all([
+      searchConsole.searchanalytics.query({
+        siteUrl: GSC_SITE,
+        requestBody: {
+          startDate: fmt(startDate),
+          endDate: fmt(endDate),
+          dimensions: ["query"],
+          rowLimit: 500,
+        },
+      }),
+      searchConsole.searchanalytics.query({
+        siteUrl: GSC_SITE,
+        requestBody: {
+          startDate: fmt(prevStart),
+          endDate: fmt(prevEnd),
+          dimensions: ["query"],
+          rowLimit: 500,
+        },
+      }),
+    ]);
+
+    // Build previous period position map for comparison
+    const prevPositionMap = new Map<string, number>();
+    for (const r of prevQueries.rows || []) {
+      if (r.keys?.[0]) prevPositionMap.set(r.keys[0], r.position || 0);
+    }
+
+    const allQueries = (queries.rows || []).map((r) => {
+      const pos = Math.round((r.position || 0) * 10) / 10;
+      const prevPos = prevPositionMap.get(r.keys?.[0] || "");
+      return {
+        query: r.keys?.[0],
+        clicks: r.clicks || 0,
+        impressions: r.impressions || 0,
+        ctr: Math.round((r.ctr || 0) * 1000) / 10,
+        position: pos,
+        prevPosition: prevPos !== undefined ? Math.round(prevPos * 10) / 10 : null,
+        positionChange: prevPos !== undefined ? Math.round((prevPos - pos) * 10) / 10 : null,
+      };
+    });
 
     // Position distribution (like Semrush)
     const top3 = allQueries.filter((q) => q.position <= 3);
@@ -197,12 +224,22 @@ export async function GET() {
     const top20 = allQueries.filter((q) => q.position <= 20);
     const top100 = allQueries.filter((q) => q.position <= 100);
 
+    // Previous period distribution for comparison
+    const prevAll = (prevQueries.rows || []).map((r) => ({
+      position: Math.round((r.position || 0) * 10) / 10,
+    }));
+    const prevTop3 = prevAll.filter((q) => q.position <= 3).length;
+    const prevTop10 = prevAll.filter((q) => q.position <= 10).length;
+    const prevTop20 = prevAll.filter((q) => q.position <= 20).length;
+    const prevTop100 = prevAll.filter((q) => q.position <= 100).length;
+
     result.positionDistribution = {
-      top3: { count: top3.length, queries: top3 },
-      top10: { count: top10.length, queries: top10.filter((q) => q.position > 3) },
-      top20: { count: top20.length, queries: top20.filter((q) => q.position > 10) },
-      top100: { count: top100.length, queries: top100.filter((q) => q.position > 20) },
+      top3: { count: top3.length, queries: top3, prev: prevTop3 },
+      top10: { count: top10.length, queries: top10.filter((q) => q.position > 3), prev: prevTop10 },
+      top20: { count: top20.length, queries: top20.filter((q) => q.position > 10), prev: prevTop20 },
+      top100: { count: top100.length, queries: top100.filter((q) => q.position > 20), prev: prevTop100 },
       total: allQueries.length,
+      prevTotal: prevAll.length,
     };
 
     result.topQueries = allQueries.slice(0, 50);

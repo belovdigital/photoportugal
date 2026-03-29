@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { queryOne, query } from "./db";
+import { sendWelcomeEmail, sendAdminNewClientNotification } from "./email";
 
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -97,8 +98,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               "INSERT INTO users (email, name, first_name, last_name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, $5, $6, 'client', TRUE)",
               [email, user.name, firstName, lastName, account.providerAccountId, user.image]
             );
-            // Welcome email and admin notification are sent after role is determined
-            // (via set-role for photographers, or on first dashboard visit for clients)
+            // Send welcome + admin notification for new Google sign-ups
+            // If user goes through set-role as photographer, photographer notification will also be sent there
+            sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
+              console.error("[auth] Failed to send welcome email:", err)
+            );
+            sendAdminNewClientNotification(user.name || "Unknown", email).catch((err) =>
+              console.error("[auth] Failed to send admin client notification:", err)
+            );
           }
         } catch (error) {
           console.error("[auth] Google signIn DB error:", error);

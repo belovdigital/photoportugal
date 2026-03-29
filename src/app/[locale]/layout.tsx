@@ -8,6 +8,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
+import { VisitorTracker } from "@/components/ui/VisitorTracker";
 
 type Locale = "en" | "pt";
 
@@ -40,6 +41,7 @@ export default async function LocaleLayout({
           <Footer />
         </NotificationProvider>
         <CookieConsent />
+        <VisitorTracker />
         <GoogleAnalytics />
       </SessionProvider>
     </NextIntlClientProvider>

@@ -637,7 +637,7 @@ export async function GET(req: NextRequest) {
   try {
     const expiredDeliveries = await query<{ id: string }>(
       `SELECT b.id FROM bookings b
-       WHERE b.delivery_expires_at < NOW()
+       WHERE b.delivery_expires_at < NOW() - INTERVAL '30 days'
          AND EXISTS (SELECT 1 FROM delivery_photos dp WHERE dp.booking_id = b.id)`
     );
 

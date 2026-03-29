@@ -54,17 +54,18 @@ export async function POST(req: NextRequest) {
 
           // Add system message to chat
           try {
-            const bookingForMsg = await queryOne<{ client_id: string; client_name: string; client_email: string; client_phone: string | null; total_price: number }>(
-              `SELECT b.client_id, cu.name as client_name, cu.email as client_email, cu.phone as client_phone, b.total_price
+            const bookingForMsg = await queryOne<{ client_id: string; client_name: string; client_phone: string | null; total_price: number }>(
+              `SELECT b.client_id, cu.name as client_name, cu.phone as client_phone, b.total_price
                FROM bookings b JOIN users cu ON cu.id = b.client_id WHERE b.id = $1`,
               [bookingId]
             );
             if (bookingForMsg) {
-              const contactLine = [bookingForMsg.client_email, bookingForMsg.client_phone].filter(Boolean).join(" · ");
+              const firstName = bookingForMsg.client_name?.split(" ")[0] || "Client";
+              const phoneNote = bookingForMsg.client_phone ? `\n\nClient phone: ${bookingForMsg.client_phone}` : "";
               await queryOne(
                 `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE) RETURNING id`,
                 [bookingId, bookingForMsg.client_id,
-                  `✅ Payment of €${Number(bookingForMsg.total_price)} received from ${bookingForMsg.client_name}.\n\nClient contact: ${contactLine}`]
+                  `✅ Payment of €${Number(bookingForMsg.total_price)} received from ${firstName}.${phoneNote}`]
               );
             }
           } catch (msgErr) {
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
                 bookingInfo.client_name,
                 bookingId!,
                 bookingInfo.total_price,
-                { email: bookingInfo.client_email, phone: bookingInfo.client_phone }
+                bookingInfo.client_phone
               );
               sendPaymentConfirmedToClient(
                 bookingInfo.client_email,

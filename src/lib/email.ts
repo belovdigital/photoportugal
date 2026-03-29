@@ -48,15 +48,41 @@ export async function sendBookingNotification(
   packageName: string | null,
   shootDate: string | null
 ) {
+  const clientFirstName = clientName.split(" ")[0];
   await sendEmail(
     photographerEmail,
-    `New booking request from ${clientName}`,
+    `New booking request from ${clientFirstName}`,
     `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #C94536;">New Booking Request</h2>
       <p>Hi ${photographerName},</p>
-      <p><strong>${clientName}</strong> has requested a photoshoot${packageName ? ` (${packageName})` : ""}${shootDate ? ` on ${shootDate}` : ""}.</p>
+      <p><strong>${clientFirstName}</strong> has requested a photoshoot${packageName ? ` (${packageName})` : ""}${shootDate ? ` on ${shootDate}` : ""}.</p>
       <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
+}
+
+export async function sendBookingRequestToClient(
+  clientEmail: string,
+  clientName: string,
+  photographerName: string,
+  packageName: string | null,
+  shootDate: string | null
+) {
+  await sendEmail(
+    clientEmail,
+    `Booking request sent to ${photographerName}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Booking Request Sent!</h2>
+      <p>Hi ${clientName},</p>
+      <p>Your booking request has been sent to <strong>${photographerName}</strong>${packageName ? ` for ${packageName}` : ""}${shootDate ? ` on ${shootDate}` : ""}.</p>
+      <p style="margin-top: 12px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px; color: #5f4a3d;">
+        <strong>What happens next?</strong> ${photographerName} will review your request and get back to you shortly. You can also message them directly to discuss details.
+      </p>
+      <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Your Booking</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
     `
@@ -129,23 +155,23 @@ export async function sendPaymentReceivedToPhotographer(
   clientName: string,
   bookingId: string,
   amount: number,
-  clientContact?: { email: string; phone?: string | null }
+  clientPhone?: string | null
 ) {
-  const contactSection = clientContact
+  const firstName = clientName.split(" ")[0];
+  const contactSection = clientPhone
     ? `<div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 8px; font-size: 13px;">
-        <strong style="color: #166534;">Client contact:</strong><br/>
-        ${clientContact.email}${clientContact.phone ? `<br/>${clientContact.phone}` : ""}
+        <strong style="color: #166534;">Client phone:</strong> ${clientPhone}
       </div>`
     : "";
 
   await sendEmail(
     photographerEmail,
-    `Payment received from ${clientName} — &euro;${amount}`,
+    `Payment received from ${firstName} — €${amount}`,
     `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #C94536;">Payment Received!</h2>
       <p>Hi ${photographerName},</p>
-      <p><strong>${clientName}</strong> has paid <strong>&euro;${amount}</strong> for their booking.</p>
+      <p><strong>${firstName}</strong> has paid <strong>&euro;${amount}</strong> for their booking.</p>
       <p>The funds are held securely until the client accepts the photo delivery.</p>
       ${contactSection}
       <p style="margin-top: 12px;"><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
@@ -163,7 +189,7 @@ export async function sendPaymentConfirmedToClient(
 ) {
   await sendEmail(
     clientEmail,
-    `Payment confirmed — &euro;${amount} for your session with ${photographerName}`,
+    `Payment confirmed — €${amount} for your session with ${photographerName}`,
     `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #C94536;">Payment Confirmed!</h2>
@@ -183,14 +209,15 @@ export async function sendDeliveryAcceptedToPhotographer(
   clientName: string,
   payoutAmount: number
 ) {
+  const clientFirstName = clientName.split(" ")[0];
   await sendEmail(
     photographerEmail,
-    `${clientName} accepted delivery — &euro;${payoutAmount.toFixed(2)} transferred to you`,
+    `${clientFirstName} accepted delivery — €${payoutAmount.toFixed(2)} transferred to you`,
     `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #C94536;">Payment Transferred!</h2>
       <p>Hi ${photographerName},</p>
-      <p><strong>${clientName}</strong> has accepted the photo delivery. A payment of <strong>&euro;${payoutAmount.toFixed(2)}</strong> has been transferred to your Stripe account.</p>
+      <p><strong>${clientFirstName}</strong> has accepted the photo delivery. A payment of <strong>&euro;${payoutAmount.toFixed(2)}</strong> has been transferred to your Stripe account.</p>
       <p>The funds should arrive in your bank account within 2-7 business days, depending on your Stripe payout schedule.</p>
       <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Dashboard</a></p>
       <p style="margin-top: 16px;">Enjoyed working with this client? Leave a quick review to help build your reputation on the platform:</p>
@@ -299,14 +326,15 @@ export async function sendReviewNotification(
   rating: number
 ) {
   const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+  const clientFirstName = clientName.split(" ")[0];
   await sendEmail(
     photographerEmail,
-    `New ${rating}-star review from ${clientName}`,
+    `New ${rating}-star review from ${clientFirstName}`,
     `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #C94536;">New Review</h2>
       <p>Hi ${photographerName},</p>
-      <p><strong>${clientName}</strong> left you a review:</p>
+      <p><strong>${clientFirstName}</strong> left you a review:</p>
       <p style="font-size: 24px; color: #F59E0B;">${stars}</p>
       <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Review</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
@@ -458,56 +486,53 @@ export async function sendSubscriptionEmail(
 
 // === Admin notification emails ===
 
+// Send to all admin emails in parallel, failures don't block each other
+async function sendToAllAdmins(subject: string, html: string) {
+  const adminEmail = await getAdminEmail();
+  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+  await Promise.allSettled(emails.map((email) => sendEmail(email, subject, html)));
+}
+
 export async function sendAdminNewPhotographerNotification(
   photographerName: string,
   photographerEmail: string
 ) {
-  const adminEmail = await getAdminEmail();
-  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
-  for (const email of emails) {
-    await sendEmail(
-      email,
-      `[New Photographer] ${photographerName} has joined`,
-      `
-      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-        <h2 style="color: #C94536;">New Photographer Registration</h2>
-        <p>A new photographer has registered and is setting up their profile:</p>
-        <ul style="line-height: 1.8;">
-          <li><strong>Name:</strong> ${photographerName}</li>
-          <li><strong>Email:</strong> ${photographerEmail}</li>
-        </ul>
-        <p><a href="${BASE_URL}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
-      </div>
-      `
-    );
-  }
+  await sendToAllAdmins(
+    `[New Photographer] ${photographerName} has joined`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">New Photographer Registration</h2>
+      <p>A new photographer has registered and is setting up their profile:</p>
+      <ul style="line-height: 1.8;">
+        <li><strong>Name:</strong> ${photographerName}</li>
+        <li><strong>Email:</strong> ${photographerEmail}</li>
+      </ul>
+      <p><a href="${BASE_URL}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
 }
 
 export async function sendAdminNewClientNotification(
   clientName: string,
   clientEmail: string
 ) {
-  const adminEmail = await getAdminEmail();
-  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
-  for (const email of emails) {
-    await sendEmail(
-      email,
-      `[New Client] ${clientName} has signed up`,
-      `
-      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-        <h2 style="color: #C94536;">New Client Registration</h2>
-        <p>A new client has signed up:</p>
-        <ul style="line-height: 1.8;">
-          <li><strong>Name:</strong> ${clientName}</li>
-          <li><strong>Email:</strong> ${clientEmail}</li>
-        </ul>
-        <p><a href="${BASE_URL}/admin#clients" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
-      </div>
-      `
-    );
-  }
+  await sendToAllAdmins(
+    `[New Client] ${clientName} has signed up`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">New Client Registration</h2>
+      <p>A new client has signed up:</p>
+      <ul style="line-height: 1.8;">
+        <li><strong>Name:</strong> ${clientName}</li>
+        <li><strong>Email:</strong> ${clientEmail}</li>
+      </ul>
+      <p><a href="${BASE_URL}/admin#clients" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+    </div>
+    `
+  );
 }
 
 export async function sendAdminNewBookingNotification(
@@ -516,11 +541,7 @@ export async function sendAdminNewBookingNotification(
   packageName: string | null,
   shootDate: string | null
 ) {
-  const adminEmail = await getAdminEmail();
-  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
-  for (const email of emails) {
-    await sendEmail(
-      email,
+  await sendToAllAdmins(
       `[New Booking] ${clientName} \u2192 ${photographerName}`,
       `
       <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
@@ -536,7 +557,6 @@ export async function sendAdminNewBookingNotification(
       </div>
       `
     );
-  }
 }
 
 export async function sendPaymentReminderToClient(
@@ -594,14 +614,15 @@ export async function sendShootReminderToPhotographer(
   clientName: string,
   shootDate: string
 ) {
+  const clientFirstName = clientName.split(" ")[0];
   await sendEmail(
     photographerEmail,
-    `Tomorrow: Photoshoot with ${clientName}`,
+    `Tomorrow: Photoshoot with ${clientFirstName}`,
     `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #C94536;">Photoshoot Tomorrow!</h2>
       <p>Hi ${photographerName},</p>
-      <p>Reminder: you have a photoshoot with <strong>${clientName}</strong> scheduled for <strong>${shootDate}</strong>.</p>
+      <p>Reminder: you have a photoshoot with <strong>${clientFirstName}</strong> scheduled for <strong>${shootDate}</strong>.</p>
       <p>Make sure to confirm the meeting point and any details with your client.</p>
       <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Messages</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
@@ -615,14 +636,15 @@ export async function sendDeliveryReminderToPhotographer(
   photographerName: string,
   clientName: string
 ) {
+  const clientFirstName = clientName.split(" ")[0];
   await sendEmail(
     photographerEmail,
-    `Reminder: ${clientName} is waiting for their photos`,
+    `Reminder: ${clientFirstName} is waiting for their photos`,
     `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #C94536;">Delivery Reminder</h2>
       <p>Hi ${photographerName},</p>
-      <p>Your client <strong>${clientName}</strong> is waiting for their photos. The expected delivery time has passed.</p>
+      <p>Your client <strong>${clientFirstName}</strong> is waiting for their photos. The expected delivery time has passed.</p>
       <p>Please upload and deliver the photos as soon as possible.</p>
       <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Bookings</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
@@ -639,28 +661,23 @@ export async function sendAdminBookingCancelledNotification(
   cancelledBy: "client" | "photographer" | "admin",
   refundAmount: number | null
 ) {
-  const adminEmail = await getAdminEmail();
-  const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
   const refundLine = refundAmount && refundAmount > 0
     ? `<li><strong>Refund:</strong> &euro;${refundAmount.toFixed(2)}</li>`
     : `<li><strong>Refund:</strong> None</li>`;
-  for (const email of emails) {
-    await sendEmail(
-      email,
-      `[Booking Cancelled] ${clientName} \u2194 ${photographerName}`,
-      `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-        <h2 style="color: #C94536;">Booking Cancelled</h2>
-        <ul style="line-height: 1.8;">
-          <li><strong>Client:</strong> ${clientName}</li>
-          <li><strong>Photographer:</strong> ${photographerName}</li>
-          <li><strong>Cancelled by:</strong> ${cancelledBy}</li>
-          ${refundLine}
-        </ul>
-        <p><a href="${BASE_URL}/admin#bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal</p>
-      </div>`
-    );
-  }
+  await sendToAllAdmins(
+    `[Booking Cancelled] ${clientName} \u2194 ${photographerName}`,
+    `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #C94536;">Booking Cancelled</h2>
+      <ul style="line-height: 1.8;">
+        <li><strong>Client:</strong> ${clientName}</li>
+        <li><strong>Photographer:</strong> ${photographerName}</li>
+        <li><strong>Cancelled by:</strong> ${cancelledBy}</li>
+        ${refundLine}
+      </ul>
+      <p><a href="${BASE_URL}/admin#bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal</p>
+    </div>`
+  );
 }
 
 export async function sendPaymentFailedToClient(
@@ -693,13 +710,14 @@ export async function sendReviewApprovedToPhotographer(
   profileSlug: string
 ) {
   const stars = "\u2605".repeat(rating) + "\u2606".repeat(5 - rating);
+  const clientFirstName = clientName.split(" ")[0];
   await sendEmail(
     photographerEmail,
     `New ${rating}-star review published on your profile!`,
     `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #C94536;">New Review Published!</h2>
       <p>Hi ${photographerName},</p>
-      <p>A review from <strong>${clientName}</strong> has been approved and is now visible on your profile.</p>
+      <p>A review from <strong>${clientFirstName}</strong> has been approved and is now visible on your profile.</p>
       <div style="margin: 16px 0; padding: 16px; background: #faf8f5; border-radius: 8px;">
         <p style="margin: 0; font-size: 20px; color: #f59e0b;">${stars}</p>
       </div>

@@ -92,10 +92,112 @@ export async function POST(req: NextRequest) {
       return d.rows[0];
     });
 
+    // Send notifications (non-blocking)
+    try {
+      const info = await queryOne<{ client_name: string; client_email: string; photographer_name: string; photographer_email: string }>(
+        `SELECT cu.name as client_name, cu.email as client_email, pp.display_name as photographer_name, pu.email as photographer_email
+         FROM bookings b
+         JOIN users cu ON cu.id = b.client_id
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+         WHERE b.id = $1`, [booking_id]
+      );
+      if (info) {
+        const { sendEmail, getAdminEmail } = await import("@/lib/email");
+        const REASON_LABELS: Record<string, string> = { fewer_photos: "Fewer photos than promised", wrong_location: "Wrong location or subjects", technical_issues: "Technical issues", no_show: "Photographer no-show", other: "Other" };
+        const reasonText = REASON_LABELS[reason] || reason;
+
+        // Email to photographer
+        sendEmail(info.photographer_email, `A client has reported an issue with their delivery`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Delivery Issue Reported</h2>
+            <p>${info.client_name?.split(" ")[0]} has reported an issue with their photo delivery.</p>
+            <p><strong>Reason:</strong> ${reasonText}</p>
+            <p><strong>Details:</strong> ${description}</p>
+            <p>Our team will review this within 48 hours. No action is needed from you right now — we'll be in touch if we need more information.</p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        ).catch(e => console.error("[dispute] photographer email error:", e));
+
+        // Email to client
+        sendEmail(info.client_email, `We've received your report — reviewing now`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">We've Received Your Report</h2>
+            <p>Hi ${info.client_name?.split(" ")[0]},</p>
+            <p>Thank you for letting us know. We've received your report and our team will review it within <strong>48 hours</strong>.</p>
+            <p><strong>Issue:</strong> ${reasonText}</p>
+            <p>If you change your mind, you can cancel the dispute and accept the delivery at any time from your bookings page.</p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        ).catch(e => console.error("[dispute] client email error:", e));
+
+        // Email to admin
+        const adminEmail = await getAdminEmail();
+        const adminEmails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
+        for (const ae of adminEmails) {
+          sendEmail(ae, `[Dispute] ${info.client_name} vs ${info.photographer_name}`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">New Dispute Filed</h2>
+              <p><strong>${info.client_name}</strong> vs <strong>${info.photographer_name}</strong></p>
+              <p><strong>Reason:</strong> ${reasonText}</p>
+              <p><strong>Details:</strong> ${description}</p>
+              <p><a href="https://photoportugal.com/admin#disputes" style="display: inline-block; background: #C94536; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
+            </div>`
+          ).catch(e => console.error("[dispute] admin email error:", e));
+        }
+
+        // Chat message
+        await queryOne(
+          `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE)`,
+          [booking_id, userId, `⚠️ A delivery issue has been reported. Our team will review and respond within 48 hours.`]
+        );
+      }
+    } catch (notifErr) {
+      console.error("[dispute] notification error:", notifErr);
+    }
+
     return NextResponse.json({ success: true, id: dispute.id });
   } catch (error) {
     console.error("Error creating dispute:", error);
     return NextResponse.json({ error: "Failed to create dispute" }, { status: 500 });
+  }
+}
+
+// DELETE - Cancel dispute (client only)
+export async function DELETE(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: "Please sign in" }, { status: 401 });
+  const userId = (session.user as { id?: string }).id;
+  if (!userId) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+
+  try {
+    const { dispute_id } = await req.json();
+    if (!dispute_id) return NextResponse.json({ error: "dispute_id required" }, { status: 400 });
+
+    const dispute = await queryOne<{ id: string; booking_id: string; client_id: string; status: string }>(
+      "SELECT id, booking_id, client_id, status FROM disputes WHERE id = $1", [dispute_id]
+    );
+    if (!dispute) return NextResponse.json({ error: "Dispute not found" }, { status: 404 });
+    if (dispute.client_id !== userId) return NextResponse.json({ error: "Not your dispute" }, { status: 403 });
+    if (dispute.status !== "open" && dispute.status !== "under_review") {
+      return NextResponse.json({ error: "Cannot cancel a resolved dispute" }, { status: 400 });
+    }
+
+    await withTransaction(async (client) => {
+      await client.query("UPDATE disputes SET status = 'cancelled', resolved_at = NOW() WHERE id = $1", [dispute_id]);
+      await client.query("UPDATE bookings SET status = 'delivered' WHERE id = $1", [dispute.booking_id]);
+    });
+
+    // Chat message
+    await queryOne(
+      `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE)`,
+      [dispute.booking_id, userId, "ℹ️ The reported issue has been withdrawn by the client."]
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error cancelling dispute:", error);
+    return NextResponse.json({ error: "Failed to cancel dispute" }, { status: 500 });
   }
 }
 

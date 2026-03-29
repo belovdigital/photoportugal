@@ -32,7 +32,7 @@ export async function GET(
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
-     WHERE b.delivery_token = $1 AND b.status = 'delivered'`,
+     WHERE b.delivery_token = $1 AND b.delivery_token IS NOT NULL`,
     [token]
   );
 

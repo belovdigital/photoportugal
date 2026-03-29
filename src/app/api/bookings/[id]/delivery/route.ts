@@ -112,16 +112,17 @@ export async function POST(
 
       const deliveryUrl = `${BASE_URL}/delivery/${token}`;
 
+      const photoCount = await queryOne<{ count: string }>(
+        "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1", [id]
+      );
+      const count = photoCount?.count || "0";
+
       // Auto-send message in booking chat with link + password
       try {
-        const photoCount = await queryOne<{ count: string }>(
-          "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1", [id]
-        );
-        const count = photoCount?.count || "0";
 
         await queryOne(
-          `INSERT INTO messages (booking_id, sender_id, text) VALUES ($1, $2, $3)`,
-          [id, userId, `📸 Your ${count} photos are ready!\n\n🔗 Gallery: ${deliveryUrl}\n🔑 Password: ${password}\n\nThis link is available for 90 days. You can view photos online or download them all as a ZIP file.`]
+          `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE)`,
+          [id, userId, `DELIVERY:${count}:${deliveryUrl}:${password}`]
         );
       } catch (e) {
         console.error("[delivery] chat message error:", e);
@@ -138,22 +139,34 @@ export async function POST(
         );
 
         if (details) {
+          const firstName = details.client_name?.split(" ")[0] || "there";
           await sendEmail(
             details.client_email,
-            `Your photos from ${details.photographer_name} are ready!`,
+            `${details.photographer_name} has uploaded your photo previews — please review`,
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-              <h2 style="color: #C94536;">Your Photos Are Ready!</h2>
-              <p>Hi ${details.client_name},</p>
-              <p><strong>${details.photographer_name}</strong> has delivered your photos from the photoshoot.</p>
-              <p>Open the gallery below and enter the password to view and download your photos.</p>
+              <h2 style="color: #C94536;">Your Photo Previews Are Ready!</h2>
+              <p>Hi ${firstName},</p>
+              <p><strong>${details.photographer_name}</strong> has uploaded <strong>${count} photo previews</strong> from your session for you to review.</p>
+              <p>Please take a moment to browse through them. The previews include a watermark — this is normal and will be removed once you approve the delivery.</p>
+
+              <div style="margin: 20px 0; padding: 16px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0;">
+                <p style="margin: 0 0 8px 0; font-weight: bold; color: #166534;">What to do:</p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                  <tr><td style="padding: 4px 0; color: #166534; font-weight: bold; vertical-align: top;">1.</td><td style="padding: 4px 8px;">Open the gallery and review your photos</td></tr>
+                  <tr><td style="padding: 4px 0; color: #166534; font-weight: bold; vertical-align: top;">2.</td><td style="padding: 4px 8px;">If you're happy, click <strong>"Accept Delivery"</strong></td></tr>
+                  <tr><td style="padding: 4px 0; color: #166534; font-weight: bold; vertical-align: top;">3.</td><td style="padding: 4px 8px;">You'll get full-resolution photos without watermarks + a ZIP download</td></tr>
+                </table>
+              </div>
+
               <div style="margin: 16px 0; padding: 16px; background: #faf8f5; border-radius: 8px; border: 1px solid #e8e0d8;">
                 <p style="margin: 0 0 4px 0; font-size: 13px; color: #5f4a3d;"><strong>Gallery Password:</strong></p>
-                <p style="margin: 0; font-size: 18px; font-family: monospace; color: #C94536; letter-spacing: 1px;"><strong>${password}</strong></p>
+                <p style="margin: 0; font-size: 24px; font-family: monospace; color: #C94536; letter-spacing: 3px;"><strong>${password}</strong></p>
               </div>
-              <p><a href="${deliveryUrl}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Open Photo Gallery</a></p>
-              <p style="margin-top: 16px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px; color: #5f4a3d;">
-                <strong>Important:</strong> Please review your photos and click "Accept Delivery" in the gallery. Your photos will be available for download for <strong>60 days</strong> after acceptance.
-              </p>
+
+              <p><a href="${deliveryUrl}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Review Your Photos</a></p>
+
+              <p style="margin-top: 16px; font-size: 13px; color: #666;">Not happy with the results? You can report an issue directly from the gallery and our team will help resolve it within 48 hours.</p>
+              <p style="font-size: 12px; color: #999;">This gallery is available until ${expiresAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.</p>
               <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
             </div>`
           );
@@ -354,16 +367,22 @@ export async function DELETE(
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const photo = await queryOne<{ url: string }>(
-    "DELETE FROM delivery_photos WHERE id = $1 AND booking_id = $2 RETURNING url",
+  const photo = await queryOne<{ url: string; preview_url: string | null }>(
+    "DELETE FROM delivery_photos WHERE id = $1 AND booking_id = $2 RETURNING url, preview_url",
     [photoId, id]
   );
 
   if (photo) {
+    // Delete original file
     try {
-      const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
-      await unlink(filePath);
+      await unlink(path.join(UPLOAD_DIR, photo.url.replace("/uploads/", "")));
     } catch {}
+    // Delete preview/watermark file
+    if (photo.preview_url) {
+      try {
+        await unlink(path.join(UPLOAD_DIR, photo.preview_url.replace("/uploads/", "")));
+      } catch {}
+    }
   }
 
   return NextResponse.json({ success: true });

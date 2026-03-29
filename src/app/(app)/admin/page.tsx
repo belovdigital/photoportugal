@@ -84,12 +84,44 @@ export default async function AdminPage() {
   const clients = await query<{
     id: string; email: string; name: string; created_at: string; avatar_url: string | null; is_banned: boolean;
     phone: string | null; booking_count: number; total_spent: number; last_booking_at: string | null;
+    utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; utm_term: string | null;
+    google_id: string | null;
+    visitor_sessions: string | null;
   }>(`SELECT u.id, u.email, u.name, u.created_at, u.avatar_url, COALESCE(u.is_banned, FALSE) as is_banned,
-      u.phone,
+      u.phone, u.utm_source, u.utm_medium, u.utm_campaign, u.utm_term, u.google_id,
       (SELECT COUNT(*) FROM bookings WHERE client_id = u.id)::int as booking_count,
       COALESCE((SELECT SUM(total_price) FROM bookings WHERE client_id = u.id AND payment_status = 'paid'), 0)::int as total_spent,
-      (SELECT MAX(created_at) FROM bookings WHERE client_id = u.id)::text as last_booking_at
+      (SELECT MAX(created_at) FROM bookings WHERE client_id = u.id)::text as last_booking_at,
+      (SELECT json_agg(row_to_json(s) ORDER BY s.started_at DESC)::text
+       FROM (SELECT vs.started_at, vs.referrer, vs.utm_source, vs.utm_medium, vs.utm_term,
+                    vs.device_type, vs.country, vs.language, vs.screen_width,
+                    vs.pageviews, vs.pageview_count
+             FROM visitor_sessions vs WHERE vs.user_id = u.id
+             ORDER BY vs.started_at DESC LIMIT 5) s
+      ) as visitor_sessions
     FROM users u WHERE u.role = 'client' ORDER BY u.created_at DESC LIMIT 200`);
+
+  const clientBookings = await query<{
+    client_id: string; booking_id: string; photographer_name: string; package_name: string | null;
+    location_slug: string | null; shoot_date: string | null; total_price: number;
+    status: string; payment_status: string; occasion: string | null; created_at: string;
+    utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; utm_term: string | null;
+  }>(`SELECT b.client_id, b.id as booking_id, pp.display_name as photographer_name,
+      pk.name as package_name, b.location_slug, b.shoot_date, b.total_price,
+      b.status, b.payment_status, b.occasion, b.created_at,
+      b.utm_source, b.utm_medium, b.utm_campaign, b.utm_term
+    FROM bookings b
+    JOIN photographer_profiles pp ON pp.id = b.photographer_id
+    LEFT JOIN packages pk ON pk.id = b.package_id
+    WHERE b.client_id IN (SELECT id FROM users WHERE role = 'client')
+    ORDER BY b.created_at DESC`);
+
+  // Group bookings by client_id
+  const bookingsByClient: Record<string, typeof clientBookings> = {};
+  for (const b of clientBookings) {
+    if (!bookingsByClient[b.client_id]) bookingsByClient[b.client_id] = [];
+    bookingsByClient[b.client_id].push(b);
+  }
 
   const photographers = await query<{
     id: string; display_name: string; slug: string; plan: string; rating: number;
@@ -194,7 +226,7 @@ export default async function AdminPage() {
   );
 
   const clientsSection = (
-    <AdminClientsList clients={clients} />
+    <AdminClientsList clients={clients} bookingsByClient={bookingsByClient} />
   );
 
   const bookingsSection = (

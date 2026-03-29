@@ -129,6 +129,80 @@ export async function PATCH(
       );
     }
 
+    // If not a refund case, update booking status back to delivered (reshoot/rejected)
+    if (isClosing && resolution !== "full_refund" && resolution !== "partial_refund") {
+      if (resolution === "rejected") {
+        // Rejected dispute — return to delivered so client can accept
+        await query("UPDATE bookings SET status = 'delivered' WHERE id = $1", [dispute.booking_id]);
+      } else if (resolution === "reshoot") {
+        // Reshoot — return to confirmed so photographer can redo
+        await query("UPDATE bookings SET status = 'confirmed' WHERE id = $1", [dispute.booking_id]);
+      }
+    }
+
+    // Send notifications on resolution
+    if (isClosing) {
+      try {
+        const { sendEmail, getAdminEmail } = await import("@/lib/email");
+        const info = await queryOne<{ client_name: string; client_email: string; photographer_name: string; photographer_email: string; booking_id: string }>(
+          `SELECT cu.name as client_name, cu.email as client_email, pp.display_name as photographer_name, pu.email as photographer_email, d.booking_id
+           FROM disputes d
+           JOIN bookings b ON b.id = d.booking_id
+           JOIN users cu ON cu.id = d.client_id
+           JOIN photographer_profiles pp ON pp.id = d.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
+           WHERE d.id = $1`, [id]
+        );
+
+        if (info) {
+          const RESOLUTION_TEXT: Record<string, string> = {
+            reshoot: "A reshoot has been arranged. Your photographer will reach out to schedule a new session.",
+            partial_refund: `A partial refund of €${refund_amount || 0} has been issued to your original payment method.`,
+            full_refund: "A full refund has been issued to your original payment method.",
+            rejected: "After careful review, we determined the delivery meets the agreed terms.",
+          };
+          const resText = RESOLUTION_TEXT[resolution] || resolution;
+
+          // Email to client
+          sendEmail(info.client_email, `Your delivery issue has been resolved`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Issue Resolved</h2>
+              <p>Hi ${info.client_name?.split(" ")[0]},</p>
+              <p>${resText}</p>
+              ${resolution_note ? `<p style="margin-top: 12px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px;"><strong>Note from our team:</strong> ${resolution_note}</p>` : ""}
+              <p>If you have any questions, please <a href="https://photoportugal.com/contact" style="color: #C94536;">contact us</a>.</p>
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          ).catch(e => console.error("[dispute] resolve client email:", e));
+
+          // Email to photographer
+          sendEmail(info.photographer_email, `Delivery issue resolved — ${resolution.replace("_", " ")}`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Dispute Resolved</h2>
+              <p>The delivery issue reported by ${info.client_name?.split(" ")[0]} has been resolved.</p>
+              <p><strong>Resolution:</strong> ${resolution.replace("_", " ")}</p>
+              ${resolution_note ? `<p style="margin-top: 12px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px;"><strong>Note:</strong> ${resolution_note}</p>` : ""}
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          ).catch(e => console.error("[dispute] resolve photographer email:", e));
+
+          // Chat message
+          const chatResolution: Record<string, string> = {
+            reshoot: "✅ Issue resolved — a reshoot has been arranged.",
+            partial_refund: `✅ Issue resolved — partial refund of €${refund_amount || 0} issued.`,
+            full_refund: "✅ Issue resolved — full refund issued.",
+            rejected: "✅ Issue reviewed — delivery meets agreed terms. You can accept the delivery.",
+          };
+          await queryOne(
+            `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, (SELECT client_id FROM disputes WHERE id = $2), $3, TRUE)`,
+            [dispute.booking_id, id, chatResolution[resolution] || `✅ Dispute resolved: ${resolution.replace("_", " ")}`]
+          );
+        }
+      } catch (notifErr) {
+        console.error("[dispute] resolve notification error:", notifErr);
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating dispute:", error);
