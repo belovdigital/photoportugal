@@ -699,17 +699,7 @@ export function PhotographerDashboardClient({
               <p className="mt-1 text-xs text-gray-400">{t("phoneHint")}</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">{t("displayName")}</label>
-              <p className="text-xs text-gray-400 mb-1">{t("displayNameHint")}</p>
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
-                className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-              />
-            </div>
+            {/* Display name removed — using first+last name from account */}
             {/* Custom URL — Premium only */}
             {profile.plan === "premium" ? (
               <div>
