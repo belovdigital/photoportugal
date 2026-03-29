@@ -99,10 +99,10 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
   if (!location || !occ) notFound();
 
   // Get photographers at this location
-  let photographers: { slug: string; display_name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }[] = [];
+  let photographers: { slug: string; name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }[] = [];
   try {
-    photographers = await query<{ slug: string; display_name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }>(
-      `SELECT pp.slug, pp.display_name, u.avatar_url, pp.rating, pp.review_count,
+    photographers = await query<{ slug: string; name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }>(
+      `SELECT pp.slug, u.name, u.avatar_url, pp.rating, pp.review_count,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
@@ -180,9 +180,9 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
                 href={`/photographers/${p.slug}`}
                 className="flex items-center gap-4 rounded-xl border border-warm-200 bg-white p-4 transition hover:shadow-md"
               >
-                <Avatar src={p.avatar_url} fallback={normalizeName(p.display_name)} size="lg" />
+                <Avatar src={p.avatar_url} fallback={normalizeName(p.name)} size="lg" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900 truncate">{normalizeName(p.display_name)}</p>
+                  <p className="font-semibold text-gray-900 truncate">{normalizeName(p.name)}</p>
                   <div className="mt-0.5 flex items-center gap-2 text-sm text-gray-500">
                     {p.rating > 0 && <span className="text-amber-500">★ {p.rating.toFixed(1)}</span>}
                     {p.review_count > 0 && <span>({p.review_count} reviews)</span>}

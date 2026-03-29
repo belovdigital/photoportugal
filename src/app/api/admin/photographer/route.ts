@@ -83,8 +83,8 @@ export async function PATCH(req: NextRequest) {
     // Send approval email only when photographer is newly approved (was not approved before)
     if (updates.is_approved === true && !wasAlreadyApproved) {
       try {
-        const photographer = await queryOne<{ email: string; display_name: string; slug: string }>(
-          `SELECT u.email, pp.display_name, pp.slug
+        const photographer = await queryOne<{ email: string; name: string; slug: string }>(
+          `SELECT u.email, u.name, pp.slug
            FROM photographer_profiles pp
            JOIN users u ON u.id = pp.user_id
            WHERE pp.id = $1`,
@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest) {
             "Your profile is now live on Photo Portugal!",
             `
             <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
-              <h2 style="color: #C94536;">Congratulations, ${photographer.display_name}!</h2>
+              <h2 style="color: #C94536;">Congratulations, ${photographer.name}!</h2>
               <p>Great news — your photographer profile has been reviewed and approved. You're now live on Photo Portugal and visible to thousands of tourists planning their trips to Portugal.</p>
 
               <div style="margin: 24px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">

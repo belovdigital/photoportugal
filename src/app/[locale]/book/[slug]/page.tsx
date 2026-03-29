@@ -21,7 +21,7 @@ interface Package {
 
 interface Photographer {
   id: string;
-  display_name: string;
+  name: string;
   slug: string;
   avatar_url: string | null;
   locations: { slug: string; name: string }[];
@@ -174,7 +174,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           </div>
           <h1 className="mt-4 text-2xl font-bold text-gray-900">{t("success.title")}</h1>
           <p className="mt-2 text-gray-500">
-            {t("success.message", { photographer: photographer?.display_name || "" })}
+            {t("success.message", { photographer: photographer?.name || "" })}
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <Link href="/dashboard/bookings" className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
@@ -207,7 +207,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <h1 className="font-display text-3xl font-bold text-gray-900">
-        {t("title", { photographer: photographer.display_name })}
+        {t("title", { photographer: photographer.name })}
       </h1>
       <p className="mt-2 text-gray-500">{t("subtitle")}</p>
 

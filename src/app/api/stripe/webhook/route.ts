@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
               total_price: number;
             }>(
               `SELECT cu.email as client_email, cu.name as client_name, cu.phone as client_phone,
-                      pu.email as photographer_email, pp.display_name as photographer_name,
+                      pu.email as photographer_email, pu.name as photographer_name,
                       b.total_price
                FROM bookings b
                JOIN users cu ON cu.id = b.client_id
@@ -191,9 +191,10 @@ export async function POST(req: NextRequest) {
           // Notify client about failed payment
           try {
             const failedBooking = await queryOne<{ client_email: string; client_name: string; photographer_name: string }>(
-              `SELECT cu.email as client_email, cu.name as client_name, pp.display_name as photographer_name
+              `SELECT cu.email as client_email, cu.name as client_name, pu.name as photographer_name
                FROM bookings b JOIN users cu ON cu.id = b.client_id
                JOIN photographer_profiles pp ON pp.id = b.photographer_id
+               JOIN users pu ON pu.id = pp.user_id
                WHERE b.id = $1`, [bookingId]
             );
             if (failedBooking) {

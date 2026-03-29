@@ -18,7 +18,6 @@ export async function PUT(req: NextRequest) {
       first_name,
       last_name,
       phone: rawPhone,
-      display_name,
       tagline,
       bio,
       languages,
@@ -59,12 +58,11 @@ export async function PUT(req: NextRequest) {
 
     const profile = await queryOne<{ id: string; plan: string; slug: string }>(
       `UPDATE photographer_profiles
-       SET display_name = $1, tagline = $2, bio = $3, languages = $4,
-           shoot_types = $5, experience_years = $6, updated_at = NOW()
-       WHERE user_id = $7
+       SET tagline = $1, bio = $2, languages = $3,
+           shoot_types = $4, experience_years = $5, updated_at = NOW()
+       WHERE user_id = $6
        RETURNING id, plan, slug`,
       [
-        display_name,
         tagline || null,
         bio || null,
         languages || [],

@@ -95,7 +95,6 @@ export async function DELETE(req: NextRequest) {
     if (profile) {
       await queryOne(
         `UPDATE photographer_profiles SET
-          display_name = 'Deleted Photographer',
           is_approved = FALSE,
           tagline = NULL,
           bio = NULL,

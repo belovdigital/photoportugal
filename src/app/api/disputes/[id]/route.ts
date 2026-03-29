@@ -145,7 +145,7 @@ export async function PATCH(
       try {
         const { sendEmail, getAdminEmail } = await import("@/lib/email");
         const info = await queryOne<{ client_name: string; client_email: string; photographer_name: string; photographer_email: string; booking_id: string }>(
-          `SELECT cu.name as client_name, cu.email as client_email, pp.display_name as photographer_name, pu.email as photographer_email, d.booking_id
+          `SELECT cu.name as client_name, cu.email as client_email, pu.name as photographer_name, pu.email as photographer_email, d.booking_id
            FROM disputes d
            JOIN bookings b ON b.id = d.booking_id
            JOIN users cu ON cu.id = d.client_id

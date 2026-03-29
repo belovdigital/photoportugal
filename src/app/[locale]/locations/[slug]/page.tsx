@@ -94,19 +94,19 @@ export default async function LocationPage({
 
   // Fetch top photographers for this location (max 6)
   let topPhotographers: {
-    id: string; slug: string; display_name: string; avatar_url: string | null;
+    id: string; slug: string; name: string; avatar_url: string | null;
     cover_url: string | null; tagline: string | null;
     rating: number; review_count: number; starting_price: number | null;
     languages: string[]; location_names: string[];
   }[] = [];
   try {
     topPhotographers = await query<{
-      id: string; slug: string; display_name: string; avatar_url: string | null;
+      id: string; slug: string; name: string; avatar_url: string | null;
       cover_url: string | null; tagline: string | null;
       rating: number; review_count: number; starting_price: number | null;
       languages: string[]; location_names: string[];
     }>(
-      `SELECT pp.id, pp.slug, pp.display_name, u.avatar_url,
+      `SELECT pp.id, pp.slug, u.name, u.avatar_url,
               pp.cover_url, pp.tagline, pp.rating, pp.review_count, pp.languages,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price,
               ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
@@ -403,22 +403,22 @@ export default async function LocationPage({
                   {/* Cover */}
                   <div className="relative h-36 bg-warm-100">
                     {sp.cover_url ? (
-                      <OptimizedImage src={sp.cover_url} alt={sp.display_name} width={400} className="h-full w-full object-cover" />
+                      <OptimizedImage src={sp.cover_url} alt={sp.name} width={400} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full bg-gradient-to-br from-warm-100 to-warm-200" />
                     )}
                     <div className="absolute -bottom-5 left-4 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary-100 text-sm font-bold text-primary-600 overflow-hidden shadow-sm">
                       {sp.avatar_url ? (
-                        <OptimizedImage src={sp.avatar_url} alt={sp.display_name} width={80} className="h-full w-full object-cover" />
+                        <OptimizedImage src={sp.avatar_url} alt={sp.name} width={80} className="h-full w-full object-cover" />
                       ) : (
-                        sp.display_name.charAt(0)
+                        sp.name.charAt(0)
                       )}
                     </div>
                   </div>
                   {/* Info */}
                   <div className="px-4 pb-4 pt-7">
                     <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-                      {sp.display_name}
+                      {sp.name}
                     </h3>
                     {sp.tagline && (
                       <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{sp.tagline}</p>

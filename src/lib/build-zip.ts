@@ -9,8 +9,9 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 export async function buildDeliveryZip(bookingId: string): Promise<{ path: string; size: number } | null> {
   try {
     const booking = await queryOne<{ photographer_name: string }>(
-      `SELECT pp.display_name as photographer_name
+      `SELECT u.name as photographer_name
        FROM bookings b JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users u ON u.id = pp.user_id
        WHERE b.id = $1`, [bookingId]
     );
     if (!booking) return null;

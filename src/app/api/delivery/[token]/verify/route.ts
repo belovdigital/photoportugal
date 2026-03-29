@@ -33,7 +33,7 @@ export async function POST(
     zip_size: number | null;
   }>(
     `SELECT b.id, b.delivery_password, b.delivery_expires_at,
-            pp.display_name as photographer_name, u.avatar_url as photographer_avatar,
+            u.name as photographer_name, u.avatar_url as photographer_avatar,
             pp.slug as photographer_slug, cu.name as client_name,
             b.shoot_date, b.location_slug,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,

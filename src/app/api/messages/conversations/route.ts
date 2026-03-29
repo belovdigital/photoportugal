@@ -60,7 +60,7 @@ export async function GET() {
       conversations = await query(
         `SELECT DISTINCT ON (pp.user_id)
           b.id as booking_id,
-          pp.display_name as other_name,
+          u.name as other_name,
           u.avatar_url as other_avatar,
           u.id as other_user_id,
           b.status as booking_status,

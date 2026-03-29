@@ -66,7 +66,7 @@ export async function PATCH(
     try {
       const reviewDetails = await queryOne<{ rating: number; client_name: string; photographer_email: string; photographer_name: string; slug: string }>(
         `SELECT r.rating, COALESCE(r.client_name_override, cu.name, 'A client') as client_name,
-                pu.email as photographer_email, pp.display_name as photographer_name, pp.slug
+                pu.email as photographer_email, pu.name as photographer_name, pp.slug
          FROM reviews r
          LEFT JOIN users cu ON cu.id = r.client_id
          JOIN photographer_profiles pp ON pp.id = r.photographer_id

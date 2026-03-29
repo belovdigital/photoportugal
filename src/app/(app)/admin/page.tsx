@@ -109,12 +109,13 @@ export default async function AdminPage() {
     location_slug: string | null; shoot_date: string | null; total_price: number;
     status: string; payment_status: string; occasion: string | null; created_at: string;
     utm_source: string | null; utm_medium: string | null; utm_campaign: string | null; utm_term: string | null;
-  }>(`SELECT b.client_id, b.id as booking_id, pp.display_name as photographer_name,
+  }>(`SELECT b.client_id, b.id as booking_id, pu.name as photographer_name,
       pk.name as package_name, b.location_slug, b.shoot_date, b.total_price,
       b.status, b.payment_status, b.occasion, b.created_at,
       b.utm_source, b.utm_medium, b.utm_campaign, b.utm_term
     FROM bookings b
     JOIN photographer_profiles pp ON pp.id = b.photographer_id
+    JOIN users pu ON pu.id = pp.user_id
     LEFT JOIN packages pk ON pk.id = b.package_id
     WHERE b.client_id IN (SELECT id FROM users WHERE role = 'client')
     ORDER BY b.created_at DESC`);
@@ -136,7 +137,7 @@ export default async function AdminPage() {
     has_avatar: boolean; has_cover: boolean; has_bio: boolean; portfolio_count: number;
     package_count: number; location_count: number; stripe_ready: boolean; has_phone: boolean; phone: string | null;
   }>(
-    `SELECT pp.id, pp.display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
+    `SELECT pp.id, u.name as display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
             pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, COALESCE(u.is_banned, FALSE) as is_banned, pp.created_at, u.email,
             COALESCE(pp.is_founding, FALSE) as is_founding, pp.early_bird_tier, pp.early_bird_expires_at, pp.registration_number,
             (u.avatar_url IS NOT NULL) as has_avatar,
@@ -168,13 +169,14 @@ export default async function AdminPage() {
     service_fee: number | null; payout_amount: number | null;
     flexible_date_from: string | null; flexible_date_to: string | null; date_note: string | null;
   }>(
-    `SELECT b.id, cu.name as client_name, pp.display_name as photographer_name,
+    `SELECT b.id, cu.name as client_name, pu.name as photographer_name,
             b.status, b.shoot_date, b.total_price, b.created_at, b.payment_status,
             b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
             pk.name as package_name, b.service_fee, b.payout_amount,
             b.flexible_date_from, b.flexible_date_to, b.date_note
      FROM bookings b JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     JOIN users pu ON pu.id = pp.user_id
      LEFT JOIN packages pk ON pk.id = b.package_id
      ORDER BY b.created_at DESC LIMIT 200`
   );
@@ -189,10 +191,11 @@ export default async function AdminPage() {
   }>(
     `SELECT r.id, r.rating, r.title, r.text, r.video_url, r.created_at, COALESCE(r.is_approved, true) as is_approved,
             COALESCE(r.client_name_override, u.name, 'Manual review') as client_name,
-            pp.display_name as photographer_name, pp.slug as photographer_slug, pp.id as photographer_id
+            pu.name as photographer_name, pp.slug as photographer_slug, pp.id as photographer_id
      FROM reviews r
      LEFT JOIN users u ON u.id = r.client_id
      JOIN photographer_profiles pp ON pp.id = r.photographer_id
+     JOIN users pu ON pu.id = pp.user_id
      ORDER BY r.is_approved ASC, r.created_at DESC`
   ).catch(() => []);
 

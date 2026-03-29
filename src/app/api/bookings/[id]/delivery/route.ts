@@ -131,10 +131,11 @@ export async function POST(
       // Send email to client with gallery link and password
       try {
         const details = await queryOne<{ client_email: string; client_name: string; photographer_name: string }>(
-          `SELECT u.email as client_email, u.name as client_name, pp.display_name as photographer_name
+          `SELECT u.email as client_email, u.name as client_name, pu.name as photographer_name
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
            WHERE b.id = $1`, [id]
         );
 
@@ -180,10 +181,11 @@ export async function POST(
         const deliveryDetails = await queryOne<{
           client_id: string; client_phone: string | null; photographer_name: string;
         }>(
-          `SELECT b.client_id, cu.phone as client_phone, pp.display_name as photographer_name
+          `SELECT b.client_id, cu.phone as client_phone, pu.name as photographer_name
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
            WHERE b.id = $1`,
           [id]
         );

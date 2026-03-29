@@ -68,7 +68,7 @@ export interface PhotographerProfile {
   id: string;
   user_id: string;
   slug: string;
-  display_name: string;
+  name: string;
   tagline: string;
   bio: string;
   avatar_url: string | null;

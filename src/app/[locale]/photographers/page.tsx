@@ -22,7 +22,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
     const profiles = await query<{
       id: string;
       slug: string;
-      display_name: string;
+      name: string;
       tagline: string | null;
       bio: string | null;
       avatar_url: string | null;
@@ -39,7 +39,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
       review_count: number;
       session_count: number;
     }>(
-      `SELECT p.id, p.slug, p.display_name, p.tagline, p.bio,
+      `SELECT p.id, p.slug, u.name, p.tagline, p.bio,
               u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               p.experience_years, p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
               p.plan, p.rating, p.review_count, p.session_count
@@ -93,7 +93,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
         id: p.id,
         user_id: "",
         slug: p.slug,
-        display_name: p.display_name,
+        name: p.name,
         tagline: p.tagline || "",
         bio: p.bio || "",
         avatar_url: p.avatar_url,
@@ -165,7 +165,7 @@ export default async function PhotographersPage({
       "@type": "ListItem",
       position: i + 1,
       url: `${base}/photographers/${p.slug}`,
-      name: p.display_name,
+      name: p.name,
     })),
   };
 

@@ -9,12 +9,12 @@ import { sendAdminWhatsApp } from "@/lib/whatsapp";
 export async function checkAndNotifyChecklistComplete(photographerId: string) {
   try {
     const profile = await queryOne<{
-      display_name: string;
+      name: string;
       email: string;
       checklist_complete: boolean;
       checklist_notified: boolean;
     }>(`
-      SELECT pp.display_name, u.email,
+      SELECT u.name, u.email,
         COALESCE(pp.checklist_notified, FALSE) as checklist_notified,
         (u.avatar_url IS NOT NULL
          AND pp.cover_url IS NOT NULL
@@ -41,18 +41,18 @@ export async function checkAndNotifyChecklistComplete(photographerId: string) {
     const adminEmail = await getAdminEmail();
     sendEmail(
       adminEmail,
-      `Photographer ready for approval: ${profile.display_name}`,
+      `Photographer ready for approval: ${profile.name}`,
       `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2 style="color: #16a34a;">Photographer Ready for Approval</h2>
-        <p><strong>${profile.display_name}</strong> (${profile.email}) has completed all onboarding steps and is ready to be reviewed.</p>
+        <p><strong>${profile.name}</strong> (${profile.email}) has completed all onboarding steps and is ready to be reviewed.</p>
         <p><a href="https://photoportugal.com/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
       </div>`
     );
 
     sendAdminWhatsApp(
       "admin_new_booking",
-      [profile.display_name, "completed checklist", "ready for approval"],
-      `Photo Portugal: ${profile.display_name} completed their profile and is ready for approval. Check admin panel.`
+      [profile.name, "completed checklist", "ready for approval"],
+      `Photo Portugal: ${profile.name} completed their profile and is ready for approval. Check admin panel.`
     );
   } catch (err) {
     console.error("[checklist-notify] error:", err);

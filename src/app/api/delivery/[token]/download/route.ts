@@ -30,11 +30,12 @@ export async function GET(
     zip_size: number | null;
     zip_ready: boolean;
   }>(
-    `SELECT b.id, pp.display_name as photographer_name, b.delivery_password, b.delivery_expires_at,
+    `SELECT b.id, u.name as photographer_name, b.delivery_password, b.delivery_expires_at,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
             b.zip_path, b.zip_size, COALESCE(b.zip_ready, FALSE) as zip_ready
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     JOIN users u ON u.id = pp.user_id
      WHERE b.delivery_token = $1 AND b.delivery_token IS NOT NULL`,
     [token]
   );

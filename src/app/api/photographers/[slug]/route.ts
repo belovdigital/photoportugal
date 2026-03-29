@@ -12,10 +12,10 @@ export async function GET(
     const profile = await queryOne<{
       id: string;
       slug: string;
-      display_name: string;
+      name: string;
       avatar_url: string | null;
     }>(
-      `SELECT p.id, p.slug, p.display_name, u.avatar_url
+      `SELECT p.id, p.slug, u.name, u.avatar_url
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.slug = $1 AND p.is_approved = TRUE`,
@@ -62,7 +62,7 @@ export async function GET(
 
     return NextResponse.json({
       id: profile.id,
-      display_name: profile.display_name,
+      name: profile.name,
       slug: profile.slug,
       avatar_url: profile.avatar_url,
       locations: locs,

@@ -42,7 +42,7 @@ export async function POST(
             pp.stripe_account_id as photographer_stripe_id,
             pp.plan as photographer_plan,
             pu.email as photographer_email,
-            pp.display_name as photographer_name,
+            pu.name as photographer_name,
             cu.email as client_email,
             cu.name as client_name
      FROM bookings b

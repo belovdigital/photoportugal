@@ -21,7 +21,7 @@ export function PhotographerCard({
   return (
     <div
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
-      onClick={() => trackViewPhotographer(photographer.slug, normalizeName(photographer.display_name))}
+      onClick={() => trackViewPhotographer(photographer.slug, normalizeName(photographer.name))}
     >
       <Link
         href={`/photographers/${photographer.slug}`}
@@ -30,7 +30,7 @@ export function PhotographerCard({
       {/* Cover */}
       <div className="relative h-48 bg-gradient-to-br from-primary-300 to-primary-600">
         {photographer.cover_url && (
-          <OptimizedImage src={photographer.cover_url} alt={t("coverAlt", { name: normalizeName(photographer.display_name) })} width={800} quality={88} className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
+          <OptimizedImage src={photographer.cover_url} alt={t("coverAlt", { name: normalizeName(photographer.name) })} width={800} quality={88} className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
         )}
         {photographer.is_founding ? (
           <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow">
@@ -45,9 +45,9 @@ export function PhotographerCard({
         <div className="absolute -bottom-6 left-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-primary-100 text-xl font-bold text-primary-600 shadow-md overflow-hidden">
             {photographer.avatar_url ? (
-              <OptimizedImage src={photographer.avatar_url} alt={normalizeName(photographer.display_name)} width={200} className="h-full w-full" />
+              <OptimizedImage src={photographer.avatar_url} alt={normalizeName(photographer.name)} width={200} className="h-full w-full" />
             ) : (
-              normalizeName(photographer.display_name).charAt(0)
+              normalizeName(photographer.name).charAt(0)
             )}
           </div>
         </div>
@@ -57,7 +57,7 @@ export function PhotographerCard({
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition">
-              {normalizeName(photographer.display_name)}
+              {normalizeName(photographer.name)}
             </h3>
             <p className="text-sm text-gray-500">{photographer.tagline}</p>
           </div>
@@ -135,7 +135,7 @@ export function PhotographerCard({
           <Link
             href={`/photographers/${photographer.slug}#message`}
             className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
-            title={t("messagePhotographer", { name: normalizeName(photographer.display_name) })}
+            title={t("messagePhotographer", { name: normalizeName(photographer.name) })}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     `SELECT b.id, b.status, b.client_id, b.photographer_id,
             b.shoot_date, b.proposed_date, b.proposed_by,
             cu.name as client_name, cu.email as client_email,
-            pp.display_name as photographer_name, pu.email as photographer_email, pp.user_id as photographer_user_id
+            pu.name as photographer_name, pu.email as photographer_email, pp.user_id as photographer_user_id
      FROM bookings b
      JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id

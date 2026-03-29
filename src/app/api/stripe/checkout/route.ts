@@ -30,10 +30,11 @@ export async function POST(req: NextRequest) {
     }>(
       `SELECT b.id, b.client_id, b.total_price, b.status, b.payment_status,
               pp.stripe_account_id as photographer_stripe_id, pp.plan as photographer_plan,
-              pp.display_name as photographer_name,
+              pu.name as photographer_name,
               p.name as package_name
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
        LEFT JOIN packages p ON p.id = b.package_id
        WHERE b.id = $1`,
       [booking_id]

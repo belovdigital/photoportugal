@@ -8,9 +8,10 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const { token } = await params;
   const booking = await queryOne<{ photographer_name: string }>(
-    `SELECT pp.display_name as photographer_name
+    `SELECT u.name as photographer_name
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     JOIN users u ON u.id = pp.user_id
      WHERE b.delivery_token = $1`, [token]
   );
 
@@ -29,7 +30,7 @@ export default async function DeliveryPage({ params }: { params: Promise<{ token
     photographer_avatar: string | null;
     delivery_expires_at: string;
   }>(
-    `SELECT pp.display_name as photographer_name, u.avatar_url as photographer_avatar,
+    `SELECT u.name as photographer_name, u.avatar_url as photographer_avatar,
             b.delivery_expires_at
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id

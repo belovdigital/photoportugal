@@ -85,10 +85,10 @@ export async function GET(request: NextRequest) {
           }
 
           await query(
-            `INSERT INTO photographer_profiles (user_id, slug, display_name, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            `INSERT INTO photographer_profiles (user_id, slug, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              ON CONFLICT (user_id) DO NOTHING`,
-            [user.id, slug, session.user.name, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
+            [user.id, slug, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
           );
 
           // Send photographer welcome email (non-blocking)

@@ -96,7 +96,7 @@ export default async function BookingsPage() {
       }
     } else {
       bookings = await query(
-        `SELECT b.id, pp.display_name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
+        `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
                 COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at

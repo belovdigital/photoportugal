@@ -47,7 +47,7 @@ async function sendReminders() {
   const bookings = await pool.query(
     `SELECT b.id, b.shoot_date, b.shoot_time,
             cu.name as client_name, cu.email as client_email,
-            pp.display_name as photographer_name, pu.email as photographer_email
+            pu.name as photographer_name, pu.email as photographer_email
      FROM bookings b
      JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -104,10 +104,11 @@ async function sendReviewRequests() {
 
   const bookings = await pool.query(
     `SELECT b.id, cu.name as client_name, cu.email as client_email,
-            pp.display_name as photographer_name
+            pu.name as photographer_name
      FROM bookings b
      JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     JOIN users pu ON pu.id = pp.user_id
      WHERE b.status IN ('completed', 'delivered')
        AND b.review_requested = FALSE
        AND b.updated_at < NOW() - INTERVAL '3 days'

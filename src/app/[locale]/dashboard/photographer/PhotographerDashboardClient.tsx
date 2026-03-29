@@ -32,7 +32,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 interface Profile {
   id: string;
   slug: string;
-  display_name: string;
+  name: string;
   first_name?: string;
   last_name?: string;
   tagline: string | null;
@@ -151,7 +151,7 @@ export function PhotographerDashboardClient({
   const [lastName, setLastName] = useState(profile.last_name || "");
   const [phoneCode, setPhoneCode] = useState("+351");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [displayName, setDisplayName] = useState(profile.display_name);
+  const [displayName, setDisplayName] = useState(profile.name);
 
   // Load phone on mount
   useEffect(() => {
@@ -207,7 +207,6 @@ export function PhotographerDashboardClient({
         first_name: firstName,
         last_name: lastName,
         phone: phoneNumber ? `${phoneCode}${phoneNumber}` : null,
-        display_name: displayName,
         tagline,
         bio,
         languages: selectedLanguages,
@@ -633,7 +632,7 @@ export function PhotographerDashboardClient({
           <>
           <form onSubmit={saveProfile} onChange={() => { setSaved(false); setIsDirty(true); }} className="max-w-2xl space-y-6 pb-20">
             {/* Avatar */}
-            <AvatarUpload initialUrl={profile.avatar_url} fallbackChar={profile.display_name.charAt(0)} onMessage={showMessage} />
+            <AvatarUpload initialUrl={profile.avatar_url} fallbackChar={profile.name.charAt(0)} onMessage={showMessage} />
 
             {/* Cover Image */}
             <CoverUpload initialUrl={profile.cover_url} initialPositionY={profile.cover_position_y ?? 50} onMessage={showMessage} />

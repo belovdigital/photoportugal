@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     // Send notifications (non-blocking)
     try {
       const info = await queryOne<{ client_name: string; client_email: string; photographer_name: string; photographer_email: string }>(
-        `SELECT cu.name as client_name, cu.email as client_email, pp.display_name as photographer_name, pu.email as photographer_email
+        `SELECT cu.name as client_name, cu.email as client_email, pu.name as photographer_name, pu.email as photographer_email
          FROM bookings b
          JOIN users cu ON cu.id = b.client_id
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -230,13 +230,14 @@ export async function GET() {
       `SELECT
         d.*,
         u.name AS client_name,
-        pp.display_name AS photographer_name,
+        pu.name AS photographer_name,
         b.shoot_date,
         p.name AS package_name,
         b.total_price
       FROM disputes d
       JOIN users u ON u.id = d.client_id
       JOIN photographer_profiles pp ON pp.id = d.photographer_id
+      JOIN users pu ON pu.id = pp.user_id
       JOIN bookings b ON b.id = d.booking_id
       LEFT JOIN packages p ON p.id = b.package_id
       ORDER BY d.created_at DESC`

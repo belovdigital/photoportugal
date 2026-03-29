@@ -126,7 +126,7 @@ export async function PATCH(
           shoot_date: string | null;
         }>(
           `SELECT cu.email as client_email, cu.name as client_name,
-                  pu.email as photographer_email, pp.display_name as photographer_name,
+                  pu.email as photographer_email, pu.name as photographer_name,
                   b.total_price, b.service_fee, b.shoot_date
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
@@ -260,7 +260,7 @@ export async function PATCH(
           photographer_email: string; photographer_name: string;
         }>(
           `SELECT cu.email as client_email, cu.name as client_name,
-                  pu.email as photographer_email, pp.display_name as photographer_name
+                  pu.email as photographer_email, pu.name as photographer_name
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -319,12 +319,13 @@ export async function PATCH(
         }>(
           `SELECT u.email as client_email, u.name as client_name, u.id as client_id,
                   u.stripe_customer_id,
-                  pp.display_name as photographer_name, b.shoot_date, b.total_price,
+                  pu.name as photographer_name, b.shoot_date, b.total_price,
                   p.name as package_name,
                   pp.stripe_account_id as photographer_stripe_id, pp.plan as photographer_plan
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
            LEFT JOIN packages p ON p.id = b.package_id
            WHERE b.id = $1`,
           [id]

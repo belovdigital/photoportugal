@@ -13,9 +13,10 @@ export async function GET(
     photographer_name: string;
     delivery_expires_at: string;
   }>(
-    `SELECT pp.display_name as photographer_name, b.delivery_expires_at
+    `SELECT u.name as photographer_name, b.delivery_expires_at
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     JOIN users u ON u.id = pp.user_id
      WHERE b.delivery_token = $1 AND b.delivery_token IS NOT NULL`,
     [token]
   );

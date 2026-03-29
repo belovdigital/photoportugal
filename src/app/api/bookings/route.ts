@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     // Send email notification to photographer (if enabled)
     try {
       const photographerInfo = await queryOne<{ email: string; display_name: string; user_id: string }>(
-        `SELECT u.email, pp.display_name, u.id as user_id FROM photographer_profiles pp
+        `SELECT u.email, u.name as display_name, u.id as user_id FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`,
         [photographer_id]
       );
@@ -189,7 +189,7 @@ export async function GET() {
       );
     } else {
       bookings = await query(
-        `SELECT b.*, pp.display_name as photographer_name, pp.slug as photographer_slug,
+        `SELECT b.*, u.name as photographer_name, pp.slug as photographer_slug,
                 u.avatar_url as photographer_avatar,
                 p.name as package_name, p.duration_minutes, p.num_photos
          FROM bookings b

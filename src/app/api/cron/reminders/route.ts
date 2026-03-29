@@ -46,11 +46,12 @@ export async function GET(req: NextRequest) {
       total_price: number | null;
     }>(
       `SELECT b.id, u.email as client_email, u.name as client_name,
-              pp.display_name as photographer_name,
+              pu.name as photographer_name,
               b.payment_url, b.total_price
        FROM bookings b
        JOIN users u ON u.id = b.client_id
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
        WHERE b.status = 'confirmed'
          AND b.payment_status != 'paid'
          AND b.created_at < NOW() - INTERVAL '24 hours'
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
       photographer_name: string;
     }>(
       `SELECT b.id, cu.email as client_email, cu.name as client_name,
-              pu.email as photographer_email, pp.display_name as photographer_name
+              pu.email as photographer_email, pu.name as photographer_name
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -154,7 +155,7 @@ export async function GET(req: NextRequest) {
       shoot_date: string;
     }>(
       `SELECT b.id, cu.email as client_email, cu.name as client_name,
-              pu.email as photographer_email, pp.display_name as photographer_name,
+              pu.email as photographer_email, pu.name as photographer_name,
               b.shoot_date::text
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
@@ -253,7 +254,7 @@ export async function GET(req: NextRequest) {
       photographer_name: string;
       client_name: string;
     }>(
-      `SELECT b.id, pu.email as photographer_email, pp.display_name as photographer_name,
+      `SELECT b.id, pu.email as photographer_email, pu.name as photographer_name,
               cu.name as client_name
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -295,7 +296,7 @@ export async function GET(req: NextRequest) {
       client_name: string;
       client_email: string;
     }>(
-      `SELECT b.id, pu.email as photographer_email, pp.display_name as photographer_name,
+      `SELECT b.id, pu.email as photographer_email, pu.name as photographer_name,
               cu.name as client_name, cu.email as client_email
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -368,7 +369,7 @@ export async function GET(req: NextRequest) {
       total_price: number | null;
       service_fee: number | null;
     }>(
-      `SELECT b.id, pu.email as photographer_email, pp.display_name as photographer_name,
+      `SELECT b.id, pu.email as photographer_email, pu.name as photographer_name,
               cu.email as client_email, cu.name as client_name,
               b.payment_status, b.stripe_payment_intent_id, b.total_price, b.service_fee
        FROM bookings b
@@ -462,7 +463,7 @@ export async function GET(req: NextRequest) {
               pp.stripe_account_id as photographer_stripe_id,
               pp.plan as photographer_plan,
               pu.email as photographer_email,
-              pp.display_name as photographer_name,
+              pu.name as photographer_name,
               cu.email as client_email,
               cu.name as client_name
        FROM bookings b
@@ -576,7 +577,7 @@ export async function GET(req: NextRequest) {
       photographer_name: string;
     }>(
       `SELECT b.id, cu.email as client_email, cu.name as client_name,
-              pu.email as photographer_email, pp.display_name as photographer_name
+              pu.email as photographer_email, pu.name as photographer_name
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -674,8 +675,8 @@ export async function GET(req: NextRequest) {
   // === Checklist deadline reminders (last day — 6-7 days after registration) ===
   let checklistDeadlineEmails = 0;
   try {
-    const incompletePhotographers = await query<{ email: string; display_name: string; id: string }>(
-      `SELECT u.email, pp.display_name, pp.id
+    const incompletePhotographers = await query<{ email: string; name: string; id: string }>(
+      `SELECT u.email, u.name, pp.id
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = FALSE
@@ -693,7 +694,7 @@ export async function GET(req: NextRequest) {
         await sendEmail(
           p.email,
           "Complete your Photo Portugal profile today",
-          `<p>Hi ${p.display_name},</p>
+          `<p>Hi ${p.name},</p>
 <p>Your photographer profile on Photo Portugal is almost ready, but some steps are still incomplete.</p>
 <p><strong>Please complete your profile today</strong> to avoid account deactivation. Once your checklist is done, our team will review and approve your profile so you can start receiving bookings.</p>
 <p><a href="https://photoportugal.com/dashboard" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Complete My Profile</a></p>
@@ -713,8 +714,8 @@ export async function GET(req: NextRequest) {
   // === Auto-deactivate photographers who didn't complete checklist in 7 days ===
   let checklistDeactivated = 0;
   try {
-    const expired = await query<{ id: string; email: string; display_name: string }>(
-      `SELECT pp.id, u.email, pp.display_name
+    const expired = await query<{ id: string; email: string; name: string }>(
+      `SELECT pp.id, u.email, u.name
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = FALSE
@@ -733,13 +734,13 @@ export async function GET(req: NextRequest) {
         await sendEmail(
           p.email,
           "Your Photo Portugal account has been deactivated",
-          `<p>Hi ${p.display_name},</p>
+          `<p>Hi ${p.name},</p>
 <p>Your photographer profile on Photo Portugal has been deactivated because the onboarding checklist was not completed within 7 days of registration.</p>
 <p>If you'd like to reactivate your account, please contact us at <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> and we'll help you get started again.</p>
 <p>Best,<br>Photo Portugal Team</p>`
         );
         checklistDeactivated++;
-        console.log(`[cron/reminders] deactivated incomplete photographer ${p.display_name} (${p.email})`);
+        console.log(`[cron/reminders] deactivated incomplete photographer ${p.name} (${p.email})`);
       } catch (err) {
         results.errors.push(`Checklist deactivation for ${p.email}: ${err}`);
       }

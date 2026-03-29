@@ -92,10 +92,10 @@ export async function POST(req: NextRequest) {
       }
 
       await queryOne(
-        `INSERT INTO photographer_profiles (user_id, slug, display_name, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO photographer_profiles (user_id, slug, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
-        [user.id, slug, name, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
+        [user.id, slug, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
       );
     }
 
