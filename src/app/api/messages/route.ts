@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { sendNewMessageNotification } from "@/lib/email";
 import { detectContactInfo } from "@/lib/content-filter";
 
 // Get messages for a booking
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
   const bookingId = req.nextUrl.searchParams.get("booking_id");
 
   if (!bookingId) {
@@ -63,12 +63,12 @@ export async function GET(req: NextRequest) {
 
 // Send a message
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
 
   try {
     const { booking_id, text, media_url } = await req.json();

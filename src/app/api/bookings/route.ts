@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification } from "@/lib/email";
 import { sendWhatsApp, sendAdminWhatsApp } from "@/lib/whatsapp";
 
 // Create a booking request
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Please sign in to book" }, { status: 401 });
   }
 
-  const userId = (session.user as { id?: string }).id;
-  if (!userId) {
-    return NextResponse.json({ error: "Invalid session" }, { status: 401 });
-  }
+  const userId = user.id;
 
   try {
     const { photographer_id, package_id, location_slug, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, utm_source, utm_medium, utm_campaign, utm_term } = await req.json();
@@ -153,16 +150,16 @@ export async function POST(req: NextRequest) {
 }
 
 // Get bookings for current user
-export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
+export async function GET(req: NextRequest) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
 
   // Read role from DB (JWT may be stale)
-  let role = (session.user as { role?: string }).role;
+  let role = user.role;
   try {
     const dbUser = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
     if (dbUser) role = dbUser.role;

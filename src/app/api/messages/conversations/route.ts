@@ -1,25 +1,25 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
+export async function GET(req: NextRequest) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
 
   try {
     // Get user role from DB
-    const user = await queryOne<{ role: string }>(
+    const dbUser = await queryOne<{ role: string }>(
       "SELECT role FROM users WHERE id = $1",
       [userId]
     );
 
     let conversations;
 
-    if (user?.role === "photographer") {
+    if (dbUser?.role === "photographer") {
       const profile = await queryOne<{ id: string }>(
         "SELECT id FROM photographer_profiles WHERE user_id = $1",
         [userId]
