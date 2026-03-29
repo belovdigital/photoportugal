@@ -114,7 +114,7 @@ export default async function LocationPage({
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        JOIN users u ON u.id = pp.user_id
        WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
-       ORDER BY pp.is_featured DESC, pp.rating DESC NULLS LAST, pp.review_count DESC
+       ORDER BY pp.is_featured DESC, RANDOM()
        LIMIT 6`,
       [slug]
     );

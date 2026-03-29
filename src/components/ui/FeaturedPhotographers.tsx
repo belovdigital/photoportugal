@@ -32,7 +32,7 @@ export async function FeaturedPhotographers() {
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_featured = TRUE AND pp.is_approved = TRUE
-       ORDER BY pp.rating DESC, pp.review_count DESC
+       ORDER BY RANDOM()
        LIMIT 4`
     );
   } catch {

@@ -109,7 +109,7 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
        WHERE pp.is_approved = TRUE AND pp.id IN (
          SELECT photographer_id FROM photographer_locations WHERE location_slug = $1
        )
-       ORDER BY pp.rating DESC, pp.review_count DESC LIMIT 8`,
+       ORDER BY RANDOM() LIMIT 8`,
       [slug]
     );
   } catch {}

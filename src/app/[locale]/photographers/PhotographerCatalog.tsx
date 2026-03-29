@@ -91,7 +91,8 @@ export function PhotographerCatalog({
 
     switch (sortBy) {
       case "featured":
-        result = [...result].sort((a, b) => featuredFirst(a, b) || b.rating - a.rating || b.review_count - a.review_count);
+        // Featured first (random within), then rest (random within)
+        result = [...result].sort((a, b) => featuredFirst(a, b) || (Math.random() - 0.5));
         break;
       case "rating":
         result = [...result].sort((a, b) => b.rating - a.rating || b.review_count - a.review_count);
