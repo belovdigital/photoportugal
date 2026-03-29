@@ -91,8 +91,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify user is part of this booking
-    const booking = await queryOne<{ client_id: string; photographer_user_id: string }>(
-      `SELECT b.client_id, u.id as photographer_user_id
+    const booking = await queryOne<{ client_id: string; photographer_user_id: string; status: string }>(
+      `SELECT b.client_id, u.id as photographer_user_id, b.status
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
        JOIN users u ON u.id = pp.user_id

@@ -135,7 +135,12 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-warm-200 pt-6">
-          <p className="text-center text-sm text-gray-400">
+          <div className="flex items-center justify-center gap-4 text-sm text-gray-400">
+            <a href="mailto:info@photoportugal.com" className="hover:text-primary-600 transition">info@photoportugal.com</a>
+            <span className="text-gray-300">&middot;</span>
+            <a href="tel:+351308800496" className="hover:text-primary-600 transition">+351 308 800 496</a>
+          </div>
+          <p className="mt-2 text-center text-sm text-gray-400">
             &copy; {new Date().getFullYear()} {t("copyright")}
           </p>
           <p className="mt-1 text-center text-xs text-gray-300">
