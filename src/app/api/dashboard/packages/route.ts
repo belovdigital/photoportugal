@@ -116,6 +116,21 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
+    // Unlink completed/cancelled bookings so the package can be deleted
+    await queryOne(
+      "UPDATE bookings SET package_id = NULL WHERE package_id = $1 AND status IN ('completed', 'delivered', 'cancelled', 'refunded')",
+      [packageId]
+    );
+
+    // Check for truly active bookings
+    const activeBooking = await queryOne(
+      "SELECT id FROM bookings WHERE package_id = $1 AND status IN ('pending', 'confirmed') LIMIT 1",
+      [packageId]
+    );
+    if (activeBooking) {
+      return NextResponse.json({ error: "Cannot delete this package — it has active bookings. You can edit it instead." }, { status: 409 });
+    }
+
     const pkg = await queryOne(
       "DELETE FROM packages WHERE id = $1 AND photographer_id = $2 RETURNING id",
       [packageId, profile.id]
@@ -127,6 +142,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Cannot delete this package — it has active bookings. You can edit it instead." }, { status: 409 });
+    return NextResponse.json({ error: "Failed to delete package" }, { status: 500 });
   }
 }
