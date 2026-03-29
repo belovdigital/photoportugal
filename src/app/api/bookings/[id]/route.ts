@@ -49,13 +49,13 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
   const { status } = await req.json();
 
   const validStatuses = ["pending", "confirmed", "completed", "delivered", "cancelled"];
