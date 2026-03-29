@@ -72,7 +72,7 @@ export async function GET(
       id: string; image_url: string; thumbnail_url: string | null;
       caption: string | null; sort_order: number;
     }>(
-      "SELECT id, image_url, thumbnail_url, caption, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order, created_at",
+      "SELECT id, url as image_url, thumbnail_url, caption, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order, created_at",
       [profile.id]
     );
 
