@@ -177,17 +177,230 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
 }
 
 const ANALYTICS_TABS = [
+  { key: "visitors", label: "Visitors", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
   { key: "traffic", label: "Traffic", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
   { key: "seo", label: "SEO", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
   { key: "ads", label: "Ads", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
   { key: "funnel", label: "Funnel", icon: "M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" },
 ] as const;
 
+interface VisitorData {
+  summary: { sessions: number; sessionsPrev: number; visitors: number; visitorsPrev: number; linked: number; avgPages: number; avgDuration: number };
+  today: { sessions: number; visitors: number };
+  devices: { device_type: string; count: string }[];
+  countries: { country: string; count: string }[];
+  sources: { source: string; count: string }[];
+  landingPages: { page: string; count: string }[];
+  recentSessions: {
+    id: string; visitor_id: string; user_name: string | null; user_email: string | null;
+    device_type: string | null; country: string | null; language: string | null;
+    landing_page: string | null; referrer: string | null; utm_source: string | null;
+    utm_medium: string | null; utm_term: string | null;
+    pageview_count: number; started_at: string; pageviews: { path: string; ts: string; duration_ms?: number }[];
+  }[];
+  dailySessions: { day: string; sessions: string; visitors: string }[];
+}
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  PT: "PT", US: "US", GB: "GB", DE: "DE", FR: "FR", ES: "ES", IT: "IT", BR: "BR", CA: "CA", AU: "AU",
+  NL: "NL", BE: "BE", CH: "CH", AT: "AT", IE: "IE", SE: "SE", NO: "NO", DK: "DK", FI: "FI", PL: "PL",
+};
+
+function VisitorsTab() {
+  const [vd, setVd] = useState<VisitorData | null>(null);
+  const [vLoading, setVLoading] = useState(true);
+  const [expandedSession, setExpandedSession] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/visitors")
+      .then(r => r.json())
+      .then(d => { setVd(d); setVLoading(false); })
+      .catch(() => setVLoading(false));
+  }, []);
+
+  if (vLoading) return <p className="text-sm text-gray-400">Loading visitor data...</p>;
+  if (!vd) return <p className="text-sm text-gray-400">No visitor data yet</p>;
+
+  const { summary: s, today: t } = vd;
+  const maxDaily = Math.max(...vd.dailySessions.map(d => parseInt(d.sessions)), 1);
+
+  return (
+    <div className="space-y-6">
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[
+          { label: "Sessions (30d)", value: s.sessions, prev: s.sessionsPrev },
+          { label: "Unique Visitors", value: s.visitors, prev: s.visitorsPrev },
+          { label: "Today", value: t.sessions, sub: `${t.visitors} unique` },
+          { label: "Avg Pages", value: s.avgPages },
+          { label: "Avg Duration", value: `${s.avgDuration}m` },
+        ].map(c => (
+          <div key={c.label} className="rounded-xl border border-warm-200 bg-white p-3 text-center">
+            <p className="text-2xl font-bold text-gray-900">{c.value}</p>
+            <p className="text-xs text-gray-500">{c.label}</p>
+            {"prev" in c && typeof c.prev === "number" && c.prev > 0 && (
+              <Change current={typeof c.value === "number" ? c.value : 0} previous={c.prev} />
+            )}
+            {"sub" in c && <p className="text-[10px] text-gray-400">{c.sub}</p>}
+          </div>
+        ))}
+      </div>
+
+      {/* Daily chart */}
+      {vd.dailySessions.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Sessions (last 14 days)</h3>
+          <div className="flex items-end gap-1 h-20">
+            {[...vd.dailySessions].reverse().map(d => {
+              const h = Math.max((parseInt(d.sessions) / maxDaily) * 100, 4);
+              return (
+                <div key={d.day} className="flex-1 flex flex-col items-center gap-0.5" title={`${d.day}: ${d.sessions} sessions, ${d.visitors} visitors`}>
+                  <span className="text-[9px] text-gray-400">{parseInt(d.sessions)}</span>
+                  <div className="w-full rounded-t bg-primary-500 transition-all" style={{ height: `${h}%` }} />
+                  <span className="text-[8px] text-gray-400">{d.day.slice(5)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Devices + Countries + Sources */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {/* Devices */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Devices</h3>
+          <div className="space-y-1.5">
+            {vd.devices.map(d => (
+              <div key={d.device_type} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-3 py-2">
+                <span className="text-sm text-gray-700">
+                  {d.device_type === "mobile" ? "Mobile" : d.device_type === "desktop" ? "Desktop" : d.device_type === "tablet" ? "Tablet" : d.device_type}
+                </span>
+                <span className="text-sm font-semibold text-gray-900">{d.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Countries */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Countries</h3>
+          <div className="space-y-1.5 max-h-48 overflow-auto">
+            {vd.countries.map(c => (
+              <div key={c.country} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-3 py-2">
+                <span className="text-sm text-gray-700">{COUNTRY_FLAGS[c.country] || c.country}</span>
+                <span className="text-sm font-semibold text-gray-900">{c.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sources */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Traffic Sources</h3>
+          <div className="space-y-1.5 max-h-48 overflow-auto">
+            {vd.sources.map(s => (
+              <div key={s.source} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-3 py-2">
+                <span className="text-sm text-gray-700 truncate">{s.source}</span>
+                <span className="text-sm font-semibold text-gray-900 ml-2">{s.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Landing Pages */}
+      {vd.landingPages.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Top Landing Pages</h3>
+          <div className="rounded-xl border border-warm-200 bg-white overflow-auto max-h-64">
+            <table className="w-full text-xs sm:text-sm">
+              <thead className="bg-warm-50 border-b border-warm-200 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left text-gray-500 font-medium">Page</th>
+                  <th className="px-3 py-2 text-right text-gray-500 font-medium">Sessions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-warm-100">
+                {vd.landingPages.map(p => (
+                  <tr key={p.page}>
+                    <td className="px-3 py-2 text-gray-900 truncate max-w-xs">{p.page}</td>
+                    <td className="px-3 py-2 text-right text-gray-500">{p.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Sessions */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">Recent Visitors</h3>
+        <div className="space-y-2">
+          {vd.recentSessions.map(session => {
+            const isExpanded = expandedSession === session.id;
+            const time = new Date(session.started_at);
+            const ago = Math.round((Date.now() - time.getTime()) / 60000);
+            const agoStr = ago < 60 ? `${ago}m ago` : ago < 1440 ? `${Math.round(ago / 60)}h ago` : `${Math.round(ago / 1440)}d ago`;
+
+            return (
+              <button
+                key={session.id}
+                onClick={() => setExpandedSession(isExpanded ? null : session.id)}
+                className="w-full text-left rounded-xl border border-warm-200 bg-white p-3 hover:shadow-sm transition"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs">{session.device_type === "mobile" ? "M" : session.device_type === "tablet" ? "T" : "D"}</span>
+                    <span className="text-xs text-gray-400">{session.country || "?"}</span>
+                    {session.user_name ? (
+                      <span className="text-sm font-medium text-primary-600 truncate">{session.user_name}</span>
+                    ) : (
+                      <span className="text-sm text-gray-500 truncate">{session.visitor_id.slice(0, 8)}...</span>
+                    )}
+                    {session.utm_source && (
+                      <span className="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-[10px] font-medium">{session.utm_source}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs text-gray-400">{session.pageview_count} pages</span>
+                    <span className="text-xs text-gray-400">{agoStr}</span>
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="mt-3 pt-3 border-t border-warm-100 space-y-2" onClick={e => e.stopPropagation()}>
+                    {session.user_email && <p className="text-xs text-gray-500">{session.user_email}</p>}
+                    {session.referrer && <p className="text-xs text-gray-400">Referrer: {session.referrer}</p>}
+                    {session.utm_term && <p className="text-xs text-gray-400">Keyword: {session.utm_term}</p>}
+                    <div className="flex flex-wrap gap-1">
+                      {session.pageviews.map((pv, i) => (
+                        <span key={i} className="inline-flex items-center gap-1">
+                          {i > 0 && <span className="text-gray-300 text-xs">&rarr;</span>}
+                          <span className="rounded bg-warm-100 px-1.5 py-0.5 text-[10px] text-gray-700">{pv.path}</span>
+                          {pv.duration_ms && pv.duration_ms > 0 && (
+                            <span className="text-[9px] text-gray-400">{Math.round(pv.duration_ms / 1000)}s</span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<string>("traffic");
+  const [activeTab, setActiveTab] = useState<string>("visitors");
   const queriesSort = useSortable<{ query: string; clicks: number; impressions: number; ctr: number; position: number }>("clicks", "desc");
   const pagesSort = useSortable<{ path: string; views: number; users: number }>("views", "desc");
 
@@ -226,6 +439,9 @@ export function AnalyticsDashboard() {
           ))}
         </div>
       </div>
+
+      {/* === VISITORS TAB === */}
+      {activeTab === "visitors" && <VisitorsTab />}
 
       {/* Smart Insights */}
       {data.insights && data.insights.length > 0 && (
