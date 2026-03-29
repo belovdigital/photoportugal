@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const userId = (session.user as { id?: string }).id;
+export async function GET(req: NextRequest) {
+  const user = await authFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const user = await queryOne<{ phone: string | null }>("SELECT phone FROM users WHERE id = $1", [userId]);
-    return NextResponse.json({ phone: user?.phone || null });
+    const data = await queryOne<{
+      name: string; first_name: string | null; last_name: string | null;
+      email: string; phone: string | null; avatar_url: string | null;
+    }>(
+      "SELECT name, first_name, last_name, email, phone, avatar_url FROM users WHERE id = $1",
+      [user.id]
+    );
+    return NextResponse.json(data || {});
   } catch {
-    return NextResponse.json({ phone: null });
+    return NextResponse.json({});
   }
 }
 
 export async function PUT(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const mobileUser = await authFromRequest(req);
+  const session = !mobileUser ? await auth() : null;
+  const userId = mobileUser?.id || (session?.user as { id?: string })?.id;
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = (session.user as { id?: string }).id;
   const { first_name, last_name, name: legacyName, phone: rawPhone } = await req.json();
   const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
   const lastName = (last_name ?? legacyName?.split(" ").slice(1).join(" ") ?? "").trim();

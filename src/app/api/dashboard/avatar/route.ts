@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { writeFile, mkdir } from "fs/promises";
@@ -11,12 +12,12 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB raw (will be compressed)
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const mobileUser = await authFromRequest(req);
+  if (!mobileUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = mobileUser.id;
 
   try {
     const formData = await req.formData();
