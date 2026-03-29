@@ -40,13 +40,16 @@ export async function POST(
     location_slug: string | null;
     delivery_accepted: boolean;
     payment_status: string;
+    zip_ready: boolean;
+    zip_size: number | null;
   }>(
     `SELECT b.id, b.delivery_password, b.delivery_expires_at,
             pp.display_name as photographer_name, u.avatar_url as photographer_avatar,
             pp.slug as photographer_slug, cu.name as client_name,
             b.shoot_date, b.location_slug,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
-            b.payment_status
+            b.payment_status,
+            COALESCE(b.zip_ready, FALSE) as zip_ready, b.zip_size
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -102,5 +105,7 @@ export async function POST(
     photo_count: photos.length,
     delivery_accepted: isAccepted,
     payment_status: booking.payment_status,
+    zip_ready: isAccepted && booking.zip_ready,
+    zip_size: booking.zip_size ? Number(booking.zip_size) : null,
   });
 }

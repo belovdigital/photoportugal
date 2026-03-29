@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { queryOne, query } from "@/lib/db";
-import archiver from "archiver";
 import { createReadStream } from "fs";
+import { stat } from "fs/promises";
 import path from "path";
-import { PassThrough } from "stream";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 
-// GET: Download all delivery photos as ZIP (password-protected)
+// GET: Download all delivery photos as ZIP
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
@@ -27,9 +26,13 @@ export async function GET(
     delivery_password: string;
     delivery_expires_at: string;
     delivery_accepted: boolean;
+    zip_path: string | null;
+    zip_size: number | null;
+    zip_ready: boolean;
   }>(
     `SELECT b.id, pp.display_name as photographer_name, b.delivery_password, b.delivery_expires_at,
-            COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
+            COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
+            b.zip_path, b.zip_size, COALESCE(b.zip_ready, FALSE) as zip_ready
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      WHERE b.delivery_token = $1 AND b.delivery_token IS NOT NULL`,
@@ -40,7 +43,7 @@ export async function GET(
     return NextResponse.json({ error: "Gallery not found" }, { status: 404 });
   }
 
-  // Verify password (bcrypt, with SHA256 fallback for old deliveries)
+  // Verify password
   const { compare: bcryptCompare } = await import("bcryptjs");
   const crypto = await import("crypto");
   const isBcrypt = booking.delivery_password.startsWith("$2");
@@ -55,10 +58,41 @@ export async function GET(
     return NextResponse.json({ error: "Gallery expired" }, { status: 410 });
   }
 
-  // Only allow download after delivery has been accepted
   if (!booking.delivery_accepted) {
-    return NextResponse.json({ error: "Delivery must be accepted before downloading. Please accept the delivery in the gallery first." }, { status: 403 });
+    return NextResponse.json({ error: "Please accept the delivery first" }, { status: 403 });
   }
+
+  const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
+
+  // Serve pre-built ZIP if available
+  if (booking.zip_ready && booking.zip_path) {
+    const zipFullPath = path.join(UPLOAD_DIR, booking.zip_path.replace("/uploads/", ""));
+    try {
+      const stats = await stat(zipFullPath);
+      const stream = createReadStream(zipFullPath);
+      const readable = new ReadableStream({
+        start(controller) {
+          stream.on("data", (chunk) => controller.enqueue(chunk));
+          stream.on("end", () => controller.close());
+          stream.on("error", (err) => controller.error(err));
+        },
+      });
+
+      return new Response(readable, {
+        headers: {
+          "Content-Type": "application/zip",
+          "Content-Length": String(stats.size),
+          "Content-Disposition": `attachment; filename="PhotoPortugal_${sanitizedName}.zip"`,
+        },
+      });
+    } catch {
+      // ZIP file missing, fall through to build on-the-fly
+    }
+  }
+
+  // Fallback: build ZIP on-the-fly (slower, for old deliveries or if pre-build failed)
+  const archiver = (await import("archiver")).default;
+  const { PassThrough } = await import("stream");
 
   const photos = await query<{ url: string; filename: string }>(
     "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at",
@@ -69,19 +103,14 @@ export async function GET(
     return NextResponse.json({ error: "No photos found" }, { status: 404 });
   }
 
-  // Create ZIP archive streamed to response
   const archive = archiver("zip", { zlib: { level: 5 } });
   const passthrough = new PassThrough();
-
   archive.pipe(passthrough);
 
-  // Add each photo to the archive
   const usedNames = new Set<string>();
   for (const photo of photos) {
     const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
     let name = (photo.filename || path.basename(photo.url)).replace(/[^\w\s.-]/g, "_").replace(/\s+/g, "_");
-
-    // Deduplicate filenames
     if (usedNames.has(name)) {
       const ext = path.extname(name);
       const base = path.basename(name, ext);
@@ -90,19 +119,16 @@ export async function GET(
       name = `${base}_${i}${ext}`;
     }
     usedNames.add(name);
-
-    try {
-      archive.append(createReadStream(filePath), { name });
-    } catch {
-      // Skip files that don't exist on disk
-    }
+    try { archive.append(createReadStream(filePath), { name }); } catch {}
   }
 
   archive.finalize();
 
-  const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
+  // Also save ZIP for next time (non-blocking)
+  import("@/lib/build-zip").then(({ buildDeliveryZip }) => {
+    buildDeliveryZip(booking.id).catch(() => {});
+  });
 
-  // Convert Node stream to Web ReadableStream
   const readable = new ReadableStream({
     start(controller) {
       passthrough.on("data", (chunk) => controller.enqueue(chunk));

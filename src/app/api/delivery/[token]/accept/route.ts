@@ -169,6 +169,11 @@ export async function POST(
   // System message in chat
   sendBookingStatusMessage(booking.id, "delivery_accepted").catch(() => {});
 
+  // Pre-build ZIP in background (non-blocking)
+  import("@/lib/build-zip").then(({ buildDeliveryZip }) => {
+    buildDeliveryZip(booking.id).catch(err => console.error("[accept] zip build error:", err));
+  });
+
   return NextResponse.json({
     success: true,
     payout_transferred: payoutSuccess,

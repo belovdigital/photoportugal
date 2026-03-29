@@ -26,6 +26,8 @@ interface GalleryData {
   expires_at: string;
   delivery_accepted: boolean;
   payment_status: string;
+  zip_ready?: boolean;
+  zip_size?: number | null;
 }
 
 export function DeliveryPageClient({
@@ -70,6 +72,32 @@ export function DeliveryPageClient({
       setAutoLoading(false);
     }
   }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Poll for ZIP readiness after accept
+  useEffect(() => {
+    if (!accepted || !gallery || gallery.zip_ready) return;
+    const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+    if (!pw) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/delivery/${token}/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pw }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.zip_ready) {
+            setGallery(data);
+            clearInterval(interval);
+          }
+        }
+      } catch {}
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [accepted, gallery?.zip_ready, token, password]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -244,15 +272,26 @@ export function DeliveryPageClient({
           <span className="ml-3 text-xs text-gray-400">{t("availableUntil", { date: expiresDate })}</span>
         </div>
         {accepted ? (
-          <a
-            href={`/api/delivery/${token}/download?password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            {t("downloadAllZip")}
-          </a>
+          gallery?.zip_ready ? (
+            <a
+              href={`/api/delivery/${token}/download?password=${encodeURIComponent(password || sessionStorage.getItem(`delivery_pw_${token}`) || "")}`}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-bold text-white hover:bg-primary-700"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {t("downloadAllZip")}
+              {gallery.zip_size && <span className="text-xs opacity-75">({(gallery.zip_size / (1024 * 1024)).toFixed(0)} MB)</span>}
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-5 py-3 text-sm font-medium text-gray-500">
+              <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Preparing ZIP...
+            </span>
+          )
         ) : (
           <span className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 text-sm font-medium text-amber-800">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
