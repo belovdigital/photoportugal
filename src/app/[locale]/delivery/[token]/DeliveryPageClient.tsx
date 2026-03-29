@@ -122,6 +122,8 @@ export function DeliveryPageClient({
         setError(t("incorrectPassword"));
       } else if (res.status === 410) {
         setError(t("galleryExpired"));
+      } else if (res.status === 429) {
+        setError("Too many attempts. Please wait 15 minutes and try again.");
       } else {
         setError(t("somethingWentWrong"));
       }

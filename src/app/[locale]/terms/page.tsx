@@ -67,6 +67,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
             <li>{t("sections.forPhotographers.items.delivery")}</li>
             <li>{t("sections.forPhotographers.items.taxes")}</li>
             <li>{t("sections.forPhotographers.items.subscription")}</li>
+            <li className="font-semibold text-red-700">{t("sections.forPhotographers.items.noOffPlatform")}</li>
           </ul>
         </section>
 

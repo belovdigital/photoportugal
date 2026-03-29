@@ -1441,7 +1441,8 @@
           "response": "Deve responder aos pedidos de reserva no prazo de 24 horas",
           "delivery": "Concorda em entregar as fotos dentro do prazo indicado no seu pacote",
           "taxes": "É responsável pelos seus próprios impostos, seguros e conformidade legal",
-          "subscription": "As taxas de subscrição (planos Pro e Premium) são cobradas mensalmente e não são reembolsáveis"
+          "subscription": "As taxas de subscrição (planos Pro e Premium) são cobradas mensalmente e não são reembolsáveis",
+          "noOffPlatform": "É estritamente proibido solicitar ou realizar negócios com clientes que o contactaram através da Photo Portugal fora da plataforma. Isto inclui trocar dados de contacto, redirecionar clientes para sites pessoais ou aceitar pagamentos diretos. A violação desta política resultará no encerramento imediato e permanente da conta"
         }
       },
       "paymentsEscrow": {

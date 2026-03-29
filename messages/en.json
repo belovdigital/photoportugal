@@ -1444,7 +1444,8 @@
           "response": "You must respond to booking requests within 24 hours",
           "delivery": "You agree to deliver photos within the timeframe stated in your package",
           "taxes": "You are responsible for your own taxes, insurance, and legal compliance",
-          "subscription": "Subscription fees (Pro, Premium plans) are billed monthly and non-refundable"
+          "subscription": "Subscription fees (Pro, Premium plans) are billed monthly and non-refundable",
+          "noOffPlatform": "You are strictly prohibited from soliciting or conducting business with clients who contacted you through Photo Portugal outside of the platform. This includes exchanging contact details, redirecting clients to personal websites, or accepting direct payments. Violation of this policy will result in immediate and permanent account termination"
         }
       },
       "paymentsEscrow": {

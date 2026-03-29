@@ -45,19 +45,19 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
 
   return (
     <>
-      {/* Grid — photos load in order, no jumping */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      {/* Masonry gallery */}
+      <div className="mt-6 columns-2 gap-3 sm:columns-3 md:columns-4">
         {photos.map((photo, index) => (
           <div
             key={photo.id}
-            className="cursor-pointer overflow-hidden rounded-lg bg-warm-100 aspect-square transition hover:opacity-90"
+            className="mb-3 break-inside-avoid cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90"
             onClick={() => openLightbox(index)}
           >
             <img
               src={photo.url}
               alt={photo.filename}
               loading="lazy"
-              className="h-full w-full object-cover"
+              className="w-full"
             />
           </div>
         ))}

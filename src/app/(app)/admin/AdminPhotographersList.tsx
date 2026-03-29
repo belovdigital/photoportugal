@@ -33,6 +33,7 @@ export interface AdminPhotographer {
   location_count: number;
   stripe_ready: boolean;
   has_phone: boolean;
+  phone: string | null;
 }
 
 const PAGE_SIZE = 20;
@@ -161,8 +162,8 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
             {/* Expanded details */}
             {isOpen && (
               <div className="border-t border-warm-100 px-3 py-3 sm:px-4 sm:py-4">
-                {/* Profile link */}
-                <div className="mb-4">
+                {/* Contact & profile */}
+                <div className="mb-4 flex flex-wrap items-center gap-3">
                   <Link
                     href={`/photographers/${p.slug}${!p.is_approved ? `?preview=${previewSecret}` : ""}`}
                     target="_blank"
@@ -173,6 +174,14 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   </Link>
+                  <span className="text-gray-300">|</span>
+                  <a href={`mailto:${p.email}`} className="text-xs text-gray-500 hover:text-primary-600">{p.email}</a>
+                  {p.phone && (
+                    <>
+                      <span className="text-gray-300">|</span>
+                      <a href={`tel:${p.phone}`} className="text-xs text-gray-500 hover:text-primary-600">{p.phone}</a>
+                    </>
+                  )}
                 </div>
 
                 {/* Grid of controls */}

@@ -131,7 +131,7 @@ export default async function AdminPage() {
     checklist_complete: boolean;
     days_until_deactivation: number | null;
     has_avatar: boolean; has_cover: boolean; has_bio: boolean; portfolio_count: number;
-    package_count: number; location_count: number; stripe_ready: boolean; has_phone: boolean;
+    package_count: number; location_count: number; stripe_ready: boolean; has_phone: boolean; phone: string | null;
   }>(
     `SELECT pp.id, pp.display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
             pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, COALESCE(u.is_banned, FALSE) as is_banned, pp.created_at, u.email,
@@ -143,7 +143,7 @@ export default async function AdminPage() {
             (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id)::int as package_count,
             (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id)::int as location_count,
             (pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as stripe_ready,
-            (u.phone IS NOT NULL) as has_phone,
+            (u.phone IS NOT NULL) as has_phone, u.phone,
             (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
              AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
              AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
