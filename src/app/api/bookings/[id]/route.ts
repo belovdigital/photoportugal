@@ -4,6 +4,7 @@ import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
+import { sendBookingStatusMessage } from "@/lib/booking-messages";
 
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
@@ -240,6 +241,9 @@ export async function PATCH(
       "UPDATE bookings SET status = $1 WHERE id = $2 AND status = $3 RETURNING id",
       [status, id, currentBooking!.status]
     );
+
+    // Send system message to chat for status change
+    sendBookingStatusMessage(id, status, userId).catch(() => {});
 
     if (!updateResult) {
       return NextResponse.json(

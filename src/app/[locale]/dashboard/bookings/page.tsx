@@ -214,7 +214,7 @@ export default async function BookingsPage() {
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {isPhotographer && (booking.status === "inquiry" || booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
-                  <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} />
+                  <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} deliveryAccepted={booking.delivery_accepted} />
                 )}
                 <Link
                   href={`/dashboard/messages?chat=${booking.id}`}

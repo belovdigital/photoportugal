@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { queryOne, withTransaction } from "@/lib/db";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { sendDeliveryAcceptedToPhotographer, sendDeliveryAcceptedToClient } from "@/lib/email";
+import { sendBookingStatusMessage } from "@/lib/booking-messages";
 import crypto from "crypto";
 
 // POST: Accept delivery — verify password, mark accepted, trigger payout
@@ -164,6 +165,9 @@ export async function POST(
     booking.client_name,
     booking.photographer_name
   );
+
+  // System message in chat
+  sendBookingStatusMessage(booking.id, "delivery_accepted").catch(() => {});
 
   return NextResponse.json({
     success: true,

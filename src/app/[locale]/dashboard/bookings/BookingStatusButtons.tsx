@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 
-export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus }: { bookingId: string; currentStatus: string; paymentStatus?: string | null }) {
+export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, deliveryAccepted }: { bookingId: string; currentStatus: string; paymentStatus?: string | null; deliveryAccepted?: boolean }) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
@@ -79,7 +79,7 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus }
     );
   }
 
-  if (currentStatus === "completed") {
+  if (currentStatus === "completed" && !deliveryAccepted) {
     return (
       <Link
         href={`/dashboard/bookings/${bookingId}/deliver`}
@@ -90,6 +90,17 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus }
         </svg>
         {t("uploadDeliverPhotos")}
       </Link>
+    );
+  }
+
+  if (currentStatus === "completed" && deliveryAccepted) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-lg bg-green-100 px-4 py-2 text-sm font-medium text-green-700">
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+        {t("deliveryAccepted") || "Delivery Accepted"}
+      </span>
     );
   }
 
