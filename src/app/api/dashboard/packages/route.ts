@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 
 async function getProfile(userId: string) {
   return queryOne<{ id: string; plan: string }>(
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
       [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7]
     );
 
+    checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     return NextResponse.json({ success: true, id: (pkg as { id: string }).id });
   } catch (error) {
     console.error("Package create error:", error);
@@ -68,6 +70,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Package not found" }, { status: 404 });
     }
 
+    checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Package update error:", error);

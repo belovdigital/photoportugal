@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
+import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -72,6 +73,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const profile = await queryOne<{ id: string }>("SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]);
+    if (profile) checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     return NextResponse.json({ success: true, url });
   } catch (error) {
     console.error("Upload error:", error);

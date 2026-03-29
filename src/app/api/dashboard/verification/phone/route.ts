@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
+import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import twilio from "twilio";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -98,6 +99,7 @@ export async function PUT(req: NextRequest) {
         "UPDATE photographer_profiles SET phone_verified = TRUE WHERE id = $1 RETURNING id",
         [profile.id]
       );
+      checkAndNotifyChecklistComplete(profile.id).catch(() => {});
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json({ error: "Incorrect code" }, { status: 401 });

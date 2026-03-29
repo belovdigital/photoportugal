@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
       [profile.id, url, thumbnailUrl, locationSlug, shootType, count]
     );
 
+    checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     return NextResponse.json({ success: true, item });
   } catch (error) {
     console.error("Upload error:", error);

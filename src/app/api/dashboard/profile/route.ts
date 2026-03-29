@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
+import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { revalidatePath } from "next/cache";
 
 export async function PUT(req: NextRequest) {
@@ -126,6 +127,7 @@ export async function PUT(req: NextRequest) {
     if (slugRow) revalidatePath(`/photographers/${slugRow.slug}`);
     revalidatePath("/photographers");
 
+    checkAndNotifyChecklistComplete(profile.id).catch(() => {});
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Profile update error:", error);
