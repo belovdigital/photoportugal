@@ -416,6 +416,15 @@ export async function sendWelcomeEmail(
 
         <p>Once your profile is complete and approved by our team, you'll appear in search results and can start receiving bookings.</p>
 
+        <div style="margin: 20px 0; padding: 16px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca;">
+          <p style="margin: 0 0 10px; font-weight: bold; color: #991b1b;">Important rules:</p>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #7f1d1d;">
+            <tr><td style="padding: 4px 0; vertical-align: top;">⏰</td><td style="padding: 4px 8px;"><strong>Complete your profile within 7 days</strong> — accounts that remain incomplete will be automatically deactivated</td></tr>
+            <tr><td style="padding: 4px 0; vertical-align: top;">🚫</td><td style="padding: 4px 8px;"><strong>Never work with clients off-platform</strong> — soliciting clients outside Photo Portugal or accepting direct payments results in a permanent ban</td></tr>
+            <tr><td style="padding: 4px 0; vertical-align: top;">⏱️</td><td style="padding: 4px 8px;"><strong>Respond to booking requests within 24 hours</strong> — clients expect fast communication</td></tr>
+          </table>
+        </div>
+
         <p><a href="${BASE_URL}/dashboard/profile" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Complete Your Profile</a></p>
 
         <p style="margin-top: 20px; font-size: 13px; color: #666;">
