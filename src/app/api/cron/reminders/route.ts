@@ -10,7 +10,7 @@ import {
   sendTrustpilotFollowUpToClient,
   sendTrustpilotFollowUpToPhotographer,
 } from "@/lib/email";
-import { sendSMS } from "@/lib/sms";
+import { sendWhatsApp } from "@/lib/whatsapp";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { rm } from "fs/promises";
 import path from "path";
@@ -197,30 +197,34 @@ export async function GET(req: NextRequest) {
             [booking.id]
           );
           if (smsInfo) {
-            // Photographer SMS
+            // Photographer WhatsApp/SMS
             if (smsInfo.photographer_phone) {
               const pPrefs = await queryOne<{ sms_bookings: boolean }>(
                 "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
                 [smsInfo.photographer_user_id]
               );
               if (pPrefs?.sms_bookings !== false) {
-                sendSMS(
+                sendWhatsApp(
                   smsInfo.photographer_phone,
+                  "shoot_reminder",
+                  [booking.client_name],
                   `Photo Portugal: Reminder — you have a photoshoot with ${booking.client_name} tomorrow. Check your dashboard for details.`
-                ).catch(err => console.error("[sms] error:", err));
+                ).catch(err => console.error("[whatsapp] error:", err));
               }
             }
-            // Client SMS
+            // Client WhatsApp/SMS
             if (smsInfo.client_phone) {
               const cPrefs = await queryOne<{ sms_bookings: boolean }>(
                 "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
                 [smsInfo.client_id]
               );
               if (cPrefs?.sms_bookings !== false) {
-                sendSMS(
+                sendWhatsApp(
                   smsInfo.client_phone,
+                  "shoot_reminder",
+                  [booking.photographer_name],
                   `Photo Portugal: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`
-                ).catch(err => console.error("[sms] error:", err));
+                ).catch(err => console.error("[whatsapp] error:", err));
               }
             }
           }

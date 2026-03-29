@@ -7,7 +7,7 @@ import path from "path";
 import crypto from "crypto";
 import sharp from "sharp";
 import { sendEmail } from "@/lib/email";
-import { sendSMS } from "@/lib/sms";
+import { sendWhatsApp } from "@/lib/whatsapp";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per delivery photo (high-res)
@@ -193,14 +193,16 @@ export async function POST(
             [deliveryDetails.client_id]
           );
           if (smsPrefs?.sms_bookings !== false) {
-            sendSMS(
+            sendWhatsApp(
               deliveryDetails.client_phone,
+              "photos_delivered",
+              [deliveryDetails.photographer_name],
               `Photo Portugal: Your photos from ${deliveryDetails.photographer_name} are ready! Check your email for the gallery link.`
-            ).catch(err => console.error("[sms] error:", err));
+            ).catch(err => console.error("[whatsapp] error:", err));
           }
         }
       } catch (smsErr) {
-        console.error("[delivery] sms error:", smsErr);
+        console.error("[delivery] whatsapp/sms error:", smsErr);
       }
 
       return NextResponse.json({ success: true, token, deliveryUrl });

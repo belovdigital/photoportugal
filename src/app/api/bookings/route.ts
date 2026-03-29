@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification } from "@/lib/email";
-import { sendSMS } from "@/lib/sms";
+import { sendWhatsApp, sendAdminWhatsApp } from "@/lib/whatsapp";
 
 // Create a booking request
 export async function POST(req: NextRequest) {
@@ -126,11 +126,22 @@ export async function POST(req: NextRequest) {
           [photographerInfo.user_id]
         );
         if (photographerPhone?.phone) {
-          sendSMS(
+          sendWhatsApp(
             photographerPhone.phone,
+            "new_booking_request",
+            [clientInfo.name],
             `New booking request on Photo Portugal from ${clientInfo.name}. Log in to review: https://photoportugal.com/dashboard/bookings`
-          ).catch(err => console.error("[sms] new booking error:", err));
+          ).catch(err => console.error("[whatsapp] new booking error:", err));
         }
+      }
+
+      // WhatsApp/SMS notification to all admin phones
+      if (photographerInfo && clientInfo) {
+        sendAdminWhatsApp(
+          "admin_new_booking",
+          [clientInfo.name, photographerInfo.display_name, dateDisplay || "flexible"],
+          `New booking: ${clientInfo.name} → ${photographerInfo.display_name}${pkgInfo?.name ? ` (${pkgInfo.name})` : ""}${dateDisplay ? `, ${dateDisplay}` : ""}`
+        );
       }
     } catch {}
 

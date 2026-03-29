@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
-import { sendSMS } from "@/lib/sms";
+import { sendWhatsApp } from "@/lib/whatsapp";
 
 async function verifyAdmin(): Promise<{ email: string } | null> {
   const cookieStore = await cookies();
@@ -122,7 +122,7 @@ export async function PATCH(req: NextRequest) {
             `
           ).catch((err) => console.error("[admin] Failed to send approval email:", err));
 
-          // SMS to photographer about approval
+          // WhatsApp/SMS to photographer about approval
           try {
             const photographerPhone = await queryOne<{ phone: string | null; user_id: string }>(
               `SELECT u.phone, u.id as user_id FROM users u
@@ -136,14 +136,16 @@ export async function PATCH(req: NextRequest) {
                 [photographerPhone.user_id]
               );
               if (smsPrefs?.sms_bookings !== false) {
-                sendSMS(
+                sendWhatsApp(
                   photographerPhone.phone,
+                  "profile_approved",
+                  [],
                   `Photo Portugal: Congratulations! Your profile is now live. Clients can find and book you at photoportugal.com`
-                ).catch(err => console.error("[sms] error:", err));
+                ).catch(err => console.error("[whatsapp] error:", err));
               }
             }
           } catch (smsErr) {
-            console.error("[admin] approval sms error:", smsErr);
+            console.error("[admin] approval whatsapp/sms error:", smsErr);
           }
         }
       } catch (emailErr) {

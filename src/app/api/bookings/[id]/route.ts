@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification } from "@/lib/email";
-import { sendSMS } from "@/lib/sms";
+import { sendWhatsApp } from "@/lib/whatsapp";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
 
@@ -418,10 +418,12 @@ export async function PATCH(
                 [bookingDetails.client_id]
               );
               if (smsPrefs?.sms_bookings !== false) {
-                sendSMS(
+                sendWhatsApp(
                   clientPhone.phone,
+                  "booking_confirmed",
+                  ["Portugal", bookingDetails.shoot_date || "a date to be confirmed"],
                   `Photo Portugal: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`
-                ).catch(err => console.error("[sms] error:", err));
+                ).catch(err => console.error("[whatsapp] error:", err));
               }
             }
           } catch (smsErr) {

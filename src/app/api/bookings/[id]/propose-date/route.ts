@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { sendSMS } from "@/lib/sms";
+import { sendWhatsApp } from "@/lib/whatsapp";
 
 const BASE_URL = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
 
@@ -93,10 +93,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           [recipientUserId]
         );
         if (smsPrefs?.sms_bookings !== false) {
-          sendSMS(
+          sendWhatsApp(
             recipientPhone.phone,
+            "new_message",
+            [senderName],
             `Photo Portugal: ${senderName} proposed a new date (${formattedDate}) for your photoshoot. Log in to respond.`
-          ).catch(err => console.error("[sms] error:", err));
+          ).catch(err => console.error("[whatsapp] error:", err));
         }
       }
     } catch (smsErr) {

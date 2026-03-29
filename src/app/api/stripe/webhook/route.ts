@@ -4,7 +4,7 @@ import { requireStripe } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient } from "@/lib/email";
-import { sendSMS } from "@/lib/sms";
+import { sendWhatsApp, sendAdminWhatsApp } from "@/lib/whatsapp";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -121,15 +121,14 @@ export async function POST(req: NextRequest) {
                 }
               } catch {}
 
-              // SMS to admin
-              try {
-                sendSMS(
-                  "+351962598883",
-                  `Photo Portugal: €${Number(bookingInfo.total_price)} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
-                ).catch(err => console.error("[sms] admin payment sms error:", err));
-              } catch {}
+              // WhatsApp/SMS to all admin phones
+              sendAdminWhatsApp(
+                "admin_new_booking",
+                [bookingInfo.client_name, bookingInfo.photographer_name, `€${Number(bookingInfo.total_price)}`],
+                `Photo Portugal: €${Number(bookingInfo.total_price)} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
+              );
 
-              // SMS to photographer
+              // WhatsApp/SMS to photographer
               try {
                 const photographerUser = await queryOne<{ phone: string | null; id: string }>(
                   `SELECT u.phone, u.id FROM users u
@@ -144,14 +143,16 @@ export async function POST(req: NextRequest) {
                     [photographerUser.id]
                   );
                   if (smsPrefs?.sms_bookings !== false) {
-                    sendSMS(
+                    sendWhatsApp(
                       photographerUser.phone,
+                      "payment_received",
+                      [`€${Number(bookingInfo.total_price)}`, bookingInfo.client_name],
                       `Photo Portugal: Payment of €${Number(bookingInfo.total_price)} received for your booking with ${bookingInfo.client_name}. Log in to view details.`
-                    ).catch(err => console.error("[sms] error:", err));
+                    ).catch(err => console.error("[whatsapp] error:", err));
                   }
                 }
               } catch (smsErr) {
-                console.error("[webhook] payment sms error:", smsErr);
+                console.error("[webhook] payment whatsapp/sms error:", smsErr);
               }
             }
           } catch (emailErr) {
