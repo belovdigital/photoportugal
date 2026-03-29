@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification } from "@/lib/email";
 import { sendWhatsApp } from "@/lib/whatsapp";
@@ -7,6 +8,42 @@ import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
 
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+
+// Get a single booking by ID
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await authFromRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const booking = await queryOne(
+      `SELECT b.*,
+              cu.name as client_name, cu.avatar_url as client_avatar,
+              pu.name as photographer_name, pp.slug as photographer_slug,
+              pu.avatar_url as photographer_avatar,
+              p.name as package_name, p.duration_minutes, p.num_photos
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       LEFT JOIN packages p ON p.id = b.package_id
+       WHERE b.id = $1 AND (b.client_id = $2 OR pp.user_id = $2)`,
+      [id, user.id]
+    );
+
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(booking);
+  } catch (error) {
+    console.error("[bookings] get by id error:", error);
+    return NextResponse.json({ error: "Failed to get booking" }, { status: 500 });
+  }
+}
 
 export async function PATCH(
   req: NextRequest,
