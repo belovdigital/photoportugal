@@ -749,6 +749,12 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Checklist deactivation query: ${err}`);
   }
 
+  // Clean old notification logs (30 days)
+  try {
+    const { cleanOldNotificationLogs } = await import("@/lib/notification-log");
+    await cleanOldNotificationLogs();
+  } catch {}
+
   console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated });
 
   return NextResponse.json({

@@ -21,9 +21,9 @@ export async function sendSMS(to: string, message: string): Promise<boolean> {
       to,
     });
     console.log(`[sms] Sent SMS to ${to}`);
+    import("@/lib/notification-log").then(m => m.logNotification("sms", to, message.slice(0, 100), "sent")).catch(() => {});
     return true;
   } catch (error: unknown) {
-    // Parse Twilio-specific error codes for better diagnostics
     const twilioError = error as { code?: number; status?: number; message?: string };
     if (twilioError.code === 21211) {
       console.warn(`[sms] Invalid phone number "${to}" — Twilio error 21211. Message not sent.`);
@@ -34,6 +34,7 @@ export async function sendSMS(to: string, message: string): Promise<boolean> {
     } else {
       console.error(`[sms] Failed to send SMS to "${to}":`, twilioError.code || "", twilioError.message || error);
     }
+    import("@/lib/notification-log").then(m => m.logNotification("sms", to, message.slice(0, 100), "failed", String(twilioError.code || ""), twilioError.message || "")).catch(() => {});
     return false;
   }
 }

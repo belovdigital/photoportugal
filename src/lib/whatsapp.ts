@@ -58,15 +58,17 @@ export async function sendWhatsApp(
     });
 
     console.log(`[whatsapp] Sent "${template}" to ${to}`);
+    import("@/lib/notification-log").then(m => m.logNotification("whatsapp", to, template, "sent", undefined, undefined, { variables })).catch(() => {});
     return "whatsapp";
   } catch (error: unknown) {
     const err = error as { code?: number; message?: string };
-    // 63016 = template not approved or outside session window without template
-    // 63001 = channel not enabled
-    // 63003 = outside 24h window
     console.warn(`[whatsapp] Failed "${template}" to ${to}: ${err.code} ${err.message || ""}. Falling back to SMS.`);
+    import("@/lib/notification-log").then(m => m.logNotification("whatsapp", to, template, "failed", String(err.code || ""), err.message || "")).catch(() => {});
 
     const sent = await sendSMS(to, smsFallbackText);
+    if (sent) {
+      import("@/lib/notification-log").then(m => m.logNotification("sms", to, `fallback:${template}`, "fallback")).catch(() => {});
+    }
     return sent ? "sms" : false;
   }
 }

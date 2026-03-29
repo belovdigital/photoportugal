@@ -34,8 +34,10 @@ export async function sendEmail(to: string, subject: string, html: string, optio
   try {
     await transporter.sendMail({ from: FROM, to, subject, html, ...(options?.replyTo ? { replyTo: options.replyTo } : {}) });
     console.log(`[email] Sent: ${subject} → ${to}`);
+    import("@/lib/notification-log").then(m => m.logNotification("email", to, subject.slice(0, 100), "sent")).catch(() => {});
   } catch (error) {
     console.error(`[email] Failed: ${subject} → ${to}`, error);
+    import("@/lib/notification-log").then(m => m.logNotification("email", to, subject.slice(0, 100), "failed", undefined, String(error))).catch(() => {});
   }
 }
 
