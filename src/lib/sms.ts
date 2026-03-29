@@ -1,20 +1,23 @@
 import twilio from "twilio";
+import { queryOne } from "@/lib/db";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const phoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
 export async function sendSMS(to: string, message: string): Promise<boolean> {
-  if (!accountSid || !authToken || !phoneNumber) {
-    console.warn("[sms] Twilio not configured — missing TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER");
+  if (!accountSid || !authToken) {
+    console.warn("[sms] Twilio not configured — missing TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN");
     return false;
   }
+
+  const sender = phoneNumber || "PHOTO PT";
 
   try {
     const client = twilio(accountSid, authToken);
     await client.messages.create({
       body: message,
-      from: phoneNumber,
+      from: sender,
       to,
     });
     console.log(`[sms] Sent SMS to ${to}`);
@@ -32,5 +35,24 @@ export async function sendSMS(to: string, message: string): Promise<boolean> {
       console.error(`[sms] Failed to send SMS to "${to}":`, twilioError.code || "", twilioError.message || error);
     }
     return false;
+  }
+}
+
+export async function getAdminPhones(): Promise<string[]> {
+  try {
+    const setting = await queryOne<{ value: string }>(
+      "SELECT value FROM platform_settings WHERE key = 'admin_notification_phone'"
+    );
+    if (setting?.value) return setting.value.split(",").map(p => p.trim()).filter(Boolean);
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export async function sendAdminSMS(message: string) {
+  const phones = await getAdminPhones();
+  for (const phone of phones) {
+    sendSMS(phone, message).catch(err => console.error("[admin-sms] error:", err));
   }
 }

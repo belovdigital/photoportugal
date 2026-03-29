@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import { AdminLoginForm } from "./AdminControls";
-import { AdminLogoutButton, AdminNotificationEmail } from "./AdminControls";
+import { AdminLogoutButton, AdminNotificationEmail, AdminNotificationPhone } from "./AdminControls";
 import { AdminPhotographersList } from "./AdminPhotographersList";
 import { AdminClientsList } from "./AdminClientsList";
 import { AdminBookingsList } from "./AdminBookingsList";
@@ -72,11 +72,14 @@ export default async function AdminPage() {
 
   // Platform settings
   let adminNotificationEmail = "";
+  let adminNotificationPhone = "";
   try {
-    const setting = await queryOne<{ value: string }>(
-      "SELECT value FROM platform_settings WHERE key = 'admin_notification_email'"
-    );
-    if (setting?.value) adminNotificationEmail = setting.value;
+    const [emailSetting, phoneSetting] = await Promise.all([
+      queryOne<{ value: string }>("SELECT value FROM platform_settings WHERE key = 'admin_notification_email'"),
+      queryOne<{ value: string }>("SELECT value FROM platform_settings WHERE key = 'admin_notification_phone'"),
+    ]);
+    if (emailSetting?.value) adminNotificationEmail = emailSetting.value;
+    if (phoneSetting?.value) adminNotificationPhone = phoneSetting.value;
   } catch (e) {
     console.error("[admin] Failed to load platform settings:", e);
   }
@@ -237,8 +240,13 @@ export default async function AdminPage() {
     <div className="space-y-6">
       <div className="max-w-xl rounded-xl border border-warm-200 bg-white p-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Admin notification email</label>
-        <p className="text-xs text-gray-400 mb-3">Support requests and notifications will be sent here. Use commas for multiple emails.</p>
+        <p className="text-xs text-gray-400 mb-3">Support requests and notifications will be sent here.</p>
         <AdminNotificationEmail initialValue={adminNotificationEmail} />
+      </div>
+      <div className="max-w-xl rounded-xl border border-warm-200 bg-white p-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Admin notification phones</label>
+        <p className="text-xs text-gray-400 mb-3">SMS notifications for critical events (new bookings, disputes).</p>
+        <AdminNotificationPhone initialValue={adminNotificationPhone} />
       </div>
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-3">Audit Log</h3>
