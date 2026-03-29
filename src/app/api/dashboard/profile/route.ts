@@ -1,8 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { revalidatePath } from "next/cache";
+
+export async function GET(req: NextRequest) {
+  const user = await authFromRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const profile = await queryOne<Record<string, unknown>>(
+      `SELECT pp.id, pp.slug, u.name, pp.tagline, pp.bio,
+              u.avatar_url, pp.cover_url, pp.languages, pp.shoot_types,
+              pp.is_verified, pp.is_approved, pp.rating, pp.review_count,
+              pp.session_count, pp.plan, u.phone,
+              (pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as stripe_ready,
+              (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id)::int as portfolio_count,
+              (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id)::int as package_count,
+              (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id)::int as location_count
+       FROM photographer_profiles pp
+       JOIN users u ON u.id = pp.user_id
+       WHERE pp.user_id = $1`,
+      [user.id]
+    );
+
+    if (!profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(profile);
+  } catch (error) {
+    console.error("[dashboard/profile] GET error:", error);
+    return NextResponse.json({ error: "Failed to load profile" }, { status: 500 });
+  }
+}
 
 export async function PUT(req: NextRequest) {
   const session = await auth();
