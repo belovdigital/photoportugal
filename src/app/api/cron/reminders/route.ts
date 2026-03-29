@@ -672,6 +672,33 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Expired delivery cleanup query: ${err}`);
   }
 
+  // === Checklist complete → notify admins (cron catch-up) ===
+  try {
+    const readyPhotographers = await query<{ id: string }>(
+      `SELECT pp.id FROM photographer_profiles pp
+       JOIN users u ON u.id = pp.user_id
+       WHERE pp.is_approved = FALSE
+         AND COALESCE(pp.checklist_notified, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+         AND u.avatar_url IS NOT NULL
+         AND pp.cover_url IS NOT NULL
+         AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
+         AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
+         AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
+         AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
+         AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
+         AND u.phone IS NOT NULL`
+    );
+    for (const p of readyPhotographers) {
+      try {
+        const { checkAndNotifyChecklistComplete } = await import("@/lib/checklist-notify");
+        await checkAndNotifyChecklistComplete(p.id);
+      } catch {}
+    }
+  } catch (err) {
+    results.errors.push(`Checklist ready notification: ${err}`);
+  }
+
   // === Checklist deadline reminders (last day — 6-7 days after registration) ===
   let checklistDeadlineEmails = 0;
   try {
