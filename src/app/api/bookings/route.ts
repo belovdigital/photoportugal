@@ -140,6 +140,18 @@ export async function POST(req: NextRequest) {
           `New booking: ${clientInfo.name} → ${photographerInfo.display_name}${pkgInfo?.name ? ` (${pkgInfo.name})` : ""}${dateDisplay ? `, ${dateDisplay}` : ""}`
         );
       }
+
+      // Push notification to photographer
+      if (photographerInfo && clientInfo) {
+        import("@/lib/push").then(m =>
+          m.sendPushNotification(
+            photographerInfo!.user_id,
+            "New Booking Request",
+            `${clientInfo!.name} wants to book a session`,
+            { type: "booking", bookingId: booking?.id || "" }
+          )
+        ).catch(() => {});
+      }
     } catch {}
 
     return NextResponse.json({ success: true, booking_id: booking?.id });

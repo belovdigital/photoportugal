@@ -135,6 +135,17 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Push notification to recipient
+      const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "Someone";
+      import("@/lib/push").then(m =>
+        m.sendPushNotification(
+          recipientId,
+          "New Message",
+          `${senderName}: ${text?.trim().slice(0, 50) || "sent a photo"}`,
+          { type: "message", bookingId: booking_id }
+        )
+      ).catch(() => {});
+
       // Throttled WhatsApp/SMS for pending bookings (max once per 10 min per recipient)
       if (booking.status === "pending") {
         try {
