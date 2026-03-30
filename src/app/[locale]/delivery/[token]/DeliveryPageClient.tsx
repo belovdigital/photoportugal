@@ -50,9 +50,11 @@ export function DeliveryPageClient({
   const [accepted, setAccepted] = useState(false);
   const [acceptError, setAcceptError] = useState("");
 
-  // Auto-login with cached password
+  // Auto-login with URL param or cached password
   useEffect(() => {
-    const cached = sessionStorage.getItem(`delivery_pw_${token}`);
+    const urlPw = new URLSearchParams(window.location.search).get("pw");
+    const cached = urlPw || sessionStorage.getItem(`delivery_pw_${token}`);
+    if (urlPw) sessionStorage.setItem(`delivery_pw_${token}`, urlPw);
     if (cached) {
       fetch(`/api/delivery/${token}/verify`, {
         method: "POST",

@@ -474,28 +474,18 @@ function MessagesContent() {
     );
 
   return (
-    <div className="p-6 sm:p-8">
-      <h1 className="font-display text-2xl font-bold text-gray-900">
-        {t("title")}
-      </h1>
-      <p className="mt-1 text-gray-500">
-        {userId ? t("chatWithContacts") : t("chatWithPhotographers")}
-      </p>
-
+    <div className="p-4 sm:p-6">
       <div
-        className="mt-6 flex gap-4 rounded-xl border border-warm-200 bg-white"
-        style={{ height: "min(700px, calc(100vh - 260px))" }}
+        className="flex gap-0 rounded-xl border border-warm-200 bg-white overflow-hidden"
+        style={{ height: "min(800px, calc(100vh - 140px))" }}
       >
         {/* Conversations sidebar */}
         <div
-          className={`w-full shrink-0 border-r border-warm-100 sm:w-64 ${
+          className={`w-full shrink-0 border-r border-warm-100 sm:w-72 ${
             activeChat ? "hidden sm:block" : ""
           }`}
         >
-          <div
-            className="overflow-y-auto p-2"
-            style={{ height: "min(520px, calc(100vh - 220px))" }}
-          >
+          <div className="overflow-y-auto p-2 h-full">
             {loadingConvos ? (
               <div className="space-y-3 p-2">
                 {[...Array(3)].map((_, i) => (
@@ -517,7 +507,7 @@ function MessagesContent() {
                 <button
                   key={convo.booking_id}
                   onClick={() => setActiveChat(convo.booking_id)}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition ${
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
                     activeChat === convo.booking_id
                       ? "bg-primary-50"
                       : "hover:bg-warm-50"
@@ -527,10 +517,10 @@ function MessagesContent() {
                     <Avatar
                       src={convo.other_avatar}
                       fallback={convo.other_name}
-                      size="sm"
+                      size="md"
                     />
                     {convo.unread_count > 0 && (
-                      <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-primary-600" />
+                      <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-primary-600" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -538,8 +528,8 @@ function MessagesContent() {
                       <span
                         className={`truncate text-sm ${
                           convo.unread_count > 0
-                            ? "font-semibold text-gray-900"
-                            : "text-gray-700"
+                            ? "font-bold text-gray-900"
+                            : "font-medium text-gray-700"
                         }`}
                       >
                         {convo.other_name}
@@ -554,7 +544,7 @@ function MessagesContent() {
                         </span>
                       )}
                     </div>
-                    <p className="truncate text-xs text-gray-400">
+                    <p className={`mt-0.5 text-xs leading-4 line-clamp-2 ${convo.unread_count > 0 ? "text-gray-600" : "text-gray-400"}`}>
                       {convo.last_message || t("startConversation")}
                     </p>
                   </div>
@@ -658,10 +648,9 @@ function MessagesContent() {
                                 <div className="text-3xl">📸</div>
                                 <p className="mt-2 text-base font-bold text-gray-900">{photoCount} photo previews ready for review</p>
                                 <p className="mt-1 text-xs text-gray-500">Review the photos and approve the delivery when you&apos;re happy</p>
-                                <a href={url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-xl bg-accent-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-accent-700 transition">
+                                <a href={`${url}?pw=${encodeURIComponent(pw)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-xl bg-accent-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-accent-700 transition">
                                   View Gallery
                                 </a>
-                                <p className="mt-2 text-xs text-gray-400">Password: <span className="font-mono font-medium text-gray-600">{pw}</span></p>
                               </div>
                             </div>
                           );
@@ -684,7 +673,7 @@ function MessagesContent() {
                         >
                           <div className="max-w-[70%]">
                             <div
-                              className={`inline-block rounded-2xl px-3 py-1.5 text-sm ${
+                              className={`inline-block rounded-2xl px-3.5 py-2 text-[15px] leading-relaxed ${
                                 isMe
                                   ? msg.failed
                                     ? "bg-red-100 text-red-800"
