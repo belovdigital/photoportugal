@@ -247,7 +247,10 @@ function MessagesContent() {
     isUserScrolledUp.current = false;
     fetchMessages(activeChat).then(() => {
       setLoadingMessages(false);
+      // Multiple scroll attempts to catch images loading and layout shifts
       setTimeout(() => scrollToBottom(true), 50);
+      setTimeout(() => scrollToBottom(true), 200);
+      setTimeout(() => scrollToBottom(true), 500);
     });
   }, [activeChat, scrollToBottom]);
 
@@ -369,6 +372,7 @@ function MessagesContent() {
                   sender_id: "system", sender_name: "system", sender_avatar: null,
                   created_at: new Date().toISOString(), read_at: null, is_system: true,
                 }]);
+                setTimeout(() => scrollToBottom(true), 50);
               }, 500);
             }
           } catch {}
