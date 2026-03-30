@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
       ]);
     } catch {}
 
-    // Send email notification to the other person (if they have it enabled)
+    // Send email notification to the other person (if they have it enabled, throttled to 1 per 15 min)
     try {
       const recipientId = userId === booking.client_id ? booking.photographer_user_id : booking.client_id;
       const prefs = await queryOne<{ email_messages: boolean }>(
@@ -154,7 +154,21 @@ export async function POST(req: NextRequest) {
           "SELECT name FROM users WHERE id = $1", [userId]
         );
         if (recipient && sender) {
-          sendNewMessageNotification(recipient.email, recipient.name, sender.name);
+          // Throttle: only send if no email sent to this recipient in last 15 minutes
+          const recentEmail = await queryOne(
+            `SELECT id FROM notification_logs
+             WHERE channel = 'email' AND recipient = $1 AND event LIKE '%New message%'
+             AND created_at > NOW() - INTERVAL '15 minutes' LIMIT 1`,
+            [recipient.email]
+          );
+          if (!recentEmail) {
+            sendNewMessageNotification(recipient.email, recipient.name, sender.name);
+            // Log for throttling
+            try {
+              const { logNotification } = await import("@/lib/notification-log");
+              logNotification("email", recipient.email, `New messages from ${sender.name}`, "sent");
+            } catch {}
+          }
         }
       }
 

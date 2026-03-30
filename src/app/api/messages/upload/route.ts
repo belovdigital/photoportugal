@@ -7,14 +7,16 @@ import crypto from "crypto";
 import sharp from "sharp";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "heif"];
+const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
+const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "pdf"];
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/heic",
   "image/heif",
+  "image/gif",
+  "application/pdf",
 ];
 
 export async function POST(req: NextRequest) {
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
+      return NextResponse.json({ error: "File too large (max 30MB)" }, { status: 400 });
     }
 
     // Validate mime type
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     if (!isValidMime && !isValidExt) {
       return NextResponse.json(
-        { error: "Only images are allowed (jpg, png, webp, heic, heif)" },
+        { error: "Only images and PDFs are allowed (jpg, png, webp, heic, heif, gif, pdf)" },
         { status: 400 }
       );
     }
@@ -77,20 +79,34 @@ export async function POST(req: NextRequest) {
     const messageDir = path.join(UPLOAD_DIR, "messages", bookingId);
     await mkdir(messageDir, { recursive: true });
 
-    const filename = `${crypto.randomUUID()}.jpg`;
     const rawBuffer = Buffer.from(await file.arrayBuffer());
+    const isPdf = rawExt === "pdf" || file.type === "application/pdf";
+    const isGif = rawExt === "gif" || file.type === "image/gif";
 
-    // Resize to max 1200px wide, JPEG quality 85
+    let filename: string;
     let buffer: Buffer;
-    try {
-      buffer = await sharp(rawBuffer)
-        .rotate()
-        .resize(1200, undefined, { fit: "inside", withoutEnlargement: true })
-        .jpeg({ quality: 85 })
-        .toBuffer();
-    } catch {
-      // If sharp fails (e.g. unsupported format), use raw buffer
+
+    if (isPdf) {
+      // Save PDFs as-is, no sharp processing
+      filename = `${crypto.randomUUID()}.pdf`;
       buffer = rawBuffer;
+    } else if (isGif) {
+      // Save GIFs as-is to preserve animation
+      filename = `${crypto.randomUUID()}.gif`;
+      buffer = rawBuffer;
+    } else {
+      // Resize images to max 1200px wide, JPEG quality 85
+      filename = `${crypto.randomUUID()}.jpg`;
+      try {
+        buffer = await sharp(rawBuffer)
+          .rotate()
+          .resize(1200, undefined, { fit: "inside", withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+      } catch {
+        // If sharp fails (e.g. unsupported format), use raw buffer
+        buffer = rawBuffer;
+      }
     }
 
     await writeFile(path.join(messageDir, filename), buffer);

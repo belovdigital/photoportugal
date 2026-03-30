@@ -38,10 +38,12 @@ export function DashboardSidebar() {
   ];
 
   const filteredItems = navItems.filter((item) => item.roles.includes(role));
+  const isMessagesPage = pathname.includes("/messages");
 
   return (
     <>
-      {/* Mobile toggle */}
+      {/* Mobile toggle — hidden on messages page to avoid overlapping chat send button */}
+      {!isMessagesPage && (
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg md:hidden"
@@ -59,6 +61,7 @@ export function DashboardSidebar() {
           </span>
         )}
       </button>
+      )}
 
       {/* Mobile overlay */}
       {sidebarOpen && (

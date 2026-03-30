@@ -308,13 +308,13 @@ export async function sendNewMessageNotification(
 ) {
   await sendEmail(
     recipientEmail,
-    `New message from ${senderName}`,
+    `You have new messages from ${senderName}`,
     `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-      <h2 style="color: #C94536;">New Message</h2>
+      <h2 style="color: #C94536;">New Messages</h2>
       <p>Hi ${recipientName},</p>
-      <p><strong>${senderName}</strong> sent you a message.</p>
-      <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Read Message</a></p>
+      <p>You have new messages from <strong>${senderName}</strong>.</p>
+      <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Read Messages</a></p>
       <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
     </div>
     `

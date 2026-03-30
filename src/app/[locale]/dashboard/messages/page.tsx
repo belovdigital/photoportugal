@@ -67,7 +67,7 @@ function MessagesContent() {
   useEffect(() => {
     if (lightboxIndex === null) return;
     function handleKey(e: KeyboardEvent) {
-      const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-"));
+      const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-") && !m.media_url!.endsWith('.pdf'));
       if (e.key === "Escape") setLightboxIndex(null);
       else if (e.key === "ArrowLeft" && lightboxIndex! > 0) setLightboxIndex(lightboxIndex! - 1);
       else if (e.key === "ArrowRight" && lightboxIndex! < allMedia.length - 1) setLightboxIndex(lightboxIndex! + 1);
@@ -177,6 +177,15 @@ function MessagesContent() {
 
   const handleWSMessage = useCallback((msg: Message) => {
     setMessages((prev) => {
+      // For media messages from self: update temp in-place instead of remove+add to avoid flash
+      if (msg.sender_id === userId && msg.media_url) {
+        const tempIdx = prev.findIndex(m => m.id.startsWith("temp-") && m.sender_id === msg.sender_id && m.media_url);
+        if (tempIdx >= 0) {
+          const updated = [...prev];
+          updated[tempIdx] = msg;
+          return updated;
+        }
+      }
       // Dedup: remove temp messages that match the real message
       const filtered = prev.filter((m) => {
         if (m.id.startsWith("temp-")) {
@@ -249,15 +258,20 @@ function MessagesContent() {
   // --- Upload & compress a single file ---
   async function uploadFile(file: File, bookingId: string): Promise<string | null> {
     let processedFile = file;
-    try { processedFile = await convertHeicIfNeeded(processedFile); } catch { /* use original */ }
-    if (processedFile.size > 500 * 1024) {
-      try {
-        processedFile = await imageCompression(processedFile, {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1600,
-          useWebWorker: false,
-        });
-      } catch { /* use uncompressed */ }
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    const isGif = file.type === "image/gif" || file.name.toLowerCase().endsWith(".gif");
+    // Skip compression for PDFs and GIFs
+    if (!isPdf && !isGif) {
+      try { processedFile = await convertHeicIfNeeded(processedFile); } catch { /* use original */ }
+      if (processedFile.size > 500 * 1024) {
+        try {
+          processedFile = await imageCompression(processedFile, {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1600,
+            useWebWorker: false,
+          });
+        } catch { /* use uncompressed */ }
+      }
     }
     const formData = new FormData();
     formData.append("file", processedFile);
@@ -413,7 +427,7 @@ function MessagesContent() {
     const newFiles: File[] = [];
     const newPreviews: string[] = [];
     for (let i = 0; i < files.length; i++) {
-      if (files[i].size > 10 * 1024 * 1024) { alert(`${files[i].name}: max 10MB`); continue; }
+      if (files[i].size > 30 * 1024 * 1024) { alert(`${files[i].name}: max 30MB`); continue; }
       newFiles.push(files[i]);
       newPreviews.push(URL.createObjectURL(files[i]));
     }
@@ -687,7 +701,18 @@ function MessagesContent() {
                               }`}
                             >
                               {msg.media_url && (() => {
-                                const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-"));
+                                // PDF files: show icon + link
+                                if (msg.media_url!.endsWith('.pdf')) {
+                                  return (
+                                    <a href={msg.media_url!} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 py-1">
+                                      <span className="text-2xl" role="img" aria-label="PDF">&#x1F4C4;</span>
+                                      <span className={`underline text-sm ${isMe ? "text-white/90" : "text-primary-600"}`}>
+                                        {msg.media_url!.split('/').pop()}
+                                      </span>
+                                    </a>
+                                  );
+                                }
+                                const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-") && !m.media_url!.endsWith('.pdf'));
                                 const mediaIndex = allMedia.findIndex((m) => m.id === msg.id);
                                 return (
                                 <div className="relative inline-block">
@@ -698,7 +723,7 @@ function MessagesContent() {
                                   >
                                     <div className="rounded-lg bg-warm-200 animate-pulse" style={{ width: 200, height: 150 }} />
                                     <img
-                                      src={msg.media_url}
+                                      src={msg.media_url!}
                                       alt="Shared photo"
                                       style={{ maxWidth: 240, maxHeight: 300 }}
                                       className="rounded-lg object-cover absolute inset-0"
@@ -781,7 +806,11 @@ function MessagesContent() {
                 <div className="flex items-center gap-2 border-t border-warm-100 bg-warm-50 px-3 py-2 overflow-x-auto">
                   {pendingPreviews.map((preview, i) => (
                     <div key={i} className="relative shrink-0">
-                      <img src={preview} alt="Pending photo attachment" aria-hidden="true" className="h-14 w-14 rounded-lg object-cover" />
+                      {pendingFiles[i]?.type === "application/pdf" || pendingFiles[i]?.name?.toLowerCase().endsWith(".pdf") ? (
+                        <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-warm-200 text-2xl" role="img" aria-label="PDF">&#x1F4C4;</div>
+                      ) : (
+                        <img src={preview} alt="Pending photo attachment" aria-hidden="true" className="h-14 w-14 rounded-lg object-cover" />
+                      )}
                       <button
                         type="button"
                         onClick={() => removePendingFile(i)}
@@ -798,7 +827,7 @@ function MessagesContent() {
                 onSubmit={handleSend}
                 className="flex items-center gap-2 border-t border-warm-100 px-3 py-2.5"
               >
-                <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" multiple className="hidden" onChange={handleMediaSelect} />
+                <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif,.pdf,.gif" multiple className="hidden" onChange={handleMediaSelect} />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -826,7 +855,7 @@ function MessagesContent() {
                     }
                   }}
                   placeholder={t("typePlaceholder")}
-                  className="flex-1 rounded-full border border-warm-200 bg-warm-50 px-4 py-2 text-sm outline-none focus:border-primary-300 focus:bg-white"
+                  className="flex-1 rounded-full border border-warm-200 bg-warm-50 px-4 py-2 text-base outline-none focus:border-primary-300 focus:bg-white"
                 />
                 <button
                   type="submit"
@@ -861,7 +890,7 @@ function MessagesContent() {
 
       {/* Lightbox */}
       {lightboxIndex !== null && (() => {
-        const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-"));
+        const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-") && !m.media_url!.endsWith('.pdf'));
         const current = allMedia[lightboxIndex];
         if (!current) return null;
         const total = allMedia.length;
