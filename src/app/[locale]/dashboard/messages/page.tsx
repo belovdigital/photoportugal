@@ -149,7 +149,6 @@ function MessagesContent() {
           ) {
             return prev;
           }
-          setTimeout(scrollToBottom, 30);
           return [...data, ...remainingKeep];
         });
         setConversations((prev) =>
@@ -193,18 +192,24 @@ function MessagesContent() {
           const newMessages: Message[] = JSON.parse(event.data);
           if (newMessages.length > 0) {
             setMessages((prev) => {
-              // Remove temp messages (optimistic) and deduplicate
               const realIds = new Set(newMessages.map((m) => m.id));
               const filtered = prev.filter((m) => {
+                // Remove temp messages if ANY real message with matching text arrived
                 if (m.id.startsWith("temp-")) {
-                  // Remove temp if a real message from same sender arrived
-                  return !newMessages.some((n) => n.sender_id === m.sender_id);
+                  return !newMessages.some((n) =>
+                    n.sender_id === m.sender_id && (
+                      (n.text && m.text && n.text === m.text) ||
+                      (n.media_url && m.media_url)
+                    )
+                  );
                 }
+                // Deduplicate real messages
                 return !realIds.has(m.id);
               });
-              setTimeout(scrollToBottom, 30);
               return [...filtered, ...newMessages];
             });
+            // Only auto-scroll if user is at bottom
+            setTimeout(() => scrollToBottom(), 30);
             fetchConversations();
           }
         } catch {
