@@ -37,10 +37,21 @@ export function useWebSocket({
   const reconnectAttempt = useRef(0);
   const [status, setStatus] = useState<"connected" | "disconnected" | "reconnecting">("disconnected");
 
+  // Use refs for callbacks to avoid reconnecting on every render
+  const onMessageRef = useRef(onMessage);
+  const onTypingRef = useRef(onTyping);
+  const onReadRef = useRef(onRead);
+  const onOnlineRef = useRef(onOnline);
+  const onStatusChangeRef = useRef(onStatusChange);
+  onMessageRef.current = onMessage;
+  onTypingRef.current = onTyping;
+  onReadRef.current = onRead;
+  onOnlineRef.current = onOnline;
+  onStatusChangeRef.current = onStatusChange;
+
   const connect = useCallback(() => {
     if (!bookingId || !token) return;
 
-    // Close existing
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
@@ -53,8 +64,7 @@ export function useWebSocket({
     ws.onopen = () => {
       reconnectAttempt.current = 0;
       setStatus("connected");
-      onStatusChange?.("connected");
-      // Join the room
+      onStatusChangeRef.current?.("connected");
       ws.send(JSON.stringify({ type: "join", booking_id: bookingId }));
     };
 
@@ -63,16 +73,16 @@ export function useWebSocket({
         const data = JSON.parse(event.data);
         switch (data.type) {
           case "message":
-            onMessage?.(data.message);
+            onMessageRef.current?.(data.message);
             break;
           case "typing":
-            onTyping?.(data.user_id, data.user_name);
+            onTypingRef.current?.(data.user_id, data.user_name);
             break;
           case "read":
-            onRead?.(data.user_id, data.timestamp);
+            onReadRef.current?.(data.user_id, data.timestamp);
             break;
           case "online":
-            onOnline?.(data.users);
+            onOnlineRef.current?.(data.users);
             break;
         }
       } catch {}
@@ -80,8 +90,7 @@ export function useWebSocket({
 
     ws.onclose = () => {
       setStatus("reconnecting");
-      onStatusChange?.("reconnecting");
-      // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+      onStatusChangeRef.current?.("reconnecting");
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempt.current), 30000);
       reconnectAttempt.current++;
       reconnectTimer.current = setTimeout(connect, delay);
@@ -90,7 +99,7 @@ export function useWebSocket({
     ws.onerror = () => {
       ws.close();
     };
-  }, [bookingId, token, onMessage, onTyping, onRead, onOnline, onStatusChange]);
+  }, [bookingId, token]); // Only reconnect when bookingId or token changes
 
   useEffect(() => {
     connect();

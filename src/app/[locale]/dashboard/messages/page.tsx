@@ -190,7 +190,13 @@ function MessagesContent() {
     if (msg.sender_id !== userId && document.visibilityState === "visible") {
       sendReadRef.current();
     }
-    setTimeout(() => scrollToBottom(), 30);
+    // Force scroll for own messages, respect scroll for others
+    if (msg.sender_id === userId) {
+      isUserScrolledUp.current = false;
+      setTimeout(() => scrollToBottom(true), 30);
+    } else {
+      setTimeout(() => scrollToBottom(), 30);
+    }
     fetchConversations();
   }, [scrollToBottom, fetchConversations, userId]);
 
@@ -341,7 +347,7 @@ function MessagesContent() {
       }
 
       setSending(false);
-      await fetchMessages(activeChat);
+      // Don't fetchMessages — WebSocket will deliver the real message and dedup the temp
       if (res && !res.ok) {
         setMessages((prev) =>
           prev.map((m) => (m.id === textTempId ? { ...m, failed: true } : m))
@@ -463,7 +469,7 @@ function MessagesContent() {
     <div className="p-4 sm:p-6">
       <div
         className="flex gap-0 rounded-xl border border-warm-200 bg-white overflow-hidden"
-        style={{ height: "min(800px, calc(100vh - 140px))" }}
+        style={{ height: "min(800px, calc(100dvh - 140px))" }}
       >
         {/* Conversations sidebar */}
         <div
@@ -659,12 +665,15 @@ function MessagesContent() {
                         >
                           <div className="max-w-[70%]">
                             <div
-                              className={`inline-block rounded-2xl px-3.5 py-2 text-[15px] leading-relaxed ${
-                                isMe
-                                  ? msg.failed
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-primary-600 text-white"
-                                  : "bg-warm-100 text-gray-900"
+                              className={`inline-block rounded-2xl text-[15px] leading-relaxed ${
+                                msg.media_url && !msg.text
+                                  ? "p-1"
+                                  : `px-3.5 py-2 ${isMe
+                                    ? msg.failed
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-primary-600 text-white"
+                                    : "bg-warm-100 text-gray-900"
+                                  }`
                               } ${
                                 isMe
                                   ? isLast
@@ -744,6 +753,9 @@ function MessagesContent() {
                                   locale,
                                   t("yesterday")
                                 )}
+                                {isMe && msg.read_at && (
+                                  <span className="ml-1.5 text-blue-400">read</span>
+                                )}
                               </p>
                             )}
                           </div>
@@ -795,7 +807,7 @@ function MessagesContent() {
                   {uploadingMedia ? (
                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4" strokeLinecap="round" /></svg>
                   ) : (
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   )}
                 </button>
                 <input
