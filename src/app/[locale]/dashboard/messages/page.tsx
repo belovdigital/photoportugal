@@ -466,10 +466,12 @@ function MessagesContent() {
     );
 
   return (
-    <div className="p-4 sm:p-6">
+    <>
+      <style>{`footer { display: none !important; }`}</style>
+    <div className="p-2 sm:p-6 overflow-hidden">
       <div
-        className="flex gap-0 rounded-xl border border-warm-200 bg-white overflow-hidden"
-        style={{ height: "min(800px, calc(100dvh - 140px))" }}
+        className="flex gap-0 sm:rounded-xl sm:border sm:border-warm-200 bg-white overflow-hidden"
+        style={{ height: "calc(100dvh - 80px)" }}
       >
         {/* Conversations sidebar */}
         <div
@@ -754,7 +756,7 @@ function MessagesContent() {
                                   t("yesterday")
                                 )}
                                 {isMe && msg.read_at && (
-                                  <span className="ml-1.5 text-blue-400">read</span>
+                                  <span className="ml-1.5 font-medium text-green-500">read</span>
                                 )}
                               </p>
                             )}
@@ -921,6 +923,7 @@ function MessagesContent() {
         );
       })()}
     </div>
+    </>
   );
 }
 
