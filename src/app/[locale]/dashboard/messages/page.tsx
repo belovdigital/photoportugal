@@ -703,18 +703,14 @@ function MessagesContent() {
                               {msg.media_url && (() => {
                                 // PDF files: show icon + link
                                 if (msg.media_url!.endsWith('.pdf')) {
-                                  const fileName = decodeURIComponent(msg.media_url!.split('/').pop() || 'document.pdf');
                                   return (
                                     <a href={msg.media_url!} target="_blank" rel="noopener noreferrer"
-                                      className="flex items-center gap-3 rounded-xl bg-white/10 border border-gray-200/30 p-3 hover:bg-white/20 transition" style={{ minWidth: 200 }}>
-                                      <div className="flex h-12 w-10 items-center justify-center rounded-lg bg-red-50 border border-red-100 shrink-0">
-                                        <svg className="h-6 w-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zm-2.5 9.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5zm3 0c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5.67-1.5 1.5-1.5 1.5.67 1.5 1.5z"/></svg>
+                                      className="flex flex-col items-center rounded-xl bg-white border border-gray-200 p-4 hover:shadow-md transition" style={{ width: 140 }}>
+                                      <div className="flex h-20 w-16 items-center justify-center rounded-lg bg-red-50 border border-red-100 mb-2">
+                                        <svg className="h-10 w-8 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM9 13h2v2H9v-2zm4 0h2v2h-2v-2z"/></svg>
                                       </div>
-                                      <div className="min-w-0 flex-1">
-                                        <p className={`text-sm font-medium truncate ${isMe ? "text-white" : "text-gray-900"}`}>{fileName.length > 20 ? fileName.slice(0, 17) + '...' + fileName.slice(-4) : fileName}</p>
-                                        <p className={`text-[11px] ${isMe ? "text-white/60" : "text-gray-400"}`}>PDF Document</p>
-                                      </div>
-                                      <svg className={`h-4 w-4 shrink-0 ${isMe ? "text-white/60" : "text-gray-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                      <p className="text-[11px] font-medium text-gray-700 text-center">PDF</p>
+                                      <p className="text-[10px] text-gray-400 mt-0.5">Tap to open</p>
                                     </a>
                                   );
                                 }
