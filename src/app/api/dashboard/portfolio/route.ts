@@ -10,6 +10,35 @@ import sharp from "sharp";
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per portfolio photo
 
+export async function GET(req: NextRequest) {
+  const user = await authFromRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = user.id;
+
+  const profile = await queryOne<{ id: string }>(
+    "SELECT id FROM photographer_profiles WHERE user_id = $1",
+    [userId]
+  );
+
+  if (!profile) {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  try {
+    const items = await query(
+      "SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order, created_at",
+      [profile.id]
+    );
+    return NextResponse.json(items);
+  } catch (error) {
+    console.error("Portfolio list error:", error);
+    return NextResponse.json({ error: "Failed to fetch portfolio" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   const user = await authFromRequest(req);
   if (!user) {

@@ -10,6 +10,30 @@ async function getProfile(userId: string) {
   );
 }
 
+export async function GET(req: NextRequest) {
+  const user = await authFromRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = user.id;
+  const profile = await getProfile(userId!);
+  if (!profile) {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+
+  try {
+    const packages = await query(
+      "SELECT * FROM packages WHERE photographer_id = $1 ORDER BY sort_order, created_at",
+      [profile.id]
+    );
+    return NextResponse.json(packages);
+  } catch (error) {
+    console.error("Package list error:", error);
+    return NextResponse.json({ error: "Failed to fetch packages" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   const user = await authFromRequest(req);
   if (!user) {

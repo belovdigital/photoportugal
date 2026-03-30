@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendReviewNotification } from "@/lib/email";
 
 // Create a review (client only, after completed booking)
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const mobileUser = await authFromRequest(req);
+  const session = !mobileUser ? await auth() : null;
+  const userId = mobileUser?.id || (session?.user as { id?: string })?.id;
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const userId = (session.user as { id?: string }).id;
 
   try {
     const { booking_id, rating, title, text } = await req.json();
