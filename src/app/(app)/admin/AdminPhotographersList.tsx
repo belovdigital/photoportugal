@@ -80,35 +80,31 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
         const isOpen = expandedId === p.id;
         const missingSteps = getMissingSteps(p);
 
-        const checklistTotal = 8;
         const checklistDone = [
           p.has_avatar, p.has_cover, p.has_bio,
           p.portfolio_count >= 5, p.package_count >= 1,
           p.location_count >= 1, p.stripe_ready, p.has_phone,
         ].filter(Boolean).length;
-        const progress = checklistDone / checklistTotal;
+        const progressPct = Math.round((checklistDone / 8) * 100);
+        const progressColor = progressPct >= 100 ? "#22c55e" : progressPct >= 50 ? "#eab308" : "#ef4444";
 
         return (
           <div
             key={p.id}
-            className={`rounded-xl bg-white transition-shadow relative ${
-              p.is_approved ? "border border-warm-200" : ""
+            className={`rounded-xl border bg-white transition-shadow overflow-hidden ${
+              !p.is_approved ? "border-warm-300" : "border-warm-200"
             } ${isOpen ? "shadow-md" : "hover:shadow-sm"}`}
-            style={!p.is_approved ? {
-              padding: "3px",
-              background: `conic-gradient(${
-                progress >= 1 ? "#22c55e" : progress >= 0.5 ? "#eab308" : "#ef4444"
-              } ${progress * 100}%, #e8ddd1 ${progress * 100}%)`,
-              borderRadius: "12px",
-            } : undefined}
           >
+            {/* Progress bar for unapproved */}
             {!p.is_approved && (
-              <div className="absolute top-0 left-0 right-0 bottom-0 rounded-xl bg-white" style={{ margin: "3px" }} />
+              <div className="h-1 w-full bg-warm-100">
+                <div className="h-full rounded-r-full transition-all duration-500" style={{ width: `${progressPct}%`, backgroundColor: progressColor }} />
+              </div>
             )}
             {/* Collapsed row — always visible */}
             <button
               onClick={() => setExpandedId(isOpen ? null : p.id)}
-              className="flex w-full items-center gap-3 px-3 py-3 sm:px-4 text-left relative z-10"
+              className="flex w-full items-center gap-3 px-3 py-3 sm:px-4 text-left"
             >
               {/* Status dot */}
               <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${
@@ -179,7 +175,7 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
 
             {/* Expanded details */}
             {isOpen && (
-              <div className="border-t border-warm-100 px-3 py-3 sm:px-4 sm:py-4 relative z-10">
+              <div className="border-t border-warm-100 px-3 py-3 sm:px-4 sm:py-4">
                 {/* Contact & profile */}
                 <div className="mb-4 flex flex-wrap items-center gap-3">
                   <Link
