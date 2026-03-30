@@ -193,6 +193,7 @@ interface VisitorData {
   landingPages: { page: string; count: string }[];
   recentSessions: {
     id: string; visitor_id: string; user_name: string | null; user_email: string | null;
+    user_role: string | null;
     device_type: string | null; country: string | null; language: string | null;
     landing_page: string | null; referrer: string | null; utm_source: string | null;
     utm_medium: string | null; utm_term: string | null;
@@ -201,23 +202,37 @@ interface VisitorData {
   dailySessions: { day: string; sessions: string; visitors: string }[];
 }
 
-const COUNTRY_FLAGS: Record<string, string> = {
-  PT: "PT", US: "US", GB: "GB", DE: "DE", FR: "FR", ES: "ES", IT: "IT", BR: "BR", CA: "CA", AU: "AU",
-  NL: "NL", BE: "BE", CH: "CH", AT: "AT", IE: "IE", SE: "SE", NO: "NO", DK: "DK", FI: "FI", PL: "PL",
+const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
+  PT: { flag: "🇵🇹", name: "Portugal" }, US: { flag: "🇺🇸", name: "United States" }, GB: { flag: "🇬🇧", name: "United Kingdom" },
+  DE: { flag: "🇩🇪", name: "Germany" }, FR: { flag: "🇫🇷", name: "France" }, ES: { flag: "🇪🇸", name: "Spain" },
+  IT: { flag: "🇮🇹", name: "Italy" }, BR: { flag: "🇧🇷", name: "Brazil" }, CA: { flag: "🇨🇦", name: "Canada" },
+  AU: { flag: "🇦🇺", name: "Australia" }, NL: { flag: "🇳🇱", name: "Netherlands" }, BE: { flag: "🇧🇪", name: "Belgium" },
+  CH: { flag: "🇨🇭", name: "Switzerland" }, AT: { flag: "🇦🇹", name: "Austria" }, IE: { flag: "🇮🇪", name: "Ireland" },
+  SE: { flag: "🇸🇪", name: "Sweden" }, NO: { flag: "🇳🇴", name: "Norway" }, DK: { flag: "🇩🇰", name: "Denmark" },
+  FI: { flag: "🇫🇮", name: "Finland" }, PL: { flag: "🇵🇱", name: "Poland" }, RU: { flag: "🇷🇺", name: "Russia" },
+  UA: { flag: "🇺🇦", name: "Ukraine" }, CZ: { flag: "🇨🇿", name: "Czechia" }, GR: { flag: "🇬🇷", name: "Greece" },
+  RO: { flag: "🇷🇴", name: "Romania" }, HU: { flag: "🇭🇺", name: "Hungary" }, TR: { flag: "🇹🇷", name: "Turkey" },
+  IN: { flag: "🇮🇳", name: "India" }, CN: { flag: "🇨🇳", name: "China" }, JP: { flag: "🇯🇵", name: "Japan" },
+  KR: { flag: "🇰🇷", name: "South Korea" }, ZA: { flag: "🇿🇦", name: "South Africa" }, MX: { flag: "🇲🇽", name: "Mexico" },
+  AR: { flag: "🇦🇷", name: "Argentina" }, CO: { flag: "🇨🇴", name: "Colombia" }, CL: { flag: "🇨🇱", name: "Chile" },
+  IL: { flag: "🇮🇱", name: "Israel" }, AE: { flag: "🇦🇪", name: "UAE" }, SG: { flag: "🇸🇬", name: "Singapore" },
 };
+const getCountry = (code: string) => COUNTRY_INFO[code] || { flag: "🏳️", name: code };
 
 function VisitorsTab() {
   const [vd, setVd] = useState<VisitorData | null>(null);
   const [vLoading, setVLoading] = useState(true);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [sessionLimit, setSessionLimit] = useState(30);
+  const [roleFilter, setRoleFilter] = useState("all");
 
   useEffect(() => {
-    fetch(`/api/admin/visitors?limit=${sessionLimit}`)
+    setVLoading(true);
+    fetch(`/api/admin/visitors?limit=${sessionLimit}&role=${roleFilter}`)
       .then(r => r.json())
       .then(d => { setVd(d); setVLoading(false); })
       .catch(() => setVLoading(false));
-  }, [sessionLimit]);
+  }, [sessionLimit, roleFilter]);
 
   if (vLoading) return <p className="text-sm text-gray-400">Loading visitor data...</p>;
   if (!vd) return <p className="text-sm text-gray-400">No visitor data yet</p>;
@@ -290,7 +305,7 @@ function VisitorsTab() {
           <div className="space-y-1.5 max-h-48 overflow-auto">
             {vd.countries.map(c => (
               <div key={c.country} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-3 py-2">
-                <span className="text-sm text-gray-700">{COUNTRY_FLAGS[c.country] || c.country}</span>
+                <span className="text-sm text-gray-700">{getCountry(c.country).flag} {getCountry(c.country).name}</span>
                 <span className="text-sm font-semibold text-gray-900">{c.count}</span>
               </div>
             ))}
@@ -338,7 +353,29 @@ function VisitorsTab() {
 
       {/* Recent Sessions */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">Recent Visitors</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-gray-700">Recent Visitors</h3>
+          <div className="flex gap-1">
+            {[
+              { key: "all", label: "All", icon: "👥" },
+              { key: "client", label: "Clients", icon: "🧳" },
+              { key: "photographer", label: "Photographers", icon: "📸" },
+              { key: "guest", label: "Guests", icon: "👻" },
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => { setRoleFilter(f.key); setSessionLimit(30); }}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                  roleFilter === f.key
+                    ? "bg-primary-500 text-white"
+                    : "bg-warm-100 text-gray-500 hover:bg-warm-200"
+                }`}
+              >
+                {f.icon} {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="space-y-2">
           {vd.recentSessions.map(session => {
             const isExpanded = expandedSession === session.id;
@@ -386,10 +423,15 @@ function VisitorsTab() {
                         ) : (
                           <span className="text-sm text-gray-500 truncate font-mono">{session.visitor_id.slice(0, 8)}</span>
                         )}
+                        {session.user_role && (
+                          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                            session.user_role === "photographer" ? "bg-purple-50 text-purple-600" : "bg-emerald-50 text-emerald-600"
+                          }`}>{session.user_role === "photographer" ? "📸" : "🧳"}</span>
+                        )}
                         {session.user_email && <span className="text-[10px] text-gray-400 hidden sm:inline">{session.user_email}</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-gray-400">{session.country || "?"}</span>
+                        <span className="text-xs font-medium">{session.country ? `${getCountry(session.country).flag} ${getCountry(session.country).name}` : "🏳️ Unknown"}</span>
                         {session.utm_source && (
                           <span className="rounded-full bg-blue-50 text-blue-600 px-1.5 py-0.5 text-[9px] font-medium">via {session.utm_source}</span>
                         )}

@@ -22,6 +22,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const sessionLimit = Math.min(parseInt(url.searchParams.get("limit") || "30"), 200);
+  const roleFilter = url.searchParams.get("role") || "all"; // all, client, photographer, guest
 
   // Summary stats
   const [summary, summaryPrev] = await Promise.all([
@@ -90,22 +91,28 @@ export async function GET(req: Request) {
     GROUP BY landing_page ORDER BY count DESC LIMIT 15
   `);
 
-  // Recent sessions (last 20)
+  // Recent sessions
+  const roleWhere = roleFilter === "guest" ? "AND vs.user_id IS NULL"
+    : roleFilter === "client" ? "AND u.role = 'client'"
+    : roleFilter === "photographer" ? "AND u.role = 'photographer'"
+    : "";
   const recentSessions = await query<{
     id: string; visitor_id: string; user_name: string | null; user_email: string | null;
+    user_role: string | null;
     device_type: string | null; country: string | null; language: string | null;
     landing_page: string | null; referrer: string | null; utm_source: string | null;
     utm_medium: string | null; utm_term: string | null;
     pageview_count: number; started_at: string; pageviews: string | null;
   }>(`
     SELECT vs.id, vs.visitor_id,
-           u.name as user_name, u.email as user_email,
+           u.name as user_name, u.email as user_email, u.role as user_role,
            vs.device_type, vs.country, vs.language,
            vs.landing_page, vs.referrer, vs.utm_source, vs.utm_medium, vs.utm_term,
            vs.pageview_count, vs.started_at,
            vs.pageviews::text
     FROM visitor_sessions vs
     LEFT JOIN users u ON u.id = vs.user_id
+    WHERE 1=1 ${roleWhere}
     ORDER BY vs.started_at DESC LIMIT ${sessionLimit}
   `);
 
