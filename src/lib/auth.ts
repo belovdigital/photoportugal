@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { queryOne, query } from "./db";
-import { sendWelcomeEmail, sendAdminNewClientNotification } from "./email";
+import { sendWelcomeEmail } from "./email";
 
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -98,13 +98,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               "INSERT INTO users (email, name, first_name, last_name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, $5, $6, 'client', TRUE)",
               [email, user.name, firstName, lastName, account.providerAccountId, user.image]
             );
-            // Send welcome + admin notification for new Google sign-ups
-            // If user goes through set-role as photographer, photographer notification will also be sent there
+            // Send welcome email immediately (user is created as client by default).
+            // Admin notification is NOT sent here — it's sent from set-role endpoint
+            // after the user picks their role, to avoid duplicate notifications
+            // when someone registers as photographer (created as client first, then role changed).
             sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
               console.error("[auth] Failed to send welcome email:", err)
-            );
-            sendAdminNewClientNotification(user.name || "Unknown", email).catch((err) =>
-              console.error("[auth] Failed to send admin client notification:", err)
             );
           }
         } catch (error) {
