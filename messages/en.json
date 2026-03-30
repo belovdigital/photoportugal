@@ -177,10 +177,10 @@
     "trustBadge": "Trusted by {count}+ happy travelers",
     "heroTitle": "Book a Vacation Photographer in",
     "heroTitleHighlight": "Portugal",
-    "heroDescription": "Hire a professional vacation photographer who knows Portugal's most breathtaking spots. Couples, families, solo travelers — book your session and we'll match you with the perfect photographer.",
+    "heroDescription": "Choose from our hand-picked network of professional photographers who know Portugal's most breathtaking spots. Every photographer is personally vetted for quality, reliability, and style.",
     "socialProof": {
+      "handPicked": "Hand-picked photographers",
       "verifiedReviews": "Verified reviews",
-      "payAfterHappy": "Pay after you're happy",
       "securePayments": "Secure Stripe payments"
     },
     "floatingReview": {
@@ -334,11 +334,14 @@
     "badge": "Simple Process",
     "title": "Four Steps to Stunning Photos",
     "subtitle": "From booking to delivery — we make professional photography effortless",
+    "whyUsTitle": "Why Photo Portugal?",
+    "whyUsCurated": "Curated network",
+    "whyUsCuratedDesc": "We personally vet every photographer for quality, reliability, and professionalism. Only the best make it to our platform.",
     "findYourPhotographer": "Find Your Photographer",
     "steps": {
       "browse": {
         "title": "Browse & Choose",
-        "description": "Explore photographer profiles, view stunning portfolios, and read verified reviews from real travelers.",
+        "description": "Explore our hand-picked photographer profiles, view stunning portfolios, and read verified reviews from real travelers.",
         "detail": "Filter by location, style, and budget"
       },
       "book": {
@@ -909,8 +912,9 @@
     "findYourPhotographer": "Find Your Photographer",
     "photographersIn": "Photographers in {location}",
     "photographersInMultiple": "Photographers in {count} locations",
-    "available": "{count} photographer available",
-    "availablePlural": "{count} photographers available",
+    "available": "{count} hand-picked photographer",
+    "availablePlural": "{count} hand-picked photographers",
+    "trustLine": "Every photographer is personally vetted and approved by our team",
     "noMatch": "No photographers match your filters.",
     "noMatchSuggestion": "Try adjusting your location, shoot type, or language filters to see more photographers.",
     "filters": {
@@ -982,8 +986,8 @@
     "subtitle": "From Lisbon's cobblestone streets to the Algarve's golden cliffs — explore {count}+ stunning destinations for your vacation photoshoot and find the perfect setting for your memories.",
     "detail": {
       "viewPhotographers": "View Photographers in {location}",
-      "photographerAvailable": "{count} photographer available",
-      "photographersAvailable": "{count} photographers available",
+      "photographerAvailable": "{count} hand-picked photographer",
+      "photographersAvailable": "{count} hand-picked photographers",
       "whyLocation": "Why {location} for Your Photoshoot",
       "popularTypes": "Popular photoshoot types in {location}",
       "popularTypesSection": "Popular Photoshoot Types in {location}",

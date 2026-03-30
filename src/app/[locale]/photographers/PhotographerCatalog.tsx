@@ -130,6 +130,7 @@ export function PhotographerCatalog({
             ? t("available", { count: filtered.length })
             : t("availablePlural", { count: filtered.length })}
         </p>
+        <p className="mt-1 text-sm text-gray-400">{t("trustLine")}</p>
       </div>
 
       {/* Filter bar */}

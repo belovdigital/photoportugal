@@ -174,10 +174,10 @@
     "trustBadge": "A confiança de {count}+ viajantes satisfeitos",
     "heroTitle": "Reserve um Fotógrafo de Férias em",
     "heroTitleHighlight": "Portugal",
-    "heroDescription": "Contrate um fotógrafo profissional de férias que conhece os locais mais deslumbrantes de Portugal. Casais, famílias, viajantes a solo — reserve a sua sessão e encontramos o fotógrafo perfeito para si.",
+    "heroDescription": "Escolha da nossa rede selecionada de fotógrafos profissionais que conhecem os locais mais deslumbrantes de Portugal. Cada fotógrafo é pessoalmente verificado quanto à qualidade, fiabilidade e estilo.",
     "socialProof": {
+      "handPicked": "Fotógrafos selecionados a dedo",
       "verifiedReviews": "Avaliações verificadas",
-      "payAfterHappy": "Pague quando estiver satisfeito",
       "securePayments": "Pagamentos seguros via Stripe"
     },
     "floatingReview": {
@@ -331,11 +331,14 @@
     "badge": "Processo Simples",
     "title": "Quatro Passos para Fotos Deslumbrantes",
     "subtitle": "Da reserva à entrega — tornamos a fotografia profissional fácil e sem esforço",
+    "whyUsTitle": "Porquê a Photo Portugal?",
+    "whyUsCurated": "Rede selecionada",
+    "whyUsCuratedDesc": "Verificamos pessoalmente cada fotógrafo quanto à qualidade, fiabilidade e profissionalismo. Apenas os melhores chegam à nossa plataforma.",
     "findYourPhotographer": "Encontre o Seu Fotógrafo",
     "steps": {
       "browse": {
         "title": "Explorar e Escolher",
-        "description": "Explore perfis de fotógrafos, veja portfólios impressionantes e leia avaliações verificadas de viajantes reais.",
+        "description": "Explore os perfis dos nossos fotógrafos selecionados, veja portfólios impressionantes e leia avaliações verificadas de viajantes reais.",
         "detail": "Filtre por localização, estilo e orçamento"
       },
       "book": {
@@ -906,8 +909,9 @@
     "findYourPhotographer": "Encontre o Seu Fotógrafo",
     "photographersIn": "Fotógrafos em {location}",
     "photographersInMultiple": "Fotógrafos em {count} localizações",
-    "available": "{count} fotógrafo disponível",
-    "availablePlural": "{count} fotógrafos disponíveis",
+    "available": "{count} fotógrafo selecionado",
+    "availablePlural": "{count} fotógrafos selecionados",
+    "trustLine": "Cada fotógrafo é pessoalmente verificado e aprovado pela nossa equipa",
     "noMatch": "Nenhum fotógrafo corresponde aos seus filtros.",
     "noMatchSuggestion": "Tente ajustar os filtros de localização, tipo de sessão ou idioma para ver mais fotógrafos.",
     "filters": {
@@ -979,8 +983,8 @@
     "subtitle": "Das ruas de calçada de Lisboa às falésias douradas do Algarve — explore {count}+ destinos deslumbrantes para a sua sessão fotográfica de férias e encontre o cenário perfeito para as suas memórias.",
     "detail": {
       "viewPhotographers": "Ver Fotógrafos em {location}",
-      "photographerAvailable": "{count} fotógrafo disponível",
-      "photographersAvailable": "{count} fotógrafos disponíveis",
+      "photographerAvailable": "{count} fotógrafo selecionado",
+      "photographersAvailable": "{count} fotógrafos selecionados",
       "whyLocation": "Porquê {location} para a Sua Sessão Fotográfica",
       "popularTypes": "Tipos populares de sessão fotográfica em {location}",
       "popularTypesSection": "Tipos Populares de Sessão Fotográfica em {location}",
