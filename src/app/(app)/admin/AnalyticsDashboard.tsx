@@ -944,41 +944,57 @@ function GoogleAdsSection() {
             </div>
           </div>
 
-          {/* Recent Ad Visitors - the key new section */}
+          {/* Recent Ad Visitors */}
           {stats.recentVisitors && stats.recentVisitors.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-gray-500 mb-2">Recent Ad Visitors</p>
-              <div className="rounded-xl border border-warm-200 bg-white overflow-hidden">
-                <div className="max-h-72 overflow-y-auto divide-y divide-warm-100">
-                  {stats.recentVisitors.map((v, i) => (
-                    <div key={i} className="px-3 py-2.5 hover:bg-warm-50 transition-colors">
-                      <div className="flex items-center justify-between mb-1">
+              <div className="space-y-2">
+                {stats.recentVisitors.map((v, i) => {
+                  const depth = v.pages.length;
+                  const isEngaged = depth >= 3;
+                  const shortPages = v.pages.map(p => p.replace(/^\/[a-z]{2}\//, "/").replace(/^\//, "") || "home");
+                  return (
+                    <div key={i} className={`rounded-xl border bg-white p-3 transition-shadow hover:shadow-sm ${v.converted ? "border-green-200" : isEngaged ? "border-blue-200" : "border-warm-200"}`}
+                      style={!v.converted && !isEngaged ? {} : { borderLeftWidth: 3, borderLeftColor: v.converted ? "#22c55e" : "#3b82f6" }}
+                    >
+                      {/* Top row: badge + keyword + time */}
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className={`inline-flex h-5 items-center rounded-full px-2 text-[10px] font-medium ${v.converted ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                            {v.converted ? "Converted" : "Bounced"}
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            v.converted ? "bg-green-100 text-green-700" : isEngaged ? "bg-blue-50 text-blue-600" : "bg-warm-100 text-gray-500"
+                          }`}>
+                            {v.converted ? "💰 Converted" : isEngaged ? `👀 ${depth} pages` : "↩ Bounced"}
                           </span>
-                          <span className="text-xs font-medium text-gray-800">{v.keyword}</span>
+                          <span className="text-sm font-semibold text-gray-900">🔍 {v.keyword}</span>
                         </div>
-                        <span className="text-[10px] text-gray-400">{timeAgo(v.time)}</span>
+                        <span className="text-[10px] text-gray-400 shrink-0">{timeAgo(v.time)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                        <span className="text-gray-500">{v.landing}</span>
-                        {v.pages.length > 1 && (
-                          <>
-                            <span>→</span>
-                            {v.pages.slice(1, 5).map((p, j) => (
-                              <span key={j}>
-                                {j > 0 && <span className="mx-0.5">→</span>}
-                                <span className="text-gray-500">{p.replace(/^\/[a-z]{2}\//, "/")}</span>
-                              </span>
-                            ))}
-                            {v.pages.length > 5 && <span className="text-gray-400">+{v.pages.length - 5} more</span>}
-                          </>
-                        )}
+
+                      {/* Journey flow */}
+                      <div className="mt-2 flex items-center gap-1 flex-wrap">
+                        {shortPages.slice(0, 6).map((p, j) => (
+                          <span key={j} className="inline-flex items-center">
+                            {j > 0 && <span className="text-gray-300 text-[10px] mx-0.5">→</span>}
+                            <span className={`rounded-md px-1.5 py-0.5 text-[10px] ${
+                              j === 0 ? "bg-primary-50 text-primary-700 font-medium" :
+                              p.includes("book") ? "bg-green-50 text-green-700 font-medium" :
+                              p.includes("photographer") ? "bg-blue-50 text-blue-700" :
+                              "bg-warm-50 text-gray-600"
+                            }`}>{p}</span>
+                          </span>
+                        ))}
+                        {shortPages.length > 6 && <span className="text-[10px] text-gray-400 ml-1">+{shortPages.length - 6} more</span>}
                       </div>
+
+                      {/* Campaign tag */}
+                      {v.campaign && v.campaign !== "null" && (
+                        <div className="mt-1.5">
+                          <span className="text-[9px] text-gray-400 bg-warm-50 rounded-full px-2 py-0.5">{v.campaign}</span>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             </div>
           )}
