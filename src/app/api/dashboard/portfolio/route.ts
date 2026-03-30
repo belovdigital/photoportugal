@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { writeFile, mkdir, unlink } from "fs/promises";
@@ -11,12 +11,12 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per portfolio photo
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
 
   const profile = await queryOne<{ id: string; plan: string }>(
     "SELECT id, plan FROM photographer_profiles WHERE user_id = $1",
@@ -116,12 +116,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
   const { searchParams } = new URL(req.url);
   const itemId = searchParams.get("id");
 
@@ -163,10 +163,10 @@ export async function DELETE(req: NextRequest) {
 
 // Update tags or reorder portfolio items
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await authFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
   const body = await req.json();
 
   const profile = await queryOne<{ id: string }>(

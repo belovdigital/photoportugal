@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { sendEmail, getAdminEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const authUser = await authFromRequest(req);
+  if (!authUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const user = session.user as { id?: string; name?: string; email?: string; role?: string };
+  const user = authUser as { id: string; name?: string; email: string; role: string };
 
   try {
     const { subject, message } = await req.json();

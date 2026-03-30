@@ -1,19 +1,19 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  const userId = (session.user as { id?: string }).id;
+  const userId = user.id;
   const bookingId = req.nextUrl.searchParams.get("booking_id");
 
   if (!bookingId) {
