@@ -481,10 +481,10 @@ function MessagesContent() {
 
   return (
     <>
-      <style>{`footer { display: none !important; }`}</style>
+      <style>{`footer { display: none !important; } @media(min-width:640px){ .chat-container { height: calc(100dvh - 200px) !important; } }`}</style>
     <div className="p-1 sm:p-3 overflow-hidden">
       <div
-        className="flex gap-0 sm:rounded-xl sm:border sm:border-warm-200 bg-white overflow-hidden"
+        className="flex gap-0 sm:rounded-xl sm:border sm:border-warm-200 bg-white overflow-hidden chat-container"
         style={{ height: "calc(100dvh - 120px)" }}
       >
         {/* Conversations sidebar */}
