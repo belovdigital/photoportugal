@@ -1,0 +1,161 @@
+import { NextRequest, NextResponse } from "next/server";
+import { query, queryOne } from "@/lib/db";
+import { sendEmail, getAdminEmail } from "@/lib/email";
+
+const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+
+export async function GET(req: NextRequest) {
+  if (req.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    // Gather last 24h stats
+    const [bookings, messages, users, payments, sessions] = await Promise.all([
+      query<{ id: string; status: string; client_name: string; photographer_name: string; total_price: number | null; created_at: string; updated_at: string }>(
+        `SELECT b.id, b.status, cu.name as client_name, pu.name as photographer_name,
+                b.total_price, b.created_at::timestamp(0)::text, b.updated_at::timestamp(0)::text
+         FROM bookings b
+         JOIN users cu ON cu.id = b.client_id
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+         WHERE b.created_at > NOW() - INTERVAL '24 hours'
+         ORDER BY b.created_at DESC`
+      ),
+      queryOne<{ count: string }>(
+        "SELECT COUNT(*)::text as count FROM messages WHERE created_at > NOW() - INTERVAL '24 hours' AND is_system = false"
+      ),
+      query<{ name: string; email: string; role: string; created_at: string }>(
+        "SELECT name, email, role, created_at::timestamp(0)::text FROM users WHERE created_at > NOW() - INTERVAL '24 hours' ORDER BY created_at DESC"
+      ),
+      query<{ client_name: string; photographer_name: string; total_price: number; status: string }>(
+        `SELECT cu.name as client_name, pu.name as photographer_name, b.total_price, b.payment_status as status
+         FROM bookings b
+         JOIN users cu ON cu.id = b.client_id
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+         WHERE b.payment_status = 'paid' AND b.updated_at > NOW() - INTERVAL '24 hours'`
+      ),
+      queryOne<{ count: string; visitors: string }>(
+        `SELECT COUNT(*)::text as count, COUNT(DISTINCT visitor_id)::text as visitors
+         FROM visitor_sessions WHERE started_at > NOW() - INTERVAL '24 hours'`
+      ),
+    ]);
+
+    const messageCount = parseInt(messages?.count || "0");
+    const sessionCount = parseInt(sessions?.count || "0");
+    const visitorCount = parseInt(sessions?.visitors || "0");
+    const totalRevenue = payments.reduce((sum, p) => sum + (p.total_price || 0), 0);
+
+    // Skip if absolutely nothing happened
+    if (bookings.length === 0 && messageCount === 0 && users.length === 0 && sessionCount === 0) {
+      return NextResponse.json({ skipped: true, reason: "no activity" });
+    }
+
+    // Build email
+    const newBookingsHtml = bookings.length > 0
+      ? bookings.map(b =>
+        `<tr>
+          <td style="padding: 6px 12px; border-bottom: 1px solid #f0e6d6;">${b.client_name}</td>
+          <td style="padding: 6px 12px; border-bottom: 1px solid #f0e6d6;">${b.photographer_name}</td>
+          <td style="padding: 6px 12px; border-bottom: 1px solid #f0e6d6;"><span style="background: ${b.status === 'confirmed' ? '#dbeafe' : b.status === 'pending' ? '#fef9c3' : '#e5e7eb'}; padding: 2px 8px; border-radius: 12px; font-size: 11px;">${b.status}</span></td>
+          <td style="padding: 6px 12px; border-bottom: 1px solid #f0e6d6; text-align: right;">${b.total_price ? `€${Math.round(b.total_price)}` : '—'}</td>
+        </tr>`
+      ).join("")
+      : "";
+
+    const newUsersHtml = users.length > 0
+      ? users.map(u =>
+        `<tr>
+          <td style="padding: 6px 12px; border-bottom: 1px solid #f0e6d6;">${u.name}</td>
+          <td style="padding: 6px 12px; border-bottom: 1px solid #f0e6d6;">${u.email}</td>
+          <td style="padding: 6px 12px; border-bottom: 1px solid #f0e6d6;">${u.role}</td>
+        </tr>`
+      ).join("")
+      : "";
+
+    const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+      <h1 style="color: #C94536; font-size: 22px; margin-bottom: 4px;">Daily Digest</h1>
+      <p style="color: #999; font-size: 13px; margin-top: 0;">Last 24 hours — ${new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
+
+      <!-- Summary cards -->
+      <div style="display: flex; gap: 8px; margin: 20px 0;">
+        <div style="flex: 1; background: #faf8f5; border: 1px solid #e8ddd1; border-radius: 12px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: bold;">${bookings.length}</div>
+          <div style="font-size: 12px; color: #666;">Bookings</div>
+        </div>
+        <div style="flex: 1; background: #faf8f5; border: 1px solid #e8ddd1; border-radius: 12px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: bold;">${messageCount}</div>
+          <div style="font-size: 12px; color: #666;">Messages</div>
+        </div>
+        <div style="flex: 1; background: #faf8f5; border: 1px solid #e8ddd1; border-radius: 12px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: bold;">${users.length}</div>
+          <div style="font-size: 12px; color: #666;">New Users</div>
+        </div>
+        <div style="flex: 1; background: #faf8f5; border: 1px solid #e8ddd1; border-radius: 12px; padding: 16px; text-align: center;">
+          <div style="font-size: 28px; font-weight: bold;">${visitorCount}</div>
+          <div style="font-size: 12px; color: #666;">Visitors</div>
+        </div>
+      </div>
+
+      ${totalRevenue > 0 ? `
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <span style="font-size: 13px; color: #166534;">💰 Revenue today:</span>
+        <span style="font-size: 22px; font-weight: bold; color: #166534; margin-left: 8px;">€${Math.round(totalRevenue)}</span>
+        <span style="font-size: 12px; color: #166534; margin-left: 4px;">(${payments.length} payment${payments.length !== 1 ? 's' : ''})</span>
+      </div>` : ""}
+
+      ${bookings.length > 0 ? `
+      <h3 style="font-size: 14px; color: #333; margin-bottom: 8px;">📅 Bookings</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
+        <thead><tr style="background: #faf8f5;">
+          <th style="padding: 8px 12px; text-align: left; font-weight: 600; color: #666;">Client</th>
+          <th style="padding: 8px 12px; text-align: left; font-weight: 600; color: #666;">Photographer</th>
+          <th style="padding: 8px 12px; text-align: left; font-weight: 600; color: #666;">Status</th>
+          <th style="padding: 8px 12px; text-align: right; font-weight: 600; color: #666;">Price</th>
+        </tr></thead>
+        <tbody>${newBookingsHtml}</tbody>
+      </table>` : ""}
+
+      ${users.length > 0 ? `
+      <h3 style="font-size: 14px; color: #333; margin-bottom: 8px;">👤 New Users</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
+        <thead><tr style="background: #faf8f5;">
+          <th style="padding: 8px 12px; text-align: left; font-weight: 600; color: #666;">Name</th>
+          <th style="padding: 8px 12px; text-align: left; font-weight: 600; color: #666;">Email</th>
+          <th style="padding: 8px 12px; text-align: left; font-weight: 600; color: #666;">Role</th>
+        </tr></thead>
+        <tbody>${newUsersHtml}</tbody>
+      </table>` : ""}
+
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="${BASE_URL}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Open Admin Panel</a>
+      </div>
+
+      <p style="color: #ccc; font-size: 11px; text-align: center; margin-top: 24px;">Photo Portugal — Daily Digest</p>
+    </div>`;
+
+    const adminEmail = await getAdminEmail();
+    const emails = adminEmail.split(",").map(e => e.trim()).filter(Boolean);
+    for (const email of emails) {
+      await sendEmail(
+        email,
+        `📊 Daily Digest — ${bookings.length} bookings, ${users.length} new users, ${messageCount} messages`,
+        html
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      bookings: bookings.length,
+      messages: messageCount,
+      users: users.length,
+      payments: payments.length,
+      sessions: sessionCount,
+    });
+  } catch (error) {
+    console.error("[cron/digest] error:", error);
+    return NextResponse.json({ error: "Digest failed" }, { status: 500 });
+  }
+}
