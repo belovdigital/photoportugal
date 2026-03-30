@@ -152,7 +152,7 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="mx-auto max-w-screen-xl px-3 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-screen-xl px-3 sm:px-6 lg:px-8 pb-20">
       {/* Header — full width above sidebar */}
       <div className="flex items-center justify-between pt-4 sm:pt-8">
         <div>

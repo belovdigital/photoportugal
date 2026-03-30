@@ -94,6 +94,7 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
             className={`rounded-xl border bg-white transition-shadow overflow-hidden ${
               !p.is_approved ? "border-warm-300" : "border-warm-200"
             } ${isOpen ? "shadow-md" : "hover:shadow-sm"}`}
+            style={!p.is_approved ? { borderLeftWidth: 3, borderLeftColor: progressColor } : undefined}
           >
             {/* Progress bar for unapproved */}
             {!p.is_approved && (
