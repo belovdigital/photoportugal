@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, withTransaction } from "@/lib/db";
-import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification } from "@/lib/email";
+import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification, sendAdminBookingConfirmedNotification } from "@/lib/email";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
@@ -477,6 +477,15 @@ export async function PATCH(
             paymentUrl,
             clientTotal ?? Number(bookingDetails.total_price)
           );
+
+          // Notify admins
+          sendAdminBookingConfirmedNotification(
+            bookingDetails.client_name,
+            bookingDetails.photographer_name,
+            bookingDetails.shoot_date,
+            bookingDetails.total_price,
+            bookingDetails.package_name
+          ).catch(err => console.error("[bookings] admin confirmed notification error:", err));
         }
       } catch (emailErr) {
         console.error("[bookings] confirmation email error:", emailErr);

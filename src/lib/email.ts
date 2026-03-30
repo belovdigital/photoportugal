@@ -666,6 +666,34 @@ export async function sendDeliveryReminderToPhotographer(
 
 // === Additional notifications ===
 
+export async function sendAdminBookingConfirmedNotification(
+  clientName: string,
+  photographerName: string,
+  shootDate: string | null,
+  totalPrice: number | null,
+  packageName: string | null
+) {
+  const dateStr = shootDate
+    ? new Date(shootDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+    : "Flexible dates";
+  await sendToAllAdmins(
+    `[Booking Confirmed] ${clientName} ↔ ${photographerName}`,
+    `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+      <h2 style="color: #22C55E;">Booking Confirmed ✓</h2>
+      <ul style="line-height: 1.8;">
+        <li><strong>Client:</strong> ${clientName}</li>
+        <li><strong>Photographer:</strong> ${photographerName}</li>
+        <li><strong>Date:</strong> ${dateStr}</li>
+        ${packageName ? `<li><strong>Package:</strong> ${packageName}</li>` : ""}
+        ${totalPrice ? `<li><strong>Price:</strong> €${Math.round(totalPrice)}</li>` : ""}
+      </ul>
+      <p>Payment link has been sent to the client.</p>
+      <p><a href="${BASE_URL}/admin#bookings" style="display: inline-block; background: #22C55E; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin Panel</a></p>
+      <p style="color: #999; font-size: 12px;">Photo Portugal</p>
+    </div>`
+  );
+}
+
 export async function sendAdminBookingCancelledNotification(
   clientName: string,
   photographerName: string,
