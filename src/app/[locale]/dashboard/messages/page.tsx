@@ -481,11 +481,11 @@ function MessagesContent() {
 
   return (
     <>
-      <style>{`footer { display: none !important; } html, body { overflow: hidden; height: 100dvh; }`}</style>
-    <div className="p-1 sm:p-4 overflow-hidden">
+      <style>{`footer { display: none !important; }`}</style>
+    <div className="p-1 sm:p-3 overflow-hidden">
       <div
         className="flex gap-0 sm:rounded-xl sm:border sm:border-warm-200 bg-white overflow-hidden"
-        style={{ height: "calc(100dvh - 90px)" }}
+        style={{ height: "calc(100dvh - 120px)" }}
       >
         {/* Conversations sidebar */}
         <div
