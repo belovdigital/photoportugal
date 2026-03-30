@@ -677,8 +677,7 @@ export async function GET(req: NextRequest) {
     const readyPhotographers = await query<{ id: string }>(
       `SELECT pp.id FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
-       WHERE pp.is_approved = FALSE
-         AND COALESCE(pp.checklist_notified, FALSE) = FALSE
+       WHERE COALESCE(pp.checklist_notified, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND u.avatar_url IS NOT NULL
          AND pp.cover_url IS NOT NULL
@@ -709,6 +708,7 @@ export async function GET(req: NextRequest) {
        WHERE pp.is_approved = FALSE
          AND pp.created_at >= NOW() - INTERVAL '8 days'
          AND pp.created_at < NOW() - INTERVAL '6 days'
+         AND COALESCE(pp.checklist_deadline_emailed, FALSE) = FALSE
          AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
            AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
            AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
@@ -718,6 +718,8 @@ export async function GET(req: NextRequest) {
     );
     for (const p of incompletePhotographers) {
       try {
+        // Mark as emailed first to prevent re-sending on next cron run
+        await queryOne("UPDATE photographer_profiles SET checklist_deadline_emailed = TRUE WHERE id = $1", [p.id]);
         await sendEmail(
           p.email,
           "Complete your Photo Portugal profile today",

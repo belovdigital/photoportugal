@@ -26,7 +26,7 @@ export async function checkAndNotifyChecklistComplete(photographerId: string) {
          AND u.phone IS NOT NULL) as checklist_complete
       FROM photographer_profiles pp
       JOIN users u ON u.id = pp.user_id
-      WHERE pp.id = $1 AND pp.is_approved = FALSE
+      WHERE pp.id = $1
     `, [photographerId]);
 
     if (!profile || !profile.checklist_complete || profile.checklist_notified) return;
