@@ -250,14 +250,15 @@ function VisitorsTab() {
       {vd.dailySessions.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Sessions (last 14 days)</h3>
-          <div className="flex items-end gap-1 h-20">
+          <div className="flex items-end gap-1" style={{ height: 160 }}>
             {[...vd.dailySessions].reverse().map(d => {
-              const h = Math.max((parseInt(d.sessions) / maxDaily) * 100, 4);
+              const count = parseInt(d.sessions);
+              const barH = maxDaily > 0 ? Math.max((count / maxDaily) * 120, count > 0 ? 6 : 0) : 0;
               return (
-                <div key={d.day} className="flex-1 flex flex-col items-center gap-0.5" title={`${d.day}: ${d.sessions} sessions, ${d.visitors} visitors`}>
-                  <span className="text-[9px] text-gray-400">{parseInt(d.sessions)}</span>
-                  <div className="w-full rounded-t bg-primary-500 transition-all" style={{ height: `${h}%` }} />
-                  <span className="text-[8px] text-gray-400">{d.day.slice(5)}</span>
+                <div key={d.day} className="flex-1 flex flex-col items-center justify-end" title={`${d.day}: ${d.sessions} sessions, ${d.visitors} visitors`}>
+                  {count > 0 && <span className="text-[10px] font-medium text-gray-500 mb-1">{count}</span>}
+                  <div className="w-full rounded-t bg-primary-500" style={{ height: barH }} />
+                  <span className="text-[9px] text-gray-400 mt-1">{d.day.slice(8)}.{d.day.slice(5, 7)}</span>
                 </div>
               );
             })}
