@@ -133,9 +133,14 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                   )}
                 </div>
 
-                {/* Price + date */}
-                <div className="hidden sm:flex items-center gap-3 shrink-0 text-xs">
+                {/* Price + payment + date */}
+                <div className="hidden sm:flex items-center gap-2 shrink-0 text-xs">
                   {b.total_price && <span className="font-medium text-gray-700">&euro;{Math.round(Number(b.total_price))}</span>}
+                  {b.payment_status && (
+                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                      b.payment_status === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                    }`}>{b.payment_status === "paid" ? "paid" : "unpaid"}</span>
+                  )}
                   {b.shoot_date && (
                     <span className="text-gray-400">
                       {new Date(b.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
