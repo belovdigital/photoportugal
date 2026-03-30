@@ -358,6 +358,21 @@ function MessagesContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ booking_id: activeChat, text }),
         });
+        // Show contact info warning if returned by server
+        if (res && res.ok) {
+          try {
+            const resData = await res.json();
+            if (resData.warning) {
+              setTimeout(() => {
+                setMessages((prev) => [...prev, {
+                  id: `warning-${Date.now()}`, text: resData.warning, media_url: null,
+                  sender_id: "system", sender_name: "system", sender_avatar: null,
+                  created_at: new Date().toISOString(), read_at: null, is_system: true,
+                }]);
+              }, 500);
+            }
+          } catch {}
+        }
       }
 
       setSending(false);
