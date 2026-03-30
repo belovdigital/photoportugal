@@ -16,6 +16,8 @@ interface Conversation {
   booking_id: string;
   other_name: string;
   other_avatar: string | null;
+  other_role: "client" | "photographer";
+  other_slug: string | null;
   last_message: string | null;
   last_message_at: string | null;
   unread_count: number;
@@ -609,21 +611,31 @@ function MessagesContent() {
                     />
                   </svg>
                 </button>
-                <Avatar
-                  src={activeConvo.other_avatar}
-                  fallback={activeConvo.other_name}
-                  size="sm"
-                />
-                <span className="text-sm font-semibold text-gray-900">
-                  {activeConvo.other_name}
-                </span>
+                {activeConvo.other_slug ? (
+                  <a href={`/photographers/${activeConvo.other_slug}`} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                    <Avatar src={activeConvo.other_avatar} fallback={activeConvo.other_name} size="md" />
+                  </a>
+                ) : (
+                  <Avatar src={activeConvo.other_avatar} fallback={activeConvo.other_name} size="md" />
+                )}
+                <div className="min-w-0">
+                  {activeConvo.other_slug ? (
+                    <a href={`/photographers/${activeConvo.other_slug}`} target="_blank" rel="noopener noreferrer"
+                      className="text-sm font-semibold text-gray-900 hover:text-primary-600 transition">
+                      {activeConvo.other_name}
+                    </a>
+                  ) : (
+                    <span className="text-sm font-semibold text-gray-900">{activeConvo.other_name}</span>
+                  )}
+                  <p className="text-[11px] text-gray-400 capitalize">{activeConvo.other_role}</p>
+                </div>
                 {/* Connection & online status indicator */}
                 <div className="ml-auto flex items-center gap-1.5">
                   {onlineUsers.some(u => u.userId !== userId) && (
-                    <span
-                      className="h-2 w-2 rounded-full bg-green-500"
-                      title="Online"
-                    />
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-green-500" />
+                      <span className="text-[11px] text-green-600 hidden sm:inline">Online</span>
+                    </span>
                   )}
                   {sseStatus === "reconnecting" && (
                     <span className="flex items-center gap-1">

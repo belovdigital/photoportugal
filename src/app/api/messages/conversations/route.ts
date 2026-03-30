@@ -32,6 +32,8 @@ export async function GET(req: NextRequest) {
           u.name as other_name,
           u.avatar_url as other_avatar,
           u.id as other_user_id,
+          'client' as other_role,
+          NULL as other_slug,
           b.status as booking_status,
           p.name as package_name,
           COALESCE(
@@ -63,6 +65,8 @@ export async function GET(req: NextRequest) {
           u.name as other_name,
           u.avatar_url as other_avatar,
           u.id as other_user_id,
+          'photographer' as other_role,
+          pp.slug as other_slug,
           b.status as booking_status,
           p.name as package_name,
           COALESCE(
