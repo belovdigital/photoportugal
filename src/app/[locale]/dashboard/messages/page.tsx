@@ -84,10 +84,27 @@ function MessagesContent() {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const convoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const scrollToBottom = useCallback(() => {
+  const isUserScrolledUp = useRef(false);
+
+  const scrollToBottom = useCallback((force?: boolean) => {
     const el = messagesContainerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    // Don't auto-scroll if user has scrolled up to read history, unless forced
+    if (isUserScrolledUp.current && !force) return;
+    el.scrollTop = el.scrollHeight;
   }, []);
+
+  // Track if user scrolled up
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      isUserScrolledUp.current = distFromBottom > 100;
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [activeChat]);
 
   // --- Fetch conversations ---
   const fetchConversations = useCallback(async () => {
@@ -219,9 +236,10 @@ function MessagesContent() {
     }
 
     setLoadingMessages(true);
+    isUserScrolledUp.current = false;
     fetchMessages(activeChat).then(() => {
       setLoadingMessages(false);
-      setTimeout(scrollToBottom, 50);
+      setTimeout(() => scrollToBottom(true), 50);
     });
 
     connectSSE(activeChat);
@@ -300,7 +318,8 @@ function MessagesContent() {
     setNewMessage("");
     setPendingFiles([]);
     setPendingPreviews([]);
-    setTimeout(scrollToBottom, 10);
+    isUserScrolledUp.current = false;
+    setTimeout(() => scrollToBottom(true), 10);
     if (messages.length === 0) trackSendMessage(activeChat);
 
     setSending(true);
@@ -715,7 +734,13 @@ function MessagesContent() {
                               })()}
                               {msg.text && (
                                 <p className="whitespace-pre-wrap break-words">
-                                  {msg.text}
+                                  {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, pi) =>
+                                    /^https?:\/\//.test(part) ? (
+                                      <a key={pi} href={part} target="_blank" rel="noopener noreferrer"
+                                        className={`underline break-all ${isMe ? "text-white/90 hover:text-white" : "text-primary-600 hover:text-primary-700"}`}
+                                      >{part.replace(/^https?:\/\//, "").slice(0, 50)}{part.replace(/^https?:\/\//, "").length > 50 ? "…" : ""}</a>
+                                    ) : part
+                                  )}
                                 </p>
                               )}
                             </div>
