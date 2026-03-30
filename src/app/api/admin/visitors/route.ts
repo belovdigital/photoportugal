@@ -22,7 +22,8 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const sessionLimit = Math.min(parseInt(url.searchParams.get("limit") || "30"), 200);
-  const roleFilter = url.searchParams.get("role") || "all"; // all, client, photographer, guest
+  const roleFilter = url.searchParams.get("role") || "all";
+  const countryFilter = url.searchParams.get("country") || "all";
 
   // Summary stats
   const [summary, summaryPrev] = await Promise.all([
@@ -96,6 +97,7 @@ export async function GET(req: Request) {
     : roleFilter === "client" ? "AND u.role = 'client'"
     : roleFilter === "photographer" ? "AND u.role = 'photographer'"
     : "";
+  const countryWhere = countryFilter !== "all" ? `AND vs.country = '${countryFilter.replace(/'/g, "")}'` : "";
   const recentSessions = await query<{
     id: string; visitor_id: string; user_name: string | null; user_email: string | null;
     user_role: string | null;
@@ -112,7 +114,7 @@ export async function GET(req: Request) {
            vs.pageviews::text
     FROM visitor_sessions vs
     LEFT JOIN users u ON u.id = vs.user_id
-    WHERE 1=1 ${roleWhere}
+    WHERE 1=1 ${roleWhere} ${countryWhere}
     ORDER BY vs.started_at DESC LIMIT ${sessionLimit}
   `);
 

@@ -225,14 +225,26 @@ function VisitorsTab() {
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [sessionLimit, setSessionLimit] = useState(30);
   const [roleFilter, setRoleFilter] = useState("all");
+  const [countryFilter, setCountryFilter] = useState("all");
+  const [sessionsLoading, setSessionsLoading] = useState(false);
 
+  // Initial load
   useEffect(() => {
-    setVLoading(true);
-    fetch(`/api/admin/visitors?limit=${sessionLimit}&role=${roleFilter}`)
+    fetch("/api/admin/visitors?limit=30")
       .then(r => r.json())
       .then(d => { setVd(d); setVLoading(false); })
       .catch(() => setVLoading(false));
-  }, [sessionLimit, roleFilter]);
+  }, []);
+
+  // Filter changes — only reload sessions, don't replace entire page
+  useEffect(() => {
+    if (!vd) return;
+    setSessionsLoading(true);
+    fetch(`/api/admin/visitors?limit=${sessionLimit}&role=${roleFilter}&country=${countryFilter}`)
+      .then(r => r.json())
+      .then(d => { setVd(d); setSessionsLoading(false); })
+      .catch(() => setSessionsLoading(false));
+  }, [sessionLimit, roleFilter, countryFilter]);
 
   if (vLoading) return <p className="text-sm text-gray-400">Loading visitor data...</p>;
   if (!vd) return <p className="text-sm text-gray-400">No visitor data yet</p>;
@@ -355,28 +367,46 @@ function VisitorsTab() {
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-gray-700">Recent Visitors</h3>
-          <div className="flex gap-1">
-            {[
-              { key: "all", label: "All", icon: "👥" },
-              { key: "client", label: "Clients", icon: "🧳" },
-              { key: "photographer", label: "Photographers", icon: "📸" },
-              { key: "guest", label: "Guests", icon: "👻" },
-            ].map(f => (
-              <button
-                key={f.key}
-                onClick={() => { setRoleFilter(f.key); setSessionLimit(30); }}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                  roleFilter === f.key
-                    ? "bg-primary-500 text-white"
-                    : "bg-warm-100 text-gray-500 hover:bg-warm-200"
-                }`}
-              >
-                {f.icon} {f.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {[
+                { key: "all", label: "All", icon: "👥" },
+                { key: "client", label: "Clients", icon: "🧳" },
+                { key: "photographer", label: "Photographers", icon: "📸" },
+                { key: "guest", label: "Guests", icon: "👻" },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => { setRoleFilter(f.key); setSessionLimit(30); }}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                    roleFilter === f.key
+                      ? "bg-primary-500 text-white"
+                      : "bg-warm-100 text-gray-500 hover:bg-warm-200"
+                  }`}
+                >
+                  {f.icon} {f.label}
+                </button>
+              ))}
+            </div>
+            <select
+              value={countryFilter}
+              onChange={e => { setCountryFilter(e.target.value); setSessionLimit(30); }}
+              className={`text-[11px] font-medium rounded-lg px-2 py-1 border-0 cursor-pointer transition ${
+                countryFilter !== "all"
+                  ? "bg-primary-500 text-white"
+                  : "bg-warm-100 text-gray-500"
+              }`}
+            >
+              <option value="all">🌍 All countries</option>
+              {vd.countries.map(c => (
+                <option key={c.country} value={c.country}>
+                  {getCountry(c.country).flag} {getCountry(c.country).name} ({c.count})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-        <div className="space-y-2">
+        <div className={`space-y-2 transition-opacity ${sessionsLoading ? "opacity-50" : ""}`}>
           {vd.recentSessions.map(session => {
             const isExpanded = expandedSession === session.id;
             const time = new Date(session.started_at);
