@@ -15,10 +15,13 @@ async function isAdmin(): Promise<boolean> {
   return user?.role === "admin";
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });
   }
+
+  const url = new URL(req.url);
+  const sessionLimit = Math.min(parseInt(url.searchParams.get("limit") || "30"), 200);
 
   // Summary stats
   const [summary, summaryPrev] = await Promise.all([
@@ -103,7 +106,7 @@ export async function GET() {
            vs.pageviews::text
     FROM visitor_sessions vs
     LEFT JOIN users u ON u.id = vs.user_id
-    ORDER BY vs.started_at DESC LIMIT 20
+    ORDER BY vs.started_at DESC LIMIT ${sessionLimit}
   `);
 
   // Sessions by day (last 14 days)

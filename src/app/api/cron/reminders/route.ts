@@ -782,6 +782,11 @@ export async function GET(req: NextRequest) {
     await cleanOldNotificationLogs();
   } catch {}
 
+  // Clean old visitor sessions (30 days)
+  try {
+    await queryOne("DELETE FROM visitor_sessions WHERE started_at < NOW() - INTERVAL '30 days'", []);
+  } catch {}
+
   console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated });
 
   return NextResponse.json({

@@ -210,13 +210,14 @@ function VisitorsTab() {
   const [vd, setVd] = useState<VisitorData | null>(null);
   const [vLoading, setVLoading] = useState(true);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
+  const [sessionLimit, setSessionLimit] = useState(30);
 
   useEffect(() => {
-    fetch("/api/admin/visitors")
+    fetch(`/api/admin/visitors?limit=${sessionLimit}`)
       .then(r => r.json())
       .then(d => { setVd(d); setVLoading(false); })
       .catch(() => setVLoading(false));
-  }, []);
+  }, [sessionLimit]);
 
   if (vLoading) return <p className="text-sm text-gray-400">Loading visitor data...</p>;
   if (!vd) return <p className="text-sm text-gray-400">No visitor data yet</p>;
@@ -344,53 +345,145 @@ function VisitorsTab() {
             const time = new Date(session.started_at);
             const ago = Math.round((Date.now() - time.getTime()) / 60000);
             const agoStr = ago < 60 ? `${ago}m ago` : ago < 1440 ? `${Math.round(ago / 60)}h ago` : `${Math.round(ago / 1440)}d ago`;
+            const totalMs = session.pageviews.reduce((sum: number, pv: { duration_ms?: number }) => sum + (pv.duration_ms || 0), 0);
+            const totalDur = totalMs > 0 ? (totalMs >= 60000 ? `${Math.round(totalMs / 60000)}m ${Math.round((totalMs % 60000) / 1000)}s` : `${Math.round(totalMs / 1000)}s`) : null;
+
+            const PAGE_ICONS: Record<string, string> = {
+              "/": "🏠", "/photographers": "📸", "/dashboard": "📊", "/dashboard/bookings": "📅",
+              "/dashboard/messages": "💬", "/dashboard/profile": "👤", "/dashboard/portfolio": "🖼️",
+              "/dashboard/packages": "📦", "/dashboard/settings": "⚙️",
+            };
+            const getIcon = (path: string) => {
+              if (PAGE_ICONS[path]) return PAGE_ICONS[path];
+              if (path.startsWith("/photographers/")) return "📷";
+              if (path.startsWith("/book/")) return "🛒";
+              if (path.startsWith("/locations/")) return "📍";
+              if (path.startsWith("/blog")) return "📝";
+              if (path.startsWith("/delivery/")) return "🎁";
+              return "📄";
+            };
+            const shortPath = (path: string) => {
+              if (path === "/") return "Home";
+              return path.replace(/^\//, "").replace(/\//g, " / ");
+            };
 
             return (
               <button
                 key={session.id}
                 onClick={() => setExpandedSession(isExpanded ? null : session.id)}
-                className="w-full text-left rounded-xl border border-warm-200 bg-white p-3 hover:shadow-sm transition"
+                className={`w-full text-left rounded-xl border bg-white p-3 hover:shadow-sm transition ${isExpanded ? "border-primary-300 shadow-sm" : "border-warm-200"}`}
               >
+                {/* Header row */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs">{session.device_type === "mobile" ? "M" : session.device_type === "tablet" ? "T" : "D"}</span>
-                    <span className="text-xs text-gray-400">{session.country || "?"}</span>
-                    {session.user_name ? (
-                      <span className="text-sm font-medium text-primary-600 truncate">{session.user_name}</span>
-                    ) : (
-                      <span className="text-sm text-gray-500 truncate">{session.visitor_id.slice(0, 8)}...</span>
-                    )}
-                    {session.utm_source && (
-                      <span className="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-[10px] font-medium">{session.utm_source}</span>
-                    )}
+                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-warm-100 text-xs shrink-0">
+                      {session.device_type === "mobile" ? "📱" : session.device_type === "tablet" ? "📱" : "💻"}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        {session.user_name ? (
+                          <span className="text-sm font-semibold text-primary-600 truncate">{session.user_name}</span>
+                        ) : (
+                          <span className="text-sm text-gray-500 truncate font-mono">{session.visitor_id.slice(0, 8)}</span>
+                        )}
+                        {session.user_email && <span className="text-[10px] text-gray-400 hidden sm:inline">{session.user_email}</span>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] text-gray-400">{session.country || "?"}</span>
+                        {session.utm_source && (
+                          <span className="rounded-full bg-blue-50 text-blue-600 px-1.5 py-0.5 text-[9px] font-medium">via {session.utm_source}</span>
+                        )}
+                        {session.referrer && !session.utm_source && (
+                          <span className="text-[10px] text-gray-400 truncate max-w-[120px]">from {session.referrer.replace(/^https?:\/\//, "").split("/")[0]}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-xs text-gray-400">{session.pageview_count} pages</span>
-                    <span className="text-xs text-gray-400">{agoStr}</span>
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    <span className="text-xs text-gray-500 font-medium">{session.pageview_count} pages</span>
+                    <div className="flex items-center gap-1.5">
+                      {totalDur && <span className="text-[10px] text-gray-400">{totalDur}</span>}
+                      <span className="text-[10px] text-gray-400">{agoStr}</span>
+                    </div>
                   </div>
                 </div>
 
+                {/* Expanded: Visual user flow */}
                 {isExpanded && (
-                  <div className="mt-3 pt-3 border-t border-warm-100 space-y-2" onClick={e => e.stopPropagation()}>
-                    {session.user_email && <p className="text-xs text-gray-500">{session.user_email}</p>}
-                    {session.referrer && <p className="text-xs text-gray-400">Referrer: {session.referrer}</p>}
-                    {session.utm_term && <p className="text-xs text-gray-400">Keyword: {session.utm_term}</p>}
-                    <div className="flex flex-wrap gap-1">
-                      {session.pageviews.map((pv, i) => (
-                        <span key={i} className="inline-flex items-center gap-1">
-                          {i > 0 && <span className="text-gray-300 text-xs">&rarr;</span>}
-                          <span className="rounded bg-warm-100 px-1.5 py-0.5 text-[10px] text-gray-700">{pv.path}</span>
-                          {pv.duration_ms && pv.duration_ms > 0 && (
-                            <span className="text-[9px] text-gray-400">{Math.round(pv.duration_ms / 1000)}s</span>
-                          )}
-                        </span>
-                      ))}
+                  <div className="mt-3 pt-3 border-t border-warm-100" onClick={e => e.stopPropagation()}>
+                    {/* Meta info */}
+                    {(session.utm_term || session.language) && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {session.utm_term && (
+                          <span className="text-[10px] bg-amber-50 text-amber-700 rounded-full px-2 py-0.5">🔍 {session.utm_term}</span>
+                        )}
+                        {session.language && (
+                          <span className="text-[10px] bg-gray-50 text-gray-500 rounded-full px-2 py-0.5">🌐 {session.language}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Timeline */}
+                    <div className="relative">
+                      {session.pageviews.map((pv: { path: string; ts: string; duration_ms?: number }, i: number) => {
+                        const isLast = i === session.pageviews.length - 1;
+                        const durSec = pv.duration_ms ? Math.round(pv.duration_ms / 1000) : 0;
+                        const pvTime = new Date(pv.ts);
+                        const timeStr = pvTime.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+                        return (
+                          <div key={i} className="flex gap-3">
+                            {/* Timeline line */}
+                            <div className="flex flex-col items-center w-5 shrink-0">
+                              <div className={`w-3 h-3 rounded-full border-2 shrink-0 ${i === 0 ? "bg-primary-500 border-primary-500" : isLast ? "bg-gray-400 border-gray-400" : "bg-white border-gray-300"}`} />
+                              {!isLast && <div className="w-0.5 flex-1 bg-gray-200 min-h-[24px]" />}
+                            </div>
+
+                            {/* Page info */}
+                            <div className={`flex-1 ${!isLast ? "pb-2" : ""}`}>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs">{getIcon(pv.path)}</span>
+                                <span className="text-xs font-medium text-gray-900">{shortPath(pv.path)}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] text-gray-400">{timeStr}</span>
+                                {durSec > 0 && (
+                                  <span className={`text-[10px] font-medium ${durSec >= 30 ? "text-green-600" : durSec >= 10 ? "text-amber-600" : "text-gray-400"}`}>
+                                    {durSec >= 60 ? `${Math.floor(durSec / 60)}m ${durSec % 60}s` : `${durSec}s`}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
+
+                    {/* Session summary bar */}
+                    {session.pageviews.length > 1 && (
+                      <div className="mt-3 pt-2 border-t border-warm-50 flex items-center justify-between">
+                        <span className="text-[10px] text-gray-400">
+                          {new Date(session.started_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] text-gray-400">{session.pageview_count} pages</span>
+                          {totalDur && <span className="text-[10px] font-medium text-gray-500">⏱ {totalDur}</span>}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </button>
             );
           })}
+          {vd.recentSessions.length >= sessionLimit && (
+            <button
+              onClick={() => setSessionLimit(prev => prev + 30)}
+              className="w-full py-2.5 text-sm font-medium text-primary-600 hover:text-primary-700 bg-warm-50 rounded-xl border border-warm-200 hover:bg-warm-100 transition"
+            >
+              Load more sessions
+            </button>
+          )}
         </div>
       </div>
     </div>
