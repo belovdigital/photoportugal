@@ -42,6 +42,17 @@ export async function sendWhatsApp(
     return sent ? "sms" : false;
   }
 
+  // WhatsApp disabled — Meta business verification rejected.
+  // Sending SMS directly. To re-enable WhatsApp, remove this block
+  // and uncomment the WhatsApp sending code below.
+  const sent = await sendSMS(to, smsFallbackText);
+  if (sent) {
+    import("@/lib/notification-log").then(m => m.logNotification("sms", to, template, "sent")).catch(() => {});
+  }
+  return sent ? "sms" : false;
+
+  /*
+  // --- WhatsApp sending (disabled) ---
   try {
     const client = twilio(accountSid, authToken);
 
@@ -71,6 +82,7 @@ export async function sendWhatsApp(
     }
     return sent ? "sms" : false;
   }
+  */
 }
 
 /**
