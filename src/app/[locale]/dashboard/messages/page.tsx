@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { trackSendMessage } from "@/lib/analytics";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import imageCompression from "browser-image-compression";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 interface Conversation {
   booking_id: string;
@@ -78,10 +79,14 @@ function MessagesContent() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sseStatus, setSSEStatus] = useState<SSEStatus>("disconnected");
 
+  const [wsToken, setWsToken] = useState<string | null>(null);
+  const [typingUser, setTypingUser] = useState<string | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<{ userId: string; userName: string }[]>([]);
+  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTypingSent = useRef<number>(0);
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const convoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isUserScrolledUp = useRef(false);
@@ -123,9 +128,14 @@ function MessagesContent() {
     fetchConversations().then(() => setLoadingConvos(false));
   }, [fetchConversations]);
 
-  // --- Periodic conversation list refresh (every 10s) ---
+  // Fetch WS token on mount
   useEffect(() => {
-    convoRefreshRef.current = setInterval(fetchConversations, 10000);
+    fetch("/api/auth/ws-token").then(r => r.json()).then(d => setWsToken(d.token)).catch(() => {});
+  }, []);
+
+  // --- Periodic conversation list refresh (every 30s) ---
+  useEffect(() => {
+    convoRefreshRef.current = setInterval(fetchConversations, 30000);
     return () => {
       if (convoRefreshRef.current) clearInterval(convoRefreshRef.current);
     };
@@ -158,84 +168,62 @@ function MessagesContent() {
         );
       }
     } catch {
-      // Will retry via SSE reconnection
+      // Will retry via WebSocket reconnection
     }
   }
 
-  // --- SSE connection management ---
-  const closeSSE = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
+  // --- WebSocket handlers ---
+  const sendReadRef = useRef<() => void>(() => {});
+
+  const handleWSMessage = useCallback((msg: Message) => {
+    setMessages((prev) => {
+      // Dedup: remove temp messages that match the real message
+      const filtered = prev.filter((m) => {
+        if (m.id.startsWith("temp-")) {
+          return !(msg.sender_id === m.sender_id && ((msg.text && m.text && msg.text === m.text) || (msg.media_url && m.media_url)));
+        }
+        return m.id !== msg.id;
+      });
+      return [...filtered, msg];
+    });
+    // Mark as read if message is from the other user and document is visible
+    if (msg.sender_id !== userId && document.visibilityState === "visible") {
+      sendReadRef.current();
     }
-    if (reconnectTimerRef.current) {
-      clearTimeout(reconnectTimerRef.current);
-      reconnectTimerRef.current = null;
-    }
+    setTimeout(() => scrollToBottom(), 30);
+    fetchConversations();
+  }, [scrollToBottom, fetchConversations, userId]);
+
+  const handleTyping = useCallback((typingUserId: string, userName: string) => {
+    if (typingUserId === userId) return;
+    setTypingUser(userName);
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(() => setTypingUser(null), 3000);
+  }, [userId]);
+
+  const handleRead = useCallback((readUserId: string, timestamp: string) => {
+    setMessages(prev => prev.map(m =>
+      m.sender_id !== readUserId && !m.read_at ? { ...m, read_at: timestamp } : m
+    ));
   }, []);
 
-  const connectSSE = useCallback(
-    (chatId: string) => {
-      closeSSE();
+  const { status: wsStatus, sendTyping, sendRead } = useWebSocket({
+    bookingId: activeChat,
+    token: wsToken,
+    onMessage: handleWSMessage,
+    onTyping: handleTyping,
+    onRead: handleRead,
+    onOnline: setOnlineUsers,
+    onStatusChange: (s) => setSSEStatus(s === "connected" ? "connected" : s === "reconnecting" ? "reconnecting" : "disconnected"),
+  });
 
-      const es = new EventSource(
-        `/api/messages/stream?booking_id=${chatId}`
-      );
-      eventSourceRef.current = es;
+  // Keep sendRead ref in sync to avoid circular dependency
+  sendReadRef.current = sendRead;
 
-      es.onopen = () => {
-        setSSEStatus("connected");
-      };
-
-      es.onmessage = (event) => {
-        try {
-          const newMessages: Message[] = JSON.parse(event.data);
-          if (newMessages.length > 0) {
-            setMessages((prev) => {
-              const realIds = new Set(newMessages.map((m) => m.id));
-              const filtered = prev.filter((m) => {
-                // Remove temp messages if ANY real message with matching text arrived
-                if (m.id.startsWith("temp-")) {
-                  return !newMessages.some((n) =>
-                    n.sender_id === m.sender_id && (
-                      (n.text && m.text && n.text === m.text) ||
-                      (n.media_url && m.media_url)
-                    )
-                  );
-                }
-                // Deduplicate real messages
-                return !realIds.has(m.id);
-              });
-              return [...filtered, ...newMessages];
-            });
-            // Only auto-scroll if user is at bottom
-            setTimeout(() => scrollToBottom(), 30);
-            fetchConversations();
-          }
-        } catch {
-          // Malformed SSE data — ignore
-        }
-      };
-
-      es.onerror = () => {
-        setSSEStatus("reconnecting");
-        es.close();
-        eventSourceRef.current = null;
-
-        // Auto-reconnect after 3 seconds
-        reconnectTimerRef.current = setTimeout(() => {
-          connectSSE(chatId);
-        }, 3000);
-      };
-    },
-    [closeSSE, scrollToBottom, fetchConversations]
-  );
-
-  // --- When activeChat changes, open SSE and fetch history ---
+  // --- When activeChat changes, fetch history ---
   useEffect(() => {
     if (!activeChat) {
       setMessages([]);
-      closeSSE();
       setSSEStatus("disconnected");
       return;
     }
@@ -246,14 +234,7 @@ function MessagesContent() {
       setLoadingMessages(false);
       setTimeout(() => scrollToBottom(true), 50);
     });
-
-    connectSSE(activeChat);
-
-    return () => {
-      closeSSE();
-      setSSEStatus("disconnected");
-    };
-  }, [activeChat, scrollToBottom, connectSSE, closeSSE]);
+  }, [activeChat, scrollToBottom]);
 
   useEffect(() => {
     if (activeChat && !loadingMessages) inputRef.current?.focus();
@@ -595,12 +576,12 @@ function MessagesContent() {
                 <span className="text-sm font-semibold text-gray-900">
                   {activeConvo.other_name}
                 </span>
-                {/* Connection status indicator */}
+                {/* Connection & online status indicator */}
                 <div className="ml-auto flex items-center gap-1.5">
-                  {sseStatus === "connected" && (
+                  {onlineUsers.some(u => u.userId !== userId) && (
                     <span
                       className="h-2 w-2 rounded-full bg-green-500"
-                      title="Connected"
+                      title="Online"
                     />
                   )}
                   {sseStatus === "reconnecting" && (
@@ -773,6 +754,13 @@ function MessagesContent() {
                 )}
               </div>
 
+              {/* Typing indicator */}
+              {typingUser && (
+                <div className="px-4 pb-1">
+                  <span className="text-xs text-gray-400 italic">{typingUser} is typing...</span>
+                </div>
+              )}
+
               {/* Input */}
               {/* Pending media preview */}
               {pendingPreviews.length > 0 && (
@@ -814,7 +802,15 @@ function MessagesContent() {
                   ref={inputRef}
                   type="text"
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    // Debounced typing indicator (max once per 2s)
+                    const now = Date.now();
+                    if (now - lastTypingSent.current > 2000) {
+                      sendTyping();
+                      lastTypingSent.current = now;
+                    }
+                  }}
                   placeholder={t("typePlaceholder")}
                   className="flex-1 rounded-full border border-warm-200 bg-warm-50 px-4 py-2 text-sm outline-none focus:border-primary-300 focus:bg-white"
                 />

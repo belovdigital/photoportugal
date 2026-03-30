@@ -115,6 +115,29 @@ export async function POST(req: NextRequest) {
       [booking_id, userId, text?.trim() || null, media_url || null]
     );
 
+    // Notify WebSocket server via PostgreSQL
+    try {
+      const senderInfo = await queryOne<{ name: string; avatar_url: string | null }>(
+        "SELECT name, avatar_url FROM users WHERE id = $1", [userId]
+      );
+      await queryOne("SELECT pg_notify('new_message', $1)", [
+        JSON.stringify({
+          booking_id,
+          message: {
+            id: (message as any).id,
+            text: text?.trim() || null,
+            media_url: (message as any).media_url || null,
+            sender_id: userId,
+            sender_name: senderInfo?.name || "",
+            sender_avatar: senderInfo?.avatar_url || null,
+            created_at: (message as any).created_at,
+            read_at: null,
+            is_system: false,
+          },
+        }),
+      ]);
+    } catch {}
+
     // Send email notification to the other person (if they have it enabled)
     try {
       const recipientId = userId === booking.client_id ? booking.photographer_user_id : booking.client_id;
