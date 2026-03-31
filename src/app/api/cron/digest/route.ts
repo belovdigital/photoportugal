@@ -9,6 +9,40 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Save keyword position snapshot daily via GSC API
+  try {
+    const { google } = await import("googleapis");
+    const fs = await import("fs");
+    const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || "./google-credentials.json";
+    const creds = JSON.parse(fs.readFileSync(credPath, "utf8"));
+    const auth = new google.auth.GoogleAuth({
+      credentials: creds,
+      scopes: ["https://www.googleapis.com/auth/webmasters.readonly"],
+    });
+    const searchconsole = google.searchconsole({ version: "v1", auth });
+    const now = new Date();
+    const endDate = new Date(now.getTime() - 3 * 86400000).toISOString().split("T")[0];
+    const startDate = new Date(now.getTime() - 33 * 86400000).toISOString().split("T")[0];
+    const gscRes = await searchconsole.searchanalytics.query({
+      siteUrl: "sc-domain:photoportugal.com",
+      requestBody: { startDate, endDate, dimensions: ["query"], rowLimit: 500 },
+    });
+    const rows = gscRes.data.rows || [];
+    const top3 = rows.filter(r => (r.position || 999) <= 3).length;
+    const top10 = rows.filter(r => (r.position || 999) <= 10).length;
+    const top20 = rows.filter(r => (r.position || 999) <= 20).length;
+    const top100 = rows.filter(r => (r.position || 999) <= 100).length;
+    await queryOne(
+      `INSERT INTO keyword_snapshots (date, top3, top10, top20, top100, total)
+       VALUES (CURRENT_DATE, $1, $2, $3, $4, $5)
+       ON CONFLICT (date) DO UPDATE SET top3=$1, top10=$2, top20=$3, top100=$4, total=$5`,
+      [top3, top10, top20, top100, rows.length]
+    );
+    console.log(`[cron/digest] keyword snapshot saved: top3=${top3} top10=${top10} top20=${top20} top100=${top100} total=${rows.length}`);
+  } catch (err) {
+    console.error("[cron/digest] keyword snapshot error:", err);
+  }
+
   try {
     // Gather last 24h stats
     const [bookings, messages, users, payments, sessions] = await Promise.all([

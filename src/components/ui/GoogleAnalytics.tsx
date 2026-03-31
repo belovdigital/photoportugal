@@ -32,14 +32,19 @@ export function GoogleAnalytics() {
     }).catch(() => {});
   }, [pathname]);
 
-  // Only load GA4 if user accepted all cookies
-  if (consent !== "accepted") return null;
+  // UTM tracking runs always (no cookie consent needed — it's our own first-party analytics)
+  const utmScript = (
+    <Script id="utm-persist" strategy="afterInteractive">
+      {`(function(){var p=new URLSearchParams(location.search);var s=p.get('utm_source');if(!s)return;var d={utm_source:s,utm_medium:p.get('utm_medium'),utm_campaign:p.get('utm_campaign'),utm_term:p.get('utm_term'),landing_page:location.pathname};['utm_source','utm_medium','utm_campaign','utm_term'].forEach(function(k){if(d[k])sessionStorage.setItem(k,d[k])});if(!sessionStorage.getItem('_av')){sessionStorage.setItem('_av','1');fetch('/api/track-visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(function(){})}})();`}
+    </Script>
+  );
+
+  // GA4/Ads only with cookie consent
+  if (consent !== "accepted") return utmScript;
 
   return (
     <>
-      <Script id="utm-persist" strategy="afterInteractive">
-        {`(function(){var p=new URLSearchParams(location.search);var s=p.get('utm_source');if(!s)return;var d={utm_source:s,utm_medium:p.get('utm_medium'),utm_campaign:p.get('utm_campaign'),utm_term:p.get('utm_term'),landing_page:location.pathname};['utm_source','utm_medium','utm_campaign','utm_term'].forEach(function(k){if(d[k])sessionStorage.setItem(k,d[k])});if(!sessionStorage.getItem('_av')){sessionStorage.setItem('_av','1');fetch('/api/track-visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(function(){})}})();`}
-      </Script>
+      {utmScript}
       <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
       <Script id="gtag-init" strategy="afterInteractive">
         {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');gtag('config','${ADS_ID}');`}
