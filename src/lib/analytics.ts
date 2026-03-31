@@ -69,7 +69,7 @@ export function trackBookingSubmitted(photographerSlug: string, price: number) {
     value: price,
     items: [{ item_id: photographerSlug, price }],
   });
-  trackAdsConversion("booking_submitted", Number(price));
+  trackAdsConversion("eNkuCKKespMcEPzs9ZtD", Number(price));
 }
 
 // Step 5: Payment completed (with value for Google Ads optimization)
@@ -79,7 +79,7 @@ export function trackPaymentCompleted(bookingId: string, amount: number) {
     currency: "EUR",
     value: amount,
   });
-  trackAdsConversion("payment_completed", Number(amount));
+  trackAdsConversion("nNt3CKWespMcEPzs9ZtD", Number(amount));
 }
 
 // Step 6: Delivery accepted
@@ -96,7 +96,7 @@ export function trackReviewSubmitted(photographerSlug: string, rating: number) {
 
 export function trackSignUp(method: string, role: string) {
   track("sign_up", { method, role });
-  if (role === "client") trackAdsConversion("client_signup");
+  if (role === "client") trackAdsConversion("eNkuCKKespMcEPzs9ZtD");
 }
 
 export function trackLocationView(slug: string) {
