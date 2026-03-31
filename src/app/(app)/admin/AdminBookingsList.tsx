@@ -40,7 +40,7 @@ const PAYMENT_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
 };
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
   const [search, setSearch] = useState("");

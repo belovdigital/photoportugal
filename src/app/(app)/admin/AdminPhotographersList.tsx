@@ -36,7 +36,7 @@ export interface AdminPhotographer {
   phone: string | null;
 }
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 export function AdminPhotographersList({ photographers, previewSecret }: { photographers: AdminPhotographer[]; previewSecret: string }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);

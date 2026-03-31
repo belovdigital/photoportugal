@@ -85,7 +85,7 @@ function deviceIcon(type: string | null) {
   return "💻";
 }
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 export function AdminClientsList({ clients, bookingsByClient }: { clients: AdminClient[]; bookingsByClient: Record<string, ClientBooking[]> }) {
   const [search, setSearch] = useState("");
