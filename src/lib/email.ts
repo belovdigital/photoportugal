@@ -497,11 +497,18 @@ export async function sendSubscriptionEmail(
 
 // === Admin notification emails ===
 
-// Send to all admin emails in parallel, failures don't block each other
+// Send to all admin emails + Telegram in parallel, failures don't block each other
 async function sendToAllAdmins(subject: string, html: string) {
   const adminEmail = await getAdminEmail();
   const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
   await Promise.allSettled(emails.map((email) => sendEmail(email, subject, html)));
+  // Also send to Telegram (strip HTML tags for clean text)
+  try {
+    const { sendTelegram } = await import("@/lib/telegram");
+    const cleanText = html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&euro;/g, "€").replace(/\s+/g, " ").trim();
+    const shortText = cleanText.length > 300 ? cleanText.slice(0, 297) + "..." : cleanText;
+    sendTelegram(`📬 <b>${subject}</b>\n\n${shortText}`).catch(() => {});
+  } catch {}
 }
 
 export async function sendAdminNewPhotographerNotification(

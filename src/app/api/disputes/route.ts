@@ -145,6 +145,9 @@ export async function POST(req: NextRequest) {
             </div>`
           ).catch(e => console.error("[dispute] admin email error:", e));
         }
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`⚠️ <b>New Dispute!</b>\n\n${info.client_name} vs ${info.photographer_name}\nReason: ${reasonText}\n${description.slice(0, 200)}`);
+        }).catch(() => {});
 
         // Chat message
         await queryOne(

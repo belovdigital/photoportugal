@@ -180,6 +180,18 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Telegram digest
+    try {
+      const { sendTelegram } = await import("@/lib/telegram");
+      const lines = [`📊 <b>Daily Digest</b>\n`];
+      lines.push(`📅 Bookings: ${bookings.length}`);
+      lines.push(`💬 Messages: ${messageCount}`);
+      lines.push(`👤 New users: ${users.length}`);
+      lines.push(`👁 Visitors: ${visitorCount}`);
+      if (totalRevenue > 0) lines.push(`💰 Revenue: €${Math.round(totalRevenue)}`);
+      await sendTelegram(lines.join("\n"));
+    } catch {}
+
     return NextResponse.json({
       success: true,
       bookings: bookings.length,
