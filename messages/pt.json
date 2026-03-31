@@ -2086,7 +2086,11 @@
     "paymentDueLabel": "Pagamento pendente",
     "paymentDueMessage": "dentro de {hours} horas. A sua reserva será automaticamente cancelada se não for paga.",
     "paymentOverdueLabel": "Pagamento em atraso",
-    "paymentOverdueMessage": "A sua reserva pode ser cancelada a qualquer momento. Pague imediatamente para evitar o cancelamento."
+    "paymentOverdueMessage": "A sua reserva pode ser cancelada a qualquer momento. Pague imediatamente para evitar o cancelamento.",
+    "shootDate": "Data",
+    "price": "Preço",
+    "occasion": "Ocasião",
+    "requestedLabel": "Solicitado"
   },
   "bookingJourney": {
     "cancelled": "Cancelada",

@@ -2249,7 +2249,11 @@
     "paymentDueLabel": "Payment due",
     "paymentDueMessage": "within {hours} hours. Your booking will be automatically cancelled if not paid.",
     "paymentOverdueLabel": "Payment overdue",
-    "paymentOverdueMessage": "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation."
+    "paymentOverdueMessage": "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation.",
+    "shootDate": "Date",
+    "price": "Price",
+    "occasion": "Occasion",
+    "requestedLabel": "Requested"
   },
   "bookingJourney": {
     "cancelled": "Cancelled",
