@@ -57,8 +57,9 @@ export async function GET(request: NextRequest) {
           // Determine early bird tier (count only real photographers, not test accounts)
           // Wrapped in transaction with lock to prevent race conditions with concurrent signups
           await withTransaction(async (client) => {
+            await client.query("LOCK TABLE photographer_profiles IN EXCLUSIVE MODE");
             const countResult = await client.query(
-              "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0 FOR UPDATE"
+              "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0"
             );
             const photographerCount = countResult.rows[0] as { count: string; next_num: string } | undefined;
             const count = parseInt(photographerCount?.count || "0");
