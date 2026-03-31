@@ -138,6 +138,20 @@ export async function POST(req: NextRequest) {
       ]);
     } catch {}
 
+    // Telegram: notify admin of new chat activity (first message only, not every one)
+    try {
+      const msgCount = await queryOne<{count: string}>(
+        "SELECT COUNT(*)::text as count FROM messages WHERE booking_id = $1 AND created_at > NOW() - INTERVAL '2 hours'",
+        [booking_id]
+      );
+      if (parseInt(msgCount?.count || "0") <= 1) {
+        const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name || "Someone";
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`💬 <b>New chat activity</b>\n\n${senderName} wrote to their booking partner`);
+        }).catch(() => {});
+      }
+    } catch {}
+
     // Send email notification to the other person (if they have it enabled, throttled to 1 per 15 min)
     try {
       const recipientId = userId === booking.client_id ? booking.photographer_user_id : booking.client_id;

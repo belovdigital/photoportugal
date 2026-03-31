@@ -136,6 +136,9 @@ export async function GET(req: NextRequest) {
         );
 
         results.autoCancelled++;
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`⏰ <b>Booking Auto-Cancelled</b>\n\n${booking.client_name} → ${booking.photographer_name}\nReason: Payment not received within 48h`);
+        }).catch(() => {});
       } catch (err) {
         results.errors.push(`Auto-cancel booking ${booking.id}: ${err}`);
       }
@@ -770,6 +773,9 @@ export async function GET(req: NextRequest) {
         );
         checklistDeactivated++;
         console.log(`[cron/reminders] deactivated incomplete photographer ${p.name} (${p.email})`);
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`🚫 <b>Photographer Deactivated</b>\n\n${p.name} (${p.email})\nReason: Profile not completed within 7 days`);
+        }).catch(() => {});
       } catch (err) {
         results.errors.push(`Checklist deactivation for ${p.email}: ${err}`);
       }

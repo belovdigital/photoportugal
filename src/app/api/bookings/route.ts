@@ -119,6 +119,18 @@ export async function POST(req: NextRequest) {
         }).catch(() => {});
       }
 
+      // Check if this client came from ads
+      try {
+        const clientUtm = await queryOne<{utm_source: string | null}>(
+          "SELECT utm_source FROM users WHERE id = $1", [userId]
+        );
+        if (clientUtm?.utm_source) {
+          import("@/lib/telegram").then(({ sendTelegram }) => {
+            sendTelegram(`🎯 <b>Ad Visitor Booked!</b>\n\nSource: ${clientUtm!.utm_source}\n${clientInfo!.name} → ${photographerInfo!.display_name}`);
+          }).catch(() => {});
+        }
+      } catch {}
+
       // Send SMS notification to photographer (if enabled and phone number exists)
       if (photographerInfo && clientInfo && prefs?.sms_bookings !== false) {
         const photographerPhone = await queryOne<{ phone: string | null }>(

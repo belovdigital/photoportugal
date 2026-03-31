@@ -68,6 +68,11 @@ export async function POST(req: NextRequest) {
       const client = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
       if (info && client) {
         sendReviewNotification(info.email, info.name, client.name, rating);
+
+        // Telegram: notify admin of new review
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`⭐ <b>New Review!</b>\n\n${"★".repeat(rating)}${"☆".repeat(5-rating)} from ${client!.name}\nFor: ${info!.name}${title ? `\n"${title}"` : ""}`);
+        }).catch(() => {});
       }
     } catch {}
 

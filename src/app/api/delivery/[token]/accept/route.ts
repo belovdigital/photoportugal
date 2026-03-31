@@ -169,6 +169,12 @@ export async function POST(
   // System message in chat
   sendBookingStatusMessage(booking.id, "delivery_accepted").catch(() => {});
 
+  // Telegram: notify admin of delivery acceptance
+  import("@/lib/telegram").then(({ sendTelegram }) => {
+    const estimatedPayout = booking.payout_amount ? Number(booking.payout_amount) : (booking.total_price ? Math.round(booking.total_price * 0.8) : 0);
+    sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${Math.round(estimatedPayout)}` : ""}`);
+  }).catch(() => {});
+
   // Pre-build ZIP in background (non-blocking)
   import("@/lib/build-zip").then(({ buildDeliveryZip }) => {
     buildDeliveryZip(booking.id).catch(err => console.error("[accept] zip build error:", err));

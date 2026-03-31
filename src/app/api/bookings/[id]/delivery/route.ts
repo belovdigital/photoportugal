@@ -207,6 +207,21 @@ export async function POST(
         console.error("[delivery] whatsapp/sms error:", smsErr);
       }
 
+      // Telegram: notify admin of photo delivery
+      try {
+        const tgNames = await queryOne<{ photographer_name: string; client_name: string }>(
+          `SELECT pu.name as photographer_name, cu.name as client_name
+           FROM bookings b
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
+           JOIN users cu ON cu.id = b.client_id
+           WHERE b.id = $1`, [id]
+        );
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`🎁 <b>Photos Delivered!</b>\n\n${tgNames?.photographer_name || "Photographer"} delivered ${count} photos to ${tgNames?.client_name || "Client"}`);
+        }).catch(() => {});
+      } catch {}
+
       return NextResponse.json({ success: true, token, deliveryUrl });
     }
 
