@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || "fallback-secret";
+function getJwtSecret(): string {
+  const s = process.env.NEXTAUTH_SECRET;
+  if (!s) throw new Error("NEXTAUTH_SECRET environment variable is required");
+  return s;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +16,10 @@ export async function POST(req: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 });
+    }
+
+    if (!checkRateLimit(`mobile-login:${email.toLowerCase().trim()}`, 10, 60000)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
     const user = await queryOne<{
@@ -48,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: "30d" }
     );
 

@@ -1,7 +1,7 @@
 import { queryOne } from "@/lib/db";
 
 export async function logNotification(
-  channel: "email" | "sms" | "whatsapp",
+  channel: "email" | "sms" | "whatsapp" | "push",
   recipient: string,
   event: string,
   status: "sent" | "failed" | "fallback",

@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || "fallback-secret";
+function getJwtSecret(): string {
+  const s = process.env.NEXTAUTH_SECRET;
+  if (!s) throw new Error("NEXTAUTH_SECRET environment variable is required");
+  return s;
+}
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") || "unknown";
+  if (!checkRateLimit(`mobile-google:${ip}`, 10, 60000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const { id_token } = await req.json();
 
@@ -85,7 +95,7 @@ export async function POST(req: NextRequest) {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: "30d" }
     );
 

@@ -77,6 +77,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "booking_id and text or media_url required" }, { status: 400 });
     }
 
+    if (text && text.length > 10000) {
+      return NextResponse.json({ error: "Message is too long, please shorten it" }, { status: 400 });
+    }
+
     // Check for contact info sharing — soft warning, still send
     let contactWarning: string | null = null;
     if (text?.trim()) {

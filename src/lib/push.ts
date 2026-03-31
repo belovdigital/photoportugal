@@ -45,7 +45,7 @@ export async function sendPushNotification(
     } else {
       console.log(`[push] Sent to ${userId}: ${title}`);
       import("@/lib/notification-log").then(m =>
-        m.logNotification("push" as "sms", userId, `${title}: ${body}`.slice(0, 100), "sent")
+        m.logNotification("push", userId, `${title}: ${body}`.slice(0, 100), "sent")
       ).catch(() => {});
     }
   } catch (err) {

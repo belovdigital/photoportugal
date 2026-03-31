@@ -13,7 +13,8 @@ const env = Object.fromEntries(
 );
 
 const PORT = parseInt(env.WS_PORT || "3002");
-const JWT_SECRET = env.NEXTAUTH_SECRET || "fallback-secret";
+const JWT_SECRET = env.NEXTAUTH_SECRET;
+if (!JWT_SECRET) throw new Error("NEXTAUTH_SECRET environment variable is required");
 const DATABASE_URL = env.DATABASE_URL;
 
 // DB pools

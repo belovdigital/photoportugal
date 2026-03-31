@@ -2,7 +2,11 @@ import { auth } from "@/lib/auth";
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || "fallback-secret";
+function getJwtSecret(): string {
+  const s = process.env.NEXTAUTH_SECRET;
+  if (!s) throw new Error("NEXTAUTH_SECRET environment variable is required");
+  return s;
+}
 
 interface MobileUser {
   id: string;
@@ -32,7 +36,7 @@ export async function authFromRequest(req?: NextRequest): Promise<MobileUser | n
     if (authHeader?.startsWith("Bearer ")) {
       try {
         const token = authHeader.replace("Bearer ", "");
-        const decoded = jwt.verify(token, JWT_SECRET) as MobileUser;
+        const decoded = jwt.verify(token, getJwtSecret()) as MobileUser;
         if (decoded.id) return decoded;
       } catch {}
     }

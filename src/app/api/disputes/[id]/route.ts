@@ -17,6 +17,14 @@ async function isAdmin(): Promise<boolean> {
   return user?.role === "admin";
 }
 
+async function getAdminEmail(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
+  if (!token) return null;
+  const data = verifyToken(token);
+  return data?.email ?? null;
+}
+
 // PATCH - Update dispute (admin only, resolve/reject)
 export async function PATCH(
   req: NextRequest,
@@ -60,6 +68,17 @@ export async function PATCH(
     }
 
     const isClosing = status === "resolved" || status === "rejected";
+
+    // Validate refund amount before making any changes
+    if (refund_amount && (resolution === "full_refund" || resolution === "partial_refund")) {
+      const bookingCheck = await queryOne<{ total_price: number }>(
+        "SELECT total_price FROM bookings WHERE id = $1",
+        [dispute.booking_id]
+      );
+      if (bookingCheck?.total_price && refund_amount > bookingCheck.total_price) {
+        return NextResponse.json({ error: "Refund amount cannot exceed booking price" }, { status: 400 });
+      }
+    }
 
     // Update dispute record
     await query(
@@ -201,6 +220,19 @@ export async function PATCH(
       } catch (notifErr) {
         console.error("[dispute] resolve notification error:", notifErr);
       }
+    }
+
+    // Audit log
+    try {
+      const adminEmail = await getAdminEmail();
+      const action = isClosing ? `dispute_${status}` : "dispute_updated";
+      const details = JSON.stringify({ status, resolution, resolution_note, refund_amount });
+      await query(
+        "INSERT INTO audit_logs (admin_email, action, entity_type, entity_id, details) VALUES ($1, $2, $3, $4, $5)",
+        [adminEmail, action, "dispute", id, details]
+      );
+    } catch (auditErr) {
+      console.error("[disputes] audit log error:", auditErr);
     }
 
     return NextResponse.json({ success: true });

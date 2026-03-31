@@ -138,7 +138,7 @@ export default async function PhotographerProfilePage({
   const t = await getTranslations("photographers.profile");
   const tc = await getTranslations("common");
 
-  const isPreview = sp.preview === process.env.ADMIN_PREVIEW_SECRET;
+  const isPreview = !!process.env.ADMIN_PREVIEW_SECRET && sp.preview === process.env.ADMIN_PREVIEW_SECRET;
   const result = await getPhotographer(slug, isPreview);
 
   if (!result) {

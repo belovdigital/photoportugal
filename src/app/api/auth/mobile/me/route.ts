@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || "fallback-secret";
+function getJwtSecret(): string {
+  const s = process.env.NEXTAUTH_SECRET;
+  if (!s) throw new Error("NEXTAUTH_SECRET environment variable is required");
+  return s;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,7 +16,7 @@ export async function GET(req: NextRequest) {
     }
 
     const token = authHeader.replace("Bearer ", "");
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; role: string };
+    const decoded = jwt.verify(token, getJwtSecret()) as { id: string; email: string; role: string };
 
     const user = await queryOne<{
       id: string; email: string; name: string; role: string; avatar_url: string | null;

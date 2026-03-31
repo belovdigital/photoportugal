@@ -62,8 +62,8 @@ export async function GET(req: NextRequest) {
       query<{ name: string; email: string; role: string; created_at: string }>(
         "SELECT name, email, role, created_at::timestamp(0)::text FROM users WHERE created_at > NOW() - INTERVAL '24 hours' ORDER BY created_at DESC"
       ),
-      query<{ client_name: string; photographer_name: string; total_price: number; status: string }>(
-        `SELECT cu.name as client_name, pu.name as photographer_name, b.total_price, b.payment_status as status
+      query<{ client_name: string; photographer_name: string; total_price: number; service_fee: number; platform_fee: number; status: string }>(
+        `SELECT cu.name as client_name, pu.name as photographer_name, b.total_price, b.service_fee, b.platform_fee, b.payment_status as status
          FROM bookings b
          JOIN users cu ON cu.id = b.client_id
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -79,7 +79,8 @@ export async function GET(req: NextRequest) {
     const messageCount = parseInt(messages?.count || "0");
     const sessionCount = parseInt(sessions?.count || "0");
     const visitorCount = parseInt(sessions?.visitors || "0");
-    const totalRevenue = payments.reduce((sum, p) => sum + (p.total_price || 0), 0);
+    const grossRevenue = payments.reduce((sum, p) => sum + (p.total_price || 0) + (p.service_fee || 0), 0);
+    const platformRevenue = payments.reduce((sum, p) => sum + (p.service_fee || 0) + (p.platform_fee || 0), 0);
 
     // Skip if absolutely nothing happened
     if (bookings.length === 0 && messageCount === 0 && users.length === 0 && sessionCount === 0) {
@@ -133,11 +134,17 @@ export async function GET(req: NextRequest) {
         </div>
       </div>
 
-      ${totalRevenue > 0 ? `
+      ${grossRevenue > 0 ? `
       <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-        <span style="font-size: 13px; color: #166534;">💰 Revenue today:</span>
-        <span style="font-size: 22px; font-weight: bold; color: #166534; margin-left: 8px;">€${Math.round(totalRevenue)}</span>
-        <span style="font-size: 12px; color: #166534; margin-left: 4px;">(${payments.length} payment${payments.length !== 1 ? 's' : ''})</span>
+        <div style="margin-bottom: 8px;">
+          <span style="font-size: 13px; color: #166534;">💰 Turnover:</span>
+          <span style="font-size: 22px; font-weight: bold; color: #166534; margin-left: 8px;">€${Math.round(grossRevenue)}</span>
+          <span style="font-size: 12px; color: #166534; margin-left: 4px;">(${payments.length} payment${payments.length !== 1 ? 's' : ''})</span>
+        </div>
+        <div>
+          <span style="font-size: 13px; color: #166534;">📈 Platform revenue:</span>
+          <span style="font-size: 22px; font-weight: bold; color: #166534; margin-left: 8px;">€${Math.round(platformRevenue)}</span>
+        </div>
       </div>` : ""}
 
       ${bookings.length > 0 ? `
@@ -188,7 +195,10 @@ export async function GET(req: NextRequest) {
       lines.push(`💬 Messages: ${messageCount}`);
       lines.push(`👤 New users: ${users.length}`);
       lines.push(`👁 Visitors: ${visitorCount}`);
-      if (totalRevenue > 0) lines.push(`💰 Revenue: €${Math.round(totalRevenue)}`);
+      if (grossRevenue > 0) {
+        lines.push(`💰 Turnover: €${Math.round(grossRevenue)}`);
+        lines.push(`📈 Platform revenue: €${Math.round(platformRevenue)}`);
+      }
       await sendTelegram(lines.join("\n"));
     } catch {}
 

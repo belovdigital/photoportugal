@@ -8,34 +8,35 @@ import { sendAdminWhatsApp } from "@/lib/whatsapp";
  */
 export async function checkAndNotifyChecklistComplete(photographerId: string) {
   try {
-    const profile = await queryOne<{
-      name: string;
-      email: string;
-      checklist_complete: boolean;
-      checklist_notified: boolean;
-    }>(`
-      SELECT u.name, u.email,
-        COALESCE(pp.checklist_notified, FALSE) as checklist_notified,
-        (u.avatar_url IS NOT NULL
+    // Atomic check-and-set: only mark as notified if checklist is complete and not yet notified
+    const updated = await queryOne<{ id: string }>(
+      `UPDATE photographer_profiles pp SET checklist_notified = TRUE
+       FROM users u
+       WHERE pp.id = $1
+         AND u.id = pp.user_id
+         AND pp.checklist_notified = FALSE
+         AND u.avatar_url IS NOT NULL
          AND pp.cover_url IS NOT NULL
          AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
          AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
          AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
          AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
          AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
-         AND u.phone IS NOT NULL) as checklist_complete
+         AND u.phone IS NOT NULL
+       RETURNING pp.id`,
+      [photographerId]
+    );
+
+    if (!updated) return; // already notified or checklist not complete
+
+    const profile = await queryOne<{ name: string; email: string }>(`
+      SELECT u.name, u.email
       FROM photographer_profiles pp
       JOIN users u ON u.id = pp.user_id
       WHERE pp.id = $1
     `, [photographerId]);
 
-    if (!profile || !profile.checklist_complete || profile.checklist_notified) return;
-
-    // Mark as notified so we don't spam
-    await queryOne(
-      "UPDATE photographer_profiles SET checklist_notified = TRUE WHERE id = $1",
-      [photographerId]
-    );
+    if (!profile) return;
 
     // Notify admins
     const adminEmail = await getAdminEmail();

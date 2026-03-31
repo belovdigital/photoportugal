@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { query, queryOne } from "@/lib/db";
+import { query, queryOne, withTransaction } from "@/lib/db";
 import { sendWelcomeEmail, sendAdminNewPhotographerNotification, sendAdminNewClientNotification } from "@/lib/email";
 
 export async function GET(request: NextRequest) {
@@ -55,41 +55,44 @@ export async function GET(request: NextRequest) {
           }
 
           // Determine early bird tier (count only real photographers, not test accounts)
-          // Use MAX to avoid race conditions with concurrent signups
-          const photographerCount = await queryOne<{ count: string; next_num: string }>(
-            "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0"
-          );
-          const count = parseInt(photographerCount?.count || "0");
-          const nextNumber = parseInt(photographerCount?.next_num || "1");
+          // Wrapped in transaction with lock to prevent race conditions with concurrent signups
+          await withTransaction(async (client) => {
+            const countResult = await client.query(
+              "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0 FOR UPDATE"
+            );
+            const photographerCount = countResult.rows[0] as { count: string; next_num: string } | undefined;
+            const count = parseInt(photographerCount?.count || "0");
+            const nextNumber = parseInt(photographerCount?.next_num || "1");
 
-          let earlyBirdTier: string | null = null;
-          let earlyBirdExpires: string | null = null;
-          let isFounding = false;
-          let plan = "free";
+            let earlyBirdTier: string | null = null;
+            let earlyBirdExpires: string | null = null;
+            let isFounding = false;
+            let plan = "free";
 
-          if (count < 10) {
-            // Founding 10: Premium forever
-            earlyBirdTier = "founding";
-            isFounding = true;
-            plan = "premium";
-          } else if (count < 35) {
-            // Early 50: Premium for 6 months
-            earlyBirdTier = "early50";
-            plan = "premium";
-            earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-          } else if (count < 60) {
-            // First 100: Pro for 3 months
-            earlyBirdTier = "first100";
-            plan = "pro";
-            earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
-          }
+            if (count < 10) {
+              // Founding 10: Premium forever
+              earlyBirdTier = "founding";
+              isFounding = true;
+              plan = "premium";
+            } else if (count < 35) {
+              // Early 50: Premium for 6 months
+              earlyBirdTier = "early50";
+              plan = "premium";
+              earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+            } else if (count < 60) {
+              // First 100: Pro for 3 months
+              earlyBirdTier = "first100";
+              plan = "pro";
+              earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+            }
 
-          await query(
-            `INSERT INTO photographer_profiles (user_id, slug, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             ON CONFLICT (user_id) DO NOTHING`,
-            [user.id, slug, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
-          );
+            await client.query(
+              `INSERT INTO photographer_profiles (user_id, slug, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)
+               ON CONFLICT (user_id) DO NOTHING`,
+              [user.id, slug, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
+            );
+          });
 
           // Send photographer welcome email (non-blocking)
           sendWelcomeEmail(session.user.email!, session.user.name || "there", "photographer").catch((err) =>

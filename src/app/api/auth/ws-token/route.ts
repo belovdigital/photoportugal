@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || "fallback-secret";
+function getJwtSecret(): string {
+  const s = process.env.NEXTAUTH_SECRET;
+  if (!s) throw new Error("NEXTAUTH_SECRET environment variable is required");
+  return s;
+}
 
 export async function GET() {
   const session = await auth();
@@ -14,7 +18,7 @@ export async function GET() {
 
   const token = jwt.sign(
     { id: user.id, name: user.name || "", email: user.email || "" },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: "24h" }
   );
 

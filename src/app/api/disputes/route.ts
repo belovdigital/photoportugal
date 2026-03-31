@@ -4,6 +4,10 @@ import { auth } from "@/lib/auth";
 import { queryOne, query, withTransaction } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 const VALID_REASONS = ["fewer_photos", "wrong_location", "technical_issues", "no_show", "other"] as const;
 
 async function isAdmin(): Promise<boolean> {
@@ -33,6 +37,10 @@ export async function POST(req: NextRequest) {
 
     if (!booking_id || !reason || !description) {
       return NextResponse.json({ error: "booking_id, reason, and description are required" }, { status: 400 });
+    }
+
+    if (description.length > 2000) {
+      return NextResponse.json({ error: "Description too long (max 2000 characters)" }, { status: 400 });
     }
 
     if (!VALID_REASONS.includes(reason)) {
@@ -111,9 +119,9 @@ export async function POST(req: NextRequest) {
         sendEmail(info.photographer_email, `A client has reported an issue with their delivery`,
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #C94536;">Delivery Issue Reported</h2>
-            <p>${info.client_name?.split(" ")[0]} has reported an issue with their photo delivery.</p>
+            <p>${escapeHtml(info.client_name?.split(" ")[0] || "")} has reported an issue with their photo delivery.</p>
             <p><strong>Reason:</strong> ${reasonText}</p>
-            <p><strong>Details:</strong> ${description}</p>
+            <p><strong>Details:</strong> ${escapeHtml(description)}</p>
             <p>Our team will review this within 48 hours. No action is needed from you right now — we'll be in touch if we need more information.</p>
             <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
           </div>`
@@ -123,7 +131,7 @@ export async function POST(req: NextRequest) {
         sendEmail(info.client_email, `We've received your report — reviewing now`,
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #C94536;">We've Received Your Report</h2>
-            <p>Hi ${info.client_name?.split(" ")[0]},</p>
+            <p>Hi ${escapeHtml(info.client_name?.split(" ")[0] || "")},</p>
             <p>Thank you for letting us know. We've received your report and our team will review it within <strong>48 hours</strong>.</p>
             <p><strong>Issue:</strong> ${reasonText}</p>
             <p>If you change your mind, you can cancel the dispute and accept the delivery at any time from your bookings page.</p>
@@ -138,15 +146,15 @@ export async function POST(req: NextRequest) {
           sendEmail(ae, `[Dispute] ${info.client_name} vs ${info.photographer_name}`,
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2 style="color: #C94536;">New Dispute Filed</h2>
-              <p><strong>${info.client_name}</strong> vs <strong>${info.photographer_name}</strong></p>
+              <p><strong>${escapeHtml(info.client_name)}</strong> vs <strong>${escapeHtml(info.photographer_name)}</strong></p>
               <p><strong>Reason:</strong> ${reasonText}</p>
-              <p><strong>Details:</strong> ${description}</p>
+              <p><strong>Details:</strong> ${escapeHtml(description)}</p>
               <p><a href="https://photoportugal.com/admin#disputes" style="display: inline-block; background: #C94536; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
             </div>`
           ).catch(e => console.error("[dispute] admin email error:", e));
         }
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`⚠️ <b>New Dispute!</b>\n\n${info.client_name} vs ${info.photographer_name}\nReason: ${reasonText}\n${description.slice(0, 200)}`);
+          sendTelegram(`⚠️ <b>New Dispute!</b>\n\n${escapeHtml(info.client_name)} vs ${escapeHtml(info.photographer_name)}\nReason: ${reasonText}\n${escapeHtml(description.slice(0, 200))}`);
         }).catch(() => {});
 
         // Chat message

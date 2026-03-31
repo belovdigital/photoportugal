@@ -53,6 +53,12 @@ export function VideoReviewRecorder({
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (videoUrl) URL.revokeObjectURL(videoUrl);
+    };
+  }, [videoUrl]);
+
   // Attach stream to video when recording
   useEffect(() => {
     if ((step === "setup" || step === "recording") && videoRef.current && streamRef.current) {

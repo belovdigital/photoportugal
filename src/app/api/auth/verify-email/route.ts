@@ -52,6 +52,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // If from mobile app, redirect to deep link
+    const source = req.nextUrl.searchParams.get("source");
+    if (source === "mobile") {
+      return NextResponse.redirect("photoportugal://email-verified");
+    }
+
     return NextResponse.redirect(`${base}/auth/signin?verified=true`);
   } catch (error) {
     console.error("[verify-email] error:", error);

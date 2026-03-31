@@ -97,7 +97,11 @@ export async function GET(req: Request) {
     : roleFilter === "client" ? "AND u.role = 'client'"
     : roleFilter === "photographer" ? "AND u.role = 'photographer'"
     : "";
-  const countryWhere = countryFilter !== "all" ? `AND vs.country = '${countryFilter.replace(/'/g, "")}'` : "";
+  const countryWhere = countryFilter !== "all" ? `AND vs.country = $1` : "";
+  const params: (string | number)[] = [];
+  if (countryFilter !== "all") params.push(countryFilter);
+  const limitParam = `$${params.length + 1}`;
+  params.push(sessionLimit);
   const recentSessions = await query<{
     id: string; visitor_id: string; user_name: string | null; user_email: string | null;
     user_role: string | null;
@@ -115,8 +119,8 @@ export async function GET(req: Request) {
     FROM visitor_sessions vs
     LEFT JOIN users u ON u.id = vs.user_id
     WHERE 1=1 ${roleWhere} ${countryWhere}
-    ORDER BY vs.started_at DESC LIMIT ${sessionLimit}
-  `);
+    ORDER BY vs.started_at DESC LIMIT ${limitParam}
+  `, params);
 
   // Sessions by day (last 14 days)
   const dailySessions = await query<{ day: string; sessions: string; visitors: string }>(`
