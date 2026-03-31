@@ -183,21 +183,43 @@ export default async function BookingsPage() {
                 />
               )}
 
-              <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-500">
-                {booking.shoot_date ? (
-                  <span>{new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })}</span>
-                ) : booking.flexible_date_from && booking.flexible_date_to ? (
-                  <span>{t("flexibleRange", { from: new Date(booking.flexible_date_from).toLocaleDateString(dateLocale, { month: "short", day: "numeric" }), to: new Date(booking.flexible_date_to).toLocaleDateString(dateLocale, { month: "short", day: "numeric" }) })}</span>
-                ) : null}
-                {booking.shoot_time && <span>{TIME_LABEL_KEYS[booking.shoot_time] ? t(TIME_LABEL_KEYS[booking.shoot_time]) : booking.shoot_time}</span>}
-                {booking.group_size && booking.group_size > 1 && <span>{t("people", { count: booking.group_size })}</span>}
-                {booking.occasion && <span className="capitalize">{booking.occasion}</span>}
-                {booking.total_price && <span>&euro;{Math.round(Number(booking.total_price))}</span>}
-                <span>{t("requested", { date: new Date(booking.created_at).toLocaleDateString(dateLocale, { month: "short", day: "numeric" }) })}</span>
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {(booking.shoot_date || (booking.flexible_date_from && booking.flexible_date_to)) && (
+                  <div className="rounded-lg bg-warm-50 px-3 py-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{t("shootDate") || "Date"}</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {booking.shoot_date
+                        ? new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })
+                        : t("flexibleRange", { from: new Date(booking.flexible_date_from!).toLocaleDateString(dateLocale, { month: "short", day: "numeric" }), to: new Date(booking.flexible_date_to!).toLocaleDateString(dateLocale, { month: "short", day: "numeric" }) })}
+                    </p>
+                    {booking.shoot_time && (
+                      <p className="text-xs text-gray-500">{TIME_LABEL_KEYS[booking.shoot_time] ? t(TIME_LABEL_KEYS[booking.shoot_time]) : booking.shoot_time}</p>
+                    )}
+                  </div>
+                )}
+                {booking.total_price && (
+                  <div className="rounded-lg bg-warm-50 px-3 py-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
+                    <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price))}</p>
+                  </div>
+                )}
+                {booking.occasion && (
+                  <div className="rounded-lg bg-warm-50 px-3 py-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{t("occasion") || "Occasion"}</p>
+                    <p className="text-sm font-medium text-gray-800 capitalize">{booking.occasion}</p>
+                    {booking.group_size && booking.group_size > 1 && (
+                      <p className="text-xs text-gray-500">{t("people", { count: booking.group_size })}</p>
+                    )}
+                  </div>
+                )}
+                <div className="rounded-lg bg-warm-50 px-3 py-2">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{t("requestedLabel") || "Requested"}</p>
+                  <p className="text-sm font-medium text-gray-800">{new Date(booking.created_at).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })}</p>
+                </div>
               </div>
 
               {booking.message && (
-                <p className="mt-3 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
+                <p className="mt-3 rounded-lg bg-warm-50 px-3 py-2 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
               )}
 
               {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (() => {
