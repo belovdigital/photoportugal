@@ -68,7 +68,7 @@ export function BookingJourney({
       case 3: // Session
         return si >= statusIndex("completed");
       case 4: // Photos/Upload
-        return si >= statusIndex("delivered");
+        return si >= statusIndex("delivered") || deliveryAccepted;
       case 5: // Accepted
         return deliveryAccepted === true;
       default:

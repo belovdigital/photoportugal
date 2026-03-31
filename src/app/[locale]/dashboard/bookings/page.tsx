@@ -145,20 +145,11 @@ export default async function BookingsPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[booking.status] || STATUS_STYLES.pending}`}>
-                    {STATUS_LABEL_KEYS[booking.status] ? t(STATUS_LABEL_KEYS[booking.status]) : booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                  </span>
-                  {booking.payment_status === "paid" && (
-                    <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">{t("paid")}</span>
+                  {booking.status === "cancelled" && (
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">{t("statusCancelled")}</span>
                   )}
                   {booking.payment_status === "refunded" && (
                     <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">{t("refunded")}</span>
-                  )}
-                  {booking.status !== "cancelled" && booking.total_price && booking.payment_status !== "paid" && booking.payment_status !== "refunded" && booking.status !== "pending" && (
-                    <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-700">{t("unpaid")}</span>
-                  )}
-                  {booking.delivery_accepted && (
-                    <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">{t("accepted")}</span>
                   )}
                 </div>
               </div>

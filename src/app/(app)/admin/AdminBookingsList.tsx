@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { AdminBookingActions } from "./AdminControls";
 
 export interface AdminBooking {
@@ -164,6 +164,10 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
 
               {isOpen && (
                 <div className="border-t border-warm-100 px-3 py-3 sm:px-4 sm:py-4">
+                  {/* Journey stepper */}
+                  {b.status !== "cancelled" && (
+                    <AdminBookingJourney status={b.status} paymentStatus={b.payment_status} deliveryAccepted={!!b.delivery_accepted} />
+                  )}
                   {/* Client message */}
                   {b.message && (
                     <div className="mb-4 rounded-lg bg-warm-50 p-3">
@@ -279,6 +283,48 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+const JOURNEY_STEPS = ["Booked", "Confirmed", "Paid", "Session", "Photos", "Accepted"];
+const STATUS_MAP: Record<string, number> = { inquiry: 0, pending: 0, confirmed: 1, completed: 3, delivered: 4 };
+
+function AdminBookingJourney({ status, paymentStatus, deliveryAccepted }: { status: string; paymentStatus: string | null; deliveryAccepted: boolean }) {
+  const si = STATUS_MAP[status] ?? -1;
+  const done = [
+    true, // Booked
+    si >= 1, // Confirmed
+    paymentStatus === "paid", // Paid
+    si >= 3, // Session
+    si >= 4 || deliveryAccepted, // Photos
+    deliveryAccepted, // Accepted
+  ];
+  const currentIdx = done.indexOf(false);
+
+  return (
+    <div className="flex items-center gap-1 mb-4">
+      {JOURNEY_STEPS.map((label, i) => {
+        const completed = done[i];
+        const isCurrent = i === currentIdx;
+        return (
+          <React.Fragment key={i}>
+            <div className="flex flex-col items-center" style={{ flex: "0 0 auto" }}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                completed ? "bg-green-500 text-white" : isCurrent ? "bg-accent-500 text-white" : "bg-gray-200 text-gray-400"
+              }`}>
+                {completed ? (
+                  <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                ) : (i + 1)}
+              </div>
+              <span className={`text-[9px] mt-0.5 ${completed ? "text-green-700" : isCurrent ? "text-accent-700 font-semibold" : "text-gray-400"}`}>{label}</span>
+            </div>
+            {i < JOURNEY_STEPS.length - 1 && (
+              <div className={`flex-1 h-px ${completed ? "bg-green-400" : "bg-gray-200"}`} />
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
