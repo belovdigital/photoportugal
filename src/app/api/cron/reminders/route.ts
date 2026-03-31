@@ -713,7 +713,8 @@ export async function GET(req: NextRequest) {
          AND b.payment_status = 'paid'
          AND COALESCE(b.payout_transferred, FALSE) = FALSE
          AND pp.stripe_account_id IS NOT NULL
-         AND pp.stripe_onboarding_complete = TRUE`
+         AND pp.stripe_onboarding_complete = TRUE
+         AND b.delivery_accepted_at < NOW() - INTERVAL '7 days'`
     );
 
     for (const booking of pendingPayouts) {
