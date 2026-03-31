@@ -205,22 +205,37 @@ interface VisitorData {
   dailySessions: { day: string; sessions: string; visitors: string }[];
 }
 
-const COUNTRY_INFO: Record<string, { flag: string; name: string }> = {
-  PT: { flag: "🇵🇹", name: "Portugal" }, US: { flag: "🇺🇸", name: "United States" }, GB: { flag: "🇬🇧", name: "United Kingdom" },
-  DE: { flag: "🇩🇪", name: "Germany" }, FR: { flag: "🇫🇷", name: "France" }, ES: { flag: "🇪🇸", name: "Spain" },
-  IT: { flag: "🇮🇹", name: "Italy" }, BR: { flag: "🇧🇷", name: "Brazil" }, CA: { flag: "🇨🇦", name: "Canada" },
-  AU: { flag: "🇦🇺", name: "Australia" }, NL: { flag: "🇳🇱", name: "Netherlands" }, BE: { flag: "🇧🇪", name: "Belgium" },
-  CH: { flag: "🇨🇭", name: "Switzerland" }, AT: { flag: "🇦🇹", name: "Austria" }, IE: { flag: "🇮🇪", name: "Ireland" },
-  SE: { flag: "🇸🇪", name: "Sweden" }, NO: { flag: "🇳🇴", name: "Norway" }, DK: { flag: "🇩🇰", name: "Denmark" },
-  FI: { flag: "🇫🇮", name: "Finland" }, PL: { flag: "🇵🇱", name: "Poland" }, RU: { flag: "🇷🇺", name: "Russia" },
-  UA: { flag: "🇺🇦", name: "Ukraine" }, CZ: { flag: "🇨🇿", name: "Czechia" }, GR: { flag: "🇬🇷", name: "Greece" },
-  RO: { flag: "🇷🇴", name: "Romania" }, HU: { flag: "🇭🇺", name: "Hungary" }, TR: { flag: "🇹🇷", name: "Turkey" },
-  IN: { flag: "🇮🇳", name: "India" }, CN: { flag: "🇨🇳", name: "China" }, JP: { flag: "🇯🇵", name: "Japan" },
-  KR: { flag: "🇰🇷", name: "South Korea" }, ZA: { flag: "🇿🇦", name: "South Africa" }, MX: { flag: "🇲🇽", name: "Mexico" },
-  AR: { flag: "🇦🇷", name: "Argentina" }, CO: { flag: "🇨🇴", name: "Colombia" }, CL: { flag: "🇨🇱", name: "Chile" },
-  IL: { flag: "🇮🇱", name: "Israel" }, AE: { flag: "🇦🇪", name: "UAE" }, SG: { flag: "🇸🇬", name: "Singapore" },
+// Convert any ISO 3166-1 alpha-2 code to emoji flag
+function codeToFlag(code: string): string {
+  if (!code || code.length !== 2) return "🏳️";
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
+
+const COUNTRY_NAMES: Record<string, string> = {
+  PT: "Portugal", US: "United States", GB: "United Kingdom", DE: "Germany", FR: "France",
+  ES: "Spain", IT: "Italy", BR: "Brazil", CA: "Canada", AU: "Australia", NL: "Netherlands",
+  BE: "Belgium", CH: "Switzerland", AT: "Austria", IE: "Ireland", SE: "Sweden", NO: "Norway",
+  DK: "Denmark", FI: "Finland", PL: "Poland", RU: "Russia", UA: "Ukraine", CZ: "Czechia",
+  GR: "Greece", RO: "Romania", HU: "Hungary", TR: "Turkey", IN: "India", CN: "China",
+  JP: "Japan", KR: "South Korea", ZA: "South Africa", MX: "Mexico", AR: "Argentina",
+  CO: "Colombia", CL: "Chile", IL: "Israel", AE: "UAE", SG: "Singapore", TH: "Thailand",
+  AM: "Armenia", GE: "Georgia", LU: "Luxembourg", LT: "Lithuania", LV: "Latvia",
+  EE: "Estonia", BG: "Bulgaria", HR: "Croatia", RS: "Serbia", SK: "Slovakia", SI: "Slovenia",
+  CY: "Cyprus", MT: "Malta", IS: "Iceland", NZ: "New Zealand", PH: "Philippines",
+  MY: "Malaysia", ID: "Indonesia", VN: "Vietnam", TW: "Taiwan", HK: "Hong Kong",
+  SA: "Saudi Arabia", QA: "Qatar", KW: "Kuwait", BH: "Bahrain", OM: "Oman",
+  EG: "Egypt", MA: "Morocco", NG: "Nigeria", KE: "Kenya", TZ: "Tanzania",
+  PE: "Peru", EC: "Ecuador", UY: "Uruguay", PY: "Paraguay", VE: "Venezuela",
+  CR: "Costa Rica", PA: "Panama", DO: "Dominican Republic", PR: "Puerto Rico",
+  JM: "Jamaica", TT: "Trinidad", CU: "Cuba", BY: "Belarus", MD: "Moldova",
+  KZ: "Kazakhstan", UZ: "Uzbekistan", AZ: "Azerbaijan", LK: "Sri Lanka", BD: "Bangladesh",
+  PK: "Pakistan", NP: "Nepal", MM: "Myanmar", KH: "Cambodia", LA: "Laos",
 };
-const getCountry = (code: string) => COUNTRY_INFO[code] || { flag: "🏳️", name: code };
+
+const getCountry = (code: string) => ({
+  flag: codeToFlag(code),
+  name: COUNTRY_NAMES[code] || code,
+});
 
 function VisitorsTab() {
   const [vd, setVd] = useState<VisitorData | null>(null);
