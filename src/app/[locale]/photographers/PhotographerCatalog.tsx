@@ -161,7 +161,7 @@ export function PhotographerCatalog({
             {showLocationDropdown && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowLocationDropdown(false)} />
-                <div className="absolute left-0 top-full z-20 mt-1 w-64 rounded-xl border border-warm-200 bg-white shadow-lg">
+                <div className="absolute left-0 top-full z-20 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-warm-200 bg-white shadow-lg">
                   <div className="p-2">
                     <input
                       type="text"
@@ -245,7 +245,7 @@ export function PhotographerCatalog({
             <button
               key={type}
               onClick={() => toggleShootType(type)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+              className={`rounded-full px-3 py-2 text-sm font-medium transition ${
                 shootTypeFilters.includes(type)
                   ? "bg-primary-600 text-white"
                   : "bg-warm-100 text-gray-600 hover:bg-warm-200"

@@ -19,9 +19,9 @@ export async function GET() {
   }
 
   try {
-    // Total ad visits
+    // Total ad visits (last 30 days to match displayed period)
     const visitCount = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM ad_visits WHERE utm_source = 'google' AND utm_medium = 'cpc'"
+      "SELECT COUNT(*) as count FROM ad_visits WHERE utm_source = 'google' AND utm_medium = 'cpc' AND created_at >= NOW() - INTERVAL '30 days'"
     );
 
     // Visits today

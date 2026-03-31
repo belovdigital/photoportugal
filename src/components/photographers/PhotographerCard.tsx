@@ -101,7 +101,7 @@ export function PhotographerCard({
           {photographer.locations.map((loc) => (
             <span
               key={loc.slug}
-              className="rounded-full bg-warm-100 px-2.5 py-0.5 text-xs font-medium text-warm-700"
+              className="rounded-full bg-warm-100 px-2.5 py-1 text-xs font-medium text-warm-700"
             >
               {loc.name}
             </span>
@@ -134,7 +134,7 @@ export function PhotographerCard({
         <div className="flex items-center gap-2">
           <Link
             href={`/photographers/${photographer.slug}#message`}
-            className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
             title={t("messagePhotographer", { name: normalizeName(photographer.name) })}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -143,7 +143,7 @@ export function PhotographerCard({
           </Link>
           <Link
             href={`/photographers/${photographer.slug}`}
-            className="rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white"
+            className="rounded-lg bg-primary-50 px-3 py-2 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white"
           >
             {t("viewProfile")}
           </Link>

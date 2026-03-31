@@ -336,7 +336,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {/* ===== STATS ===== */}
       <section className="border-y border-warm-200 bg-white">
-        <div className="mx-auto grid max-w-5xl grid-cols-3 gap-6 px-4 py-10 sm:px-6 lg:gap-8 lg:px-8">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 sm:grid-cols-3 gap-6 px-4 py-10 sm:px-6 lg:gap-8 lg:px-8">
           {[
             {
               value: `${locations.length}`,

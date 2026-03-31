@@ -51,12 +51,12 @@ interface AnalyticsData {
   topPages?: { path: string; views: number; users: number }[];
   topQueries?: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
   positionDistribution?: {
-    top3: { count: number; prev?: number; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
-    top10: { count: number; prev?: number; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
-    top20: { count: number; prev?: number; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
-    top100: { count: number; prev?: number; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
+    top3: { count: number; prev?: number | null; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
+    top10: { count: number; prev?: number | null; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
+    top20: { count: number; prev?: number | null; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
+    top100: { count: number; prev?: number | null; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
     total: number;
-    prevTotal?: number;
+    prevTotal?: number | null;
   };
   topSearchPages?: { page: string; clicks: number; impressions: number; position: number }[];
   trafficSources?: { channel: string; sessions: number; users: number }[];
@@ -903,7 +903,7 @@ function GoogleAdsSection() {
           {/* Funnel */}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
             {[
-              { label: "Ad Clicks", value: stats.visits, sub: `${stats.visitsToday} today` },
+              { label: "Ad Clicks", value: stats.visits, sub: `${stats.visitsToday} today · tracked on-site` },
               { label: "Signups", value: stats.signups, sub: stats.visits > 0 ? `${((stats.signups / stats.visits) * 100).toFixed(0)}% rate` : "" },
               { label: "Bookings", value: stats.bookingsFromAds, sub: `${stats.visitToBookingRate}% rate` },
               { label: "Paid", value: stats.paidBookings, sub: `${stats.bookingToPayRate}% rate` },

@@ -174,8 +174,8 @@ export async function GET() {
 
     // Top queries (fetch more for position distribution)
     // Compare with yesterday vs today for daily progress tracking
-    const prevStart = new Date(endDate.getTime() - 7 * 86400000); // 7 days before end
-    const prevEnd = new Date(endDate.getTime() - 3 * 86400000); // 3 days before end (older window)
+    const prevEnd = new Date(startDate.getTime()); // previous period ends where current starts (non-overlapping)
+    const prevStart = new Date(prevEnd.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days before that
 
     const [{ data: queries }, { data: prevQueries }] = await Promise.all([
       searchConsole.searchanalytics.query({
@@ -224,22 +224,30 @@ export async function GET() {
     const top20 = allQueries.filter((q) => q.position <= 20);
     const top100 = allQueries.filter((q) => q.position <= 100);
 
-    // Previous period distribution for comparison
-    const prevAll = (prevQueries.rows || []).map((r) => ({
-      position: Math.round((r.position || 0) * 10) / 10,
-    }));
-    const prevTop3 = prevAll.filter((q) => q.position <= 3).length;
-    const prevTop10 = prevAll.filter((q) => q.position <= 10).length;
-    const prevTop20 = prevAll.filter((q) => q.position <= 20).length;
-    const prevTop100 = prevAll.filter((q) => q.position <= 100).length;
+    // Save daily keyword position snapshot (once per day, upsert)
+    let prevSnapshot: { top3: number; top10: number; top20: number; top100: number; total: number } | null = null;
+    try {
+      await queryOne(`
+        INSERT INTO keyword_snapshots (date, top3, top10, top20, top100, total)
+        VALUES (CURRENT_DATE, $1, $2, $3, $4, $5)
+        ON CONFLICT (date) DO UPDATE SET top3=$1, top10=$2, top20=$3, top100=$4, total=$5
+      `, [top3.length, top10.length, top20.length, top100.length, allQueries.length]);
+    } catch {}
+
+    // Get yesterday's snapshot for comparison
+    try {
+      prevSnapshot = await queryOne<{ top3: number; top10: number; top20: number; top100: number; total: number }>(
+        "SELECT top3, top10, top20, top100, total FROM keyword_snapshots WHERE date = CURRENT_DATE - 1"
+      ) ?? null;
+    } catch {}
 
     result.positionDistribution = {
-      top3: { count: top3.length, queries: top3, prev: prevTop3 },
-      top10: { count: top10.length, queries: top10.filter((q) => q.position > 3), prev: prevTop10 },
-      top20: { count: top20.length, queries: top20.filter((q) => q.position > 10), prev: prevTop20 },
-      top100: { count: top100.length, queries: top100.filter((q) => q.position > 20), prev: prevTop100 },
+      top3: { count: top3.length, queries: top3, prev: prevSnapshot?.top3 ?? null },
+      top10: { count: top10.length, queries: top10.filter((q) => q.position > 3), prev: prevSnapshot?.top10 ?? null },
+      top20: { count: top20.length, queries: top20.filter((q) => q.position > 10), prev: prevSnapshot?.top20 ?? null },
+      top100: { count: top100.length, queries: top100.filter((q) => q.position > 20), prev: prevSnapshot?.top100 ?? null },
       total: allQueries.length,
-      prevTotal: prevAll.length,
+      prevTotal: prevSnapshot?.total ?? null,
     };
 
     result.topQueries = allQueries.slice(0, 50);
