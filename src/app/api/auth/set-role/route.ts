@@ -98,6 +98,9 @@ export async function GET(request: NextRequest) {
           sendAdminNewPhotographerNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
             console.error("[set-role] Failed to send admin notification:", err)
           );
+          import("@/lib/telegram").then(({ sendTelegram }) => {
+            sendTelegram(`👤 <b>New Photographer!</b>\n\n${session.user!.name || "Unknown"}\n${session.user!.email}`);
+          }).catch(() => {});
         } else {
           // Client: send welcome email + admin notification
           sendWelcomeEmail(session.user.email!, session.user.name || "there", "client").catch((err) =>
@@ -106,6 +109,9 @@ export async function GET(request: NextRequest) {
           sendAdminNewClientNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
             console.error("[set-role] Failed to send admin client notification:", err)
           );
+          import("@/lib/telegram").then(({ sendTelegram }) => {
+            sendTelegram(`👤 <b>New Client!</b>\n\n${session.user!.name || "Unknown"}\n${session.user!.email}`);
+          }).catch(() => {});
         }
       }
     }

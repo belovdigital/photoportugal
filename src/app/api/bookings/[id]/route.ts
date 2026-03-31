@@ -262,6 +262,9 @@ export async function PATCH(
           sendAdminBookingCancelledNotification(
             cancelInfo.client_name, cancelInfo.photographer_name, cancelledBy, refundAmount
           ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
+          import("@/lib/telegram").then(({ sendTelegram }) => {
+            sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)`);
+          }).catch(() => {});
         }
 
         return NextResponse.json({ success: true, refunded: refundPercent > 0, refundPercent });
@@ -328,6 +331,9 @@ export async function PATCH(
           sendAdminBookingCancelledNotification(
             cancelInfo.client_name, cancelInfo.photographer_name, cancelledBy, null
           ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
+          import("@/lib/telegram").then(({ sendTelegram }) => {
+            sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}`);
+          }).catch(() => {});
         }
       } catch (emailErr) {
         console.error("[bookings] cancellation email error:", emailErr);
@@ -486,6 +492,9 @@ export async function PATCH(
             bookingDetails.total_price,
             bookingDetails.package_name
           ).catch(err => console.error("[bookings] admin confirmed notification error:", err));
+          import("@/lib/telegram").then(({ sendTelegram }) => {
+            sendTelegram(`✅ <b>Booking Confirmed!</b>\n\n${bookingDetails!.client_name} → ${bookingDetails!.photographer_name}\n${bookingDetails!.package_name || ""}\n€${Math.round(bookingDetails!.total_price || 0)}`);
+          }).catch(() => {});
         }
       } catch (emailErr) {
         console.error("[bookings] confirmation email error:", emailErr);

@@ -114,6 +114,9 @@ export async function POST(req: NextRequest) {
           pkgInfo?.name || null,
           dateDisplay
         );
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`📅 <b>New Booking!</b>\n\n${clientInfo!.name} → ${photographerInfo!.display_name}\n${pkgInfo?.name || "Custom"}\n${dateDisplay || "Flexible dates"}`);
+        }).catch(() => {});
       }
 
       // Send SMS notification to photographer (if enabled and phone number exists)

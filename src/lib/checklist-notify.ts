@@ -54,6 +54,10 @@ export async function checkAndNotifyChecklistComplete(photographerId: string) {
       [profile.name, "completed checklist", "ready for approval"],
       `Photo Portugal: ${profile.name} completed their profile and is ready for approval. Check admin panel.`
     );
+
+    import("@/lib/telegram").then(({ sendTelegram }) => {
+      sendTelegram(`📸 <b>Photographer Ready!</b>\n\n${profile!.name} (${profile!.email}) completed all onboarding steps.\n\nReview in admin panel.`);
+    }).catch(() => {});
   } catch (err) {
     console.error("[checklist-notify] error:", err);
   }
