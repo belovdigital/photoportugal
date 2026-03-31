@@ -19,9 +19,9 @@ export async function getAdminEmail(): Promise<string> {
     const setting = await queryOne<{ value: string }>(
       "SELECT value FROM platform_settings WHERE key = 'admin_notification_email'"
     );
-    return setting?.value || "info@photoportugal.com";
+    return setting?.value || "";
   } catch {
-    return "info@photoportugal.com";
+    return "";
   }
 }
 

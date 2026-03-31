@@ -73,6 +73,21 @@ export async function POST(req: NextRequest) {
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`⭐ <b>New Review!</b>\n\n${"★".repeat(rating)}${"☆".repeat(5-rating)} from ${client!.name}\nFor: ${info!.name}${title ? `\n"${title}"` : ""}`);
         }).catch(() => {});
+
+        // Email: notify admin of new review
+        import("@/lib/email").then(({ sendEmail, getAdminEmail }) => {
+          getAdminEmail().then(adminEmail => {
+            sendEmail(adminEmail, `New review: ${rating}★ from ${client!.name} for ${info!.name}`,
+              `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+                <h2 style="color: #C94536;">New Review Submitted</h2>
+                <p><strong>${rating}★</strong> from <strong>${client!.name}</strong> for <strong>${info!.name}</strong></p>
+                ${title ? `<p><strong>${title}</strong></p>` : ""}
+                ${text ? `<p>${text.slice(0, 300)}</p>` : ""}
+                <p><a href="https://photoportugal.com/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
+              </div>`
+            );
+          });
+        }).catch(() => {});
       }
     } catch {}
 

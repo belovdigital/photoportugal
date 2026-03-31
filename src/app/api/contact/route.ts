@@ -54,6 +54,11 @@ export async function POST(req: NextRequest) {
       )
     ).catch((err) => console.error("[contact] email error:", err));
 
+    // Telegram: notify admin of contact form submission
+    import("@/lib/telegram").then(({ sendTelegram }) => {
+      sendTelegram(`📩 <b>Contact Form</b>\n\n${topicLabel}\nFrom: ${name} (${email})\n\n${message.slice(0, 200)}`);
+    }).catch(() => {});
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[contact] Error:", error);
