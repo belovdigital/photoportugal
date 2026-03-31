@@ -211,30 +211,11 @@ function codeToFlag(code: string): string {
   return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 }
 
-const COUNTRY_NAMES: Record<string, string> = {
-  PT: "Portugal", US: "United States", GB: "United Kingdom", DE: "Germany", FR: "France",
-  ES: "Spain", IT: "Italy", BR: "Brazil", CA: "Canada", AU: "Australia", NL: "Netherlands",
-  BE: "Belgium", CH: "Switzerland", AT: "Austria", IE: "Ireland", SE: "Sweden", NO: "Norway",
-  DK: "Denmark", FI: "Finland", PL: "Poland", RU: "Russia", UA: "Ukraine", CZ: "Czechia",
-  GR: "Greece", RO: "Romania", HU: "Hungary", TR: "Turkey", IN: "India", CN: "China",
-  JP: "Japan", KR: "South Korea", ZA: "South Africa", MX: "Mexico", AR: "Argentina",
-  CO: "Colombia", CL: "Chile", IL: "Israel", AE: "UAE", SG: "Singapore", TH: "Thailand",
-  AM: "Armenia", GE: "Georgia", LU: "Luxembourg", LT: "Lithuania", LV: "Latvia",
-  EE: "Estonia", BG: "Bulgaria", HR: "Croatia", RS: "Serbia", SK: "Slovakia", SI: "Slovenia",
-  CY: "Cyprus", MT: "Malta", IS: "Iceland", NZ: "New Zealand", PH: "Philippines",
-  MY: "Malaysia", ID: "Indonesia", VN: "Vietnam", TW: "Taiwan", HK: "Hong Kong",
-  SA: "Saudi Arabia", QA: "Qatar", KW: "Kuwait", BH: "Bahrain", OM: "Oman",
-  EG: "Egypt", MA: "Morocco", NG: "Nigeria", KE: "Kenya", TZ: "Tanzania",
-  PE: "Peru", EC: "Ecuador", UY: "Uruguay", PY: "Paraguay", VE: "Venezuela",
-  CR: "Costa Rica", PA: "Panama", DO: "Dominican Republic", PR: "Puerto Rico",
-  JM: "Jamaica", TT: "Trinidad", CU: "Cuba", BY: "Belarus", MD: "Moldova",
-  KZ: "Kazakhstan", UZ: "Uzbekistan", AZ: "Azerbaijan", LK: "Sri Lanka", BD: "Bangladesh",
-  PK: "Pakistan", NP: "Nepal", MM: "Myanmar", KH: "Cambodia", LA: "Laos",
-};
+const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
 
 const getCountry = (code: string) => ({
   flag: codeToFlag(code),
-  name: COUNTRY_NAMES[code] || code,
+  name: (() => { try { return countryNames.of(code) || code; } catch { return code; } })(),
 });
 
 function VisitorsTab() {
