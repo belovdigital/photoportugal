@@ -69,27 +69,31 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
 
   if (currentStatus === "confirmed") {
     return (
-      <>
+      <div>
         <button onClick={() => updateStatus("completed")} disabled={updating}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
           {t("markSessionDone")}
         </button>
+        <p className="mt-1.5 text-[11px] text-gray-400">{t("markSessionDoneHint")}</p>
         {errorBanner}
-      </>
+      </div>
     );
   }
 
   if (currentStatus === "completed" && !deliveryAccepted) {
     return (
-      <Link
-        href={`/dashboard/bookings/${bookingId}/deliver`}
-        className="inline-flex items-center gap-2 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700"
-      >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        {t("uploadDeliverPhotos")}
-      </Link>
+      <div>
+        <Link
+          href={`/dashboard/bookings/${bookingId}/deliver`}
+          className="inline-flex items-center gap-2 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {t("uploadDeliverPhotos")}
+        </Link>
+        <p className="mt-1.5 text-[11px] text-gray-400">{t("uploadDeliverHint")}</p>
+      </div>
     );
   }
 

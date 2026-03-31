@@ -2134,7 +2134,9 @@
     "cancelling": "Cancelling...",
     "cancelConfirm": "Cancel this booking?",
     "cancelRefundConfirm": "Cancel this booking? Your payment will be refunded. Refunds typically take 5-10 business days.",
-    "failedUpdate": "Failed to update booking"
+    "failedUpdate": "Failed to update booking",
+    "markSessionDoneHint": "Confirm that the session took place successfully. If there was a problem (client no-show, issues), contact support instead.",
+    "uploadDeliverHint": "Upload your photos and share them with the client. They'll receive an email with a link to review and accept."
   },
   "clientDashboard": {
     "title": "My Dashboard"

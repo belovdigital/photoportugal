@@ -196,6 +196,8 @@ CREATE TABLE bookings (
   delivery_reminder_sent BOOLEAN DEFAULT FALSE,
   review_requested BOOLEAN DEFAULT FALSE,
   trustpilot_sent BOOLEAN DEFAULT FALSE,
+  session_reminder_sent BOOLEAN DEFAULT FALSE,
+  delivery_review_reminder_sent BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

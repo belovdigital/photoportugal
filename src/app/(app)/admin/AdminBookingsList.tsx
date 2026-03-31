@@ -23,13 +23,14 @@ export interface AdminBooking {
   flexible_date_from: string | null;
   flexible_date_to: string | null;
   date_note: string | null;
+  delivery_accepted: boolean | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
   confirmed: "bg-green-100 text-green-700",
   completed: "bg-blue-100 text-blue-700",
-  delivered: "bg-blue-100 text-blue-700",
+  delivered: "bg-purple-100 text-purple-700",
   cancelled: "bg-gray-100 text-gray-500",
 };
 
@@ -122,6 +123,11 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[b.status] || "bg-gray-100 text-gray-500"}`}>
                   {b.status}
                 </span>
+                {b.status === "delivered" && b.delivery_accepted && (
+                  <span className="shrink-0 rounded-full bg-green-100 px-1.5 py-0.5 text-[9px] font-semibold text-green-700">
+                    ✓ accepted
+                  </span>
+                )}
 
                 {/* Names */}
                 <div className="min-w-0 flex-1">

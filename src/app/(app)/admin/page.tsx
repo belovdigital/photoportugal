@@ -168,12 +168,14 @@ export default async function AdminPage() {
     group_size: number | null; shoot_time: string | null; package_name: string | null;
     service_fee: number | null; payout_amount: number | null;
     flexible_date_from: string | null; flexible_date_to: string | null; date_note: string | null;
+    delivery_accepted: boolean | null;
   }>(
     `SELECT b.id, cu.name as client_name, pu.name as photographer_name,
             b.status, b.shoot_date, b.total_price, b.created_at, b.payment_status,
             b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
             pk.name as package_name, b.service_fee, b.payout_amount,
-            b.flexible_date_from, b.flexible_date_to, b.date_note
+            b.flexible_date_from, b.flexible_date_to, b.date_note,
+            b.delivery_accepted
      FROM bookings b JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users pu ON pu.id = pp.user_id

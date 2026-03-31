@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
     paymentReminders: 0,
     autoCancelled: 0,
     shootReminders: 0,
+    sessionReminders: 0,
     deliveryReminders: 0,
     deliveryEscalations: 0,
     deliveryAutoRefunds: 0,
@@ -247,6 +248,79 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Shoot reminders query: ${err}`);
+  }
+
+  // === 2b. Session reminders (after shoot date passed, photographer hasn't marked done) ===
+  try {
+    const sessionReminders = await query<{
+      id: string;
+      shoot_date: string | null;
+      flexible_date_from: string | null;
+      flexible_date_to: string | null;
+      photographer_email: string;
+      photographer_name: string;
+      client_name: string;
+      photographer_profile_id: string;
+    }>(
+      `SELECT b.id, b.shoot_date::text, b.flexible_date_from::text, b.flexible_date_to::text,
+              pu.email as photographer_email, pu.name as photographer_name,
+              cu.name as client_name,
+              pp.id as photographer_profile_id
+       FROM bookings b
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       JOIN users cu ON cu.id = b.client_id
+       WHERE b.status = 'confirmed'
+         AND b.payment_status = 'paid'
+         AND COALESCE(b.session_reminder_sent, FALSE) = FALSE
+         AND (
+           (b.shoot_date IS NOT NULL AND b.shoot_date < CURRENT_DATE)
+           OR (b.flexible_date_to IS NOT NULL AND b.flexible_date_to < CURRENT_DATE)
+         )`
+    );
+
+    for (const booking of sessionReminders) {
+      try {
+        const dateDisplay = booking.shoot_date
+          ? new Date(booking.shoot_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+          : booking.flexible_date_to
+            ? new Date(booking.flexible_date_to).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+            : "your scheduled date";
+        const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+
+        await sendEmail(
+          booking.photographer_email,
+          `How did the session go? Mark it as completed`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">How did the session go?</h2>
+            <p>Hi ${booking.photographer_name.split(" ")[0]},</p>
+            <p>Your session with <strong>${booking.client_name}</strong> was scheduled for ${dateDisplay}. If the session went well, please mark it as completed and upload your photos.</p>
+            <p>If something went wrong or the client didn't show up, please contact our support team.</p>
+            <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Bookings</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        // Telegram notification
+        try {
+          const { notifyPhotographerViaTelegram } = await import("@/lib/notify-photographer");
+          await notifyPhotographerViaTelegram(
+            booking.photographer_profile_id,
+            `How did the session with ${booking.client_name} go?\n\nPlease mark it as completed in your dashboard:\n${baseUrl}/dashboard/bookings`
+          );
+        } catch {}
+
+        await queryOne(
+          "UPDATE bookings SET session_reminder_sent = TRUE WHERE id = $1 RETURNING id",
+          [booking.id]
+        );
+        results.sessionReminders++;
+      } catch (err) {
+        results.errors.push(`Session reminder for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Session reminders query: ${err}`);
   }
 
   // === 3. Delivery reminders (if delivery_days passed after completion) ===
@@ -572,6 +646,54 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Auto-release payments query: ${err}`);
   }
 
+  // === 3d2. Client delivery review reminder (3 days after delivered, if not accepted) ===
+  let deliveryReviewReminders = 0;
+  try {
+    const unacceptedDeliveries = await query<{
+      id: string;
+      client_email: string;
+      client_name: string;
+      photographer_name: string;
+    }>(
+      `SELECT b.id, cu.email as client_email, cu.name as client_name,
+              pu.name as photographer_name
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.status = 'delivered'
+         AND COALESCE(b.delivery_accepted, FALSE) = FALSE
+         AND b.updated_at < NOW() - INTERVAL '3 days'
+         AND COALESCE(b.delivery_review_reminder_sent, FALSE) = FALSE`
+    );
+
+    for (const booking of unacceptedDeliveries) {
+      try {
+        const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+        await sendEmail(
+          booking.client_email,
+          `Don't forget to review your photos from ${booking.photographer_name}!`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Your photos are waiting!</h2>
+            <p>Hi ${booking.client_name.split(" ")[0]},</p>
+            <p>Your photo previews from <strong>${booking.photographer_name}</strong> are ready and waiting for your review. Accept them to download the full-resolution versions.</p>
+            <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review Your Photos</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+        await queryOne(
+          "UPDATE bookings SET delivery_review_reminder_sent = TRUE WHERE id = $1 RETURNING id",
+          [booking.id]
+        );
+        deliveryReviewReminders++;
+      } catch (err) {
+        results.errors.push(`Delivery review reminder for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Delivery review reminders query: ${err}`);
+  }
+
   // === 3e. Retry pending payouts (delivery accepted but payout not transferred) ===
   try {
     const pendingPayouts = await query<{
@@ -854,7 +976,7 @@ export async function GET(req: NextRequest) {
     await queryOne("DELETE FROM visitor_sessions WHERE started_at < NOW() - INTERVAL '30 days'", []);
   } catch {}
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated });
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders });
 
   return NextResponse.json({
     success: true,
@@ -863,6 +985,7 @@ export async function GET(req: NextRequest) {
     expiredDeliveriesCleaned,
     checklistDeadlineEmails,
     checklistDeactivated,
+    deliveryReviewReminders,
   });
 
 }

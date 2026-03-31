@@ -1971,7 +1971,9 @@
     "cancelling": "A cancelar...",
     "cancelConfirm": "Cancelar esta reserva?",
     "cancelRefundConfirm": "Cancelar esta reserva? O seu pagamento será reembolsado. Os reembolsos demoram normalmente 5 a 10 dias úteis.",
-    "failedUpdate": "Falha ao atualizar a reserva"
+    "failedUpdate": "Falha ao atualizar a reserva",
+    "markSessionDoneHint": "Confirme que a sessão decorreu com sucesso. Se houve algum problema (cliente não apareceu, imprevistos), contacte o suporte.",
+    "uploadDeliverHint": "Carregue as suas fotos e partilhe-as com o cliente. Receberão um email com um link para rever e aceitar."
   },
   "clientDashboard": {
     "title": "O Meu Painel"

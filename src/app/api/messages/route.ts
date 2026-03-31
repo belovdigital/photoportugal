@@ -152,21 +152,23 @@ export async function POST(req: NextRequest) {
       );
       // Default to true if no preferences set
       if (prefs?.email_messages !== false) {
-        const recipient = await queryOne<{ email: string; name: string }>(
-          "SELECT email, name FROM users WHERE id = $1", [recipientId]
+        const recipient = await queryOne<{ email: string; name: string; last_seen_at: string | null }>(
+          "SELECT email, name, last_seen_at FROM users WHERE id = $1", [recipientId]
         );
         const sender = await queryOne<{ name: string }>(
           "SELECT name FROM users WHERE id = $1", [userId]
         );
         if (recipient && sender) {
-          // Throttle: only send if no email sent to this recipient in last 15 minutes
-          const recentEmail = await queryOne(
+          // Skip if recipient is online (last seen < 5 min ago)
+          const isOnline = recipient.last_seen_at && (Date.now() - new Date(recipient.last_seen_at).getTime()) < 5 * 60 * 1000;
+          // Throttle: only send if no email sent to this recipient in last 1 hour
+          const recentEmail = !isOnline && await queryOne(
             `SELECT id FROM notification_logs
              WHERE channel = 'email' AND recipient = $1 AND event LIKE '%New message%'
-             AND created_at > NOW() - INTERVAL '15 minutes' LIMIT 1`,
+             AND created_at > NOW() - INTERVAL '1 hour' LIMIT 1`,
             [recipient.email]
           );
-          if (!recentEmail) {
+          if (!isOnline && !recentEmail) {
             sendNewMessageNotification(recipient.email, recipient.name, sender.name);
             // Log for throttling
             try {
