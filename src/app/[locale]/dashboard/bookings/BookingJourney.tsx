@@ -10,6 +10,7 @@ interface BookingJourneyProps {
   isPhotographer: boolean;
   shootDate: string | null;
   deliveryToken: string | null;
+  action?: React.ReactNode;
 }
 
 interface Step {
@@ -32,6 +33,7 @@ export function BookingJourney({
   paymentStatus,
   deliveryAccepted,
   isPhotographer,
+  action,
 }: BookingJourneyProps) {
   const t = useTranslations("bookingJourney");
 
@@ -150,6 +152,9 @@ export function BookingJourney({
                   {step.hint}
                 </span>
               )}
+              {step.isCurrent && action && (
+                <div className="mt-2">{action}</div>
+              )}
             </div>
             {i < steps.length - 1 && (
               <div className="flex-1 mt-3.5">
@@ -208,6 +213,9 @@ export function BookingJourney({
               </span>
               {step.isCurrent && (
                 <p className="text-[11px] text-accent-600 mt-0.5">{step.hint}</p>
+              )}
+              {step.isCurrent && action && (
+                <div className="mt-1.5">{action}</div>
               )}
             </div>
           </div>

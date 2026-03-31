@@ -162,6 +162,24 @@ export default async function BookingsPage() {
                   isPhotographer={isPhotographer}
                   shootDate={booking.shoot_date}
                   deliveryToken={booking.delivery_token}
+                  action={
+                    <div className="flex flex-wrap gap-2">
+                      {isPhotographer && (booking.status === "inquiry" || booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
+                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} deliveryAccepted={booking.delivery_accepted} />
+                      )}
+                      {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
+                        <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />
+                      )}
+                      {!isPhotographer && booking.status === "delivered" && booking.delivery_token && (
+                        <Link
+                          href={`/delivery/${booking.delivery_token}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700"
+                        >
+                          {t("viewPhotos")}
+                        </Link>
+                      )}
+                    </div>
+                  }
                 />
               )}
 
@@ -215,32 +233,15 @@ export default async function BookingsPage() {
                 />
               )}
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {isPhotographer && (booking.status === "inquiry" || booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
-                  <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} deliveryAccepted={booking.delivery_accepted} />
-                )}
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Link
                   href={`/dashboard/messages?chat=${booking.id}`}
                   className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
                 >
                   {t("message")}
                 </Link>
-                {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
-                  <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />
-                )}
                 {!isPhotographer && (booking.status === "pending" || booking.status === "confirmed") && (
                   <BookingStatusButtons bookingId={booking.id} currentStatus="cancel-only" paymentStatus={booking.payment_status} />
-                )}
-                {!isPhotographer && booking.status === "delivered" && booking.delivery_token && (
-                  <Link
-                    href={`/delivery/${booking.delivery_token}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {t("viewPhotos")}
-                  </Link>
                 )}
                 {!isPhotographer && (booking.status === "completed" || booking.status === "delivered") && !booking.has_review && (
                   <ReviewForm bookingId={booking.id} photographerName={normalizeName(booking.other_name)} />
