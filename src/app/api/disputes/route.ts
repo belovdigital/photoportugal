@@ -157,6 +157,14 @@ export async function POST(req: NextRequest) {
           sendTelegram(`⚠️ <b>New Dispute!</b>\n\n${escapeHtml(info.client_name)} vs ${escapeHtml(info.photographer_name)}\nReason: ${reasonText}\n${escapeHtml(description.slice(0, 200))}`);
         }).catch(() => {});
 
+        // Telegram notification to photographer
+        import("@/lib/notify-photographer").then(m =>
+          m.notifyPhotographerViaTelegram(
+            booking.photographer_id,
+            `A client reported an issue with their delivery.\n\nReason: ${reasonText}\n\nOur team will review within 48 hours. No action needed from you right now.`
+          )
+        ).catch(() => {});
+
         // Chat message
         await queryOne(
           `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE)`,

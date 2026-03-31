@@ -75,6 +75,7 @@ CREATE TABLE photographer_profiles (
   stripe_onboarding_complete BOOLEAN DEFAULT FALSE,
   stripe_subscription_id VARCHAR(255),
   verification_requested_at TIMESTAMPTZ,
+  telegram_chat_id TEXT,
   rating NUMERIC(2,1) DEFAULT 0,
   review_count INTEGER DEFAULT 0,
   session_count INTEGER DEFAULT 0,
@@ -282,6 +283,7 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   email_messages BOOLEAN DEFAULT TRUE,
   email_reviews BOOLEAN DEFAULT TRUE,
   sms_bookings BOOLEAN DEFAULT TRUE,
+  telegram_enabled BOOLEAN DEFAULT FALSE,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

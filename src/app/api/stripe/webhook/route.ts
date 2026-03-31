@@ -157,6 +157,22 @@ export async function POST(req: NextRequest) {
               } catch (smsErr) {
                 console.error("[webhook] payment whatsapp/sms error:", smsErr);
               }
+
+              // Telegram notification to photographer
+              try {
+                const photographerProfileId = await queryOne<{ photographer_id: string }>(
+                  "SELECT photographer_id FROM bookings WHERE id = $1", [bookingId]
+                );
+                if (photographerProfileId) {
+                  const clientFirst = bookingInfo.client_name.split(" ")[0];
+                  import("@/lib/notify-photographer").then(m =>
+                    m.notifyPhotographerViaTelegram(
+                      photographerProfileId.photographer_id,
+                      `Payment received from ${clientFirst}!\n\nAmount: \u20ac${Number(bookingInfo.total_price)}\n\nView: https://photoportugal.com/dashboard/bookings`
+                    )
+                  ).catch(() => {});
+                }
+              } catch {}
             }
           } catch (emailErr) {
             console.error("[webhook] payment email error:", emailErr);

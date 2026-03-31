@@ -8,13 +8,13 @@ export async function GET(req: NextRequest) {
   const userId = user.id;
 
   try {
-    const prefs = await queryOne<{ email_bookings: boolean; email_messages: boolean; email_reviews: boolean; sms_bookings: boolean }>(
-      "SELECT email_bookings, email_messages, email_reviews, sms_bookings FROM notification_preferences WHERE user_id = $1",
+    const prefs = await queryOne<{ email_bookings: boolean; email_messages: boolean; email_reviews: boolean; sms_bookings: boolean; telegram_enabled: boolean }>(
+      "SELECT email_bookings, email_messages, email_reviews, sms_bookings, telegram_enabled FROM notification_preferences WHERE user_id = $1",
       [userId]
     );
-    return NextResponse.json(prefs || { email_bookings: true, email_messages: true, email_reviews: true, sms_bookings: true });
+    return NextResponse.json(prefs || { email_bookings: true, email_messages: true, email_reviews: true, sms_bookings: true, telegram_enabled: false });
   } catch {
-    return NextResponse.json({ email_bookings: true, email_messages: true, email_reviews: true, sms_bookings: true });
+    return NextResponse.json({ email_bookings: true, email_messages: true, email_reviews: true, sms_bookings: true, telegram_enabled: false });
   }
 }
 

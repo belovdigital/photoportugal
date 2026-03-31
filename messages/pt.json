@@ -623,7 +623,8 @@
           "portfolioPhotos": "Até 10 fotos de portfólio",
           "locations": "1 localização",
           "searchVisibility": "Visibilidade básica na pesquisa",
-          "commission": "Comissão da plataforma de {rate}%"
+          "commission": "Comissão da plataforma de {rate}%",
+          "unlimitedPackages": "Pacotes ilimitados"
         },
         "cta": "Começar Gratuitamente"
       },
@@ -635,7 +636,8 @@
           "locations": "5 localizações",
           "searchRanking": "Posição prioritária na pesquisa",
           "analytics": "Análise do perfil",
-          "commission": "Comissão da plataforma de {rate}%"
+          "commission": "Comissão da plataforma de {rate}%",
+          "unlimitedPackages": "Pacotes ilimitados"
         },
         "cta": "Atualizar para Pro"
       },
@@ -649,7 +651,8 @@
           "analytics": "Painel de análise completo",
           "commission": "Comissão da plataforma de {rate}%",
           "support": "Apoio prioritário",
-          "customUrl": "URL de perfil personalizado"
+          "customUrl": "URL de perfil personalizado",
+          "unlimitedPackages": "Pacotes ilimitados"
         },
         "cta": "Escolher Premium"
       }
@@ -1411,7 +1414,7 @@
   },
   "terms": {
     "title": "Termos de Serviço",
-    "lastUpdated": "Última atualização: 19 de março de 2026",
+    "lastUpdated": "Última atualização: 31 de março de 2026",
     "metaDescription": "Termos de serviço da Photo Portugal — reservas, pagamentos, cancelamentos, reembolsos e regras da plataforma.",
     "sections": {
       "overview": {
@@ -1457,7 +1460,8 @@
           "fundsHeld": "Os fundos são retidos em segurança até o fotógrafo entregar as fotos e o cliente aceitar a entrega",
           "released": "Assim que o cliente aceitar a entrega, a parte do fotógrafo (menos a comissão da plataforma) é-lhe libertada",
           "autoRelease": "Se o cliente não responder no prazo de <strong>14 dias</strong> após a entrega, o pagamento é automaticamente libertado para o fotógrafo",
-          "support": "Se o cliente não aceitar nem contestar no prazo de 7 dias, o fotógrafo pode contactar a nossa equipa de apoio para resolver a situação"
+          "support": "Se o cliente não aceitar nem contestar no prazo de 7 dias, o fotógrafo pode contactar a nossa equipa de apoio para resolver a situação",
+          "autoCancellation": "Se o fotógrafo não tiver confirmado a reserva e o pagamento não tiver sido recebido no prazo de <strong>48 horas</strong> após o pedido de reserva, a reserva é automaticamente cancelada e é emitido um reembolso total ao cliente"
         }
       },
       "commission": {
@@ -2018,6 +2022,17 @@
     "smsNotifications": "Notificações por SMS",
     "smsNewBookings": "Novas reservas",
     "smsNewBookingsDesc": "Receba um SMS quando alguém solicitar uma sessão",
+    "telegramNotifications": "Notificações por Telegram",
+    "telegramDesc": "Receba notificações instantâneas na sua aplicação Telegram",
+    "telegramNotConnected": "Conecte a sua conta Telegram para receber notificações instantâneas sobre novas reservas, mensagens, pagamentos e mais.",
+    "connectTelegram": "Conectar Telegram",
+    "connecting": "A conectar...",
+    "telegramConnectedSuccess": "Telegram conectado com sucesso!",
+    "telegramActive": "Notificações Telegram",
+    "telegramActiveDesc": "Receba alertas de reservas e mensagens via Telegram",
+    "disconnectTelegram": "Desconectar Telegram",
+    "telegramDisconnectConfirm": "Tem a certeza que deseja desconectar o Telegram?",
+    "telegramDisconnected": "Telegram desconectado.",
     "dangerZone": "Zona de Perigo",
     "deleteAccount": "Eliminar Conta",
     "deleteAccountDesc": "Eliminar permanentemente a sua conta e todos os dados.",

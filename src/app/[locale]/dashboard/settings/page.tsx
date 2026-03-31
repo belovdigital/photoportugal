@@ -103,6 +103,11 @@ export default function SettingsPage() {
   const [smsBookings, setSmsBookings] = useState(true);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
+  // Telegram
+  const [telegramConnected, setTelegramConnected] = useState(false);
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [telegramLoading, setTelegramLoading] = useState(false);
+
   // Delete account
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -138,6 +143,19 @@ export default function SettingsPage() {
     setMessage(msg);
     setTimeout(() => setMessage(""), 3000);
   }
+
+  // Load Telegram status (separate effect: isPhotographer depends on session loading)
+  useEffect(() => {
+    if (isPhotographer) {
+      fetch("/api/dashboard/telegram")
+        .then((r) => r.json())
+        .then((data) => {
+          setTelegramConnected(data.connected ?? false);
+          setTelegramEnabled(data.enabled ?? false);
+        })
+        .catch(() => {});
+    }
+  }, [isPhotographer]);
 
   async function saveAccount(e: React.FormEvent) {
     e.preventDefault();
@@ -311,6 +329,102 @@ export default function SettingsPage() {
               </div>
               {prefsLoaded && <Toggle enabled={smsBookings} onChange={(v) => { setSmsBookings(v); saveNotificationPref("sms_bookings", v); }} />}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Telegram Notifications */}
+      {isPhotographer && (
+        <section className="mt-8">
+          <h2 className="text-lg font-bold text-gray-900">{t("telegramNotifications")}</h2>
+          <p className="mt-1 text-sm text-gray-500">{t("telegramDesc")}</p>
+          <div className="mt-4 rounded-xl border border-warm-200 bg-white divide-y divide-warm-100">
+            {!telegramConnected ? (
+              <div className="px-6 py-5">
+                <p className="text-sm text-gray-600 mb-3">{t("telegramNotConnected")}</p>
+                <button
+                  onClick={async () => {
+                    setTelegramLoading(true);
+                    try {
+                      const res = await fetch("/api/dashboard/telegram", { method: "POST" });
+                      const data = await res.json();
+                      if (data.url) {
+                        window.open(data.url, "_blank");
+                        // Poll for connection status
+                        const poll = setInterval(async () => {
+                          try {
+                            const statusRes = await fetch("/api/dashboard/telegram");
+                            const statusData = await statusRes.json();
+                            if (statusData.connected) {
+                              setTelegramConnected(true);
+                              setTelegramEnabled(statusData.enabled);
+                              clearInterval(poll);
+                              showMessage(t("telegramConnectedSuccess"));
+                            }
+                          } catch {}
+                        }, 3000);
+                        // Stop polling after 2 minutes
+                        setTimeout(() => clearInterval(poll), 120000);
+                      } else {
+                        showMessage(data.error || t("failedToSave"));
+                      }
+                    } catch {
+                      showMessage(t("failedToSave"));
+                    }
+                    setTelegramLoading(false);
+                  }}
+                  disabled={telegramLoading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0088cc] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#006daa] disabled:opacity-50"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                  {telegramLoading ? t("connecting") : t("connectTelegram")}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between px-6 py-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{t("telegramActive")}</p>
+                    <p className="text-xs text-gray-400">{t("telegramActiveDesc")}</p>
+                  </div>
+                  {prefsLoaded && (
+                    <Toggle
+                      enabled={telegramEnabled}
+                      onChange={async (v) => {
+                        setTelegramEnabled(v);
+                        try {
+                          await fetch("/api/dashboard/telegram", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ enabled: v }),
+                          });
+                        } catch {
+                          setTelegramEnabled(!v);
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+                <div className="px-6 py-3">
+                  <button
+                    onClick={async () => {
+                      if (!confirm(t("telegramDisconnectConfirm"))) return;
+                      try {
+                        await fetch("/api/dashboard/telegram", { method: "DELETE" });
+                        setTelegramConnected(false);
+                        setTelegramEnabled(false);
+                        showMessage(t("telegramDisconnected"));
+                      } catch {
+                        showMessage(t("failedToSave"));
+                      }
+                    }}
+                    className="text-xs text-gray-400 hover:text-red-500 transition"
+                  >
+                    {t("disconnectTelegram")}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </section>
       )}

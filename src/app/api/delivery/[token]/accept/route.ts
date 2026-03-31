@@ -175,6 +175,23 @@ export async function POST(
     sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${Math.round(estimatedPayout)}` : ""}`);
   }).catch(() => {});
 
+  // Telegram: notify photographer of delivery acceptance
+  try {
+    const photographerProfileForTg = await queryOne<{ id: string }>(
+      "SELECT photographer_id as id FROM bookings WHERE id = $1", [booking.id]
+    );
+    if (photographerProfileForTg) {
+      const clientFirst = booking.client_name.split(" ")[0];
+      const payoutInfo = booking.payout_amount ? `\nPayout: \u20ac${Number(booking.payout_amount).toFixed(2)}` : "";
+      import("@/lib/notify-photographer").then(m =>
+        m.notifyPhotographerViaTelegram(
+          photographerProfileForTg.id,
+          `${clientFirst} accepted your delivery!${payoutInfo}\n\nView: https://photoportugal.com/dashboard/bookings`
+        )
+      ).catch(() => {});
+    }
+  } catch {}
+
   // Pre-build ZIP in background (non-blocking)
   import("@/lib/build-zip").then(({ buildDeliveryZip }) => {
     buildDeliveryZip(booking.id).catch(err => console.error("[accept] zip build error:", err));

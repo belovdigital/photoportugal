@@ -167,6 +167,17 @@ export async function POST(req: NextRequest) {
           )
         ).catch(() => {});
       }
+
+      // Telegram notification to photographer
+      if (clientInfo) {
+        const clientFirst = clientInfo.name.split(" ")[0];
+        import("@/lib/notify-photographer").then(m =>
+          m.notifyPhotographerViaTelegram(
+            photographer_id,
+            `New booking request from ${clientFirst}!\n\nPackage: ${pkgInfo?.name || "Custom"}\nDate: ${dateDisplay || "Flexible"}\n\nView: https://photoportugal.com/dashboard/bookings`
+          )
+        ).catch(() => {});
+      }
     } catch {}
 
     return NextResponse.json({ success: true, booking_id: booking?.id });

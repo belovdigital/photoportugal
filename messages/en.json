@@ -626,7 +626,8 @@
           "portfolioPhotos": "Up to 10 portfolio photos",
           "locations": "1 location",
           "searchVisibility": "Basic search visibility",
-          "commission": "{rate}% platform commission"
+          "commission": "{rate}% platform commission",
+          "unlimitedPackages": "Unlimited packages"
         },
         "cta": "Get Started Free"
       },
@@ -638,7 +639,8 @@
           "locations": "5 locations",
           "searchRanking": "Priority search ranking",
           "analytics": "Profile analytics",
-          "commission": "{rate}% platform commission"
+          "commission": "{rate}% platform commission",
+          "unlimitedPackages": "Unlimited packages"
         },
         "cta": "Upgrade to Pro"
       },
@@ -652,7 +654,8 @@
           "analytics": "Full analytics dashboard",
           "commission": "{rate}% platform commission",
           "support": "Priority support",
-          "customUrl": "Custom profile URL"
+          "customUrl": "Custom profile URL",
+          "unlimitedPackages": "Unlimited packages"
         },
         "cta": "Go Premium"
       }
@@ -1414,7 +1417,7 @@
   },
   "terms": {
     "title": "Terms of Service",
-    "lastUpdated": "Last updated: March 19, 2026",
+    "lastUpdated": "Last updated: March 31, 2026",
     "metaDescription": "Photo Portugal terms of service — booking, payments, cancellations, refunds, and platform rules.",
     "sections": {
       "overview": {
@@ -1460,7 +1463,8 @@
           "fundsHeld": "Funds are held securely until the photographer delivers the photos and the client accepts the delivery",
           "released": "Once the client accepts the delivery, the photographer's share (minus platform commission) is released to them",
           "autoRelease": "If the client does not respond within <strong>14 days</strong> after delivery, the payment is automatically released to the photographer",
-          "support": "If the client does not accept or dispute within 7 days, the photographer may contact our support team to resolve the situation"
+          "support": "If the client does not accept or dispute within 7 days, the photographer may contact our support team to resolve the situation",
+          "autoCancellation": "If the photographer has not confirmed the booking and payment has not been received within <strong>48 hours</strong> of the booking request, the booking is automatically cancelled and a full refund is issued to the client"
         }
       },
       "commission": {
@@ -2181,6 +2185,17 @@
     "smsNotifications": "SMS Notifications",
     "smsNewBookings": "New bookings",
     "smsNewBookingsDesc": "Receive an SMS when someone requests a session",
+    "telegramNotifications": "Telegram Notifications",
+    "telegramDesc": "Receive instant notifications in your Telegram app",
+    "telegramNotConnected": "Connect your Telegram account to receive instant notifications about new bookings, messages, payments, and more.",
+    "connectTelegram": "Connect Telegram",
+    "connecting": "Connecting...",
+    "telegramConnectedSuccess": "Telegram connected successfully!",
+    "telegramActive": "Telegram notifications",
+    "telegramActiveDesc": "Receive booking and message alerts via Telegram",
+    "disconnectTelegram": "Disconnect Telegram",
+    "telegramDisconnectConfirm": "Are you sure you want to disconnect Telegram?",
+    "telegramDisconnected": "Telegram disconnected.",
     "dangerZone": "Danger Zone",
     "deleteAccount": "Delete Account",
     "deleteAccountDesc": "Permanently delete your account and all data.",

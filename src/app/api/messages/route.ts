@@ -201,6 +201,26 @@ export async function POST(req: NextRequest) {
         )
       ).catch(() => {});
 
+      // Telegram notification to photographer (when sender is client)
+      if (userId === booking.client_id) {
+        try {
+          const photographerProfile = await queryOne<{ id: string }>(
+            `SELECT pp.id FROM photographer_profiles pp
+             JOIN bookings b ON b.photographer_id = pp.id
+             WHERE b.id = $1`, [booking_id]
+          );
+          if (photographerProfile) {
+            const senderFirst = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "A client";
+            import("@/lib/notify-photographer").then(m =>
+              m.notifyPhotographerViaTelegram(
+                photographerProfile.id,
+                `New message from ${senderFirst}\n\nView: https://photoportugal.com/dashboard/messages`
+              )
+            ).catch(() => {});
+          }
+        } catch {}
+      }
+
       // Throttled WhatsApp/SMS for pending bookings (max once per 10 min per recipient)
       if (booking.status === "pending") {
         try {
