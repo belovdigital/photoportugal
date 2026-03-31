@@ -30,6 +30,7 @@ export async function POST(
     payout_amount: number | null;
     payout_transferred: boolean;
     photographer_stripe_id: string | null;
+    photographer_stripe_ready: boolean;
     photographer_plan: string;
     photographer_email: string;
     photographer_name: string;
@@ -40,6 +41,7 @@ export async function POST(
             b.delivery_accepted, b.payment_status, b.stripe_payment_intent_id,
             b.total_price, b.payout_amount, b.payout_transferred,
             pp.stripe_account_id as photographer_stripe_id,
+            pp.stripe_onboarding_complete as photographer_stripe_ready,
             pp.plan as photographer_plan,
             pu.email as photographer_email,
             pu.name as photographer_name,
@@ -109,6 +111,29 @@ export async function POST(
 
   // Trigger payout if payment was made and not already transferred
   if (booking.payment_status === "paid" && !booking.payout_transferred && booking.photographer_stripe_id) {
+    // Check if photographer completed Stripe onboarding
+    if (!booking.photographer_stripe_ready) {
+      console.log(`[delivery/accept] Photographer Stripe not ready for booking ${booking.id}, skipping payout`);
+      // Notify photographer to complete Stripe setup
+      import("@/lib/email").then(({ sendEmail }) =>
+        sendEmail(booking.photographer_email, "Complete your Stripe setup to receive payment",
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Payment Pending — Action Required</h2>
+            <p>Hi ${booking.photographer_name.split(" ")[0]},</p>
+            <p><strong>${booking.client_name}</strong> has accepted your photo delivery! However, we can't transfer your payment yet because your Stripe account setup is incomplete.</p>
+            <p><a href="https://photoportugal.com/dashboard/settings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Complete Stripe Setup</a></p>
+            <p style="color: #666; font-size: 13px;">Once your Stripe account is verified, the payment will be transferred automatically.</p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`)
+      ).catch(e => console.error("[delivery/accept] stripe setup email error:", e));
+
+      import("@/lib/notify-photographer").then(m => {
+        const ppId = queryOne<{id:string}>("SELECT id FROM photographer_profiles WHERE stripe_account_id = $1", [booking.photographer_stripe_id!]);
+        ppId.then(p => p && m.notifyPhotographerViaTelegram(p.id, "⚠️ Payment pending! Complete your Stripe setup to receive your payout.\n\nhttps://photoportugal.com/dashboard/settings"));
+      }).catch(() => {});
+    }
+
+    if (booking.photographer_stripe_ready) {
     try {
       const stripeClient = requireStripe();
 
@@ -157,6 +182,7 @@ export async function POST(
       console.error("[delivery/accept] payout error:", stripeErr);
       // Don't fail the acceptance even if payout fails — it can be retried
     }
+    } // end if photographer_stripe_ready
   }
 
   // Send acceptance email to client

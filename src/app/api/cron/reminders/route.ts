@@ -455,6 +455,7 @@ export async function GET(req: NextRequest) {
       payout_transferred: boolean;
       stripe_payment_intent_id: string | null;
       photographer_stripe_id: string | null;
+      photographer_stripe_ready: boolean;
       photographer_plan: string;
       photographer_email: string;
       photographer_name: string;
@@ -464,6 +465,7 @@ export async function GET(req: NextRequest) {
       `SELECT b.id, b.total_price, b.payout_amount, b.payout_transferred,
               b.stripe_payment_intent_id,
               pp.stripe_account_id as photographer_stripe_id,
+              pp.stripe_onboarding_complete as photographer_stripe_ready,
               pp.plan as photographer_plan,
               pu.email as photographer_email,
               pu.name as photographer_name,
@@ -488,7 +490,7 @@ export async function GET(req: NextRequest) {
         );
 
         // Transfer payout to photographer (same logic as delivery accept)
-        if (!booking.payout_transferred && booking.photographer_stripe_id) {
+        if (!booking.payout_transferred && booking.photographer_stripe_id && booking.photographer_stripe_ready) {
           try {
             const stripeClient = requireStripe();
 
@@ -568,6 +570,63 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Auto-release payments query: ${err}`);
+  }
+
+  // === 3e. Retry pending payouts (delivery accepted but payout not transferred) ===
+  try {
+    const pendingPayouts = await query<{
+      id: string; total_price: number | null; payout_amount: number | null;
+      stripe_payment_intent_id: string | null;
+      photographer_stripe_id: string; photographer_plan: string;
+      photographer_email: string; photographer_name: string;
+    }>(
+      `SELECT b.id, b.total_price, b.payout_amount, b.stripe_payment_intent_id,
+              pp.stripe_account_id as photographer_stripe_id,
+              pp.plan as photographer_plan,
+              pu.email as photographer_email, pu.name as photographer_name
+       FROM bookings b
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.delivery_accepted = TRUE
+         AND b.payment_status = 'paid'
+         AND COALESCE(b.payout_transferred, FALSE) = FALSE
+         AND pp.stripe_account_id IS NOT NULL
+         AND pp.stripe_onboarding_complete = TRUE`
+    );
+
+    for (const booking of pendingPayouts) {
+      try {
+        const stripeClient = requireStripe();
+        let payoutAmount = booking.payout_amount ? Number(booking.payout_amount) : null;
+        if (!payoutAmount && booking.total_price) {
+          const payment = calculatePayment(booking.total_price, booking.photographer_plan);
+          payoutAmount = payment.photographerPayout;
+        }
+        if (payoutAmount && payoutAmount > 0) {
+          await stripeClient.transfers.create({
+            amount: Math.round(payoutAmount * 100),
+            currency: "eur",
+            destination: booking.photographer_stripe_id,
+            ...(booking.stripe_payment_intent_id ? { transfer_group: booking.stripe_payment_intent_id } : {}),
+            metadata: { booking_id: booking.id, type: "retry_payout" },
+          });
+          await queryOne("UPDATE bookings SET payout_transferred = TRUE WHERE id = $1", [booking.id]);
+          sendEmail(booking.photographer_email, "Payment transferred!",
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Payment Transferred!</h2>
+              <p>Hi ${booking.photographer_name.split(" ")[0]},</p>
+              <p>Your payment of <strong>€${Math.round(payoutAmount)}</strong> has been transferred to your Stripe account.</p>
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          );
+          console.log(`[cron] Retry payout success for booking ${booking.id}: €${payoutAmount}`);
+        }
+      } catch (err) {
+        results.errors.push(`Retry payout for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Retry payouts query: ${err}`);
   }
 
   // === 4. Trustpilot follow-up (3 days after delivery accepted) ===

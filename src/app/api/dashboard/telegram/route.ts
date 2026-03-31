@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
-import jwt from "jsonwebtoken";
-
-function getJwtSecret(): string {
-  const s = process.env.NEXTAUTH_SECRET;
-  if (!s) throw new Error("NEXTAUTH_SECRET not set");
-  return s;
-}
+import crypto from "crypto";
 
 // GET — check connection status
 export async function GET(req: NextRequest) {
@@ -47,26 +41,20 @@ export async function POST(req: NextRequest) {
     );
     if (!profile) return NextResponse.json({ error: "Not a photographer" }, { status: 403 });
 
-    const token = jwt.sign(
-      { userId: user.id, type: "telegram_connect" },
-      getJwtSecret(),
-      { expiresIn: "10m" }
+    // Generate short code (Telegram /start param limited to 64 chars)
+    const code = crypto.randomBytes(16).toString("hex"); // 32 chars
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+
+    // Store code in DB
+    await queryOne(
+      `INSERT INTO platform_settings (key, value)
+       VALUES ($1, $2)
+       ON CONFLICT (key) DO UPDATE SET value = $2`,
+      [`tg_connect:${code}`, JSON.stringify({ userId: user.id, expiresAt: expiresAt.toISOString() })]
     );
 
-    // Telegram deep link: t.me/BOT_USERNAME?start=TOKEN
-    // The bot username is derived from the bot token via Telegram API at setup time.
-    // We use a generic format that works with any bot username.
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    if (!botToken) return NextResponse.json({ error: "Telegram not configured" }, { status: 500 });
-
-    // Fetch bot username from Telegram API
-    const botInfo = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
-    const botData = await botInfo.json();
-    const botUsername = botData?.result?.username;
-    if (!botUsername) return NextResponse.json({ error: "Could not fetch bot info" }, { status: 500 });
-
     return NextResponse.json({
-      url: `https://t.me/${botUsername}?start=${token}`,
+      url: `https://t.me/photopt_bot?start=${code}`,
     });
   } catch (err) {
     console.error("[dashboard/telegram] POST error:", err);
