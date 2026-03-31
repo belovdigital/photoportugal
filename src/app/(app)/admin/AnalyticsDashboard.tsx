@@ -111,11 +111,14 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
             <span className="text-lg">{b.icon}</span>
             <p className="mt-1 text-2xl font-bold text-gray-900">{b.count}</p>
             <p className="text-xs font-semibold text-gray-500">{b.label}</p>
-            {b.prev !== undefined && b.prev !== null && (
-              <p className={`mt-0.5 text-[10px] font-medium ${b.count > b.prev ? "text-green-500" : b.count < b.prev ? "text-red-500" : "text-gray-400"}`}>
-                {b.count > b.prev ? `+${b.count - b.prev}` : b.count < b.prev ? `${b.count - b.prev}` : "="} vs prev
-              </p>
-            )}
+            {b.prev !== undefined && b.prev !== null && (() => {
+              const diff = b.count - b.prev;
+              return diff !== 0 ? (
+                <p className={`mt-1 text-sm font-bold ${diff > 0 ? "text-green-500" : "text-red-500"}`}>
+                  {diff > 0 ? `▲ +${diff}` : `▼ ${diff}`}
+                </p>
+              ) : null;
+            })()}
           </button>
         ))}
       </div>
