@@ -2251,6 +2251,37 @@
     "paymentOverdueLabel": "Payment overdue",
     "paymentOverdueMessage": "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation."
   },
+  "bookingJourney": {
+    "cancelled": "Cancelled",
+    "client": {
+      "booked": "Booked",
+      "confirmed": "Confirmed",
+      "paid": "Paid",
+      "session": "Session",
+      "photos": "Photos",
+      "accepted": "Accepted",
+      "hintBooked": "Your booking request has been sent",
+      "hintConfirmed": "Waiting for photographer to confirm",
+      "hintPaid": "Complete your payment to secure the booking",
+      "hintSession": "Your session is coming up!",
+      "hintPhotos": "Photographer is editing your photos",
+      "hintAccepted": "Review your photos and accept the delivery"
+    },
+    "photographer": {
+      "request": "Request",
+      "confirmed": "Confirmed",
+      "paid": "Paid",
+      "session": "Session",
+      "upload": "Upload",
+      "accepted": "Accepted",
+      "hintRequest": "New booking request received",
+      "hintConfirmed": "Confirm or decline this booking request",
+      "hintPaid": "Waiting for client to pay",
+      "hintSession": "Session day is coming up!",
+      "hintUpload": "Upload photos and share with your client",
+      "hintAccepted": "Waiting for client to review photos"
+    }
+  },
   "askQuestion": {
     "message": "Message",
     "dialogTitle": "Message {name}",

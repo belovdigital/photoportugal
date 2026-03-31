@@ -8,6 +8,7 @@ import { BookingStatusButtons } from "./BookingStatusButtons";
 import { DateNegotiation } from "./DateNegotiation";
 import { Avatar } from "@/components/ui/Avatar";
 import { PaymentTracker } from "./PaymentTracker";
+import { BookingJourney } from "./BookingJourney";
 import { normalizeName } from "@/lib/format-name";
 
 export const dynamic = "force-dynamic";
@@ -161,6 +162,17 @@ export default async function BookingsPage() {
                   )}
                 </div>
               </div>
+
+              {booking.status !== "cancelled" && (
+                <BookingJourney
+                  status={booking.status}
+                  paymentStatus={booking.payment_status}
+                  deliveryAccepted={booking.delivery_accepted}
+                  isPhotographer={isPhotographer}
+                  shootDate={booking.shoot_date}
+                  deliveryToken={booking.delivery_token}
+                />
+              )}
 
               <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-500">
                 {booking.shoot_date ? (

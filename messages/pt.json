@@ -2088,6 +2088,37 @@
     "paymentOverdueLabel": "Pagamento em atraso",
     "paymentOverdueMessage": "A sua reserva pode ser cancelada a qualquer momento. Pague imediatamente para evitar o cancelamento."
   },
+  "bookingJourney": {
+    "cancelled": "Cancelada",
+    "client": {
+      "booked": "Reservado",
+      "confirmed": "Confirmado",
+      "paid": "Pago",
+      "session": "Sessão",
+      "photos": "Fotos",
+      "accepted": "Aceite",
+      "hintBooked": "O seu pedido de reserva foi enviado",
+      "hintConfirmed": "A aguardar confirmação do fotógrafo",
+      "hintPaid": "Complete o pagamento para garantir a reserva",
+      "hintSession": "A sua sessão está a chegar!",
+      "hintPhotos": "O fotógrafo está a editar as suas fotos",
+      "hintAccepted": "Reveja as suas fotos e aceite a entrega"
+    },
+    "photographer": {
+      "request": "Pedido",
+      "confirmed": "Confirmado",
+      "paid": "Pago",
+      "session": "Sessão",
+      "upload": "Enviar",
+      "accepted": "Aceite",
+      "hintRequest": "Novo pedido de reserva recebido",
+      "hintConfirmed": "Confirme ou recuse este pedido de reserva",
+      "hintPaid": "A aguardar pagamento do cliente",
+      "hintSession": "O dia da sessão está a chegar!",
+      "hintUpload": "Envie as fotos e partilhe com o seu cliente",
+      "hintAccepted": "A aguardar que o cliente reveja as fotos"
+    }
+  },
   "askQuestion": {
     "message": "Mensagem",
     "dialogTitle": "Mensagem para {name}",
