@@ -57,9 +57,13 @@ interface AnalyticsData {
     top100: { count: number; prev?: number | null; queries: { query: string; clicks: number; impressions: number; position: number; positionChange?: number | null }[] };
     total: number;
     prevTotal?: number | null;
+    movements?: {
+      [key: string]: {
+        entered: { query: string; position: number; prevPosition: number | null }[];
+        exited: { query: string; position: number | null; prevPosition: number }[];
+      };
+    };
   };
-  newKeywords?: { query: string; position: number; clicks: number; impressions: number }[];
-  lostKeywords?: { query: string; position: number }[];
   topSearchPages?: { page: string; clicks: number; impressions: number; position: number }[];
   trafficSources?: { channel: string; sessions: number; users: number }[];
   topCountries?: { country: string; users: number }[];
@@ -134,6 +138,47 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
           ) : null;
         })}
       </div>
+
+      {/* Daily movements per bucket */}
+      {dist.movements && (
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {buckets.map(b => {
+            const m = dist.movements?.[b.key];
+            if (!m || (m.entered.length === 0 && m.exited.length === 0)) return null;
+            return (
+              <div key={b.key} className="rounded-xl border border-warm-200 bg-white p-3">
+                <p className="text-xs font-bold text-gray-700 mb-2">{b.label} changes vs yesterday</p>
+                {m.entered.length > 0 && (
+                  <div className="mb-2">
+                    <p className="text-[10px] font-semibold text-green-600 mb-1">▲ Entered ({m.entered.length})</p>
+                    {m.entered.map(q => (
+                      <div key={q.query} className="flex items-center justify-between text-xs py-0.5">
+                        <span className="text-gray-800 truncate mr-2">{q.query}</span>
+                        <span className="shrink-0 text-[10px] text-green-600 font-medium">
+                          {q.prevPosition ? `${q.prevPosition} → ${q.position}` : `new @ ${q.position}`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {m.exited.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-red-600 mb-1">▼ Exited ({m.exited.length})</p>
+                    {m.exited.map(q => (
+                      <div key={q.query} className="flex items-center justify-between text-xs py-0.5">
+                        <span className="text-gray-800 truncate mr-2">{q.query}</span>
+                        <span className="shrink-0 text-[10px] text-red-600 font-medium">
+                          was {q.prevPosition}{q.position ? ` → ${q.position}` : " → gone"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Expanded query list */}
       {expanded && (
@@ -734,40 +779,6 @@ export function AnalyticsDashboard() {
       {/* Position Distribution */}
       {activeTab === "seo" && data.positionDistribution && data.positionDistribution.total > 0 && (
         <PositionDistribution dist={data.positionDistribution} />
-      )}
-
-      {/* New & Lost Keywords */}
-      {activeTab === "seo" && ((data.newKeywords && data.newKeywords.length > 0) || (data.lostKeywords && data.lostKeywords.length > 0)) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {data.newKeywords && data.newKeywords.length > 0 && (
-            <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-              <h4 className="text-sm font-bold text-green-800 mb-2">🆕 New Keywords ({data.newKeywords.length})</h4>
-              <p className="text-[10px] text-green-600 mb-3">Appeared since last period</p>
-              <div className="space-y-1.5">
-                {data.newKeywords.map(kw => (
-                  <div key={kw.query} className="flex items-center justify-between text-xs">
-                    <span className="text-green-900 font-medium truncate mr-2">{kw.query}</span>
-                    <span className="shrink-0 rounded-full bg-green-200 px-2 py-0.5 text-[10px] font-bold text-green-800">{kw.position}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {data.lostKeywords && data.lostKeywords.length > 0 && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-              <h4 className="text-sm font-bold text-red-800 mb-2">📉 Lost Keywords ({data.lostKeywords.length})</h4>
-              <p className="text-[10px] text-red-600 mb-3">Disappeared since last period</p>
-              <div className="space-y-1.5">
-                {data.lostKeywords.map(kw => (
-                  <div key={kw.query} className="flex items-center justify-between text-xs">
-                    <span className="text-red-900 font-medium truncate mr-2">{kw.query}</span>
-                    <span className="shrink-0 rounded-full bg-red-200 px-2 py-0.5 text-[10px] font-bold text-red-800">was {kw.position}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
       )}
 
       {/* Top Search Queries (in SEO tab) */}

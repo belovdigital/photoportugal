@@ -224,22 +224,56 @@ export async function GET() {
     const top20 = allQueries.filter((q) => q.position <= 20);
     const top100 = allQueries.filter((q) => q.position <= 100);
 
-    // Save daily keyword position snapshot (once per day, upsert)
-    let prevSnapshot: { top3: number; top10: number; top20: number; top100: number; total: number } | null = null;
+    // Save daily keyword position snapshot with full query list
+    const queriesJson = JSON.stringify(allQueries.map(q => ({ q: q.query, p: q.position })));
+    let prevSnapshot: { top3: number; top10: number; top20: number; top100: number; total: number; queries: { q: string; p: number }[] | null } | null = null;
     try {
       await queryOne(`
-        INSERT INTO keyword_snapshots (date, top3, top10, top20, top100, total)
-        VALUES (CURRENT_DATE, $1, $2, $3, $4, $5)
-        ON CONFLICT (date) DO UPDATE SET top3=$1, top10=$2, top20=$3, top100=$4, total=$5
-      `, [top3.length, top10.length, top20.length, top100.length, allQueries.length]);
+        INSERT INTO keyword_snapshots (date, top3, top10, top20, top100, total, queries)
+        VALUES (CURRENT_DATE, $1, $2, $3, $4, $5, $6::jsonb)
+        ON CONFLICT (date) DO UPDATE SET top3=$1, top10=$2, top20=$3, top100=$4, total=$5, queries=$6::jsonb
+      `, [top3.length, top10.length, top20.length, top100.length, allQueries.length, queriesJson]);
     } catch {}
 
     // Get yesterday's snapshot for comparison
     try {
-      prevSnapshot = await queryOne<{ top3: number; top10: number; top20: number; top100: number; total: number }>(
-        "SELECT top3, top10, top20, top100, total FROM keyword_snapshots WHERE date = CURRENT_DATE - 1"
-      ) ?? null;
+      const snap = await queryOne<{ top3: number; top10: number; top20: number; top100: number; total: number; queries: string | null }>(
+        "SELECT top3, top10, top20, top100, total, queries::text FROM keyword_snapshots WHERE date = CURRENT_DATE - 1"
+      );
+      if (snap) {
+        prevSnapshot = { ...snap, queries: snap.queries ? JSON.parse(snap.queries) : null };
+      }
     } catch {}
+
+    // Build yesterday's position map from snapshot
+    const yesterdayMap = new Map<string, number>();
+    if (prevSnapshot?.queries) {
+      for (const q of prevSnapshot.queries) yesterdayMap.set(q.q, q.p);
+    }
+
+    // Today's position map
+    const todayMap = new Map<string, number>();
+    for (const q of allQueries) if (q.query) todayMap.set(q.query, q.position);
+
+    // Compute movements per bucket (vs yesterday)
+    function bucketMovements(maxPos: number) {
+      const todayInBucket = allQueries.filter(q => q.position <= maxPos).map(q => q.query!);
+      const yesterdayInBucket = prevSnapshot?.queries
+        ? prevSnapshot.queries.filter(q => q.p <= maxPos).map(q => q.q)
+        : [];
+      const todaySet = new Set(todayInBucket);
+      const yesterdaySet = new Set(yesterdayInBucket);
+      const entered = todayInBucket.filter(q => !yesterdaySet.has(q)).map(q => ({ query: q, position: todayMap.get(q)!, prevPosition: yesterdayMap.get(q) ?? null }));
+      const exited = yesterdayInBucket.filter(q => !todaySet.has(q)).map(q => ({ query: q, position: todayMap.get(q) ?? null, prevPosition: yesterdayMap.get(q)! }));
+      return { entered, exited };
+    }
+
+    const movements = {
+      top3: bucketMovements(3),
+      top10: bucketMovements(10),
+      top20: bucketMovements(20),
+      top100: bucketMovements(100),
+    };
 
     result.positionDistribution = {
       top3: { count: top3.length, queries: top3, prev: prevSnapshot?.top3 ?? null },
@@ -248,22 +282,10 @@ export async function GET() {
       top100: { count: top100.length, queries: top100.filter((q) => q.position > 20), prev: prevSnapshot?.top100 ?? null },
       total: allQueries.length,
       prevTotal: prevSnapshot?.total ?? null,
+      movements,
     };
 
     result.topQueries = allQueries.slice(0, 50);
-
-    // New keywords (in current period but not in previous)
-    const currentKeys = new Set(allQueries.map(q => q.query));
-    const prevKeys = new Set(prevPositionMap.keys());
-    result.newKeywords = allQueries
-      .filter(q => q.query && !prevKeys.has(q.query))
-      .sort((a, b) => a.position - b.position)
-      .slice(0, 20);
-    result.lostKeywords = [...prevPositionMap.entries()]
-      .filter(([key]) => !currentKeys.has(key))
-      .map(([query, position]) => ({ query, position: Math.round(position * 10) / 10 }))
-      .sort((a, b) => a.position - b.position)
-      .slice(0, 20);
 
     // Top pages in search
     const { data: pages } = await searchConsole.searchanalytics.query({
