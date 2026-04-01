@@ -20,7 +20,7 @@ export function IntercomWidget() {
         name: user.name || undefined,
         email: user.email || undefined,
         custom_attributes: {
-          role: user.role || "client",
+          user_role: user.role || "client",
         },
       });
     } else {
