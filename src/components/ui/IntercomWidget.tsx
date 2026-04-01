@@ -25,21 +25,28 @@ export function IntercomWidget() {
     }
 
     const user = session?.user as { id?: string; email?: string; name?: string; role?: string } | undefined;
+    const intercom = (window as any).Intercom;
+    const booted = (window as any).__intercom_booted;
 
     if (user?.id) {
-      (window as any).Intercom("boot", {
+      const settings = {
         app_id: APP_ID,
         user_id: user.id,
         name: user.name || undefined,
         email: user.email || undefined,
-        custom_attributes: {
-          user_role: user.role || "client",
-        },
-      });
+        user_role: user.role || "client",
+      };
+      if (booted) {
+        intercom("update", settings);
+      } else {
+        intercom("boot", settings);
+        (window as any).__intercom_booted = true;
+      }
     } else {
-      (window as any).Intercom("boot", {
-        app_id: APP_ID,
-      });
+      if (!booted) {
+        intercom("boot", { app_id: APP_ID });
+        (window as any).__intercom_booted = true;
+      }
     }
   }, [session]);
 
