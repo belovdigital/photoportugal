@@ -24,6 +24,7 @@ CREATE TABLE users (
   role user_role NOT NULL DEFAULT 'client',
   avatar_url TEXT,
   google_id VARCHAR(255) UNIQUE,
+  apple_id VARCHAR(255) UNIQUE,
   email_verified BOOLEAN DEFAULT FALSE,
   password_reset_token VARCHAR(255),
   password_reset_expires TIMESTAMPTZ,
@@ -39,6 +40,7 @@ CREATE TABLE users (
 
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_google_id ON users(google_id);
+CREATE INDEX idx_users_apple_id ON users(apple_id);
 
 -- ============================================================
 -- PHOTOGRAPHER PROFILES
