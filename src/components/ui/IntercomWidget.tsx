@@ -7,7 +7,7 @@ export function IntercomWidget() {
     if ((window as any).__intercomLoaded) return;
     (window as any).__intercomLoaded = true;
 
-    // 1. Fetch user first, THEN load and boot Intercom with full data
+    // 1. Fetch user, sync to Intercom via server API, then boot widget
     fetch("/api/auth/me")
       .then(r => r.json())
       .catch(() => null)
@@ -17,10 +17,11 @@ export function IntercomWidget() {
           settings.user_id = user.id;
           settings.name = user.name || "";
           settings.email = user.email || "";
-          settings.user_role = user.role || "client";
+          // Sync role via server-side API (JS SDK doesn't pass custom_attributes reliably)
+          fetch("/api/intercom/sync", { method: "POST" }).catch(() => {});
         }
 
-        // 2. Load script
+        // 2. Load widget script
         const script = document.createElement("script");
         script.src = "https://widget.intercom.io/widget/d02q0i7w";
         script.async = true;
