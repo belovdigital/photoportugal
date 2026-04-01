@@ -119,8 +119,8 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                 onClick={() => setExpandedId(isOpen ? null : b.id)}
                 className="w-full px-3 py-3 sm:px-4 text-left"
               >
-                {/* Journey step label — above names */}
-                <div className="mb-1.5">
+                {/* Row 1: status left, price right */}
+                <div className="flex items-center justify-between mb-1">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                     b.status === "cancelled" ? "bg-gray-100 text-gray-500" :
                     b.delivery_accepted ? "bg-green-100 text-green-700" :
@@ -139,10 +139,19 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                      b.status === "pending" ? "awaiting confirmation" :
                      b.status}
                   </span>
+                  <div className="flex items-center gap-2">
+                    {b.total_price && <span className="text-base font-bold text-gray-900">&euro;{Math.round(Number(b.total_price))}</span>}
+                    <svg
+                      className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
 
-                {/* Names + price row */}
-                <div className="flex items-center gap-3">
+                {/* Row 2: names left, date right */}
+                <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
                     <span className="text-sm font-semibold text-gray-900">{b.client_name}</span>
                     <span className="mx-1.5 text-gray-300">&rarr;</span>
@@ -151,23 +160,11 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                       <span className="ml-2 text-[10px] font-medium text-orange-500">{daysPending}d pending</span>
                     )}
                   </div>
-
-                  {/* Price + date */}
-                  <div className="hidden sm:flex flex-col items-end shrink-0">
-                    {b.total_price && <span className="text-base font-bold text-gray-900">&euro;{Math.round(Number(b.total_price))}</span>}
-                    {b.shoot_date && (
-                      <span className="text-[11px] text-gray-400">
-                        {new Date(b.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </span>
-                    )}
-                  </div>
-
-                  <svg
-                    className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
+                  {b.shoot_date && (
+                    <span className="text-xs text-gray-400 shrink-0">
+                      {new Date(b.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                  )}
                 </div>
               </button>
 
