@@ -550,12 +550,20 @@ export default async function BlogPostPage({ params }: PageProps) {
         {/* Content */}
         <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           {/* Breadcrumb */}
-          <nav className="mb-6 text-sm text-gray-400">
-            <Link href="/" className="hover:text-primary-600 transition">{tc("home")}</Link>
-            <span className="mx-2">/</span>
-            <Link href="/blog" className="hover:text-primary-600 transition">{tc("blog")}</Link>
-            <span className="mx-2">/</span>
-            <span className="text-gray-600">{post.title}</span>
+          <nav aria-label="Breadcrumb" className="mb-6 text-sm text-gray-400">
+            <ol className="flex flex-wrap items-center gap-1.5">
+              <li className="flex items-center gap-1.5">
+                <Link href="/" className="hover:text-primary-600 transition">{tc("home")}</Link>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                <Link href="/blog" className="hover:text-primary-600 transition">{tc("blog")}</Link>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                <span className="text-gray-600">{post.title}</span>
+              </li>
+            </ol>
           </nav>
 
           {/* Title */}

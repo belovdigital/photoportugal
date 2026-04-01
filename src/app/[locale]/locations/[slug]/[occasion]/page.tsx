@@ -197,6 +197,29 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
         </section>
       )}
 
+      {/* Other occasions in this location */}
+      <section className="mt-12">
+        <h2 className="text-xl font-bold text-gray-900">
+          {locale === "pt"
+            ? `Outras ocasiões em ${location.name}`
+            : `Other occasions in ${location.name}`}
+        </h2>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {Object.entries(OCCASIONS)
+            .filter(([key]) => key !== occasion)
+            .map(([key, occ]) => (
+              <Link
+                key={key}
+                href={`/locations/${slug}/${key}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-warm-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+              >
+                <span>{occ.emoji}</span>
+                {locale === "pt" ? occ.titlePt : occ.title}
+              </Link>
+            ))}
+        </div>
+      </section>
+
       {/* CTA */}
       <div className="mt-12 rounded-2xl bg-primary-50 p-8 text-center">
         <h2 className="font-display text-2xl font-bold text-gray-900">

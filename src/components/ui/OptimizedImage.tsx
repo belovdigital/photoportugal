@@ -30,6 +30,7 @@ export function OptimizedImage({
   style,
   priority = false,
   onClick,
+  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
 }: OptimizedImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
@@ -63,6 +64,7 @@ export function OptimizedImage({
         ref={imgRef}
         src={optimizedSrc}
         srcSet={srcSet}
+        sizes={srcSet ? sizes : undefined}
         alt={alt}
         loading={priority ? "eager" : "lazy"}
         decoding={priority ? "sync" : "async"}

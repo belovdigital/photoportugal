@@ -107,7 +107,9 @@ export async function generateMetadata({
   const p = result.data;
   const locationNames = (p.locations || []).map((l: { name: string }) => l.name).join(", ");
   const title = t("metaTitle", { name: normalizeName(p.name), locations: locationNames || "Portugal" });
-  const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })} ${p.tagline || ""}`.trim();
+  const topShootTypes = (p.shoot_types || []).slice(0, 2);
+  const shootTypeText = topShootTypes.length > 0 ? ` Specializing in ${topShootTypes.join(" & ").toLowerCase()} photography.` : "";
+  const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })}${shootTypeText} ${p.tagline || ""}`.trim();
   const rawImage = p.cover_url || p.avatar_url;
   const ogImage = rawImage ? `https://photoportugal.com/api/img/${rawImage.replace("/uploads/", "")}?w=1200&h=630&f=jpeg&q=80` : "https://photoportugal.com/og-image.png";
   return {

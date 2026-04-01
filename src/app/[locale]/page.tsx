@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   if (locale === "pt") {
     return {
       title: "Fotógrafo de Férias em Portugal — Reserve Sessões Fotográficas Profissionais",
-      description: `Reserve um fotógrafo profissional de férias em Portugal. ${photographerCount}+ fotógrafos em ${locations.length} localizações. ${reviewTextPt}A partir de €${minPrice}.`,
+      description: `Reserve um fotógrafo profissional de férias em Portugal. ${photographerCount}+ fotógrafos em Lisboa, Porto, Algarve, Sintra e ${locations.length - 4}+ localizações. ${reviewTextPt}A partir de €${minPrice}.`,
       alternates: localeAlternates("/", locale),
       openGraph: {
         title: "Fotógrafo de Férias em Portugal — Photo Portugal",
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
   return {
     title: "Vacation Photographer Portugal — Hire & Book Online",
-    description: `Hire a professional vacation photographer in Portugal. ${photographerCount}+ photographers across ${locations.length} locations. ${reviewText}Couples, families & solo travelers. From €${minPrice}.`,
+    description: `Hire a professional vacation photographer in Portugal. ${photographerCount}+ photographers in Lisbon, Porto, Algarve, Sintra & ${locations.length - 4}+ locations. ${reviewText}Couples, families & solo travelers. From €${minPrice}.`,
     alternates: localeAlternates("/", locale),
     openGraph: {
       title: "Vacation Photographer Portugal — Hire & Book Online | Photo Portugal",
