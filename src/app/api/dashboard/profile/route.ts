@@ -4,6 +4,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { revalidatePath } from "next/cache";
+import { detectContactInfo } from "@/lib/content-filter";
 
 export async function GET(req: NextRequest) {
   const user = await authFromRequest(req);
@@ -77,6 +78,29 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ error: "Phone number must be 7-15 digits after the country code" }, { status: 400 });
       }
       phone = cleaned;
+    }
+
+    // Block contact info in bio and tagline
+    const contactBlockMessage =
+      "Bio/tagline cannot contain links, email addresses, phone numbers, or social media handles. Please use your profile fields for contact information.";
+    if (bio?.trim()) {
+      const detected = detectContactInfo(bio);
+      if (detected) {
+        return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
+      }
+      // Additional checks: instagram/facebook mentions
+      if (/\b(instagram|facebook|whatsapp|tiktok|snapchat|twitter|linkedin)\b/i.test(bio)) {
+        return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
+      }
+    }
+    if (tagline?.trim()) {
+      const detected = detectContactInfo(tagline);
+      if (detected) {
+        return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
+      }
+      if (/\b(instagram|facebook|whatsapp|tiktok|snapchat|twitter|linkedin)\b/i.test(tagline)) {
+        return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
+      }
     }
 
     // Update user's first/last name if provided
