@@ -175,22 +175,8 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                     <AdminBookingJourney status={b.status} paymentStatus={b.payment_status} deliveryAccepted={!!b.delivery_accepted} />
                   )}
                   {/* Client message */}
-                  {b.message && (
-                    <div className="mb-4 rounded-lg bg-warm-50 p-3">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1">Client message</p>
-                      <p className="text-sm text-gray-700">{b.message}</p>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
-                    <div>
-                      <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Payment</label>
-                      <div className="mt-1">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${PAYMENT_COLORS[b.payment_status || ""] || "bg-gray-100 text-gray-500"}`}>
-                          {b.payment_status || "—"}
-                        </span>
-                      </div>
-                    </div>
+                  {/* Info grid */}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
                     <div>
                       <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Shoot Date</label>
                       <p className="mt-1 text-sm text-gray-700">
@@ -224,19 +210,19 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                     {b.location_slug && (
                       <div>
                         <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Location</label>
-                        <p className="mt-1 text-sm text-gray-700">{b.location_slug.replace(/-/g, " ")}</p>
+                        <p className="mt-1 text-sm text-gray-700 capitalize">{b.location_slug.replace(/-/g, " ")}</p>
                       </div>
                     )}
                     {b.occasion && (
                       <div>
                         <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Occasion</label>
-                        <p className="mt-1 text-sm text-gray-700">{b.occasion}</p>
+                        <p className="mt-1 text-sm text-gray-700 capitalize">{b.occasion}</p>
                       </div>
                     )}
-                    {b.group_size && b.group_size > 0 && (
+                    {b.group_size && b.group_size > 1 && (
                       <div>
-                        <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Group Size</label>
-                        <p className="mt-1 text-sm text-gray-700">{b.group_size}</p>
+                        <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Group</label>
+                        <p className="mt-1 text-sm text-gray-700">{b.group_size} people</p>
                       </div>
                     )}
                     <div>
@@ -247,8 +233,16 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                     </div>
                   </div>
 
+                  {/* Client message */}
+                  {b.message && (
+                    <div className="mt-3 rounded-lg bg-warm-50 p-3">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1">Client Message</p>
+                      <p className="text-sm text-gray-700 italic">&ldquo;{b.message}&rdquo;</p>
+                    </div>
+                  )}
+
                   {/* Actions */}
-                  <div className="mt-4 flex items-center gap-2 border-t border-warm-100 pt-3">
+                  <div className="mt-4 flex items-center border-t border-warm-100 pt-3">
                     <AdminBookingActions id={b.id} status={b.status} paymentStatus={b.payment_status} />
                     <span className="text-[10px] text-gray-300 ml-auto">ID: {b.id.slice(0, 8)}</span>
                   </div>
