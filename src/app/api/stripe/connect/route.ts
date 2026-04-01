@@ -92,10 +92,16 @@ export async function GET() {
     const onboarded = account.charges_enabled && account.payouts_enabled;
 
     if (onboarded && !profile.stripe_onboarding_complete) {
-      await queryOne(
+      const updated = await queryOne<{ id: string }>(
         "UPDATE photographer_profiles SET stripe_onboarding_complete = TRUE WHERE user_id = $1 RETURNING id",
         [userId]
       );
+      // Stripe was the last checklist step — check if ready for review now
+      if (updated) {
+        import("@/lib/checklist-notify").then(m =>
+          m.checkAndNotifyChecklistComplete(updated.id)
+        ).catch(e => console.error("[stripe/connect] checklist notify error:", e));
+      }
     }
 
     return NextResponse.json({
