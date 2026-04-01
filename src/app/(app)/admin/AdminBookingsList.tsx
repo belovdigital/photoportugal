@@ -153,10 +153,10 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                   </div>
 
                   {/* Price + date */}
-                  <div className="hidden sm:flex items-center gap-2 shrink-0 text-xs">
-                    {b.total_price && <span className="font-medium text-gray-700">&euro;{Math.round(Number(b.total_price))}</span>}
+                  <div className="hidden sm:flex flex-col items-end shrink-0">
+                    {b.total_price && <span className="text-base font-bold text-gray-900">&euro;{Math.round(Number(b.total_price))}</span>}
                     {b.shoot_date && (
-                      <span className="text-gray-400">
+                      <span className="text-[11px] text-gray-400">
                         {new Date(b.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
                     )}
