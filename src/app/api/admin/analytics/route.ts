@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { queryOne } from "@/lib/db";
+import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
 import { google } from "googleapis";
@@ -309,37 +309,64 @@ export async function GET() {
     result.gscError = `GSC error: ${err instanceof Error ? err.message : String(err)}`;
   }
 
-  // ===== Smart Insights (from DB + analytics) =====
+  // ===== Smart Insights (context-aware) =====
   try {
-    const ga4 = result.ga4 as Record<string, number> | undefined;
     const gsc = result.gsc as Record<string, number> | undefined;
     const insights: string[] = [];
 
-    if (ga4) {
-      if (ga4.users > 0 && ga4.usersPrev > 0) {
-        const change = Math.round(((ga4.users - ga4.usersPrev) / ga4.usersPrev) * 100);
-        if (change > 10) insights.push(`Traffic is up ${change}% vs previous period — keep it up!`);
-        else if (change < -10) insights.push(`Traffic is down ${change}% vs previous period — consider promoting content or ads.`);
-        else insights.push(`Traffic is stable (${change > 0 ? "+" : ""}${change}% vs previous period).`);
-      }
-      if (ga4.bounceRate > 70) insights.push(`Bounce rate is ${ga4.bounceRate}% — consider improving page load speed or content relevance.`);
-      if (ga4.avgSessionDuration < 30) insights.push(`Average session is only ${ga4.avgSessionDuration}s — users leave quickly. Improve above-the-fold content.`);
-      else if (ga4.avgSessionDuration > 120) insights.push(`Users spend ${Math.round(ga4.avgSessionDuration / 60)} min on average — great engagement!`);
-    }
-
-    if (gsc) {
-      if (gsc.position > 30) insights.push(`Average search position is ${gsc.position} — most pages aren't on page 1 yet. Normal for a new site.`);
-      else if (gsc.position < 15) insights.push(`Average search position is ${gsc.position} — you're getting close to page 1!`);
-      if (gsc.clicks === 0) insights.push(`No organic clicks yet — Google is still indexing. Focus on content + backlinks.`);
-    }
-
-    // DB-based insights
-    const bookingsThisMonth = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM bookings WHERE created_at >= date_trunc('month', CURRENT_DATE)"
+    // Bookings
+    const bookingsThisMonth = await queryOne<{ count: string; revenue: string }>(
+      "SELECT COUNT(*) as count, COALESCE(SUM(total_price + COALESCE(service_fee, 0)), 0)::text as revenue FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)"
     );
     const bookingsCount = parseInt(bookingsThisMonth?.count || "0");
-    if (bookingsCount === 0) insights.push("No bookings this month yet. Consider running Google Ads for key locations.");
-    else insights.push(`${bookingsCount} booking${bookingsCount !== 1 ? "s" : ""} this month.`);
+    const monthRevenue = Math.round(Number(bookingsThisMonth?.revenue || 0));
+    if (bookingsCount === 0) insights.push("No paid bookings this month yet.");
+    else insights.push(`${bookingsCount} paid booking${bookingsCount !== 1 ? "s" : ""} this month (€${monthRevenue} turnover).`);
+
+    // Photographers
+    const photographerStats = await queryOne<{ approved: string; pending: string; total: string }>(
+      `SELECT
+        COUNT(*) FILTER (WHERE is_approved AND NOT COALESCE(u.is_banned, FALSE))::text as approved,
+        COUNT(*) FILTER (WHERE NOT is_approved AND NOT COALESCE(u.is_banned, FALSE) AND checklist_notified)::text as pending,
+        COUNT(*)::text as total
+       FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id`
+    );
+    const approved = parseInt(photographerStats?.approved || "0");
+    const pending = parseInt(photographerStats?.pending || "0");
+    insights.push(`${approved} active photographer${approved !== 1 ? "s" : ""}${pending > 0 ? `, ${pending} awaiting review` : ""}.`);
+
+    // Coverage gaps
+    const topLocationsWithoutPhotographers = await query<{ name: string }>(
+      `SELECT l.name FROM locations l
+       WHERE l.slug IN ('lisbon', 'porto', 'algarve', 'sintra', 'cascais')
+       AND NOT EXISTS (
+         SELECT 1 FROM photographer_locations pl
+         JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+         WHERE pl.location_slug = l.slug AND pp.is_approved = TRUE
+       )`
+    );
+    if (topLocationsWithoutPhotographers.length > 0) {
+      insights.push(`No photographers in ${topLocationsWithoutPhotographers.map((l: { name: string }) => l.name).join(", ")} — recruit to cover these locations.`);
+    }
+
+    // SEO
+    if (gsc) {
+      const pos = gsc.position;
+      if (pos > 30) insights.push(`Avg search position ${pos} — growing but not on page 1 yet. Blog posts targeting long-tail keywords will help.`);
+      else if (pos > 10) insights.push(`Avg search position ${pos} — close to page 1! Focus on backlinks and content updates.`);
+      else insights.push(`Avg search position ${pos} — strong presence on page 1!`);
+
+      if (gsc.clicks > 0) insights.push(`${gsc.clicks} organic clicks (${gsc.ctr}% CTR) in last 30 days.`);
+    }
+
+    // Conversion
+    const visitorsToday = await queryOne<{ count: string }>(
+      "SELECT COUNT(DISTINCT visitor_id)::text as count FROM visitor_sessions WHERE started_at > NOW() - INTERVAL '24 hours'"
+    );
+    const todayVisitors = parseInt(visitorsToday?.count || "0");
+    if (todayVisitors > 0 && bookingsCount === 0) {
+      insights.push(`${todayVisitors} unique visitors today but no bookings — check if booking flow has friction.`);
+    }
 
     result.insights = insights;
   } catch {
