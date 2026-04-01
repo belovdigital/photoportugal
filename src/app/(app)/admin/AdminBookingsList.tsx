@@ -119,15 +119,25 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                 onClick={() => setExpandedId(isOpen ? null : b.id)}
                 className="flex w-full items-center gap-3 px-3 py-3 sm:px-4 text-left"
               >
-                {/* Status badge */}
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[b.status] || "bg-gray-100 text-gray-500"}`}>
-                  {b.status}
+                {/* Journey step label */}
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  b.status === "cancelled" ? "bg-gray-100 text-gray-500" :
+                  b.delivery_accepted ? "bg-green-100 text-green-700" :
+                  b.status === "delivered" ? "bg-purple-100 text-purple-700" :
+                  b.status === "completed" ? "bg-blue-100 text-blue-700" :
+                  b.payment_status === "paid" && b.status === "confirmed" ? "bg-green-100 text-green-700" :
+                  b.status === "confirmed" ? "bg-yellow-100 text-yellow-700" :
+                  "bg-yellow-100 text-yellow-700"
+                }`}>
+                  {b.status === "cancelled" ? "cancelled" :
+                   b.delivery_accepted ? "✓ accepted" :
+                   b.status === "delivered" ? "awaiting review" :
+                   b.status === "completed" ? "awaiting photos" :
+                   b.payment_status === "paid" && b.status === "confirmed" ? "paid · awaiting session" :
+                   b.status === "confirmed" ? "awaiting payment" :
+                   b.status === "pending" ? "awaiting confirmation" :
+                   b.status}
                 </span>
-                {b.status === "delivered" && b.delivery_accepted && (
-                  <span className="shrink-0 rounded-full bg-green-100 px-1.5 py-0.5 text-[9px] font-semibold text-green-700">
-                    ✓ accepted
-                  </span>
-                )}
 
                 {/* Names */}
                 <div className="min-w-0 flex-1">
@@ -139,14 +149,9 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                   )}
                 </div>
 
-                {/* Price + payment + date */}
+                {/* Price + date */}
                 <div className="hidden sm:flex items-center gap-2 shrink-0 text-xs">
                   {b.total_price && <span className="font-medium text-gray-700">&euro;{Math.round(Number(b.total_price))}</span>}
-                  {b.payment_status && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
-                      b.payment_status === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
-                    }`}>{b.payment_status === "paid" ? "paid" : "unpaid"}</span>
-                  )}
                   {b.shoot_date && (
                     <span className="text-gray-400">
                       {new Date(b.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { queryOne } from "@/lib/db";
+import { queryOne, withTransaction } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -67,14 +67,44 @@ export async function POST(req: NextRequest) {
       console.error("[mobile/register] verification email error:", err)
     );
 
-    // Create photographer profile if needed
+    // Create photographer profile with early bird tier (same logic as web set-role)
     if (validRole === "photographer") {
-      const slug = `p-${user.id.slice(0, 7)}`;
-      await queryOne(
-        `INSERT INTO photographer_profiles (user_id, slug, bio, languages, shoot_types)
-         VALUES ($1, $2, '', '{}', '{}')`,
-        [user.id, slug]
-      );
+      const slug = `p-${user.id.replace(/-/g, "").slice(0, 10)}`;
+      await withTransaction(async (client) => {
+        await client.query("LOCK TABLE photographer_profiles IN EXCLUSIVE MODE");
+        const countResult = await client.query(
+          "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0"
+        );
+        const row = countResult.rows[0] as { count: string; next_num: string };
+        const count = parseInt(row?.count || "0");
+        const nextNumber = parseInt(row?.next_num || "1");
+
+        let earlyBirdTier: string | null = null;
+        let earlyBirdExpires: string | null = null;
+        let isFounding = false;
+        let plan = "free";
+
+        if (count < 10) {
+          earlyBirdTier = "founding";
+          isFounding = true;
+          plan = "premium";
+        } else if (count < 35) {
+          earlyBirdTier = "early50";
+          plan = "premium";
+          earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+        } else if (count < 60) {
+          earlyBirdTier = "first100";
+          plan = "pro";
+          earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+        }
+
+        await client.query(
+          `INSERT INTO photographer_profiles (user_id, slug, plan, is_founding, early_bird_tier, early_bird_expires_at, registration_number, bio, languages, shoot_types)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, '', '{}', '{}')
+           ON CONFLICT (user_id) DO NOTHING`,
+          [user.id, slug, plan, isFounding, earlyBirdTier, earlyBirdExpires, nextNumber]
+        );
+      });
     }
 
     // Create notification preferences
