@@ -58,6 +58,8 @@ interface AnalyticsData {
     total: number;
     prevTotal?: number | null;
   };
+  newKeywords?: { query: string; position: number; clicks: number; impressions: number }[];
+  lostKeywords?: { query: string; position: number }[];
   topSearchPages?: { page: string; clicks: number; impressions: number; position: number }[];
   trafficSources?: { channel: string; sessions: number; users: number }[];
   topCountries?: { country: string; users: number }[];
@@ -732,6 +734,40 @@ export function AnalyticsDashboard() {
       {/* Position Distribution */}
       {activeTab === "seo" && data.positionDistribution && data.positionDistribution.total > 0 && (
         <PositionDistribution dist={data.positionDistribution} />
+      )}
+
+      {/* New & Lost Keywords */}
+      {activeTab === "seo" && ((data.newKeywords && data.newKeywords.length > 0) || (data.lostKeywords && data.lostKeywords.length > 0)) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {data.newKeywords && data.newKeywords.length > 0 && (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+              <h4 className="text-sm font-bold text-green-800 mb-2">🆕 New Keywords ({data.newKeywords.length})</h4>
+              <p className="text-[10px] text-green-600 mb-3">Appeared since last period</p>
+              <div className="space-y-1.5">
+                {data.newKeywords.map(kw => (
+                  <div key={kw.query} className="flex items-center justify-between text-xs">
+                    <span className="text-green-900 font-medium truncate mr-2">{kw.query}</span>
+                    <span className="shrink-0 rounded-full bg-green-200 px-2 py-0.5 text-[10px] font-bold text-green-800">{kw.position}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {data.lostKeywords && data.lostKeywords.length > 0 && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+              <h4 className="text-sm font-bold text-red-800 mb-2">📉 Lost Keywords ({data.lostKeywords.length})</h4>
+              <p className="text-[10px] text-red-600 mb-3">Disappeared since last period</p>
+              <div className="space-y-1.5">
+                {data.lostKeywords.map(kw => (
+                  <div key={kw.query} className="flex items-center justify-between text-xs">
+                    <span className="text-red-900 font-medium truncate mr-2">{kw.query}</span>
+                    <span className="shrink-0 rounded-full bg-red-200 px-2 py-0.5 text-[10px] font-bold text-red-800">was {kw.position}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Top Search Queries (in SEO tab) */}

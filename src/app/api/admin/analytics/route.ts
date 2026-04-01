@@ -252,6 +252,19 @@ export async function GET() {
 
     result.topQueries = allQueries.slice(0, 50);
 
+    // New keywords (in current period but not in previous)
+    const currentKeys = new Set(allQueries.map(q => q.query));
+    const prevKeys = new Set(prevPositionMap.keys());
+    result.newKeywords = allQueries
+      .filter(q => q.query && !prevKeys.has(q.query))
+      .sort((a, b) => a.position - b.position)
+      .slice(0, 20);
+    result.lostKeywords = [...prevPositionMap.entries()]
+      .filter(([key]) => !currentKeys.has(key))
+      .map(([query, position]) => ({ query, position: Math.round(position * 10) / 10 }))
+      .sort((a, b) => a.position - b.position)
+      .slice(0, 20);
+
     // Top pages in search
     const { data: pages } = await searchConsole.searchanalytics.query({
       siteUrl: GSC_SITE,
