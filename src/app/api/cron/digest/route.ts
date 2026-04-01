@@ -202,6 +202,12 @@ export async function GET(req: NextRequest) {
       await sendTelegram(lines.join("\n"));
     } catch {}
 
+    // Daily Intercom sync
+    try {
+      const base = process.env.AUTH_URL || "https://photoportugal.com";
+      await fetch(`${base}/api/admin/intercom-sync?secret=${process.env.CRON_SECRET}`, { method: "POST" });
+    } catch {}
+
     return NextResponse.json({
       success: true,
       bookings: bookings.length,

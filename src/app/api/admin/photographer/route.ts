@@ -186,6 +186,37 @@ export async function PATCH(req: NextRequest) {
     const changedFields = Object.entries(updates).filter(([k]) => k !== "is_deactivated").map(([k, v]) => `${k}=${v}`).join(", ");
     await logAudit(admin.email, "update", "photographer", id, slugRow?.slug, changedFields);
 
+    // Sync to Intercom (approval/deactivation status)
+    if ("is_approved" in updates || "is_deactivated" in updates) {
+      const profile = await queryOne<{ user_id: string; is_approved: boolean }>(
+        "SELECT user_id, COALESCE(is_approved, FALSE) as is_approved FROM photographer_profiles WHERE id = $1", [id]
+      );
+      if (profile) {
+        const userInfo = await queryOne<{ email: string; is_banned: boolean }>(
+          "SELECT email, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE id = $1", [profile.user_id]
+        );
+        if (userInfo) {
+          const token = process.env.INTERCOM_ACCESS_TOKEN;
+          if (token) {
+            fetch("https://api.intercom.io/contacts/search", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+              body: JSON.stringify({ query: { field: "email", operator: "=", value: userInfo.email } }),
+            }).then(r => r.json()).then(data => {
+              const contact = data.data?.[0];
+              if (contact) {
+                fetch(`https://api.intercom.io/contacts/${contact.id}`, {
+                  method: "PUT",
+                  headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
+                  body: JSON.stringify({ custom_attributes: { is_approved: profile.is_approved && !userInfo.is_banned } }),
+                });
+              }
+            }).catch(() => {});
+          }
+        }
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin] update error:", error);
