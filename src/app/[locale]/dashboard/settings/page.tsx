@@ -318,20 +318,18 @@ export default function SettingsPage() {
       </section>
 
       {/* SMS Notifications */}
-      {isPhotographer && (
-        <section className="mt-8">
-          <h2 className="text-lg font-bold text-gray-900">{t("smsNotifications")}</h2>
-          <div className="mt-4 rounded-xl border border-warm-200 bg-white divide-y divide-warm-100">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{t("smsNewBookings")}</p>
-                <p className="text-xs text-gray-400">{t("smsNewBookingsDesc")}</p>
-              </div>
-              {prefsLoaded && <Toggle enabled={smsBookings} onChange={(v) => { setSmsBookings(v); saveNotificationPref("sms_bookings", v); }} />}
+      <section className="mt-8">
+        <h2 className="text-lg font-bold text-gray-900">{t("smsNotifications")}</h2>
+        <div className="mt-4 rounded-xl border border-warm-200 bg-white divide-y divide-warm-100">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">{t("smsNewBookings")}</p>
+              <p className="text-xs text-gray-400">{t("smsNewBookingsDesc")}</p>
             </div>
+            {prefsLoaded && <Toggle enabled={smsBookings} onChange={(v) => { setSmsBookings(v); saveNotificationPref("sms_bookings", v); }} />}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Telegram Notifications */}
       {isPhotographer && (
