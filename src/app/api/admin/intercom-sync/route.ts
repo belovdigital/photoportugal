@@ -37,12 +37,24 @@ async function searchIntercomContact(
   return data.data?.[0] ?? null;
 }
 
-async function createIntercomContact(user: {
+interface SyncUser {
   id: string;
   name: string;
   email: string;
   role: string;
-}): Promise<boolean> {
+  is_approved: boolean;
+  is_banned: boolean;
+}
+
+function buildAttributes(user: SyncUser) {
+  const attrs: Record<string, string | boolean> = { user_role: user.role };
+  if (user.role === "photographer") {
+    attrs.is_approved = user.is_approved && !user.is_banned;
+  }
+  return attrs;
+}
+
+async function createIntercomContact(user: SyncUser): Promise<boolean> {
   const res = await fetch("https://api.intercom.io/contacts", {
     method: "POST",
     headers: {
@@ -55,16 +67,13 @@ async function createIntercomContact(user: {
       external_id: user.id,
       email: user.email,
       name: user.name,
-      custom_attributes: { user_role: user.role },
+      custom_attributes: buildAttributes(user),
     }),
   });
   return res.ok;
 }
 
-async function updateIntercomContact(
-  intercomId: string,
-  user: { id: string; name: string; email: string; role: string }
-): Promise<boolean> {
+async function updateIntercomContact(intercomId: string, user: SyncUser): Promise<boolean> {
   const res = await fetch(
     `https://api.intercom.io/contacts/${intercomId}`,
     {
@@ -77,7 +86,7 @@ async function updateIntercomContact(
       body: JSON.stringify({
         external_id: user.id,
         name: user.name,
-        custom_attributes: { user_role: user.role },
+        custom_attributes: buildAttributes(user),
       }),
     }
   );
@@ -99,19 +108,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const users = await query<{
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-  }>("SELECT id, name, email, role FROM users ORDER BY created_at ASC");
+  const users = await query<SyncUser>(
+    `SELECT u.id, u.name, u.email, u.role,
+            COALESCE(pp.is_approved, FALSE) as is_approved,
+            COALESCE(u.is_banned, FALSE) as is_banned
+     FROM users u
+     LEFT JOIN photographer_profiles pp ON pp.user_id = u.id
+     ORDER BY u.created_at ASC`
+  );
 
   let created = 0;
   let updated = 0;
   let errors = 0;
 
+  const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
+
   for (const user of users) {
     try {
+      await delay(200); // Rate limit: max 5 req/s
       const existing = await searchIntercomContact(user.email);
 
       if (existing) {

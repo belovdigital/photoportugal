@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { queryOne } from "@/lib/db";
 
 const INTERCOM_TOKEN = process.env.INTERCOM_ACCESS_TOKEN || "";
 
@@ -11,6 +12,16 @@ export async function POST() {
   if (!user.id || !user.email) return NextResponse.json({ ok: false });
 
   try {
+    // Get photographer status if applicable
+    const attrs: Record<string, string | boolean> = { user_role: user.role || "client" };
+    if (user.role === "photographer") {
+      const profile = await queryOne<{ is_approved: boolean }>(
+        "SELECT COALESCE(is_approved, FALSE) as is_approved FROM photographer_profiles WHERE user_id = $1",
+        [user.id]
+      );
+      attrs.is_approved = profile?.is_approved ?? false;
+    }
+
     // Search for contact by email
     const searchRes = await fetch("https://api.intercom.io/contacts/search", {
       method: "POST",
@@ -27,7 +38,6 @@ export async function POST() {
     const contact = searchData.data?.[0];
 
     if (contact) {
-      // Update existing contact
       await fetch(`https://api.intercom.io/contacts/${contact.id}`, {
         method: "PUT",
         headers: {
@@ -35,9 +45,7 @@ export async function POST() {
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
-        body: JSON.stringify({
-          custom_attributes: { user_role: user.role || "client" },
-        }),
+        body: JSON.stringify({ custom_attributes: attrs }),
       });
     }
 
