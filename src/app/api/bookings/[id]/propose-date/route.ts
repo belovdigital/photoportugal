@@ -105,6 +105,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       console.error("[propose-date] sms error:", smsErr);
     }
 
+    // Telegram notification to photographer (if they're the recipient)
+    if (isClient) {
+      import("@/lib/notify-photographer").then(m =>
+        m.notifyPhotographerViaTelegram(booking.photographer_id, `📅 <b>New date proposed</b>\n\n${senderName} proposed: <b>${formattedDate}</b>${date_note ? `\nNote: "${date_note}"` : ""}\n\nAccept or propose another in your dashboard.`)
+      ).catch(() => {});
+    }
+
     return NextResponse.json({ success: true, action: "proposed" });
   }
 
@@ -123,11 +130,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const accepterName = isPhotographer ? booking.photographer_name : booking.client_name;
     const formattedDate = new Date(booking.proposed_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
+    // Email to the proposer
     await sendEmail(
       recipientEmail,
       `Date Confirmed — ${formattedDate}`,
       `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-        <h2 style="color: #22C55E;">Date Accepted!</h2>
+        <h2 style="color: #22C55E;">Date Confirmed!</h2>
         <p>Hi ${recipientName.split(" ")[0]},</p>
         <p><strong>${accepterName}</strong> has accepted the proposed date:</p>
         <div style="background: #F0FFF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 16px; margin: 16px 0;">
@@ -137,6 +145,25 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
       </div>`
     ).catch(console.error);
+
+    // SMS to the proposer
+    try {
+      const recipientUserId = isPhotographer ? booking.client_id : booking.photographer_user_id;
+      const recipientPhone = await queryOne<{ phone: string | null }>(
+        "SELECT phone FROM users WHERE id = $1", [recipientUserId]
+      );
+      if (recipientPhone?.phone) {
+        sendWhatsApp(
+          recipientPhone.phone, "new_message", [accepterName],
+          `Photo Portugal: Date confirmed! ${accepterName} accepted ${formattedDate} for your photoshoot.`
+        ).catch(() => {});
+      }
+    } catch {}
+
+    // Telegram to photographer (whether they proposed or accepted)
+    import("@/lib/notify-photographer").then(m =>
+      m.notifyPhotographerViaTelegram(booking.photographer_id, `✅ <b>Date confirmed!</b>\n\nSession with ${booking.client_name}: <b>${formattedDate}</b>`)
+    ).catch(() => {});
 
     return NextResponse.json({ success: true, action: "accepted" });
   }
