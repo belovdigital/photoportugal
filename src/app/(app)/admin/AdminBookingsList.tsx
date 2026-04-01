@@ -18,6 +18,7 @@ export interface AdminBooking {
   group_size: number | null;
   shoot_time: string | null;
   package_name: string | null;
+  package_duration: number | null;
   service_fee: number | null;
   payout_amount: number | null;
   flexible_date_from: string | null;
@@ -190,8 +191,8 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                                 {new Date(b.flexible_date_to).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                               </>
                             : <span className="text-gray-300">&mdash;</span>}
-                        {b.shoot_time && <span className="ml-1 text-gray-400">at {b.shoot_time}</span>}
                       </p>
+                      {b.shoot_time && <p className="text-xs text-gray-400 capitalize">{b.shoot_time}</p>}
                       {b.date_note && <p className="text-[10px] text-gray-400 mt-0.5">{b.date_note}</p>}
                     </div>
                     <div>
@@ -205,6 +206,7 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                       <div>
                         <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Package</label>
                         <p className="mt-1 text-sm text-gray-700">{b.package_name}</p>
+                        {b.package_duration && <p className="text-[10px] text-gray-400">{b.package_duration} min</p>}
                       </div>
                     )}
                     {b.location_slug && (
