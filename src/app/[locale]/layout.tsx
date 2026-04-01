@@ -9,6 +9,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 import { VisitorTracker } from "@/components/ui/VisitorTracker";
+import { IntercomWidget } from "@/components/ui/IntercomWidget";
 
 type Locale = "en" | "pt";
 
@@ -43,6 +44,7 @@ export default async function LocaleLayout({
         <CookieConsent />
         <VisitorTracker />
         <GoogleAnalytics />
+        <IntercomWidget />
       </SessionProvider>
     </NextIntlClientProvider>
   );
