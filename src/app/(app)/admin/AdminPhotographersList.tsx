@@ -38,18 +38,56 @@ export interface AdminPhotographer {
 
 const PAGE_SIZE = 50;
 
+type Filter = "active" | "deactivated" | "not_ready" | "founding" | "early25" | "early50" | "premium" | "pro" | "free" | "all";
+
+const FILTERS: { key: Filter; label: string; color: string; activeColor: string }[] = [
+  { key: "active", label: "Active", color: "text-green-700 border-green-300", activeColor: "bg-green-100 text-green-800 border-green-400" },
+  { key: "not_ready", label: "Not Ready", color: "text-orange-700 border-orange-300", activeColor: "bg-orange-100 text-orange-800 border-orange-400" },
+  { key: "founding", label: "Founding", color: "text-purple-700 border-purple-300", activeColor: "bg-purple-100 text-purple-800 border-purple-400" },
+  { key: "early25", label: "Early 25", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
+  { key: "early50", label: "Early 50", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
+  { key: "premium", label: "Premium", color: "text-indigo-700 border-indigo-300", activeColor: "bg-indigo-100 text-indigo-800 border-indigo-400" },
+  { key: "pro", label: "Pro", color: "text-blue-700 border-blue-300", activeColor: "bg-blue-100 text-blue-800 border-blue-400" },
+  { key: "free", label: "Free", color: "text-gray-700 border-gray-300", activeColor: "bg-gray-200 text-gray-800 border-gray-400" },
+  { key: "deactivated", label: "Deactivated", color: "text-red-700 border-red-300", activeColor: "bg-red-100 text-red-800 border-red-400" },
+  { key: "all", label: "All", color: "text-gray-600 border-gray-300", activeColor: "bg-gray-800 text-white border-gray-800" },
+];
+
+function matchesFilter(p: AdminPhotographer, f: Filter): boolean {
+  switch (f) {
+    case "active": return p.is_approved && !p.is_banned;
+    case "deactivated": return p.is_banned || (!p.is_approved && p.checklist_complete);
+    case "not_ready": return !p.is_approved && !p.checklist_complete && !p.is_banned;
+    case "founding": return p.is_founding;
+    case "early25": return p.early_bird_tier === "early25";
+    case "early50": return p.early_bird_tier === "early50";
+    case "premium": return p.plan === "premium";
+    case "pro": return p.plan === "pro";
+    case "free": return p.plan === "free";
+    case "all": return true;
+    default: return true;
+  }
+}
+
 export function AdminPhotographersList({ photographers, previewSecret }: { photographers: AdminPhotographer[]; previewSecret: string }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<Filter>("active");
   const [page, setPage] = useState(0);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return photographers;
-    const q = search.toLowerCase();
-    return photographers.filter(
-      (p) => p.display_name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q) || p.slug.includes(q)
-    );
-  }, [photographers, search]);
+    let list = photographers;
+    if (filter !== "all") {
+      list = list.filter(p => matchesFilter(p, filter));
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (p) => p.display_name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q) || p.slug.includes(q)
+      );
+    }
+    return list;
+  }, [photographers, search, filter]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -73,6 +111,23 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
             {filtered.length} result{filtered.length !== 1 ? "s" : ""}
           </span>
         )}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-1.5">
+        {FILTERS.map(f => {
+          const count = photographers.filter(p => matchesFilter(p, f.key)).length;
+          const isActive = filter === f.key;
+          return (
+            <button
+              key={f.key}
+              onClick={() => { setFilter(f.key); setPage(0); }}
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${isActive ? f.activeColor : `bg-white ${f.color} hover:bg-warm-50`}`}
+            >
+              {f.label} <span className="opacity-60">{count}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="space-y-2">
