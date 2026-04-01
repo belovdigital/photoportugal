@@ -104,7 +104,8 @@ export async function FeaturedPhotographers() {
                 <p className="mt-0.5 truncate text-xs text-gray-500">{p.tagline}</p>
               )}
 
-              {/* Rating */}
+              {/* Rating — only show if has reviews */}
+              {p.review_count > 0 && (
               <div className="mt-2 flex items-center gap-1.5">
                 <div className="flex gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -119,10 +120,9 @@ export async function FeaturedPhotographers() {
                   ))}
                 </div>
                 <span className="text-xs font-semibold text-gray-900">{Number(p.rating).toFixed(1)}</span>
-                {p.review_count > 0 && (
-                  <span className="text-xs text-gray-400">({p.review_count})</span>
-                )}
+                <span className="text-xs text-gray-400">({p.review_count})</span>
               </div>
+              )}
 
               {/* Location */}
               {p.locations && (

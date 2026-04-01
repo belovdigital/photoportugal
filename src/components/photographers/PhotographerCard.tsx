@@ -74,7 +74,8 @@ export function PhotographerCard({
           )}
         </div>
 
-        {/* Rating */}
+        {/* Rating — only show if has reviews */}
+        {photographer.review_count > 0 && (
         <div className="mt-3 flex items-center gap-2">
           <div className="flex gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -89,12 +90,13 @@ export function PhotographerCard({
             ))}
           </div>
           <span className="text-sm font-semibold text-gray-900">
-            {photographer.rating}
+            {Number(photographer.rating).toFixed(1)}
           </span>
           <span className="text-sm text-gray-400">
             ({photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")})
           </span>
         </div>
+        )}
 
         {/* Locations */}
         <div className="mt-3 flex flex-wrap gap-1">
