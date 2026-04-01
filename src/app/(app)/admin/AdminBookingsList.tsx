@@ -117,54 +117,58 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
             >
               <button
                 onClick={() => setExpandedId(isOpen ? null : b.id)}
-                className="flex w-full items-center gap-3 px-3 py-3 sm:px-4 text-left"
+                className="w-full px-3 py-3 sm:px-4 text-left"
               >
-                {/* Journey step label */}
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                  b.status === "cancelled" ? "bg-gray-100 text-gray-500" :
-                  b.delivery_accepted ? "bg-green-100 text-green-700" :
-                  b.status === "delivered" ? "bg-purple-100 text-purple-700" :
-                  b.status === "completed" ? "bg-blue-100 text-blue-700" :
-                  b.payment_status === "paid" && b.status === "confirmed" ? "bg-green-100 text-green-700" :
-                  b.status === "confirmed" ? "bg-yellow-100 text-yellow-700" :
-                  "bg-yellow-100 text-yellow-700"
-                }`}>
-                  {b.status === "cancelled" ? "cancelled" :
-                   b.delivery_accepted ? "✓ accepted" :
-                   b.status === "delivered" ? "awaiting review" :
-                   b.status === "completed" ? "awaiting photos" :
-                   b.payment_status === "paid" && b.status === "confirmed" ? "paid · awaiting session" :
-                   b.status === "confirmed" ? "awaiting payment" :
-                   b.status === "pending" ? "awaiting confirmation" :
-                   b.status}
-                </span>
-
-                {/* Names */}
-                <div className="min-w-0 flex-1">
-                  <span className="text-sm font-semibold text-gray-900">{b.client_name}</span>
-                  <span className="mx-1.5 text-gray-300">&rarr;</span>
-                  <span className="text-sm text-gray-600">{b.photographer_name}</span>
-                  {daysPending > 1 && (
-                    <span className="ml-2 text-[10px] font-medium text-orange-500">{daysPending}d pending</span>
-                  )}
+                {/* Journey step label — above names */}
+                <div className="mb-1.5">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    b.status === "cancelled" ? "bg-gray-100 text-gray-500" :
+                    b.delivery_accepted ? "bg-green-100 text-green-700" :
+                    b.status === "delivered" ? "bg-purple-100 text-purple-700" :
+                    b.status === "completed" ? "bg-blue-100 text-blue-700" :
+                    b.payment_status === "paid" && b.status === "confirmed" ? "bg-green-100 text-green-700" :
+                    b.status === "confirmed" ? "bg-yellow-100 text-yellow-700" :
+                    "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {b.status === "cancelled" ? "cancelled" :
+                     b.delivery_accepted ? "✓ accepted" :
+                     b.status === "delivered" ? "awaiting review" :
+                     b.status === "completed" ? "awaiting photos" :
+                     b.payment_status === "paid" && b.status === "confirmed" ? "paid · awaiting session" :
+                     b.status === "confirmed" ? "awaiting payment" :
+                     b.status === "pending" ? "awaiting confirmation" :
+                     b.status}
+                  </span>
                 </div>
 
-                {/* Price + date */}
-                <div className="hidden sm:flex items-center gap-2 shrink-0 text-xs">
-                  {b.total_price && <span className="font-medium text-gray-700">&euro;{Math.round(Number(b.total_price))}</span>}
-                  {b.shoot_date && (
-                    <span className="text-gray-400">
-                      {new Date(b.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </span>
-                  )}
-                </div>
+                {/* Names + price row */}
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm font-semibold text-gray-900">{b.client_name}</span>
+                    <span className="mx-1.5 text-gray-300">&rarr;</span>
+                    <span className="text-sm text-gray-600">{b.photographer_name}</span>
+                    {daysPending > 1 && (
+                      <span className="ml-2 text-[10px] font-medium text-orange-500">{daysPending}d pending</span>
+                    )}
+                  </div>
 
-                <svg
-                  className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
+                  {/* Price + date */}
+                  <div className="hidden sm:flex items-center gap-2 shrink-0 text-xs">
+                    {b.total_price && <span className="font-medium text-gray-700">&euro;{Math.round(Number(b.total_price))}</span>}
+                    {b.shoot_date && (
+                      <span className="text-gray-400">
+                        {new Date(b.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </span>
+                    )}
+                  </div>
+
+                  <svg
+                    className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </button>
 
               {isOpen && (
