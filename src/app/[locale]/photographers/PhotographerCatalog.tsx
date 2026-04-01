@@ -43,10 +43,16 @@ export function PhotographerCatalog({
   }, [locationFilters, shootTypeFilters, locations]);
 
   const filteredLocations = useMemo(() => {
-    if (!locationSearch) return locations;
-    return locations.filter((l) =>
-      l.name.toLowerCase().includes(locationSearch.toLowerCase())
-    );
+    const list = !locationSearch
+      ? locations
+      : locations.filter((l) =>
+          l.name.toLowerCase().includes(locationSearch.toLowerCase())
+        );
+    return [...list].sort((a, b) => {
+      if (a.slug === "lisbon") return -1;
+      if (b.slug === "lisbon") return 1;
+      return a.name.localeCompare(b.name);
+    });
   }, [locations, locationSearch]);
 
   function toggleLocation(slug: string) {
@@ -179,23 +185,27 @@ export function PhotographerCatalog({
                     >
                       {t("filters.allLocations")}
                     </button>
-                    {filteredLocations.map((loc) => (
-                      <button
-                        key={loc.slug}
-                        onClick={() => toggleLocation(loc.slug)}
-                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${locationFilters.includes(loc.slug) ? "font-semibold text-primary-600" : "text-gray-600"}`}
-                      >
-                        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                          locationFilters.includes(loc.slug) ? "border-primary-500 bg-primary-500" : "border-gray-300"
-                        }`}>
-                          {locationFilters.includes(loc.slug) && (
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </span>
-                        {loc.name}
-                      </button>
+                    {filteredLocations.map((loc, idx) => (
+                      <div key={loc.slug}>
+                        <button
+                          onClick={() => toggleLocation(loc.slug)}
+                          className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${locationFilters.includes(loc.slug) ? "font-semibold text-primary-600" : loc.slug === "lisbon" ? "font-bold text-gray-800" : "text-gray-600"}`}
+                        >
+                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                            locationFilters.includes(loc.slug) ? "border-primary-500 bg-primary-500" : "border-gray-300"
+                          }`}>
+                            {locationFilters.includes(loc.slug) && (
+                              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </span>
+                          {loc.name}
+                        </button>
+                        {loc.slug === "lisbon" && idx < filteredLocations.length - 1 && (
+                          <div className="mx-3 my-1 border-b border-warm-200" />
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>

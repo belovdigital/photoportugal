@@ -296,7 +296,7 @@ function VisitorsTab() {
   if (!vd) return <p className="text-sm text-gray-400">No visitor data yet</p>;
 
   const { summary: s, today: t } = vd;
-  const maxDaily = Math.max(...vd.dailySessions.map(d => parseInt(d.sessions)), 1);
+  const maxDaily = Math.max(...vd.dailySessions.map(d => Math.max(parseInt(d.sessions), parseInt(d.visitors))), 1);
 
   return (
     <div className="space-y-6">
@@ -323,15 +323,26 @@ function VisitorsTab() {
       {/* Daily chart */}
       {vd.dailySessions.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Sessions (last 14 days)</h3>
+          <div className="flex items-center gap-4 mb-2">
+            <h3 className="text-sm font-semibold text-gray-700">Sessions (last 14 days)</h3>
+            <div className="flex items-center gap-3 text-[11px] text-gray-500">
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary-500" /> Sessions</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-indigo-400" /> Unique visitors</span>
+            </div>
+          </div>
           <div className="flex items-end gap-1" style={{ height: 160 }}>
             {[...vd.dailySessions].reverse().map(d => {
-              const count = parseInt(d.sessions);
-              const barH = maxDaily > 0 ? Math.max((count / maxDaily) * 120, count > 0 ? 6 : 0) : 0;
+              const sessCount = parseInt(d.sessions);
+              const visCount = parseInt(d.visitors);
+              const sessH = maxDaily > 0 ? Math.max((sessCount / maxDaily) * 120, sessCount > 0 ? 6 : 0) : 0;
+              const visH = maxDaily > 0 ? Math.max((visCount / maxDaily) * 120, visCount > 0 ? 4 : 0) : 0;
               return (
                 <div key={d.day} className="flex-1 flex flex-col items-center justify-end" title={`${d.day}: ${d.sessions} sessions, ${d.visitors} visitors`}>
-                  {count > 0 && <span className="text-[10px] font-medium text-gray-500 mb-1">{count}</span>}
-                  <div className="w-full rounded-t bg-primary-500" style={{ height: barH }} />
+                  {sessCount > 0 && <span className="text-[10px] font-medium text-gray-500 mb-1">{sessCount}</span>}
+                  <div className="relative w-full">
+                    <div className="w-full rounded-t bg-primary-500" style={{ height: sessH }} />
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] rounded-t bg-indigo-400" style={{ height: visH }} />
+                  </div>
                   <span className="text-[9px] text-gray-400 mt-1">{d.day.slice(8)}.{d.day.slice(5, 7)}</span>
                 </div>
               );
