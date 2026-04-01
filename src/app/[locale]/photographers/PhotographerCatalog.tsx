@@ -42,10 +42,17 @@ export function PhotographerCatalog({
     trackSearch({ location: locationName || undefined, shootType: shootTypeFilters.join(", ") || undefined });
   }, [locationFilters, shootTypeFilters, locations]);
 
+  // Only show locations that have at least 1 photographer
+  const locationsWithPhotographers = useMemo(() => {
+    const slugsWithPhotographers = new Set<string>();
+    photographers.forEach((p) => p.locations.forEach((l) => slugsWithPhotographers.add(l.slug)));
+    return locations.filter((l) => slugsWithPhotographers.has(l.slug));
+  }, [locations, photographers]);
+
   const filteredLocations = useMemo(() => {
     const list = !locationSearch
-      ? locations
-      : locations.filter((l) =>
+      ? locationsWithPhotographers
+      : locationsWithPhotographers.filter((l) =>
           l.name.toLowerCase().includes(locationSearch.toLowerCase())
         );
     return [...list].sort((a, b) => {
@@ -53,7 +60,7 @@ export function PhotographerCatalog({
       if (b.slug === "lisbon") return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [locations, locationSearch]);
+  }, [locationsWithPhotographers, locationSearch]);
 
   function toggleLocation(slug: string) {
     setLocationFilters((prev) =>
