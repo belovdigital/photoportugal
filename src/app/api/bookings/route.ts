@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
           dateDisplay
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`📅 <b>New Booking!</b>\n\n${clientInfo!.name} → ${photographerInfo!.display_name}\n${pkgInfo?.name || "Custom"}\n${dateDisplay || "Flexible dates"}`);
+          sendTelegram(`📅 <b>New Booking!</b>\n\n<b>Client:</b> ${clientInfo!.name}\n<b>Photographer:</b> ${photographerInfo!.display_name}\n<b>Package:</b> ${pkgInfo?.name || "Custom"}\n<b>Date:</b> ${dateDisplay || "Flexible"}\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`);
         }).catch(() => {});
       }
 

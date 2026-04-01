@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
                 `Photo Portugal: €${Number(bookingInfo.total_price)} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
               );
               import("@/lib/telegram").then(({ sendTelegram }) => {
-                sendTelegram(`💰 <b>Payment Received!</b>\n\n€${Number(bookingInfo!.total_price)}\n${bookingInfo!.client_name} → ${bookingInfo!.photographer_name}`);
+                sendTelegram(`💰 <b>Payment Received!</b>\n\n<b>Amount:</b> €${Number(bookingInfo!.total_price)}\n<b>Client:</b> ${bookingInfo!.client_name}\n<b>Photographer:</b> ${bookingInfo!.photographer_name}`);
               }).catch(() => {});
 
               // WhatsApp/SMS to photographer

@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
             console.error("[set-role] Failed to send admin notification:", err)
           );
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`👤 <b>New Photographer!</b>\n\n${session.user!.name || "Unknown"}\n${session.user!.email}`);
+            sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`);
           }).catch(() => {});
         } else {
           // Client: send welcome email + admin notification
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
             console.error("[set-role] Failed to send admin client notification:", err)
           );
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`👤 <b>New Client!</b>\n\n${session.user!.name || "Unknown"}\n${session.user!.email}`);
+            sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}`);
           }).catch(() => {});
         }
       }

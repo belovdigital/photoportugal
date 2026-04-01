@@ -57,7 +57,7 @@ export async function checkAndNotifyChecklistComplete(photographerId: string) {
     );
 
     import("@/lib/telegram").then(({ sendTelegram }) => {
-      sendTelegram(`📸 <b>Photographer Ready!</b>\n\n${profile!.name} (${profile!.email}) completed all onboarding steps.\n\nReview in admin panel.`);
+      sendTelegram(`📸 <b>Photographer Ready for Approval!</b>\n\n<b>Name:</b> ${profile!.name}\n<b>Email:</b> ${profile!.email}\n\nAll onboarding steps completed.\n\n<a href="https://photoportugal.com/admin">Review in Admin →</a>`);
     }).catch(e => console.error("[checklist-notify] telegram error:", e));
   } catch (err) {
     console.error("[checklist-notify] error:", err);
