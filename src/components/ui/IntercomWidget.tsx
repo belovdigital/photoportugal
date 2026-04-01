@@ -1,51 +1,40 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-
-const APP_ID = "d02q0i7w";
+import { useEffect } from "react";
 
 export function IntercomWidget() {
-  const { data: session, status } = useSession();
-  const bootedRef = useRef(false);
-
   useEffect(() => {
-    // Don't do anything while session is loading
-    if (status === "loading") return;
+    // Skip if already loaded
+    if ((window as any).__intercomLoaded) return;
+    (window as any).__intercomLoaded = true;
 
-    // Load Intercom script once
-    if (!(window as any).Intercom) {
-      const w = window as any;
-      const ic = function (...args: any[]) { ic.c(args); };
-      ic.q = [] as any[];
-      ic.c = function (args: any) { ic.q.push(args); };
-      w.Intercom = ic;
-      const s = document.createElement("script");
-      s.type = "text/javascript";
-      s.async = true;
-      s.src = `https://widget.intercom.io/widget/${APP_ID}`;
-      s.setAttribute("data-cfasync", "false");
-      document.head.appendChild(s);
-    }
+    // 1. Load Intercom script
+    const script = document.createElement("script");
+    script.src = "https://widget.intercom.io/widget/d02q0i7w";
+    script.async = true;
+    script.setAttribute("data-cfasync", "false");
+    document.head.appendChild(script);
 
-    const user = session?.user as { id?: string; email?: string; name?: string; role?: string } | undefined;
-    const method = bootedRef.current ? "update" : "boot";
+    script.onload = () => {
+      // 2. Boot anonymous
+      (window as any).Intercom("boot", { app_id: "d02q0i7w" });
 
-    if (user?.id) {
-      (window as any).Intercom(method, {
-        app_id: APP_ID,
-        user_id: user.id,
-        name: user.name || undefined,
-        email: user.email || undefined,
-        user_role: user.role || "client",
-      });
-    } else {
-      (window as any).Intercom(method, {
-        app_id: APP_ID,
-      });
-    }
-    bootedRef.current = true;
-  }, [session, status]);
+      // 3. Fetch user data and update
+      fetch("/api/auth/me")
+        .then(r => r.json())
+        .then(user => {
+          if (user && user.id) {
+            (window as any).Intercom("update", {
+              user_id: user.id,
+              name: user.name || "",
+              email: user.email || "",
+              user_role: user.role || "client",
+            });
+          }
+        })
+        .catch(() => {});
+    };
+  }, []);
 
   return null;
 }

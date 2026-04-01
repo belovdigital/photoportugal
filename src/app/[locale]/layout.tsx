@@ -9,7 +9,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 import { VisitorTracker } from "@/components/ui/VisitorTracker";
-import Script from "next/script";
+import { IntercomWidget } from "@/components/ui/IntercomWidget";
 
 type Locale = "en" | "pt";
 
@@ -44,16 +44,7 @@ export default async function LocaleLayout({
         <CookieConsent />
         <VisitorTracker />
         <GoogleAnalytics />
-        <Script
-          id="intercom-boot"
-          strategy="afterInteractive"
-          data-cfasync="false"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(){var w=window;var d=document;var i=function(){i.c(arguments);};i.q=[];i.c=function(args){i.q.push(args);};w.Intercom=i;var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/d02q0i7w';s.setAttribute('data-cfasync','false');d.head.appendChild(s);s.onload=function(){w.Intercom('boot',{app_id:'d02q0i7w'});fetch('/api/auth/me').then(function(r){return r.json()}).then(function(u){if(u&&u.id){w.Intercom('update',{user_id:u.id,name:u.name||'',email:u.email||'',user_role:u.role||'client'})}}).catch(function(){});}})();
-            `,
-          }}
-        />
+        <IntercomWidget />
       </SessionProvider>
     </NextIntlClientProvider>
   );
