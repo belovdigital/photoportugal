@@ -38,15 +38,14 @@ export interface AdminPhotographer {
 
 const PAGE_SIZE = 50;
 
-type Filter = "active" | "ready_review" | "deactivated" | "not_ready" | "founding" | "early25" | "early50" | "premium" | "pro" | "free" | "all";
+type Filter = "active" | "ready_review" | "deactivated" | "not_ready" | "founding" | "early50" | "premium" | "pro" | "free" | "all";
 
 const FILTERS: { key: Filter; label: string; color: string; activeColor: string }[] = [
   { key: "active", label: "Active", color: "text-green-700 border-green-300", activeColor: "bg-green-100 text-green-800 border-green-400" },
   { key: "ready_review", label: "Ready for Review", color: "text-emerald-700 border-emerald-300", activeColor: "bg-emerald-100 text-emerald-800 border-emerald-400" },
   { key: "not_ready", label: "Not Ready", color: "text-orange-700 border-orange-300", activeColor: "bg-orange-100 text-orange-800 border-orange-400" },
   { key: "founding", label: "Founding", color: "text-purple-700 border-purple-300", activeColor: "bg-purple-100 text-purple-800 border-purple-400" },
-  { key: "early25", label: "Early 25", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
-  { key: "early50", label: "Early 50", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
+  { key: "early50", label: "Early 25", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
   { key: "premium", label: "Premium", color: "text-indigo-700 border-indigo-300", activeColor: "bg-indigo-100 text-indigo-800 border-indigo-400" },
   { key: "pro", label: "Pro", color: "text-blue-700 border-blue-300", activeColor: "bg-blue-100 text-blue-800 border-blue-400" },
   { key: "free", label: "Free", color: "text-gray-700 border-gray-300", activeColor: "bg-gray-200 text-gray-800 border-gray-400" },
@@ -61,7 +60,6 @@ function matchesFilter(p: AdminPhotographer, f: Filter): boolean {
     case "ready_review": return !p.is_approved && p.checklist_complete && !p.is_banned;
     case "not_ready": return !p.is_approved && !p.checklist_complete && !p.is_banned;
     case "founding": return p.is_founding;
-    case "early25": return p.early_bird_tier === "early25";
     case "early50": return p.early_bird_tier === "early50";
     case "premium": return p.plan === "premium";
     case "pro": return p.plan === "pro";
