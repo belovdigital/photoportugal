@@ -38,7 +38,7 @@ export interface AdminPhotographer {
 
 const PAGE_SIZE = 50;
 
-type Filter = "active" | "ready_review" | "deactivated" | "not_ready" | "founding" | "early50" | "premium" | "pro" | "free" | "all";
+type Filter = "active" | "ready_review" | "deactivated" | "not_ready" | "founding" | "early50" | "premium" | "pro" | "free" | "below_min" | "all";
 
 const FILTERS: { key: Filter; label: string; color: string; activeColor: string }[] = [
   { key: "active", label: "Active", color: "text-green-700 border-green-300", activeColor: "bg-green-100 text-green-800 border-green-400" },
@@ -49,11 +49,12 @@ const FILTERS: { key: Filter; label: string; color: string; activeColor: string 
   { key: "premium", label: "Premium", color: "text-indigo-700 border-indigo-300", activeColor: "bg-indigo-100 text-indigo-800 border-indigo-400" },
   { key: "pro", label: "Pro", color: "text-blue-700 border-blue-300", activeColor: "bg-blue-100 text-blue-800 border-blue-400" },
   { key: "free", label: "Free", color: "text-gray-700 border-gray-300", activeColor: "bg-gray-200 text-gray-800 border-gray-400" },
+  { key: "below_min", label: "⚠ Below Min Price", color: "text-red-700 border-red-300", activeColor: "bg-red-100 text-red-800 border-red-400" },
   { key: "deactivated", label: "Deactivated", color: "text-red-700 border-red-300", activeColor: "bg-red-100 text-red-800 border-red-400" },
   { key: "all", label: "All", color: "text-gray-600 border-gray-300", activeColor: "bg-gray-800 text-white border-gray-800" },
 ];
 
-function matchesFilter(p: AdminPhotographer, f: Filter): boolean {
+function matchesFilter(p: AdminPhotographer, f: Filter, belowMinPackages?: Record<string, BelowMinPackage[]>): boolean {
   switch (f) {
     case "active": return p.is_approved && !p.is_banned;
     case "deactivated": return p.is_banned;
@@ -64,12 +65,23 @@ function matchesFilter(p: AdminPhotographer, f: Filter): boolean {
     case "premium": return p.plan === "premium";
     case "pro": return p.plan === "pro";
     case "free": return p.plan === "free";
+    case "below_min": return !!(belowMinPackages?.[p.id]?.length);
     case "all": return true;
     default: return true;
   }
 }
 
-export function AdminPhotographersList({ photographers, previewSecret }: { photographers: AdminPhotographer[]; previewSecret: string }) {
+export interface BelowMinPackage {
+  name: string;
+  duration_minutes: number;
+  price: number;
+}
+
+export function AdminPhotographersList({ photographers, previewSecret, belowMinPackages = {} }: {
+  photographers: AdminPhotographer[];
+  previewSecret: string;
+  belowMinPackages?: Record<string, BelowMinPackage[]>;
+}) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("active");
@@ -78,7 +90,7 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
   const filtered = useMemo(() => {
     let list = photographers;
     if (filter !== "all") {
-      list = list.filter(p => matchesFilter(p, filter));
+      list = list.filter(p => matchesFilter(p, filter, belowMinPackages));
     }
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -116,7 +128,7 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
       {/* Filters */}
       <div className="flex flex-wrap gap-1.5">
         {FILTERS.map(f => {
-          const count = photographers.filter(p => matchesFilter(p, f.key)).length;
+          const count = photographers.filter(p => matchesFilter(p, f.key, belowMinPackages)).length;
           const isActive = filter === f.key;
           return (
             <button
@@ -200,6 +212,11 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
                         : "bg-yellow-100 text-yellow-700"
                     }`}>
                       {p.days_until_deactivation !== null ? `${p.days_until_deactivation}d left` : "Pending"}
+                    </span>
+                  )}
+                  {belowMinPackages[p.id] && belowMinPackages[p.id].length > 0 && (
+                    <span className="shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-600">
+                      ⚠ {belowMinPackages[p.id].length} pkg below min
                     </span>
                   )}
                 </div>
@@ -353,6 +370,23 @@ export function AdminPhotographersList({ photographers, previewSecret }: { photo
                     />
                   </div>
                 </div>
+
+                {/* Below-minimum packages warning */}
+                {belowMinPackages[p.id] && belowMinPackages[p.id].length > 0 && (
+                  <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-3">
+                    <p className="text-[11px] font-semibold text-red-700 mb-1.5">⚠ Packages below minimum price:</p>
+                    <div className="space-y-1">
+                      {belowMinPackages[p.id].map((pkg, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[11px]">
+                          <span className="font-medium text-red-600">{pkg.name}</span>
+                          <span className="text-red-400">
+                            {pkg.duration_minutes < 60 ? `${pkg.duration_minutes} min` : `${pkg.duration_minutes / 60}h`} — €{pkg.price}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Stats row */}
                 <div className="mt-4 flex flex-wrap gap-3 text-xs text-gray-500">

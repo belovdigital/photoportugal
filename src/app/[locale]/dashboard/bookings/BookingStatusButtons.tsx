@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 
-export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, deliveryAccepted }: { bookingId: string; currentStatus: string; paymentStatus?: string | null; deliveryAccepted?: boolean }) {
+export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, deliveryAccepted, shootDate }: { bookingId: string; currentStatus: string; paymentStatus?: string | null; deliveryAccepted?: boolean; shootDate?: string | null }) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +45,7 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
             {t("decline")}
           </button>
         </div>
-        <p className="mt-1.5 text-[11px] text-gray-400">{t("acceptInquiryHint")}</p>
+        <p className="mt-1.5 text-[11px] text-gray-400 max-w-sm">{t("acceptInquiryHint")}</p>
         {errorBanner}
       </div>
     );
@@ -68,13 +68,22 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
   }
 
   if (currentStatus === "confirmed") {
+    const isFutureDate = shootDate && new Date(shootDate + "T23:59:59") > new Date();
     return (
       <div>
-        <button onClick={() => updateStatus("completed")} disabled={updating}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+        <button
+          onClick={() => updateStatus("completed")}
+          disabled={updating || !!isFutureDate}
+          title={isFutureDate ? t("markSessionDoneWait") || `Available on ${new Date(shootDate!).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : undefined}
+          className={`rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${isFutureDate ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+        >
           {t("markSessionDone")}
         </button>
-        <p className="mt-1.5 text-[11px] text-gray-400">{t("markSessionDoneHint")}</p>
+        <p className="mt-1.5 text-[11px] text-gray-400 max-w-sm">
+          {isFutureDate
+            ? (t("markSessionDoneWait") || `Available on ${new Date(shootDate!).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`)
+            : t("markSessionDoneHint")}
+        </p>
         {errorBanner}
       </div>
     );
@@ -92,7 +101,7 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
           </svg>
           {t("uploadDeliverPhotos")}
         </Link>
-        <p className="mt-1.5 text-[11px] text-gray-400">{t("uploadDeliverHint")}</p>
+        <p className="mt-1.5 text-[11px] text-gray-400 max-w-sm">{t("uploadDeliverHint")}</p>
       </div>
     );
   }

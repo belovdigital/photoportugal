@@ -26,7 +26,7 @@ export async function FeaturedPhotographers() {
       `SELECT pp.slug, u.name, pp.tagline,
               u.avatar_url, pp.cover_url, pp.cover_position_y, pp.is_verified,
               pp.rating, pp.review_count,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as min_price,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations
        FROM photographer_profiles pp

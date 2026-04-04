@@ -168,6 +168,7 @@ CREATE TABLE bookings (
   photographer_id UUID NOT NULL REFERENCES photographer_profiles(id),
   package_id UUID REFERENCES packages(id),
   location_slug VARCHAR(100),
+  location_detail TEXT,              -- free-text meeting point / specific area
   status booking_status DEFAULT 'pending',
   shoot_date DATE,
   shoot_time VARCHAR(50),

@@ -99,6 +99,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Create notification preferences (defaults: all enabled)
+    if (user) {
+      await queryOne(
+        "INSERT INTO notification_preferences (user_id) VALUES ($1) ON CONFLICT DO NOTHING",
+        [user.id]
+      );
+    }
+
     // Generate verification token and send email
     if (user) {
       const token = crypto.randomBytes(32).toString("hex");

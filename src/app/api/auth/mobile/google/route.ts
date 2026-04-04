@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { sendAdminNewClientNotification, sendWelcomeEmail } from "@/lib/email";
 
 function getJwtSecret(): string {
   const s = process.env.NEXTAUTH_SECRET;
@@ -76,6 +77,13 @@ export async function POST(req: NextRequest) {
         role: "client",
         avatar_url: googleUser.picture || null,
       };
+
+      // Notify admin + send welcome email for new users
+      sendWelcomeEmail(googleUser.email, googleUser.name, "client").catch(() => {});
+      sendAdminNewClientNotification(googleUser.name, googleUser.email).catch(() => {});
+      import("@/lib/telegram").then(({ sendTelegram }) => {
+        sendTelegram(`👤 <b>New Client (Google, mobile)</b>\n\n<b>Name:</b> ${googleUser.name}\n<b>Email:</b> ${googleUser.email}`);
+      }).catch(() => {});
     } else {
       // Update google_id and avatar if missing
       await queryOne(

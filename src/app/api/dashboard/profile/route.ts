@@ -16,12 +16,14 @@ export async function GET(req: NextRequest) {
     const profile = await queryOne<Record<string, unknown>>(
       `SELECT pp.id, pp.slug, u.name, pp.tagline, pp.bio,
               u.avatar_url, pp.cover_url, pp.languages, pp.shoot_types,
+              pp.experience_years,
               pp.is_verified, pp.is_approved, pp.rating, pp.review_count,
               pp.session_count, pp.plan, u.phone,
               (pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as stripe_ready,
               (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id)::int as portfolio_count,
               (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id)::int as package_count,
-              (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id)::int as location_count
+              (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id)::int as location_count,
+              COALESCE((SELECT array_agg(location_slug) FROM photographer_locations WHERE photographer_id = pp.id), ARRAY[]::text[]) as locations
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.user_id = $1`,

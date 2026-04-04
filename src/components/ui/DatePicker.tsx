@@ -124,7 +124,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
       </button>
 
       {open && (
-        <div className="absolute left-0 z-50 mt-2 w-[320px] rounded-2xl border border-warm-200 bg-white p-4 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute left-0 z-50 mt-2 w-[320px] max-w-[calc(100vw-2rem)] rounded-2xl border border-warm-200 bg-white p-4 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
           {/* Header */}
           <div className="mb-3 flex items-center justify-between">
             <button type="button" onClick={prevMonth} className="rounded-lg p-1.5 text-gray-400 transition hover:bg-warm-100 hover:text-gray-600">

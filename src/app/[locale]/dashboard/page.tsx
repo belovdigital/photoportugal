@@ -172,11 +172,14 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
 
   return (
     <div className="p-6 sm:p-8">
-      <div className="flex items-center justify-between">
-        <div>
+      <div>
+        <div className="flex items-center gap-3">
           <h1 className="font-display text-2xl font-bold text-gray-900">{t("welcomeBack", { name })}</h1>
-          <p className="mt-1 text-gray-500">{t("managePhotographyBusiness")}</p>
+          <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold uppercase text-primary-600">
+            {profile.plan}
+          </span>
         </div>
+        <p className="mt-1 text-gray-500">{t("managePhotographyBusiness")}</p>
       </div>
 
       {/* Onboarding Checklist */}
@@ -214,16 +217,6 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
           </div>
         </div>
       )}
-
-      {profile.is_approved && <div className="mt-2 flex justify-end">
-        <Link
-          href={`/photographers/${profile.slug}`}
-          target="_blank"
-          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
-        >
-          {t("viewPublicProfile")}
-        </Link>
-      </div>}
 
       {/* Stats */}
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">

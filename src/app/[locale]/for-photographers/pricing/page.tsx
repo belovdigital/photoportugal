@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
-    alternates: localeAlternates("/pricing", locale),
+    alternates: localeAlternates("/for-photographers/pricing", locale),
   };
 }
 
@@ -37,7 +37,7 @@ export default async function PricingPage({
         t("plans.free.features.searchVisibility"),
         t("plans.free.features.commission", { rate: COMMISSION_RATES.free }),
       ],
-      href: "/join",
+      href: "/for-photographers/join",
       highlighted: false,
     },
     {
@@ -115,7 +115,7 @@ export default async function PricingPage({
     <Breadcrumbs
       items={[
         { name: tc("home"), href: "/" },
-        { name: tc("pricing"), href: "/pricing" },
+        { name: tc("pricing"), href: "/for-photographers/pricing" },
       ]}
     />
     <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">

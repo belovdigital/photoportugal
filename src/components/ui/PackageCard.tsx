@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { formatDuration } from "@/lib/package-pricing";
 
 interface PackageProps {
   pkg: {
@@ -82,7 +83,7 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
         <span className="flex items-center gap-1">
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          {pkg.duration_minutes} {tc("min")}
+          {formatDuration(pkg.duration_minutes)}
         </span>
         <span className="text-warm-300">|</span>
         <span className="flex items-center gap-1">

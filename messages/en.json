@@ -1059,6 +1059,8 @@
     "form": {
       "selectPackage": "Select a package",
       "preferredLocation": "Preferred location",
+      "locationDetail": "Meeting point or specific area (optional)",
+      "locationDetailPlaceholder": "e.g. Praia Dona Ana, hotel lobby, Alfama neighborhood...",
       "preferredDate": "Preferred date",
       "preferredTime": "Preferred time",
       "flexibleDates": "I'm flexible with dates",
@@ -1736,6 +1738,8 @@
     "descriptionHintEnglish": "in English",
     "descriptionPlaceholder": "Describe what's included in English...",
     "durationMinutes": "Duration (minutes)",
+    "duration": "Duration",
+    "selectDuration": "Select duration",
     "numberOfPhotos": "Number of Photos",
     "priceEur": "Price (EUR)",
     "pricePlaceholder": "e.g. 149",
@@ -2136,6 +2140,7 @@
     "cancelRefundConfirm": "Cancel this booking? Your payment will be refunded. Refunds typically take 5-10 business days.",
     "failedUpdate": "Failed to update booking",
     "markSessionDoneHint": "Confirm that the session took place successfully. If there was a problem (client no-show, issues), contact support instead.",
+    "markSessionDoneWait": "This button will become active on the session date",
     "uploadDeliverHint": "Upload your photos and share them with the client. They'll receive an email with a link to review and accept."
   },
   "clientDashboard": {
@@ -2165,7 +2170,7 @@
     "firstName": "First Name",
     "lastName": "Last Name",
     "email": "Email",
-    "emailCannotBeChanged": "Email cannot be changed",
+    "emailCannotBeChanged": "Need to change your email?",
     "phone": "Phone Number",
     "phoneHint": "Used for SMS booking notifications",
     "saveChanges": "Save Changes",
@@ -2253,7 +2258,10 @@
     "shootDate": "Date",
     "price": "Price",
     "occasion": "Occasion",
-    "requestedLabel": "Requested"
+    "requestedLabel": "Requested",
+    "packageLabel": "Package",
+    "locationLabel": "Location",
+    "groupLabel": "Group"
   },
   "bookingJourney": {
     "cancelled": "Cancelled",

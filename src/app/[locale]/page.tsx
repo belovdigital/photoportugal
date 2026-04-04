@@ -434,7 +434,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               {t("cta.browsePhotographers")}
             </Link>
             <Link
-              href="/join"
+              href="/for-photographers/join"
               className="rounded-xl border-2 border-white/20 px-8 py-4 text-base font-semibold text-white transition hover:border-white/40 hover:bg-white/5"
             >
               {t("cta.joinAsPhotographer")}

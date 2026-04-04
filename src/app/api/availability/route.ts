@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 
 // GET — fetch unavailability ranges for a photographer
@@ -19,21 +19,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(ranges);
   }
 
-  // Authenticated: get own ranges (including past for archive)
-  const session = await auth();
-  const userId = (session?.user as { id?: string })?.id;
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Authenticated: get own ranges
+  const user = await authFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const profile = await queryOne<{ id: string }>(
-    "SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]
+    "SELECT id FROM photographer_profiles WHERE user_id = $1", [user.id]
   );
   if (!profile) return NextResponse.json({ error: "Not a photographer" }, { status: 403 });
 
-  const ranges = await query<{ id: string; date_from: string; date_to: string; reason: string | null; created_at: string }>(
-    `SELECT id, date_from::text, date_to::text, reason, created_at
+  const ranges = await query<{ id: string; date_from: string; date_to: string; reason: string | null }>(
+    `SELECT id, date_from::text, date_to::text, reason
      FROM photographer_unavailability
      WHERE photographer_id = $1
-     ORDER BY date_from DESC`,
+     ORDER BY date_from ASC`,
     [profile.id]
   );
 
@@ -42,21 +41,17 @@ export async function GET(req: NextRequest) {
 
 // POST — add a new unavailability range
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  const userId = (session?.user as { id?: string })?.id;
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await authFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const profile = await queryOne<{ id: string }>(
-    "SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]
+    "SELECT id FROM photographer_profiles WHERE user_id = $1", [user.id]
   );
   if (!profile) return NextResponse.json({ error: "Not a photographer" }, { status: 403 });
 
   const { date_from, date_to, reason } = await req.json();
   if (!date_from || !date_to) {
-    return NextResponse.json({ error: "Date range is required" }, { status: 400 });
-  }
-  if (date_from > date_to) {
-    return NextResponse.json({ error: "Start date must be before end date" }, { status: 400 });
+    return NextResponse.json({ error: "date_from and date_to are required" }, { status: 400 });
   }
 
   const row = await queryOne<{ id: string }>(
@@ -70,18 +65,15 @@ export async function POST(req: NextRequest) {
 
 // DELETE — remove an unavailability range
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  const userId = (session?.user as { id?: string })?.id;
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await authFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const profile = await queryOne<{ id: string }>(
-    "SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]
+    "SELECT id FROM photographer_profiles WHERE user_id = $1", [user.id]
   );
   if (!profile) return NextResponse.json({ error: "Not a photographer" }, { status: 403 });
 
   const { id } = await req.json();
-  if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
-
   await queryOne(
     "DELETE FROM photographer_unavailability WHERE id = $1 AND photographer_id = $2 RETURNING id",
     [id, profile.id]

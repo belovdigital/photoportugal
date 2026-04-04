@@ -11,6 +11,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: { params: { prompt: "select_account" } },
     }),
     Credentials({
       name: "Email",
@@ -102,6 +103,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // Admin notification is NOT sent here — it's sent from set-role endpoint
             // after the user picks their role, to avoid duplicate notifications
             // when someone registers as photographer (created as client first, then role changed).
+            // Create notification preferences
+            const newUser = await queryOne<{ id: string }>("SELECT id FROM users WHERE email = $1", [email]);
+            if (newUser) {
+              query("INSERT INTO notification_preferences (user_id) VALUES ($1) ON CONFLICT DO NOTHING", [newUser.id]).catch(() => {});
+            }
             sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
               console.error("[auth] Failed to send welcome email:", err)
             );

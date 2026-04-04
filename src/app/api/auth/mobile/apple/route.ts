@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { sendAdminNewClientNotification, sendWelcomeEmail } from "@/lib/email";
 
 function getJwtSecret(): string {
   const s = process.env.NEXTAUTH_SECRET;
@@ -98,6 +99,13 @@ export async function POST(req: NextRequest) {
         "INSERT INTO notification_preferences (user_id) VALUES ($1) ON CONFLICT DO NOTHING",
         [user.id]
       );
+
+      // Notify admin + send welcome email
+      sendWelcomeEmail(email.toLowerCase(), name, "client").catch(() => {});
+      sendAdminNewClientNotification(name, email.toLowerCase()).catch(() => {});
+      import("@/lib/telegram").then(({ sendTelegram }) => {
+        sendTelegram(`👤 <b>New Client (Apple, mobile)</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}`);
+      }).catch(() => {});
     }
 
     // Update name if we have it and current is "Apple User"

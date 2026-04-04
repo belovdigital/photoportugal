@@ -161,7 +161,7 @@ export default async function AboutPage({
                 After years of shooting family and lifestyle sessions across Lisbon, Sintra, and Cascais, Kate realized that tourists visiting Portugal wanted beautiful photos but finding a trustworthy local photographer was surprisingly hard. She created Photo Portugal to solve this — a curated marketplace where every photographer is personally vetted and every session delivers an exceptional experience.
               </p>
               <p>
-                Kate personally oversees the <Link href="/how-we-select" className="text-primary-600 hover:underline">photographer selection process</Link>, ensuring that only professionals who share her commitment to authenticity and quality join the platform.
+                Kate personally oversees the <Link href="/for-photographers/how-we-select" className="text-primary-600 hover:underline">photographer selection process</Link>, ensuring that only professionals who share her commitment to authenticity and quality join the platform.
               </p>
             </div>
           </div>

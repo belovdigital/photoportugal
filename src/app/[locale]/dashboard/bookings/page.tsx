@@ -64,12 +64,19 @@ export default async function BookingsPage() {
     flexible_date_to: string | null;
     proposed_date: string | null;
     proposed_by: string | null;
+    proposed_time: string | null;
     date_note: string | null;
     group_size: number | null;
     occasion: string | null;
     total_price: number | null;
+    service_fee: number | null;
+    payout_amount: number | null;
+    duration_minutes: number | null;
+    location_slug: string | null;
+    location_detail: string | null;
     message: string | null;
     created_at: string;
+    client_country: string | null;
     has_review: boolean;
     payment_status: string | null;
     delivery_token: string | null;
@@ -84,9 +91,10 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
+                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
-                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at
+                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at,
+                  (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            LEFT JOIN packages p ON p.id = b.package_id
@@ -98,7 +106,7 @@ export default async function BookingsPage() {
     } else {
       bookings = await query(
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.date_note, b.group_size, b.occasion, b.total_price, b.message, b.created_at, b.payment_status,
+                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
                 COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at
          FROM bookings b
@@ -111,6 +119,15 @@ export default async function BookingsPage() {
       );
     }
   } catch {}
+
+  // Serialize Date objects to strings (node-postgres returns date columns as Date objects)
+  for (const b of bookings) {
+    const rec = b as Record<string, unknown>;
+    for (const key of ["shoot_date", "proposed_date", "flexible_date_from", "flexible_date_to", "created_at"]) {
+      const val = rec[key];
+      if (val && typeof val === "object" && "toISOString" in (val as object)) rec[key] = (val as Date).toISOString();
+    }
+  }
 
   const bookingAmounts = Object.fromEntries(bookings.map((b) => [b.id, Number(b.total_price) || 0]));
 
@@ -164,8 +181,8 @@ export default async function BookingsPage() {
                   deliveryToken={booking.delivery_token}
                   action={
                     <div className="flex flex-wrap gap-2">
-                      {isPhotographer && (booking.status === "inquiry" || booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
-                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} deliveryAccepted={booking.delivery_accepted} />
+                      {isPhotographer && (booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
+                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} />
                       )}
                       {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
                         <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />
@@ -183,10 +200,10 @@ export default async function BookingsPage() {
                 />
               )}
 
-              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {(booking.shoot_date || (booking.flexible_date_from && booking.flexible_date_to)) && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{t("shootDate") || "Date"}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("shootDate") || "Date"}</p>
                     <p className="text-sm font-medium text-gray-800">
                       {booking.shoot_date
                         ? new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })
@@ -199,23 +216,49 @@ export default async function BookingsPage() {
                 )}
                 {booking.total_price && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
                     <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price))}</p>
+                    {isPhotographer && (Number(booking.service_fee) > 0 || Number(booking.payout_amount) > 0) && (
+                      <p className="text-[10px] text-gray-400">Fee: &euro;{Math.round(Number(booking.service_fee))} &middot; Payout: &euro;{Math.round(Number(booking.payout_amount))}</p>
+                    )}
+                  </div>
+                )}
+                {booking.package_name && (
+                  <div className="rounded-lg bg-warm-50 px-3 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("packageLabel") || "Package"}</p>
+                    <p className="text-sm font-medium text-gray-800">{booking.package_name}</p>
+                    {booking.duration_minutes && <p className="text-xs text-gray-500">{booking.duration_minutes < 60 ? `${booking.duration_minutes} min` : `${booking.duration_minutes / 60}h`}</p>}
+                  </div>
+                )}
+                {booking.location_slug && (
+                  <div className="rounded-lg bg-warm-50 px-3 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("locationLabel") || "Location"}</p>
+                    <p className="text-sm font-medium text-gray-800 capitalize">{booking.location_slug.replace(/-/g, " ")}</p>
+                    {booking.location_detail && <p className="text-xs text-gray-500">{booking.location_detail}</p>}
                   </div>
                 )}
                 {booking.occasion && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{t("occasion") || "Occasion"}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("occasion") || "Occasion"}</p>
                     <p className="text-sm font-medium text-gray-800 capitalize">{booking.occasion}</p>
-                    {booking.group_size && booking.group_size > 1 && (
-                      <p className="text-xs text-gray-500">{t("people", { count: booking.group_size })}</p>
-                    )}
+                  </div>
+                )}
+                {booking.group_size && booking.group_size > 1 && (
+                  <div className="rounded-lg bg-warm-50 px-3 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("groupLabel") || "Group"}</p>
+                    <p className="text-sm font-medium text-gray-800">{booking.group_size} {t("people", { count: booking.group_size }) || "people"}</p>
                   </div>
                 )}
                 <div className="rounded-lg bg-warm-50 px-3 py-2">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{t("requestedLabel") || "Requested"}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("requestedLabel") || "Requested"}</p>
                   <p className="text-sm font-medium text-gray-800">{new Date(booking.created_at).toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" })}</p>
                 </div>
+                {isPhotographer && booking.client_country && (
+                  <div className="rounded-lg bg-warm-50 px-3 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Client</p>
+                    <p className="text-sm font-medium text-gray-800">{booking.client_country.toUpperCase().replace(/./g, (c: string) => String.fromCodePoint(127397 + c.charCodeAt(0)))} {(() => { try { return new Intl.DisplayNames(["en"], { type: "region" }).of(booking.client_country!); } catch { return booking.client_country; } })()}</p>
+                  </div>
+                )}
               </div>
 
               {booking.message && (
@@ -243,12 +286,13 @@ export default async function BookingsPage() {
                 );
               })()}
 
-              {(booking.status === "pending" || booking.status === "inquiry") && (
+              {!["cancelled", "completed", "delivered"].includes(booking.status) && (
                 <DateNegotiation
                   bookingId={booking.id}
                   shootDate={booking.shoot_date}
                   proposedDate={booking.proposed_date}
                   proposedBy={booking.proposed_by}
+                  proposedTime={booking.proposed_time}
                   dateNote={booking.date_note}
                   isPhotographer={isPhotographer}
                   otherName={normalizeName(booking.other_name).split(" ")[0]}

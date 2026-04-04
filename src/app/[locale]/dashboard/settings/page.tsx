@@ -73,7 +73,7 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
 }
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const t = useTranslations("settings");
   const user = session?.user;
   const role = (user as { role?: string })?.role;
@@ -183,10 +183,10 @@ export default function SettingsPage() {
     } catch {}
   }
 
-  if (!user) {
+  if (sessionStatus === "loading" || !user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Link href="/auth/signin" className="text-primary-600 hover:underline">{t("signIn")}</Link>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-warm-300 border-t-primary-600" />
       </div>
     );
   }
@@ -212,7 +212,7 @@ export default function SettingsPage() {
             />
           )}
           {!isPhotographer && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">{t("firstName")}</label>
                 <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required
@@ -229,7 +229,7 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-gray-700">{t("email")}</label>
             <input type="email" value={user.email || ""} disabled
               className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500" />
-            <p className="mt-1 text-xs text-gray-400">{t("emailCannotBeChanged")}</p>
+            <p className="mt-1 text-xs text-gray-400">{t("emailCannotBeChanged")} <a href="/dashboard/support" className="text-primary-500 hover:text-primary-600 underline">Contact support</a></p>
           </div>
           {!isPhotographer && (
             <div className="max-w-sm">

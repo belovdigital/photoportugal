@@ -8,6 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
 import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
 import DatePicker, { UnavailableRange } from "@/components/ui/DatePicker";
+import { formatDuration } from "@/lib/package-pricing";
 
 interface Package {
   id: string;
@@ -50,6 +51,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [unavailableRanges, setUnavailableRanges] = useState<UnavailableRange[]>([]);
   const [groupSize, setGroupSize] = useState("2");
   const [occasion, setOccasion] = useState("");
+  const [locationDetail, setLocationDetail] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -112,6 +114,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         photographer_id: photographer.id,
         package_id: selectedPackage || null,
         location_slug: selectedLocation || null,
+        location_detail: locationDetail.trim() || null,
         shoot_date: flexibleDate ? "flexible" : shootDate,
         shoot_time: shootTime || null,
         flexible_date_from: flexibleDate ? flexibleDateFrom : null,
@@ -224,7 +227,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               {photographer.packages.map((pkg) => (
                 <label
                   key={pkg.id}
-                  className={`flex items-center justify-between rounded-xl border-2 p-4 transition ${
+                  className={`flex items-center justify-between rounded-xl border-2 p-4 transition cursor-pointer ${
                     selectedPackage === pkg.id
                       ? "border-primary-500 bg-primary-50"
                       : "border-gray-200 hover:border-gray-300"
@@ -236,7 +239,12 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                       name="package"
                       value={pkg.id}
                       checked={selectedPackage === pkg.id}
-                      onChange={(e) => setSelectedPackage(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedPackage(e.target.value);
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("package", e.target.value);
+                        window.history.replaceState(null, "", url.toString());
+                      }}
                       className="h-4 w-4 text-primary-600"
                     />
                     <div>
@@ -245,7 +253,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                         {pkg.is_popular && <span className="ml-2 text-xs text-primary-600">{tc("mostPopular")}</span>}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {pkg.duration_minutes} {tc("min")} &middot; {pkg.num_photos} {tc("photos")}
+                        {formatDuration(pkg.duration_minutes)} &middot; {pkg.num_photos} {tc("photos")}
                       </p>
                     </div>
                   </div>
@@ -271,6 +279,18 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             </select>
           </div>
         )}
+
+        {/* Specific location / meeting point */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">{t("form.locationDetail")}</label>
+          <input
+            type="text"
+            value={locationDetail}
+            onChange={(e) => setLocationDetail(e.target.value)}
+            placeholder={t("form.locationDetailPlaceholder")}
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+          />
+        </div>
 
         {/* Date & Time */}
         <div>

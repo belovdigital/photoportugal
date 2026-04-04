@@ -5,13 +5,15 @@ import { AdminLogoutButton, AdminNotificationEmail, AdminNotificationPhone } fro
 import { AdminPhotographersList } from "./AdminPhotographersList";
 import { AdminClientsList } from "./AdminClientsList";
 import { AdminBookingsList } from "./AdminBookingsList";
+import { AdminInquiriesList } from "./AdminBookingsTab";
 import { LocationsManager } from "./LocationsManager";
 import { PromoCodesManager } from "./PromoCodesManager";
 import { BlogManager } from "./BlogManager";
 import { AdminDashboard } from "./AdminDashboard";
 import { DisputesManager } from "./DisputesManager";
 import { ReviewsManager } from "./ReviewsManager";
-import { AnalyticsDashboard } from "./AnalyticsDashboard";
+import { AnalyticsDashboard, VisitorsTab } from "./AnalyticsDashboard";
+import { isBelowMinimum } from "@/lib/package-pricing";
 import { AuditLog } from "./AuditLog";
 import { verifyToken } from "@/app/api/admin/login/route";
 
@@ -55,11 +57,11 @@ export default async function AdminPage() {
     messageCount,
     blogCount,
   ] = await Promise.all([
-    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM users WHERE role = 'client'"),
-    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles WHERE is_approved = TRUE"),
-    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND NOT EXISTS (SELECT 1 FROM users u WHERE u.id = pp.user_id AND u.is_banned = TRUE)"),
-    queryOne<{ count: string }>(`SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE AND u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10 AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5 AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1 AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1 AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE AND u.phone IS NOT NULL`),
-    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings"),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM users WHERE role = 'client' AND COALESCE(email_verified, FALSE) = TRUE"),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = TRUE AND COALESCE(u.email_verified, FALSE) = TRUE"),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.email_verified, FALSE) = TRUE AND NOT EXISTS (SELECT 1 FROM users uu WHERE uu.id = pp.user_id AND uu.is_banned = TRUE)"),
+    queryOne<{ count: string }>(`SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.email_verified, FALSE) = TRUE AND COALESCE(u.is_banned, FALSE) = FALSE AND u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10 AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5 AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1 AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1 AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE AND u.phone IS NOT NULL`),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status != 'inquiry'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'pending'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'confirmed'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status IN ('completed', 'delivered')"),
@@ -92,9 +94,9 @@ export default async function AdminPage() {
     visitor_sessions: string | null;
   }>(`SELECT u.id, u.email, u.name, u.created_at, u.avatar_url, COALESCE(u.is_banned, FALSE) as is_banned,
       u.phone, u.utm_source, u.utm_medium, u.utm_campaign, u.utm_term, u.google_id,
-      (SELECT COUNT(*) FROM bookings WHERE client_id = u.id)::int as booking_count,
+      (SELECT COUNT(*) FROM bookings WHERE client_id = u.id AND status != 'inquiry')::int as booking_count,
       COALESCE((SELECT SUM(total_price) FROM bookings WHERE client_id = u.id AND payment_status = 'paid'), 0)::int as total_spent,
-      (SELECT MAX(created_at) FROM bookings WHERE client_id = u.id)::text as last_booking_at,
+      (SELECT MAX(created_at) FROM bookings WHERE client_id = u.id AND status != 'inquiry')::text as last_booking_at,
       (SELECT json_agg(row_to_json(s) ORDER BY s.started_at DESC)::text
        FROM (SELECT vs.started_at, vs.referrer, vs.utm_source, vs.utm_medium, vs.utm_term,
                     vs.device_type, vs.country, vs.language, vs.screen_width,
@@ -102,7 +104,7 @@ export default async function AdminPage() {
              FROM visitor_sessions vs WHERE vs.user_id = u.id
              ORDER BY vs.started_at DESC LIMIT 5) s
       ) as visitor_sessions
-    FROM users u WHERE u.role = 'client' ORDER BY u.created_at DESC LIMIT 200`);
+    FROM users u WHERE u.role = 'client' AND COALESCE(u.email_verified, FALSE) = TRUE ORDER BY u.created_at DESC LIMIT 200`);
 
   const clientBookings = await query<{
     client_id: string; booking_id: string; photographer_name: string; package_name: string | null;
@@ -117,7 +119,7 @@ export default async function AdminPage() {
     JOIN photographer_profiles pp ON pp.id = b.photographer_id
     JOIN users pu ON pu.id = pp.user_id
     LEFT JOIN packages pk ON pk.id = b.package_id
-    WHERE b.client_id IN (SELECT id FROM users WHERE role = 'client')
+    WHERE b.client_id IN (SELECT id FROM users WHERE role = 'client') AND b.status != 'inquiry'
     ORDER BY b.created_at DESC`);
 
   // Group bookings by client_id
@@ -158,6 +160,7 @@ export default async function AdminPage() {
               THEN GREATEST(0, 7 - EXTRACT(DAY FROM NOW() - pp.created_at)::int)
               ELSE NULL END as days_until_deactivation
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
+     WHERE COALESCE(u.email_verified, FALSE) = TRUE
      ORDER BY pp.is_approved DESC, COALESCE(u.is_banned, FALSE) ASC, pp.created_at DESC`
   );
 
@@ -168,19 +171,43 @@ export default async function AdminPage() {
     group_size: number | null; shoot_time: string | null; package_name: string | null;
     package_duration: number | null; service_fee: number | null; payout_amount: number | null;
     flexible_date_from: string | null; flexible_date_to: string | null; date_note: string | null;
-    delivery_accepted: boolean | null;
+    delivery_accepted: boolean | null; location_detail: string | null;
+    client_country: string | null;
   }>(
     `SELECT b.id, cu.name as client_name, pu.name as photographer_name,
             b.status, b.shoot_date, b.total_price, b.created_at, b.payment_status,
             b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,
             b.flexible_date_from, b.flexible_date_to, b.date_note,
-            b.delivery_accepted
+            b.delivery_accepted, b.location_detail,
+            (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country
      FROM bookings b JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users pu ON pu.id = pp.user_id
      LEFT JOIN packages pk ON pk.id = b.package_id
+     WHERE b.status != 'inquiry'
      ORDER BY b.created_at DESC LIMIT 200`
+  );
+
+  const inquiries = await query<{
+    id: string; client_name: string; client_email: string; photographer_name: string;
+    created_at: string; first_message: string | null; message_count: number;
+    last_message_at: string | null; has_reply: boolean; client_country: string | null;
+    converted_to_booking_id: string | null;
+  }>(
+    `SELECT b.id, cu.name as client_name, cu.email as client_email, pu.name as photographer_name,
+            b.created_at,
+            (SELECT m.text FROM messages m WHERE m.booking_id = b.id ORDER BY m.created_at ASC LIMIT 1) as first_message,
+            (SELECT COUNT(*)::int FROM messages m WHERE m.booking_id = b.id) as message_count,
+            (SELECT MAX(m.created_at) FROM messages m WHERE m.booking_id = b.id) as last_message_at,
+            EXISTS(SELECT 1 FROM messages m WHERE m.booking_id = b.id AND m.sender_id != b.client_id) as has_reply,
+            (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,
+            b.converted_to_booking_id
+     FROM bookings b JOIN users cu ON cu.id = b.client_id
+     JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     JOIN users pu ON pu.id = pp.user_id
+     WHERE b.status = 'inquiry'
+     ORDER BY b.created_at DESC LIMIT 100`
   );
 
   // Disputes count
@@ -216,6 +243,7 @@ export default async function AdminPage() {
     messages: parseInt(messageCount?.count || "0"),
     blogPosts: parseInt(blogCount?.count || "0"),
     disputesOpen: parseInt(disputeCount?.count || "0"),
+    inquiriesCount: inquiries.filter(i => !i.has_reply && !i.converted_to_booking_id).length,
     // Funnel data from DB
     funnelMessages: parseInt(messageCount?.count || "0"),
     funnelBookings: parseInt(bookingsTotal?.count || "0"),
@@ -225,11 +253,25 @@ export default async function AdminPage() {
     funnelReviewed: parseInt(reviewCount?.count || "0"),
   };
 
+  // Check for below-minimum packages per photographer
+  const allPkgs = await query<{ photographer_id: string; duration_minutes: number; price: number; name: string }>(
+    "SELECT photographer_id, duration_minutes, price, name FROM packages"
+  ).catch(() => []);
+
+  const belowMinByPhotographer: Record<string, { name: string; duration_minutes: number; price: number }[]> = {};
+  for (const pkg of allPkgs) {
+    if (isBelowMinimum(pkg.duration_minutes, pkg.price)) {
+      if (!belowMinByPhotographer[pkg.photographer_id]) belowMinByPhotographer[pkg.photographer_id] = [];
+      belowMinByPhotographer[pkg.photographer_id].push({ name: pkg.name, duration_minutes: pkg.duration_minutes, price: pkg.price });
+    }
+  }
+
   // Render sections as server components passed to client
   const photographersSection = (
     <AdminPhotographersList
       photographers={photographers}
       previewSecret={process.env.ADMIN_PREVIEW_SECRET || ""}
+      belowMinPackages={belowMinByPhotographer}
     />
   );
 
@@ -239,6 +281,10 @@ export default async function AdminPage() {
 
   const bookingsSection = (
     <AdminBookingsList bookings={bookings} />
+  );
+
+  const inquiriesSection = (
+    <AdminInquiriesList inquiries={inquiries} />
   );
 
   const settingsSection = (
@@ -268,6 +314,8 @@ export default async function AdminPage() {
       photographersSection={photographersSection}
       clientsSection={clientsSection}
       bookingsSection={bookingsSection}
+      inquiriesSection={inquiriesSection}
+      visitorsSection={<VisitorsTab recentOnly />}
       disputesSection={<DisputesManager />}
       reviewsSection={<ReviewsManager initialReviews={allReviews} photographers={photographers.map(p => ({ id: p.id, name: p.display_name }))} />}
       blogSection={<BlogManager />}

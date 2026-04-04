@@ -99,6 +99,7 @@ export interface Package {
   num_photos: number;
   price: number;
   is_popular: boolean;
+  is_public: boolean;
 }
 
 export interface PortfolioItem {

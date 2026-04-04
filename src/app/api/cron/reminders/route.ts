@@ -752,7 +752,96 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Retry payouts query: ${err}`);
   }
 
-  // === 4. Trustpilot follow-up (3 days after delivery accepted) ===
+  // === 4a. Review reminder (1 day after delivery accepted, no review yet) ===
+  let reviewReminders = 0;
+  try {
+    const needsReviewReminder = await query<{
+      id: string; client_email: string; client_name: string;
+      photographer_name: string; photographer_slug: string;
+      client_phone: string | null;
+    }>(
+      `SELECT b.id, cu.email as client_email, cu.name as client_name,
+              pu.name as photographer_name, pp.slug as photographer_slug,
+              cu.phone as client_phone
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.status = 'delivered'
+         AND b.delivery_accepted = TRUE
+         AND b.delivery_accepted_at < NOW() - INTERVAL '1 day'
+         AND b.delivery_accepted_at > NOW() - INTERVAL '2 days'
+         AND COALESCE(b.review_requested, FALSE) = FALSE
+         AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = b.id)`
+    );
+
+    const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+
+    for (const booking of needsReviewReminder) {
+      try {
+        const firstName = booking.client_name.split(" ")[0];
+        await sendEmail(
+          booking.client_email,
+          `How was your photoshoot with ${booking.photographer_name}?`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">How was your experience?</h2>
+            <p>Hi ${firstName},</p>
+            <p>We hope you love your photos from <strong>${booking.photographer_name}</strong>!</p>
+            <p>A quick review would mean the world — it helps other travelers find great photographers and supports ${booking.photographer_name.split(" ")[0]}'s work on our platform.</p>
+            <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px;">Leave a Review</a></p>
+            <p style="color: #666; font-size: 13px;">It only takes a minute and makes a big difference.</p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+        await queryOne("UPDATE bookings SET review_requested = TRUE WHERE id = $1 RETURNING id", [booking.id]);
+        reviewReminders++;
+      } catch (err) {
+        results.errors.push(`Review reminder for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Review reminders query: ${err}`);
+  }
+
+  // === 4b. SMS review reminder (5 days after delivery accepted, still no review) ===
+  let smsReviewReminders = 0;
+  try {
+    const needsSmsReview = await query<{
+      id: string; client_name: string; client_phone: string;
+      photographer_name: string;
+    }>(
+      `SELECT b.id, cu.name as client_name, cu.phone as client_phone,
+              pu.name as photographer_name
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.status = 'delivered'
+         AND b.delivery_accepted = TRUE
+         AND b.delivery_accepted_at < NOW() - INTERVAL '5 days'
+         AND b.delivery_accepted_at > NOW() - INTERVAL '6 days'
+         AND cu.phone IS NOT NULL
+         AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = b.id)`
+    );
+
+    for (const booking of needsSmsReview) {
+      try {
+        const firstName = booking.client_name.split(" ")[0];
+        const { sendSMS } = await import("@/lib/sms");
+        await sendSMS(
+          booking.client_phone,
+          `Hi ${firstName}! We'd love to hear about your photoshoot with ${booking.photographer_name}. A quick review helps other travelers: https://photoportugal.com/dashboard/bookings`
+        ).catch(() => {});
+        smsReviewReminders++;
+      } catch (err) {
+        results.errors.push(`SMS review reminder for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`SMS review reminders query: ${err}`);
+  }
+
+  // === 4c. Trustpilot follow-up (3 days after delivery accepted) ===
   try {
     const recentlyAccepted = await query<{
       id: string;
@@ -977,7 +1066,26 @@ export async function GET(req: NextRequest) {
     await queryOne("DELETE FROM visitor_sessions WHERE started_at < NOW() - INTERVAL '30 days'", []);
   } catch {}
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders });
+  // Clean unverified users older than 24h (spam prevention)
+  let unverifiedCleaned = 0;
+  try {
+    // Only delete users who registered via email (have password_hash), not OAuth
+    const deleted = await query<{ id: string }>(
+      `DELETE FROM users
+       WHERE email_verified = FALSE
+         AND password_hash IS NOT NULL
+         AND created_at < NOW() - INTERVAL '24 hours'
+         AND NOT EXISTS (SELECT 1 FROM bookings WHERE client_id = users.id)
+         AND NOT EXISTS (SELECT 1 FROM photographer_profiles WHERE user_id = users.id AND is_approved = TRUE)
+       RETURNING id`
+    );
+    unverifiedCleaned = deleted.length;
+    if (unverifiedCleaned > 0) console.log(`[cron/reminders] cleaned ${unverifiedCleaned} unverified users`);
+  } catch (err) {
+    results.errors.push(`Unverified user cleanup: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned });
 
   return NextResponse.json({
     success: true,
@@ -987,6 +1095,8 @@ export async function GET(req: NextRequest) {
     checklistDeadlineEmails,
     checklistDeactivated,
     deliveryReviewReminders,
+    reviewReminders,
+    smsReviewReminders,
   });
 
 }

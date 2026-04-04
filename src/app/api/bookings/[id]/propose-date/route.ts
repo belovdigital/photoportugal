@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const userId = user.id;
   const { id: bookingId } = await params;
-  const { action, proposed_date, date_note } = await req.json();
+  const { action, proposed_date, proposed_time, date_note } = await req.json();
 
   // Get booking with both parties' info
   const booking = await queryOne<{
@@ -35,9 +35,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (!booking) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
 
-  // Only pending/inquiry bookings can have date negotiation
-  if (!["pending", "inquiry"].includes(booking.status)) {
-    return NextResponse.json({ error: "Date can only be changed for pending bookings" }, { status: 400 });
+  // Block date changes only for cancelled/completed/delivered bookings
+  if (["cancelled", "completed", "delivered"].includes(booking.status)) {
+    return NextResponse.json({ error: "Cannot change date for this booking" }, { status: 400 });
   }
 
   // Determine who is making the request
@@ -51,15 +51,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const proposedBy = isPhotographer ? "photographer" : "client";
 
     await queryOne(
-      `UPDATE bookings SET proposed_date = $1, proposed_by = $2, date_note = $3, updated_at = NOW() WHERE id = $4 RETURNING id`,
-      [proposed_date, proposedBy, date_note || null, bookingId]
+      `UPDATE bookings SET proposed_date = $1, proposed_by = $2, date_note = $3, proposed_time = $5, updated_at = NOW() WHERE id = $4 RETURNING id`,
+      [proposed_date, proposedBy, date_note || null, bookingId, proposed_time || null]
     );
 
     // Notify the other party
     const recipientEmail = isPhotographer ? booking.client_email : booking.photographer_email;
     const recipientName = isPhotographer ? booking.client_name : booking.photographer_name;
     const senderName = isPhotographer ? booking.photographer_name : booking.client_name;
-    const formattedDate = new Date(proposed_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    const formattedDate = new Date(proposed_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    const timeDisplay = proposed_time ? ` at ${proposed_time}` : "";
 
     await sendEmail(
       recipientEmail,
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         <p>Hi ${recipientName.split(" ")[0]},</p>
         <p><strong>${senderName}</strong> has proposed a new date for your photoshoot:</p>
         <div style="background: #FFF9F0; border: 1px solid #F0E6D6; border-radius: 12px; padding: 16px; margin: 16px 0;">
-          <p style="font-size: 18px; font-weight: bold; margin: 0;">${formattedDate}</p>
+          <p style="font-size: 18px; font-weight: bold; margin: 0;">${formattedDate}${timeDisplay}</p>
           ${date_note ? `<p style="color: #666; margin: 8px 0 0;">"${date_note}"</p>` : ""}
         </div>
         <p>You can accept this date or propose a different one.</p>
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             recipientPhone.phone,
             "new_message",
             [senderName],
-            `Photo Portugal: ${senderName} proposed a new date (${formattedDate}) for your photoshoot. Log in to respond.`
+            `Photo Portugal: ${senderName} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`
           ).catch(err => console.error("[whatsapp] error:", err));
         }
       }
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Telegram notification to photographer (if they're the recipient)
     if (isClient) {
       import("@/lib/notify-photographer").then(m =>
-        m.notifyPhotographerViaTelegram(booking.photographer_id, `📅 <b>New date proposed</b>\n\n${senderName} proposed: <b>${formattedDate}</b>${date_note ? `\nNote: "${date_note}"` : ""}\n\nAccept or propose another in your dashboard.`)
+        m.notifyPhotographerViaTelegram(booking.photographer_id, `📅 <b>New date proposed</b>\n\n${senderName} proposed: <b>${formattedDate}${timeDisplay}</b>${date_note ? `\nNote: "${date_note}"` : ""}\n\nAccept or propose another in your dashboard.`)
       ).catch(() => {});
     }
 
@@ -119,8 +120,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Accept the proposed date — update shoot_date, clear proposal
     if (!booking.proposed_date) return NextResponse.json({ error: "No date proposal to accept" }, { status: 400 });
 
+    // Get proposed_time before clearing
+    const proposalData = await queryOne<{ proposed_time: string | null }>(
+      "SELECT proposed_time FROM bookings WHERE id = $1", [bookingId]
+    );
+
     await queryOne(
-      `UPDATE bookings SET shoot_date = proposed_date, proposed_date = NULL, proposed_by = NULL, date_note = NULL, updated_at = NOW() WHERE id = $1 RETURNING id`,
+      `UPDATE bookings SET shoot_date = proposed_date, shoot_time = COALESCE(proposed_time, shoot_time), proposed_date = NULL, proposed_by = NULL, date_note = NULL, proposed_time = NULL, updated_at = NOW() WHERE id = $1 RETURNING id`,
       [bookingId]
     );
 
@@ -128,7 +134,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const recipientEmail = isPhotographer ? booking.client_email : booking.photographer_email;
     const recipientName = isPhotographer ? booking.client_name : booking.photographer_name;
     const accepterName = isPhotographer ? booking.photographer_name : booking.client_name;
-    const formattedDate = new Date(booking.proposed_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    const pdRaw = booking.proposed_date as unknown;
+    const pdStr = pdRaw instanceof Date ? pdRaw.toISOString().split("T")[0] : String(booking.proposed_date).split("T")[0];
+    const formattedDate = new Date(pdStr + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    const acceptedTimeDisplay = proposalData?.proposed_time ? ` at ${proposalData.proposed_time}` : "";
 
     // Email to the proposer
     await sendEmail(
@@ -139,7 +148,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         <p>Hi ${recipientName.split(" ")[0]},</p>
         <p><strong>${accepterName}</strong> has accepted the proposed date:</p>
         <div style="background: #F0FFF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 16px; margin: 16px 0;">
-          <p style="font-size: 18px; font-weight: bold; margin: 0; color: #166534;">${formattedDate}</p>
+          <p style="font-size: 18px; font-weight: bold; margin: 0; color: #166534;">${formattedDate}${acceptedTimeDisplay}</p>
         </div>
         <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
         <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
@@ -155,14 +164,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       if (recipientPhone?.phone) {
         sendWhatsApp(
           recipientPhone.phone, "new_message", [accepterName],
-          `Photo Portugal: Date confirmed! ${accepterName} accepted ${formattedDate} for your photoshoot.`
+          `Photo Portugal: Date confirmed! ${accepterName} accepted ${formattedDate}${acceptedTimeDisplay} for your photoshoot.`
         ).catch(() => {});
       }
     } catch {}
 
     // Telegram to photographer (whether they proposed or accepted)
     import("@/lib/notify-photographer").then(m =>
-      m.notifyPhotographerViaTelegram(booking.photographer_id, `✅ <b>Date confirmed!</b>\n\nSession with ${booking.client_name}: <b>${formattedDate}</b>`)
+      m.notifyPhotographerViaTelegram(booking.photographer_id, `✅ <b>Date confirmed!</b>\n\nSession with ${booking.client_name}: <b>${formattedDate}${acceptedTimeDisplay}</b>`)
     ).catch(() => {});
 
     return NextResponse.json({ success: true, action: "accepted" });

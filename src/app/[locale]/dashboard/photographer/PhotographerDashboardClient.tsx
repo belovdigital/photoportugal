@@ -28,6 +28,7 @@ import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import { Avatar } from "@/components/ui/Avatar";
 import { parsePhone } from "@/lib/phone-codes";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { DURATION_OPTIONS, getPricingForDuration, formatDuration } from "@/lib/package-pricing";
 
 interface Profile {
   id: string;
@@ -73,6 +74,7 @@ interface Package {
   num_photos: number;
   price: number;
   is_popular: boolean;
+  is_public: boolean;
   delivery_days: number;
 }
 
@@ -109,6 +111,7 @@ export function PhotographerDashboardClient({
   bookings,
   allLocations,
   initialTab,
+  standalone,
 }: {
   profile: Profile;
   portfolioItems: PortfolioItem[];
@@ -116,6 +119,7 @@ export function PhotographerDashboardClient({
   bookings: Booking[];
   allLocations: LocationOption[];
   initialTab?: Tab;
+  standalone?: boolean;
 }) {
   const router = useRouter();
   const t = useTranslations("photographerDashboard");
@@ -180,6 +184,7 @@ export function PhotographerDashboardClient({
   const [pkgPhotos, setPkgPhotos] = useState("");
   const [pkgPrice, setPkgPrice] = useState("");
   const [pkgPopular, setPkgPopular] = useState(false);
+  const [pkgPublic, setPkgPublic] = useState(true);
   const [pkgDeliveryDays, setPkgDeliveryDays] = useState("7");
 
   function showMessage(msg: string) {
@@ -442,10 +447,11 @@ export function PhotographerDashboardClient({
     setEditingPackage(null);
     setPkgName("");
     setPkgDesc("");
-    setPkgDuration("60");
+    setPkgDuration("");
     setPkgPhotos("30");
     setPkgPrice("");
     setPkgPopular(false);
+    setPkgPublic(true);
     setPkgDeliveryDays("7");
     setShowPackageForm(true);
   }
@@ -458,22 +464,33 @@ export function PhotographerDashboardClient({
     setPkgPhotos(pkg.num_photos.toString());
     setPkgPrice(pkg.price.toString());
     setPkgPopular(pkg.is_popular);
+    setPkgPublic(pkg.is_public !== false);
     setPkgDeliveryDays((pkg.delivery_days || 7).toString());
     setShowPackageForm(true);
   }
 
   async function savePackage(e: React.FormEvent) {
     e.preventDefault();
+
+    const durationMin = parseInt(pkgDuration);
+    const priceVal = parseFloat(pkgPrice);
+    const pricing = getPricingForDuration(durationMin);
+    if (pricing && priceVal < pricing.minPrice) {
+      showMessage(`Minimum price for ${DURATION_OPTIONS.find(o => o.minutes === durationMin)?.label} is €${pricing.minPrice}`);
+      return;
+    }
+
     setSaving(true);
 
     const body = {
       id: editingPackage?.id,
       name: pkgName,
       description: pkgDesc,
-      duration_minutes: parseInt(pkgDuration),
+      duration_minutes: durationMin,
       num_photos: parseInt(pkgPhotos),
-      price: parseFloat(pkgPrice),
+      price: priceVal,
       is_popular: pkgPopular,
+      is_public: pkgPublic,
       delivery_days: parseInt(pkgDeliveryDays) || 7,
     };
 
@@ -489,13 +506,13 @@ export function PhotographerDashboardClient({
       if (editingPackage) {
         // Update in local state
         setLocalPackages((prev) =>
-          prev.map((p) => (p.id === editingPackage.id ? { ...p, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration), num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, delivery_days: parseInt(pkgDeliveryDays) || 7 } : p))
+          prev.map((p) => (p.id === editingPackage.id ? { ...p, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration), num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, delivery_days: parseInt(pkgDeliveryDays) || 7 } : p))
         );
       } else if (data?.id) {
         // Add to local state
         setLocalPackages((prev) => [...prev, {
           id: data.id, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration),
-          num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, delivery_days: parseInt(pkgDeliveryDays) || 7,
+          num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, delivery_days: parseInt(pkgDeliveryDays) || 7,
         }]);
       }
       showMessage(editingPackage ? t("packageUpdated") : t("packageCreated"));
@@ -562,72 +579,67 @@ export function PhotographerDashboardClient({
 
   return (
     <div className="mx-auto max-w-5xl">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-gray-900">
-            {t("title")}
-          </h1>
-          <p className="mt-1 text-gray-500">
-            {t("subtitle")}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-600 uppercase">
-            {profile.plan} plan
-          </span>
-          <a
-            href={`/photographers/${profile.slug}`}
-            target="_blank"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-          >
-            {profile.is_approved ? td("viewPublicProfile") : td("previewProfile")}
-          </a>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        {[
-          { label: td("statRating"), value: profile.rating ? `${profile.rating}/5` : "—" },
-          { label: td("statReviews"), value: profile.review_count },
-          { label: td("statSessions"), value: profile.session_count },
-        ].map((stat) => (
-          <div key={stat.label} className="rounded-xl border border-warm-200 bg-white p-4 text-center">
-            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-            <p className="text-sm text-gray-500">{stat.label}</p>
+      {!standalone && (
+        <>
+          {/* Header */}
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="font-display text-2xl font-bold text-gray-900">
+                {t("title")}
+              </h1>
+              <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-600 uppercase">
+                {profile.plan}
+              </span>
+            </div>
+            <p className="mt-1 text-gray-500">
+              {t("subtitle")}
+            </p>
           </div>
-        ))}
-      </div>
 
-      {/* Message */}
-      {message && (
-        <div className="mt-4 rounded-lg bg-primary-50 p-3 text-sm text-primary-700">
-          {message}
-        </div>
+          {/* Stats */}
+          <div className="mt-6 grid grid-cols-3 gap-4">
+            {[
+              { label: td("statRating"), value: profile.rating ? `${profile.rating}/5` : "—" },
+              { label: td("statReviews"), value: profile.review_count },
+              { label: td("statSessions"), value: profile.session_count },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-xl border border-warm-200 bg-white p-4 text-center">
+                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-sm text-gray-500">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Message */}
+          {message && (
+            <div className="mt-4 rounded-lg bg-primary-50 p-3 text-sm text-primary-700">
+              {message}
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="mt-8 overflow-x-auto border-b border-warm-200">
+            <div className="flex gap-6 whitespace-nowrap">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`border-b-2 pb-3 text-sm font-semibold transition ${
+                    activeTab === tab.key
+                      ? "border-primary-600 text-primary-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
-      {/* Tabs */}
-      <div className="mt-8 overflow-x-auto border-b border-warm-200">
-        <div className="flex gap-6 whitespace-nowrap">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`border-b-2 pb-3 text-sm font-semibold transition ${
-                activeTab === tab.key
-                  ? "border-primary-600 text-primary-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* === PROFILE TAB === */}
-      <div className="mt-8">
+      <div className={standalone ? "" : "mt-8"}>
         {activeTab === "profile" && (
           <>
           <form onSubmit={saveProfile} onChange={() => { setSaved(false); setIsDirty(true); }} className="max-w-2xl space-y-6 pb-20">
@@ -1102,23 +1114,26 @@ export function PhotographerDashboardClient({
                     </label>
                     <textarea
                       value={pkgDesc}
-                      onChange={(e) => setPkgDesc(e.target.value)}
-                      rows={2}
+                      onChange={(e) => setPkgDesc(e.target.value.slice(0, 1000))}
+                      rows={10}
                       placeholder={t("descriptionPlaceholder")}
                       className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
+                    <p className="mt-1 text-xs text-gray-400">{pkgDesc.length}/1000</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">{t("durationMinutes")}</label>
-                    <input
-                      type="number"
+                    <label className="block text-sm font-medium text-gray-700">{t("duration")}</label>
+                    <select
                       value={pkgDuration}
                       onChange={(e) => setPkgDuration(e.target.value)}
                       required
-                      min="15"
-                      step="15"
-                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    />
+                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 bg-white"
+                    >
+                      <option value="">{t("selectDuration")}</option>
+                      {DURATION_OPTIONS.map((opt) => (
+                        <option key={opt.minutes} value={opt.minutes}>{opt.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">{t("numberOfPhotos")}</label>
@@ -1138,11 +1153,31 @@ export function PhotographerDashboardClient({
                       value={pkgPrice}
                       onChange={(e) => setPkgPrice(e.target.value)}
                       required
-                      min="1"
+                      min={pkgDuration ? (getPricingForDuration(parseInt(pkgDuration))?.minPrice || 1) : 1}
                       step="1"
                       placeholder={t("pricePlaceholder")}
-                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                      className={`mt-1 block w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 ${
+                        pkgPrice && pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && parseFloat(pkgPrice) < getPricingForDuration(parseInt(pkgDuration))!.minPrice
+                          ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                          : "border-gray-300 focus:border-primary-500 focus:ring-primary-200"
+                      }`}
                     />
+                    {pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && (
+                      <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                        <span className="text-amber-600 text-sm font-medium">
+                          Min €{getPricingForDuration(parseInt(pkgDuration))!.minPrice}
+                        </span>
+                        <span className="text-gray-300">|</span>
+                        <span className="text-emerald-600 text-sm font-medium">
+                          Recommended €{getPricingForDuration(parseInt(pkgDuration))!.recommendedPrice}
+                        </span>
+                      </div>
+                    )}
+                    {pkgPrice && pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && parseFloat(pkgPrice) < getPricingForDuration(parseInt(pkgDuration))!.minPrice && (
+                      <p className="mt-1 text-xs text-red-500 font-medium">
+                        Price cannot be below the minimum of €{getPricingForDuration(parseInt(pkgDuration))!.minPrice} for this duration
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-gray-400">{t("priceHint")}</p>
                   </div>
                   <div>
@@ -1167,6 +1202,20 @@ export function PhotographerDashboardClient({
                       />
                       <span className="text-sm font-medium text-gray-700">{t("markAsMostPopular")}</span>
                     </label>
+                  </div>
+                  <div className="flex items-end">
+                    <label className="flex cursor-pointer items-center gap-2 rounded-xl px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={pkgPublic}
+                        onChange={(e) => setPkgPublic(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary-600"
+                      />
+                      <span className="text-sm font-medium text-gray-700">Show on profile</span>
+                    </label>
+                    {!pkgPublic && (
+                      <span className="ml-1 text-xs text-gray-400">Private — only via link or messages</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -1260,6 +1309,8 @@ function SortablePackageCard({
 }) {
   const t = useTranslations("photographerDashboard");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pkg.id });
+  const pricing = getPricingForDuration(pkg.duration_minutes);
+  const belowMin = pricing ? Number(pkg.price) < pricing.minPrice : false;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -1268,7 +1319,7 @@ function SortablePackageCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="group rounded-xl border border-warm-200 bg-white p-4">
+    <div ref={setNodeRef} style={style} className={`group rounded-xl border bg-white p-4 ${belowMin ? "border-red-300 bg-red-50/30" : "border-warm-200"}`}>
       <div className="flex items-center gap-3">
         {/* Drag handle */}
         <div
@@ -1288,15 +1339,23 @@ function SortablePackageCard({
             {pkg.is_popular && (
               <span className="shrink-0 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-600">{t("popular")}</span>
             )}
+            {!pkg.is_public && (
+              <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">Private</span>
+            )}
+            {belowMin && (
+              <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
+                Below minimum (€{pricing!.minPrice})
+              </span>
+            )}
           </div>
           <p className="mt-0.5 text-xs text-gray-400">
-            {pkg.duration_minutes} {t("minDot")} &middot; {pkg.num_photos} {t("photosDot")} &middot; {t("dayDelivery", { days: pkg.delivery_days || 7 })}
+            {formatDuration(pkg.duration_minutes)} &middot; {pkg.num_photos} {t("photosDot")} &middot; {t("dayDelivery", { days: pkg.delivery_days || 7 })}
           </p>
         </div>
 
         {/* Price + actions */}
         <div className="flex shrink-0 items-center gap-3">
-          <p className="text-lg font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</p>
+          <p className={`text-lg font-bold ${belowMin ? "text-red-600" : "text-gray-900"}`}>&euro;{Math.round(Number(pkg.price))}</p>
           <button onClick={() => onEdit(pkg)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-warm-100 hover:text-primary-600" title="Edit">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
           </button>

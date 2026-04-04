@@ -107,62 +107,65 @@ export function BookingJourney({
   return (
     <div className="mt-3">
       {/* Desktop horizontal layout */}
-      <div className="hidden sm:flex items-start justify-between">
-        {steps.map((step, i) => (
-          <React.Fragment key={i}>
-            <div className="flex flex-col items-center" style={{ flex: "0 0 auto" }}>
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                  step.isCancelled
-                    ? "bg-red-500 text-white"
-                    : step.completed
-                    ? "bg-green-500 text-white"
-                    : step.isCurrent
-                    ? "bg-accent-600 text-white ring-2 ring-accent-200 animate-pulse"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                {step.isCancelled ? (
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : step.completed ? (
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  i + 1
+      <div className="hidden sm:block">
+        <div className="flex items-start">
+          {steps.map((step, i) => (
+            <React.Fragment key={i}>
+              <div className="flex flex-col items-center flex-1">
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                    step.isCancelled
+                      ? "bg-red-500 text-white"
+                      : step.completed
+                      ? "bg-green-500 text-white"
+                      : step.isCurrent
+                      ? "bg-accent-600 text-white ring-2 ring-accent-200 animate-pulse"
+                      : "bg-gray-200 text-gray-500"
+                  }`}
+                >
+                  {step.isCancelled ? (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : step.completed ? (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    i + 1
+                  )}
+                </div>
+                <span
+                  className={`mt-1 text-xs text-center ${
+                    step.isCancelled
+                      ? "font-semibold text-red-600"
+                      : step.completed
+                      ? "text-green-700 font-medium"
+                      : step.isCurrent
+                      ? "text-accent-700 font-bold"
+                      : "text-gray-400"
+                  }`}
+                >
+                  {step.isCancelled ? t("cancelled") : step.label}
+                </span>
+                {step.isCurrent && (
+                  <span className="text-[11px] text-accent-600 text-center max-w-[100px] mt-0.5">
+                    {step.hint}
+                  </span>
                 )}
               </div>
-              <span
-                className={`mt-1 text-xs text-center max-w-[72px] ${
-                  step.isCancelled
-                    ? "font-semibold text-red-600"
-                    : step.completed
-                    ? "text-green-700 font-medium"
-                    : step.isCurrent
-                    ? "text-accent-700 font-bold"
-                    : "text-gray-400"
-                }`}
-              >
-                {step.isCancelled ? t("cancelled") : step.label}
-              </span>
-              {step.isCurrent && (
-                <span className="text-[11px] text-accent-600 text-center max-w-[90px] mt-0.5">
-                  {step.hint}
-                </span>
+              {i < steps.length - 1 && (
+                <div className="mt-3.5 w-8 shrink-0">
+                  <div className={`h-0.5 ${step.completed ? "bg-green-400" : "bg-gray-200"}`} />
+                </div>
               )}
-              {step.isCurrent && action && (
-                <div className="mt-2">{action}</div>
-              )}
-            </div>
-            {i < steps.length - 1 && (
-              <div className="flex-1 mt-3.5">
-                <div className={`h-0.5 ${step.completed ? "bg-green-400" : "bg-gray-200"}`} />
-              </div>
-            )}
-          </React.Fragment>
-        ))}
+            </React.Fragment>
+          ))}
+        </div>
+        {/* Action below stepper */}
+        {action && steps.some(s => s.isCurrent) && (
+          <div className="mt-3">{action}</div>
+        )}
       </div>
 
       {/* Mobile vertical layout */}

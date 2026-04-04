@@ -91,7 +91,7 @@ export function Header() {
       </div>
 
       {/* Main header */}
-      <header className="md:sticky md:top-0 z-50 border-b border-warm-200 bg-white/95 md:backdrop-blur-sm">
+      <header className="sticky top-0 z-50 border-b border-warm-200 bg-white/95 backdrop-blur-sm">
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link href="/" className="shrink-0" onClick={() => setActiveMenu(null)}>
@@ -251,6 +251,8 @@ export function Header() {
                   )}
                 </div>
               </div>
+            ) : pathname.startsWith("/dashboard") ? (
+              <div className="h-8 w-8 animate-pulse rounded-full bg-warm-200" />
             ) : (
               <Link href="/auth/signin" className="text-sm font-medium text-gray-600 transition hover:text-gray-900">
                 {t("logIn")}
@@ -369,7 +371,7 @@ export function Header() {
                 <div>
                   <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaTrustQuality")}</p>
                   <div className="space-y-0.5">
-                    <Link href="/how-we-select" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                    <Link href="/for-photographers/how-we-select" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
                       <ShieldCheck className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
                       <div>
                         <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("howWeSelect")}</p>
@@ -437,7 +439,7 @@ export function Header() {
                 <div>
                   <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaJoinUs")}</p>
                   <div className="space-y-0.5">
-                    <Link href="/join" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                    <Link href="/for-photographers/join" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
                       <UserPlus className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
                       <div>
                         <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("joinAsPhotographer")}</p>
@@ -458,7 +460,7 @@ export function Header() {
                 <div>
                   <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaPlansAndPricing")}</p>
                   <div className="space-y-0.5">
-                    <Link href="/pricing" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                    <Link href="/for-photographers/pricing" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
                       <CreditCard className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
                       <div>
                         <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("pricingPlans")}</p>
@@ -513,8 +515,8 @@ export function Header() {
                 <>
                   <hr className="my-2 border-warm-200" />
                   <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">{t("forPhotographers")}</p>
-                  <MobileNavLink href="/join" label={t("joinAsPhotographer")} onClick={() => setMobileOpen(false)} />
-                  <MobileNavLink href="/pricing" label={t("pricingPlans")} onClick={() => setMobileOpen(false)} />
+                  <MobileNavLink href="/for-photographers/join" label={t("joinAsPhotographer")} onClick={() => setMobileOpen(false)} />
+                  <MobileNavLink href="/for-photographers/pricing" label={t("pricingPlans")} onClick={() => setMobileOpen(false)} />
                 </>
               )}
               <hr className="my-2 border-warm-200" />

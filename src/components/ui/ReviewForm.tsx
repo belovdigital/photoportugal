@@ -199,7 +199,7 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
                         <button
                           type="button"
                           onClick={() => removePhoto(i)}
-                          className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center hover:bg-red-600"
+                          className="absolute -top-1.5 -right-1.5 h-7 w-7 rounded-full bg-red-500 text-white text-sm flex items-center justify-center hover:bg-red-600"
                         >×</button>
                       </div>
                     ))}

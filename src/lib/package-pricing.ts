@@ -1,0 +1,47 @@
+// Duration options and pricing guidelines for photographer packages
+// Used by: dashboard form, API validation, admin flagging
+
+export interface DurationOption {
+  minutes: number;
+  label: string;
+  minPrice: number;
+  recommendedPrice: number;
+}
+
+export const DURATION_OPTIONS: DurationOption[] = [
+  { minutes: 15, label: "15 min", minPrice: 50, recommendedPrice: 90 },
+  { minutes: 30, label: "30 min", minPrice: 75, recommendedPrice: 150 },
+  { minutes: 45, label: "45 min", minPrice: 100, recommendedPrice: 180 },
+  { minutes: 60, label: "1 hour", minPrice: 135, recommendedPrice: 220 },
+  { minutes: 90, label: "1.5 hours", minPrice: 190, recommendedPrice: 300 },
+  { minutes: 120, label: "2 hours", minPrice: 250, recommendedPrice: 380 },
+  { minutes: 150, label: "2.5 hours", minPrice: 300, recommendedPrice: 440 },
+  { minutes: 180, label: "3 hours", minPrice: 350, recommendedPrice: 500 },
+  { minutes: 210, label: "3.5 hours", minPrice: 390, recommendedPrice: 560 },
+  { minutes: 240, label: "4 hours", minPrice: 430, recommendedPrice: 620 },
+  { minutes: 300, label: "5 hours", minPrice: 510, recommendedPrice: 720 },
+  { minutes: 360, label: "6 hours", minPrice: 590, recommendedPrice: 820 },
+  { minutes: 420, label: "7 hours", minPrice: 670, recommendedPrice: 900 },
+  { minutes: 480, label: "8 hours", minPrice: 750, recommendedPrice: 980 },
+  { minutes: 600, label: "10 hours", minPrice: 900, recommendedPrice: 1200 },
+  { minutes: 720, label: "Full Day (12h)", minPrice: 1100, recommendedPrice: 1500 },
+];
+
+export function getPricingForDuration(minutes: number): { minPrice: number; recommendedPrice: number } | null {
+  const option = DURATION_OPTIONS.find((o) => o.minutes === minutes);
+  return option ? { minPrice: option.minPrice, recommendedPrice: option.recommendedPrice } : null;
+}
+
+export function formatDuration(minutes: number): string {
+  const option = DURATION_OPTIONS.find((o) => o.minutes === minutes);
+  if (option) return option.label;
+  if (minutes < 60) return `${minutes} min`;
+  const hours = minutes / 60;
+  return `${hours} h`;
+}
+
+export function isBelowMinimum(durationMinutes: number, price: number): boolean {
+  const pricing = getPricingForDuration(durationMinutes);
+  if (!pricing) return false;
+  return price < pricing.minPrice;
+}

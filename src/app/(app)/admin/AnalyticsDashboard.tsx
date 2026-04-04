@@ -265,7 +265,7 @@ const getCountry = (code: string) => ({
   name: (() => { try { return countryNames.of(code) || code; } catch { return code; } })(),
 });
 
-function VisitorsTab() {
+export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recentOnly?: boolean; hideRecent?: boolean } = {}) {
   const [vd, setVd] = useState<VisitorData | null>(null);
   const [vLoading, setVLoading] = useState(true);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
@@ -274,23 +274,24 @@ function VisitorsTab() {
   const [countryFilter, setCountryFilter] = useState("all");
   const [sessionsLoading, setSessionsLoading] = useState(false);
 
-  // Initial load
-  useEffect(() => {
-    fetch("/api/admin/visitors?limit=30")
+  // Initial load + auto-refresh every 15s
+  const fetchVisitors = useCallback(() => {
+    fetch(`/api/admin/visitors?limit=${sessionLimit}&role=${roleFilter}&country=${countryFilter}`)
       .then(r => r.json())
       .then(d => { setVd(d); setVLoading(false); })
       .catch(() => setVLoading(false));
-  }, []);
-
-  // Filter changes — only reload sessions, don't replace entire page
-  useEffect(() => {
-    if (!vd) return;
-    setSessionsLoading(true);
-    fetch(`/api/admin/visitors?limit=${sessionLimit}&role=${roleFilter}&country=${countryFilter}`)
-      .then(r => r.json())
-      .then(d => { setVd(d); setSessionsLoading(false); })
-      .catch(() => setSessionsLoading(false));
   }, [sessionLimit, roleFilter, countryFilter]);
+
+  useEffect(() => {
+    fetchVisitors();
+    const interval = setInterval(fetchVisitors, 15000);
+    return () => clearInterval(interval);
+  }, [fetchVisitors]);
+
+  // sessionsLoading is set when filters change — reset after fetchVisitors runs
+  useEffect(() => {
+    if (vd) setSessionsLoading(false);
+  }, [vd]);
 
   if (vLoading) return <p className="text-sm text-gray-400">Loading visitor data...</p>;
   if (!vd) return <p className="text-sm text-gray-400">No visitor data yet</p>;
@@ -301,7 +302,7 @@ function VisitorsTab() {
   return (
     <div className="space-y-6">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      {!recentOnly && <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
           { label: "Sessions (30d)", value: s.sessions, prev: s.sessionsPrev },
           { label: "Unique Visitors", value: s.visitors, prev: s.visitorsPrev },
@@ -318,9 +319,9 @@ function VisitorsTab() {
             {"sub" in c && <p className="text-[10px] text-gray-400">{c.sub}</p>}
           </div>
         ))}
-      </div>
+      </div>}
 
-      {/* Daily chart */}
+      {!recentOnly && <>{/* Daily chart */}
       {vd.dailySessions.length > 0 && (
         <div>
           <div className="flex items-center gap-4 mb-2">
@@ -330,23 +331,35 @@ function VisitorsTab() {
               <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-indigo-400" /> Unique visitors</span>
             </div>
           </div>
-          <div className="flex items-end gap-1" style={{ height: 160 }}>
-            {[...vd.dailySessions].reverse().map(d => {
-              const sessCount = parseInt(d.sessions);
-              const visCount = parseInt(d.visitors);
-              const sessH = maxDaily > 0 ? Math.max((sessCount / maxDaily) * 120, sessCount > 0 ? 6 : 0) : 0;
-              const visH = maxDaily > 0 ? Math.max((visCount / maxDaily) * 120, visCount > 0 ? 4 : 0) : 0;
-              return (
-                <div key={d.day} className="flex-1 flex flex-col items-center justify-end" title={`${d.day}: ${d.sessions} sessions, ${d.visitors} visitors`}>
-                  {sessCount > 0 && <span className="text-[10px] font-medium text-gray-500 mb-1">{sessCount}</span>}
-                  <div className="relative w-full">
-                    <div className="w-full rounded-t bg-primary-500" style={{ height: sessH }} />
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] rounded-t bg-indigo-400" style={{ height: visH }} />
-                  </div>
-                  <span className="text-[9px] text-gray-400 mt-1">{d.day.slice(8)}.{d.day.slice(5, 7)}</span>
+          <div className="relative rounded-xl border border-warm-200 bg-white p-4">
+            {/* Grid lines */}
+            <div className="absolute inset-x-4 top-4 bottom-10" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              {[1, 0.75, 0.5, 0.25, 0].map((pct) => (
+                <div key={pct} className="flex items-center gap-2">
+                  <span className="text-[9px] text-gray-300 w-6 text-right">{Math.round(maxDaily * pct)}</span>
+                  <div className="flex-1 border-t border-dashed border-gray-100" />
                 </div>
-              );
-            })}
+              ))}
+            </div>
+            {/* Bars */}
+            <div className="relative flex items-end gap-2 pl-9" style={{ height: 180 }}>
+              {[...vd.dailySessions].reverse().map(d => {
+                const sessCount = parseInt(d.sessions);
+                const visCount = parseInt(d.visitors);
+                const barH = 140;
+                const sessH = maxDaily > 0 ? Math.max((sessCount / maxDaily) * barH, sessCount > 0 ? 4 : 0) : 0;
+                const visH = maxDaily > 0 ? Math.max((visCount / maxDaily) * barH, visCount > 0 ? 4 : 0) : 0;
+                return (
+                  <div key={d.day} className="flex-1 flex flex-col items-center justify-end" title={`${d.day}: ${sessCount} sessions, ${visCount} visitors`}>
+                    <div className="flex items-end gap-[2px] w-full justify-center">
+                      <div className="flex-1 max-w-3 rounded-t-sm bg-primary-400" style={{ height: sessH }} />
+                      <div className="flex-1 max-w-3 rounded-t-sm bg-indigo-300" style={{ height: visH }} />
+                    </div>
+                    <span className="text-[9px] text-gray-400 mt-2">{d.day.slice(8)}.{d.day.slice(5, 7)}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -419,9 +432,10 @@ function VisitorsTab() {
           </div>
         </div>
       )}
+      </>}
 
       {/* Recent Sessions */}
-      <div>
+      {!hideRecent && <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-gray-700">Recent Visitors</h3>
           <div className="flex items-center gap-2">
@@ -515,16 +529,14 @@ function VisitorsTab() {
                             session.user_role === "photographer" ? "bg-purple-50 text-purple-600" : "bg-emerald-50 text-emerald-600"
                           }`}>{session.user_role === "photographer" ? "📸" : "🧳"}</span>
                         )}
-                        {session.user_email && <span className="text-[10px] text-gray-400 hidden sm:inline">{session.user_email}</span>}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className="text-xs font-medium">{session.country ? `${getCountry(session.country).flag} ${getCountry(session.country).name}` : "🏳️ Unknown"}</span>
-                        {session.utm_source && (
-                          <span className="rounded-full bg-blue-50 text-blue-600 px-1.5 py-0.5 text-[9px] font-medium">via {session.utm_source}</span>
-                        )}
-                        {session.referrer && !session.utm_source && (
-                          <span className="text-[10px] text-gray-400 truncate max-w-[120px]">from {session.referrer.replace(/^https?:\/\//, "").split("/")[0]}</span>
-                        )}
+                        {session.utm_source ? (
+                          <span className="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-semibold">{session.utm_source}{session.utm_term ? ` — "${session.utm_term}"` : ""}</span>
+                        ) : session.referrer ? (
+                          <span className="rounded-full bg-warm-100 text-gray-700 px-2 py-0.5 text-xs font-medium">{session.referrer.replace(/^https?:\/\//, "").split("/")[0]}</span>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -615,6 +627,7 @@ function VisitorsTab() {
           )}
         </div>
       </div>
+      }
     </div>
   );
 }
@@ -679,7 +692,7 @@ export function AnalyticsDashboard() {
       )}
 
       {/* === VISITORS TAB === */}
-      {activeTab === "visitors" && <VisitorsTab />}
+      {activeTab === "visitors" && <VisitorsTab hideRecent />}
 
       {/* Errors */}
       {data.ga4Error && <p className="text-xs text-red-500">{data.ga4Error}</p>}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
+import { getPricingForDuration, DURATION_OPTIONS } from "@/lib/package-pricing";
 
 async function getProfile(userId: string) {
   return queryOne<{ id: string; plan: string }>(
@@ -11,6 +12,12 @@ async function getProfile(userId: string) {
 }
 
 export async function GET(req: NextRequest) {
+  // /api/dashboard/packages?pricing=1 — return pricing config (no auth needed for form hints)
+  const { searchParams } = new URL(req.url);
+  if (searchParams.get("pricing") === "1") {
+    return NextResponse.json(DURATION_OPTIONS);
+  }
+
   const user = await authFromRequest(req);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,7 +31,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const packages = await query(
-      "SELECT * FROM packages WHERE photographer_id = $1 ORDER BY sort_order, created_at",
+      "SELECT * FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price",
       [profile.id]
     );
     return NextResponse.json(packages);
@@ -47,17 +54,27 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, description, duration_minutes, num_photos, price, is_popular, delivery_days } = await req.json();
+    const { name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public } = await req.json();
 
     if (!name || !duration_minutes || !num_photos || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const validDuration = DURATION_OPTIONS.some((o) => o.minutes === duration_minutes);
+    if (!validDuration) {
+      return NextResponse.json({ error: "Invalid duration. Please select from the available options." }, { status: 400 });
+    }
+
+    const pricing = getPricingForDuration(duration_minutes);
+    if (pricing && Math.round(price) < pricing.minPrice) {
+      return NextResponse.json({ error: `Minimum price for this duration is €${pricing.minPrice}` }, { status: 400 });
+    }
+
     const pkg = await queryOne(
-      `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id`,
-      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7]
+      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false]
     );
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
@@ -81,13 +98,23 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const { id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days } = await req.json();
+    const { id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public } = await req.json();
+
+    const validDuration = DURATION_OPTIONS.some((o) => o.minutes === duration_minutes);
+    if (!validDuration) {
+      return NextResponse.json({ error: "Invalid duration. Please select from the available options." }, { status: 400 });
+    }
+
+    const pricing = getPricingForDuration(duration_minutes);
+    if (pricing && Math.round(price) < pricing.minPrice) {
+      return NextResponse.json({ error: `Minimum price for this duration is €${pricing.minPrice}` }, { status: 400 });
+    }
 
     const pkg = await queryOne(
-      `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7
-       WHERE id = $8 AND photographer_id = $9
+      `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7, is_public = $8
+       WHERE id = $9 AND photographer_id = $10
        RETURNING id`,
-      [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, id, profile.id]
+      [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, id, profile.id]
     );
 
     if (!pkg) {

@@ -33,10 +33,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/how-it-works", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/about", changeFrequency: "monthly" as const, priority: 0.4 },
     { path: "/faq", changeFrequency: "monthly" as const, priority: 0.6 },
-    { path: "/pricing", changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/for-photographers", changeFrequency: "monthly" as const, priority: 0.7 },
-    { path: "/how-we-select", changeFrequency: "monthly" as const, priority: 0.6 },
-    { path: "/join", changeFrequency: "daily" as const, priority: 0.9 },
+    { path: "/for-photographers/pricing", changeFrequency: "monthly" as const, priority: 0.6 },
+    { path: "/for-photographers/how-we-select", changeFrequency: "monthly" as const, priority: 0.6 },
+    { path: "/for-photographers/join", changeFrequency: "daily" as const, priority: 0.9 },
     { path: "/photoshoots", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/blog", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/contact", changeFrequency: "monthly" as const, priority: 0.4 },
@@ -92,5 +92,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] Failed to load blog pages:", err);
   }
 
-  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...photographerPages, ...blogPages];
+  // /photographers/location/[slug] — clean URL filtered catalogs
+  const photographerLocationPages = locations.flatMap((loc) =>
+    localized(`/photographers/location/${loc.slug}`, { lastModified: now, changeFrequency: "weekly", priority: 0.85 })
+  );
+
+  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...photographerLocationPages, ...photographerPages, ...blogPages];
 }

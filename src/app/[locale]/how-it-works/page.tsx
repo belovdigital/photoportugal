@@ -155,7 +155,7 @@ export default async function HowItWorksPage({
           </div>
           <div className="mt-10">
             <Link
-              href="/join"
+              href="/for-photographers/join"
               className="inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
             >
               {t("joinAsPhotographer")}

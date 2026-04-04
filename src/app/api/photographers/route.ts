@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
              p.languages, p.shoot_types,
              p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
              p.rating, p.review_count,
-             (SELECT MIN(price) FROM packages WHERE photographer_id = p.id) as min_price,
+             (SELECT MIN(price) FROM packages WHERE photographer_id = p.id AND is_public = TRUE) as min_price,
              ARRAY(SELECT pl.location_slug FROM photographer_locations pl WHERE pl.photographer_id = p.id) as locations
       FROM photographer_profiles p
       JOIN users u ON u.id = p.user_id

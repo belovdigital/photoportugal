@@ -108,7 +108,7 @@ export default async function LocationPage({
     }>(
       `SELECT pp.id, pp.slug, u.name, u.avatar_url,
               pp.cover_url, pp.tagline, pp.rating, pp.review_count, pp.languages,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price,
               ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id

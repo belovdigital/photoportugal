@@ -48,19 +48,19 @@ const HERO_ID = "photo-1765854638659-aa17a6b00543"; // Couple on beach
  */
 export function unsplashUrl(
   id: string,
-  width: number = 400,
-  quality: number = 75
+  width: number = 250,
+  quality: number = 70
 ): string {
   return `https://images.unsplash.com/${id}?w=${width}&q=${quality}&auto=format&fit=crop&dpr=2`;
 }
 
-// Pre-built sizes — CSS display sizes (Unsplash serves 2x via dpr=2)
+// Pre-built sizes — CSS display sizes (Unsplash serves 2x via dpr=2 for Retina)
 export const IMAGE_SIZES = {
-  card: 400, // Location cards → serves 800px for Retina
-  cardLarge: 600, // Featured cards → serves 1200px
-  hero: 1400, // Hero section → serves 2800px
-  profile: 800, // Profile cover → serves 1600px
-  thumbnail: 200, // Thumbnails → serves 400px
+  card: 250, // Location/shoot type cards (~250px display) → serves 500px for Retina
+  cardLarge: 400, // Featured cards (~400px display) → serves 800px
+  hero: 800, // Hero section → serves 1600px for Retina
+  profile: 500, // Profile cover → serves 1000px
+  thumbnail: 150, // Thumbnails → serves 300px
 } as const;
 
 export function locationImage(slug: string, size: keyof typeof IMAGE_SIZES = "card"): string {

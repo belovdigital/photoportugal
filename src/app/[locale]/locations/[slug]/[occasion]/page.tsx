@@ -103,7 +103,7 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
   try {
     photographers = await query<{ slug: string; name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }>(
       `SELECT pp.slug, u.name, u.avatar_url, pp.rating, pp.review_count,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = TRUE AND pp.id IN (

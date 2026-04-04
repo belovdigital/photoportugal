@@ -59,6 +59,10 @@ export default async function RootLayout({
   const locale = await getLocale();
   return (
     <html lang={locale} className={`${inter.variable} ${playfair.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      </head>
       <body className="flex min-h-screen flex-col font-sans">
         <script
           type="application/ld+json"

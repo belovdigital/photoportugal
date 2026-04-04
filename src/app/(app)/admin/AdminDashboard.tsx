@@ -18,6 +18,7 @@ interface AdminStats {
   messages: number;
   blogPosts: number;
   disputesOpen: number;
+  inquiriesCount: number;
   // Funnel
   funnelMessages: number;
   funnelBookings: number;
@@ -27,21 +28,50 @@ interface AdminStats {
   funnelReviewed: number;
 }
 
-const tabs = [
-  { key: "overview", label: "Overview", icon: "home" },
-  { key: "analytics", label: "Analytics", icon: "chart" },
-  { key: "photographers", label: "Photographers", icon: "camera" },
-  { key: "clients", label: "Clients", icon: "users" },
-  { key: "bookings", label: "Bookings", icon: "calendar" },
-  { key: "disputes", label: "Disputes", icon: "flag" },
-  { key: "reviews", label: "Reviews", icon: "star" },
-  { key: "blog", label: "Blog", icon: "document" },
-  { key: "promos", label: "Promo Codes", icon: "tag" },
-  { key: "locations", label: "Locations", icon: "map" },
-  { key: "settings", label: "Settings", icon: "settings" },
-] as const;
+const tabGroups = [
+  {
+    label: null, // no header for top group
+    items: [
+      { key: "overview", label: "Overview", icon: "home" },
+      { key: "analytics", label: "Analytics", icon: "chart" },
+      { key: "visitors", label: "Recent Visitors", icon: "eye" },
+    ],
+  },
+  {
+    label: "Business",
+    items: [
+      { key: "bookings", label: "Bookings", icon: "calendar" },
+      { key: "inquiries", label: "Inquiries", icon: "message" },
+      { key: "disputes", label: "Disputes", icon: "flag" },
+      { key: "reviews", label: "Reviews", icon: "star" },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { key: "photographers", label: "Photographers", icon: "camera" },
+      { key: "clients", label: "Clients", icon: "users" },
+    ],
+  },
+  {
+    label: "Content",
+    items: [
+      { key: "blog", label: "Blog", icon: "document" },
+      { key: "promos", label: "Promo Codes", icon: "tag" },
+      { key: "locations", label: "Locations", icon: "map" },
+    ],
+  },
+  {
+    label: null,
+    items: [
+      { key: "settings", label: "Settings", icon: "settings" },
+    ],
+  },
+];
 
-type TabKey = (typeof tabs)[number]["key"];
+const tabs = tabGroups.flatMap(g => g.items);
+
+type TabKey = "overview" | "analytics" | "visitors" | "bookings" | "inquiries" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "settings";
 
 function SidebarIcon({ type, active }: { type: string; active: boolean }) {
   const cls = `h-4.5 w-4.5 ${active ? "text-primary-600" : "text-gray-400"}`;
@@ -60,6 +90,10 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>;
     case "tag":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>;
+    case "eye":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>;
+    case "message":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>;
     case "flag":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>;
     case "star":
@@ -80,6 +114,8 @@ export function AdminDashboard({
   photographersSection,
   clientsSection,
   bookingsSection,
+  inquiriesSection,
+  visitorsSection,
   disputesSection,
   reviewsSection,
   blogSection,
@@ -93,6 +129,8 @@ export function AdminDashboard({
   photographersSection: ReactNode;
   clientsSection: ReactNode;
   bookingsSection: ReactNode;
+  inquiriesSection: ReactNode;
+  visitorsSection: ReactNode;
   disputesSection: ReactNode;
   reviewsSection: ReactNode;
   blogSection: ReactNode;
@@ -147,6 +185,7 @@ export function AdminDashboard({
   function getBadge(key: string): number {
     if (key === "photographers") return stats.photographersReady;
     if (key === "bookings") return stats.bookingsPending;
+    if (key === "inquiries") return stats.inquiriesCount;
     if (key === "disputes") return stats.disputesOpen;
     return 0;
   }
@@ -188,33 +227,41 @@ export function AdminDashboard({
           md:sticky md:top-0 md:h-auto md:translate-x-0 md:bg-transparent md:pt-0
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}>
-          <nav className="flex flex-col gap-0.5 pr-3">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.key;
-              const badge = getBadge(tab.key);
-
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => { setActiveTab(tab.key); setSidebarOpen(false); }}
-                  className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                    isActive
-                      ? "bg-white text-primary-700 shadow-sm"
-                      : "text-gray-500 hover:text-gray-900"
-                  }`}
-                >
-                  <span className="flex items-center gap-3">
-                    <SidebarIcon type={tab.icon} active={isActive} />
-                    {tab.label}
-                  </span>
-                  {badge > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[10px] font-bold text-white">
-                      {badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+          <nav className="flex flex-col pr-3">
+            {tabGroups.map((group, gi) => (
+              <div key={gi} className={gi > 0 ? "mt-4" : ""}>
+                {group.label && (
+                  <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">{group.label}</p>
+                )}
+                <div className="flex flex-col gap-0.5">
+                  {group.items.map((tab) => {
+                    const isActive = activeTab === tab.key;
+                    const badge = getBadge(tab.key);
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => { setActiveTab(tab.key as TabKey); setSidebarOpen(false); }}
+                        className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                          isActive
+                            ? "bg-white text-primary-700 shadow-sm"
+                            : "text-gray-500 hover:text-gray-900"
+                        }`}
+                      >
+                        <span className="flex items-center gap-3">
+                          <SidebarIcon type={tab.icon} active={isActive} />
+                          {tab.label}
+                        </span>
+                        {badge > 0 && (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[10px] font-bold text-white">
+                            {badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </aside>
 
@@ -307,6 +354,8 @@ export function AdminDashboard({
           {activeTab === "photographers" && photographersSection}
           {activeTab === "clients" && clientsSection}
           {activeTab === "bookings" && bookingsSection}
+          {activeTab === "inquiries" && inquiriesSection}
+          {activeTab === "visitors" && visitorsSection}
           {activeTab === "disputes" && disputesSection}
           {activeTab === "reviews" && reviewsSection}
           {activeTab === "blog" && blogSection}

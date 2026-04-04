@@ -3,7 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useTranslations } from "next-intl";
 
@@ -73,7 +73,7 @@ export function DashboardSidebar() {
         fixed left-0 top-0 z-30 h-full w-56 shrink-0 bg-warm-50 pt-[100px] transition-transform
         md:sticky md:top-[100px] md:h-auto md:translate-x-0 md:bg-transparent md:pt-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `} style={{ maxHeight: "calc(100vh - 100px)" }}>
+      `} style={{ maxHeight: "calc(100dvh - 100px)" }}>
         <nav className="flex flex-col gap-0.5 p-3">
           {filteredItems.map((item) => {
             const isActive = pathname === item.href || pathname.endsWith(item.href) || (item.href !== "/dashboard" && pathname.includes(item.href));
@@ -101,10 +101,41 @@ export function DashboardSidebar() {
               </Link>
             );
           })}
+          {role === "photographer" && (
+            <ViewPublicProfileLink />
+          )}
         </nav>
 
       </aside>
     </>
+  );
+}
+
+function ViewPublicProfileLink() {
+  const [slug, setSlug] = useState<string | null>(null);
+  const t = useTranslations("dashboard");
+
+  useEffect(() => {
+    fetch("/api/dashboard/profile")
+      .then(r => r.json())
+      .then(d => { if (d.slug) setSlug(d.slug); })
+      .catch(() => {});
+  }, []);
+
+  if (!slug) return null;
+
+  return (
+    <a
+      href={`/photographers/${slug}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-3 flex items-center gap-3 rounded-xl border border-dashed border-gray-300 px-3 py-2.5 text-sm font-medium text-gray-500 transition hover:border-primary-300 hover:text-primary-600"
+    >
+      <svg className="h-4.5 w-4.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+      </svg>
+      {t("viewPublicProfile")}
+    </a>
   );
 }
 

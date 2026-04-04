@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 
 export default function SupportPage() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const user = session?.user;
   const t = useTranslations("support");
 
@@ -42,10 +42,10 @@ export default function SupportPage() {
     setSending(false);
   }
 
-  if (!user) {
+  if (sessionStatus === "loading" || !user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <Link href="/auth/signin" className="text-primary-600 hover:underline">{t("signInPrompt")}</Link>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-warm-300 border-t-primary-600" />
       </div>
     );
   }

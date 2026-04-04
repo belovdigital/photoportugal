@@ -1056,6 +1056,8 @@
     "form": {
       "selectPackage": "Selecione um pacote",
       "preferredLocation": "Localização preferida",
+      "locationDetail": "Ponto de encontro ou zona específica (opcional)",
+      "locationDetailPlaceholder": "ex: Praia Dona Ana, lobby do hotel, bairro de Alfama...",
       "preferredDate": "Data preferida",
       "preferredTime": "Hora preferida",
       "flexibleDates": "Tenho flexibilidade de datas",
@@ -1733,6 +1735,8 @@
     "descriptionHintEnglish": "em inglês",
     "descriptionPlaceholder": "Descreva o que está incluído em inglês...",
     "durationMinutes": "Duração (minutos)",
+    "duration": "Duração",
+    "selectDuration": "Selecionar duração",
     "numberOfPhotos": "Número de Fotos",
     "priceEur": "Preço (EUR)",
     "pricePlaceholder": "ex. 149",
@@ -1973,6 +1977,7 @@
     "cancelRefundConfirm": "Cancelar esta reserva? O seu pagamento será reembolsado. Os reembolsos demoram normalmente 5 a 10 dias úteis.",
     "failedUpdate": "Falha ao atualizar a reserva",
     "markSessionDoneHint": "Confirme que a sessão decorreu com sucesso. Se houve algum problema (cliente não apareceu, imprevistos), contacte o suporte.",
+    "markSessionDoneWait": "Este botão ficará ativo na data da sessão",
     "uploadDeliverHint": "Carregue as suas fotos e partilhe-as com o cliente. Receberão um email com um link para rever e aceitar."
   },
   "clientDashboard": {
@@ -2002,7 +2007,7 @@
     "firstName": "Nome",
     "lastName": "Apelido",
     "email": "Email",
-    "emailCannotBeChanged": "O email não pode ser alterado",
+    "emailCannotBeChanged": "Precisa de alterar o email?",
     "phone": "Número de Telefone",
     "phoneHint": "Usado para notificações SMS de reservas",
     "saveChanges": "Guardar Alterações",
@@ -2090,7 +2095,10 @@
     "shootDate": "Data",
     "price": "Preço",
     "occasion": "Ocasião",
-    "requestedLabel": "Solicitado"
+    "requestedLabel": "Solicitado",
+    "packageLabel": "Pacote",
+    "locationLabel": "Localização",
+    "groupLabel": "Grupo"
   },
   "bookingJourney": {
     "cancelled": "Cancelada",

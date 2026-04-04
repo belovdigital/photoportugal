@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 interface PortfolioItem {
   url: string;
@@ -15,6 +14,28 @@ interface PortfolioItem {
 interface LocationOption {
   slug: string;
   name: string;
+}
+
+function PortfolioImage({ item, alt, onClick }: { item: PortfolioItem; alt: string; onClick: () => void }) {
+  const src = item.url.startsWith("/uploads/")
+    ? `/api/img/${item.url.replace("/uploads/", "")}?w=1200&q=85&f=webp`
+    : item.url;
+
+  return (
+    <div
+      className="mb-3 cursor-pointer overflow-hidden rounded-xl break-inside-avoid bg-warm-100 transition hover:opacity-90"
+      onClick={onClick}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        draggable={false}
+        className="w-full select-none"
+      />
+    </div>
+  );
 }
 
 export function PortfolioGallery({
@@ -87,7 +108,7 @@ export function PortfolioGallery({
         <div className="mt-3 flex flex-wrap gap-1.5">
           <button
             onClick={() => setFilter({ location: "", shootType: "" })}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
               !filter.location && !filter.shootType
                 ? "bg-gray-900 text-white" : "bg-warm-100 text-gray-500 hover:bg-warm-200"
             }`}
@@ -98,7 +119,7 @@ export function PortfolioGallery({
             <button
               key={slug}
               onClick={() => setFilter((f) => ({ ...f, location: f.location === slug ? "" : slug }))}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
                 filter.location === slug
                   ? "bg-primary-600 text-white" : "bg-warm-100 text-gray-600 hover:bg-warm-200"
               }`}
@@ -110,7 +131,7 @@ export function PortfolioGallery({
             <button
               key={type}
               onClick={() => setFilter((f) => ({ ...f, shootType: f.shootType === type ? "" : type }))}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
                 filter.shootType === type
                   ? "bg-accent-600 text-white" : "bg-warm-100 text-gray-600 hover:bg-warm-200"
               }`}
@@ -121,21 +142,15 @@ export function PortfolioGallery({
         </div>
       )}
 
-      {/* Masonry grid — preserves original aspect ratios */}
+      {/* Masonry grid */}
       <div className="mt-4 columns-2 gap-3 sm:columns-3">
         {filtered.map((item, i) => (
-          <div
+          <PortfolioImage
             key={i}
-            className="mb-3 cursor-pointer overflow-hidden rounded-xl bg-warm-100 break-inside-avoid transition hover:opacity-90"
+            item={item}
+            alt={describePhoto(item)}
             onClick={() => setLightbox(i)}
-          >
-            <img
-              src={item.url.startsWith("/uploads/") ? `/api/img/${item.url.replace("/uploads/", "")}?w=1200&q=85&f=webp` : item.url}
-              alt={describePhoto(item)}
-              loading="lazy"
-              className="w-full"
-            />
-          </div>
+          />
         ))}
       </div>
 
@@ -175,7 +190,7 @@ export function PortfolioGallery({
             </button>
           )}
 
-          {/* Image — reuses same 1200px version already cached from the grid */}
+          {/* Image */}
           {(() => {
             const imgSrc = filtered[lightbox].url;
             const url = imgSrc.startsWith("/uploads/")
@@ -185,7 +200,9 @@ export function PortfolioGallery({
               <img
                 src={url}
                 alt={describePhoto(filtered[lightbox])}
-                className="max-h-[90vh] max-w-[90vw] object-contain"
+                className="max-h-[90vh] max-w-[90vw] object-contain select-none"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
                 onClick={(e) => e.stopPropagation()}
               />
             );

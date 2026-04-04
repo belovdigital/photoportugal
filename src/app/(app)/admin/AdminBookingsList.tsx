@@ -25,6 +25,22 @@ export interface AdminBooking {
   flexible_date_to: string | null;
   date_note: string | null;
   delivery_accepted: boolean | null;
+  location_detail: string | null;
+  client_country: string | null;
+}
+
+const TIME_LABELS: Record<string, string> = {
+  sunrise: "Sunrise",
+  morning: "Morning",
+  midday: "Midday",
+  afternoon: "Afternoon",
+  golden_hour: "Golden Hour",
+  sunset: "Sunset",
+  flexible: "Flexible",
+};
+
+function codeToFlag(code: string): string {
+  return code.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -154,6 +170,7 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                 {/* Row 2: names left, date right */}
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
+                    {b.client_country && <span className="mr-1" title={b.client_country}>{codeToFlag(b.client_country)}</span>}
                     <span className="text-sm font-semibold text-gray-900">{b.client_name}</span>
                     <span className="mx-1.5 text-gray-300">&rarr;</span>
                     <span className="text-sm text-gray-600">{b.photographer_name}</span>
@@ -192,7 +209,7 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                               </>
                             : <span className="text-gray-300">&mdash;</span>}
                       </p>
-                      {b.shoot_time && <p className="text-xs text-gray-400 capitalize">{b.shoot_time}</p>}
+                      {b.shoot_time && <p className="text-xs text-gray-400">{TIME_LABELS[b.shoot_time] || b.shoot_time}</p>}
                       {b.date_note && <p className="text-[10px] text-gray-400 mt-0.5">{b.date_note}</p>}
                     </div>
                     <div>
@@ -209,10 +226,11 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                         {b.package_duration && <p className="text-[10px] text-gray-400">{b.package_duration} min</p>}
                       </div>
                     )}
-                    {b.location_slug && (
+                    {(b.location_slug || b.location_detail) && (
                       <div>
                         <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Location</label>
-                        <p className="mt-1 text-sm text-gray-700 capitalize">{b.location_slug.replace(/-/g, " ")}</p>
+                        {b.location_slug && <p className="mt-1 text-sm text-gray-700 capitalize">{b.location_slug.replace(/-/g, " ")}</p>}
+                        {b.location_detail && <p className="text-xs text-gray-500 mt-0.5">{b.location_detail}</p>}
                       </div>
                     )}
                     {b.occasion && (
@@ -233,6 +251,12 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                         {new Date(b.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </p>
                     </div>
+                    {b.client_country && (
+                      <div>
+                        <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Client Country</label>
+                        <p className="mt-1 text-sm text-gray-700">{codeToFlag(b.client_country)} {new Intl.DisplayNames(["en"], { type: "region" }).of(b.client_country)}</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Client message */}

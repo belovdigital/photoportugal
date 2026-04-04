@@ -21,7 +21,7 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
       } else if (session === null) {
         // Not logged in — redirect to sign in with return URL
         const returnUrl = window.location.pathname + "#message";
-        router.push(`/auth/signin?callbackUrl=${encodeURIComponent(returnUrl)}`);
+        router.replace(`/auth/signin?callbackUrl=${encodeURIComponent(returnUrl)}`);
       }
     }
   }, [session, autoOpen, router]);

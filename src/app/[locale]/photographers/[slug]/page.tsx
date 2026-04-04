@@ -67,7 +67,7 @@ async function getPhotographer(slug: string, isAdmin = false) {
       is_popular: boolean;
       delivery_days: number;
     }>(
-      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price",
+      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price",
       [profile.id]
     );
 
@@ -227,7 +227,7 @@ export default async function PhotographerProfilePage({
       }>(
         `SELECT DISTINCT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url,
                 pp.tagline, pp.rating, pp.review_count, pp.languages,
-                (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) as starting_price,
+                (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price,
                 ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
@@ -428,9 +428,6 @@ export default async function PhotographerProfilePage({
                     <span className="text-gray-400">({photographer.review_count} {photographer.review_count !== 1 ? tc("reviews") : tc("review")})</span>
                   </a>
                 )}
-                {photographer.review_count === 0 && (
-                  <span className="text-xs text-gray-400">{t("newPhotographer")}</span>
-                )}
               </div>
 
               {/* Locations as pill tags */}
@@ -522,8 +519,8 @@ export default async function PhotographerProfilePage({
           </div>
 
           {/* Sidebar — packages */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-4">
+          <div className="lg:col-span-1 order-first lg:order-none">
+            <div className="sticky top-24 space-y-4 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
               {photographer.packages && photographer.packages.length > 0 && (
                 <>
                   <h2 className="text-xl font-bold text-gray-900">{t("packages")}</h2>

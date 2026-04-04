@@ -490,6 +490,36 @@ export default async function BlogPostPage({ params }: PageProps) {
     ],
   };
 
+  // Extract FAQ from content (## headers that are questions + following paragraphs)
+  const faqItems: { question: string; answer: string }[] = [];
+  const faqRegex = /(?:^|\n)#{2,3}\s+([^\n]*\?)\s*\n+([\s\S]*?)(?=\n#{2,3}\s|\n*$)/g;
+  let faqMatch;
+  while ((faqMatch = faqRegex.exec(post.content)) !== null) {
+    const question = faqMatch[1].replace(/\*\*/g, "").trim();
+    const answer = faqMatch[2]
+      .split("\n")
+      .filter((l: string) => l.trim() && !l.trim().startsWith("#") && !l.trim().startsWith("!["))
+      .map((l: string) => l.replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").trim())
+      .join(" ")
+      .slice(0, 500);
+    if (question && answer.length > 20) {
+      faqItems.push({ question, answer });
+    }
+  }
+
+  const faqJsonLd = faqItems.length >= 2 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  } : null;
+
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -531,6 +561,12 @@ export default async function BlogPostPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
 
       <article>
         {/* Cover image hero */}

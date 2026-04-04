@@ -58,10 +58,10 @@ export default async function ForPhotographersPage({
             {t("heroSubtitle")}
           </p>
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/join" className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-base font-bold text-white hover:from-amber-600 hover:to-orange-600 shadow-lg">
+            <Link href="/for-photographers/join" className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-base font-bold text-white hover:from-amber-600 hover:to-orange-600 shadow-lg">
               {t("joinEarlyBird")}
             </Link>
-            <Link href="/pricing" className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white hover:bg-white/5">
+            <Link href="/for-photographers/pricing" className="rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white hover:bg-white/5">
               {t("viewPlans")}
             </Link>
           </div>
@@ -122,7 +122,7 @@ export default async function ForPhotographersPage({
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="font-display text-3xl font-bold text-gray-900">{t("cta.title")}</h2>
           <p className="mt-4 text-gray-500">{t("cta.subtitle")}</p>
-          <Link href="/join" className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-700">
+          <Link href="/for-photographers/join" className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white hover:bg-primary-700">
             {t("cta.createProfile")}
           </Link>
           <p className="mt-6 text-sm text-gray-400">

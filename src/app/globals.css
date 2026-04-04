@@ -120,12 +120,13 @@ body:has(.admin-layout) footer {
 }
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
   body {
     @apply bg-warm-50 text-gray-900 antialiased;
+  }
+
+  /* Hide scrollbar but keep scroll functionality */
+  .lg\:overflow-y-auto::-webkit-scrollbar {
+    display: none;
   }
 
   button,

@@ -762,4 +762,80 @@ export const locationFaqs: Record<string, { question: string; answer: string }[]
       answer: "Yes! Sintra's enchanting atmosphere makes it perfect for proposals. The Initiation Well at Quinta da Regaleira and the colorful terraces of Pena Palace are the most popular proposal locations. Book early morning to avoid crowds during this intimate moment.",
     },
   ],
+  cascais: [
+    {
+      question: "How much does a photoshoot in Cascais cost?",
+      answer: "Professional photoshoots in Cascais start from €150 for a 30-minute session. Most photographers offer packages from €150 to €400. Beach and cliff-side sessions are the most popular options.",
+    },
+    {
+      question: "What are the best photo spots in Cascais?",
+      answer: "Top Cascais photo locations include Boca do Inferno (Hell's Mouth) for dramatic cliffs, Praia do Guincho for wild Atlantic waves, Cascais Marina for a relaxed coastal vibe, Santa Marta Lighthouse for colorful backdrops, and the charming old town streets.",
+    },
+    {
+      question: "How do I get to Cascais from Lisbon?",
+      answer: "Cascais is just 30 minutes from Lisbon by train (Cais do Sodré station). The scenic coastal train ride is €2.30 each way. Many Lisbon-based photographers also cover Cascais sessions.",
+    },
+    {
+      question: "What's the best time for photos in Cascais?",
+      answer: "Golden hour (1-2 hours before sunset) is magical in Cascais — the Atlantic-facing coastline catches the light beautifully. Early morning is also great for Guincho beach when it's empty. Avoid midday in summer when beaches are crowded.",
+    },
+    {
+      question: "Can I combine a Cascais and Sintra photoshoot?",
+      answer: "Yes! Cascais and Sintra are only 20 minutes apart by car. A popular option is a morning shoot in Sintra's palaces followed by a golden hour session on Cascais beaches. Ask your photographer about half-day combination packages.",
+    },
+  ],
+  lagos: [
+    {
+      question: "How much does a photoshoot in Lagos cost?",
+      answer: "Professional photoshoots in Lagos and the western Algarve start from €150. Beach and cliff sessions at Ponta da Piedade are the most popular, typically ranging from €150 to €400 depending on duration.",
+    },
+    {
+      question: "What are the best photo spots in Lagos?",
+      answer: "Lagos' top photo locations include Ponta da Piedade's golden cliffs and sea stacks, Praia do Camilo's wooden staircase, Praia Dona Ana's turquoise coves, the old town's colorful streets, and the Marina for sunset shots.",
+    },
+    {
+      question: "Is Lagos good for a proposal photoshoot?",
+      answer: "Absolutely! Lagos has some of the most dramatic proposal spots in Portugal. Ponta da Piedade at sunset is breathtaking. Your photographer can hide among the cliffs to capture the surprise moment, then take couple photos on the golden rocks.",
+    },
+    {
+      question: "When is the best time to visit Lagos for photos?",
+      answer: "Spring (April–May) and early autumn (September–October) offer the best light and fewer crowds. Summer is beautiful but beaches are packed. Golden hour on the west-facing cliffs is spectacular year-round.",
+    },
+  ],
+  madeira: [
+    {
+      question: "How much does a photoshoot in Madeira cost?",
+      answer: "Professional photoshoots in Madeira start from €150. Due to the island's diverse landscapes, many photographers offer half-day packages (€300–500) covering multiple locations from mountains to coast.",
+    },
+    {
+      question: "What are the best photo spots in Madeira?",
+      answer: "Madeira's top spots include Pico do Arieiro above the clouds, the volcanic swimming pools at Porto Moniz, Cabo Girão's glass skywalk (Europe's highest cliff), Funchal's colorful Zona Velha street art, and the laurel forests of Fanal.",
+    },
+    {
+      question: "What's the best time of year for photos in Madeira?",
+      answer: "Madeira has mild weather year-round, making it great for photos any season. Spring brings flowers in bloom, especially during the famous Flower Festival (April-May). Winter offers dramatic cloud formations above the mountains.",
+    },
+    {
+      question: "Do I need a car for a Madeira photoshoot?",
+      answer: "For mountain and coastal locations outside Funchal, yes — or your photographer can arrange transport. Many iconic spots like Pico do Arieiro, Fanal, and Porto Moniz require driving. Funchal city sessions can be done on foot.",
+    },
+  ],
+  "douro-valley": [
+    {
+      question: "How much does a photoshoot in Douro Valley cost?",
+      answer: "Professional photoshoots in Douro Valley start from €200 due to travel from Porto (1.5 hours). Half-day packages covering vineyards and river viewpoints typically range from €300 to €500.",
+    },
+    {
+      question: "What are the best photo spots in Douro Valley?",
+      answer: "Top Douro photo spots include the terraced vineyards from São Leonardo da Galafura viewpoint, the bend in the river at Casal de Loivos, wine estates (quintas) with barrel rooms, and the historic village of Pinhão with its azulejo train station.",
+    },
+    {
+      question: "When is the best time for Douro Valley photos?",
+      answer: "September–October during the grape harvest (vindima) is magical — the vineyards turn golden and red. Spring (March–May) offers green terraces and wildflowers. Summer mornings have beautiful mist rising from the river.",
+    },
+    {
+      question: "Can I combine a Porto and Douro Valley photoshoot?",
+      answer: "Yes, many Porto-based photographers offer Douro Valley add-ons. A popular option is a morning shoot in Porto followed by an afternoon drive to Douro for sunset vineyard photos. Book a full-day package for both.",
+    },
+  ],
 };

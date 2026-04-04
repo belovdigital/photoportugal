@@ -494,9 +494,7 @@ function MessagesContent() {
   if (!session?.user)
     return (
       <div className="flex h-96 items-center justify-center">
-        <Link href="/auth/signin" className="text-primary-600">
-          {t("signInPrompt")}
-        </Link>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-warm-300 border-t-primary-600" />
       </div>
     );
 
