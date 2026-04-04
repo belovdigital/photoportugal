@@ -63,7 +63,7 @@ export async function GET(
       duration_minutes: number; num_photos: number; price: number;
       is_popular: boolean; delivery_days: number;
     }>(
-      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price",
+      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price",
       [profile.id]
     );
 

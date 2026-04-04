@@ -40,8 +40,8 @@ export default async function ProfilePage() {
   }>("SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order", [profile.id]);
 
   const packages = await query<{
-    id: string; name: string; description: string | null; duration_minutes: number; num_photos: number; price: number; is_popular: boolean; is_public: boolean; delivery_days: number;
-  }>("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, is_public, COALESCE(delivery_days, 7) as delivery_days FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price", [profile.id]);
+    id: string; name: string; description: string | null; duration_minutes: number; num_photos: number; price: number; is_popular: boolean; is_public: boolean; delivery_days: number; features: string[];
+  }>("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, is_public, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price", [profile.id]);
 
   const bookings = await query<{
     id: string; client_name: string; client_email: string; client_avatar: string | null;

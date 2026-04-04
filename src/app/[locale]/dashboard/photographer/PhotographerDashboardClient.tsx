@@ -76,6 +76,7 @@ interface Package {
   is_popular: boolean;
   is_public: boolean;
   delivery_days: number;
+  features: string[];
 }
 
 interface Booking {
@@ -185,6 +186,7 @@ export function PhotographerDashboardClient({
   const [pkgPrice, setPkgPrice] = useState("");
   const [pkgPopular, setPkgPopular] = useState(false);
   const [pkgPublic, setPkgPublic] = useState(true);
+  const [pkgFeatures, setPkgFeatures] = useState<string[]>([]);
   const [pkgDeliveryDays, setPkgDeliveryDays] = useState("7");
 
   function showMessage(msg: string) {
@@ -452,6 +454,7 @@ export function PhotographerDashboardClient({
     setPkgPrice("");
     setPkgPopular(false);
     setPkgPublic(true);
+    setPkgFeatures([]);
     setPkgDeliveryDays("7");
     setShowPackageForm(true);
   }
@@ -465,6 +468,7 @@ export function PhotographerDashboardClient({
     setPkgPrice(pkg.price.toString());
     setPkgPopular(pkg.is_popular);
     setPkgPublic(pkg.is_public !== false);
+    setPkgFeatures(pkg.features || []);
     setPkgDeliveryDays((pkg.delivery_days || 7).toString());
     setShowPackageForm(true);
   }
@@ -491,6 +495,7 @@ export function PhotographerDashboardClient({
       price: priceVal,
       is_popular: pkgPopular,
       is_public: pkgPublic,
+      features: pkgFeatures.filter((f) => f.trim()),
       delivery_days: parseInt(pkgDeliveryDays) || 7,
     };
 
@@ -506,13 +511,13 @@ export function PhotographerDashboardClient({
       if (editingPackage) {
         // Update in local state
         setLocalPackages((prev) =>
-          prev.map((p) => (p.id === editingPackage.id ? { ...p, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration), num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, delivery_days: parseInt(pkgDeliveryDays) || 7 } : p))
+          prev.map((p) => (p.id === editingPackage.id ? { ...p, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration), num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, features: pkgFeatures.filter((f) => f.trim()), delivery_days: parseInt(pkgDeliveryDays) || 7 } : p))
         );
       } else if (data?.id) {
         // Add to local state
         setLocalPackages((prev) => [...prev, {
           id: data.id, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration),
-          num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, delivery_days: parseInt(pkgDeliveryDays) || 7,
+          num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, features: pkgFeatures.filter((f) => f.trim()), delivery_days: parseInt(pkgDeliveryDays) || 7,
         }]);
       }
       showMessage(editingPackage ? t("packageUpdated") : t("packageCreated"));
@@ -1098,6 +1103,7 @@ export function PhotographerDashboardClient({
                 pkgDeliveryDays={pkgDeliveryDays} setPkgDeliveryDays={setPkgDeliveryDays}
                 pkgPopular={pkgPopular} setPkgPopular={setPkgPopular}
                 pkgPublic={pkgPublic} setPkgPublic={setPkgPublic}
+                pkgFeatures={pkgFeatures} setPkgFeatures={setPkgFeatures}
                 saving={saving}
                 isEdit={false}
                 onSubmit={savePackage}
@@ -1132,6 +1138,7 @@ export function PhotographerDashboardClient({
                         pkgDeliveryDays={pkgDeliveryDays} setPkgDeliveryDays={setPkgDeliveryDays}
                         pkgPopular={pkgPopular} setPkgPopular={setPkgPopular}
                         pkgPublic={pkgPublic} setPkgPublic={setPkgPublic}
+                        pkgFeatures={pkgFeatures} setPkgFeatures={setPkgFeatures}
                         saving={saving}
                         isEdit={true}
                         onSubmit={savePackage}
@@ -1192,6 +1199,7 @@ function PackageFormInline({
   title, pkgName, setPkgName, pkgDesc, setPkgDesc, pkgDuration, setPkgDuration,
   pkgPhotos, setPkgPhotos, pkgPrice, setPkgPrice, pkgDeliveryDays, setPkgDeliveryDays,
   pkgPopular, setPkgPopular, pkgPublic, setPkgPublic,
+  pkgFeatures, setPkgFeatures,
   saving, isEdit, onSubmit, onCancel, t, className = "",
 }: {
   title: string;
@@ -1203,6 +1211,7 @@ function PackageFormInline({
   pkgDeliveryDays: string; setPkgDeliveryDays: (v: string) => void;
   pkgPopular: boolean; setPkgPopular: (v: boolean) => void;
   pkgPublic: boolean; setPkgPublic: (v: boolean) => void;
+  pkgFeatures: string[]; setPkgFeatures: (v: string[]) => void;
   saving: boolean; isEdit: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
@@ -1227,10 +1236,43 @@ function PackageFormInline({
             {t("description")}
             <span className="ml-1.5 text-xs font-normal text-amber-600">{t("descriptionHintEnglish")}</span>
           </label>
-          <textarea value={pkgDesc} onChange={(e) => setPkgDesc(e.target.value.slice(0, 1000))} rows={14}
+          <textarea value={pkgDesc} onChange={(e) => setPkgDesc(e.target.value.slice(0, 500))} rows={4}
             placeholder={t("descriptionPlaceholder")}
             className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
-          <p className="mt-1 text-xs text-gray-400">{pkgDesc.length}/1000</p>
+          <p className="mt-1 text-xs text-gray-400">{pkgDesc.length}/500</p>
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            What&apos;s included
+            <span className="ml-1.5 text-xs font-normal text-amber-600">{t("packageNameHintEnglish")}</span>
+          </label>
+          <div className="space-y-2">
+            {pkgFeatures.map((feature, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-primary-400 text-sm">&#x2713;</span>
+                <input
+                  type="text"
+                  value={feature}
+                  onChange={(e) => {
+                    const updated = [...pkgFeatures];
+                    updated[i] = e.target.value;
+                    setPkgFeatures(updated);
+                  }}
+                  placeholder="e.g. 30 professionally edited photos"
+                  className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-200"
+                />
+                <button type="button" onClick={() => setPkgFeatures(pkgFeatures.filter((_, j) => j !== i))}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-400 transition">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={() => setPkgFeatures([...pkgFeatures, ""])}
+            className="mt-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 transition">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            Add feature
+          </button>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">{t("duration")}</label>

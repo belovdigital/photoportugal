@@ -100,6 +100,7 @@ export interface Package {
   price: number;
   is_popular: boolean;
   is_public: boolean;
+  features: string[];
 }
 
 export interface PortfolioItem {

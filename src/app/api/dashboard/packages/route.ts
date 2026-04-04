@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public } = await req.json();
+    const { name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public, features } = await req.json();
 
     if (!name || !duration_minutes || !num_photos || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -70,11 +70,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Minimum price for this duration is €${pricing.minPrice}` }, { status: 400 });
     }
 
+    const cleanFeatures = Array.isArray(features) ? features.filter((f: string) => f.trim()) : [];
+
     const pkg = await queryOne(
-      `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public, features)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
-      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false]
+      [profile.id, name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, cleanFeatures]
     );
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
@@ -98,7 +100,7 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const { id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public } = await req.json();
+    const { id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public, features } = await req.json();
 
     const validDuration = DURATION_OPTIONS.some((o) => o.minutes === duration_minutes);
     if (!validDuration) {
@@ -110,11 +112,13 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: `Minimum price for this duration is €${pricing.minPrice}` }, { status: 400 });
     }
 
+    const cleanFeatures = Array.isArray(features) ? features.filter((f: string) => f.trim()) : [];
+
     const pkg = await queryOne(
-      `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7, is_public = $8
-       WHERE id = $9 AND photographer_id = $10
+      `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7, is_public = $8, features = $9
+       WHERE id = $10 AND photographer_id = $11
        RETURNING id`,
-      [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, id, profile.id]
+      [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, cleanFeatures, id, profile.id]
     );
 
     if (!pkg) {

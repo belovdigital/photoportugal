@@ -15,6 +15,7 @@ interface PackageProps {
     num_photos: number;
     is_popular: boolean;
     delivery_days?: number;
+    features?: string[];
   };
   photographerSlug: string;
 }
@@ -57,7 +58,7 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
   const [expanded, setExpanded] = useState(false);
   const t = useTranslations("photographers.package");
   const tc = useTranslations("common");
-  const hasDescription = pkg.description && pkg.description.trim().length > 0;
+  const hasDescription = (pkg.description && pkg.description.trim().length > 0) || (pkg.features && pkg.features.length > 0);
 
   return (
     <div
@@ -114,7 +115,25 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
           </button>
           {expanded && (
             <div className="mt-2 rounded-lg bg-warm-50 px-3 py-2.5">
-              {formatDescription(pkg.description!)}
+              {pkg.features && pkg.features.length > 0 ? (
+                <>
+                  {pkg.description && pkg.description.trim() && (
+                    <p className="text-sm text-gray-500">{pkg.description}</p>
+                  )}
+                  <ul className={`space-y-1.5 ${pkg.description && pkg.description.trim() ? "mt-2.5" : ""}`}>
+                    {pkg.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : pkg.description ? (
+                formatDescription(pkg.description)
+              ) : null}
             </div>
           )}
         </>
