@@ -64,6 +64,9 @@ function MessagesContent() {
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showPackagePicker, setShowPackagePicker] = useState(false);
+  const [shareablePackages, setShareablePackages] = useState<{ id: string; name: string; price: number; duration_minutes: number; num_photos: number }[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
 
   // Lightbox keyboard nav
   useEffect(() => {
@@ -442,6 +445,31 @@ function MessagesContent() {
     }
   }
 
+  async function openPackagePicker() {
+    if (!activeChat) return;
+    setLoadingPackages(true);
+    setShowPackagePicker(true);
+    try {
+      const res = await fetch(`/api/messages/share-package?booking_id=${activeChat}`);
+      if (res.ok) {
+        setShareablePackages(await res.json());
+      }
+    } catch {}
+    setLoadingPackages(false);
+  }
+
+  async function sharePackage(packageId: string) {
+    if (!activeChat) return;
+    setShowPackagePicker(false);
+    try {
+      await fetch("/api/messages/share-package", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ booking_id: activeChat, package_id: packageId }),
+      });
+    } catch {}
+  }
+
   function handleMediaSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -692,6 +720,35 @@ function MessagesContent() {
                             </div>
                           );
                         }
+                        // Package card shared by photographer
+                        if (msg.text?.startsWith("BOOKING_CARD:")) {
+                          try {
+                            const card = JSON.parse(msg.text.slice("BOOKING_CARD:".length));
+                            const durationLabel = card.duration_minutes >= 60 ? `${card.duration_minutes / 60}h` : `${card.duration_minutes} min`;
+                            return (
+                              <div key={msg.id} className="flex justify-center my-3">
+                                <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 to-white p-5 shadow-sm">
+                                  <p className="text-xs font-medium text-primary-500 uppercase tracking-wide">Package</p>
+                                  <p className="mt-1 text-base font-bold text-gray-900">{card.name}</p>
+                                  <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
+                                    <span>{durationLabel}</span>
+                                    <span className="text-gray-300">&middot;</span>
+                                    <span>{card.num_photos} photos</span>
+                                  </div>
+                                  <p className="mt-2 text-xl font-bold text-gray-900">&euro;{Math.round(card.price)}</p>
+                                  {card.slug && activeConvo?.other_role === "photographer" && (
+                                    <a href={`/book/${card.slug}?package=${card.package_id}`}
+                                      className="mt-3 inline-block rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-700 transition">
+                                      Book Now
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          } catch {
+                            // fall through to default system message
+                          }
+                        }
                         return (
                           <div key={msg.id} className="flex justify-center my-3">
                             <div className="max-w-[85%] rounded-xl border border-green-200 bg-green-50 px-4 py-2.5 text-center text-xs text-green-800 whitespace-pre-line">
@@ -872,6 +929,46 @@ function MessagesContent() {
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   )}
                 </button>
+                {activeConvo?.other_role === "client" && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={openPackagePicker}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 sm:h-8 sm:w-8"
+                      title="Share package"
+                    >
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
+                    </button>
+                    {showPackagePicker && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setShowPackagePicker(false)} />
+                        <div className="absolute bottom-12 left-0 z-50 w-72 rounded-xl border border-warm-200 bg-white shadow-xl">
+                          <div className="px-4 py-3 border-b border-warm-100">
+                            <p className="text-sm font-semibold text-gray-900">Share a Package</p>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto py-1">
+                            {loadingPackages ? (
+                              <div className="flex justify-center py-6"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /></div>
+                            ) : shareablePackages.length === 0 ? (
+                              <p className="px-4 py-4 text-sm text-gray-400 text-center">No packages yet</p>
+                            ) : (
+                              shareablePackages.map((pkg) => (
+                                <button key={pkg.id} type="button" onClick={() => sharePackage(pkg.id)}
+                                  className="w-full px-4 py-2.5 text-left hover:bg-warm-50 transition flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900">{pkg.name}</p>
+                                    <p className="text-xs text-gray-400">{pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes} min`} &middot; {pkg.num_photos} photos</p>
+                                  </div>
+                                  <span className="text-sm font-bold text-gray-700">&euro;{Math.round(pkg.price)}</span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
                 <input
                   ref={inputRef}
                   type="text"

@@ -1086,155 +1086,25 @@ export function PhotographerDashboardClient({
               </button>
             </div>
 
-            {/* Package form */}
-            {showPackageForm && (
-              <form onSubmit={savePackage} className="mt-6 rounded-xl border border-warm-200 bg-white p-6 space-y-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  {editingPackage ? t("editPackage") : t("newPackage")}
-                </h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t("packageName")}
-                      <span className="ml-1.5 text-xs font-normal text-amber-600">{t("packageNameHintEnglish")}</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={pkgName}
-                      onChange={(e) => setPkgName(e.target.value)}
-                      required
-                      placeholder={t("packageNamePlaceholder")}
-                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      {t("description")}
-                      <span className="ml-1.5 text-xs font-normal text-amber-600">{t("descriptionHintEnglish")}</span>
-                    </label>
-                    <textarea
-                      value={pkgDesc}
-                      onChange={(e) => setPkgDesc(e.target.value.slice(0, 1000))}
-                      rows={10}
-                      placeholder={t("descriptionPlaceholder")}
-                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    />
-                    <p className="mt-1 text-xs text-gray-400">{pkgDesc.length}/1000</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t("duration")}</label>
-                    <select
-                      value={pkgDuration}
-                      onChange={(e) => setPkgDuration(e.target.value)}
-                      required
-                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 bg-white"
-                    >
-                      <option value="">{t("selectDuration")}</option>
-                      {DURATION_OPTIONS.map((opt) => (
-                        <option key={opt.minutes} value={opt.minutes}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t("numberOfPhotos")}</label>
-                    <input
-                      type="number"
-                      value={pkgPhotos}
-                      onChange={(e) => setPkgPhotos(e.target.value)}
-                      required
-                      min="1"
-                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t("priceEur")}</label>
-                    <input
-                      type="number"
-                      value={pkgPrice}
-                      onChange={(e) => setPkgPrice(e.target.value)}
-                      required
-                      min={pkgDuration ? (getPricingForDuration(parseInt(pkgDuration))?.minPrice || 1) : 1}
-                      step="1"
-                      placeholder={t("pricePlaceholder")}
-                      className={`mt-1 block w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 ${
-                        pkgPrice && pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && parseFloat(pkgPrice) < getPricingForDuration(parseInt(pkgDuration))!.minPrice
-                          ? "border-red-400 focus:border-red-500 focus:ring-red-200"
-                          : "border-gray-300 focus:border-primary-500 focus:ring-primary-200"
-                      }`}
-                    />
-                    {pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && (
-                      <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
-                        <span className="text-amber-600 text-sm font-medium">
-                          Min €{getPricingForDuration(parseInt(pkgDuration))!.minPrice}
-                        </span>
-                        <span className="text-gray-300">|</span>
-                        <span className="text-emerald-600 text-sm font-medium">
-                          Recommended €{getPricingForDuration(parseInt(pkgDuration))!.recommendedPrice}
-                        </span>
-                      </div>
-                    )}
-                    {pkgPrice && pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && parseFloat(pkgPrice) < getPricingForDuration(parseInt(pkgDuration))!.minPrice && (
-                      <p className="mt-1 text-xs text-red-500 font-medium">
-                        Price cannot be below the minimum of €{getPricingForDuration(parseInt(pkgDuration))!.minPrice} for this duration
-                      </p>
-                    )}
-                    <p className="mt-1 text-xs text-gray-400">{t("priceHint")}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">{t("deliveryTimeDays")}</label>
-                    <input
-                      type="number"
-                      value={pkgDeliveryDays}
-                      onChange={(e) => setPkgDeliveryDays(e.target.value)}
-                      min="1"
-                      max="90"
-                      className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    />
-                    <p className="mt-1 text-xs text-gray-400">{t("deliveryTimeHint")}</p>
-                  </div>
-                  <div className="flex items-end">
-                    <label className="flex cursor-pointer items-center gap-2 rounded-xl px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={pkgPopular}
-                        onChange={(e) => setPkgPopular(e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-primary-600"
-                      />
-                      <span className="text-sm font-medium text-gray-700">{t("markAsMostPopular")}</span>
-                    </label>
-                  </div>
-                  <div className="flex items-end">
-                    <label className="flex cursor-pointer items-center gap-2 rounded-xl px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={pkgPublic}
-                        onChange={(e) => setPkgPublic(e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-primary-600"
-                      />
-                      <span className="text-sm font-medium text-gray-700">Show on profile</span>
-                    </label>
-                    {!pkgPublic && (
-                      <span className="ml-1 text-xs text-gray-400">Private — only via link or messages</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
-                  >
-                    {saving ? t("saving") : editingPackage ? t("updatePackage") : t("createPackage")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowPackageForm(false)}
-                    className="rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
-                  >
-                    {t("cancel")}
-                  </button>
-                </div>
-              </form>
+            {/* Package form — for new packages only (edit form renders inline below) */}
+            {showPackageForm && !editingPackage && (
+              <PackageFormInline
+                title={t("newPackage")}
+                pkgName={pkgName} setPkgName={setPkgName}
+                pkgDesc={pkgDesc} setPkgDesc={setPkgDesc}
+                pkgDuration={pkgDuration} setPkgDuration={setPkgDuration}
+                pkgPhotos={pkgPhotos} setPkgPhotos={setPkgPhotos}
+                pkgPrice={pkgPrice} setPkgPrice={setPkgPrice}
+                pkgDeliveryDays={pkgDeliveryDays} setPkgDeliveryDays={setPkgDeliveryDays}
+                pkgPopular={pkgPopular} setPkgPopular={setPkgPopular}
+                pkgPublic={pkgPublic} setPkgPublic={setPkgPublic}
+                saving={saving}
+                isEdit={false}
+                onSubmit={savePackage}
+                onCancel={() => setShowPackageForm(false)}
+                t={t}
+                className="mt-6"
+              />
             )}
 
             {/* Packages list with DnD */}
@@ -1250,12 +1120,32 @@ export function PhotographerDashboardClient({
               <SortableContext items={localPackages.map((p) => p.id)} strategy={rectSortingStrategy}>
                 <div className="mt-3 space-y-3">
                   {localPackages.map((pkg) => (
-                    <SortablePackageCard
-                      key={pkg.id}
-                      pkg={pkg}
-                      onEdit={openEditPackage}
-                      onDelete={deletePackage}
-                    />
+                    editingPackage?.id === pkg.id && showPackageForm ? (
+                      <PackageFormInline
+                        key={pkg.id}
+                        title={t("editPackage")}
+                        pkgName={pkgName} setPkgName={setPkgName}
+                        pkgDesc={pkgDesc} setPkgDesc={setPkgDesc}
+                        pkgDuration={pkgDuration} setPkgDuration={setPkgDuration}
+                        pkgPhotos={pkgPhotos} setPkgPhotos={setPkgPhotos}
+                        pkgPrice={pkgPrice} setPkgPrice={setPkgPrice}
+                        pkgDeliveryDays={pkgDeliveryDays} setPkgDeliveryDays={setPkgDeliveryDays}
+                        pkgPopular={pkgPopular} setPkgPopular={setPkgPopular}
+                        pkgPublic={pkgPublic} setPkgPublic={setPkgPublic}
+                        saving={saving}
+                        isEdit={true}
+                        onSubmit={savePackage}
+                        onCancel={() => setShowPackageForm(false)}
+                        t={t}
+                      />
+                    ) : (
+                      <SortablePackageCard
+                        key={pkg.id}
+                        pkg={pkg}
+                        onEdit={openEditPackage}
+                        onDelete={deletePackage}
+                      />
+                    )
                   ))}
                 </div>
               </SortableContext>
@@ -1295,6 +1185,132 @@ export function PhotographerDashboardClient({
 
       </div>
     </div>
+  );
+}
+
+function PackageFormInline({
+  title, pkgName, setPkgName, pkgDesc, setPkgDesc, pkgDuration, setPkgDuration,
+  pkgPhotos, setPkgPhotos, pkgPrice, setPkgPrice, pkgDeliveryDays, setPkgDeliveryDays,
+  pkgPopular, setPkgPopular, pkgPublic, setPkgPublic,
+  saving, isEdit, onSubmit, onCancel, t, className = "",
+}: {
+  title: string;
+  pkgName: string; setPkgName: (v: string) => void;
+  pkgDesc: string; setPkgDesc: (v: string) => void;
+  pkgDuration: string; setPkgDuration: (v: string) => void;
+  pkgPhotos: string; setPkgPhotos: (v: string) => void;
+  pkgPrice: string; setPkgPrice: (v: string) => void;
+  pkgDeliveryDays: string; setPkgDeliveryDays: (v: string) => void;
+  pkgPopular: boolean; setPkgPopular: (v: boolean) => void;
+  pkgPublic: boolean; setPkgPublic: (v: boolean) => void;
+  saving: boolean; isEdit: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any; className?: string;
+}) {
+  return (
+    <form onSubmit={onSubmit} className={`rounded-xl border border-primary-200 bg-white p-6 space-y-4 ring-2 ring-primary-100 ${className}`}>
+      <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-gray-700">
+            {t("packageName")}
+            <span className="ml-1.5 text-xs font-normal text-amber-600">{t("packageNameHintEnglish")}</span>
+          </label>
+          <input type="text" value={pkgName} onChange={(e) => setPkgName(e.target.value)} required
+            placeholder={t("packageNamePlaceholder")}
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-gray-700">
+            {t("description")}
+            <span className="ml-1.5 text-xs font-normal text-amber-600">{t("descriptionHintEnglish")}</span>
+          </label>
+          <textarea value={pkgDesc} onChange={(e) => setPkgDesc(e.target.value.slice(0, 1000))} rows={10}
+            placeholder={t("descriptionPlaceholder")}
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+          <p className="mt-1 text-xs text-gray-400">{pkgDesc.length}/1000</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">{t("duration")}</label>
+          <select value={pkgDuration} onChange={(e) => setPkgDuration(e.target.value)} required
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 bg-white">
+            <option value="">{t("selectDuration")}</option>
+            {DURATION_OPTIONS.map((opt) => (
+              <option key={opt.minutes} value={opt.minutes}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">{t("numberOfPhotos")}</label>
+          <input type="number" value={pkgPhotos} onChange={(e) => setPkgPhotos(e.target.value)} required min="1"
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">{t("priceEur")}</label>
+          <input type="number" value={pkgPrice} onChange={(e) => setPkgPrice(e.target.value)} required
+            min={pkgDuration ? (getPricingForDuration(parseInt(pkgDuration))?.minPrice || 1) : 1} step="1"
+            placeholder={t("pricePlaceholder")}
+            className={`mt-1 block w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 ${
+              pkgPrice && pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && parseFloat(pkgPrice) < getPricingForDuration(parseInt(pkgDuration))!.minPrice
+                ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                : "border-gray-300 focus:border-primary-500 focus:ring-primary-200"
+            }`} />
+          {pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && (
+            <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+              <span className="text-amber-600 text-sm font-medium">Min &euro;{getPricingForDuration(parseInt(pkgDuration))!.minPrice}</span>
+              <span className="text-gray-300">|</span>
+              <span className="text-emerald-600 text-sm font-medium">Recommended &euro;{getPricingForDuration(parseInt(pkgDuration))!.recommendedPrice}</span>
+            </div>
+          )}
+          {pkgPrice && pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && parseFloat(pkgPrice) < getPricingForDuration(parseInt(pkgDuration))!.minPrice && (
+            <p className="mt-1 text-xs text-red-500 font-medium">
+              Price cannot be below the minimum of &euro;{getPricingForDuration(parseInt(pkgDuration))!.minPrice} for this duration
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-400">{t("priceHint")}</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">{t("deliveryTimeDays")}</label>
+          <input type="number" value={pkgDeliveryDays} onChange={(e) => setPkgDeliveryDays(e.target.value)} min="1" max="90"
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+          <p className="mt-1 text-xs text-gray-400">{t("deliveryTimeHint")}</p>
+        </div>
+      </div>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-warm-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-gray-900">{t("markAsMostPopular")}</p>
+            <p className="text-xs text-gray-400 mt-0.5">Highlighted on your profile</p>
+          </div>
+          <button type="button" role="switch" aria-checked={pkgPopular} onClick={() => setPkgPopular(!pkgPopular)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${pkgPopular ? "bg-primary-600" : "bg-gray-200"}`}>
+            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${pkgPopular ? "translate-x-[22px]" : "translate-x-[2px]"} mt-[2px]`} />
+          </button>
+        </div>
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-warm-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-gray-900">Show on profile</p>
+            <p className="text-xs text-gray-400 mt-0.5">{pkgPublic ? "Visible to everyone" : "Private — only via link or messages"}</p>
+          </div>
+          <button type="button" role="switch" aria-checked={pkgPublic} onClick={() => setPkgPublic(!pkgPublic)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${pkgPublic ? "bg-primary-600" : "bg-gray-200"}`}>
+            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${pkgPublic ? "translate-x-[22px]" : "translate-x-[2px]"} mt-[2px]`} />
+          </button>
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <button type="submit" disabled={saving}
+          className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50">
+          {saving ? t("saving") : isEdit ? t("updatePackage") : t("createPackage")}
+        </button>
+        <button type="button" onClick={onCancel}
+          className="rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50">
+          {t("cancel")}
+        </button>
+      </div>
+    </form>
   );
 }
 
