@@ -916,29 +916,37 @@ function MessagesContent() {
                 className="flex items-center gap-2 border-t border-warm-100 px-3 py-2.5"
               >
                 <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif,.pdf,.gif" multiple className="hidden" onChange={handleMediaSelect} />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingMedia}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 disabled:opacity-30 sm:h-8 sm:w-8"
-                  title="Send photo"
-                >
-                  {uploadingMedia ? (
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4" strokeLinecap="round" /></svg>
-                  ) : (
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  )}
-                </button>
+                <div className="group relative">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingMedia}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 disabled:opacity-30 sm:h-8 sm:w-8"
+                  >
+                    {uploadingMedia ? (
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4" strokeLinecap="round" /></svg>
+                    ) : (
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    )}
+                  </button>
+                  <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                    Send photo
+                  </span>
+                </div>
                 {activeConvo?.other_role === "client" && (
-                  <div className="relative">
+                  <div className="group/pkg relative">
                     <button
                       type="button"
                       onClick={openPackagePicker}
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 sm:h-8 sm:w-8"
-                      title="Share package"
                     >
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
                     </button>
+                    {!showPackagePicker && (
+                      <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover/pkg:opacity-100">
+                        Share package
+                      </span>
+                    )}
                     {showPackagePicker && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setShowPackagePicker(false)} />

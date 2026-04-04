@@ -1227,7 +1227,7 @@ function PackageFormInline({
             {t("description")}
             <span className="ml-1.5 text-xs font-normal text-amber-600">{t("descriptionHintEnglish")}</span>
           </label>
-          <textarea value={pkgDesc} onChange={(e) => setPkgDesc(e.target.value.slice(0, 1000))} rows={10}
+          <textarea value={pkgDesc} onChange={(e) => setPkgDesc(e.target.value.slice(0, 1000))} rows={14}
             placeholder={t("descriptionPlaceholder")}
             className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
           <p className="mt-1 text-xs text-gray-400">{pkgDesc.length}/1000</p>
