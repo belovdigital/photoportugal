@@ -42,7 +42,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
 
   let totalPhotographers = 0;
   try {
-    const row = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_test = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE");
+    const row = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_test = FALSE AND pp.is_approved = TRUE AND COALESCE(u.is_banned, FALSE) = FALSE");
     totalPhotographers = parseInt(row?.count || "0");
   } catch {}
 
