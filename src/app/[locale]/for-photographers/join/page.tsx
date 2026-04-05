@@ -355,7 +355,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
       </section>
 
       {/* Final CTA */}
-      <section className="bg-gray-900">
+      <section className="bg-gray-900 -mb-16 sm:-mb-24">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6 sm:py-24">
           <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
             {t("finalCta.title")}
