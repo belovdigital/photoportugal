@@ -168,7 +168,9 @@
     "legalEntityType": "Empresária em Nome Individual",
     "legalEntityNif": "NIF: 319455327",
     "legalEntityVat": "Isento de IVA — Art. 53.º do CIVA",
-    "legalEntityLocation": "Lisboa, Portugal"
+    "legalEntityLocation": "Lisboa, Portugal",
+    "appTitle": "Leve o Photo Portugal consigo",
+    "appSubtitle": "Explore fotógrafos, reserve sessões e faça tudo pelo telemóvel. Disponível para iOS."
   },
   "home": {
     "trustBadge": "A confiança de {count}+ viajantes satisfeitos",
