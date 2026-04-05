@@ -1965,6 +1965,25 @@
     "acceptToUnlockFullRes": "Aceite a entrega para desbloquear alta qualidade e downloads",
     "acceptToDownload": "Aceitar para baixar"
   },
+  "dateNegotiation": {
+    "date": "Data",
+    "selectDate": "Selecionar data",
+    "timePT": "Hora (PT)",
+    "noteOptional": "Nota (opcional)",
+    "notePlaceholder": "ex. Encontro na entrada principal",
+    "proposeDate": "Propor Data",
+    "proposing": "A propor...",
+    "cancel": "Cancelar",
+    "accept": "Aceitar",
+    "suggestDifferent": "Sugerir outra",
+    "proposedNewDate": "{name} propôs uma nova data",
+    "youProposed": "Propôs",
+    "waitingFor": "a aguardar resposta de {name}",
+    "currentDate": "Data atual",
+    "hide": "Ocultar",
+    "changeDateAndTime": "Alterar data e hora",
+    "proposeDateAndTime": "Propor data e hora"
+  },
   "bookingActions": {
     "convertToBooking": "Aceitar Consulta",
     "acceptInquiryHint": "Isto move a consulta para um pedido de reserva. Ainda pode discutir detalhes e recusar mais tarde.",

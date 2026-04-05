@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import DatePicker from "@/components/ui/DatePicker";
 
 const TIME_OPTIONS: { value: string; label: string }[] = [
@@ -39,6 +40,7 @@ export function DateNegotiation({
   otherName: string;
 }) {
   const router = useRouter();
+  const td = useTranslations("dateNegotiation");
   const [showPropose, setShowPropose] = useState(false);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
@@ -98,11 +100,11 @@ export function DateNegotiation({
     <div className="mt-3 rounded-xl border border-warm-200 bg-white p-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
-          <label className="block text-[11px] font-medium text-gray-500 mb-1">Date</label>
-          <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
+          <label className="block text-[11px] font-medium text-gray-500 mb-1">{td("date")}</label>
+          <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder={td("selectDate")} />
         </div>
         <div>
-          <label className="block text-[11px] font-medium text-gray-500 mb-1">Time (PT)</label>
+          <label className="block text-[11px] font-medium text-gray-500 mb-1">{td("timePT")}</label>
           <select
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
@@ -114,12 +116,12 @@ export function DateNegotiation({
           </select>
         </div>
         <div className="col-span-2 sm:col-span-1">
-          <label className="block text-[11px] font-medium text-gray-500 mb-1">Note (optional)</label>
+          <label className="block text-[11px] font-medium text-gray-500 mb-1">{td("noteOptional")}</label>
           <input
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="e.g. Meet at the main entrance"
+            placeholder={td("notePlaceholder")}
             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900"
           />
         </div>
@@ -131,14 +133,14 @@ export function DateNegotiation({
           disabled={loading || !newDate}
           className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
         >
-          {loading ? "Proposing..." : "Propose Date"}
+          {loading ? td("proposing") : td("proposeDate")}
         </button>
         <button
           type="button"
           onClick={() => { setShowPropose(false); setNewDate(""); setNewTime(""); setNote(""); }}
           className="text-sm text-gray-400 hover:text-gray-600 font-medium"
         >
-          Cancel
+          {td("cancel")}
         </button>
       </div>
     </div>
@@ -149,7 +151,7 @@ export function DateNegotiation({
     return (
       <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
         <p className="text-sm font-semibold text-amber-800">
-          {otherName} proposed a new date
+          {td("proposedNewDate", { name: otherName })}
         </p>
         <p className="mt-1 text-sm font-bold text-gray-900">{formatDateAndTime(proposedDate!, proposedTime)}</p>
         {dateNote && <p className="mt-1 text-xs text-gray-500 italic">&ldquo;{dateNote}&rdquo;</p>}
@@ -160,7 +162,7 @@ export function DateNegotiation({
             disabled={loading}
             className="rounded-lg bg-green-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
           >
-            Accept
+            {td("accept")}
           </button>
           <button
             type="button"
@@ -168,7 +170,7 @@ export function DateNegotiation({
             disabled={loading}
             className="rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
           >
-            {showPropose ? "Cancel" : "Suggest Different"}
+            {showPropose ? td("cancel") : td("suggestDifferent")}
           </button>
         </div>
         {showPropose && proposeForm}
@@ -181,7 +183,7 @@ export function DateNegotiation({
     return (
       <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
         <p className="text-sm text-blue-700">
-          You proposed <span className="font-bold">{formatDateAndTime(proposedDate!, proposedTime)}</span> — waiting for {otherName} to respond
+          {td("youProposed")} <span className="font-bold">{formatDateAndTime(proposedDate!, proposedTime)}</span> — {td("waitingFor", { name: otherName })}
         </p>
         {dateNote && <p className="mt-1 text-xs text-gray-500 italic">&ldquo;{dateNote}&rdquo;</p>}
       </div>
@@ -193,7 +195,7 @@ export function DateNegotiation({
     <div className="mt-2">
       {shootDate && (
         <p className="text-xs text-gray-500 mb-1">
-          Current date: <span className="font-medium text-gray-700">{formatDate(shootDate)}</span>
+          {td("currentDate")}: <span className="font-medium text-gray-700">{formatDate(shootDate)}</span>
         </p>
       )}
       <button
@@ -201,7 +203,7 @@ export function DateNegotiation({
         onClick={() => setShowPropose(!showPropose)}
         className="text-xs text-primary-600 hover:text-primary-700 font-medium"
       >
-        {showPropose ? "Hide" : shootDate ? "Change date & time" : "Propose date & time"}
+        {showPropose ? td("hide") : shootDate ? td("changeDateAndTime") : td("proposeDateAndTime")}
       </button>
       {showPropose && proposeForm}
     </div>

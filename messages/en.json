@@ -2128,6 +2128,25 @@
     "acceptToUnlockFullRes": "Accept delivery to unlock full resolution & downloads",
     "acceptToDownload": "Accept to download"
   },
+  "dateNegotiation": {
+    "date": "Date",
+    "selectDate": "Select date",
+    "timePT": "Time (PT)",
+    "noteOptional": "Note (optional)",
+    "notePlaceholder": "e.g. Meet at the main entrance",
+    "proposeDate": "Propose Date",
+    "proposing": "Proposing...",
+    "cancel": "Cancel",
+    "accept": "Accept",
+    "suggestDifferent": "Suggest Different",
+    "proposedNewDate": "{name} proposed a new date",
+    "youProposed": "You proposed",
+    "waitingFor": "waiting for {name} to respond",
+    "currentDate": "Current date",
+    "hide": "Hide",
+    "changeDateAndTime": "Change date & time",
+    "proposeDateAndTime": "Propose date & time"
+  },
   "bookingActions": {
     "convertToBooking": "Accept Inquiry",
     "acceptInquiryHint": "This moves the inquiry to a booking request. You can still discuss details and decline later.",
