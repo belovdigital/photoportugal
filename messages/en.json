@@ -2128,6 +2128,26 @@
     "acceptToUnlockFullRes": "Accept delivery to unlock full resolution & downloads",
     "acceptToDownload": "Accept to download"
   },
+  "availability": {
+    "description": "Mark dates when you're unavailable for photoshoots. Clients will see that you're fully booked during these periods.",
+    "addUnavailableDates": "Add unavailable dates",
+    "from": "From",
+    "until": "Until",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "reasonOptional": "Reason (optional)",
+    "reasonPlaceholder": "e.g. Vacation, Personal",
+    "saving": "Saving...",
+    "addUnavailablePeriod": "Add Unavailable Period",
+    "loading": "Loading...",
+    "noUnavailableDates": "No unavailable dates set — you're shown as available every day",
+    "now": "Now",
+    "remove": "Remove",
+    "archive": "Archive",
+    "selectBothDates": "Please select both dates",
+    "startBeforeEnd": "Start date must be before end date",
+    "failedToSave": "Failed to save"
+  },
   "dateNegotiation": {
     "date": "Date",
     "selectDate": "Select date",

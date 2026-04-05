@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatDuration } from "@/lib/package-pricing";
@@ -56,6 +57,8 @@ function formatDescription(desc: string) {
 
 export function PackageCard({ pkg, photographerSlug }: PackageProps) {
   const [expanded, setExpanded] = useState(false);
+  const { data: session } = useSession();
+  const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const t = useTranslations("photographers.package");
   const tc = useTranslations("common");
   const hasDescription = (pkg.description && pkg.description.trim().length > 0) || (pkg.features && pkg.features.length > 0);
@@ -139,16 +142,18 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
         </>
       )}
 
-      <Link
-        href={`/book/${photographerSlug}?package=${pkg.id}`}
-        className={`mt-4 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition ${
-          pkg.is_popular
-            ? "bg-primary-600 text-white hover:bg-primary-700"
-            : "bg-gray-900 text-white hover:bg-gray-800"
-        }`}
-      >
-        {t("bookThisPackage")}
-      </Link>
+      {!isPhotographer && (
+        <Link
+          href={`/book/${photographerSlug}?package=${pkg.id}`}
+          className={`mt-4 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition ${
+            pkg.is_popular
+              ? "bg-primary-600 text-white hover:bg-primary-700"
+              : "bg-gray-900 text-white hover:bg-gray-800"
+          }`}
+        >
+          {t("bookThisPackage")}
+        </Link>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PhotographerProfile } from "@/types";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { useSession } from "next-auth/react";
 import { trackViewPhotographer } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
 import { WishlistButton } from "@/components/ui/WishlistButton";
@@ -13,6 +14,8 @@ export function PhotographerCard({
 }: {
   photographer: PhotographerProfile;
 }) {
+  const { data: session } = useSession();
+  const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const t = useTranslations("photographers.card");
   const tc = useTranslations("common");
   const minPrice = photographer.packages?.length > 0
@@ -138,15 +141,17 @@ export function PhotographerCard({
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href={`/photographers/${photographer.slug}#message`}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
-            title={t("messagePhotographer", { name: normalizeName(photographer.name) })}
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </Link>
+          {!isPhotographer && (
+            <Link
+              href={`/photographers/${photographer.slug}#message`}
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
+              title={t("messagePhotographer", { name: normalizeName(photographer.name) })}
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </Link>
+          )}
           <Link
             href={`/photographers/${photographer.slug}`}
             className="rounded-lg bg-primary-50 px-3 py-2 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white"

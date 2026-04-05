@@ -1965,6 +1965,26 @@
     "acceptToUnlockFullRes": "Aceite a entrega para desbloquear alta qualidade e downloads",
     "acceptToDownload": "Aceitar para baixar"
   },
+  "availability": {
+    "description": "Marque as datas em que não está disponível para sessões fotográficas. Os clientes verão que está totalmente reservado durante estes períodos.",
+    "addUnavailableDates": "Adicionar datas indisponíveis",
+    "from": "De",
+    "until": "Até",
+    "startDate": "Data de início",
+    "endDate": "Data de fim",
+    "reasonOptional": "Motivo (opcional)",
+    "reasonPlaceholder": "ex. Férias, Pessoal",
+    "saving": "A guardar...",
+    "addUnavailablePeriod": "Adicionar período indisponível",
+    "loading": "A carregar...",
+    "noUnavailableDates": "Sem datas indisponíveis — aparece como disponível todos os dias",
+    "now": "Agora",
+    "remove": "Remover",
+    "archive": "Arquivo",
+    "selectBothDates": "Selecione ambas as datas",
+    "startBeforeEnd": "A data de início deve ser anterior à data de fim",
+    "failedToSave": "Falha ao guardar"
+  },
   "dateNegotiation": {
     "date": "Data",
     "selectDate": "Selecionar data",

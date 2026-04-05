@@ -10,6 +10,7 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
   const { data: session } = useSession();
   const router = useRouter();
   const t = useTranslations("askQuestion");
+  const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const [open, setOpen] = useState(false);
 
   // Auto-open when navigating from card with #message hash
@@ -64,6 +65,8 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
       setError(data.error || t("failedToSend"));
     }
   }
+
+  if (isPhotographer) return null;
 
   return (
     <>
