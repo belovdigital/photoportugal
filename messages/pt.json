@@ -837,7 +837,9 @@
       "subtitle": "Quando as vagas de fundador acabarem, acabaram para sempre. Junte-se agora e garanta os seus benefícios vitalícios.",
       "freeToSignUp": "Registo gratuito. Sem necessidade de cartão de crédito."
     },
-    "spotsRemaining": "{tier} lugares restantes"
+    "spotsRemaining": "{tier} lugares restantes",
+    "spotsClaimed": "{tier} lugares ocupados",
+    "spotsLeft": "lugares restantes"
   },
   "forPhotographers": {
     "metaTitle": "Junte-se à Photo Portugal — Ganhe Dinheiro como Fotógrafo de Férias em Portugal",

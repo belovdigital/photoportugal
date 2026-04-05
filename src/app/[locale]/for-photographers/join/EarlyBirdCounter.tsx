@@ -26,19 +26,22 @@ export function EarlyBirdCounter({ totalPhotographers }: { totalPhotographers: n
 
   if (!tierKey) return null;
 
+  const claimed = totalSpots - spotsLeft;
+
   return (
     <div className="mt-10 inline-flex flex-col items-center rounded-2xl border border-white/10 bg-white/5 px-8 py-5 backdrop-blur-sm">
-      <p className="text-sm font-medium text-gray-400">{t("spotsRemaining", { tier: t(`tiers.${tierKey}.label`) })}</p>
+      <p className="text-sm font-medium text-gray-400">{t("spotsClaimed", { tier: t(`tiers.${tierKey}.label`) })}</p>
       <p className="mt-1 font-display text-5xl font-bold text-white">
-        {spotsLeft}
+        {claimed}
         <span className="text-2xl text-gray-500"> / {totalSpots}</span>
       </p>
       <div className="mt-3 h-2 w-48 overflow-hidden rounded-full bg-white/10">
         <div
           className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all"
-          style={{ width: `${((totalSpots - spotsLeft) / totalSpots) * 100}%` }}
+          style={{ width: `${(claimed / totalSpots) * 100}%` }}
         />
       </div>
+      <p className="mt-2 text-xs text-gray-500">{spotsLeft} {t("spotsLeft")}</p>
     </div>
   );
 }

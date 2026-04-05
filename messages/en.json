@@ -836,6 +836,8 @@
       }
     },
     "spotsRemaining": "{tier} spots remaining",
+    "spotsClaimed": "{tier} spots claimed",
+    "spotsLeft": "spots left",
     "finalCta": {
       "title": "Don't Miss Your Spot",
       "subtitle": "Once the founding spots are gone, they're gone forever. Join now and lock in your lifetime benefits.",
