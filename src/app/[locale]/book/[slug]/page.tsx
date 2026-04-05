@@ -208,7 +208,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const selectedPkg = photographer.packages.find((p) => p.id === selectedPackage);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <div className="mx-auto max-w-2xl px-4 py-6 sm:py-12">
       <h1 className="font-display text-3xl font-bold text-gray-900">
         {t("title", { photographer: photographer.name })}
       </h1>

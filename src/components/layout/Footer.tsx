@@ -76,7 +76,7 @@ export function Footer() {
                 <li key={loc.slug}>
                   <Link
                     href={`/locations/${loc.slug}`}
-                    className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block"
+                    className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block"
                   >
                     {t("photographersIn", { location: loc.name })}
                   </Link>
@@ -85,7 +85,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/locations"
-                  className="text-sm font-medium text-primary-600 transition hover:text-primary-700 py-1 inline-block"
+                  className="text-sm font-medium text-primary-600 transition hover:text-primary-700 py-2 inline-block"
                 >
                   {t("viewAllLocations", { count: locations.length })}
                 </Link>
@@ -102,7 +102,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/for-photographers/join"
-                  className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block"
+                  className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block"
                 >
                   {t("joinAsPhotographer")}
                 </Link>
@@ -110,7 +110,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/for-photographers/pricing"
-                  className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block"
+                  className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block"
                 >
                   {t("pricingPlans")}
                 </Link>
@@ -118,7 +118,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/how-it-works"
-                  className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block"
+                  className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block"
                 >
                   {t("howItWorks")}
                 </Link>
@@ -131,37 +131,37 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-gray-900">{t("company")}</h3>
             <ul className="mt-3 space-y-2">
               <li>
-                <Link href="/about" className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block">
+                <Link href="/about" className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
                   {t("aboutUs")}
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block">
+                <Link href="/blog" className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
                   {t("blog")}
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block">
+                <Link href="/faq" className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
                   {t("faq")}
                 </Link>
               </li>
               <li>
-                <Link href="/support" className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block">
+                <Link href="/support" className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
                   {t("helpCenter")}
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block">
+                <Link href="/contact" className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
                   {t("contact")}
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block">
+                <Link href="/privacy" className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
                   {t("privacyPolicy")}
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm text-gray-500 transition hover:text-primary-600 py-1 inline-block">
+                <Link href="/terms" className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
                   {t("termsOfService")}
                 </Link>
               </li>
@@ -181,7 +181,7 @@ export function Footer() {
           <p className="mt-1 text-center text-xs text-gray-300">
             {t("legalEntity")} &middot; {t("legalEntityType")} &middot; {t("legalEntityNif")} &middot; {t("legalEntityLocation")}
           </p>
-          <p className="mt-0.5 text-center text-[10px] text-gray-400">
+          <p className="mt-0.5 text-center text-xs text-gray-400">
             {t("legalEntityVat")}
           </p>
         </div>

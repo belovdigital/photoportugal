@@ -490,7 +490,7 @@ export default async function PhotographerProfilePage({
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mt-8 grid grid-cols-1 gap-12 pb-16 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-6 pb-16 sm:gap-8 lg:grid-cols-3 lg:gap-12">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-12">
             {/* About */}
