@@ -7,7 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 
 export function AskQuestionButton({ photographerId, photographerName, autoOpen }: { photographerId: string; photographerName: string; autoOpen?: boolean }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const t = useTranslations("askQuestion");
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";

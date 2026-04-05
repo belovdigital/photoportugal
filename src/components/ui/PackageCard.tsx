@@ -57,7 +57,7 @@ function formatDescription(desc: string) {
 
 export function PackageCard({ pkg, photographerSlug }: PackageProps) {
   const [expanded, setExpanded] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const t = useTranslations("photographers.package");
   const tc = useTranslations("common");
