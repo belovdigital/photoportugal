@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export function IntercomWidget() {
+  const pathname = usePathname();
+
   useEffect(() => {
     if ((window as any).__intercomLoaded) return;
     (window as any).__intercomLoaded = true;
@@ -17,8 +20,10 @@ export function IntercomWidget() {
           settings.user_id = user.id;
           settings.name = user.name || "";
           settings.email = user.email || "";
-          // Sync role via server-side API (JS SDK doesn't pass custom_attributes reliably)
           fetch("/api/intercom/sync", { method: "POST" }).catch(() => {});
+        } else {
+          // Guest context for proactive messages
+          settings.user_type = "guest";
         }
 
         // 2. Load widget script
@@ -33,6 +38,13 @@ export function IntercomWidget() {
         };
       });
   }, []);
+
+  // Update Intercom on page navigation
+  useEffect(() => {
+    if ((window as any).Intercom) {
+      (window as any).Intercom("update", { page: pathname });
+    }
+  }, [pathname]);
 
   return null;
 }

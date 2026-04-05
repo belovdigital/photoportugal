@@ -60,7 +60,9 @@ export function useWishlist() {
     }
   }, []);
 
-  return { isWishlisted, toggle, isLoggedIn: !!session?.user };
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  const isPhotographer = role === "photographer";
+  return { isWishlisted, toggle, isLoggedIn: !!session?.user, isPhotographer };
 }
 
 export function WishlistButton({
@@ -74,8 +76,9 @@ export function WishlistButton({
   className?: string;
   onToggle?: (wishlisted: boolean) => void;
 }) {
-  const { isWishlisted, toggle, isLoggedIn } = useWishlist();
+  const { isWishlisted, toggle, isLoggedIn, isPhotographer } = useWishlist();
   const router = useRouter();
+  if (isPhotographer) return null;
   const active = isWishlisted(photographerId);
   const sz = size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const iconSz = size === "sm" ? "h-4 w-4" : "h-5 w-5";
