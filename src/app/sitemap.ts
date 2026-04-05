@@ -40,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/photoshoots", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/blog", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/contact", changeFrequency: "monthly" as const, priority: 0.4 },
+    { path: "/support", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.2 },
     { path: "/terms", changeFrequency: "yearly" as const, priority: 0.2 },
   ].flatMap((p) => localized(p.path, { lastModified: now, changeFrequency: p.changeFrequency, priority: p.priority }));

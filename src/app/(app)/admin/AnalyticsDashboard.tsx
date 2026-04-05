@@ -436,35 +436,33 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
 
       {/* Recent Sessions */}
       {!hideRecent && <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-gray-700">Recent Visitors</h3>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              {[
-                { key: "all", label: "All", icon: "👥" },
-                { key: "client", label: "Clients", icon: "🧳" },
-                { key: "photographer", label: "Photographers", icon: "📸" },
-                { key: "guest", label: "Guests", icon: "👻" },
-              ].map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => { setRoleFilter(f.key); setSessionLimit(30); }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                    roleFilter === f.key
-                      ? "bg-primary-500 text-white"
-                      : "bg-warm-100 text-gray-500 hover:bg-warm-200"
-                  }`}
-                >
-                  {f.icon} {f.label}
-                </button>
-              ))}
-            </div>
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Recent Visitors</h3>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { key: "all", label: "All", icon: "👥" },
+              { key: "client", label: "Clients", icon: "🧳" },
+              { key: "photographer", label: "Photographers", icon: "📸" },
+              { key: "guest", label: "Guests", icon: "👻" },
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => { setRoleFilter(f.key); setSessionLimit(30); setSessionsLoading(true); }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                  roleFilter === f.key
+                    ? "bg-primary-500 text-white shadow-sm"
+                    : "bg-warm-100 text-gray-500 hover:bg-warm-200"
+                }`}
+              >
+                {f.icon} {f.label}
+              </button>
+            ))}
             <select
               value={countryFilter}
-              onChange={e => { setCountryFilter(e.target.value); setSessionLimit(30); }}
-              className={`text-[11px] font-medium rounded-lg px-2 py-1 border-0 cursor-pointer transition ${
+              onChange={e => { setCountryFilter(e.target.value); setSessionLimit(30); setSessionsLoading(true); }}
+              className={`text-xs font-medium rounded-full px-3 py-1.5 border-0 cursor-pointer transition appearance-none ${
                 countryFilter !== "all"
-                  ? "bg-primary-500 text-white"
+                  ? "bg-primary-500 text-white shadow-sm"
                   : "bg-warm-100 text-gray-500"
               }`}
             >

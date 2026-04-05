@@ -14,6 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("title"),
     description: t("description"),
     alternates: localeAlternates("/photographers", locale),
+    openGraph: { title: t("title"), description: t("description"), url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/photographers` },
   };
 }
 
