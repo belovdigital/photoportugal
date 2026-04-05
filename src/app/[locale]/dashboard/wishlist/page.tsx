@@ -83,16 +83,18 @@ export default function WishlistPage() {
                 </div>
               </div>
 
-              <Link href={`/photographers/${item.slug}`} className="block p-4">
-                <div className="flex items-center gap-3">
+              {/* Avatar overlapping cover */}
+              <div className="px-4 -mt-6 relative z-10">
+                <div className="h-12 w-12 rounded-full border-3 border-white bg-primary-100 shadow-md overflow-hidden">
                   <Avatar src={item.avatar_url} fallback={item.name} size="md" />
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary-600 transition">{normalizeName(item.name)}</h3>
-                    {item.tagline && <p className="text-sm text-gray-500 truncate">{item.tagline}</p>}
-                  </div>
                 </div>
+              </div>
 
-                <div className="mt-3 flex items-center justify-between">
+              <Link href={`/photographers/${item.slug}`} className="block px-4 pt-2 pb-4">
+                <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary-600 transition">{normalizeName(item.name)}</h3>
+                {item.tagline && <p className="text-sm text-gray-500 truncate mt-0.5">{item.tagline}</p>}
+
+                <div className="mt-2 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {item.review_count > 0 && (
                       <>

@@ -80,20 +80,30 @@ export function WishlistButton({
   const sz = size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const iconSz = size === "sm" ? "h-4 w-4" : "h-5 w-5";
 
+  const [animating, setAnimating] = useState(false);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLoggedIn) {
+      router.push("/auth/signin");
+      return;
+    }
+    const willBeActive = !active;
+    toggle(photographerId);
+    onToggle?.(willBeActive);
+
+    // Animate heart flying up on add
+    if (willBeActive) {
+      setAnimating(true);
+      setTimeout(() => setAnimating(false), 600);
+    }
+  };
+
   return (
     <button
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!isLoggedIn) {
-          router.push("/auth/signin");
-          return;
-        }
-        toggle(photographerId);
-        const newState = !active;
-        onToggle?.(newState);
-      }}
-      className={`flex ${sz} items-center justify-center rounded-full transition ${
+      onClick={handleClick}
+      className={`relative flex ${sz} items-center justify-center rounded-full transition ${
         active
           ? "bg-red-50 text-red-500 hover:bg-red-100"
           : "bg-white/80 text-gray-400 hover:bg-white hover:text-red-400"
@@ -101,7 +111,7 @@ export function WishlistButton({
       title={active ? "Remove from wishlist" : "Save to wishlist"}
     >
       <svg
-        className={`${iconSz} transition-transform ${active ? "scale-110" : ""}`}
+        className={`${iconSz} transition-transform duration-300 ${active ? "scale-110" : ""}`}
         fill={active ? "currentColor" : "none"}
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -113,6 +123,13 @@ export function WishlistButton({
           d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
         />
       </svg>
+      {animating && (
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <svg className="h-4 w-4 text-red-500 animate-wishlist-fly" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+        </span>
+      )}
     </button>
   );
 }

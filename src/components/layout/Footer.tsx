@@ -14,7 +14,7 @@ export function Footer() {
   return (
     <>
     {/* Pre-footer: Mobile App CTA */}
-    <section className="mt-24 sm:mt-32 border-t border-warm-200 bg-warm-50">
+    <section className="border-t border-warm-200 bg-warm-50">
       <div className="mx-auto max-w-7xl px-4 py-14 text-center sm:px-6 sm:py-16 lg:px-8">
         <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
           {t("appTitle")}

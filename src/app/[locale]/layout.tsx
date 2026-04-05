@@ -38,7 +38,7 @@ export default async function LocaleLayout({
       <SessionProvider>
         <NotificationProvider>
           <Header />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pb-16 sm:pb-24">{children}</main>
           <Footer />
         </NotificationProvider>
         <CookieConsent />
