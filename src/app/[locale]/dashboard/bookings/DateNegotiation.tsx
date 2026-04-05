@@ -187,13 +187,24 @@ export function DateNegotiation({
           Current date: <span className="font-medium text-gray-700">{formatDate(shootDate)}</span>
         </p>
       )}
-      <button
-        type="button"
-        onClick={() => setShowPropose(!showPropose)}
-        className="text-xs text-primary-600 hover:text-primary-700 font-medium"
-      >
-        {showPropose ? "Cancel" : shootDate ? "Change date & time" : "Propose date & time"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setShowPropose(!showPropose)}
+          className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+        >
+          {shootDate ? "Change date & time" : "Propose date & time"}
+        </button>
+        {showPropose && (
+          <button
+            type="button"
+            onClick={() => { setShowPropose(false); setNewDate(""); setNewTime(""); setNote(""); }}
+            className="text-xs text-gray-400 hover:text-gray-600 font-medium"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
       {showPropose && proposeForm}
     </div>
   );

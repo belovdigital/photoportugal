@@ -68,20 +68,21 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
   }
 
   if (currentStatus === "confirmed") {
-    const isFutureDate = shootDate && new Date(shootDate + "T23:59:59") > new Date();
+    const shootDateStr = shootDate ? (shootDate.includes("T") ? shootDate.split("T")[0] : shootDate) : null;
+    const isFutureDate = shootDateStr && new Date(shootDateStr + "T23:59:59") > new Date();
     return (
       <div>
         <button
           onClick={() => updateStatus("completed")}
           disabled={updating || !!isFutureDate}
-          title={isFutureDate ? t("markSessionDoneWait") || `Available on ${new Date(shootDate!).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : undefined}
+          title={isFutureDate ? t("markSessionDoneWait") || `Available on ${new Date(shootDateStr! + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : undefined}
           className={`rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${isFutureDate ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
         >
           {t("markSessionDone")}
         </button>
         <p className="mt-1.5 text-[11px] text-gray-400 max-w-sm">
           {isFutureDate
-            ? (t("markSessionDoneWait") || `Available on ${new Date(shootDate!).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`)
+            ? (t("markSessionDoneWait") || `Available on ${new Date(shootDateStr! + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`)
             : t("markSessionDoneHint")}
         </p>
         {errorBanner}
