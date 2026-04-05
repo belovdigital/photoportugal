@@ -1085,7 +1085,70 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Unverified user cleanup: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned });
+  // === ABANDONED BOOKING REMINDERS ===
+  // 1. Clients who visited /book/ page but never created a booking (24h after registration)
+  let abandonedBookingEmails = 0;
+  try {
+    const { sendAbandonedBookingReminder } = await import("@/lib/email");
+    // Find clients registered 24-48h ago with no bookings, who visited a /book/ page
+    const abandonedClients = await query<{
+      id: string; name: string; email: string; pageviews: string;
+    }>(
+      `SELECT u.id, u.name, u.email, vs.pageviews::text
+       FROM users u
+       JOIN visitor_sessions vs ON vs.user_id = u.id
+       WHERE u.role = 'client'
+         AND u.email_verified = TRUE
+         AND u.created_at > NOW() - INTERVAL '48 hours'
+         AND u.created_at < NOW() - INTERVAL '20 hours'
+         AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.client_id = u.id)
+         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still thinking%')
+         AND vs.pageviews::text LIKE '%/book/%'
+       ORDER BY u.created_at DESC
+       LIMIT 10`
+    );
+    for (const c of abandonedClients) {
+      // Extract the photographer slug from /book/slug in pageviews
+      const bookMatch = c.pageviews.match(/\/book\/([a-z0-9-]+)/);
+      if (!bookMatch) continue;
+      const slug = bookMatch[1];
+      const photographer = await queryOne<{ name: string; slug: string }>(
+        `SELECT u.name, pp.slug FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.slug = $1 AND pp.is_approved = TRUE`,
+        [slug]
+      );
+      if (!photographer) continue;
+      await sendAbandonedBookingReminder(c.email, c.name, photographer.name, photographer.slug);
+      abandonedBookingEmails++;
+    }
+  } catch (err) {
+    results.errors.push(`Abandoned booking reminders: ${err}`);
+  }
+
+  // 2. Clients registered 24-48h ago with no bookings and no /book/ visits → generic nudge
+  let noBookingNudges = 0;
+  try {
+    const { sendNoBookingNudge } = await import("@/lib/email");
+    const nudgeClients = await query<{ email: string; name: string }>(
+      `SELECT u.email, u.name
+       FROM users u
+       WHERE u.role = 'client'
+         AND u.email_verified = TRUE
+         AND u.created_at > NOW() - INTERVAL '48 hours'
+         AND u.created_at < NOW() - INTERVAL '24 hours'
+         AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.client_id = u.id)
+         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still thinking%')
+         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Need help finding%')
+       LIMIT 10`
+    );
+    for (const c of nudgeClients) {
+      await sendNoBookingNudge(c.email, c.name);
+      noBookingNudges++;
+    }
+  } catch (err) {
+    results.errors.push(`No-booking nudges: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges });
 
   return NextResponse.json({
     success: true,
@@ -1097,6 +1160,8 @@ export async function GET(req: NextRequest) {
     deliveryReviewReminders,
     reviewReminders,
     smsReviewReminders,
+    abandonedBookingEmails,
+    noBookingNudges,
   });
 
 }

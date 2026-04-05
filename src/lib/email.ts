@@ -710,6 +710,44 @@ export async function sendPaymentFailedToClient(
   );
 }
 
+export async function sendAbandonedBookingReminder(
+  clientEmail: string,
+  clientName: string,
+  photographerName: string,
+  photographerSlug: string
+) {
+  const firstName = clientName.split(" ")[0];
+  await sendEmail(
+    clientEmail,
+    `Still thinking about your photoshoot with ${photographerName}?`,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Hi ${firstName}!</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We noticed you were looking at <strong>${photographerName}</strong>'s profile. Great taste!</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">If you'd like to go ahead with the booking, their schedule fills up quickly during peak season. You can also message them directly with any questions before booking.</p>
+      ${emailButton(`${BASE_URL}/photographers/${photographerSlug}`, "View " + photographerName + "'s Profile")}
+      <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#9A9A9A;">Need help choosing? Reply to this email and we'll personally help you find the perfect photographer for your trip.</p>
+    `)
+  );
+}
+
+export async function sendNoBookingNudge(
+  clientEmail: string,
+  clientName: string
+) {
+  const firstName = clientName.split(" ")[0];
+  await sendEmail(
+    clientEmail,
+    `Need help finding a photographer in Portugal?`,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Hi ${firstName}!</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Welcome to Photo Portugal! We noticed you signed up but haven't booked a session yet.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Not sure where to start? Tell us your dates, group size, and preferred location, and we'll recommend the perfect photographer for your trip.</p>
+      ${emailButton(`${BASE_URL}/photographers`, "Browse Photographers")}
+      <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#9A9A9A;">Just reply to this email with your plans and we'll take care of the rest!</p>
+    `)
+  );
+}
+
 export async function sendReviewApprovedToPhotographer(
   photographerEmail: string,
   photographerName: string,
