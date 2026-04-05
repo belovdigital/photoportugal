@@ -1982,7 +1982,8 @@
     "currentDate": "Data atual",
     "hide": "Ocultar",
     "changeDateAndTime": "Alterar data e hora",
-    "proposeDateAndTime": "Propor data e hora"
+    "proposeDateAndTime": "Propor data e hora",
+    "timeFlexible": "Horário flexível"
   },
   "bookingActions": {
     "convertToBooking": "Aceitar Consulta",

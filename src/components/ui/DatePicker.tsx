@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useLocale } from "next-intl";
 
 export interface UnavailableRange {
   date_from: string;
@@ -18,7 +19,8 @@ interface DatePickerProps {
   unavailableRanges?: UnavailableRange[];
 }
 
-const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const WEEKDAYS_EN = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const WEEKDAYS_PT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -38,12 +40,14 @@ function parseDate(str: string) {
   return { year: y, month: m - 1, day: d };
 }
 
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const MONTH_NAMES_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTH_NAMES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 export default function DatePicker({ value, onChange, min, max, label, required, placeholder, unavailableRanges }: DatePickerProps) {
+  const locale = useLocale();
+  const isPT = locale === "pt";
+  const WEEKDAYS = isPT ? WEEKDAYS_PT : WEEKDAYS_EN;
+  const MONTH_NAMES = isPT ? MONTH_NAMES_PT : MONTH_NAMES_EN;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -104,7 +108,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   const displayValue = value
-    ? new Date(value + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    ? new Date(value + "T12:00:00").toLocaleDateString(isPT ? "pt-PT" : "en-GB", { day: "numeric", month: "short", year: "numeric" })
     : "";
 
   return (
@@ -184,7 +188,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
                   </button>
                   {unavailable && (
                     <div className="pointer-events-none absolute -top-8 left-1/2 z-50 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-[10px] text-white group-hover/day:block">
-                      Unavailable
+                      {isPT ? "Indisponível" : "Unavailable"}
                     </div>
                   )}
                 </div>
@@ -204,7 +208,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
               }}
               className="mt-3 w-full rounded-lg py-1.5 text-center text-xs font-medium text-primary-600 transition hover:bg-primary-50"
             >
-              Today
+              {isPT ? "Hoje" : "Today"}
             </button>
           )}
         </div>

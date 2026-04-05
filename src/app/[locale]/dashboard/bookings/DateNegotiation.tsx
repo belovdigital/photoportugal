@@ -5,19 +5,21 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import DatePicker from "@/components/ui/DatePicker";
 
-const TIME_OPTIONS: { value: string; label: string }[] = [
-  { value: "", label: "Time flexible" },
-];
-// Generate 15-min intervals from 6:00 AM to 9:00 PM
-for (let h = 6; h <= 21; h++) {
-  for (let m = 0; m < 60; m += 15) {
-    if (h === 21 && m > 0) break;
-    const val = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-    const hour12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
-    const ampm = h >= 12 ? "PM" : "AM";
-    const label = `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
-    TIME_OPTIONS.push({ value: val, label });
+function buildTimeOptions(flexibleLabel: string) {
+  const opts: { value: string; label: string }[] = [
+    { value: "", label: flexibleLabel },
+  ];
+  for (let h = 6; h <= 21; h++) {
+    for (let m = 0; m < 60; m += 15) {
+      if (h === 21 && m > 0) break;
+      const val = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      const hour12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
+      const ampm = h >= 12 ? "PM" : "AM";
+      const label = `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
+      opts.push({ value: val, label });
+    }
   }
+  return opts;
 }
 
 export function DateNegotiation({
@@ -41,6 +43,7 @@ export function DateNegotiation({
 }) {
   const router = useRouter();
   const td = useTranslations("dateNegotiation");
+  const TIME_OPTIONS = buildTimeOptions(td("timeFlexible"));
   const [showPropose, setShowPropose] = useState(false);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 
 // Global wishlist cache so all buttons stay in sync
 let wishlistCache: Set<string> = new Set();
@@ -78,6 +79,7 @@ export function WishlistButton({
 }) {
   const { isWishlisted, toggle, isLoggedIn, isPhotographer } = useWishlist();
   const router = useRouter();
+  const locale = useLocale();
   const [animating, setAnimating] = useState(false);
   const active = isWishlisted(photographerId);
   const sz = size === "sm" ? "h-8 w-8" : "h-10 w-10";
@@ -111,7 +113,7 @@ export function WishlistButton({
           ? "bg-red-50 text-red-500 hover:bg-red-100"
           : "bg-white/80 text-gray-400 hover:bg-white hover:text-red-400"
       } backdrop-blur-sm ${className}`}
-      title={active ? "Remove from wishlist" : "Save to wishlist"}
+      title={active ? (locale === "pt" ? "Remover dos guardados" : "Remove from wishlist") : (locale === "pt" ? "Guardar" : "Save to wishlist")}
     >
       <svg
         className={`${iconSz} transition-transform duration-300 ${active ? "scale-110" : ""}`}

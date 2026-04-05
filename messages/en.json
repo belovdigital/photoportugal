@@ -2145,7 +2145,8 @@
     "currentDate": "Current date",
     "hide": "Hide",
     "changeDateAndTime": "Change date & time",
-    "proposeDateAndTime": "Propose date & time"
+    "proposeDateAndTime": "Propose date & time",
+    "timeFlexible": "Time flexible"
   },
   "bookingActions": {
     "convertToBooking": "Accept Inquiry",
