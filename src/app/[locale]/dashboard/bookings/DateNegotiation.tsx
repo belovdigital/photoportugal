@@ -95,8 +95,8 @@ export function DateNegotiation({
   };
 
   const proposeForm = (
-    <div className="mt-3 rounded-xl border border-warm-200 bg-warm-50 p-4">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="mt-3 rounded-xl border border-warm-200 bg-white p-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
           <label className="block text-[11px] font-medium text-gray-500 mb-1">Date</label>
           <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
@@ -106,32 +106,41 @@ export function DateNegotiation({
           <select
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900"
           >
             {TIME_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
         </div>
-        <div className="col-span-2">
+        <div className="col-span-2 sm:col-span-1">
           <label className="block text-[11px] font-medium text-gray-500 mb-1">Note (optional)</label>
           <input
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g. Meet at the main entrance"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900"
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900"
           />
         </div>
       </div>
-      <button
-        type="button"
-        onClick={handlePropose}
-        disabled={loading || !newDate}
-        className="mt-3 w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50 sm:w-auto"
-      >
-        {loading ? "Proposing..." : "Propose Date"}
-      </button>
+      <div className="mt-3 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handlePropose}
+          disabled={loading || !newDate}
+          className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
+        >
+          {loading ? "Proposing..." : "Propose Date"}
+        </button>
+        <button
+          type="button"
+          onClick={() => { setShowPropose(false); setNewDate(""); setNewTime(""); setNote(""); }}
+          className="text-sm text-gray-400 hover:text-gray-600 font-medium"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 
@@ -187,24 +196,13 @@ export function DateNegotiation({
           Current date: <span className="font-medium text-gray-700">{formatDate(shootDate)}</span>
         </p>
       )}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setShowPropose(!showPropose)}
-          className="text-xs text-primary-600 hover:text-primary-700 font-medium"
-        >
-          {shootDate ? "Change date & time" : "Propose date & time"}
-        </button>
-        {showPropose && (
-          <button
-            type="button"
-            onClick={() => { setShowPropose(false); setNewDate(""); setNewTime(""); setNote(""); }}
-            className="text-xs text-gray-400 hover:text-gray-600 font-medium"
-          >
-            Cancel
-          </button>
-        )}
-      </div>
+      <button
+        type="button"
+        onClick={() => setShowPropose(!showPropose)}
+        className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+      >
+        {showPropose ? "Hide" : shootDate ? "Change date & time" : "Propose date & time"}
+      </button>
       {showPropose && proposeForm}
     </div>
   );
