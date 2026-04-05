@@ -14,41 +14,34 @@ export function Footer() {
   return (
     <>
     {/* Pre-footer: Mobile App CTA */}
-    <section className="border-t border-warm-200 bg-gradient-to-b from-warm-50 to-warm-100">
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center text-center gap-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-600 shadow-sm">
-              <img src="/logo-icon.png" alt="" className="h-6 w-6" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-              {t("appTitle")}
-            </h2>
-          </div>
-          <p className="max-w-md text-gray-500">
-            {t("appSubtitle")}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 mt-1">
-            <a
-              href="https://apps.apple.com/app/photo-portugal/id6761375811"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition hover:scale-105 active:scale-95"
-            >
-              <img
-                src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-                alt="Download on the App Store"
-                className="h-12"
-              />
-            </a>
-            <div className="relative">
-              <img
-                src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-                alt="Get it on Google Play"
-                className="h-[58px] opacity-30 grayscale"
-              />
-              <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-warm-200/80 px-2.5 py-0.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">Coming Soon</span>
-            </div>
+    <section className="mt-24 sm:mt-32 border-t border-warm-200 bg-warm-50">
+      <div className="mx-auto max-w-7xl px-4 py-14 text-center sm:px-6 sm:py-16 lg:px-8">
+        <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
+          {t("appTitle")}
+        </h2>
+        <p className="mx-auto mt-3 max-w-md text-sm text-gray-500">
+          {t("appSubtitle")}
+        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+          <a
+            href="https://apps.apple.com/app/photo-portugal/id6761375811"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:opacity-80"
+          >
+            <img
+              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+              alt="Download on the App Store"
+              className="h-[40px]"
+            />
+          </a>
+          <div className="relative">
+            <img
+              src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+              alt="Get it on Google Play"
+              className="h-[58px] opacity-30 grayscale"
+            />
+            <span className="absolute top-0 -right-1.5 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold text-white uppercase leading-none">Soon</span>
           </div>
         </div>
       </div>
