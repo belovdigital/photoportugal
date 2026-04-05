@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
+import { sendTelegram } from "@/lib/telegram";
 
 // GET /api/wishlist — list wishlisted photographers
 // GET /api/wishlist?check=id1,id2 — bulk check which IDs are wishlisted
@@ -84,6 +85,18 @@ export async function POST(req: NextRequest) {
       "INSERT INTO wishlists (user_id, photographer_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
       [user.id, photographer_id]
     );
+
+    // Telegram notification
+    const info = await queryOne<{ client_name: string; photographer_name: string; slug: string }>(
+      `SELECT u_c.name as client_name, u_p.name as photographer_name, pp.slug
+       FROM users u_c, photographer_profiles pp JOIN users u_p ON u_p.id = pp.user_id
+       WHERE u_c.id = $1 AND pp.id = $2`,
+      [user.id, photographer_id]
+    );
+    if (info) {
+      sendTelegram(`❤️ <b>${info.client_name}</b> saved <b>${info.photographer_name}</b> to wishlist\nhttps://photoportugal.com/photographers/${info.slug}`).catch(() => {});
+    }
+
     return NextResponse.json({ wishlisted: true });
   }
 }
