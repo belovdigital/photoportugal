@@ -1090,34 +1090,46 @@ export async function GET(req: NextRequest) {
   let abandonedBookingEmails = 0;
   try {
     const { sendAbandonedBookingReminder } = await import("@/lib/email");
-    // Find clients registered 24-48h ago with no bookings, who visited a /book/ page
+    // Find clients registered 4-48h ago with no bookings, who visited a /book/ page
     const abandonedClients = await query<{
-      id: string; name: string; email: string; pageviews: string;
+      id: string; name: string; email: string;
     }>(
-      `SELECT u.id, u.name, u.email, vs.pageviews::text
+      `SELECT DISTINCT u.id, u.name, u.email
        FROM users u
        JOIN visitor_sessions vs ON vs.user_id = u.id
        WHERE u.role = 'client'
          AND u.email_verified = TRUE
          AND u.created_at > NOW() - INTERVAL '48 hours'
-         AND u.created_at < NOW() - INTERVAL '20 hours'
+         AND u.created_at < NOW() - INTERVAL '4 hours'
          AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.client_id = u.id)
          AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still thinking%')
+         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still looking%')
          AND vs.pageviews::text LIKE '%/book/%'
        ORDER BY u.created_at DESC
        LIMIT 10`
     );
     for (const c of abandonedClients) {
-      // Extract the photographer slug from /book/slug in pageviews
-      const bookMatch = c.pageviews.match(/\/book\/([a-z0-9-]+)/);
-      if (!bookMatch) continue;
-      const slug = bookMatch[1];
-      const photographer = await queryOne<{ name: string; slug: string }>(
-        `SELECT u.name, pp.slug FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.slug = $1 AND pp.is_approved = TRUE`,
-        [slug]
+      // Get all /book/ and /photographers/ visits to find which photographers they looked at
+      const sessions = await query<{ pageviews: string }>(
+        `SELECT pageviews::text FROM visitor_sessions WHERE user_id = $1 OR visitor_id IN (SELECT visitor_id FROM visitor_sessions WHERE user_id = $1)`,
+        [c.id]
       );
-      if (!photographer) continue;
-      await sendAbandonedBookingReminder(c.email, c.name, photographer.name, photographer.slug);
+      const allPageviews = sessions.map(s => s.pageviews).join(" ");
+      // Extract unique photographer slugs from /book/slug (most interested) and /photographers/slug
+      const bookSlugs = [...new Set([...allPageviews.matchAll(/\/book\/([a-z0-9-]+)/g)].map(m => m[1]))];
+      const profileSlugs = [...new Set([...allPageviews.matchAll(/\/photographers\/([a-z0-9-]+)/g)].map(m => m[1]))]
+        .filter(s => !s.startsWith("location") && s !== "location");
+      // Prioritize: /book/ slugs first, then most-viewed profiles
+      const slugs = [...new Set([...bookSlugs, ...profileSlugs])].slice(0, 3);
+      if (slugs.length === 0) continue;
+      const photographers = await query<{ name: string; slug: string }>(
+        `SELECT u.name, pp.slug FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.slug = ANY($1) AND pp.is_approved = TRUE`,
+        [slugs]
+      );
+      if (photographers.length === 0) continue;
+      // Sort to match slug order (book slugs first)
+      const sorted = slugs.map(s => photographers.find(p => p.slug === s)).filter(Boolean) as { name: string; slug: string }[];
+      await sendAbandonedBookingReminder(c.email, c.name, sorted);
       abandonedBookingEmails++;
     }
   } catch (err) {
@@ -1134,9 +1146,10 @@ export async function GET(req: NextRequest) {
        WHERE u.role = 'client'
          AND u.email_verified = TRUE
          AND u.created_at > NOW() - INTERVAL '48 hours'
-         AND u.created_at < NOW() - INTERVAL '24 hours'
+         AND u.created_at < NOW() - INTERVAL '4 hours'
          AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.client_id = u.id)
          AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still thinking%')
+         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still looking%')
          AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Need help finding%')
        LIMIT 10`
     );

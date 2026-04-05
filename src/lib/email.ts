@@ -713,18 +713,24 @@ export async function sendPaymentFailedToClient(
 export async function sendAbandonedBookingReminder(
   clientEmail: string,
   clientName: string,
-  photographerName: string,
-  photographerSlug: string
+  photographers: { name: string; slug: string }[]
 ) {
   const firstName = clientName.split(" ")[0];
+  const single = photographers.length === 1;
+  const subject = single
+    ? `Still thinking about your photoshoot with ${photographers[0].name}?`
+    : `Still looking for a photographer in Portugal?`;
+  const photographerLinks = photographers
+    .map(p => `<a href="${BASE_URL}/photographers/${p.slug}" style="color:#C94536;font-weight:600;text-decoration:none;">${p.name}</a>`)
+    .join(", ");
   await sendEmail(
     clientEmail,
-    `Still thinking about your photoshoot with ${photographerName}?`,
+    subject,
     emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Hi ${firstName}!</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We noticed you were looking at <strong>${photographerName}</strong>'s profile. Great taste!</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">If you'd like to go ahead with the booking, their schedule fills up quickly during peak season. You can also message them directly with any questions before booking.</p>
-      ${emailButton(`${BASE_URL}/photographers/${photographerSlug}`, "View " + photographerName + "'s Profile")}
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We noticed you were checking out ${single ? `<strong>${photographers[0].name}</strong>` : `some of our photographers: ${photographerLinks}`}. Great taste!</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Schedules fill up quickly during peak season. You can message any photographer directly with questions before booking.</p>
+      ${emailButton(`${BASE_URL}/photographers/${photographers[0].slug}`, single ? "View " + photographers[0].name + "'s Profile" : "View Photographers")}
       <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#9A9A9A;">Need help choosing? Reply to this email and we'll personally help you find the perfect photographer for your trip.</p>
     `)
   );
