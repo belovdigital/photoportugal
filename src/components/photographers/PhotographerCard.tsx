@@ -6,6 +6,7 @@ import { PhotographerProfile } from "@/types";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { trackViewPhotographer } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
+import { WishlistButton } from "@/components/ui/WishlistButton";
 
 export function PhotographerCard({
   photographer,
@@ -32,6 +33,9 @@ export function PhotographerCard({
         {photographer.cover_url && (
           <OptimizedImage src={photographer.cover_url} alt={t("coverAlt", { name: normalizeName(photographer.name) })} width={800} quality={88} className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
         )}
+        <div className="absolute left-3 top-3 z-10">
+          <WishlistButton photographerId={photographer.id} size="sm" />
+        </div>
         {photographer.is_founding ? (
           <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow">
             {t("founding")}

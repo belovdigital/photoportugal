@@ -6,6 +6,7 @@ import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
+import { WishlistButton } from "@/components/ui/WishlistButton";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
 import { PackageCard } from "@/components/ui/PackageCard";
@@ -477,9 +478,10 @@ export default async function PhotographerProfilePage({
               )}
             </div>
 
-            {/* Message — top right on desktop */}
+            {/* Actions — top right on desktop */}
             {result.type === "db" && (
-              <div id="message" className="shrink-0 sm:ml-auto sm:self-center">
+              <div id="message" className="flex items-center gap-3 shrink-0 sm:ml-auto sm:self-center">
+                <WishlistButton photographerId={photographer.id} size="md" className="border border-warm-200 shadow-sm" />
                 <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} />
               </div>
             )}
