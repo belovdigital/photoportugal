@@ -4,20 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DatePicker from "@/components/ui/DatePicker";
 
-const TIME_OPTIONS = [
+const TIME_OPTIONS: { value: string; label: string }[] = [
   { value: "", label: "Time flexible" },
-  { value: "08:00", label: "8:00 AM" },
-  { value: "09:00", label: "9:00 AM" },
-  { value: "10:00", label: "10:00 AM" },
-  { value: "11:00", label: "11:00 AM" },
-  { value: "12:00", label: "12:00 PM" },
-  { value: "14:00", label: "2:00 PM" },
-  { value: "15:00", label: "3:00 PM" },
-  { value: "16:00", label: "4:00 PM" },
-  { value: "17:00", label: "5:00 PM" },
-  { value: "18:00", label: "6:00 PM" },
-  { value: "19:00", label: "7:00 PM" },
 ];
+// Generate 15-min intervals from 6:00 AM to 9:00 PM
+for (let h = 6; h <= 21; h++) {
+  for (let m = 0; m < 60; m += 15) {
+    if (h === 21 && m > 0) break;
+    const val = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    const hour12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    const ampm = h >= 12 ? "PM" : "AM";
+    const label = `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
+    TIME_OPTIONS.push({ value: val, label });
+  }
+}
 
 export function DateNegotiation({
   bookingId,
