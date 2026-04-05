@@ -78,12 +78,12 @@ export function WishlistButton({
 }) {
   const { isWishlisted, toggle, isLoggedIn, isPhotographer } = useWishlist();
   const router = useRouter();
-  if (isPhotographer) return null;
+  const [animating, setAnimating] = useState(false);
   const active = isWishlisted(photographerId);
   const sz = size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const iconSz = size === "sm" ? "h-4 w-4" : "h-5 w-5";
 
-  const [animating, setAnimating] = useState(false);
+  if (isPhotographer) return null;
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
