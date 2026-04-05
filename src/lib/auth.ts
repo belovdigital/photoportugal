@@ -111,6 +111,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
               console.error("[auth] Failed to send welcome email:", err)
             );
+            import("@/lib/email").then(({ sendAdminNewClientNotification }) => {
+              sendAdminNewClientNotification(user.name || "Unknown", email).catch(() => {});
+            }).catch(() => {});
+            import("@/lib/telegram").then(({ sendTelegram }) => {
+              sendTelegram(`👤 <b>New Client (Google)</b>\n\n<b>Name:</b> ${user.name || "Unknown"}\n<b>Email:</b> ${email}`);
+            }).catch(() => {});
           }
         } catch (error) {
           console.error("[auth] Google signIn DB error:", error);

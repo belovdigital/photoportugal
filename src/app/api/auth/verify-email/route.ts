@@ -46,10 +46,16 @@ export async function GET(req: NextRequest) {
       sendAdminNewPhotographerNotification(user.name, user.email).catch((err) =>
         console.error("[verify-email] Failed to send admin notification:", err)
       );
+      import("@/lib/telegram").then(({ sendTelegram }) => {
+        sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`);
+      }).catch(() => {});
     } else {
       sendAdminNewClientNotification(user.name, user.email).catch((err) =>
         console.error("[verify-email] Failed to send admin client notification:", err)
       );
+      import("@/lib/telegram").then(({ sendTelegram }) => {
+        sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}`);
+      }).catch(() => {});
     }
 
     // If from mobile app, redirect to deep link
