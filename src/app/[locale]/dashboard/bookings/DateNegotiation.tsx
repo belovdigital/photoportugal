@@ -95,37 +95,43 @@ export function DateNegotiation({
   };
 
   const proposeForm = (
-    <div className="mt-3 rounded-lg border border-warm-200 bg-warm-50 p-3 space-y-2">
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="w-36">
+    <div className="mt-3 rounded-xl border border-warm-200 bg-warm-50 p-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div>
+          <label className="block text-[11px] font-medium text-gray-500 mb-1">Date</label>
           <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder="Select date" />
         </div>
-        <select
-          value={newTime}
-          onChange={(e) => setNewTime(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-[9px] text-sm text-gray-900"
-        >
-          {TIME_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        <span className="text-[10px] text-gray-400 self-center">PT time</span>
-        <input
-          type="text"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Note (optional)"
-          className="flex-1 min-w-[120px] rounded-lg border border-gray-300 px-3 py-[9px] text-sm text-gray-900"
-        />
-        <button
-          type="button"
-          onClick={handlePropose}
-          disabled={loading || !newDate}
-          className="rounded-lg bg-primary-600 px-4 py-[9px] text-xs font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
-        >
-          Propose
-        </button>
+        <div>
+          <label className="block text-[11px] font-medium text-gray-500 mb-1">Time (PT)</label>
+          <select
+            value={newTime}
+            onChange={(e) => setNewTime(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+          >
+            {TIME_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="col-span-2">
+          <label className="block text-[11px] font-medium text-gray-500 mb-1">Note (optional)</label>
+          <input
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g. Meet at the main entrance"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900"
+          />
+        </div>
       </div>
+      <button
+        type="button"
+        onClick={handlePropose}
+        disabled={loading || !newDate}
+        className="mt-3 w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50 sm:w-auto"
+      >
+        {loading ? "Proposing..." : "Propose Date"}
+      </button>
     </div>
   );
 
