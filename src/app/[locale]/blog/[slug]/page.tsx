@@ -35,8 +35,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale, slug } = await params;
 
   const post = await queryOne<BlogPost>(
-    "SELECT id, slug, title, excerpt, meta_title, meta_description, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE",
-    [slug]
+    "SELECT id, slug, title, excerpt, meta_title, meta_description, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
+    [slug, locale]
   );
 
   if (!post) {
@@ -385,8 +385,8 @@ export default async function BlogPostPage({ params }: PageProps) {
   const tc = await getTranslations("common");
 
   const post = await queryOne<BlogPost>(
-    "SELECT * FROM blog_posts WHERE slug = $1 AND is_published = TRUE",
-    [slug]
+    "SELECT * FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
+    [slug, locale]
   );
 
   if (!post) {
@@ -404,8 +404,8 @@ export default async function BlogPostPage({ params }: PageProps) {
     target_keywords: string | null;
     content: string;
   }>(
-    "SELECT id, slug, title, excerpt, cover_image_url, published_at, target_keywords, content FROM blog_posts WHERE is_published = TRUE AND id != $1 ORDER BY published_at DESC",
-    [post.id]
+    "SELECT id, slug, title, excerpt, cover_image_url, published_at, target_keywords, content FROM blog_posts WHERE is_published = TRUE AND id != $1 AND locale = $2 ORDER BY published_at DESC",
+    [post.id, locale]
   );
 
   // Score each post by relevance to current post

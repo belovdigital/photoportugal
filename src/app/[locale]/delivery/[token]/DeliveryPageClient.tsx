@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { DisputeForm } from "@/components/ui/DisputeForm";
 import { trackDeliveryAccepted } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface Photo {
   id: string;
@@ -49,6 +50,7 @@ export function DeliveryPageClient({
   const [accepting, setAccepting] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [acceptError, setAcceptError] = useState("");
+  const { modal, confirm } = useConfirmModal();
 
   // Auto-login with URL param or cached password
   useEffect(() => {
@@ -136,7 +138,8 @@ export function DeliveryPageClient({
   }
 
   async function handleAcceptDelivery() {
-    if (!confirm(t("confirmAcceptDelivery"))) return;
+    const ok = await confirm(t("acceptDeliveryTitle") || "Accept Delivery", t("confirmAcceptDelivery"), { confirmLabel: t("acceptButton") || "Accept" });
+    if (!ok) return;
 
     setAccepting(true);
     setAcceptError("");
@@ -358,6 +361,7 @@ export function DeliveryPageClient({
           {t("deliveredVia")} <a href="https://photoportugal.com" className="text-primary-600 hover:underline">Photo Portugal</a>
         </p>
       </div>
+      {modal}
     </div>
   );
 }

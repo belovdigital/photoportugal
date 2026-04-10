@@ -101,11 +101,11 @@ export async function POST(req: NextRequest) {
       );
 
       // Notify admin + send welcome email
-      sendWelcomeEmail(email.toLowerCase(), name, "client").catch(() => {});
-      sendAdminNewClientNotification(name, email.toLowerCase()).catch(() => {});
+      sendWelcomeEmail(email.toLowerCase(), name, "client").catch((err) => console.error("[auth/apple] welcome email error:", err));
+      sendAdminNewClientNotification(name, email.toLowerCase()).catch((err) => console.error("[auth/apple] admin notification error:", err));
       import("@/lib/telegram").then(({ sendTelegram }) => {
         sendTelegram(`👤 <b>New Client (Apple, mobile)</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}`);
-      }).catch(() => {});
+      }).catch((err) => console.error("[auth/apple] telegram error:", err));
     }
 
     // Update name if we have it and current is "Apple User"

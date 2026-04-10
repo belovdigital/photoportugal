@@ -79,7 +79,7 @@ export default async function PricingPage({
         name: "Free Plan",
         price: "0",
         priceCurrency: "EUR",
-        description: `10 portfolio images, ${COMMISSION_RATES.free}% commission`,
+        description: `Up to 100 portfolio images, ${COMMISSION_RATES.free}% commission`,
       },
       {
         "@type": "Offer",
@@ -90,7 +90,7 @@ export default async function PricingPage({
           "@type": "UnitPriceSpecification",
           billingDuration: "P1M",
         },
-        description: `30 portfolio images, ${COMMISSION_RATES.pro}% commission`,
+        description: `Up to 100 portfolio images, ${COMMISSION_RATES.pro}% commission`,
       },
       {
         "@type": "Offer",
@@ -101,7 +101,7 @@ export default async function PricingPage({
           "@type": "UnitPriceSpecification",
           billingDuration: "P1M",
         },
-        description: `100 portfolio images, ${COMMISSION_RATES.premium}% commission`,
+        description: `Up to 100 portfolio images, ${COMMISSION_RATES.premium}% commission`,
       },
     ],
   };

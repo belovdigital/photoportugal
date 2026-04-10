@@ -1,6 +1,6 @@
 import { queryOne } from "@/lib/db";
 import { sendEmail, getAdminEmail } from "@/lib/email";
-import { sendAdminWhatsApp } from "@/lib/whatsapp";
+import { sendAdminSMS } from "@/lib/sms";
 
 /**
  * Check if a photographer just completed their onboarding checklist.
@@ -50,9 +50,7 @@ export async function checkAndNotifyChecklistComplete(photographerId: string) {
       </div>`
     );
 
-    sendAdminWhatsApp(
-      "admin_new_booking",
-      [profile.name, "completed checklist", "ready for approval"],
+    sendAdminSMS(
       `Photo Portugal: ${profile.name} completed their profile and is ready for approval. Check admin panel.`
     );
 

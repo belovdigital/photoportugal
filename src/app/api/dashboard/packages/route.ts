@@ -72,6 +72,14 @@ export async function POST(req: NextRequest) {
 
     const cleanFeatures = Array.isArray(features) ? features.filter((f: string) => f.trim()) : [];
 
+    // Only one package can be "most popular" — clear others first
+    if (is_popular) {
+      await queryOne(
+        "UPDATE packages SET is_popular = FALSE WHERE photographer_id = $1 AND is_popular = TRUE",
+        [profile.id]
+      );
+    }
+
     const pkg = await queryOne(
       `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public, features)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -113,6 +121,14 @@ export async function PUT(req: NextRequest) {
     }
 
     const cleanFeatures = Array.isArray(features) ? features.filter((f: string) => f.trim()) : [];
+
+    // Only one package can be "most popular" — clear others first
+    if (is_popular) {
+      await queryOne(
+        "UPDATE packages SET is_popular = FALSE WHERE photographer_id = $1 AND is_popular = TRUE AND id != $2",
+        [profile.id, id]
+      );
+    }
 
     const pkg = await queryOne(
       `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7, is_public = $8, features = $9

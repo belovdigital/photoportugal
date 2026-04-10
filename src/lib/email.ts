@@ -290,7 +290,9 @@ export async function sendTrustpilotFollowUpToClient(
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Thank You for Your Review!</h2>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We really appreciate you sharing your experience with <strong>${photographerName}</strong> on our platform.</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We have one small favour to ask — it would mean the world to our small business if you could also leave a quick review on Trustpilot. It takes less than a minute and helps other travelers discover Photo Portugal:</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover Photo Portugal:</p>
+      ${emailButton("https://g.page/r/CbWG7PogT_K2EBI/review", "Review Us on Google", "#4285F4")}
+      <div style="height:8px"></div>
       ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", "Review Us on Trustpilot", "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">Even a few words make a huge difference. Thank you for supporting independent photography in Portugal!</p>
     `)
@@ -308,7 +310,9 @@ export async function sendTrustpilotFollowUpToPhotographer(
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Help Us Grow!</h2>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Thank you for being part of Photo Portugal. Your work is what makes this platform great.</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We'd love it if you could share your experience as a photographer on Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:</p>
+      ${emailButton("https://g.page/r/CbWG7PogT_K2EBI/review", "Review Us on Google", "#4285F4")}
+      <div style="height:8px"></div>
       ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", "Review Us on Trustpilot", "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">It takes less than a minute. Thank you for your support!</p>
     `)
@@ -685,6 +689,43 @@ export async function sendAdminBookingCancelledNotification(
         ${refundLine}
       </div>
       ${emailButton(`${BASE_URL}/admin#bookings`, "Go to Admin Panel")}
+    `)
+  );
+}
+
+export async function sendAdminAutoCancelNotification(
+  clientName: string,
+  photographerName: string
+) {
+  await sendToAllAdmins(
+    `[Auto-Cancelled] ${clientName} ↔ ${photographerName}`,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#C94536;">Booking Auto-Cancelled</h2>
+      <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Client:</strong> ${clientName}</p>
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Photographer:</strong> ${photographerName}</p>
+        <p style="margin:0;font-size:15px;color:#4A4A4A;"><strong>Reason:</strong> Payment not received within 48 hours</p>
+      </div>
+      ${emailButton(`${BASE_URL}/admin#bookings`, "Go to Admin Panel")}
+    `)
+  );
+}
+
+export async function sendAdminNewInquiryNotification(
+  clientName: string,
+  photographerName: string,
+  messagePreview: string
+) {
+  await sendToAllAdmins(
+    `[New Inquiry] ${clientName} → ${photographerName}`,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">New Inquiry</h2>
+      <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Client:</strong> ${clientName}</p>
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Photographer:</strong> ${photographerName}</p>
+        <p style="margin:0;font-size:15px;color:#4A4A4A;font-style:italic;">"${messagePreview}"</p>
+      </div>
+      ${emailButton(`${BASE_URL}/admin`, "Go to Admin Panel")}
     `)
   );
 }

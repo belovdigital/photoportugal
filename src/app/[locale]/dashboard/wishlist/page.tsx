@@ -40,7 +40,7 @@ export default function WishlistPage() {
   if (loading) {
     return (
       <div className="p-6 sm:p-8">
-        <h1 className="font-display text-2xl font-bold text-gray-900">Saved Photographers</h1>
+        <h1 className="font-display text-2xl font-bold text-gray-900">{t("savedPhotographers")}</h1>
         <div className="mt-6 flex justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
         </div>
@@ -50,16 +50,16 @@ export default function WishlistPage() {
 
   return (
     <div className="p-6 sm:p-8">
-      <h1 className="font-display text-2xl font-bold text-gray-900">Saved Photographers</h1>
-      <p className="mt-1 text-sm text-gray-500">{items.length} {items.length === 1 ? "photographer" : "photographers"} saved</p>
+      <h1 className="font-display text-2xl font-bold text-gray-900">{t("savedPhotographers")}</h1>
+      <p className="mt-1 text-sm text-gray-500">{t("photographersSaved", { count: items.length })}</p>
 
       {items.length === 0 ? (
         <div className="mt-12 text-center">
           <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
-          <p className="mt-4 text-gray-500">No saved photographers yet</p>
-          <p className="mt-1 text-sm text-gray-400">Browse photographers and tap the heart to save your favorites</p>
+          <p className="mt-4 text-gray-500">{t("noSavedPhotographers")}</p>
+          <p className="mt-1 text-sm text-gray-400">{t("noSavedPhotographersHint")}</p>
           <Link href="/photographers" className="mt-6 inline-block rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition">
             Browse Photographers
           </Link>

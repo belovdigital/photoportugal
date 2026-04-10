@@ -9,8 +9,9 @@ import {
   sendDeliveryReminderToPhotographer,
   sendTrustpilotFollowUpToClient,
   sendTrustpilotFollowUpToPhotographer,
+  sendAdminAutoCancelNotification,
 } from "@/lib/email";
-import { sendWhatsApp } from "@/lib/whatsapp";
+import { sendSMS } from "@/lib/sms";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { rm } from "fs/promises";
 import path from "path";
@@ -42,11 +43,14 @@ export async function GET(req: NextRequest) {
       id: string;
       client_email: string;
       client_name: string;
+      client_phone: string | null;
+      client_id: string;
       photographer_name: string;
       payment_url: string | null;
       total_price: number | null;
     }>(
       `SELECT b.id, u.email as client_email, u.name as client_name,
+              u.phone as client_phone, u.id as client_id,
               pu.name as photographer_name,
               b.payment_url, b.total_price
        FROM bookings b
@@ -55,8 +59,8 @@ export async function GET(req: NextRequest) {
        JOIN users pu ON pu.id = pp.user_id
        WHERE b.status = 'confirmed'
          AND b.payment_status != 'paid'
-         AND b.created_at < NOW() - INTERVAL '24 hours'
-         AND b.created_at > NOW() - INTERVAL '48 hours'
+         AND COALESCE(b.confirmed_at, b.created_at) < NOW() - INTERVAL '24 hours'
+         AND COALESCE(b.confirmed_at, b.created_at) > NOW() - INTERVAL '48 hours'
          AND b.payment_reminder_sent = FALSE`
     );
 
@@ -69,6 +73,19 @@ export async function GET(req: NextRequest) {
           null, // Don't use stored payment_url — Stripe checkout sessions expire after 24h
           booking.total_price
         );
+        // SMS reminder
+        if (booking.client_phone) {
+          const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+            "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+            [booking.client_id]
+          );
+          if (smsPrefs?.sms_bookings !== false) {
+            sendSMS(
+              booking.client_phone,
+              `Photo Portugal: Reminder — your booking with ${booking.photographer_name}${booking.total_price ? ` (€${Math.round(booking.total_price)})` : ""} is awaiting payment. Pay now to secure your spot: https://photoportugal.com/dashboard/bookings`
+            ).catch(err => console.error("[cron] payment reminder sms error:", err));
+          }
+        }
         await queryOne(
           "UPDATE bookings SET payment_reminder_sent = TRUE WHERE id = $1 RETURNING id",
           [booking.id]
@@ -82,7 +99,75 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Payment reminders query: ${err}`);
   }
 
-  // === 1b. Auto-cancel unpaid bookings (48h after confirmation) ===
+  // === 1b. Final payment reminder (42h after confirmation — 6h before auto-cancel) ===
+  let paymentFinalReminders = 0;
+  try {
+    const finalReminderBookings = await query<{
+      id: string;
+      client_email: string;
+      client_name: string;
+      client_phone: string | null;
+      client_id: string;
+      photographer_name: string;
+      total_price: number | null;
+    }>(
+      `SELECT b.id, u.email as client_email, u.name as client_name,
+              u.phone as client_phone, u.id as client_id,
+              pu.name as photographer_name, b.total_price
+       FROM bookings b
+       JOIN users u ON u.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.status = 'confirmed'
+         AND b.payment_status != 'paid'
+         AND b.confirmed_at < NOW() - INTERVAL '42 hours'
+         AND b.confirmed_at > NOW() - INTERVAL '48 hours'
+         AND b.payment_final_reminder_sent = FALSE`
+    );
+
+    for (const booking of finalReminderBookings) {
+      try {
+        const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+        await sendEmail(
+          booking.client_email,
+          `Last chance — your booking will be cancelled in 6 hours`,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Your Booking Will Be Cancelled Soon</h2>
+            <p>Hi ${booking.client_name.split(" ")[0]},</p>
+            <p>Your photoshoot with <strong>${booking.photographer_name}</strong>${booking.total_price ? ` (€${Math.round(booking.total_price)})` : ""} will be <strong>automatically cancelled in 6 hours</strong> if payment is not received.</p>
+            <p>${booking.photographer_name} is holding this time slot for you — don't miss out!</p>
+            <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay Now & Secure Your Booking</a></p>
+            <p style="color: #999; font-size: 12px;">If you no longer wish to proceed, the booking will be cancelled automatically. No action needed.</p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+        // SMS final reminder
+        if (booking.client_phone) {
+          const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+            "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+            [booking.client_id]
+          );
+          if (smsPrefs?.sms_bookings !== false) {
+            sendSMS(
+              booking.client_phone,
+              `Photo Portugal: Last chance! Your booking with ${booking.photographer_name} will be cancelled in 6 hours if not paid. Pay now: https://photoportugal.com/dashboard/bookings`
+            ).catch(err => console.error("[cron] final payment reminder sms error:", err));
+          }
+        }
+        await queryOne(
+          "UPDATE bookings SET payment_final_reminder_sent = TRUE WHERE id = $1 RETURNING id",
+          [booking.id]
+        );
+        paymentFinalReminders++;
+      } catch (err) {
+        results.errors.push(`Final payment reminder for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Final payment reminders query: ${err}`);
+  }
+
+  // === 1c. Auto-cancel unpaid bookings (48h after confirmation) ===
   try {
     const staleUnpaid = await query<{
       id: string;
@@ -90,16 +175,19 @@ export async function GET(req: NextRequest) {
       client_name: string;
       photographer_email: string;
       photographer_name: string;
+      photographer_user_id: string;
+      photographer_profile_id: string;
     }>(
       `SELECT b.id, cu.email as client_email, cu.name as client_name,
-              pu.email as photographer_email, pu.name as photographer_name
+              pu.email as photographer_email, pu.name as photographer_name,
+              pu.id as photographer_user_id, pp.id as photographer_profile_id
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
        JOIN users pu ON pu.id = pp.user_id
        WHERE b.status = 'confirmed'
          AND b.payment_status IS DISTINCT FROM 'paid'
-         AND b.updated_at < NOW() - INTERVAL '48 hours'`
+         AND COALESCE(b.confirmed_at, b.updated_at) < NOW() - INTERVAL '48 hours'`
     );
 
     for (const booking of staleUnpaid) {
@@ -139,7 +227,37 @@ export async function GET(req: NextRequest) {
         results.autoCancelled++;
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`⏰ <b>Booking Auto-Cancelled</b>\n\n${booking.client_name} → ${booking.photographer_name}\nReason: Payment not received within 48h`);
-        }).catch(() => {});
+        }).catch((err) => console.error("[cron] telegram auto-cancel error:", err));
+        sendAdminAutoCancelNotification(booking.client_name, booking.photographer_name)
+          .catch((err) => console.error("[cron] admin email auto-cancel error:", err));
+
+        // SMS/WhatsApp to photographer
+        try {
+          const photographerPhone = await queryOne<{ phone: string | null }>(
+            "SELECT phone FROM users WHERE id = $1",
+            [booking.photographer_user_id]
+          );
+          const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+            "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+            [booking.photographer_user_id]
+          );
+          if (photographerPhone?.phone && smsPrefs?.sms_bookings !== false) {
+            sendSMS(
+              photographerPhone.phone,
+              `Photo Portugal: Booking with ${booking.client_name} has been auto-cancelled (payment not received within 48h). Log in to view: https://photoportugal.com/dashboard/bookings`
+            ).catch(err => console.error("[cron] sms auto-cancel error:", err));
+          }
+        } catch (smsErr) {
+          console.error("[cron] auto-cancel sms error:", smsErr);
+        }
+
+        // Telegram to photographer
+        import("@/lib/notify-photographer").then(m =>
+          m.notifyPhotographerViaTelegram(
+            booking.photographer_profile_id,
+            `⏰ Booking auto-cancelled\n\nClient: ${booking.client_name}\nReason: Payment not received within 48h\n\nView: https://photoportugal.com/dashboard/bookings`
+          )
+        ).catch((err) => console.error("[cron] telegram photographer auto-cancel error:", err));
       } catch (err) {
         results.errors.push(`Auto-cancel booking ${booking.id}: ${err}`);
       }
@@ -209,12 +327,10 @@ export async function GET(req: NextRequest) {
                 [smsInfo.photographer_user_id]
               );
               if (pPrefs?.sms_bookings !== false) {
-                sendWhatsApp(
+                sendSMS(
                   smsInfo.photographer_phone,
-                  "shoot_reminder",
-                  [booking.client_name],
                   `Photo Portugal: Reminder — you have a photoshoot with ${booking.client_name} tomorrow. Check your dashboard for details.`
-                ).catch(err => console.error("[whatsapp] error:", err));
+                ).catch(err => console.error("[sms] error:", err));
               }
             }
             // Client WhatsApp/SMS
@@ -224,12 +340,10 @@ export async function GET(req: NextRequest) {
                 [smsInfo.client_id]
               );
               if (cPrefs?.sms_bookings !== false) {
-                sendWhatsApp(
+                sendSMS(
                   smsInfo.client_phone,
-                  "shoot_reminder",
-                  [booking.photographer_name],
                   `Photo Portugal: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`
-                ).catch(err => console.error("[whatsapp] error:", err));
+                ).catch(err => console.error("[sms] error:", err));
               }
             }
           }
@@ -831,7 +945,7 @@ export async function GET(req: NextRequest) {
         await sendSMS(
           booking.client_phone,
           `Hi ${firstName}! We'd love to hear about your photoshoot with ${booking.photographer_name}. A quick review helps other travelers: https://photoportugal.com/dashboard/bookings`
-        ).catch(() => {});
+        ).catch((err) => console.error("[cron] SMS review reminder error:", err));
         smsReviewReminders++;
       } catch (err) {
         results.errors.push(`SMS review reminder for booking ${booking.id}: ${err}`);
@@ -1046,7 +1160,7 @@ export async function GET(req: NextRequest) {
         console.log(`[cron/reminders] deactivated incomplete photographer ${p.name} (${p.email})`);
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`🚫 <b>Photographer Deactivated</b>\n\n${p.name} (${p.email})\nReason: Profile not completed within 7 days`);
-        }).catch(() => {});
+        }).catch((err) => console.error("[cron] telegram deactivation error:", err));
       } catch (err) {
         results.errors.push(`Checklist deactivation for ${p.email}: ${err}`);
       }
@@ -1102,8 +1216,8 @@ export async function GET(req: NextRequest) {
          AND u.created_at > NOW() - INTERVAL '48 hours'
          AND u.created_at < NOW() - INTERVAL '4 hours'
          AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.client_id = u.id)
-         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still thinking%')
-         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still looking%')
+         AND NOT EXISTS (SELECT 1 FROM notification_logs nl WHERE nl.recipient = u.email AND nl.event LIKE '%Still thinking%')
+         AND NOT EXISTS (SELECT 1 FROM notification_logs nl WHERE nl.recipient = u.email AND nl.event LIKE '%Still looking%')
          AND vs.pageviews::text LIKE '%/book/%'
        ORDER BY u.created_at DESC
        LIMIT 10`
@@ -1148,9 +1262,9 @@ export async function GET(req: NextRequest) {
          AND u.created_at > NOW() - INTERVAL '48 hours'
          AND u.created_at < NOW() - INTERVAL '4 hours'
          AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.client_id = u.id)
-         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still thinking%')
-         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Still looking%')
-         AND NOT EXISTS (SELECT 1 FROM notification_log nl WHERE nl.recipient = u.email AND nl.subject LIKE '%Need help finding%')
+         AND NOT EXISTS (SELECT 1 FROM notification_logs nl WHERE nl.recipient = u.email AND nl.event LIKE '%Still thinking%')
+         AND NOT EXISTS (SELECT 1 FROM notification_logs nl WHERE nl.recipient = u.email AND nl.event LIKE '%Still looking%')
+         AND NOT EXISTS (SELECT 1 FROM notification_logs nl WHERE nl.recipient = u.email AND nl.event LIKE '%Need help finding%')
        LIMIT 10`
     );
     for (const c of nudgeClients) {
@@ -1161,7 +1275,36 @@ export async function GET(req: NextRequest) {
     results.errors.push(`No-booking nudges: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges });
+  // === New client admin notifications (delayed from OAuth to avoid photographer duplicates) ===
+  let newClientNotifications = 0;
+  try {
+    // Find clients created 3-10 min ago via Google OAuth who haven't been notified yet
+    // By this time, photographers have already gone through set-role and changed their role
+    const newClients = await query<{ id: string; name: string; email: string }>(
+      `SELECT u.id, u.name, u.email FROM users u
+       WHERE u.role = 'client'
+         AND u.google_id IS NOT NULL
+         AND u.created_at > NOW() - INTERVAL '10 minutes'
+         AND u.created_at < NOW() - INTERVAL '3 minutes'
+         AND u.admin_notified IS NOT TRUE
+         AND NOT EXISTS (SELECT 1 FROM photographer_profiles pp WHERE pp.user_id = u.id)
+       LIMIT 20`
+    );
+    for (const c of newClients) {
+      try {
+        const { sendAdminNewClientNotification } = await import("@/lib/email");
+        const { sendTelegram } = await import("@/lib/telegram");
+        await sendAdminNewClientNotification(c.name || "Unknown", c.email);
+        await sendTelegram(`👤 <b>New Client (Google)</b>\n\n<b>Name:</b> ${c.name || "Unknown"}\n<b>Email:</b> ${c.email}`);
+        await query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [c.id]);
+        newClientNotifications++;
+      } catch {}
+    }
+  } catch (err) {
+    results.errors.push(`New client notifications: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders });
 
   return NextResponse.json({
     success: true,
@@ -1175,6 +1318,7 @@ export async function GET(req: NextRequest) {
     smsReviewReminders,
     abandonedBookingEmails,
     noBookingNudges,
+    newClientNotifications,
   });
 
 }

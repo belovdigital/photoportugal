@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
     [profile.id]
   );
   const count = parseInt((items[0] as { count: string }).count);
-  const limits: Record<string, number> = { free: 10, pro: 30, premium: 100 };
-  const limit = limits[profile.plan] || 10;
+  const limits: Record<string, number> = { free: 100, pro: 100, premium: 100 };
+  const limit = limits[profile.plan] || 100;
 
   if (count >= limit) {
     return NextResponse.json(
@@ -129,11 +129,20 @@ export async function POST(req: NextRequest) {
     const locationSlug = (formData.get("location_slug") as string) || null;
     const shootType = (formData.get("shoot_type") as string) || null;
 
-    const item = await queryOne<{ id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number }>(
-      `INSERT INTO portfolio_items (photographer_id, type, url, thumbnail_url, location_slug, shoot_type, sort_order)
-       VALUES ($1, 'photo', $2, $3, $4, $5, $6)
-       RETURNING id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order`,
-      [profile.id, url, thumbnailUrl, locationSlug, shootType, count]
+    // Get image dimensions for aspect-ratio (prevents layout shift)
+    let imgWidth: number | null = null;
+    let imgHeight: number | null = null;
+    try {
+      const meta = await sharp(buffer).metadata();
+      imgWidth = meta.width || null;
+      imgHeight = meta.height || null;
+    } catch {}
+
+    const item = await queryOne<{ id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number; width: number | null; height: number | null }>(
+      `INSERT INTO portfolio_items (photographer_id, type, url, thumbnail_url, location_slug, shoot_type, sort_order, width, height)
+       VALUES ($1, 'photo', $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order, width, height`,
+      [profile.id, url, thumbnailUrl, locationSlug, shootType, count, imgWidth, imgHeight]
     );
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});

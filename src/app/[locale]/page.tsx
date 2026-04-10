@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description: `Hire a professional vacation photographer in Portugal. ${photographerCount}+ photographers in Lisbon, Porto, Algarve, Sintra & ${locations.length - 4}+ locations. ${reviewText}Couples, families & solo travelers. From €${minPrice}.`,
     alternates: localeAlternates("/", locale),
     openGraph: {
-      title: "Vacation Photographer Portugal — Hire & Book Online | Photo Portugal",
+      title: "Vacation Photographer Portugal — Hire & Book Online",
       description: `${photographerCount}+ professional photographers in Portugal. ${reviewText}From €${minPrice}.`,
       url: base,
       images: [{ url: `${base}/og-image.png`, width: 1200, height: 630 }],
@@ -232,9 +232,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {t("heroDescription")}
               </p>
 
-              {/* Search */}
-              <div className="mt-8">
-                <HeroSearchBar locations={locations.map(l => ({ slug: l.slug, name: l.name }))} />
+              {/* CTA buttons */}
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href="/find-photographer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-7 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                  {t("heroMatch")}
+                </Link>
+                <Link href="/photographers" className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-7 py-4 text-base font-semibold text-gray-700 shadow-sm transition hover:border-primary-300 hover:shadow-md">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  {t("heroBrowse")}
+                </Link>
               </div>
 
               {/* Social proof row */}
@@ -428,16 +435,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
-              href="/photographers"
+              href="/choose-booking-type"
               className="rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
             >
               {t("cta.browsePhotographers")}
             </Link>
             <Link
-              href="/for-photographers/join"
+              href="/find-photographer"
               className="rounded-xl border-2 border-white/20 px-8 py-4 text-base font-semibold text-white transition hover:border-white/40 hover:bg-white/5"
             >
-              {t("cta.joinAsPhotographer")}
+              {t("cta.findMePhotographer")}
             </Link>
           </div>
         </div>

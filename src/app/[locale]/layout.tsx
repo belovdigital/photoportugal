@@ -9,7 +9,8 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 import { VisitorTracker } from "@/components/ui/VisitorTracker";
-import { IntercomWidget } from "@/components/ui/IntercomWidget";
+import { LazyIntercom } from "@/components/ui/LazyIntercom";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 
 type Locale = "en" | "pt";
 
@@ -41,10 +42,11 @@ export default async function LocaleLayout({
           <main className="flex-1 pb-16 sm:pb-24">{children}</main>
           <Footer />
         </NotificationProvider>
+        <ScrollToTop />
         <CookieConsent />
         <VisitorTracker />
         <GoogleAnalytics />
-        <IntercomWidget />
+        <LazyIntercom />
       </SessionProvider>
     </NextIntlClientProvider>
   );

@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
+import { locations } from "@/lib/locations-data";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -53,7 +54,7 @@ export default async function FAQPage({
 
   const faqs = FAQ_KEYS.map((key) => ({
     question: t(`questions.${key}.question`),
-    answer: t(`questions.${key}.answer`),
+    answer: t(`questions.${key}.answer`, { locationCount: locations.length }),
   }));
 
   const jsonLd = {
@@ -111,7 +112,7 @@ export default async function FAQPage({
                 </svg>
               </summary>
               <div className="px-6 pb-5">
-                <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                <p className="text-gray-600 leading-relaxed [&_a]:text-primary-600 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-primary-700" dangerouslySetInnerHTML={{ __html: faq.answer }} />
               </div>
             </details>
           ))}

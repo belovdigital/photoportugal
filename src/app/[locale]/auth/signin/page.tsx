@@ -56,6 +56,12 @@ function SignInForm() {
           <p className="mt-2 text-gray-500">
             {t("subtitle")}
           </p>
+          <p className="mt-3 text-sm text-gray-500">
+            {t("noAccount")}{" "}
+            <Link href="/auth/signup" className="font-semibold text-primary-600 hover:text-primary-700">
+              {tc("signUp")}
+            </Link>
+          </p>
         </div>
 
         <div className="mt-8 rounded-2xl border border-warm-200 bg-white p-8 shadow-sm">

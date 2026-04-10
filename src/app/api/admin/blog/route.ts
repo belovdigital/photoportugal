@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
       created_at: string;
       updated_at: string;
     }>(
-      "SELECT id, slug, title, excerpt, cover_image_url, author, is_published, published_at, created_at, updated_at FROM blog_posts ORDER BY created_at DESC"
+      "SELECT id, slug, title, excerpt, cover_image_url, author, is_published, published_at, created_at, updated_at, locale FROM blog_posts ORDER BY created_at DESC"
     );
 
     return NextResponse.json(posts);

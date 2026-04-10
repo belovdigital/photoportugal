@@ -146,6 +146,16 @@ export function PhotographerCatalog({
         <p className="mt-1 text-sm text-gray-400">{t("trustLine")}</p>
       </div>
 
+      {/* Concierge banner */}
+      <a href="/find-photographer" className="mt-6 inline-flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-5 py-3 transition hover:bg-amber-50 hover:shadow-sm">
+        <span className="text-lg">✨</span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-800">{t("concierge.title")}</p>
+          <p className="text-xs text-gray-500">{t("concierge.desc")}</p>
+        </div>
+        <svg className="h-4 w-4 shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+      </a>
+
       {/* Filter bar */}
       <div className="mt-6 space-y-3">
         {/* Top row: Location + Language + Price + Sort */}

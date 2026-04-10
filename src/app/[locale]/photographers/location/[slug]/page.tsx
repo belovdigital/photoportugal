@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   if (!location) return {};
 
   const title = locale === "pt"
-    ? `Fotógrafos em ${location.name} — Reserve uma Sessão Fotográfica | Photo Portugal`
-    : `Photographers in ${location.name} — Book a Professional Photoshoot | Photo Portugal`;
+    ? `Fotógrafos em ${location.name} — Reserve uma Sessão Fotográfica`
+    : `Photographers in ${location.name} — Book a Professional Photoshoot`;
   const description = locale === "pt"
     ? `Encontre e reserve fotógrafos verificados em ${location.name}, Portugal. Veja portfólios, leia avaliações, compare pacotes. A partir de €150.`
     : `Find and book verified photographers in ${location.name}, Portugal. Browse portfolios, read reviews, compare packages. From €150. Instant booking.`;

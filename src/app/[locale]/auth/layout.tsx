@@ -9,6 +9,11 @@ export const metadata: Metadata = {
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (session?.user) {
+    const role = (session.user as { role?: string | null }).role;
+    if (!role) {
+      // Null role — let them through to choose-role (rendered under this layout)
+      return children;
+    }
     redirect("/dashboard");
   }
   return children;

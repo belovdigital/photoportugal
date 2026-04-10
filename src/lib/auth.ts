@@ -96,7 +96,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const firstName = nameParts[0] || "";
             const lastName = nameParts.slice(1).join(" ") || "";
             await query(
-              "INSERT INTO users (email, name, first_name, last_name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, $5, $6, 'client', TRUE)",
+              "INSERT INTO users (email, name, first_name, last_name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, $5, $6, NULL, TRUE)",
               [email, user.name, firstName, lastName, account.providerAccountId, user.image]
             );
             // Send welcome email immediately (user is created as client by default).
@@ -108,15 +108,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (newUser) {
               query("INSERT INTO notification_preferences (user_id) VALUES ($1) ON CONFLICT DO NOTHING", [newUser.id]).catch(() => {});
             }
-            sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
-              console.error("[auth] Failed to send welcome email:", err)
-            );
-            import("@/lib/email").then(({ sendAdminNewClientNotification }) => {
-              sendAdminNewClientNotification(user.name || "Unknown", email).catch(() => {});
-            }).catch(() => {});
-            import("@/lib/telegram").then(({ sendTelegram }) => {
-              sendTelegram(`👤 <b>New Client (Google)</b>\n\n<b>Name:</b> ${user.name || "Unknown"}\n<b>Email:</b> ${email}`);
-            }).catch(() => {});
+            // Welcome email + admin notifications are sent from set-role endpoint
+            // after the user picks their role, to avoid duplicate notifications
+            // when someone registers as photographer (created as client first, then role changed).
           }
         } catch (error) {
           console.error("[auth] Google signIn DB error:", error);
@@ -128,7 +122,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         try {
-          const dbUser = await queryOne<{ id: string; role: string; is_banned: boolean }>(
+          const dbUser = await queryOne<{ id: string; role: string | null; is_banned: boolean }>(
             "SELECT id, role, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE email = $1",
             [user.email!]
           );
@@ -138,18 +132,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         } catch (error) {
           console.error("[auth] jwt DB error:", error);
-          token.role = "client";
+          token.role = null;
         }
       }
-      // Always verify user still exists and isn't banned
+      // Always verify user still exists, isn't banned, and sync role from DB
       if (token.id) {
         try {
-          const exists = await queryOne<{ id: string; is_banned: boolean }>(
-            "SELECT id, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE id = $1",
+          const exists = await queryOne<{ id: string; role: string | null; is_banned: boolean }>(
+            "SELECT id, role, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE id = $1",
             [token.id as string]
           );
           if (!exists || exists.is_banned) {
             return { ...token, expired: true };
+          }
+          // Keep role in sync with DB (handles admin role changes)
+          if (exists.role && exists.role !== token.role) {
+            token.role = exists.role;
           }
         } catch {}
       }
@@ -163,7 +161,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return { ...session, user: undefined } as unknown as typeof session;
       }
       if (session.user) {
-        (session.user as { role?: string }).role = token.role as string;
+        (session.user as { role?: string | null }).role = token.role as string | null;
         (session.user as { id?: string }).id = token.id as string;
       }
       return session;

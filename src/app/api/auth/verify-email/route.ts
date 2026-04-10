@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { queryOne } from "@/lib/db";
+import { query, queryOne } from "@/lib/db";
 import { sendWelcomeEmail, sendAdminNewPhotographerNotification, sendAdminNewClientNotification } from "@/lib/email";
 
 export async function GET(req: NextRequest) {
@@ -36,26 +36,28 @@ export async function GET(req: NextRequest) {
       [user.id]
     );
 
-    // Send welcome email after verification
-    sendWelcomeEmail(user.email, user.name, user.role as "client" | "photographer").catch((err) =>
-      console.error("[verify-email] Failed to send welcome email:", err)
-    );
-
-    // Notify admin about new user
-    if (user.role === "photographer") {
-      sendAdminNewPhotographerNotification(user.name, user.email).catch((err) =>
-        console.error("[verify-email] Failed to send admin notification:", err)
+    // Send welcome email + admin notification for email sign ups
+    // (Google sign ups are handled in set-role endpoint)
+    if (!user.email_verified) {
+      sendWelcomeEmail(user.email, user.name, user.role as "client" | "photographer").catch((err) =>
+        console.error("[verify-email] Failed to send welcome email:", err)
       );
-      import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`);
-      }).catch(() => {});
-    } else {
-      sendAdminNewClientNotification(user.name, user.email).catch((err) =>
-        console.error("[verify-email] Failed to send admin client notification:", err)
-      );
-      import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}`);
-      }).catch(() => {});
+      if (user.role === "photographer") {
+        sendAdminNewPhotographerNotification(user.name, user.email).catch((err) =>
+          console.error("[verify-email] Failed to send admin notification:", err)
+        );
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`);
+        }).catch((err) => console.error("[verify-email] telegram error:", err));
+      } else {
+        sendAdminNewClientNotification(user.name, user.email).catch((err) =>
+          console.error("[verify-email] Failed to send admin notification:", err)
+        );
+        import("@/lib/telegram").then(({ sendTelegram }) => {
+          sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}`);
+        }).catch((err) => console.error("[verify-email] telegram error:", err));
+      }
+      query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch(() => {});
     }
 
     // If from mobile app, redirect to deep link

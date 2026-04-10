@@ -24,9 +24,9 @@ function SignUpForm() {
   const [loading, setLoading] = useState(false);
 
   async function handleGoogleSignUp() {
-    // Pass role via callbackUrl — will be handled after redirect
+    const redirectAfter = searchParams.get("callbackUrl") || "/dashboard";
     signIn("google", {
-      callbackUrl: `/api/auth/set-role?role=${role}&redirect=/dashboard`,
+      callbackUrl: `/api/auth/set-role?role=${role}&redirect=${encodeURIComponent(redirectAfter)}`,
     });
   }
 

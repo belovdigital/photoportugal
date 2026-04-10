@@ -39,10 +39,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/for-photographers/join", changeFrequency: "daily" as const, priority: 0.9 },
     { path: "/photoshoots", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/blog", changeFrequency: "weekly" as const, priority: 0.8 },
+    { path: "/find-photographer", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/contact", changeFrequency: "monthly" as const, priority: 0.4 },
     { path: "/support", changeFrequency: "monthly" as const, priority: 0.5 },
-    { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.2 },
-    { path: "/terms", changeFrequency: "yearly" as const, priority: 0.2 },
   ].flatMap((p) => localized(p.path, { lastModified: now, changeFrequency: p.changeFrequency, priority: p.priority }));
 
   const locationPages = locations.flatMap((loc) =>
@@ -98,5 +97,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localized(`/photographers/location/${loc.slug}`, { lastModified: now, changeFrequency: "weekly", priority: 0.85 })
   );
 
-  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...photographerLocationPages, ...photographerPages, ...blogPages];
+  const blogCategories = [
+    "locations", "pricing", "elopements", "weddings", "couples",
+    "family", "planning", "proposals", "solo", "comparisons",
+  ];
+  const blogCategoryPages = blogCategories.flatMap((cat) =>
+    localized(`/blog/category/${cat}`, { lastModified: now, changeFrequency: "weekly", priority: 0.7 })
+  );
+
+  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...photographerLocationPages, ...photographerPages, ...blogPages, ...blogCategoryPages];
 }

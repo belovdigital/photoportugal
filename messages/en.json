@@ -72,7 +72,16 @@
     "forPhotographers": "For Photographers",
     "locations": "Locations",
     "photographers": "Photographers",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "savedPhotographers": "Saved Photographers",
+    "noSavedPhotographers": "No saved photographers yet",
+    "noSavedPhotographersHint": "Browse photographers and tap the heart to save your favorites",
+    "photographersSaved": "{count, plural, one {# photographer} other {# photographers}} saved",
+    "removeFromWishlist": "Remove from wishlist",
+    "saveToWishlist": "Save to wishlist",
+    "selectDate": "Select date",
+    "unavailable": "Unavailable",
+    "today": "Today"
   },
   "nav": {
     "announcement": "Professional vacation photography",
@@ -104,6 +113,7 @@
     "pricingPlans": "Pricing Plans",
     "learnMore": "Learn More",
     "bookPhotoshoot": "Book a Photoshoot",
+    "findMePhotographer": "Find Me a Photographer",
     "findPhotographers": "Find Photographers",
     "allDestinations": "All Destinations",
     "dashboard": "Dashboard",
@@ -131,6 +141,8 @@
     "megaTrustQuality": "Trust & Quality",
     "megaCompany": "Company",
     "megaBrowseDesc": "Browse photographers by location, style & availability",
+    "findMePhotographer": "Help Me Choose",
+    "megaMatchDesc": "We'll hand-pick the perfect photographer for you",
     "megaAboutDesc": "Our story and the team behind Photo Portugal",
     "megaContactDesc": "Get in touch with our team",
     "megaHelpDesc": "Guides, tutorials, and support articles",
@@ -173,13 +185,16 @@
     "legalEntityVat": "IVA exempt — Art. 53.º CIVA",
     "legalEntityLocation": "Lisbon, Portugal",
     "appTitle": "Take Photo Portugal with you",
-    "appSubtitle": "Browse photographers, book sessions, and manage everything from your phone."
+    "appSubtitle": "Browse photographers, book sessions, and manage everything from your phone.",
+    "soon": "Soon"
   },
   "home": {
     "trustBadge": "Trusted by {count}+ happy travelers",
     "heroTitle": "Book a Vacation Photographer in",
     "heroTitleHighlight": "Portugal",
     "heroDescription": "Choose from our hand-picked network of professional photographers who know Portugal's most breathtaking spots. Every photographer is personally vetted for quality, reliability, and style.",
+    "heroBrowse": "Browse Photographers",
+    "heroMatch": "Help Me Choose",
     "socialProof": {
       "handPicked": "Hand-picked photographers",
       "verifiedReviews": "Verified reviews",
@@ -411,6 +426,7 @@
         }
       },
       "joinAsPhotographer": "Join as a Photographer",
+      "findMePhotographer": "Not Sure? We'll Match You",
       "faq": {
         "title": "Frequently Asked Questions",
         "howFarInAdvance": {
@@ -445,15 +461,15 @@
     "questions": {
       "howDoesItWork": {
         "question": "How does Photo Portugal work?",
-        "answer": "Browse our curated selection of professional photographers across Portugal. View their portfolios, read verified reviews, and book a photoshoot directly through our platform. Learn more on our How It Works page."
+        "answer": "Browse our curated selection of <a href=\"/photographers\">professional photographers</a> across Portugal. View their portfolios, read verified reviews, and book a photoshoot directly through our platform. Learn more on our <a href=\"/how-it-works\">How It Works</a> page."
       },
       "cost": {
         "question": "How much does a photoshoot cost?",
-        "answer": "Prices vary by photographer and package, typically ranging from €120 for a 30-minute quick session to €500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page. See our pricing page for an overview."
+        "answer": "Prices vary by photographer and package, typically ranging from €120 for a 30-minute quick session to €500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page. See our <a href=\"/for-photographers/pricing\">pricing page</a> for an overview."
       },
       "howToBook": {
         "question": "How do I book a photographer?",
-        "answer": "Find a photographer you like, choose a package, select your preferred date and time, and send a booking request. The photographer will review your request and confirm within 24 hours. Your payment is collected at booking and held securely until your photos are delivered."
+        "answer": "<a href=\"/photographers\">Find a photographer</a> you like, choose a package, select your preferred date and time, and send a booking request. The photographer will review your request and confirm within 24 hours. Your payment is collected at booking and held securely until your photos are delivered."
       },
       "paymentSecure": {
         "question": "How does payment work? Is it secure?",
@@ -461,7 +477,7 @@
       },
       "cancelBooking": {
         "question": "Can I cancel my booking?",
-        "answer": "Yes, you can cancel through your dashboard. Cancellation 7+ days before the shoot gives you a full refund. Between 3–7 days: 50% refund. Less than 3 days: no refund (the photographer reserved their time for you). See our Terms of Service for full details."
+        "answer": "Yes, you can cancel through your <a href=\"/dashboard/bookings\">dashboard</a>. Cancellation 7+ days before the shoot gives you a full refund. Between 3–7 days: 50% refund. Less than 3 days: no refund (the photographer reserved their time for you). See our <a href=\"/terms\">Terms of Service</a> for full details."
       },
       "reschedule": {
         "question": "Can I reschedule my booking?",
@@ -477,7 +493,7 @@
       },
       "notHappy": {
         "question": "What if I'm not happy with the photos?",
-        "answer": "You have 7 days after delivery to accept your photos or open a dispute. Valid reasons for a dispute include: significantly fewer photos than promised, wrong location, severe technical issues, or photographer no-show. We'll work with both parties to find a fair resolution — reshoot, partial refund, or full refund. Note that subjective style preferences are not grounds for a refund, so review portfolios carefully before booking. See our Terms of Service for details."
+        "answer": "You have 7 days after delivery to accept your photos or open a dispute. Valid reasons for a dispute include: significantly fewer photos than promised, wrong location, severe technical issues, or photographer no-show. We'll work with both parties to find a fair resolution — reshoot, partial refund, or full refund. Note that subjective style preferences are not grounds for a refund, so review portfolios carefully before booking. See our <a href=\"/terms\">Terms of Service</a> for details."
       },
       "galleryAccess": {
         "question": "How long can I access my photo gallery?",
@@ -493,23 +509,23 @@
       },
       "locationsAvailable": {
         "question": "What locations are available?",
-        "answer": "We cover 25+ locations across Portugal, including Lisbon, Porto, Algarve, Sintra, Madeira, Azores, and many more."
+        "answer": "We cover {locationCount}+ locations across Portugal, including <a href=\"/photographers/location/lisbon\">Lisbon</a>, <a href=\"/photographers/location/porto\">Porto</a>, <a href=\"/photographers/location/algarve\">Algarve</a>, <a href=\"/photographers/location/sintra\">Sintra</a>, <a href=\"/photographers/location/madeira\">Madeira</a>, <a href=\"/photographers/location/azores\">Azores</a>, and many more."
       },
       "speakEnglish": {
         "question": "Do photographers speak English?",
-        "answer": "Most photographers on our platform speak English. You can filter photographers by language on the catalog page. Many also speak Portuguese, Spanish, French, and German."
+        "answer": "Most photographers on our platform speak English. You can filter photographers by language on the <a href=\"/photographers\">catalog page</a>. Many also speak Portuguese, Spanish, French, and German."
       },
       "becomePhotographer": {
         "question": "How do I become a photographer on Photo Portugal?",
-        "answer": "Click 'Join as Photographer' and create your account. Set up your profile, upload portfolio photos, create packages, and start receiving booking requests. We offer Free, Pro, and Premium plans with different features and commission rates."
+        "answer": "Click '<a href=\"/for-photographers/join\">Join as Photographer</a>' and create your account. Set up your profile, upload portfolio photos, create packages, and start receiving booking requests. We offer Free, Pro, and Premium plans with different features and commission rates."
       },
       "photographerPlans": {
         "question": "What are the photographer plans?",
-        "answer": "We offer three plans: Free (20% commission, 1 location, 10 portfolio photos), Pro at €29/month (15% commission, 5 locations, 30 portfolio photos), and Premium at €59/month (10% commission, all locations, up to 100 portfolio photos, custom profile URL, priority support). Visit our pricing page for a full comparison."
+        "answer": "We offer three plans: Free (20% commission, 1 location), Pro at €29/month (15% commission, 5 locations), and Premium at €59/month (10% commission, all locations, custom profile URL, priority support). All plans include up to 100 portfolio photos. Visit our <a href=\"/for-photographers/pricing\">pricing page</a> for a full comparison."
       },
       "earlyBird": {
         "question": "What is the Early Bird program?",
-        "answer": "We're offering exclusive benefits to our first photographers. The first 10 photographers (Founding tier) get the Premium plan free forever with an exclusive \"Founding Photographer\" badge. The next 50 get Premium free for 6 months, and the next 100 get Pro free for 3 months. Spots are limited and first-come-first-served. Check available spots."
+        "answer": "We're offering exclusive benefits to our first photographers. The first 10 photographers (Founding tier) get the Premium plan free forever with an exclusive \"Founding Photographer\" badge. The next 25 get Premium free for 6 months, and the next 50 get Pro free for 3 months. Spots are limited and first-come-first-served. <a href=\"/for-photographers/join\">Check available spots</a>."
       },
       "clientNoShow": {
         "question": "What happens if I don't show up to my photoshoot?",
@@ -625,7 +641,7 @@
         "name": "Free",
         "description": "Get started and test the platform",
         "features": {
-          "portfolioPhotos": "Up to 10 portfolio photos",
+          "portfolioPhotos": "Up to 100 portfolio photos",
           "locations": "1 location",
           "searchVisibility": "Basic search visibility",
           "commission": "{rate}% platform commission",
@@ -637,7 +653,7 @@
         "name": "Pro",
         "description": "For photographers ready to grow their business",
         "features": {
-          "portfolioPhotos": "Up to 30 portfolio photos",
+          "portfolioPhotos": "Up to 100 portfolio photos",
           "locations": "5 locations",
           "searchRanking": "Priority search ranking",
           "analytics": "Profile analytics",
@@ -922,6 +938,10 @@
     "available": "{count} hand-picked photographer",
     "availablePlural": "{count} hand-picked photographers",
     "trustLine": "Every photographer is personally vetted and approved by our team",
+    "concierge": {
+      "title": "Need help choosing? Let us match you!",
+      "desc": "Tell us your preferences and our team will hand-pick 2-3 photographers perfect for you — free of charge."
+    },
     "noMatch": "No photographers match your filters.",
     "noMatchSuggestion": "Try adjusting your location, shoot type, or language filters to see more photographers.",
     "filters": {
@@ -1045,6 +1065,29 @@
     "noPosts": "No blog posts yet. Check back soon!",
     "readMore": "Read more"
   },
+  "blogCategories": {
+    "all": "All Posts",
+    "locations": "Photo Locations",
+    "pricing": "Pricing Guides",
+    "elopements": "Elopements",
+    "weddings": "Weddings",
+    "couples": "Couples",
+    "family": "Family",
+    "planning": "Planning & Tips",
+    "proposals": "Proposals",
+    "solo": "Solo & Creators",
+    "comparisons": "Comparisons",
+    "locationsDesc": "Discover the best photo spots and location guides across Portugal",
+    "pricingDesc": "How much photoshoots cost in Portugal — transparent pricing breakdowns",
+    "elopementsDesc": "Everything you need to know about eloping in Portugal",
+    "weddingsDesc": "Destination wedding photography guides for Portugal",
+    "couplesDesc": "Romantic couples photoshoot ideas and inspiration in Portugal",
+    "familyDesc": "Family photoshoot tips, locations, and ideas across Portugal",
+    "planningDesc": "What to wear, when to shoot, and how to plan your Portugal photoshoot",
+    "proposalsDesc": "Plan the perfect surprise proposal in Portugal",
+    "soloDesc": "Solo travel and content creator photography in Portugal",
+    "comparisonsDesc": "How Photo Portugal compares to other vacation photography services"
+  },
   "book": {
     "title": "Book {photographer}",
     "subtitle": "Fill in the details for your photoshoot request",
@@ -1116,6 +1159,68 @@
       "serviceFee": "Service fee ({rate}%)",
       "total": "Total"
     }
+  },
+  "chooseBookingType": {
+    "metaTitle": "Book a Photoshoot in Portugal",
+    "metaDescription": "Choose how to book your photographer — browse and choose yourself, or let our concierge team find the perfect match for you.",
+    "title": "How Would You Like to Book?",
+    "subtitle": "Two ways to find your perfect photographer in Portugal.",
+    "browseTitle": "I'll Choose Myself",
+    "browseDesc": "Browse photographer portfolios, compare prices and reviews, and book directly.",
+    "matchTitle": "Find Me the Perfect Match",
+    "matchDesc": "Tell us about your dream photoshoot and we'll hand-pick 2-3 photographers for you — free of charge.",
+    "browseCta": "Browse",
+    "matchCta": "Get started"
+  },
+  "chooseRole": {
+    "title": "Welcome to Photo Portugal!",
+    "subtitle": "Tell us who you are so we can personalize your experience.",
+    "tourist": "I'm a Traveler",
+    "touristDesc": "Looking for a photographer to capture my trip to Portugal.",
+    "photographer": "I'm a Photographer",
+    "photographerDesc": "I want to offer photoshoots and grow my business."
+  },
+  "findPhotographer": {
+    "metaTitle": "Find Me a Photographer in Portugal",
+    "metaDescription": "Tell us about your photoshoot and we'll match you with 2-3 hand-picked photographers in Portugal. Free concierge matching service.",
+    "title": "Find Me a Photographer",
+    "subtitle": "Tell us about your dream photoshoot and we'll hand-pick 2-3 photographers just for you — free of charge.",
+    "nameLabel": "Your Name",
+    "namePlaceholder": "Full name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your@email.com",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "+1 234 567 890",
+    "locationLabel": "Where in Portugal?",
+    "locationPlaceholder": "Select a location",
+    "shootTypeLabel": "Type of Photoshoot",
+    "shootTypePlaceholder": "Select shoot type",
+    "dateLabel": "Preferred Date",
+    "dateFlexible": "I'm flexible on dates",
+    "dateFromLabel": "Earliest date",
+    "dateToLabel": "Latest date",
+    "timeLabel": "Preferred Time",
+    "groupSizeLabel": "Group Size",
+    "budgetLabel": "Budget Range",
+    "budgetPlaceholder": "Select your budget",
+    "budget150": "€150 – €299",
+    "budget300": "€300 – €599",
+    "budget600": "€600+",
+    "messageLabel": "Special Requests or Details",
+    "messagePlaceholder": "Tell us about your vision, special moments you want captured, any preferences...",
+    "submit": "Find My Photographer",
+    "submitting": "Submitting...",
+    "error": "Something went wrong. Please try again.",
+    "successTitle": "Request Received!",
+    "successMessage": "Thank you! We'll get back to you within 2 hours with personalized photographer recommendations.",
+    "successBrowse": "Browse Photographers",
+    "howItWorksTitle": "How It Works",
+    "step1Title": "Tell us your preferences",
+    "step1Desc": "Fill in the form with your location, dates, and style.",
+    "step2Title": "We hand-pick your matches",
+    "step2Desc": "Our team reviews your request and selects 2-3 photographers perfect for you.",
+    "step3Title": "You choose and book",
+    "step3Desc": "Review your matches, check their portfolios, and book directly."
   },
   "auth": {
     "error": {
@@ -1638,6 +1743,7 @@
     "upgrade": "Upgrade",
     "sidebarOverview": "Overview",
     "sidebarBookings": "Bookings",
+    "sidebarMatchRequests": "My Matches",
     "sidebarMessages": "Messages",
     "sidebarProfile": "Profile",
     "sidebarPortfolio": "Portfolio",
@@ -1649,6 +1755,24 @@
     "sidebarSupport": "Support",
     "needHelp": "Need help?",
     "helpCenterLink": "Visit our Help Center"
+  },
+  "matchRequests": {
+    "title": "My Matches",
+    "noRequests": "No match requests yet",
+    "noRequestsDesc": "Let our concierge team find the perfect photographer for you.",
+    "findPhotographer": "Find Me a Photographer",
+    "flexibleDates": "Flexible dates",
+    "person": "person",
+    "people": "people",
+    "statusBooked": "Booked",
+    "statusAwaiting": "Awaiting your choice",
+    "teamNote": "A Note From Our Team",
+    "selected": "Selected",
+    "viewPortfolio": "View Portfolio",
+    "booking": "Booking...",
+    "choose": "Choose",
+    "error": "Something went wrong. Please try again.",
+    "inLocation": "in"
   },
   "photographerDashboard": {
     "title": "Photographer Dashboard",
@@ -1795,7 +1919,14 @@
     "uploadingCover": "Uploading cover...",
     "coverUploaded": "Cover uploaded! Drag the image up or down to adjust the visible area.",
     "coverPositionSaved": "Cover position saved!",
-    "failedToSavePosition": "Failed to save position"
+    "failedToSavePosition": "Failed to save position",
+    "highlightedOnProfile": "Highlighted on your profile",
+    "showOnProfile": "Show on profile",
+    "visibleToEveryone": "Visible to everyone",
+    "privateOnlyViaLink": "Private — only via link or messages",
+    "privateBadge": "Private",
+    "editTooltip": "Edit",
+    "deleteTooltip": "Delete"
   },
   "subscriptions": {
     "title": "Subscriptions",
@@ -1871,9 +2002,10 @@
     "planFree": "Free",
     "planPro": "Pro",
     "planPremium": "Premium",
-    "feat10Photos": "10 portfolio photos",
-    "feat30Photos": "30 portfolio photos",
-    "featUnlimitedPhotos": "100 portfolio photos",
+    "feat10Photos": "Up to 100 portfolio photos",
+    "feat30Photos": "Up to 100 portfolio photos",
+    "feat100Photos": "Up to 100 portfolio photos",
+    "featUnlimitedPhotos": "Up to 100 portfolio photos",
     "feat1Location": "1 location",
     "feat5Locations": "5 locations",
     "featAllLocations": "All locations",
@@ -1984,7 +2116,7 @@
         },
         "subscriptionPlans": {
           "question": "What subscription plans are available?",
-          "answer": "We offer three plans:\n\n**Free** — No monthly fee, 20% commission per booking. Basic listing with up to 10 portfolio photos.\n\n**Pro** — 15% commission. Up to 30 portfolio photos, 10 packages, analytics dashboard, and priority support.\n\n**Premium** — 10% commission. Up to 100 portfolio photos and packages, custom profile URL, full analytics, and featured placement options.\n\nAll plans include Stripe payment processing, client messaging, and access to the booking system. Visit our pricing page for current plan prices."
+          "answer": "We offer three plans:\n\n**Free** — No monthly fee, 20% commission per booking. Basic listing with 1 location.\n\n**Pro** — 15% commission. 5 locations, 10 packages, analytics dashboard, and priority support.\n\n**Premium** — 10% commission. All locations, unlimited packages, custom profile URL, full analytics, and featured placement options.\n\nAll plans include up to 100 portfolio photos, Stripe payment processing, client messaging, and access to the booking system. Visit our pricing page for current plan prices."
         },
         "getPaid": {
           "question": "How and when do I get paid?",
@@ -2126,7 +2258,11 @@
     "previous": "Previous",
     "next": "Next",
     "acceptToUnlockFullRes": "Accept delivery to unlock full resolution & downloads",
-    "acceptToDownload": "Accept to download"
+    "acceptToDownload": "Accept to download",
+    "deletingProgress": "Deleting {current}/{total}",
+    "retryUpload": "Retry",
+    "galleryExpiredTitle": "Gallery Expired",
+    "galleryExpiredMessage": "This photo gallery has expired. Please contact your photographer to request a new link."
   },
   "availability": {
     "description": "Mark dates when you're unavailable for photoshoots. Clients will see that you're fully booked during these periods.",
@@ -2201,7 +2337,18 @@
     "noMessages": "No messages yet. Say hello!",
     "typePlaceholder": "Type a message...",
     "yesterday": "Yesterday",
-    "signInPrompt": "Sign in"
+    "signInPrompt": "Sign in",
+    "viewGallery": "View Gallery",
+    "packageLabel": "Package",
+    "bookNow": "Book Now",
+    "tapToOpen": "Tap to open",
+    "failedToSend": "Failed to send",
+    "retry": "Retry",
+    "sendPhoto": "Send photo",
+    "sharePackage": "Share package",
+    "shareAPackage": "Share a Package",
+    "noPackagesYet": "No packages yet",
+    "online": "Online"
   },
   "settings": {
     "title": "Settings",
@@ -2260,7 +2407,8 @@
     "deleting": "Deleting...",
     "deleteAccountFailed": "Failed to delete account. Please try again.",
     "cancel": "Cancel",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "contactSupport": "Contact support"
   },
   "bookings": {
     "bookingRequests": "Booking Requests",
@@ -2386,6 +2534,7 @@
     "addPhotosHint": "Share up to 5 photos from your session — max 10MB each",
     "selectPhotos": "Add photos",
     "somePhotosFailed": "{count} photo(s) failed to upload",
+    "alsoReviewOnGoogle": "Also review us on Google?",
     "videoReview": "Video Review",
     "video": {
       "title": "Video Review",

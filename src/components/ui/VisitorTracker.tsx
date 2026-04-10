@@ -50,19 +50,29 @@ export function VisitorTracker() {
       sessionStorage.setItem("vs_sid", sessionId);
       sessionStorage.setItem("vs_last", String(Date.now()));
 
-      // Capture UTM params from URL
+      // Capture UTM params and gclid from URL
       const params = new URLSearchParams(window.location.search);
       const utmSource = params.get("utm_source");
       const utmMedium = params.get("utm_medium");
       const utmCampaign = params.get("utm_campaign");
       const utmTerm = params.get("utm_term");
+      const gclid = params.get("gclid");
+
+      // If gclid present but no utm_source, auto-tag as Google Ads
+      const effectiveSource = utmSource || (gclid ? "google" : null);
+      const effectiveMedium = utmMedium || (gclid ? "cpc" : null);
 
       // Persist UTMs for signup forms
-      if (utmSource) {
-        sessionStorage.setItem("utm_source", utmSource);
-        if (utmMedium) sessionStorage.setItem("utm_medium", utmMedium);
+      if (effectiveSource) {
+        sessionStorage.setItem("utm_source", effectiveSource);
+        if (effectiveMedium) sessionStorage.setItem("utm_medium", effectiveMedium);
         if (utmCampaign) sessionStorage.setItem("utm_campaign", utmCampaign);
         if (utmTerm) sessionStorage.setItem("utm_term", utmTerm);
+      }
+
+      // Persist gclid for Google Ads offline conversion tracking
+      if (gclid) {
+        sessionStorage.setItem("gclid", gclid);
       }
 
       // Start new session
@@ -73,10 +83,11 @@ export function VisitorTracker() {
           visitor_id: visitorId,
           session_id: sessionId,
           referrer: document.referrer || null,
-          utm_source: utmSource || sessionStorage.getItem("utm_source") || null,
-          utm_medium: utmMedium || sessionStorage.getItem("utm_medium") || null,
+          utm_source: effectiveSource || sessionStorage.getItem("utm_source") || null,
+          utm_medium: effectiveMedium || sessionStorage.getItem("utm_medium") || null,
           utm_campaign: utmCampaign || sessionStorage.getItem("utm_campaign") || null,
           utm_term: utmTerm || sessionStorage.getItem("utm_term") || null,
+          gclid: gclid || sessionStorage.getItem("gclid") || null,
           landing_page: window.location.pathname,
           screen_width: window.innerWidth,
           language: navigator.language,
@@ -114,6 +125,28 @@ export function VisitorTracker() {
     lastPathRef.current = pathname;
     lastTimestampRef.current = Date.now();
   }, [pathname]);
+
+  // Send duration for current page on leave/hide
+  useEffect(() => {
+    const sendExitDuration = () => {
+      const sessionId = sessionStorage.getItem("vs_sid");
+      if (!sessionId || !lastPathRef.current) return;
+      const duration = Date.now() - lastTimestampRef.current;
+      if (duration < 1000) return; // ignore sub-second
+      const blob = new Blob(
+        [JSON.stringify({ session_id: sessionId, duration_ms: duration })],
+        { type: "application/json" }
+      );
+      navigator.sendBeacon("/api/track-session-duration", blob);
+    };
+
+    const handleVisChange = () => {
+      if (document.visibilityState === "hidden") sendExitDuration();
+    };
+
+    document.addEventListener("visibilitychange", handleVisChange);
+    return () => document.removeEventListener("visibilitychange", handleVisChange);
+  }, []);
 
   // Link visitor to user on login
   useEffect(() => {

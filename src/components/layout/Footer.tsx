@@ -32,6 +32,8 @@ export function Footer() {
             <img
               src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
               alt="Download on the App Store"
+              width={120}
+              height={40}
               className="h-[40px]"
             />
           </a>
@@ -39,9 +41,11 @@ export function Footer() {
             <img
               src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
               alt="Get it on Google Play"
+              width={155}
+              height={58}
               className="h-[58px] opacity-30 grayscale"
             />
-            <span className="absolute top-0 -right-1.5 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold text-white uppercase leading-none">Soon</span>
+            <span className="absolute top-0 -right-1.5 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold text-white uppercase leading-none">{t("soon")}</span>
           </div>
         </div>
       </div>

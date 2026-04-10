@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
-import { sendWhatsApp } from "@/lib/whatsapp";
+import { sendEmail, sendAdminNewInquiryNotification } from "@/lib/email";
+import { sendSMS } from "@/lib/sms";
 
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
@@ -100,10 +100,8 @@ export async function POST(req: NextRequest) {
 
       // SMS notification (for new inquiries only, to avoid spam on follow-up messages)
       if (isNewInquiry && recipient.phone && prefs?.sms_bookings !== false) {
-        sendWhatsApp(
+        sendSMS(
           recipient.phone,
-          "new_message",
-          [senderName],
           `Photo Portugal: New inquiry from ${senderName}. Log in to reply: ${BASE_URL}/dashboard/messages`
         ).catch(err => console.error("[inquiry] sms error:", err));
       }
@@ -114,13 +112,15 @@ export async function POST(req: NextRequest) {
           photographer.id,
           `💬 <b>${isNewInquiry ? "New Inquiry" : "New Message"}</b>\n\nFrom: <b>${senderName}</b>\n"${msgPreview}"\n\nReply in your dashboard.`
         )
-      ).catch(() => {});
+      ).catch((err) => console.error("[inquiries] telegram photographer error:", err));
 
-      // Admin Telegram (new inquiries only)
+      // Admin notifications (new inquiries only)
       if (isNewInquiry) {
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`💬 <b>New Inquiry</b>\n\n<b>Client:</b> ${senderName}\n<b>Photographer:</b> ${recipient!.name}\n\n"${msgPreview}"\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`);
-        }).catch(() => {});
+        }).catch((err) => console.error("[inquiries] telegram admin error:", err));
+        sendAdminNewInquiryNotification(senderName, recipient!.name, msgPreview)
+          .catch((err) => console.error("[inquiries] admin email error:", err));
       }
     }
 

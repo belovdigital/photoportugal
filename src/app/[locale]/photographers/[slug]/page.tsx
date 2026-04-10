@@ -73,11 +73,11 @@ async function getPhotographer(slug: string, isAdmin = false) {
       [profile.id]
     );
 
-    const planLimits: Record<string, number> = { free: 10, pro: 30, premium: 100 };
-    const photoLimit = planLimits[profile.plan] || 10;
+    const planLimits: Record<string, number> = { free: 100, pro: 100, premium: 100 };
+    const photoLimit = planLimits[profile.plan] || 100;
 
-    const portfolioItems = await query<{ url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }>(
-      "SELECT url, thumbnail_url, caption, location_slug, shoot_type FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC LIMIT $2",
+    const portfolioItems = await query<{ url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; width: number | null; height: number | null }>(
+      "SELECT url, thumbnail_url, caption, location_slug, shoot_type, width, height FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC LIMIT $2",
       [profile.id, photoLimit]
     );
 

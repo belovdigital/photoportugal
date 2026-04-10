@@ -82,26 +82,23 @@ export async function PUT(req: NextRequest) {
       phone = cleaned;
     }
 
-    // Block contact info in bio and tagline
+    // Block contact info in bio and tagline (less aggressive than message filter — no phone regex)
     const contactBlockMessage =
-      "Bio/tagline cannot contain links, email addresses, phone numbers, or social media handles. Please use your profile fields for contact information.";
-    if (bio?.trim()) {
-      const detected = detectContactInfo(bio);
-      if (detected) {
-        return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
-      }
-      // Additional checks: instagram/facebook mentions
-      if (/\b(instagram|facebook|whatsapp|tiktok|snapchat|twitter|linkedin)\b/i.test(bio)) {
-        return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
-      }
-    }
-    if (tagline?.trim()) {
-      const detected = detectContactInfo(tagline);
-      if (detected) {
-        return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
-      }
-      if (/\b(instagram|facebook|whatsapp|tiktok|snapchat|twitter|linkedin)\b/i.test(tagline)) {
-        return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
+      "Bio/tagline cannot contain links, email addresses, or social media handles. Please use your profile fields for contact information.";
+    const bioBlockPatterns = [
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i, // email
+      /https?:\/\/[^\s]+/i, // URL
+      /www\.[^\s]+/i, // www link
+      /@[a-zA-Z0-9_]{3,}(?:\s|$)/i, // @handle
+      /\b(instagram|facebook|whatsapp|tiktok|snapchat|twitter|linkedin|telegram)\b/i, // social platforms
+    ];
+    for (const field of [{ name: "bio", value: bio }, { name: "tagline", value: tagline }]) {
+      if (field.value?.trim()) {
+        for (const pattern of bioBlockPatterns) {
+          if (pattern.test(field.value)) {
+            return NextResponse.json({ error: contactBlockMessage }, { status: 400 });
+          }
+        }
       }
     }
 

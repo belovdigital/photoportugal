@@ -127,6 +127,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         utm_medium: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_medium") || sessionStorage.getItem("utm_medium")) : null,
         utm_campaign: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_campaign") || sessionStorage.getItem("utm_campaign")) : null,
         utm_term: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_term") || sessionStorage.getItem("utm_term")) : null,
+        // Google Ads click ID for offline conversion tracking
+        gclid: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("gclid") || sessionStorage.getItem("gclid")) : null,
       }),
     });
 
@@ -271,7 +273,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
             >
               {photographer.locations.map((loc: { slug: string; name: string }) => (
                 <option key={loc.slug} value={loc.slug}>{loc.name}</option>
@@ -288,7 +290,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             value={locationDetail}
             onChange={(e) => setLocationDetail(e.target.value)}
             placeholder={t("form.locationDetailPlaceholder")}
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
           />
         </div>
 
@@ -310,7 +312,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 <select
                   value={shootTime}
                   onChange={(e) => setShootTime(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
                 >
                   <option value="flexible">{t("time.flexible")}</option>
                   <option value="sunrise">{t("time.sunrise")}</option>
@@ -369,7 +371,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <select
               value={groupSize}
               onChange={(e) => setGroupSize(e.target.value)}
-              className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
             >
               <option value="1">{t("groupSizes.solo")}</option>
               <option value="2">{t("groupSizes.couple")}</option>
@@ -383,7 +385,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <select
               value={occasion}
               onChange={(e) => setOccasion(e.target.value)}
-              className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
             >
               <option value="">{t("occasions.select")}</option>
               <option value="vacation">{t("occasions.vacation")}</option>
@@ -410,7 +412,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
             placeholder={t("form.messagePlaceholder")}
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
+            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
           />
         </div>
 

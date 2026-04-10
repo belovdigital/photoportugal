@@ -518,14 +518,14 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         {session.user_name ? (
-                          <span className="text-sm font-semibold text-primary-600 truncate">{session.user_name}</span>
+                          <span className={`text-sm font-semibold truncate ${session.user_role === "photographer" ? "text-blue-600" : "text-primary-600"}`}>{session.user_name}</span>
                         ) : (
                           <span className="text-sm text-gray-500 truncate font-mono">{session.visitor_id.slice(0, 8)}</span>
                         )}
                         {session.user_role && (
-                          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
-                            session.user_role === "photographer" ? "bg-purple-50 text-purple-600" : "bg-emerald-50 text-emerald-600"
-                          }`}>{session.user_role === "photographer" ? "📸" : "🧳"}</span>
+                          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                            session.user_role === "photographer" ? "bg-blue-50 text-blue-600" : session.user_role === "admin" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
+                          }`}>{session.user_role}</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -910,18 +910,25 @@ function GoogleAdsSection() {
   const [stats, setStats] = useState<{
     visits: number;
     visitsToday: number;
-    visits7d: number;
     signups: number;
     bookingsFromAds: number;
     paidBookings: number;
     revenueFromAds: number;
     visitToBookingRate: string;
     bookingToPayRate: string;
-    topKeywords: { keyword: string; visits: number; bookings: number; revenue: number }[];
-    topLandingPages: { page: string; visits: number }[];
-    dailyVisits: { date: string; visits: number }[];
-    recentVisitors: { keyword: string; campaign: string; landing: string; time: string; pages: string[]; converted: boolean }[];
-    topAdPages: { page: string; views: number }[];
+    recentVisitors: { keyword: string; campaign: string; landing: string; time: string; pages: string[] }[];
+    googleAds: {
+      totalImpressions: number;
+      totalClicks: number;
+      totalCost: number;
+      totalConversions: number;
+      avgCpc: string;
+      ctr: string;
+      adGroups: { name: string; impressions: number; clicks: number; cost: number; conversions: number; ctr: string; avgCpc: string }[];
+      keywords: { keyword: string; adGroup: string; impressions: number; clicks: number; cost: number; conversions: number; ctr: string; avgCpc: string }[];
+      searchTerms: { term: string; impressions: number; clicks: number; cost: number; conversions: number }[];
+      daily: { date: string; clicks: number; cost: number; impressions: number; conversions: number }[];
+    } | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -942,103 +949,219 @@ function GoogleAdsSection() {
     return `${days}d ago`;
   }
 
+  const ga = stats?.googleAds;
+
   return (
     <div>
       <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
         <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
-        Google Ads
+        Google Ads <span className="text-xs font-normal text-gray-400">Last 30 days</span>
       </h3>
 
       {loading ? (
         <p className="text-sm text-gray-400">Loading ads data...</p>
-      ) : !stats || stats.visits === 0 ? (
-        <div className="rounded-xl border border-warm-200 bg-white p-5">
-          <p className="text-sm text-gray-500">Google Ads tracking active. Waiting for first ad clicks...</p>
-          <div className="mt-3 rounded-lg bg-blue-50 p-3">
-            <p className="text-xs font-semibold text-blue-700 mb-1">Tracking:</p>
-            <ul className="text-xs text-blue-600 space-y-0.5">
-              <li>• Ad clicks + page journeys (UTM)</li>
-              <li>• booking_submitted, payment_completed, client_signup (gtag with value)</li>
-              <li>• AW-18043729532</li>
-            </ul>
-          </div>
-        </div>
+      ) : !stats ? (
+        <p className="text-sm text-gray-500">Failed to load ads data.</p>
       ) : (
         <div className="space-y-4">
-          {/* Funnel */}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
-            {[
-              { label: "Ad Clicks", value: stats.visits, sub: `${stats.visitsToday} today · tracked on-site` },
-              { label: "Signups", value: stats.signups, sub: stats.visits > 0 ? `${((stats.signups / stats.visits) * 100).toFixed(0)}% rate` : "" },
-              { label: "Bookings", value: stats.bookingsFromAds, sub: `${stats.visitToBookingRate}% rate` },
-              { label: "Paid", value: stats.paidBookings, sub: `${stats.bookingToPayRate}% rate` },
-              { label: "Revenue", value: null, sub: stats.revenueFromAds > 0 ? `€${Math.round(stats.revenueFromAds)}` : "€0", isRevenue: true },
-            ].map((item, i) => (
-              <div key={i} className="rounded-xl border border-warm-200 bg-white p-3">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{item.label}</p>
-                {'isRevenue' in item && item.isRevenue ? (
-                  <p className="mt-1 text-xl font-bold text-green-600">{item.sub}</p>
-                ) : (
-                  <>
-                    <p className="mt-1 text-xl font-bold text-gray-900">{item.value}</p>
-                    {item.sub && <p className="text-[10px] text-gray-400">{item.sub}</p>}
-                  </>
+          {/* Google Ads API metrics */}
+          {ga && (
+            <>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3">
+                {[
+                  { label: "Spend", value: `€${ga.totalCost.toFixed(0)}`, color: "text-gray-900" },
+                  { label: "Impressions", value: ga.totalImpressions.toLocaleString(), color: "text-gray-900" },
+                  { label: "Clicks", value: ga.totalClicks.toString(), color: "text-blue-600" },
+                  { label: "CTR", value: `${ga.ctr}%`, color: "text-gray-900" },
+                  { label: "Avg CPC", value: `€${ga.avgCpc}`, color: "text-gray-900" },
+                  { label: "Conversions", value: ga.totalConversions.toString(), color: "text-green-600" },
+                ].map((item, i) => (
+                  <div key={i} className="rounded-xl border border-warm-200 bg-white p-3">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{item.label}</p>
+                    <p className={`mt-1 text-lg font-bold ${item.color}`}>{item.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* On-site funnel */}
+              <div className="rounded-xl border border-warm-200 bg-white p-4">
+                <p className="text-xs font-semibold text-gray-500 mb-3">On-Site Funnel (UTM tracked)</p>
+                <div className="grid grid-cols-5 gap-2 text-center">
+                  {[
+                    { label: "Site Visits", value: stats.visits, sub: `${stats.visitsToday} today` },
+                    { label: "Signups", value: stats.signups, sub: stats.visits > 0 ? `${((stats.signups / stats.visits) * 100).toFixed(0)}%` : "—" },
+                    { label: "Bookings", value: stats.bookingsFromAds, sub: `${stats.visitToBookingRate}%` },
+                    { label: "Paid", value: stats.paidBookings, sub: `${stats.bookingToPayRate}%` },
+                    { label: "Revenue", value: null, sub: `€${Math.round(stats.revenueFromAds)}`, isRevenue: true },
+                  ].map((item, i) => (
+                    <div key={i}>
+                      <p className="text-[10px] text-gray-400">{item.label}</p>
+                      {'isRevenue' in item && item.isRevenue ? (
+                        <p className="text-lg font-bold text-green-600">{item.sub}</p>
+                      ) : (
+                        <>
+                          <p className="text-lg font-bold text-gray-900">{item.value}</p>
+                          <p className="text-[10px] text-gray-400">{item.sub}</p>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {ga.totalCost > 0 && stats.revenueFromAds > 0 && (
+                  <div className="mt-3 pt-3 border-t border-warm-100 flex items-center justify-center gap-4">
+                    <span className="text-xs text-gray-500">ROAS: <span className="font-bold text-green-600">{(stats.revenueFromAds / ga.totalCost).toFixed(1)}x</span></span>
+                    <span className="text-xs text-gray-500">Cost/Booking: <span className="font-bold text-gray-900">€{stats.bookingsFromAds > 0 ? (ga.totalCost / stats.bookingsFromAds).toFixed(0) : "—"}</span></span>
+                    <span className="text-xs text-gray-500">Cost/Paid: <span className="font-bold text-gray-900">€{stats.paidBookings > 0 ? (ga.totalCost / stats.paidBookings).toFixed(0) : "—"}</span></span>
+                  </div>
                 )}
               </div>
-            ))}
-          </div>
 
-          {/* Funnel bar */}
-          <div className="rounded-xl border border-warm-200 bg-white p-4">
-            <p className="text-xs font-semibold text-gray-500 mb-2">Conversion Funnel</p>
-            <div className="space-y-1.5">
-              {[
-                { label: "Clicks", count: stats.visits, color: "bg-blue-500" },
-                { label: "Signups", count: stats.signups, color: "bg-purple-500" },
-                { label: "Bookings", count: stats.bookingsFromAds, color: "bg-orange-500" },
-                { label: "Paid", count: stats.paidBookings, color: "bg-green-500" },
-              ].map((step) => (
-                <div key={step.label} className="flex items-center gap-3">
-                  <span className="w-16 text-xs text-gray-500">{step.label}</span>
-                  <div className="flex-1 h-5 rounded-full bg-gray-100 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${step.color} transition-all`}
-                      style={{ width: `${stats.visits > 0 ? Math.max((step.count / stats.visits) * 100, step.count > 0 ? 3 : 0) : 0}%` }}
-                    />
+              {/* Daily chart */}
+              {ga.daily.length > 1 && (
+                <div className="rounded-xl border border-warm-200 bg-white p-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Daily Spend & Clicks (14d)</p>
+                  <div className="flex items-end gap-1 h-24">
+                    {ga.daily.map((d) => {
+                      const maxClicks = Math.max(...ga.daily.map(v => v.clicks), 1);
+                      return (
+                        <div key={d.date} className="flex-1 flex flex-col items-center gap-0.5" title={`${d.date}: ${d.clicks} clicks, €${d.cost.toFixed(2)}`}>
+                          <span className="text-[8px] text-gray-400">{d.clicks}</span>
+                          <div className="w-full rounded-sm bg-blue-500 min-h-[2px]" style={{ height: `${(d.clicks / maxClicks) * 100}%` }} />
+                          <span className="text-[8px] text-gray-400">€{d.cost.toFixed(0)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <span className="w-8 text-xs font-medium text-gray-700 text-right">{step.count}</span>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[9px] text-gray-400">{ga.daily[0]?.date?.slice(5)}</span>
+                    <span className="text-[9px] text-gray-400">{ga.daily[ga.daily.length - 1]?.date?.slice(5)}</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              )}
+
+              {/* Ad Groups */}
+              {ga.adGroups.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Ad Groups</p>
+                  <div className="rounded-xl border border-warm-200 bg-white overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-warm-50 border-b border-warm-200">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-500">Group</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Impr</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Clicks</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">CTR</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">CPC</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Cost</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Conv</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-warm-100">
+                        {ga.adGroups.map((ag) => (
+                          <tr key={ag.name}>
+                            <td className="px-3 py-2 text-gray-900 font-medium">{ag.name}</td>
+                            <td className="px-3 py-2 text-right text-gray-500">{ag.impressions}</td>
+                            <td className="px-3 py-2 text-right text-blue-600 font-medium">{ag.clicks}</td>
+                            <td className="px-3 py-2 text-right text-gray-500">{ag.ctr}%</td>
+                            <td className="px-3 py-2 text-right text-gray-500">€{ag.avgCpc}</td>
+                            <td className="px-3 py-2 text-right text-gray-700">€{ag.cost.toFixed(2)}</td>
+                            <td className="px-3 py-2 text-right font-medium">{ag.conversions > 0 ? <span className="text-green-600">{ag.conversions}</span> : <span className="text-gray-300">—</span>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Top Keywords */}
+              {ga.keywords.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Top Keywords (by clicks)</p>
+                  <div className="rounded-xl border border-warm-200 bg-white overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-warm-50 border-b border-warm-200">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-500">Keyword</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Clicks</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">CTR</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">CPC</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Cost</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Conv</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-warm-100">
+                        {ga.keywords.map((kw, i) => (
+                          <tr key={i}>
+                            <td className="px-3 py-2 text-gray-900">{kw.keyword}</td>
+                            <td className="px-3 py-2 text-right text-blue-600 font-medium">{kw.clicks}</td>
+                            <td className="px-3 py-2 text-right text-gray-500">{kw.ctr}%</td>
+                            <td className="px-3 py-2 text-right text-gray-500">€{kw.avgCpc}</td>
+                            <td className="px-3 py-2 text-right text-gray-700">€{kw.cost.toFixed(2)}</td>
+                            <td className="px-3 py-2 text-right font-medium">{kw.conversions > 0 ? <span className="text-green-600">{kw.conversions}</span> : <span className="text-gray-300">—</span>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Search Terms */}
+              {ga.searchTerms.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Search Terms (what people typed)</p>
+                  <div className="rounded-xl border border-warm-200 bg-white overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-warm-50 border-b border-warm-200">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-500">Search Term</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Impr</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Clicks</th>
+                          <th className="px-3 py-2 text-right font-medium text-gray-500">Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-warm-100">
+                        {ga.searchTerms.map((st, i) => (
+                          <tr key={i} className={st.clicks === 0 ? "opacity-50" : ""}>
+                            <td className="px-3 py-2 text-gray-900">{st.term}</td>
+                            <td className="px-3 py-2 text-right text-gray-500">{st.impressions}</td>
+                            <td className="px-3 py-2 text-right text-blue-600 font-medium">{st.clicks}</td>
+                            <td className="px-3 py-2 text-right text-gray-700">€{st.cost.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           {/* Recent Ad Visitors */}
           {stats.recentVisitors && stats.recentVisitors.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 mb-2">Recent Ad Visitors</p>
+              <p className="text-xs font-semibold text-gray-500 mb-2">Recent Ad Visitors (on-site journeys)</p>
               <div className="space-y-2">
                 {stats.recentVisitors.map((v, i) => {
                   const depth = v.pages.length;
                   const isEngaged = depth >= 3;
                   const shortPages = v.pages.map(p => p.replace(/^\/[a-z]{2}\//, "/").replace(/^\//, "") || "home");
                   return (
-                    <div key={i} className={`rounded-xl border bg-white p-3 transition-shadow hover:shadow-sm ${v.converted ? "border-green-200" : isEngaged ? "border-blue-200" : "border-warm-200"}`}
-                      style={!v.converted && !isEngaged ? {} : { borderLeftWidth: 3, borderLeftColor: v.converted ? "#22c55e" : "#3b82f6" }}
+                    <div key={i} className={`rounded-xl border bg-white p-3 transition-shadow hover:shadow-sm ${isEngaged ? "border-blue-200" : "border-warm-200"}`}
+                      style={!isEngaged ? {} : { borderLeftWidth: 3, borderLeftColor: "#3b82f6" }}
                     >
-                      {/* Top row: badge + keyword + time */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                            v.converted ? "bg-green-100 text-green-700" : isEngaged ? "bg-blue-50 text-blue-600" : "bg-warm-100 text-gray-500"
+                            isEngaged ? "bg-blue-50 text-blue-600" : "bg-warm-100 text-gray-500"
                           }`}>
-                            {v.converted ? "💰 Converted" : isEngaged ? `👀 ${depth} pages` : "↩ Bounced"}
+                            {isEngaged ? `👀 ${depth} pages` : "↩ Bounced"}
                           </span>
                           <span className="text-sm font-semibold text-gray-900">🔍 {v.keyword}</span>
                         </div>
                         <span className="text-[10px] text-gray-400 shrink-0">{timeAgo(v.time)}</span>
                       </div>
-
-                      {/* Journey flow */}
                       <div className="mt-2 flex items-center gap-1 flex-wrap">
                         {shortPages.slice(0, 6).map((p, j) => (
                           <span key={j} className="inline-flex items-center">
@@ -1053,99 +1176,9 @@ function GoogleAdsSection() {
                         ))}
                         {shortPages.length > 6 && <span className="text-[10px] text-gray-400 ml-1">+{shortPages.length - 6} more</span>}
                       </div>
-
-                      {/* Campaign tag */}
-                      {v.campaign && v.campaign !== "null" && (
-                        <div className="mt-1.5">
-                          <span className="text-[9px] text-gray-400 bg-warm-50 rounded-full px-2 py-0.5">{v.campaign}</span>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Top keywords */}
-          {stats.topKeywords.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-2">Top Keywords</p>
-              <div className="rounded-xl border border-warm-200 bg-white overflow-hidden">
-                <table className="w-full text-xs">
-                  <thead className="bg-warm-50 border-b border-warm-200">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-medium text-gray-500">Keyword</th>
-                      <th className="px-3 py-2 text-right font-medium text-gray-500">Clicks</th>
-                      <th className="px-3 py-2 text-right font-medium text-gray-500">Bookings</th>
-                      <th className="px-3 py-2 text-right font-medium text-gray-500">Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-warm-100">
-                    {stats.topKeywords.map((kw) => (
-                      <tr key={kw.keyword}>
-                        <td className="px-3 py-2 text-gray-900">{kw.keyword}</td>
-                        <td className="px-3 py-2 text-right text-gray-500">{kw.visits}</td>
-                        <td className="px-3 py-2 text-right text-gray-700 font-medium">{kw.bookings || "—"}</td>
-                        <td className="px-3 py-2 text-right text-gray-700">{kw.revenue > 0 ? `€${Math.round(kw.revenue)}` : "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Top pages viewed by ad visitors */}
-          {stats.topAdPages && stats.topAdPages.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-2">Pages Viewed by Ad Visitors</p>
-              <div className="space-y-1">
-                {stats.topAdPages.map((p) => (
-                  <div key={p.page} className="flex items-center justify-between rounded-lg bg-white border border-warm-100 px-3 py-1.5">
-                    <span className="text-xs text-gray-700 truncate">{p.page}</span>
-                    <span className="text-xs font-medium text-gray-500 shrink-0 ml-2">{p.views} views</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Top landing pages */}
-          {stats.topLandingPages.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-2">Top Landing Pages</p>
-              <div className="space-y-1">
-                {stats.topLandingPages.map((p) => (
-                  <div key={p.page} className="flex items-center justify-between rounded-lg bg-white border border-warm-100 px-3 py-1.5">
-                    <span className="text-xs text-gray-700 truncate">{p.page}</span>
-                    <span className="text-xs font-medium text-gray-500 shrink-0 ml-2">{p.visits}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Daily chart (simple) */}
-          {stats.dailyVisits.length > 1 && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-2">Daily Ad Clicks (14d)</p>
-              <div className="flex items-end gap-1 h-20 rounded-xl border border-warm-200 bg-white p-3">
-                {stats.dailyVisits.map((d) => {
-                  const max = Math.max(...stats.dailyVisits.map(v => v.visits), 1);
-                  return (
-                    <div key={d.date} className="flex-1 flex flex-col items-center gap-0.5" title={`${d.date}: ${d.visits} clicks`}>
-                      <div
-                        className="w-full rounded-sm bg-blue-500 min-h-[2px]"
-                        style={{ height: `${(d.visits / max) * 100}%` }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[9px] text-gray-400">{stats.dailyVisits[0]?.date?.slice(5)}</span>
-                <span className="text-[9px] text-gray-400">{stats.dailyVisits[stats.dailyVisits.length - 1]?.date?.slice(5)}</span>
               </div>
             </div>
           )}

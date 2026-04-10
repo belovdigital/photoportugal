@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { queryOne, query } from "@/lib/db";
+import { locations as allLocations } from "@/lib/locations-data";
 
 export async function GET(
   _req: Request,
@@ -93,7 +94,10 @@ export async function GET(
 
     return NextResponse.json({
       ...profile,
-      locations: locations.map(l => l.location_slug),
+      locations: locations.map(l => {
+        const loc = allLocations.find(x => x.slug === l.location_slug);
+        return { slug: l.location_slug, name: loc?.name || l.location_slug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) };
+      }),
       packages,
       portfolio,
       reviews,

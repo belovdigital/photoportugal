@@ -18,6 +18,7 @@ interface BlogPost {
   scheduled_at: string | null;
   created_at: string;
   updated_at: string;
+  locale?: string;
 }
 
 function slugify(text: string): string {
@@ -237,7 +238,7 @@ export function BlogManager() {
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Post title"
                 required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               />
             </div>
 
@@ -271,7 +272,7 @@ export function BlogManager() {
               onChange={(e) => setExcerpt(e.target.value)}
               placeholder="Short summary for listing pages..."
               rows={2}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
             />
           </div>
 
@@ -340,7 +341,7 @@ export function BlogManager() {
                 onChange={(e) => setMetaTitle(e.target.value)}
                 placeholder="SEO title (defaults to post title)"
                 maxLength={200}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               />
               <p className="mt-1 text-xs text-gray-400">{metaTitle.length}/200</p>
             </div>
@@ -352,7 +353,7 @@ export function BlogManager() {
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Photo Portugal"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               />
             </div>
           </div>
@@ -365,7 +366,7 @@ export function BlogManager() {
               placeholder="SEO description (defaults to excerpt)"
               maxLength={300}
               rows={2}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
             />
             <p className="mt-1 text-xs text-gray-400">{metaDescription.length}/300</p>
           </div>
@@ -377,7 +378,7 @@ export function BlogManager() {
               value={targetKeywords}
               onChange={(e) => setTargetKeywords(e.target.value)}
               placeholder="comma, separated, keywords"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
             />
           </div>
 
@@ -456,7 +457,7 @@ export function BlogManager() {
                       )}
                       <div>
                         <p className="font-medium text-gray-900">{post.title}</p>
-                        <p className="text-xs text-gray-400">/blog/{post.slug}</p>
+                        <p className="text-xs text-gray-400">{post.locale === "pt" ? "/pt" : ""}/blog/{post.slug}</p>
                       </div>
                     </div>
                   </td>
@@ -483,7 +484,7 @@ export function BlogManager() {
                       </button>
                       {post.is_published && (
                         <a
-                          href={`/blog/${post.slug}`}
+                          href={`${post.locale === "pt" ? "/pt" : ""}/blog/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"

@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
       [user.id, photographer_id]
     );
     if (info) {
-      sendTelegram(`❤️ <b>${info.client_name}</b> saved <b>${info.photographer_name}</b> to wishlist\nhttps://photoportugal.com/photographers/${info.slug}`).catch(() => {});
+      sendTelegram(`❤️ <b>${info.client_name}</b> saved <b>${info.photographer_name}</b> to wishlist\nhttps://photoportugal.com/photographers/${info.slug}`).catch((err) => console.error("[wishlist] telegram error:", err));
     }
 
     return NextResponse.json({ wishlisted: true });

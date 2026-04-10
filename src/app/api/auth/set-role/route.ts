@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
   try {
     if (role === "photographer" || role === "client") {
       // Only allow role change for users created in the last 2 minutes (fresh signups)
-      const user = await queryOne<{ id: string; role: string; created_at: string }>(
-        "SELECT id, role, created_at FROM users WHERE email = $1",
+      const user = await queryOne<{ id: string; role: string | null; admin_notified: boolean; created_at: string }>(
+        "SELECT id, role, COALESCE(admin_notified, FALSE) as admin_notified, created_at FROM users WHERE email = $1",
         [session.user.email]
       );
 
@@ -36,11 +36,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${base}${redirectPath}`);
       }
 
+      // Allow role set if: user has no role (Google signup), or was just created (within 5 min)
       const createdAt = new Date(user.created_at);
-      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-
-      // Only set role if user was just created (within 2 min)
-      if (createdAt > twoMinutesAgo) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (!user.role || createdAt > fiveMinutesAgo) {
         await query("UPDATE users SET role = $1 WHERE id = $2", [role, user.id]);
 
         if (role === "photographer") {
@@ -95,27 +94,33 @@ export async function GET(request: NextRequest) {
             );
           });
 
-          // Send photographer welcome email (non-blocking)
-          sendWelcomeEmail(session.user.email!, session.user.name || "there", "photographer").catch((err) =>
-            console.error("[set-role] Failed to send photographer welcome email:", err)
-          );
-          sendAdminNewPhotographerNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
-            console.error("[set-role] Failed to send admin notification:", err)
-          );
-          import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`);
-          }).catch(() => {});
+          // Send notifications only if not already sent (verify-email sends for email signups)
+          if (!user.admin_notified) {
+            sendWelcomeEmail(session.user.email!, session.user.name || "there", "photographer").catch((err) =>
+              console.error("[set-role] Failed to send photographer welcome email:", err)
+            );
+            sendAdminNewPhotographerNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
+              console.error("[set-role] Failed to send admin notification:", err)
+            );
+            import("@/lib/telegram").then(({ sendTelegram }) => {
+              sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`);
+            }).catch((err) => console.error("[set-role] telegram new photographer error:", err));
+            query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch((err) => console.error("[set-role] admin_notified update error:", err));
+          }
         } else {
-          // Client: send welcome email + admin notification
-          sendWelcomeEmail(session.user.email!, session.user.name || "there", "client").catch((err) =>
-            console.error("[set-role] Failed to send client welcome email:", err)
-          );
-          sendAdminNewClientNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
-            console.error("[set-role] Failed to send admin client notification:", err)
-          );
-          import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}`);
-          }).catch(() => {});
+          // Client
+          if (!user.admin_notified) {
+            sendWelcomeEmail(session.user.email!, session.user.name || "there", "client").catch((err) =>
+              console.error("[set-role] Failed to send client welcome email:", err)
+            );
+            sendAdminNewClientNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
+              console.error("[set-role] Failed to send admin client notification:", err)
+            );
+            import("@/lib/telegram").then(({ sendTelegram }) => {
+              sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}`);
+            }).catch((err) => console.error("[set-role] telegram new client error:", err));
+            query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch((err) => console.error("[set-role] admin_notified update error:", err));
+          }
         }
       }
     }

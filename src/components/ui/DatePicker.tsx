@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export interface UnavailableRange {
   date_from: string;
@@ -45,6 +45,7 @@ const MONTH_NAMES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junh
 
 export default function DatePicker({ value, onChange, min, max, label, required, placeholder, unavailableRanges }: DatePickerProps) {
   const locale = useLocale();
+  const t = useTranslations("common");
   const isPT = locale === "pt";
   const WEEKDAYS = isPT ? WEEKDAYS_PT : WEEKDAYS_EN;
   const MONTH_NAMES = isPT ? MONTH_NAMES_PT : MONTH_NAMES_EN;
@@ -117,11 +118,11 @@ export default function DatePicker({ value, onChange, min, max, label, required,
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`${label ? "mt-1" : ""} flex w-full items-center justify-between rounded-xl border border-gray-300 px-4 py-3 text-left text-sm transition hover:border-gray-400 focus:border-primary-500 focus:outline-none ${
+        className={`${label ? "mt-1" : ""} flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 text-left text-sm transition hover:border-gray-400 focus:border-primary-500 focus:outline-none ${
           !value ? "text-gray-400" : "text-gray-900"
         }`}
       >
-        <span>{displayValue || placeholder || "Select date"}</span>
+        <span>{displayValue || placeholder || t("selectDate")}</span>
         <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
@@ -188,7 +189,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
                   </button>
                   {unavailable && (
                     <div className="pointer-events-none absolute -top-8 left-1/2 z-50 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-[10px] text-white group-hover/day:block">
-                      {isPT ? "Indisponível" : "Unavailable"}
+                      {t("unavailable")}
                     </div>
                   )}
                 </div>
@@ -208,7 +209,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
               }}
               className="mt-3 w-full rounded-lg py-1.5 text-center text-xs font-medium text-primary-600 transition hover:bg-primary-50"
             >
-              {isPT ? "Hoje" : "Today"}
+              {t("today")}
             </button>
           )}
         </div>

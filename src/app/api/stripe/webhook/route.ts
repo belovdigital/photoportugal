@@ -4,7 +4,7 @@ import { requireStripe } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient } from "@/lib/email";
-import { sendWhatsApp, sendAdminWhatsApp } from "@/lib/whatsapp";
+import { sendSMS, sendAdminSMS } from "@/lib/sms";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -72,6 +72,21 @@ export async function POST(req: NextRequest) {
             console.error("[webhook] system message error:", msgErr);
           }
 
+          // Upload "Payment Completed" offline conversion to Google Ads
+          try {
+            const gclidBooking = await queryOne<{ gclid: string | null; total_price: number }>(
+              "SELECT gclid, total_price FROM bookings WHERE id = $1",
+              [bookingId]
+            );
+            if (gclidBooking?.gclid) {
+              import("@/lib/google-ads-conversions").then(({ uploadPaymentCompletedConversion }) => {
+                uploadPaymentCompletedConversion(gclidBooking.gclid!, Number(gclidBooking.total_price || 0));
+              }).catch((err) => console.error("[webhook] gads conversion upload error:", err));
+            }
+          } catch (gadsErr) {
+            console.error("[webhook] gads conversion lookup error:", gadsErr);
+          }
+
           // Send payment notification emails
           try {
             const bookingInfo = await queryOne<{
@@ -122,14 +137,12 @@ export async function POST(req: NextRequest) {
               } catch {}
 
               // WhatsApp/SMS to all admin phones
-              sendAdminWhatsApp(
-                "admin_new_booking",
-                [bookingInfo.client_name, bookingInfo.photographer_name, `€${Number(bookingInfo.total_price)}`],
+              sendAdminSMS(
                 `Photo Portugal: €${Number(bookingInfo.total_price)} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
               );
               import("@/lib/telegram").then(({ sendTelegram }) => {
                 sendTelegram(`💰 <b>Payment Received!</b>\n\n<b>Amount:</b> €${Number(bookingInfo!.total_price)}\n<b>Client:</b> ${bookingInfo!.client_name}\n<b>Photographer:</b> ${bookingInfo!.photographer_name}`);
-              }).catch(() => {});
+              }).catch((err) => console.error("[webhook] telegram payment error:", err));
 
               // WhatsApp/SMS to photographer
               try {
@@ -146,12 +159,10 @@ export async function POST(req: NextRequest) {
                     [photographerUser.id]
                   );
                   if (smsPrefs?.sms_bookings !== false) {
-                    sendWhatsApp(
+                    sendSMS(
                       photographerUser.phone,
-                      "payment_received",
-                      [`€${Number(bookingInfo.total_price)}`, bookingInfo.client_name],
                       `Photo Portugal: Payment of €${Number(bookingInfo.total_price)} received for your booking with ${bookingInfo.client_name}. Log in to view details.`
-                    ).catch(err => console.error("[whatsapp] error:", err));
+                    ).catch(err => console.error("[sms] error:", err));
                   }
                 }
               } catch (smsErr) {
@@ -170,9 +181,11 @@ export async function POST(req: NextRequest) {
                       photographerProfileId.photographer_id,
                       `Payment received from ${clientFirst}!\n\nAmount: \u20ac${Number(bookingInfo.total_price)}\n\nView: https://photoportugal.com/dashboard/bookings`
                     )
-                  ).catch(() => {});
+                  ).catch((err) => console.error("[webhook] telegram photographer payment error:", err));
                 }
-              } catch {}
+              } catch (tgErr) {
+                console.error("[webhook] photographer telegram error:", tgErr);
+              }
             }
           } catch (emailErr) {
             console.error("[webhook] payment email error:", emailErr);

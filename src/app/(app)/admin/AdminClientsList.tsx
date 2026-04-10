@@ -4,6 +4,11 @@ import { useState, useMemo } from "react";
 import { AdminBanToggle } from "./AdminControls";
 import { Avatar } from "@/components/ui/Avatar";
 
+function codeToFlag(code: string): string {
+  if (!code || code.length !== 2) return "";
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
+
 export interface ClientBooking {
   client_id: string;
   booking_id: string;
@@ -148,6 +153,7 @@ export function AdminClientsList({ clients, bookingsByClient }: { clients: Admin
                   <p className="truncate text-xs text-gray-400">{c.email}</p>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 shrink-0">
+                  {firstSession?.country && <span className="text-sm" title={firstSession.country}>{codeToFlag(firstSession.country)}</span>}
                   {firstSession?.device_type && <span className="text-xs">{deviceIcon(firstSession.device_type)}</span>}
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${source.color}`}>{source.label}</span>
                   {c.booking_count > 0 && (

@@ -387,9 +387,30 @@ function MessagesContent() {
       setSending(false);
       // Don't fetchMessages — WebSocket will deliver the real message and dedup the temp
       if (res && !res.ok) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === textTempId ? { ...m, failed: true } : m))
-        );
+        try {
+          const errData = await res.json();
+          if (errData.error === "social_platform_blocked") {
+            // Remove temp message and show the warning instead
+            setMessages((prev) => [
+              ...prev.filter((m) => m.id !== textTempId),
+              {
+                id: `warning-${Date.now()}`, text: errData.warning, media_url: null,
+                sender_id: "system", sender_name: "system", sender_avatar: null,
+                created_at: new Date().toISOString(), read_at: null, is_system: true,
+              },
+            ]);
+            setNewMessage(text);
+            setTimeout(() => scrollToBottom(true), 50);
+          } else {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === textTempId ? { ...m, failed: true } : m))
+            );
+          }
+        } catch {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === textTempId ? { ...m, failed: true } : m))
+          );
+        }
       }
     } catch {
       setSending(false);
@@ -660,7 +681,7 @@ function MessagesContent() {
                   {onlineUsers.some(u => u.userId !== userId) && (
                     <span className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-green-500" />
-                      <span className="text-[11px] text-green-600 hidden sm:inline">Online</span>
+                      <span className="text-[11px] text-green-600 hidden sm:inline">{t("online")}</span>
                     </span>
                   )}
                   {sseStatus === "reconnecting" && (
@@ -714,7 +735,7 @@ function MessagesContent() {
                                 <p className="mt-2 text-base font-bold text-gray-900">{photoCount} photo previews ready for review</p>
                                 <p className="mt-1 text-xs text-gray-500">Review the photos and approve the delivery when you&apos;re happy</p>
                                 <a href={`${url}?pw=${encodeURIComponent(pw)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-xl bg-accent-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-accent-700 transition">
-                                  View Gallery
+                                  {t("viewGallery")}
                                 </a>
                               </div>
                             </div>
@@ -728,7 +749,7 @@ function MessagesContent() {
                             return (
                               <div key={msg.id} className="flex justify-center my-3">
                                 <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 to-white p-5 shadow-sm">
-                                  <p className="text-xs font-medium text-primary-500 uppercase tracking-wide">Package</p>
+                                  <p className="text-xs font-medium text-primary-500 uppercase tracking-wide">{t("packageLabel")}</p>
                                   <p className="mt-1 text-base font-bold text-gray-900">{card.name}</p>
                                   <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
                                     <span>{durationLabel}</span>
@@ -739,7 +760,7 @@ function MessagesContent() {
                                   {card.slug && activeConvo?.other_role === "photographer" && (
                                     <a href={`/book/${card.slug}?package=${card.package_id}`}
                                       className="mt-3 inline-block rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-700 transition">
-                                      Book Now
+                                      {t("bookNow")}
                                     </a>
                                   )}
                                 </div>
@@ -796,7 +817,7 @@ function MessagesContent() {
                                         <svg className="h-10 w-8 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM9 13h2v2H9v-2zm4 0h2v2h-2v-2z"/></svg>
                                       </div>
                                       <p className="text-[11px] font-medium text-gray-700 text-center">PDF</p>
-                                      <p className="text-[10px] text-gray-400 mt-0.5">Tap to open</p>
+                                      <p className="text-[10px] text-gray-400 mt-0.5">{t("tapToOpen")}</p>
                                     </a>
                                   );
                                 }
@@ -847,13 +868,13 @@ function MessagesContent() {
                             {msg.failed && (
                               <div className="mt-0.5 flex items-center justify-end gap-1.5">
                                 <span className="text-[11px] text-red-500">
-                                  Failed to send
+                                  {t("failedToSend")}
                                 </span>
                                 <button
                                   onClick={() => handleRetry(msg)}
                                   className="text-[11px] font-medium text-red-600 underline hover:text-red-700"
                                 >
-                                  Retry
+                                  {t("retry")}
                                 </button>
                               </div>
                             )}
@@ -930,7 +951,7 @@ function MessagesContent() {
                     )}
                   </button>
                   <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                    Send photo
+                    {t("sendPhoto")}
                   </span>
                 </div>
                 {activeConvo?.other_role === "client" && (
@@ -944,7 +965,7 @@ function MessagesContent() {
                     </button>
                     {!showPackagePicker && (
                       <span className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover/pkg:opacity-100">
-                        Share package
+                        {t("sharePackage")}
                       </span>
                     )}
                     {showPackagePicker && (
@@ -952,13 +973,13 @@ function MessagesContent() {
                         <div className="fixed inset-0 z-40" onClick={() => setShowPackagePicker(false)} />
                         <div className="absolute bottom-12 left-0 z-50 w-72 rounded-xl border border-warm-200 bg-white shadow-xl">
                           <div className="px-4 py-3 border-b border-warm-100">
-                            <p className="text-sm font-semibold text-gray-900">Share a Package</p>
+                            <p className="text-sm font-semibold text-gray-900">{t("shareAPackage")}</p>
                           </div>
                           <div className="max-h-60 overflow-y-auto py-1">
                             {loadingPackages ? (
                               <div className="flex justify-center py-6"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /></div>
                             ) : shareablePackages.length === 0 ? (
-                              <p className="px-4 py-4 text-sm text-gray-400 text-center">No packages yet</p>
+                              <p className="px-4 py-4 text-sm text-gray-400 text-center">{t("noPackagesYet")}</p>
                             ) : (
                               shareablePackages.map((pkg) => (
                                 <button key={pkg.id} type="button" onClick={() => sharePackage(pkg.id)}

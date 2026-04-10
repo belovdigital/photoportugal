@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -71,9 +72,9 @@ export function AdminLoginForm() {
 }
 
 export function AdminLogoutButton() {
-  function handleLogout() {
-    document.cookie = "admin_token=; path=/; max-age=0";
-    signOut({ callbackUrl: "/" });
+  async function handleLogout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    window.location.href = "/admin";
   }
 
   return (
@@ -90,6 +91,7 @@ export function AdminToggleClient({ id, field, value, name }: { id: string; fiel
   const router = useRouter();
   const [checked, setChecked] = useState(value);
   const [loading, setLoading] = useState(false);
+  const { modal, confirm } = useConfirmModal();
 
   const fieldLabel = field === "is_approved" ? "Approved" : field === "is_verified" ? "Verified" : field === "is_featured" ? "Featured" : field;
 
@@ -97,7 +99,12 @@ export function AdminToggleClient({ id, field, value, name }: { id: string; fiel
     const newValue = !checked;
     const action = newValue ? "enable" : "disable";
     const target = name ? ` for ${name}` : "";
-    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} "${fieldLabel}"${target}?`)) return;
+    const ok = await confirm(
+      `${action.charAt(0).toUpperCase() + action.slice(1)} ${fieldLabel}`,
+      `${action.charAt(0).toUpperCase() + action.slice(1)} "${fieldLabel}"${target}?`,
+      { confirmLabel: newValue ? "Enable" : "Disable" }
+    );
+    if (!ok) return;
 
     setLoading(true);
     const res = await fetch("/api/admin/photographer", {
@@ -116,15 +123,18 @@ export function AdminToggleClient({ id, field, value, name }: { id: string; fiel
   }
 
   return (
-    <button
-      onClick={toggle}
-      disabled={loading}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-        checked ? "bg-accent-500" : "bg-gray-200"
-      } ${loading ? "opacity-50" : ""}`}
-    >
-      <span className={`inline-block h-4 w-4 rounded-full bg-white transition ${checked ? "translate-x-6" : "translate-x-1"}`} />
-    </button>
+    <>
+      <button
+        onClick={toggle}
+        disabled={loading}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+          checked ? "bg-accent-500" : "bg-gray-200"
+        } ${loading ? "opacity-50" : ""}`}
+      >
+        <span className={`inline-block h-4 w-4 rounded-full bg-white transition ${checked ? "translate-x-6" : "translate-x-1"}`} />
+      </button>
+      {modal}
+    </>
   );
 }
 
@@ -132,10 +142,18 @@ export function AdminDeactivatePhotographer({ id, name, isActive, label }: { id:
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(isActive);
+  const { modal, confirm } = useConfirmModal();
 
   async function handleToggle() {
     const action = active ? "deactivate" : "reactivate";
-    if (active && !confirm(`Deactivate photographer "${name}"? They won't be able to log in and their profile will be hidden.`)) return;
+    if (active) {
+      const ok = await confirm(
+        `Deactivate ${name}`,
+        `Deactivate photographer "${name}"? They won't be able to log in and their profile will be hidden.`,
+        { danger: true, confirmLabel: "Deactivate" }
+      );
+      if (!ok) return;
+    }
     setLoading(true);
     const res = await fetch("/api/admin/photographer", {
       method: "PATCH",
@@ -153,13 +171,16 @@ export function AdminDeactivatePhotographer({ id, name, isActive, label }: { id:
   }
 
   return (
-    <button
-      onClick={handleToggle}
-      disabled={loading}
-      className={`rounded px-2 py-1 text-xs font-medium ${active ? "text-red-500 hover:bg-red-50" : "text-accent-600 hover:bg-accent-50"} disabled:opacity-50`}
-    >
-      {loading ? "..." : label ? label : active ? "Deactivate" : "Reactivate"}
-    </button>
+    <>
+      <button
+        onClick={handleToggle}
+        disabled={loading}
+        className={`rounded px-2 py-1 text-xs font-medium ${active ? "text-red-500 hover:bg-red-50" : "text-accent-600 hover:bg-accent-50"} disabled:opacity-50`}
+      >
+        {loading ? "..." : label ? label : active ? "Deactivate" : "Reactivate"}
+      </button>
+      {modal}
+    </>
   );
 }
 
@@ -347,10 +368,18 @@ export function AdminBanToggle({ id, value }: { id: string; value: boolean }) {
   const router = useRouter();
   const [banned, setBanned] = useState(value);
   const [loading, setLoading] = useState(false);
+  const { modal, confirm } = useConfirmModal();
 
   async function toggle() {
     const newValue = !banned;
-    if (newValue && !confirm("Are you sure you want to ban this user? They will not be able to log in.")) return;
+    if (newValue) {
+      const ok = await confirm(
+        "Ban User",
+        "Are you sure you want to ban this user? They will not be able to log in.",
+        { danger: true, confirmLabel: "Ban" }
+      );
+      if (!ok) return;
+    }
     setLoading(true);
     const res = await fetch("/api/admin/user", {
       method: "PATCH",
@@ -365,17 +394,20 @@ export function AdminBanToggle({ id, value }: { id: string; value: boolean }) {
   }
 
   return (
-    <button
-      onClick={toggle}
-      disabled={loading}
-      className={`rounded px-2 py-1 text-xs font-medium transition ${
-        banned
-          ? "bg-red-100 text-red-700 hover:bg-red-200"
-          : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-      } ${loading ? "opacity-50" : ""}`}
-    >
-      {loading ? "..." : banned ? "Banned" : "Active"}
-    </button>
+    <>
+      <button
+        onClick={toggle}
+        disabled={loading}
+        className={`rounded px-2 py-1 text-xs font-medium transition ${
+          banned
+            ? "bg-red-100 text-red-700 hover:bg-red-200"
+            : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        } ${loading ? "opacity-50" : ""}`}
+      >
+        {loading ? "..." : banned ? "Banned" : "Active"}
+      </button>
+      {modal}
+    </>
   );
 }
 
@@ -383,9 +415,11 @@ export function AdminPlanSelectClient({ id, currentPlan }: { id: string; current
   const router = useRouter();
   const [plan, setPlan] = useState(currentPlan);
   const [loading, setLoading] = useState(false);
+  const { modal, confirm } = useConfirmModal();
 
   async function changePlan(newPlan: string) {
-    if (!confirm(`Change plan to "${newPlan}"?`)) { return; }
+    const ok = await confirm("Change Plan", `Change plan to "${newPlan}"?`, { confirmLabel: "Change" });
+    if (!ok) { return; }
     setLoading(true);
     const res = await fetch("/api/admin/photographer", {
       method: "PATCH",
@@ -403,32 +437,38 @@ export function AdminPlanSelectClient({ id, currentPlan }: { id: string; current
   }
 
   return (
-    <select
-      value={plan}
-      onChange={(e) => changePlan(e.target.value)}
-      disabled={loading}
-      className="rounded-lg border border-gray-300 px-2 py-1 text-xs outline-none focus:border-primary-500"
-    >
-      <option value="free">Free</option>
-      <option value="pro">Pro</option>
-      <option value="premium">Premium</option>
-    </select>
+    <>
+      <select
+        value={plan}
+        onChange={(e) => changePlan(e.target.value)}
+        disabled={loading}
+        className="rounded-lg border border-gray-300 px-2 py-1 text-xs outline-none focus:border-primary-500"
+      >
+        <option value="free">Free</option>
+        <option value="pro">Pro</option>
+        <option value="premium">Premium</option>
+      </select>
+      {modal}
+    </>
   );
 }
 
 export function AdminBookingActions({ id, status, paymentStatus }: { id: string; status: string; paymentStatus: string | null }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { modal, confirm } = useConfirmModal();
 
   async function handleAction(action: "cancel" | "delete") {
-    const messages = {
-      cancel: paymentStatus === "paid"
-        ? `Cancel this booking and issue a FULL REFUND? This cannot be undone.`
-        : `Cancel this booking? This cannot be undone.`,
-      delete: `Permanently DELETE this booking? This cannot be undone.`,
-    };
-    if (!confirm(messages[action])) return;
-
+    const ok = await confirm(
+      action === "cancel" ? "Cancel Booking" : "Delete Booking",
+      action === "cancel" && paymentStatus === "paid"
+        ? "Cancel this booking and issue a FULL REFUND? This cannot be undone."
+        : action === "cancel"
+        ? "Cancel this booking? This cannot be undone."
+        : "Permanently DELETE this booking? This cannot be undone.",
+      { danger: true, confirmLabel: action === "cancel" ? "Cancel Booking" : "Delete" }
+    );
+    if (!ok) return;
     setLoading(true);
     const res = await fetch("/api/admin/bookings", {
       method: "PATCH",
@@ -445,27 +485,30 @@ export function AdminBookingActions({ id, status, paymentStatus }: { id: string;
     }
   }
 
-  if (loading) return <span className="text-xs text-gray-400">...</span>;
+  if (loading) return <><span className="text-xs text-gray-400">...</span>{modal}</>;
 
   return (
-    <div className="flex gap-1">
-      {status !== "cancelled" && (
-        <button
-          onClick={() => handleAction("cancel")}
-          className="rounded px-2 py-0.5 text-xs font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100 transition"
-        >
-          Cancel{paymentStatus === "paid" ? " & Refund" : ""}
-        </button>
-      )}
-      {(status === "cancelled" || paymentStatus !== "paid") && (
-        <button
-          onClick={() => handleAction("delete")}
-          className="rounded px-2 py-0.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition"
-        >
-          Delete
-        </button>
-      )}
-    </div>
+    <>
+      <div className="flex gap-1">
+        {status !== "cancelled" && (
+          <button
+            onClick={() => handleAction("cancel")}
+            className="rounded px-2 py-0.5 text-xs font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100 transition"
+          >
+            Cancel{paymentStatus === "paid" ? " & Refund" : ""}
+          </button>
+        )}
+        {(status === "cancelled" || paymentStatus !== "paid") && (
+          <button
+            onClick={() => handleAction("delete")}
+            className="rounded px-2 py-0.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 transition"
+          >
+            Delete
+          </button>
+        )}
+      </div>
+      {modal}
+    </>
   );
 }
 

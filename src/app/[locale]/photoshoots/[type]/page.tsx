@@ -101,7 +101,7 @@ export default async function ShootTypePage({
           </p>
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <Link
-              href={`/photographers?shootType=${shootType.slug}`}
+              href={`/choose-booking-type?shootType=${shootType.slug}`}
               className="inline-flex items-center justify-center rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
             >
               {t("findPhotographers", { name: shootType.name })}
@@ -264,7 +264,7 @@ export default async function ShootTypePage({
             {t("ctaReadySubtitle", { name: shootType.name.toLowerCase() })}
           </p>
           <Link
-            href={`/photographers?shootType=${shootType.slug}`}
+            href={`/choose-booking-type?shootType=${shootType.slug}`}
             className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
           >
             {t("findPhotographers", { name: shootType.name })}

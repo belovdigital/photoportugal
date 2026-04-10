@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         }
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`⚠️ <b>New Dispute!</b>\n\n${escapeHtml(info.client_name)} vs ${escapeHtml(info.photographer_name)}\nReason: ${reasonText}\n${escapeHtml(description.slice(0, 200))}`);
-        }).catch(() => {});
+        }).catch((err) => console.error("[disputes] telegram admin error:", err));
 
         // Telegram notification to photographer
         import("@/lib/notify-photographer").then(m =>
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
             booking.photographer_id,
             `A client reported an issue with their delivery.\n\nReason: ${reasonText}\n\nOur team will review within 48 hours. No action needed from you right now.`
           )
-        ).catch(() => {});
+        ).catch((err) => console.error("[disputes] telegram photographer error:", err));
 
         // Chat message
         await queryOne(

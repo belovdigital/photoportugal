@@ -130,7 +130,7 @@ export async function POST(
       import("@/lib/notify-photographer").then(m => {
         const ppId = queryOne<{id:string}>("SELECT id FROM photographer_profiles WHERE stripe_account_id = $1", [booking.photographer_stripe_id!]);
         ppId.then(p => p && m.notifyPhotographerViaTelegram(p.id, "⚠️ Payment pending! Complete your Stripe setup to receive your payout.\n\nhttps://photoportugal.com/dashboard/settings"));
-      }).catch(() => {});
+      }).catch((err) => console.error("[delivery/accept] telegram stripe setup error:", err));
     }
 
     if (booking.photographer_stripe_ready) {
@@ -193,13 +193,13 @@ export async function POST(
   );
 
   // System message in chat
-  sendBookingStatusMessage(booking.id, "delivery_accepted").catch(() => {});
+  sendBookingStatusMessage(booking.id, "delivery_accepted").catch((err) => console.error("[delivery/accept] status message error:", err));
 
   // Telegram: notify admin of delivery acceptance
   import("@/lib/telegram").then(({ sendTelegram }) => {
     const estimatedPayout = booking.payout_amount ? Number(booking.payout_amount) : (booking.total_price ? Math.round(booking.total_price * 0.8) : 0);
     sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${Math.round(estimatedPayout)}` : ""}`);
-  }).catch(() => {});
+  }).catch((err) => console.error("[delivery/accept] telegram admin error:", err));
 
   // Telegram: notify photographer of delivery acceptance
   try {
@@ -214,7 +214,7 @@ export async function POST(
           photographerProfileForTg.id,
           `${clientFirst} accepted your delivery!${payoutInfo}\n\nView: https://photoportugal.com/dashboard/bookings`
         )
-      ).catch(() => {});
+      ).catch((err) => console.error("[delivery/accept] telegram photographer error:", err));
     }
   } catch {}
 

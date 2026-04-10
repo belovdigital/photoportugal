@@ -13,6 +13,7 @@ import { AdminDashboard } from "./AdminDashboard";
 import { DisputesManager } from "./DisputesManager";
 import { ReviewsManager } from "./ReviewsManager";
 import { AnalyticsDashboard, VisitorsTab } from "./AnalyticsDashboard";
+import { AdminMatchRequestsTab } from "./AdminMatchRequestsTab";
 import { isBelowMinimum } from "@/lib/package-pricing";
 import { AuditLog } from "./AuditLog";
 import { verifyToken } from "@/app/api/admin/login/route";
@@ -56,6 +57,7 @@ export default async function AdminPage() {
     reviewCount,
     messageCount,
     blogCount,
+    matchRequestsNewCount,
   ] = await Promise.all([
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM users WHERE role = 'client' AND COALESCE(email_verified, FALSE) = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = TRUE AND COALESCE(u.email_verified, FALSE) = TRUE"),
@@ -70,6 +72,7 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM reviews"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM messages"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE"),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM match_requests WHERE status = 'new'").catch(() => null),
   ]);
 
   // Platform settings
@@ -130,7 +133,7 @@ export default async function AdminPage() {
   }
 
   const photographers = await query<{
-    id: string; display_name: string; slug: string; plan: string; rating: number;
+    id: string; user_id: string; display_name: string; slug: string; plan: string; rating: number;
     review_count: number; session_count: number; is_verified: boolean; is_featured: boolean;
     is_approved: boolean; is_banned: boolean; created_at: string; email: string;
     is_founding: boolean; early_bird_tier: string | null; early_bird_expires_at: string | null; registration_number: number | null;
@@ -139,7 +142,7 @@ export default async function AdminPage() {
     has_avatar: boolean; has_cover: boolean; has_bio: boolean; portfolio_count: number;
     package_count: number; location_count: number; stripe_ready: boolean; has_phone: boolean; phone: string | null;
   }>(
-    `SELECT pp.id, u.name as display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
+    `SELECT pp.id, u.id as user_id, u.name as display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
             pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, COALESCE(u.is_banned, FALSE) as is_banned, pp.created_at, u.email,
             COALESCE(pp.is_founding, FALSE) as is_founding, pp.early_bird_tier, pp.early_bird_expires_at, pp.registration_number,
             (u.avatar_url IS NOT NULL) as has_avatar,
@@ -210,6 +213,37 @@ export default async function AdminPage() {
      ORDER BY b.created_at DESC LIMIT 100`
   );
 
+  // Match requests
+  const matchRequests = await query<{
+    id: string; name: string; email: string; phone: string | null;
+    location_slug: string; shoot_date: string | null; date_flexible: boolean;
+    flexible_date_from: string | null; flexible_date_to: string | null;
+    shoot_type: string; group_size: number; budget_range: string;
+    message: string | null; status: string; admin_note: string | null;
+    created_at: string; matched_at: string | null;
+    photographers: { id: string; name: string; slug: string; avatar_url: string | null; rating: number; review_count: number; min_price: number | null; price: number | null }[];
+  }>(
+    `SELECT mr.*,
+      COALESCE(
+        (SELECT json_agg(json_build_object(
+          'id', pp.id, 'name', u.name, 'slug', pp.slug,
+          'avatar_url', u.avatar_url,
+          'rating', COALESCE(pp.rating, 0),
+          'review_count', COALESCE(pp.review_count, 0),
+          'min_price', (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE),
+          'price', mrp.price
+        ))
+        FROM match_request_photographers mrp
+        JOIN photographer_profiles pp ON pp.id = mrp.photographer_id
+        JOIN users u ON u.id = pp.user_id
+        WHERE mrp.match_request_id = mr.id),
+        '[]'::json
+      ) as photographers
+    FROM match_requests mr
+    ORDER BY mr.created_at DESC
+    LIMIT 200`
+  ).catch(() => []);
+
   // Disputes count
   const disputeCount = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM disputes WHERE status IN ('open', 'under_review')").catch(() => null);
 
@@ -244,6 +278,7 @@ export default async function AdminPage() {
     blogPosts: parseInt(blogCount?.count || "0"),
     disputesOpen: parseInt(disputeCount?.count || "0"),
     inquiriesCount: inquiries.filter(i => !i.has_reply && !i.converted_to_booking_id).length,
+    matchRequestsNew: parseInt(matchRequestsNewCount?.count || "0"),
     // Funnel data from DB
     funnelMessages: parseInt(messageCount?.count || "0"),
     funnelBookings: parseInt(bookingsTotal?.count || "0"),
@@ -287,6 +322,10 @@ export default async function AdminPage() {
     <AdminInquiriesList inquiries={inquiries} />
   );
 
+  const matchRequestsSection = (
+    <AdminMatchRequestsTab requests={matchRequests} />
+  );
+
   const settingsSection = (
     <div className="space-y-6">
       <div className="max-w-xl rounded-xl border border-warm-200 bg-white p-6">
@@ -315,6 +354,7 @@ export default async function AdminPage() {
       clientsSection={clientsSection}
       bookingsSection={bookingsSection}
       inquiriesSection={inquiriesSection}
+      matchRequestsSection={matchRequestsSection}
       visitorsSection={<VisitorsTab recentOnly />}
       disputesSection={<DisputesManager />}
       reviewsSection={<ReviewsManager initialReviews={allReviews} photographers={photographers.map(p => ({ id: p.id, name: p.display_name }))} />}

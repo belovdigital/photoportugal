@@ -5,46 +5,25 @@ import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { localeAlternates } from "@/lib/seo";
 
-const POSTS_PER_PAGE = 12;
+const POSTS_PER_PAGE = 48;
 
 export const revalidate = 300; // ISR: refresh every 5 minutes
 
-export async function generateMetadata({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const sp = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("blog");
 
-  const page = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
-  const base = "https://photoportugal.com";
-  const blogPath = locale === "pt" ? "/pt/blog" : "/blog";
-
-  // Count total pages for prev/next
-  let totalPages = 1;
-  try {
-    const countRow = await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE");
-    totalPages = Math.max(1, Math.ceil(parseInt(countRow?.count || "0") / POSTS_PER_PAGE));
-  } catch {}
-
-  const other: Record<string, Array<{ url: string; rel: string }>> = {};
-  const linkHeaders: Array<{ url: string; rel: string }> = [];
-  if (page > 1) linkHeaders.push({ url: `${base}${blogPath}?page=${page - 1}`, rel: "prev" });
-  if (page < totalPages) linkHeaders.push({ url: `${base}${blogPath}?page=${page + 1}`, rel: "next" });
-
   return {
-    title: page > 1 ? `${t("title")} — Page ${page}` : t("title"),
+    title: t("title"),
     description: t("subtitle"),
-    alternates: {
-      ...localeAlternates("/blog", locale),
-      ...(linkHeaders.length > 0 ? { types: Object.fromEntries(linkHeaders.map(l => [l.rel, l.url])) } : {}),
-    },
+    alternates: localeAlternates("/blog", locale),
     openGraph: {
-      title: `${t("title")} | Photo Portugal`,
+      title: t("title"),
       description: t("subtitle"),
-      url: page > 1 ? `${base}${blogPath}?page=${page}` : `${base}${blogPath}`,
+      url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog`,
       type: "website",
     },
-    ...(page > 1 ? { robots: { index: false } } : {}),
   };
 }
 
@@ -60,32 +39,31 @@ interface BlogPost {
 
 export default async function BlogPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { locale } = await params;
-  const sp = await searchParams;
   setRequestLocale(locale);
 
   const t = await getTranslations("blog");
   const tc = await getTranslations("common");
+  const tCat = await getTranslations("blogCategories");
 
-  const currentPage = Math.max(1, parseInt(String(sp.page || "1"), 10) || 1);
-  const offset = (currentPage - 1) * POSTS_PER_PAGE;
+  const currentPage: number = 1;
+  const offset = 0;
 
   let posts: BlogPost[] = [];
   let totalCount = 0;
   try {
     const countRow = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE"
+      "SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE AND (locale = $1)",
+      [locale]
     );
     totalCount = parseInt(countRow?.count || "0");
 
     posts = await query<BlogPost>(
-      "SELECT id, slug, title, excerpt, cover_image_url, author, published_at FROM blog_posts WHERE is_published = TRUE ORDER BY published_at DESC LIMIT $1 OFFSET $2",
-      [POSTS_PER_PAGE, offset]
+      "SELECT id, slug, title, excerpt, cover_image_url, author, published_at FROM blog_posts WHERE is_published = TRUE AND (locale = $1) ORDER BY published_at DESC LIMIT $2 OFFSET $3",
+      [locale, POSTS_PER_PAGE, offset]
     );
   } catch (e) {
     console.error("[blog] Failed to fetch posts:", e);
@@ -150,6 +128,22 @@ export default async function BlogPage({
           <p className="mt-4 max-w-2xl text-lg text-gray-500">
             {t("subtitle")}
           </p>
+
+          {/* Category filter pills */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary-500 text-white shadow-sm">
+              {tCat("all")}
+            </span>
+            {["locations", "pricing", "elopements", "weddings", "couples", "family", "planning", "proposals", "solo", "comparisons"].map((slug) => (
+              <Link
+                key={slug}
+                href={`/blog/category/${slug}`}
+                className="px-3 py-1.5 rounded-full text-xs font-medium transition bg-warm-100 text-gray-500 hover:bg-warm-200"
+              >
+                {tCat(slug)}
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -224,7 +218,7 @@ export default async function BlogPage({
                 {/* Previous */}
                 {currentPage > 1 ? (
                   <Link
-                    href={currentPage === 2 ? "/blog" : `/blog?page=${currentPage - 1}`}
+                    href={currentPage === 2 ? "/blog" : `/blog/page/${currentPage - 1}`}
                     className="inline-flex items-center gap-1 rounded-lg border border-warm-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:border-primary-200"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -258,7 +252,7 @@ export default async function BlogPage({
                     ) : (
                       <Link
                         key={page}
-                        href={page === 1 ? "/blog" : `/blog?page=${page}`}
+                        href={page === 1 ? "/blog" : `/blog/page/${page}`}
                         className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-warm-200 bg-white text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:border-primary-200"
                       >
                         {page}
@@ -275,7 +269,7 @@ export default async function BlogPage({
                 {/* Next */}
                 {currentPage < totalPages ? (
                   <Link
-                    href={`/blog?page=${currentPage + 1}`}
+                    href={`/blog/page/${currentPage + 1}`}
                     className="inline-flex items-center gap-1 rounded-lg border border-warm-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:border-primary-200"
                   >
                     Next

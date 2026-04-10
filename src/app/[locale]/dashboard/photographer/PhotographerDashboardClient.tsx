@@ -5,6 +5,7 @@ import Cropper from "react-easy-crop";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   DndContext,
   closestCenter,
@@ -125,6 +126,7 @@ export function PhotographerDashboardClient({
   const router = useRouter();
   const t = useTranslations("photographerDashboard");
   const td = useTranslations("dashboard");
+  const { modal, confirm } = useConfirmModal();
   const [activeTab, setActiveTabState] = useState<Tab>(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash.replace("#", "") as Tab;
@@ -235,7 +237,8 @@ export function PhotographerDashboardClient({
         window.location.href = `/dashboard/profile#profile`;
       }
     } else {
-      showMessage(t("errorSavingProfile"));
+      const data = await res.json().catch(() => null);
+      showMessage(data?.error || t("errorSavingProfile"));
     }
   }
 
@@ -319,9 +322,11 @@ export function PhotographerDashboardClient({
               }
               progress.done++;
             } else {
+              const err = await res.json().catch(() => null);
               setLocalItems((prev) => prev.filter((it) => it.id !== tempId));
               URL.revokeObjectURL(previewUrl);
               progress.failed++;
+              showMessage(err?.error || t("uploadFailed"));
             }
           } catch {
             setLocalItems((prev) => prev.filter((it) => it.id !== tempId));
@@ -363,7 +368,8 @@ export function PhotographerDashboardClient({
 
   async function deleteSelected() {
     if (selectedIds.size === 0) return;
-    if (!confirm(selectedIds.size !== 1 ? t("deleteSelectedPhotosPlural", { count: selectedIds.size }) : t("deleteSelectedPhotos", { count: selectedIds.size }))) return;
+    const okDel = await confirm("Delete Photos", selectedIds.size !== 1 ? t("deleteSelectedPhotosPlural", { count: selectedIds.size }) : t("deleteSelectedPhotos", { count: selectedIds.size }), { danger: true, confirmLabel: "Delete" });
+    if (!okDel) return;
     const ids = [...selectedIds];
     // Optimistic: remove immediately
     setLocalItems((prev) => prev.filter((p) => !selectedIds.has(p.id)));
@@ -380,7 +386,8 @@ export function PhotographerDashboardClient({
   );
 
   async function deletePhoto(id: string) {
-    if (!confirm(t("deleteThisPhoto"))) return;
+    const okDel = await confirm("Delete Photo", t("deleteThisPhoto"), { danger: true, confirmLabel: "Delete" });
+    if (!okDel) return;
     // Optimistic delete
     setLocalItems((prev) => prev.filter((p) => p.id !== id));
     showMessage(t("photoDeleted"));
@@ -509,16 +516,21 @@ export function PhotographerDashboardClient({
     if (res.ok) {
       const data = await res.json().catch(() => null);
       if (editingPackage) {
-        // Update in local state
+        // Update in local state — if this one is popular, clear others
         setLocalPackages((prev) =>
-          prev.map((p) => (p.id === editingPackage.id ? { ...p, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration), num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, features: pkgFeatures.filter((f) => f.trim()), delivery_days: parseInt(pkgDeliveryDays) || 7 } : p))
+          prev.map((p) => (p.id === editingPackage.id
+            ? { ...p, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration), num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, features: pkgFeatures.filter((f) => f.trim()), delivery_days: parseInt(pkgDeliveryDays) || 7 }
+            : pkgPopular ? { ...p, is_popular: false } : p))
         );
       } else if (data?.id) {
-        // Add to local state
-        setLocalPackages((prev) => [...prev, {
-          id: data.id, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration),
-          num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, features: pkgFeatures.filter((f) => f.trim()), delivery_days: parseInt(pkgDeliveryDays) || 7,
-        }]);
+        // Add to local state — if this one is popular, clear others
+        setLocalPackages((prev) => [
+          ...(pkgPopular ? prev.map((p) => ({ ...p, is_popular: false })) : prev),
+          {
+            id: data.id, name: pkgName, description: pkgDesc || null, duration_minutes: parseInt(pkgDuration),
+            num_photos: parseInt(pkgPhotos), price: parseFloat(pkgPrice), is_popular: pkgPopular, is_public: pkgPublic, features: pkgFeatures.filter((f) => f.trim()), delivery_days: parseInt(pkgDeliveryDays) || 7,
+          },
+        ]);
       }
       showMessage(editingPackage ? t("packageUpdated") : t("packageCreated"));
       setShowPackageForm(false);
@@ -529,7 +541,8 @@ export function PhotographerDashboardClient({
   }
 
   async function deletePackage(id: string) {
-    if (!confirm(t("deleteThisPackage"))) return;
+    const okDel = await confirm("Delete Package", t("deleteThisPackage"), { danger: true, confirmLabel: "Delete" });
+    if (!okDel) return;
     setLocalPackages((prev) => prev.filter((p) => p.id !== id));
     showMessage(t("packageDeleted"));
     await fetch(`/api/dashboard/packages?id=${id}`, { method: "DELETE" });
@@ -1191,6 +1204,7 @@ export function PhotographerDashboardClient({
         )}
 
       </div>
+      {modal}
     </div>
   );
 }
@@ -1324,7 +1338,7 @@ function PackageFormInline({
         <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-warm-50 px-4 py-3">
           <div>
             <p className="text-sm font-medium text-gray-900">{t("markAsMostPopular")}</p>
-            <p className="text-xs text-gray-400 mt-0.5">Highlighted on your profile</p>
+            <p className="text-xs text-gray-400 mt-0.5">{t("highlightedOnProfile")}</p>
           </div>
           <button type="button" role="switch" aria-checked={pkgPopular} onClick={() => setPkgPopular(!pkgPopular)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${pkgPopular ? "bg-primary-600" : "bg-gray-200"}`}>
@@ -1333,8 +1347,8 @@ function PackageFormInline({
         </div>
         <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-warm-50 px-4 py-3">
           <div>
-            <p className="text-sm font-medium text-gray-900">Show on profile</p>
-            <p className="text-xs text-gray-400 mt-0.5">{pkgPublic ? "Visible to everyone" : "Private — only via link or messages"}</p>
+            <p className="text-sm font-medium text-gray-900">{t("showOnProfile")}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{pkgPublic ? t("visibleToEveryone") : t("privateOnlyViaLink")}</p>
           </div>
           <button type="button" role="switch" aria-checked={pkgPublic} onClick={() => setPkgPublic(!pkgPublic)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${pkgPublic ? "bg-primary-600" : "bg-gray-200"}`}>
@@ -1398,7 +1412,7 @@ function SortablePackageCard({
               <span className="shrink-0 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-600">{t("popular")}</span>
             )}
             {!pkg.is_public && (
-              <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">Private</span>
+              <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">{t("privateBadge")}</span>
             )}
             {belowMin && (
               <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
@@ -1414,10 +1428,10 @@ function SortablePackageCard({
         {/* Price + actions */}
         <div className="flex shrink-0 items-center gap-3">
           <p className={`text-lg font-bold ${belowMin ? "text-red-600" : "text-gray-900"}`}>&euro;{Math.round(Number(pkg.price))}</p>
-          <button onClick={() => onEdit(pkg)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-warm-100 hover:text-primary-600" title="Edit">
+          <button onClick={() => onEdit(pkg)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-warm-100 hover:text-primary-600" title={t("editTooltip")}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
           </button>
-          <button onClick={() => onDelete(pkg.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red-50 hover:text-red-500" title="Delete">
+          <button onClick={() => onDelete(pkg.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red-50 hover:text-red-500" title={t("deleteTooltip")}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
           </button>
         </div>

@@ -7,7 +7,8 @@ import path from "path";
 import crypto from "crypto";
 import sharp from "sharp";
 import { sendEmail } from "@/lib/email";
-import { sendWhatsApp } from "@/lib/whatsapp";
+import { sendSMS } from "@/lib/sms";
+import { uploadToS3, deleteFromS3, isS3Path, s3KeyFromPath } from "@/lib/s3";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per delivery photo (high-res)
@@ -41,10 +42,20 @@ export async function GET(
 
 
 
-  const photos = await query(
+  const rawPhotos = await query<{ id: string; url: string; filename: string; file_size: number; sort_order: number; created_at: string }>(
     "SELECT id, url, filename, file_size, sort_order, created_at FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at",
     [id]
   );
+
+  // Resolve S3 URLs to presigned URLs for display
+  const { getPresignedUrl, isS3Path, s3KeyFromPath } = await import("@/lib/s3");
+  const photos = await Promise.all(rawPhotos.map(async (photo) => {
+    let url = photo.url;
+    if (isS3Path(url)) {
+      url = await getPresignedUrl(s3KeyFromPath(url), 3600);
+    }
+    return { ...photo, url };
+  }));
 
   return NextResponse.json({
     photos,
@@ -195,12 +206,10 @@ export async function POST(
             [deliveryDetails.client_id]
           );
           if (smsPrefs?.sms_bookings !== false) {
-            sendWhatsApp(
+            sendSMS(
               deliveryDetails.client_phone,
-              "photos_delivered",
-              [deliveryDetails.photographer_name],
               `Photo Portugal: Your photos from ${deliveryDetails.photographer_name} are ready! Check your email for the gallery link.`
-            ).catch(err => console.error("[whatsapp] error:", err));
+            ).catch(err => console.error("[sms] error:", err));
           }
         }
       } catch (smsErr) {
@@ -219,7 +228,7 @@ export async function POST(
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`🎁 <b>Photos Delivered!</b>\n\n${tgNames?.photographer_name || "Photographer"} delivered ${count} photos to ${tgNames?.client_name || "Client"}`);
-        }).catch(() => {});
+        }).catch((err) => console.error("[delivery] telegram error:", err));
       } catch {}
 
       return NextResponse.json({ success: true, token, deliveryUrl });
@@ -270,9 +279,6 @@ export async function POST(
       }, { status: 400 });
     }
 
-    const deliveryDir = path.join(UPLOAD_DIR, "delivery", id);
-    await mkdir(deliveryDir, { recursive: true });
-
     const currentCount = await queryOne<{ count: string }>(
       "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1", [id]
     );
@@ -293,16 +299,16 @@ export async function POST(
       const ext = rawExt;
       const filename = `${crypto.randomUUID()}.${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
-      const originalPath = path.join(deliveryDir, filename);
-      await writeFile(originalPath, buffer);
 
-      const url = `/uploads/delivery/${id}/${filename}`;
+      // Upload original to S3
+      const s3Key = `delivery/${id}/${filename}`;
+      await uploadToS3(s3Key, buffer, file.type || `image/${ext}`);
+      const url = `s3://${s3Key}`;
 
-      // Generate watermarked preview
+      // Generate watermarked preview and upload to S3
       let previewUrl: string | null = null;
       try {
         const previewFilename = `preview_${crypto.randomUUID()}.jpg`;
-        const previewPath = path.join(deliveryDir, previewFilename);
         const watermarkPath = path.join(process.cwd(), "public", "icon-512.png");
 
         // Resize original for preview
@@ -327,12 +333,15 @@ export async function POST(
           .toBuffer();
 
         // Composite watermark onto preview at center
-        await sharp(previewBuffer)
+        const previewFinal = await sharp(previewBuffer)
           .composite([{ input: watermark, gravity: "centre" }])
           .jpeg({ quality: 60 })
-          .toFile(previewPath);
+          .toBuffer();
 
-        previewUrl = `/uploads/delivery/${id}/${previewFilename}`;
+        // Upload preview to S3
+        const previewS3Key = `delivery/${id}/${previewFilename}`;
+        await uploadToS3(previewS3Key, previewFinal, "image/jpeg");
+        previewUrl = `s3://${previewS3Key}`;
       } catch (previewErr) {
         console.error("[delivery] preview generation error:", previewErr);
         // Continue without preview — full-res will be used as fallback
@@ -392,14 +401,22 @@ export async function DELETE(
   );
 
   if (photo) {
-    // Delete original file
+    // Delete original file (S3 or local)
     try {
-      await unlink(path.join(UPLOAD_DIR, photo.url.replace("/uploads/", "")));
+      if (isS3Path(photo.url)) {
+        await deleteFromS3(s3KeyFromPath(photo.url));
+      } else {
+        await unlink(path.join(UPLOAD_DIR, photo.url.replace("/uploads/", "")));
+      }
     } catch {}
-    // Delete preview/watermark file
+    // Delete preview/watermark file (S3 or local)
     if (photo.preview_url) {
       try {
-        await unlink(path.join(UPLOAD_DIR, photo.preview_url.replace("/uploads/", "")));
+        if (isS3Path(photo.preview_url)) {
+          await deleteFromS3(s3KeyFromPath(photo.preview_url));
+        } else {
+          await unlink(path.join(UPLOAD_DIR, photo.preview_url.replace("/uploads/", "")));
+        }
       } catch {}
     }
   }

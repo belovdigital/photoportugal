@@ -4,9 +4,11 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { AdminToggleClient, AdminPlanSelectClient, AdminDeactivatePhotographer, AdminReviewsLink } from "./AdminControls";
 import { normalizeName } from "@/lib/format-name";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 export interface AdminPhotographer {
   id: string;
+  user_id: string;
   display_name: string;
   slug: string;
   plan: string;
@@ -86,6 +88,7 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("active");
   const [page, setPage] = useState(0);
+  const { modal, confirm } = useConfirmModal();
 
   const filtered = useMemo(() => {
     let list = photographers;
@@ -407,6 +410,29 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                   ) : p.is_approved ? (
                     <AdminDeactivatePhotographer id={p.id} name={normalizeName(p.display_name)} isActive={true} />
                   ) : null}
+                  <button
+                    onClick={async () => {
+                      const ok = await confirm(
+                        "Log in as " + normalizeName(p.display_name),
+                        "You will be redirected to their dashboard.",
+                        { confirmLabel: "Log in" }
+                      );
+                      if (!ok) return;
+                      const res = await fetch("/api/admin/impersonate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user_id: p.user_id }),
+                      });
+                      if (res.ok) {
+                        window.open("/dashboard", "_blank");
+                      } else {
+                        alert("Failed to impersonate");
+                      }
+                    }}
+                    className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition"
+                  >
+                    Log in as
+                  </button>
                 </div>
               </div>
             )}
@@ -445,6 +471,7 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
           </div>
         </div>
       )}
+      {modal}
     </div>
   );
 }

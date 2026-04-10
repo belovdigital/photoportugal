@@ -8,41 +8,64 @@ export function IntercomWidget() {
 
   useEffect(() => {
     if ((window as any).__intercomLoaded) return;
-    (window as any).__intercomLoaded = true;
 
-    // 1. Fetch user, sync to Intercom via server API, then boot widget
-    fetch("/api/auth/me")
-      .then(r => r.json())
-      .catch(() => null)
-      .then(user => {
-        const settings: Record<string, unknown> = { app_id: "d02q0i7w" };
-        if (user && user.id) {
-          settings.user_id = user.id;
-          settings.name = user.name || "";
-          settings.email = user.email || "";
-          fetch("/api/intercom/sync", { method: "POST" }).catch(() => {});
-        } else {
-          // Guest context for proactive messages
-          settings.user_type = "guest";
-        }
+    // Delay Intercom load to avoid impacting initial page performance
+    const loadIntercom = () => {
+      if ((window as any).__intercomLoaded) return;
+      (window as any).__intercomLoaded = true;
 
-        // 2. Load widget script
-        const script = document.createElement("script");
-        script.src = "https://widget.intercom.io/widget/d02q0i7w";
-        script.async = true;
-        script.setAttribute("data-cfasync", "false");
-        document.head.appendChild(script);
+      fetch("/api/auth/me")
+        .then(r => r.json())
+        .catch(() => null)
+        .then(user => {
+          const settings: Record<string, unknown> = { app_id: "d02q0i7w" };
+          if (user && user.id) {
+            settings.user_id = user.id;
+            settings.name = user.name || "";
+            settings.email = user.email || "";
+            fetch("/api/intercom/sync", { method: "POST" }).catch(() => {});
+          } else {
+            settings.user_type = "guest";
+          }
 
-        script.onload = () => {
-          (window as any).Intercom("boot", settings);
-        };
-      });
+          const script = document.createElement("script");
+          script.src = "https://widget.intercom.io/widget/d02q0i7w";
+          script.async = true;
+          script.setAttribute("data-cfasync", "false");
+          document.head.appendChild(script);
+
+          script.onload = () => {
+            (window as any).Intercom("boot", settings);
+          };
+        });
+    };
+
+    // Load after 8s idle or on first user interaction, whichever comes first
+    const timer = setTimeout(loadIntercom, 8000);
+    const events = ["scroll", "click", "touchstart", "keydown"];
+    const onInteraction = () => {
+      clearTimeout(timer);
+      events.forEach(e => window.removeEventListener(e, onInteraction));
+      loadIntercom();
+    };
+    events.forEach(e => window.addEventListener(e, onInteraction, { once: true, passive: true }));
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach(e => window.removeEventListener(e, onInteraction));
+    };
   }, []);
 
-  // Update Intercom on page navigation
+  // Hide Intercom on dashboard pages on mobile only (overlaps bottom nav)
   useEffect(() => {
     if ((window as any).Intercom) {
-      (window as any).Intercom("update", { page: pathname });
+      const isMobile = window.innerWidth < 768;
+      const isDashboard = pathname.includes("/dashboard") || pathname.includes("/admin");
+      if (isMobile && isDashboard) {
+        (window as any).Intercom("update", { hide_default_launcher: true });
+      } else {
+        (window as any).Intercom("update", { hide_default_launcher: false, page: pathname });
+      }
     }
   }, [pathname]);
 

@@ -93,9 +93,10 @@ export function Header() {
       {/* Main header */}
       <header className="sticky top-0 z-50 border-b border-warm-200 bg-white/95 backdrop-blur-sm">
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo */}
+          {/* Logo — favicon on small screens, full logo on larger */}
           <Link href="/" className="shrink-0" onClick={() => setActiveMenu(null)}>
-            <img src="/logo.svg" alt="Photo Portugal" width={140} height={28} className="h-7 w-auto" />
+            <img src="/logo.svg" alt="Photo Portugal" width={140} height={28} className="hidden h-7 w-auto min-[440px]:block" />
+            <img src="/favicon.svg" alt="Photo Portugal" width={28} height={28} className="h-7 w-7 min-[440px]:hidden" />
           </Link>
 
           {/* Desktop nav */}
@@ -177,7 +178,7 @@ export function Header() {
 
             {/* Book CTA — hide while loading to prevent flash */}
             {!isLoading && !isPhotographer && (
-              <Link href="/photographers" className="hidden rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 sm:inline-flex">
+              <Link href="/choose-booking-type" className="hidden rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 sm:inline-flex">
                 {t("bookPhotoshoot")}
               </Link>
             )}
@@ -371,6 +372,13 @@ export function Header() {
                         <p className="text-xs text-gray-400">{t("megaBrowseDesc")}</p>
                       </div>
                     </Link>
+                    <Link href="/find-photographer" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg bg-primary-50 px-3 py-2.5 transition hover:bg-primary-100">
+                      <Heart className="h-[18px] w-[18px] shrink-0 text-primary-500 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-semibold text-primary-700 transition">{t("findMePhotographer")}</p>
+                        <p className="text-xs text-primary-500/70">{t("megaMatchDesc")}</p>
+                      </div>
+                    </Link>
                   </div>
                 </div>
 
@@ -429,7 +437,7 @@ export function Header() {
                 <p className="text-sm text-gray-600">
                   <span className="font-semibold text-gray-900">{t("megaCtaTitle")}</span>{" "}{t("megaCtaDesc")}
                 </p>
-                <Link href="/photographers" onClick={() => setActiveMenu(null)} className="shrink-0 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
+                <Link href="/choose-booking-type" onClick={() => setActiveMenu(null)} className="shrink-0 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700">
                   {t("bookPhotoshoot")}
                 </Link>
               </div>
@@ -539,12 +547,8 @@ export function Header() {
               ) : !isLoading ? (
                 <MobileDashLink href="/auth/signin" label={t("logIn")} onClick={() => setMobileOpen(false)} />
               ) : null}
-              {/* Language switcher mobile */}
-              <button onClick={switchLocale} className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-gray-500">
-                {locale === "en" ? "Portugues" : "English"}
-              </button>
               {!isPhotographer && (
-                <Link href="/photographers" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white">
+                <Link href="/choose-booking-type" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white">
                   {t("bookPhotoshoot")}
                 </Link>
               )}

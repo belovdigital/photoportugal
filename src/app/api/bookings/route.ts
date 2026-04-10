@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification } from "@/lib/email";
-import { sendWhatsApp, sendAdminWhatsApp } from "@/lib/whatsapp";
+import { sendSMS, sendAdminSMS } from "@/lib/sms";
 
 // Create a booking request
 export async function POST(req: NextRequest) {
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   const userId = user.id;
 
   try {
-    const { photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, utm_source, utm_medium, utm_campaign, utm_term } = await req.json();
+    const { photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, utm_source, utm_medium, utm_campaign, utm_term, gclid } = await req.json();
 
     if (!photographer_id) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
@@ -61,11 +61,18 @@ export async function POST(req: NextRequest) {
     }
 
     const booking = await queryOne<{ id: string }>(
-      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', $14, $15, $16, $17)
+      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term, gclid)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', $14, $15, $16, $17, $18)
        RETURNING id`,
-      [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, group_size || 2, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null]
+      [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, group_size || 2, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null]
     );
+
+    // Upload "Booking Created" offline conversion to Google Ads if gclid present
+    if (gclid && booking?.id) {
+      import("@/lib/google-ads-conversions").then(({ uploadBookingCreatedConversion }) => {
+        uploadBookingCreatedConversion(gclid, totalPrice ? Number(totalPrice) : 0);
+      }).catch((err) => console.error("[bookings] gads conversion upload error:", err));
+    }
 
     // Convert any inquiry between same client & photographer to point to this booking
     await queryOne(
@@ -122,7 +129,7 @@ export async function POST(req: NextRequest) {
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`📅 <b>New Booking!</b>\n\n<b>Client:</b> ${clientInfo!.name}\n<b>Photographer:</b> ${photographerInfo!.display_name}\n<b>Package:</b> ${pkgInfo?.name || "Custom"}\n<b>Date:</b> ${dateDisplay || "Flexible"}\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`);
-        }).catch(() => {});
+        }).catch((err) => console.error("[bookings] telegram new booking error:", err));
       }
 
       // Check if this client came from ads
@@ -133,7 +140,7 @@ export async function POST(req: NextRequest) {
         if (clientUtm?.utm_source) {
           import("@/lib/telegram").then(({ sendTelegram }) => {
             sendTelegram(`🎯 <b>Ad Visitor Booked!</b>\n\nSource: ${clientUtm!.utm_source}\n${clientInfo!.name} → ${photographerInfo!.display_name}`);
-          }).catch(() => {});
+          }).catch((err) => console.error("[bookings] telegram ad visitor error:", err));
         }
       } catch {}
 
@@ -144,20 +151,16 @@ export async function POST(req: NextRequest) {
           [photographerInfo.user_id]
         );
         if (photographerPhone?.phone) {
-          sendWhatsApp(
+          sendSMS(
             photographerPhone.phone,
-            "new_booking_request",
-            [clientInfo.name],
             `New booking request on Photo Portugal from ${clientInfo.name}. Log in to review: https://photoportugal.com/dashboard/bookings`
-          ).catch(err => console.error("[whatsapp] new booking error:", err));
+          ).catch(err => console.error("[sms] new booking error:", err));
         }
       }
 
-      // WhatsApp/SMS notification to all admin phones
+      // SMS notification to all admin phones
       if (photographerInfo && clientInfo) {
-        sendAdminWhatsApp(
-          "admin_new_booking",
-          [clientInfo.name, photographerInfo.display_name, dateDisplay || "flexible"],
+        sendAdminSMS(
           `New booking: ${clientInfo.name} → ${photographerInfo.display_name}${pkgInfo?.name ? ` (${pkgInfo.name})` : ""}${dateDisplay ? `, ${dateDisplay}` : ""}`
         );
       }
@@ -171,7 +174,7 @@ export async function POST(req: NextRequest) {
             `${clientInfo!.name} wants to book a session`,
             { type: "booking", bookingId: booking?.id || "" }
           )
-        ).catch(() => {});
+        ).catch((err) => console.error("[bookings] push notification error:", err));
       }
 
       // Telegram notification to photographer
@@ -182,7 +185,7 @@ export async function POST(req: NextRequest) {
             photographer_id,
             `New booking request from ${clientFirst}!\n\nPackage: ${pkgInfo?.name || "Custom"}\nDate: ${dateDisplay || "Flexible"}\n\nView: https://photoportugal.com/dashboard/bookings`
           )
-        ).catch(() => {});
+        ).catch((err) => console.error("[bookings] telegram photographer notify error:", err));
       }
     } catch {}
 

@@ -23,7 +23,7 @@ export function GoogleAnalytics() {
   // Track page views for ad visitors
   useEffect(() => {
     if (!pathname) return;
-    const utmSource = sessionStorage.getItem("utm_source");
+    const utmSource = sessionStorage.getItem("utm_source") || (sessionStorage.getItem("gclid") ? "google" : null);
     if (!utmSource) return;
     fetch("/api/track-pageview", {
       method: "POST",
@@ -35,7 +35,7 @@ export function GoogleAnalytics() {
   // UTM tracking runs always (no cookie consent needed — it's our own first-party analytics)
   const utmScript = (
     <Script id="utm-persist" strategy="afterInteractive">
-      {`(function(){var p=new URLSearchParams(location.search);var s=p.get('utm_source');if(!s)return;var d={utm_source:s,utm_medium:p.get('utm_medium'),utm_campaign:p.get('utm_campaign'),utm_term:p.get('utm_term'),landing_page:location.pathname};['utm_source','utm_medium','utm_campaign','utm_term'].forEach(function(k){if(d[k])sessionStorage.setItem(k,d[k])});if(!sessionStorage.getItem('_av')){sessionStorage.setItem('_av','1');fetch('/api/track-visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(function(){})}})();`}
+      {`(function(){var p=new URLSearchParams(location.search);var g=p.get('gclid');if(g)sessionStorage.setItem('gclid',g);var s=p.get('utm_source')||(g?'google':null);var m=p.get('utm_medium')||(g?'cpc':null);if(!s)return;var d={utm_source:s,utm_medium:m,utm_campaign:p.get('utm_campaign'),utm_term:p.get('utm_term'),gclid:g,landing_page:location.pathname};['utm_source','utm_medium','utm_campaign','utm_term'].forEach(function(k){if(d[k])sessionStorage.setItem(k,d[k])});if(!sessionStorage.getItem('_av')){sessionStorage.setItem('_av','1');fetch('/api/track-visit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).catch(function(){})}})();`}
     </Script>
   );
 

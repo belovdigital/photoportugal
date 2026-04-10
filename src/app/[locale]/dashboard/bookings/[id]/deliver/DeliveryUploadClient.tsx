@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface Photo {
   id: string;
@@ -32,6 +33,7 @@ export function DeliveryUploadClient({
     initialToken ? `${window.location.origin}/delivery/${initialToken}` : ""
   );
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [galleryPassword, setGalleryPassword] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
   const fileRef = useRef<HTMLInputElement>(null);
@@ -40,6 +42,7 @@ export function DeliveryUploadClient({
   const [deleting, setDeleting] = useState(false);
   const [deleteProgress, setDeleteProgress] = useState({ current: 0, total: 0 });
   const t = useTranslations("delivery");
+  const { modal, confirm } = useConfirmModal();
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -51,7 +54,8 @@ export function DeliveryUploadClient({
 
   async function deleteSelected() {
     if (selectedIds.size === 0) return;
-    if (!confirm(t("deletePhotos", { count: selectedIds.size }))) return;
+    const ok = await confirm("Delete Photos", t("deletePhotos", { count: selectedIds.size }), { danger: true, confirmLabel: "Delete" });
+    if (!ok) return;
     setDeleting(true);
     const ids = Array.from(selectedIds);
     setDeleteProgress({ current: 0, total: ids.length });
@@ -120,7 +124,8 @@ export function DeliveryUploadClient({
   }
 
   async function handleDelete(photoId: string) {
-    if (!confirm(t("removePhoto"))) return;
+    const ok = await confirm("Remove Photo", t("removePhoto"), { danger: true, confirmLabel: "Remove" });
+    if (!ok) return;
 
     const res = await fetch(`/api/bookings/${bookingId}/delivery?photoId=${photoId}`, {
       method: "DELETE",
@@ -139,7 +144,8 @@ export function DeliveryUploadClient({
       alert(t("setPassword"));
       return;
     }
-    if (!confirm(t("confirmShare", { count: photos.length }))) return;
+    const okShare = await confirm("Share Delivery", t("confirmShare", { count: photos.length }), { confirmLabel: "Share" });
+    if (!okShare) return;
 
     setSharing(true);
     try {
@@ -149,12 +155,16 @@ export function DeliveryUploadClient({
         body: JSON.stringify({ action: "share", password: galleryPassword.trim() }),
       });
       const data = await res.json();
-      if (data.success) {
-        setDelivered(true);
-        setDeliveryToken(data.token);
-        setDeliveryUrl(data.deliveryUrl);
+      if (!res.ok || !data.success) {
+        setError(data?.error || "Failed to share delivery. Please try again.");
+        return;
       }
-    } catch {}
+      setDelivered(true);
+      setDeliveryToken(data.token);
+      setDeliveryUrl(data.deliveryUrl);
+    } catch {
+      setError("Failed to share delivery. Please try again.");
+    }
     setSharing(false);
   }
 
@@ -176,6 +186,9 @@ export function DeliveryUploadClient({
 
   return (
     <div className="mt-6">
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
       {/* Upload area */}
       {!delivered && (
         <div
@@ -221,7 +234,7 @@ export function DeliveryUploadClient({
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-red-100">
             <div className="h-full rounded-full bg-red-500 transition-all duration-200" style={{ width: `${deleteProgress.total > 0 ? (deleteProgress.current / deleteProgress.total) * 100 : 0}%` }} />
           </div>
-          <span className="text-sm font-medium text-red-600 shrink-0">Deleting {deleteProgress.current}/{deleteProgress.total}</span>
+          <span className="text-sm font-medium text-red-600 shrink-0">{t("deletingProgress", { current: deleteProgress.current, total: deleteProgress.total })}</span>
         </div>
       )}
 
@@ -236,7 +249,7 @@ export function DeliveryUploadClient({
               onClick={() => handleUpload(failedFiles)}
               className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition"
             >
-              Retry
+              {t("retryUpload")}
             </button>
           </div>
           <p className="mt-1 text-xs text-amber-500">
@@ -362,6 +375,7 @@ export function DeliveryUploadClient({
         </div>
       )}
 
+      {modal}
     </div>
   );
 }

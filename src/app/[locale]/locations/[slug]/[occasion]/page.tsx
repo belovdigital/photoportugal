@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { getLocationBySlug, locations } from "@/lib/locations-data";
+import { getLocationBySlug, getNearbyLocations, locations } from "@/lib/locations-data";
+import { shootTypes } from "@/lib/shoot-types-data";
 import { localeAlternates } from "@/lib/seo";
 import { query, queryOne } from "@/lib/db";
 import { Avatar } from "@/components/ui/Avatar";
@@ -75,18 +76,19 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const occ = OCCASIONS[occasion];
   if (!location || !occ) return {};
 
+  const shootType = shootTypes.find((st) => st.slug === occasion);
   const title = locale === "pt"
-    ? `${occ.titlePt} em ${location.name}, Portugal`
-    : `${occ.title} in ${location.name}, Portugal`;
+    ? `${occ.titlePt} em ${location.name} — Reserve Sessão Fotográfica`
+    : `${occ.title} in ${location.name} — Book a Photoshoot`;
   const description = locale === "pt"
-    ? `${occ.descriptionPt} Reserve o seu ${occ.titlePt.toLowerCase()} em ${location.name}.`
-    : `${occ.description} Book your ${occ.title.toLowerCase()} in ${location.name}.`;
+    ? `${occ.descriptionPt} Reserve o seu ${occ.titlePt.toLowerCase()} em ${location.name}. Portfolios verificados, reserva instantanea. Desde 150EUR.`
+    : `${occ.description} Book your ${occ.title.toLowerCase()} in ${location.name}. Verified portfolios, instant booking. From EUR150.`;
 
   return {
     title,
     description,
     alternates: localeAlternates(`/locations/${slug}/${occasion}`, locale),
-    openGraph: { title, description },
+    openGraph: { title, description, url: `https://photoportugal.com/locations/${slug}/${occasion}` },
   };
 }
 
@@ -98,7 +100,7 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
   const occ = OCCASIONS[occasion];
   if (!location || !occ) notFound();
 
-  // Get photographers at this location
+  // Get photographers at this location that offer this shoot type
   let photographers: { slug: string; name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }[] = [];
   try {
     photographers = await query<{ slug: string; name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }>(
@@ -113,6 +115,25 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
       [slug]
     );
   } catch {}
+
+  // Aggregate stats for schema
+  let avgRating = 0;
+  let totalReviews = 0;
+  try {
+    const stats = await queryOne<{ avg_rating: string | null; total_reviews: string }>(
+      `SELECT AVG(pp.rating) FILTER (WHERE pp.rating IS NOT NULL AND pp.review_count > 0) as avg_rating,
+              COALESCE(SUM(pp.review_count), 0) as total_reviews
+       FROM photographer_locations pl
+       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+       WHERE pl.location_slug = $1 AND pp.is_approved = TRUE`,
+      [slug]
+    );
+    avgRating = stats?.avg_rating ? parseFloat(parseFloat(stats.avg_rating).toFixed(1)) : 0;
+    totalReviews = parseInt(stats?.total_reviews || "0");
+  } catch {}
+
+  const nearby = getNearbyLocations(slug);
+  const shootTypeData = shootTypes.find((st) => st.slug === occasion);
 
   const title = locale === "pt"
     ? `${occ.titlePt} em ${location.name}`
@@ -130,8 +151,9 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
       url: "https://photoportugal.com",
     },
     areaServed: {
-      "@type": "Place",
-      name: `${location.name}, Portugal`,
+      "@type": "City",
+      name: location.name,
+      containedInPlace: { "@type": "Country", name: "Portugal" },
     },
     ...(photographers.length > 0 && photographers[0].starting_price ? {
       offers: {
@@ -141,7 +163,28 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
         availability: "https://schema.org/InStock",
       },
     } : {}),
+    ...(totalReviews > 0 && avgRating > 0 ? {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: avgRating,
+        reviewCount: totalReviews,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    } : {}),
   };
+
+  // FAQ schema from shoot type data
+  const faqs = shootTypeData?.faqs || [];
+  const jsonLdFaq = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+    })),
+  } : null;
 
   const breadcrumbs = [
     { name: "Home", href: "/" },
@@ -153,6 +196,9 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {jsonLdFaq && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
+      )}
       <Breadcrumbs items={breadcrumbs} />
 
       <div className="mt-6">
@@ -220,6 +266,75 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
         </div>
       </section>
 
+      {/* Same occasion in nearby locations */}
+      {nearby.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-xl font-bold text-gray-900">
+            {locale === "pt"
+              ? `${occ.titlePt} em destinos próximos`
+              : `${locale === "pt" ? occ.titlePt : occ.title} in nearby destinations`}
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            {locale === "pt"
+              ? `Considere também estas localizações perto de ${location.name}.`
+              : `Also consider these locations near ${location.name}.`}
+          </p>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {nearby.slice(0, 4).map((loc) => (
+              <Link
+                key={loc.slug}
+                href={`/locations/${loc.slug}/${occasion}`}
+                className="group rounded-xl border border-warm-200 bg-white p-5 transition hover:border-primary-200 hover:shadow-md"
+              >
+                <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition">
+                  {locale === "pt" ? occ.titlePt : occ.title} {locale === "pt" ? "em" : "in"} {loc.name}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500 line-clamp-2">
+                  {locale === "pt" && loc.description_pt ? loc.description_pt : loc.description}
+                </p>
+                <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary-600">
+                  {locale === "pt" ? "Ver fotógrafos" : "View photographers"} &rarr;
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* FAQ from shoot type data */}
+      {faqs.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-xl font-bold text-gray-900">
+            {locale === "pt"
+              ? `Perguntas frequentes`
+              : `Frequently asked questions`}
+          </h2>
+          <div className="mt-4 space-y-3">
+            {faqs.slice(0, 4).map((faq, i) => (
+              <details
+                key={i}
+                className="group rounded-xl border border-warm-200 bg-warm-50"
+              >
+                <summary className="flex items-center justify-between px-5 py-4 font-semibold text-gray-900 cursor-pointer text-sm">
+                  {faq.question}
+                  <svg
+                    className="h-4 w-4 shrink-0 text-gray-400 transition group-open:rotate-180"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div className="px-5 pb-4">
+                  <p className="text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* CTA */}
       <div className="mt-12 rounded-2xl bg-primary-50 p-8 text-center">
         <h2 className="font-display text-2xl font-bold text-gray-900">
@@ -234,7 +349,7 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Link
-            href={`/photographers?location=${slug}`}
+            href={`/choose-booking-type?location=${slug}`}
             className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700"
           >
             {locale === "pt" ? "Ver Fotógrafos" : "Browse Photographers"}

@@ -98,7 +98,7 @@ export default async function BookingsPage() {
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            LEFT JOIN packages p ON p.id = b.package_id
-           WHERE b.photographer_id = $1
+           WHERE b.photographer_id = $1 AND b.status != 'inquiry'
            ORDER BY b.created_at DESC`,
           [profile.id]
         );
@@ -113,7 +113,7 @@ export default async function BookingsPage() {
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users u ON u.id = pp.user_id
          LEFT JOIN packages p ON p.id = b.package_id
-         WHERE b.client_id = $1
+         WHERE b.client_id = $1 AND b.status != 'inquiry'
          ORDER BY b.created_at DESC`,
         [userId]
       );

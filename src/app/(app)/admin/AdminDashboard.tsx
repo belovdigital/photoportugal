@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useTransition, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { AdminToastProvider } from "./AdminToast";
 
 interface AdminStats {
@@ -19,6 +20,7 @@ interface AdminStats {
   blogPosts: number;
   disputesOpen: number;
   inquiriesCount: number;
+  matchRequestsNew: number;
   // Funnel
   funnelMessages: number;
   funnelBookings: number;
@@ -42,6 +44,7 @@ const tabGroups = [
     items: [
       { key: "bookings", label: "Bookings", icon: "calendar" },
       { key: "inquiries", label: "Inquiries", icon: "message" },
+      { key: "matchRequests", label: "Match Requests", icon: "search" },
       { key: "disputes", label: "Disputes", icon: "flag" },
       { key: "reviews", label: "Reviews", icon: "star" },
     ],
@@ -71,7 +74,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "bookings" | "inquiries" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "bookings" | "inquiries" | "matchRequests" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "settings";
 
 function SidebarIcon({ type, active }: { type: string; active: boolean }) {
   const cls = `h-4.5 w-4.5 ${active ? "text-primary-600" : "text-gray-400"}`;
@@ -100,6 +103,8 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>;
     case "map":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+    case "search":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>;
     case "settings":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
     default:
@@ -115,6 +120,7 @@ export function AdminDashboard({
   clientsSection,
   bookingsSection,
   inquiriesSection,
+  matchRequestsSection,
   visitorsSection,
   disputesSection,
   reviewsSection,
@@ -130,6 +136,7 @@ export function AdminDashboard({
   clientsSection: ReactNode;
   bookingsSection: ReactNode;
   inquiriesSection: ReactNode;
+  matchRequestsSection: ReactNode;
   visitorsSection: ReactNode;
   disputesSection: ReactNode;
   reviewsSection: ReactNode;
@@ -176,16 +183,25 @@ export function AdminDashboard({
     return () => window.removeEventListener("hashchange", syncHash);
   }, []);
 
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+
   function setActiveTab(tab: TabKey) {
     setActiveTabState(tab);
     window.history.replaceState(null, "", `#${tab}`);
     try { sessionStorage.setItem("admin-tab", tab); } catch {}
+    // Refresh server data in background
+    startTransition(() => { router.refresh(); });
   }
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   function getBadge(key: string): number {
     if (key === "photographers") return stats.photographersReady;
     if (key === "bookings") return stats.bookingsPending;
     if (key === "inquiries") return stats.inquiriesCount;
+    if (key === "matchRequests") return stats.matchRequestsNew;
     if (key === "disputes") return stats.disputesOpen;
     return 0;
   }
@@ -265,8 +281,13 @@ export function AdminDashboard({
           </nav>
         </aside>
 
-        {/* Main content */}
+        {/* Main content — render only after mount to avoid hydration mismatch from timestamps */}
         <div className="flex-1 min-w-0 pl-0 md:pl-6">
+          {!mounted ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+            </div>
+          ) : <>
           {activeTab === "analytics" && analyticsSection}
           {activeTab === "overview" && (
             <div>
@@ -355,6 +376,7 @@ export function AdminDashboard({
           {activeTab === "clients" && clientsSection}
           {activeTab === "bookings" && bookingsSection}
           {activeTab === "inquiries" && inquiriesSection}
+          {activeTab === "matchRequests" && matchRequestsSection}
           {activeTab === "visitors" && visitorsSection}
           {activeTab === "disputes" && disputesSection}
           {activeTab === "reviews" && reviewsSection}
@@ -362,6 +384,7 @@ export function AdminDashboard({
           {activeTab === "promos" && promosSection}
           {activeTab === "locations" && locationsSection}
           {activeTab === "settings" && settingsSection}
+          </>}
         </div>
       </div>
       <AdminToastProvider />

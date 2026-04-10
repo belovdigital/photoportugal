@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { queryOne } from "@/lib/db";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { DeliveryPageClient } from "./DeliveryPageClient";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,7 @@ export default async function DeliveryPage({ params }: { params: Promise<{ token
   const expired = new Date(booking.delivery_expires_at) < new Date();
 
   if (expired) {
+    const t = await getTranslations("delivery");
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
@@ -50,8 +52,8 @@ export default async function DeliveryPage({ params }: { params: Promise<{ token
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h1 className="mt-4 font-display text-2xl font-bold text-gray-900">Gallery Expired</h1>
-        <p className="mt-2 text-gray-500">This photo gallery has expired. Please contact your photographer to request a new link.</p>
+        <h1 className="mt-4 font-display text-2xl font-bold text-gray-900">{t("galleryExpiredTitle")}</h1>
+        <p className="mt-2 text-gray-500">{t("galleryExpiredMessage")}</p>
       </div>
     );
   }

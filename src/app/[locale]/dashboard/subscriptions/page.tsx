@@ -41,21 +41,21 @@ export default async function SubscriptionPage() {
     {
       key: "free", name: t("planFree"), price: PLAN_PRICES.free, current: currentPlan === "free",
       features: [
-        t("feat10Photos"), t("feat1Location"), t("featBasicVisibility"),
+        t("feat100Photos"), t("feat1Location"), t("featBasicVisibility"),
         t("featCommission", { rate: COMMISSION_RATES.free }),
       ],
     },
     {
       key: "pro", name: t("planPro"), price: PLAN_PRICES.pro, current: currentPlan === "pro",
       features: [
-        t("feat30Photos"), t("feat5Locations"), t("featPriorityRanking"),
+        t("feat100Photos"), t("feat5Locations"), t("featPriorityRanking"),
         t("featAnalytics"), t("featCommission", { rate: COMMISSION_RATES.pro }),
       ],
     },
     {
       key: "premium", name: t("planPremium"), price: PLAN_PRICES.premium, current: currentPlan === "premium",
       features: [
-        t("featUnlimitedPhotos"), t("featAllLocations"), t("featTopRanking"),
+        t("feat100Photos"), t("featAllLocations"), t("featTopRanking"),
         t("featFullAnalytics"), t("featCustomUrl"), t("featCommission", { rate: COMMISSION_RATES.premium }),
         t("featPrioritySupport"),
       ],

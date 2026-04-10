@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { queryOne, query } from "@/lib/db";
 import crypto from "crypto";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 
 // POST: Verify password and return gallery data
 export async function POST(
@@ -75,11 +76,19 @@ export async function POST(
   );
 
   // If delivery not yet accepted, return preview URLs instead of full-res URLs
-  const photos = rawPhotos.map((photo) => ({
-    id: photo.id,
-    url: isAccepted ? photo.url : (photo.preview_url || photo.url),
-    filename: photo.filename,
-    file_size: photo.file_size,
+  // For S3-stored photos, generate presigned URLs
+  const photos = await Promise.all(rawPhotos.map(async (photo) => {
+    const rawUrl = isAccepted ? photo.url : (photo.preview_url || photo.url);
+    let resolvedUrl = rawUrl;
+    if (isS3Path(rawUrl)) {
+      resolvedUrl = await getPresignedUrl(s3KeyFromPath(rawUrl), 3600);
+    }
+    return {
+      id: photo.id,
+      url: resolvedUrl,
+      filename: photo.filename,
+      file_size: photo.file_size,
+    };
   }));
 
   return NextResponse.json({

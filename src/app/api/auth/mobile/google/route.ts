@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { queryOne } from "@/lib/db";
+import { query, queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendAdminNewClientNotification, sendWelcomeEmail } from "@/lib/email";
@@ -78,12 +78,13 @@ export async function POST(req: NextRequest) {
         avatar_url: googleUser.picture || null,
       };
 
-      // Notify admin + send welcome email for new users
-      sendWelcomeEmail(googleUser.email, googleUser.name, "client").catch(() => {});
-      sendAdminNewClientNotification(googleUser.name, googleUser.email).catch(() => {});
+      // Send welcome email for new mobile users (always clients on mobile)
+      sendWelcomeEmail(googleUser.email, googleUser.name, "client").catch((err) => console.error("[auth/google] welcome email error:", err));
+      sendAdminNewClientNotification(googleUser.name, googleUser.email).catch((err) => console.error("[auth/google] admin notification error:", err));
       import("@/lib/telegram").then(({ sendTelegram }) => {
         sendTelegram(`👤 <b>New Client (Google, mobile)</b>\n\n<b>Name:</b> ${googleUser.name}\n<b>Email:</b> ${googleUser.email}`);
-      }).catch(() => {});
+      }).catch((err) => console.error("[auth/google] telegram error:", err));
+      query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch((err) => console.error("[auth/google] admin_notified update error:", err));
     } else {
       // Update google_id and avatar if missing
       await queryOne(

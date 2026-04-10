@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { sendWhatsApp } from "@/lib/whatsapp";
+import { sendSMS } from "@/lib/sms";
 
 const BASE_URL = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
 
@@ -94,12 +94,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           [recipientUserId]
         );
         if (smsPrefs?.sms_bookings !== false) {
-          sendWhatsApp(
+          sendSMS(
             recipientPhone.phone,
-            "new_message",
-            [senderName],
             `Photo Portugal: ${senderName} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`
-          ).catch(err => console.error("[whatsapp] error:", err));
+          ).catch(err => console.error("[sms] error:", err));
         }
       }
     } catch (smsErr) {
@@ -110,7 +108,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (isClient) {
       import("@/lib/notify-photographer").then(m =>
         m.notifyPhotographerViaTelegram(booking.photographer_id, `📅 <b>New date proposed</b>\n\n${senderName} proposed: <b>${formattedDate}${timeDisplay}</b>${date_note ? `\nNote: "${date_note}"` : ""}\n\nAccept or propose another in your dashboard.`)
-      ).catch(() => {});
+      ).catch((err) => console.error("[propose-date] telegram photographer error:", err));
     }
 
     return NextResponse.json({ success: true, action: "proposed" });
@@ -162,17 +160,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         "SELECT phone FROM users WHERE id = $1", [recipientUserId]
       );
       if (recipientPhone?.phone) {
-        sendWhatsApp(
-          recipientPhone.phone, "new_message", [accepterName],
+        sendSMS(
+          recipientPhone.phone,
           `Photo Portugal: Date confirmed! ${accepterName} accepted ${formattedDate}${acceptedTimeDisplay} for your photoshoot.`
-        ).catch(() => {});
+        ).catch((err) => console.error("[propose-date] sms date confirmed error:", err));
       }
     } catch {}
 
     // Telegram to photographer (whether they proposed or accepted)
     import("@/lib/notify-photographer").then(m =>
       m.notifyPhotographerViaTelegram(booking.photographer_id, `✅ <b>Date confirmed!</b>\n\nSession with ${booking.client_name}: <b>${formattedDate}${acceptedTimeDisplay}</b>`)
-    ).catch(() => {});
+    ).catch((err) => console.error("[propose-date] telegram date confirmed error:", err));
 
     return NextResponse.json({ success: true, action: "accepted" });
   }

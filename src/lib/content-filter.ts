@@ -25,3 +25,41 @@ export function detectContactInfo(text: string): string | null {
 
   return null;
 }
+
+/**
+ * Detects social media platform mentions (Instagram, Facebook) in messages.
+ * Returns "instagram" or "facebook" if mentioned, null if clean.
+ *
+ * This is separate from detectContactInfo because it has different behavior:
+ * - Clients: message is BLOCKED (not sent)
+ * - Photographers: message is sent but with a system warning
+ *
+ * Does NOT trigger if the user is sharing a link to their OWN profile
+ * (e.g. "here's my instagram: instagram.com/myname" is ok for clients to share).
+ */
+export function detectSocialPlatform(text: string, senderRole: "client" | "photographer"): "instagram" | "facebook" | null {
+  const lower = text.toLowerCase();
+
+  // Instagram variations (including common typos)
+  const instaPatterns = /\b(instagram|instagra[mn]|insta[gq]ram|istagram|instagam|instagrm|instgram|insta)\b/i;
+  // Facebook variations
+  const fbPatterns = /\b(facebook|face\s?book|facbook|facebok|fb\.com)\b/i;
+
+  const hasInsta = instaPatterns.test(lower);
+  const hasFb = fbPatterns.test(lower);
+
+  if (!hasInsta && !hasFb) return null;
+
+  // If client is sharing their OWN link (instagram.com/... or facebook.com/...),
+  // that's fine — they're giving the photographer context, not asking to go off-platform
+  if (senderRole === "client") {
+    const hasInstaLink = /instagram\.com\/[a-zA-Z0-9_.]+/i.test(text);
+    const hasFbLink = /facebook\.com\/[a-zA-Z0-9_.]+/i.test(text);
+    // If the only social mention is their own link, allow it
+    if (hasInsta && hasInstaLink && !hasFb) return null;
+    if (hasFb && hasFbLink && !hasInsta) return null;
+    if (hasInsta && hasInstaLink && hasFb && hasFbLink) return null;
+  }
+
+  return hasInsta ? "instagram" : "facebook";
+}

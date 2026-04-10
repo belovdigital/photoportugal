@@ -17,6 +17,11 @@ export default async function DashboardLayout({
     redirect("/auth/signin");
   }
 
+  const role = (session.user as { role?: string | null }).role;
+  if (!role) {
+    redirect("/auth/choose-role");
+  }
+
   return (
     <div className="mx-auto flex max-w-screen-xl">
       <DashboardSidebar />

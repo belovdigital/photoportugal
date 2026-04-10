@@ -93,6 +93,20 @@ export async function GET(req: Request) {
   `);
 
   // Recent sessions
+  // Filter out bots: Googlebot, headless crawlers, and high-frequency scrapers
+  const botFilter = `AND vs.user_agent NOT ILIKE '%googlebot%'
+    AND vs.user_agent NOT ILIKE '%AdsBot%'
+    AND vs.user_agent NOT ILIKE '%Mediapartners%'
+    AND vs.user_agent NOT ILIKE '%bingbot%'
+    AND vs.user_agent NOT ILIKE '%AhrefsBot%'
+    AND vs.user_agent NOT ILIKE '%SemrushBot%'
+    AND vs.user_agent NOT ILIKE '%HeadlessChrome%'
+    AND vs.visitor_id NOT IN (
+      SELECT visitor_id FROM visitor_sessions
+      WHERE started_at >= NOW() - INTERVAL '1 hour'
+      GROUP BY visitor_id HAVING COUNT(*) > 10
+    )`;
+
   const roleWhere = roleFilter === "guest" ? "AND vs.user_id IS NULL"
     : roleFilter === "client" ? "AND u.role = 'client'"
     : roleFilter === "photographer" ? "AND u.role = 'photographer'"
@@ -118,7 +132,7 @@ export async function GET(req: Request) {
            vs.pageviews::text
     FROM visitor_sessions vs
     LEFT JOIN users u ON u.id = vs.user_id
-    WHERE 1=1 ${roleWhere} ${countryWhere}
+    WHERE 1=1 ${botFilter} ${roleWhere} ${countryWhere}
     ORDER BY vs.started_at DESC LIMIT ${limitParam}
   `, params);
 

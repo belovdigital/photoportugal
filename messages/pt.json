@@ -72,7 +72,16 @@
     "forPhotographers": "Para Fotógrafos",
     "locations": "Localizações",
     "photographers": "Fotógrafos",
-    "breadcrumb": "Navegação estrutural"
+    "breadcrumb": "Navegação estrutural",
+    "savedPhotographers": "Fotógrafos Guardados",
+    "noSavedPhotographers": "Ainda não guardou nenhum fotógrafo",
+    "noSavedPhotographersHint": "Explore fotógrafos e toque no coração para guardar os seus favoritos",
+    "photographersSaved": "{count, plural, one {# fotógrafo} other {# fotógrafos}} guardado(s)",
+    "removeFromWishlist": "Remover dos guardados",
+    "saveToWishlist": "Guardar",
+    "selectDate": "Selecionar data",
+    "unavailable": "Indisponível",
+    "today": "Hoje"
   },
   "nav": {
     "announcement": "Fotografia profissional de férias",
@@ -98,6 +107,7 @@
     "pricingPlans": "Planos e Preços",
     "learnMore": "Saber Mais",
     "bookPhotoshoot": "Reservar Sessão Fotográfica",
+    "findMePhotographer": "Encontre um Fotógrafo",
     "findPhotographers": "Encontrar Fotógrafos",
     "allDestinations": "Todos os Destinos",
     "dashboard": "Painel",
@@ -128,6 +138,8 @@
     "megaTrustQuality": "Confiança e Qualidade",
     "megaCompany": "Empresa",
     "megaBrowseDesc": "Pesquisar fotógrafos por localização, estilo e disponibilidade",
+    "findMePhotographer": "Ajudem-me a Escolher",
+    "megaMatchDesc": "Selecionamos o fotógrafo perfeito para si",
     "megaAboutDesc": "A nossa história e a equipa por detrás do Photo Portugal",
     "megaContactDesc": "Entre em contacto com a nossa equipa",
     "megaHelpDesc": "Guias, tutoriais e artigos de suporte",
@@ -170,13 +182,16 @@
     "legalEntityVat": "Isento de IVA — Art. 53.º do CIVA",
     "legalEntityLocation": "Lisboa, Portugal",
     "appTitle": "Leve o Photo Portugal consigo",
-    "appSubtitle": "Explore fotógrafos, reserve sessões e faça tudo pelo telemóvel."
+    "appSubtitle": "Explore fotógrafos, reserve sessões e faça tudo pelo telemóvel.",
+    "soon": "Em breve"
   },
   "home": {
     "trustBadge": "A confiança de {count}+ viajantes satisfeitos",
     "heroTitle": "Reserve um Fotógrafo de Férias em",
     "heroTitleHighlight": "Portugal",
     "heroDescription": "Escolha da nossa rede selecionada de fotógrafos profissionais que conhecem os locais mais deslumbrantes de Portugal. Cada fotógrafo é pessoalmente verificado quanto à qualidade, fiabilidade e estilo.",
+    "heroBrowse": "Ver Fotógrafos",
+    "heroMatch": "Ajudem-me a Escolher",
     "socialProof": {
       "handPicked": "Fotógrafos selecionados a dedo",
       "verifiedReviews": "Avaliações verificadas",
@@ -408,6 +423,7 @@
         }
       },
       "joinAsPhotographer": "Aderir como Fotógrafo",
+      "findMePhotographer": "Não Sabe? Nós Encontramos",
       "faq": {
         "title": "Perguntas Frequentes",
         "howFarInAdvance": {
@@ -442,15 +458,15 @@
     "questions": {
       "howDoesItWork": {
         "question": "Como funciona a Photo Portugal?",
-        "answer": "Explore a nossa seleção de fotógrafos profissionais em todo o Portugal. Veja os seus portfólios, leia avaliações verificadas e reserve uma sessão fotográfica diretamente na nossa plataforma. Saiba mais na nossa página Como Funciona."
+        "answer": "Explore a nossa seleção de <a href=\"/photographers\">fotógrafos profissionais</a> em todo o Portugal. Veja os seus portfólios, leia avaliações verificadas e reserve uma sessão fotográfica diretamente na nossa plataforma. Saiba mais na nossa página <a href=\"/how-it-works\">Como Funciona</a>."
       },
       "cost": {
         "question": "Quanto custa uma sessão fotográfica?",
-        "answer": "Os preços variam conforme o fotógrafo e o pacote, tipicamente entre €120 para uma sessão rápida de 30 minutos e mais de €500 para uma experiência de dia inteiro. Cada fotógrafo define os seus próprios preços e pacotes, que pode consultar na página de perfil. Veja a nossa página de preços para uma visão geral."
+        "answer": "Os preços variam conforme o fotógrafo e o pacote, tipicamente entre €120 para uma sessão rápida de 30 minutos e mais de €500 para uma experiência de dia inteiro. Cada fotógrafo define os seus próprios preços e pacotes, que pode consultar na página de perfil. Veja a nossa <a href=\"/for-photographers/pricing\">página de preços</a> para uma visão geral."
       },
       "howToBook": {
         "question": "Como reservo um fotógrafo?",
-        "answer": "Encontre um fotógrafo de que goste, escolha um pacote, selecione a data e hora preferidas e envie um pedido de reserva. O fotógrafo irá analisar o seu pedido e confirmar dentro de 24 horas. O pagamento é cobrado na reserva e retido em segurança até as suas fotos serem entregues."
+        "answer": "<a href=\"/photographers\">Encontre um fotógrafo</a> de que goste, escolha um pacote, selecione a data e hora preferidas e envie um pedido de reserva. O fotógrafo irá analisar o seu pedido e confirmar dentro de 24 horas. O pagamento é cobrado na reserva e retido em segurança até as suas fotos serem entregues."
       },
       "paymentSecure": {
         "question": "Como funciona o pagamento? É seguro?",
@@ -458,7 +474,7 @@
       },
       "cancelBooking": {
         "question": "Posso cancelar a minha reserva?",
-        "answer": "Sim, pode cancelar através do seu painel. Cancelamento com mais de 7 dias de antecedência dá direito a reembolso total. Entre 3 a 7 dias: reembolso de 50%. Menos de 3 dias: sem reembolso (o fotógrafo reservou o seu tempo para si). Consulte os nossos Termos de Serviço para todos os detalhes."
+        "answer": "Sim, pode cancelar através do seu <a href=\"/dashboard/bookings\">painel</a>. Cancelamento com mais de 7 dias de antecedência dá direito a reembolso total. Entre 3 a 7 dias: reembolso de 50%. Menos de 3 dias: sem reembolso (o fotógrafo reservou o seu tempo para si). Consulte os nossos <a href=\"/terms\">Termos de Serviço</a> para todos os detalhes."
       },
       "reschedule": {
         "question": "Posso reagendar a minha reserva?",
@@ -474,7 +490,7 @@
       },
       "notHappy": {
         "question": "E se não ficar satisfeito com as fotos?",
-        "answer": "Tem 7 dias após a entrega para aceitar as suas fotos ou abrir uma disputa. Motivos válidos para disputa incluem: significativamente menos fotos do que o prometido, local errado, problemas técnicos graves ou ausência do fotógrafo. Trabalharemos com ambas as partes para encontrar uma resolução justa — nova sessão, reembolso parcial ou reembolso total. Note que preferências subjetivas de estilo não são motivo para reembolso, por isso analise bem os portfólios antes de reservar. Consulte os nossos Termos de Serviço para mais detalhes."
+        "answer": "Tem 7 dias após a entrega para aceitar as suas fotos ou abrir uma disputa. Motivos válidos para disputa incluem: significativamente menos fotos do que o prometido, local errado, problemas técnicos graves ou ausência do fotógrafo. Trabalharemos com ambas as partes para encontrar uma resolução justa — nova sessão, reembolso parcial ou reembolso total. Note que preferências subjetivas de estilo não são motivo para reembolso, por isso analise bem os portfólios antes de reservar. Consulte os nossos <a href=\"/terms\">Termos de Serviço</a> para mais detalhes."
       },
       "galleryAccess": {
         "question": "Durante quanto tempo posso aceder à minha galeria de fotos?",
@@ -490,23 +506,23 @@
       },
       "locationsAvailable": {
         "question": "Que localizações estão disponíveis?",
-        "answer": "Cobrimos mais de 25 localizações em todo o Portugal, incluindo Lisboa, Porto, Algarve, Sintra, Madeira, Açores e muitas mais."
+        "answer": "Cobrimos {locationCount}+ localizações em todo o Portugal, incluindo <a href=\"/photographers/location/lisbon\">Lisboa</a>, <a href=\"/photographers/location/porto\">Porto</a>, <a href=\"/photographers/location/algarve\">Algarve</a>, <a href=\"/photographers/location/sintra\">Sintra</a>, <a href=\"/photographers/location/madeira\">Madeira</a>, <a href=\"/photographers/location/azores\">Açores</a> e muitas mais."
       },
       "speakEnglish": {
         "question": "Os fotógrafos falam inglês?",
-        "answer": "A maioria dos fotógrafos na nossa plataforma fala inglês. Pode filtrar fotógrafos por idioma na página do catálogo. Muitos também falam português, espanhol, francês e alemão."
+        "answer": "A maioria dos fotógrafos na nossa plataforma fala inglês. Pode filtrar fotógrafos por idioma na <a href=\"/photographers\">página do catálogo</a>. Muitos também falam português, espanhol, francês e alemão."
       },
       "becomePhotographer": {
         "question": "Como me torno fotógrafo na Photo Portugal?",
-        "answer": "Clique em 'Aderir como Fotógrafo' e crie a sua conta. Configure o seu perfil, carregue fotos de portfólio, crie pacotes e comece a receber pedidos de reserva. Oferecemos planos Gratuito, Pro e Premium com diferentes funcionalidades e taxas de comissão."
+        "answer": "Clique em '<a href=\"/for-photographers/join\">Aderir como Fotógrafo</a>' e crie a sua conta. Configure o seu perfil, carregue fotos de portfólio, crie pacotes e comece a receber pedidos de reserva. Oferecemos planos Gratuito, Pro e Premium com diferentes funcionalidades e taxas de comissão."
       },
       "photographerPlans": {
         "question": "Quais são os planos para fotógrafos?",
-        "answer": "Oferecemos três planos: Gratuito (comissão de 20%, 1 localização, 10 fotos de portfólio), Pro a €29/mês (comissão de 15%, 5 localizações, 30 fotos de portfólio) e Premium a €59/mês (comissão de 10%, todas as localizações, até 100 fotos de portfólio, URL de perfil personalizado, suporte prioritário). Visite a nossa página de preços para uma comparação completa."
+        "answer": "Oferecemos três planos: Gratuito (comissão de 20%, 1 localização), Pro a €29/mês (comissão de 15%, 5 localizações) e Premium a €59/mês (comissão de 10%, todas as localizações, URL de perfil personalizado, suporte prioritário). Todos os planos incluem até 100 fotos de portfólio. Visite a nossa <a href=\"/for-photographers/pricing\">página de preços</a> para uma comparação completa."
       },
       "earlyBird": {
         "question": "O que é o programa Early Bird?",
-        "answer": "Estamos a oferecer benefícios exclusivos aos nossos primeiros fotógrafos. Os primeiros 10 fotógrafos (nível Fundador) recebem o plano Premium gratuito para sempre com um distintivo exclusivo de \"Fotógrafo Fundador\". Os próximos 50 recebem Premium gratuito durante 6 meses e os próximos 100 recebem Pro gratuito durante 3 meses. As vagas são limitadas e atribuídas por ordem de chegada. Verifique as vagas disponíveis."
+        "answer": "Estamos a oferecer benefícios exclusivos aos nossos primeiros fotógrafos. Os primeiros 10 fotógrafos (nível Fundador) recebem o plano Premium gratuito para sempre com um distintivo exclusivo de \"Fotógrafo Fundador\". Os próximos 25 recebem Premium gratuito durante 6 meses e os próximos 50 recebem Pro gratuito durante 3 meses. As vagas são limitadas e atribuídas por ordem de chegada. <a href=\"/for-photographers/join\">Verifique as vagas disponíveis</a>."
       },
       "clientNoShow": {
         "question": "O que acontece se eu não comparecer à minha sessão fotográfica?",
@@ -622,7 +638,7 @@
         "name": "Gratuito",
         "description": "Comece e teste a plataforma",
         "features": {
-          "portfolioPhotos": "Até 10 fotos de portfólio",
+          "portfolioPhotos": "Até 100 fotos de portfólio",
           "locations": "1 localização",
           "searchVisibility": "Visibilidade básica na pesquisa",
           "commission": "Comissão da plataforma de {rate}%",
@@ -634,7 +650,7 @@
         "name": "Pro",
         "description": "Para fotógrafos prontos a fazer crescer o seu negócio",
         "features": {
-          "portfolioPhotos": "Até 30 fotos de portfólio",
+          "portfolioPhotos": "Até 100 fotos de portfólio",
           "locations": "5 localizações",
           "searchRanking": "Posição prioritária na pesquisa",
           "analytics": "Análise do perfil",
@@ -919,6 +935,10 @@
     "available": "{count} fotógrafo selecionado",
     "availablePlural": "{count} fotógrafos selecionados",
     "trustLine": "Cada fotógrafo é pessoalmente verificado e aprovado pela nossa equipa",
+    "concierge": {
+      "title": "Precisa de ajuda a escolher? Nós ajudamos!",
+      "desc": "Diga-nos as suas preferências e a nossa equipa seleciona 2-3 fotógrafos perfeitos para si — gratuitamente."
+    },
     "noMatch": "Nenhum fotógrafo corresponde aos seus filtros.",
     "noMatchSuggestion": "Tente ajustar os filtros de localização, tipo de sessão ou idioma para ver mais fotógrafos.",
     "filters": {
@@ -1042,6 +1062,29 @@
     "noPosts": "Ainda sem artigos no blogue. Volte em breve!",
     "readMore": "Ler mais"
   },
+  "blogCategories": {
+    "all": "Todos os Artigos",
+    "locations": "Locais Fotográficos",
+    "pricing": "Guias de Preços",
+    "elopements": "Elopements",
+    "weddings": "Casamentos",
+    "couples": "Casais",
+    "family": "Família",
+    "planning": "Planeamento e Dicas",
+    "proposals": "Pedidos de Casamento",
+    "solo": "Solo e Criadores",
+    "comparisons": "Comparações",
+    "locationsDesc": "Descubra os melhores locais para fotografias e guias de localizações por todo o Portugal",
+    "pricingDesc": "Quanto custam as sessões fotográficas em Portugal — preços transparentes",
+    "elopementsDesc": "Tudo o que precisa de saber sobre elopements em Portugal",
+    "weddingsDesc": "Guias de fotografia de casamento de destino em Portugal",
+    "couplesDesc": "Ideias e inspiração para sessões fotográficas românticas de casais em Portugal",
+    "familyDesc": "Dicas, locais e ideias para sessões fotográficas de família por todo o Portugal",
+    "planningDesc": "O que vestir, quando fotografar e como planear a sua sessão fotográfica em Portugal",
+    "proposalsDesc": "Planeie o pedido de casamento surpresa perfeito em Portugal",
+    "soloDesc": "Fotografia para viajantes solo e criadores de conteúdo em Portugal",
+    "comparisonsDesc": "Como o Photo Portugal se compara a outros serviços de fotografia de férias"
+  },
   "book": {
     "title": "Reservar {photographer}",
     "subtitle": "Preencha os detalhes para o seu pedido de sessão fotográfica",
@@ -1113,6 +1156,68 @@
       "serviceFee": "Taxa de serviço ({rate}%)",
       "total": "Total"
     }
+  },
+  "chooseBookingType": {
+    "metaTitle": "Reserve uma Sessão Fotográfica em Portugal",
+    "metaDescription": "Escolha como reservar o seu fotógrafo — procure e escolha, ou deixe a nossa equipa encontrar o match perfeito para si.",
+    "title": "Como Gostaria de Reservar?",
+    "subtitle": "Duas formas de encontrar o fotógrafo perfeito em Portugal.",
+    "browseTitle": "Eu Escolho",
+    "browseDesc": "Explore portfólios, compare preços e avaliações, e reserve diretamente.",
+    "matchTitle": "Encontrem o Match Perfeito",
+    "matchDesc": "Diga-nos sobre a sessão dos seus sonhos e selecionaremos 2-3 fotógrafos para si — gratuitamente.",
+    "browseCta": "Explorar",
+    "matchCta": "Começar"
+  },
+  "chooseRole": {
+    "title": "Bem-vindo à Photo Portugal!",
+    "subtitle": "Diga-nos quem é para personalizarmos a sua experiência.",
+    "tourist": "Sou Viajante",
+    "touristDesc": "Procuro um fotógrafo para capturar a minha viagem a Portugal.",
+    "photographer": "Sou Fotógrafo",
+    "photographerDesc": "Quero oferecer sessões fotográficas e fazer crescer o meu negócio."
+  },
+  "findPhotographer": {
+    "metaTitle": "Encontre um Fotógrafo em Portugal",
+    "metaDescription": "Diga-nos sobre a sua sessão fotográfica e nós encontraremos 2-3 fotógrafos selecionados para si. Serviço gratuito de matchmaking.",
+    "title": "Encontre um Fotógrafo",
+    "subtitle": "Diga-nos sobre a sessão fotográfica dos seus sonhos e selecionaremos 2-3 fotógrafos para si — gratuitamente.",
+    "nameLabel": "O Seu Nome",
+    "namePlaceholder": "Nome completo",
+    "emailLabel": "Email",
+    "emailPlaceholder": "seu@email.com",
+    "phoneLabel": "Telefone",
+    "phonePlaceholder": "+351 912 345 678",
+    "locationLabel": "Onde em Portugal?",
+    "locationPlaceholder": "Selecione uma localização",
+    "shootTypeLabel": "Tipo de Sessão",
+    "shootTypePlaceholder": "Selecione o tipo",
+    "dateLabel": "Data Preferida",
+    "dateFlexible": "Tenho flexibilidade nas datas",
+    "dateFromLabel": "Data mais cedo",
+    "dateToLabel": "Data mais tarde",
+    "timeLabel": "Hora Preferida",
+    "groupSizeLabel": "Tamanho do Grupo",
+    "budgetLabel": "Orçamento",
+    "budgetPlaceholder": "Selecione o orçamento",
+    "budget150": "€150 – €299",
+    "budget300": "€300 – €599",
+    "budget600": "€600+",
+    "messageLabel": "Pedidos Especiais ou Detalhes",
+    "messagePlaceholder": "Conte-nos sobre a sua visão, momentos especiais que quer capturar, preferências...",
+    "submit": "Encontrar o Meu Fotógrafo",
+    "submitting": "A enviar...",
+    "error": "Algo correu mal. Tente novamente.",
+    "successTitle": "Pedido Recebido!",
+    "successMessage": "Obrigado! Responderemos dentro de 2 horas com recomendações personalizadas de fotógrafos.",
+    "successBrowse": "Explorar Fotógrafos",
+    "howItWorksTitle": "Como Funciona",
+    "step1Title": "Diga-nos as suas preferências",
+    "step1Desc": "Preencha o formulário com a localização, datas e estilo.",
+    "step2Title": "Selecionamos os melhores",
+    "step2Desc": "A nossa equipa analisa o seu pedido e seleciona 2-3 fotógrafos perfeitos para si.",
+    "step3Title": "Escolha e reserve",
+    "step3Desc": "Analise as sugestões, veja portfólios e reserve diretamente."
   },
   "auth": {
     "error": {
@@ -1635,6 +1740,7 @@
     "upgrade": "Atualizar",
     "sidebarOverview": "Visão Geral",
     "sidebarBookings": "Reservas",
+    "sidebarMatchRequests": "As Minhas Sugestões",
     "sidebarMessages": "Mensagens",
     "sidebarProfile": "Perfil",
     "sidebarPortfolio": "Portfólio",
@@ -1646,6 +1752,24 @@
     "sidebarSupport": "Suporte",
     "needHelp": "Precisa de ajuda?",
     "helpCenterLink": "Visite o nosso Centro de Ajuda"
+  },
+  "matchRequests": {
+    "title": "As Minhas Sugestões",
+    "noRequests": "Ainda não tem pedidos de match",
+    "noRequestsDesc": "Deixe a nossa equipa encontrar o fotógrafo perfeito para si.",
+    "findPhotographer": "Encontrar Fotógrafo",
+    "flexibleDates": "Datas flexíveis",
+    "person": "pessoa",
+    "people": "pessoas",
+    "statusBooked": "Reservado",
+    "statusAwaiting": "A aguardar a sua escolha",
+    "teamNote": "Uma Nota da Nossa Equipa",
+    "selected": "Selecionado",
+    "viewPortfolio": "Ver Portfólio",
+    "booking": "A reservar...",
+    "choose": "Escolher",
+    "error": "Algo correu mal. Tente novamente.",
+    "inLocation": "em"
   },
   "photographerDashboard": {
     "title": "Painel do Fotógrafo",
@@ -1792,7 +1916,14 @@
     "uploadingCover": "A carregar capa...",
     "coverUploaded": "Capa carregada! Arraste a imagem para cima ou para baixo para ajustar a área visível.",
     "coverPositionSaved": "Posição da capa guardada!",
-    "failedToSavePosition": "Falha ao guardar a posição"
+    "failedToSavePosition": "Falha ao guardar a posição",
+    "highlightedOnProfile": "Destacado no seu perfil",
+    "showOnProfile": "Mostrar no perfil",
+    "visibleToEveryone": "Visível para todos",
+    "privateOnlyViaLink": "Privado — apenas via link ou mensagens",
+    "privateBadge": "Privado",
+    "editTooltip": "Editar",
+    "deleteTooltip": "Eliminar"
   },
   "subscriptions": {
     "title": "Subscrições",
@@ -1868,9 +1999,10 @@
     "planFree": "Gratuito",
     "planPro": "Pro",
     "planPremium": "Premium",
-    "feat10Photos": "10 fotos de portfólio",
-    "feat30Photos": "30 fotos de portfólio",
-    "featUnlimitedPhotos": "100 fotos de portfólio",
+    "feat10Photos": "Até 100 fotos de portfólio",
+    "feat30Photos": "Até 100 fotos de portfólio",
+    "feat100Photos": "Até 100 fotos de portfólio",
+    "featUnlimitedPhotos": "Até 100 fotos de portfólio",
     "feat1Location": "1 localização",
     "feat5Locations": "5 localizações",
     "featAllLocations": "Todas as localizações",
@@ -1963,7 +2095,11 @@
     "previous": "Anterior",
     "next": "Seguinte",
     "acceptToUnlockFullRes": "Aceite a entrega para desbloquear alta qualidade e downloads",
-    "acceptToDownload": "Aceitar para baixar"
+    "acceptToDownload": "Aceitar para baixar",
+    "deletingProgress": "A eliminar {current}/{total}",
+    "retryUpload": "Tentar novamente",
+    "galleryExpiredTitle": "Galeria Expirada",
+    "galleryExpiredMessage": "Esta galeria de fotos expirou. Por favor, contacte o seu fotógrafo para solicitar uma nova ligação."
   },
   "availability": {
     "description": "Marque as datas em que não está disponível para sessões fotográficas. Os clientes verão que está totalmente reservado durante estes períodos.",
@@ -2038,7 +2174,18 @@
     "noMessages": "Sem mensagens ainda. Diga olá!",
     "typePlaceholder": "Escreva uma mensagem...",
     "yesterday": "Ontem",
-    "signInPrompt": "Iniciar sessão"
+    "signInPrompt": "Iniciar sessão",
+    "viewGallery": "Ver Galeria",
+    "packageLabel": "Pacote",
+    "bookNow": "Reservar Agora",
+    "tapToOpen": "Toque para abrir",
+    "failedToSend": "Falha no envio",
+    "retry": "Tentar novamente",
+    "sendPhoto": "Enviar foto",
+    "sharePackage": "Partilhar pacote",
+    "shareAPackage": "Partilhar um Pacote",
+    "noPackagesYet": "Sem pacotes ainda",
+    "online": "Online"
   },
   "settings": {
     "title": "Definições",
@@ -2097,7 +2244,8 @@
     "deleting": "A eliminar...",
     "deleteAccountFailed": "Falha ao eliminar a conta. Por favor tente novamente.",
     "cancel": "Cancelar",
-    "signIn": "Iniciar sessão"
+    "signIn": "Iniciar sessão",
+    "contactSupport": "Contactar suporte"
   },
   "bookings": {
     "bookingRequests": "Pedidos de Reserva",
@@ -2223,6 +2371,7 @@
     "addPhotosHint": "Partilhe até 5 fotos da sua sessão — máx. 10MB cada",
     "selectPhotos": "Adicionar fotos",
     "somePhotosFailed": "{count} foto(s) não foram carregadas",
+    "alsoReviewOnGoogle": "Avalie-nos também no Google?",
     "videoReview": "Avaliação em Vídeo",
     "video": {
       "title": "Avaliação em Vídeo",
@@ -2381,7 +2530,7 @@
         },
         "subscriptionPlans": {
           "question": "Que planos de subscrição estão disponíveis?",
-          "answer": "Oferecemos três planos para fotógrafos: Gratuito — sem custos mensais, comissão de 20% por reserva, até 10 fotos de portfólio, ideal para experimentar a plataforma. Pro — comissão reduzida de 15%, até 30 fotos de portfólio, 10 pacotes, estatísticas avançadas e suporte prioritário. Premium — comissão mínima de apenas 10%, até 100 fotos de portfólio e pacotes, URL de perfil personalizado, estatísticas completas e opções de destaque. Pode alterar ou cancelar o seu plano a qualquer momento. Visite a nossa página de preços para os valores atuais dos planos."
+          "answer": "Oferecemos três planos para fotógrafos: Gratuito — sem custos mensais, comissão de 20% por reserva, 1 localização, ideal para experimentar a plataforma. Pro — comissão reduzida de 15%, 5 localizações, 10 pacotes, estatísticas avançadas e suporte prioritário. Premium — comissão mínima de apenas 10%, todas as localizações, pacotes ilimitados, URL de perfil personalizado, estatísticas completas e opções de destaque. Todos os planos incluem até 100 fotos de portfólio. Pode alterar ou cancelar o seu plano a qualquer momento. Visite a nossa página de preços para os valores atuais dos planos."
         },
         "getPaid": {
           "question": "Como e quando recebo os pagamentos?",

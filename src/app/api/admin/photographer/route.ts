@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
-import { sendWhatsApp } from "@/lib/whatsapp";
+import { sendSMS } from "@/lib/sms";
 
 async function verifyAdmin(): Promise<{ email: string } | null> {
   const cookieStore = await cookies();
@@ -136,18 +136,16 @@ export async function PATCH(req: NextRequest) {
                 [photographerPhone.user_id]
               );
               if (smsPrefs?.sms_bookings !== false) {
-                sendWhatsApp(
+                sendSMS(
                   photographerPhone.phone,
-                  "profile_approved",
-                  [],
                   `Photo Portugal: Congratulations! Your profile is now live. Clients can find and book you at photoportugal.com`
-                ).catch(err => console.error("[whatsapp] error:", err));
+                ).catch(err => console.error("[sms] error:", err));
               }
             }
             // Telegram notification to admins with phone for WhatsApp group addition
             import("@/lib/telegram").then(({ sendTelegram }) => {
               sendTelegram(`✅ <b>Photographer Approved!</b>\n\n<b>Name:</b> ${photographer.name}\n<b>Phone:</b> ${photographerPhone?.phone || "not set"}\n\n👉 Add to WhatsApp group`);
-            }).catch(() => {});
+            }).catch((err) => console.error("[admin] telegram approval error:", err));
           } catch (smsErr) {
             console.error("[admin] approval whatsapp/sms error:", smsErr);
           }

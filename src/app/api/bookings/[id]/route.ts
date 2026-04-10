@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification, sendAdminBookingConfirmedNotification } from "@/lib/email";
-import { sendWhatsApp } from "@/lib/whatsapp";
+import { sendSMS } from "@/lib/sms";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
 
@@ -158,11 +158,13 @@ export async function PATCH(
         const cancelInfo = await queryOne<{
           client_email: string; client_name: string;
           photographer_email: string; photographer_name: string;
+          photographer_user_id: string; photographer_profile_id: string;
           total_price: number; service_fee: number | null;
           shoot_date: string | null;
         }>(
           `SELECT cu.email as client_email, cu.name as client_name,
                   pu.email as photographer_email, pu.name as photographer_name,
+                  pu.id as photographer_user_id, pp.id as photographer_profile_id,
                   b.total_price, b.service_fee, b.shoot_date
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
@@ -263,7 +265,35 @@ export async function PATCH(
           ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
             sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)`);
-          }).catch(() => {});
+          }).catch((err) => console.error("[bookings] telegram cancellation error:", err));
+
+          // SMS/WhatsApp to photographer
+          try {
+            const photographerPhone = await queryOne<{ phone: string | null }>(
+              "SELECT phone FROM users WHERE id = $1",
+              [cancelInfo.photographer_user_id]
+            );
+            const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+              "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+              [cancelInfo.photographer_user_id]
+            );
+            if (photographerPhone?.phone && smsPrefs?.sms_bookings !== false) {
+              sendSMS(
+                photographerPhone.phone,
+                `Photo Portugal: Booking with ${cancelInfo.client_name} has been cancelled by the ${cancelledBy}. Log in to view: https://photoportugal.com/dashboard/bookings`
+              ).catch(err => console.error("[sms] cancellation error:", err));
+            }
+          } catch (smsErr) {
+            console.error("[bookings] cancellation sms error:", smsErr);
+          }
+
+          // Telegram to photographer
+          import("@/lib/notify-photographer").then(m =>
+            m.notifyPhotographerViaTelegram(
+              cancelInfo!.photographer_profile_id,
+              `❌ Booking cancelled\n\nClient: ${cancelInfo!.client_name}\nCancelled by: ${cancelledBy}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)\n\nView: https://photoportugal.com/dashboard/bookings`
+            )
+          ).catch((err) => console.error("[bookings] telegram photographer cancel error:", err));
         }
 
         return NextResponse.json({ success: true, refunded: refundPercent > 0, refundPercent });
@@ -277,12 +307,14 @@ export async function PATCH(
     // This is also our idempotency guard — if the update returns null, a concurrent
     // request already changed the status, so we skip all side-effects (emails, SMS).
     const updateResult = await queryOne<{ id: string }>(
-      "UPDATE bookings SET status = $1 WHERE id = $2 AND status = $3 RETURNING id",
+      status === "confirmed"
+        ? "UPDATE bookings SET status = $1, confirmed_at = NOW() WHERE id = $2 AND status = $3 RETURNING id"
+        : "UPDATE bookings SET status = $1 WHERE id = $2 AND status = $3 RETURNING id",
       [status, id, currentBooking!.status]
     );
 
     // Send system message to chat for status change
-    sendBookingStatusMessage(id, status, userId).catch(() => {});
+    sendBookingStatusMessage(id, status, userId).catch((err) => console.error("[bookings] status message error:", err));
 
     if (!updateResult) {
       return NextResponse.json(
@@ -297,9 +329,11 @@ export async function PATCH(
         const cancelInfo = await queryOne<{
           client_email: string; client_name: string;
           photographer_email: string; photographer_name: string;
+          photographer_user_id: string; photographer_profile_id: string;
         }>(
           `SELECT cu.email as client_email, cu.name as client_name,
-                  pu.email as photographer_email, pu.name as photographer_name
+                  pu.email as photographer_email, pu.name as photographer_name,
+                  pu.id as photographer_user_id, pp.id as photographer_profile_id
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -332,7 +366,35 @@ export async function PATCH(
           ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
             sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}`);
-          }).catch(() => {});
+          }).catch((err) => console.error("[bookings] telegram cancellation error:", err));
+
+          // SMS/WhatsApp to photographer
+          try {
+            const photographerPhone = await queryOne<{ phone: string | null }>(
+              "SELECT phone FROM users WHERE id = $1",
+              [cancelInfo.photographer_user_id]
+            );
+            const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+              "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+              [cancelInfo.photographer_user_id]
+            );
+            if (photographerPhone?.phone && smsPrefs?.sms_bookings !== false) {
+              sendSMS(
+                photographerPhone.phone,
+                `Photo Portugal: Booking with ${cancellerName} has been cancelled by the ${cancelledBy}. Log in to view: https://photoportugal.com/dashboard/bookings`
+              ).catch(err => console.error("[sms] cancellation error:", err));
+            }
+          } catch (smsErr) {
+            console.error("[bookings] cancellation sms error:", smsErr);
+          }
+
+          // Telegram to photographer
+          import("@/lib/notify-photographer").then(m =>
+            m.notifyPhotographerViaTelegram(
+              cancelInfo!.photographer_profile_id,
+              `❌ Booking cancelled\n\nClient: ${cancelInfo!.client_name}\nCancelled by: ${cancelledBy}\n\nView: https://photoportugal.com/dashboard/bookings`
+            )
+          ).catch((err) => console.error("[bookings] telegram photographer cancel error:", err));
         }
       } catch (emailErr) {
         console.error("[bookings] cancellation email error:", emailErr);
@@ -461,12 +523,10 @@ export async function PATCH(
                 [bookingDetails.client_id]
               );
               if (smsPrefs?.sms_bookings !== false) {
-                sendWhatsApp(
+                sendSMS(
                   clientPhone.phone,
-                  "booking_confirmed",
-                  ["Portugal", bookingDetails.shoot_date || "a date to be confirmed"],
                   `Photo Portugal: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`
-                ).catch(err => console.error("[whatsapp] error:", err));
+                ).catch(err => console.error("[sms] error:", err));
               }
             }
           } catch (smsErr) {
@@ -493,7 +553,7 @@ export async function PATCH(
           ).catch(err => console.error("[bookings] admin confirmed notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
             sendTelegram(`✅ <b>Booking Confirmed!</b>\n\n${bookingDetails!.client_name} → ${bookingDetails!.photographer_name}\n${bookingDetails!.package_name || ""}\n€${Math.round(bookingDetails!.total_price || 0)}`);
-          }).catch(() => {});
+          }).catch((err) => console.error("[bookings] telegram confirmation error:", err));
         }
       } catch (emailErr) {
         console.error("[bookings] confirmation email error:", emailErr);

@@ -66,11 +66,19 @@ export function AdminInquiriesList({ inquiries }: { inquiries: AdminInquiry[] })
           return (
             <div
               key={inq.id}
-              className={`rounded-xl border bg-white transition-shadow ${
-                isConverted ? "border-blue-200 opacity-70" :
-                !inq.has_reply ? "border-amber-200" : "border-warm-200"
+              className={`rounded-xl border transition-shadow relative overflow-hidden ${
+                isConverted ? "border-orange-200 bg-gradient-to-r from-orange-50 via-pink-50 to-yellow-50" :
+                !inq.has_reply ? "border-amber-200 bg-white" : "border-warm-200 bg-white"
               } ${isOpen ? "shadow-md" : "hover:shadow-sm"}`}
             >
+              {isConverted && (
+                <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+                  <img src="/balloons.png" alt="" className="absolute -top-2 left-[5%] h-20 opacity-20 -rotate-12" />
+                  <img src="/balloons.png" alt="" className="absolute -top-4 left-[35%] h-24 opacity-15 rotate-6" />
+                  <img src="/balloons.png" alt="" className="absolute -top-1 right-[20%] h-20 opacity-20 -rotate-3" />
+                  <img src="/balloons.png" alt="" className="absolute -top-6 right-[2%] h-28 opacity-15 rotate-12" />
+                </div>
+              )}
               <button
                 onClick={() => setExpandedId(isOpen ? null : inq.id)}
                 className="w-full px-3 py-3 sm:px-4 text-left"
@@ -78,8 +86,8 @@ export function AdminInquiriesList({ inquiries }: { inquiries: AdminInquiry[] })
                 {/* Row 1: status + time */}
                 <div className="flex items-center justify-between mb-1">
                   {isConverted ? (
-                    <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-blue-100 text-blue-700">
-                      converted to booking
+                    <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-gradient-to-r from-orange-400 to-pink-500 text-white">
+                      🎉 converted to booking
                     </span>
                   ) : !inq.has_reply ? (
                     <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700">
@@ -131,9 +139,16 @@ export function AdminInquiriesList({ inquiries }: { inquiries: AdminInquiry[] })
 
                   {/* Converted banner */}
                   {isConverted && (
-                    <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 mb-3 flex items-center gap-2">
-                      <span className="text-blue-600 text-sm">&#8594;</span>
-                      <span className="text-sm text-blue-700">Converted to booking <span className="font-mono text-xs">{inq.converted_to_booking_id!.slice(0, 8)}</span></span>
+                    <div className="rounded-lg bg-orange-50 border border-orange-200 p-3 mb-3 flex items-center gap-2">
+                      <span className="text-orange-600 text-sm">&#8594;</span>
+                      <button
+                        onClick={() => {
+                          window.history.replaceState(null, "", "#bookings");
+                          try { sessionStorage.setItem("admin-tab", "bookings"); } catch {}
+                          window.dispatchEvent(new HashChangeEvent("hashchange"));
+                        }}
+                        className="text-sm font-semibold text-orange-600 hover:text-orange-800 underline decoration-orange-300 hover:decoration-orange-500 transition"
+                      >🎉 View booking →</button>
                     </div>
                   )}
 

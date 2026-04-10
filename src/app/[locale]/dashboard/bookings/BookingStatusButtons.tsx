@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, deliveryAccepted, shootDate }: { bookingId: string; currentStatus: string; paymentStatus?: string | null; deliveryAccepted?: boolean; shootDate?: string | null }) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
   const t = useTranslations("bookingActions");
+  const { modal, confirm } = useConfirmModal();
 
   async function updateStatus(status: string) {
     setUpdating(true);
@@ -139,14 +141,15 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
       : t("cancelConfirm");
     return (
       <>
-        <button onClick={() => { if (confirm(confirmMessage)) updateStatus("cancelled"); }} disabled={updating}
+        <button onClick={async () => { const ok = await confirm("Cancel Booking", confirmMessage, { danger: true, confirmLabel: "Cancel Booking" }); if (ok) updateStatus("cancelled"); }} disabled={updating}
           className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">
           {updating ? t("cancelling") : isPaid ? t("cancelAndRefund") : t("cancelBooking")}
         </button>
         {errorBanner}
+        {modal}
       </>
     );
   }
 
-  return null;
+  return <>{modal}</>;
 }

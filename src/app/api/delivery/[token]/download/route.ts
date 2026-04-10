@@ -4,6 +4,7 @@ import { queryOne, query } from "@/lib/db";
 import { createReadStream } from "fs";
 import { stat } from "fs/promises";
 import path from "path";
+import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 
@@ -67,27 +68,38 @@ export async function GET(
 
   // Serve pre-built ZIP if available
   if (booking.zip_ready && booking.zip_path) {
-    const zipFullPath = path.join(UPLOAD_DIR, booking.zip_path.replace("/uploads/", ""));
-    try {
-      const stats = await stat(zipFullPath);
-      const stream = createReadStream(zipFullPath);
-      const readable = new ReadableStream({
-        start(controller) {
-          stream.on("data", (chunk) => controller.enqueue(chunk));
-          stream.on("end", () => controller.close());
-          stream.on("error", (err) => controller.error(err));
-        },
-      });
+    // S3-stored ZIP: redirect to presigned URL
+    if (isS3Path(booking.zip_path)) {
+      try {
+        const presignedUrl = await getPresignedUrl(s3KeyFromPath(booking.zip_path), 3600);
+        return NextResponse.redirect(presignedUrl);
+      } catch {
+        // S3 error, fall through to build on-the-fly
+      }
+    } else {
+      // Local ZIP (backwards compatible for existing deliveries)
+      const zipFullPath = path.join(UPLOAD_DIR, booking.zip_path.replace("/uploads/", ""));
+      try {
+        const stats = await stat(zipFullPath);
+        const stream = createReadStream(zipFullPath);
+        const readable = new ReadableStream({
+          start(controller) {
+            stream.on("data", (chunk) => controller.enqueue(chunk));
+            stream.on("end", () => controller.close());
+            stream.on("error", (err) => controller.error(err));
+          },
+        });
 
-      return new Response(readable, {
-        headers: {
-          "Content-Type": "application/zip",
-          "Content-Length": String(stats.size),
-          "Content-Disposition": `attachment; filename="PhotoPortugal_${sanitizedName}.zip"`,
-        },
-      });
-    } catch {
-      // ZIP file missing, fall through to build on-the-fly
+        return new Response(readable, {
+          headers: {
+            "Content-Type": "application/zip",
+            "Content-Length": String(stats.size),
+            "Content-Disposition": `attachment; filename="PhotoPortugal_${sanitizedName}.zip"`,
+          },
+        });
+      } catch {
+        // ZIP file missing, fall through to build on-the-fly
+      }
     }
   }
 
@@ -110,7 +122,6 @@ export async function GET(
 
   const usedNames = new Set<string>();
   for (const photo of photos) {
-    const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
     let name = (photo.filename || path.basename(photo.url)).replace(/[^\w\s.-]/g, "_").replace(/\s+/g, "_");
     if (usedNames.has(name)) {
       const ext = path.extname(name);
@@ -120,7 +131,20 @@ export async function GET(
       name = `${base}_${i}${ext}`;
     }
     usedNames.add(name);
-    try { archive.append(createReadStream(filePath), { name }); } catch {}
+    try {
+      if (isS3Path(photo.url)) {
+        // Fetch from S3 via presigned URL and append buffer
+        const presigned = await getPresignedUrl(s3KeyFromPath(photo.url), 300);
+        const resp = await fetch(presigned);
+        if (resp.ok) {
+          const buf = Buffer.from(await resp.arrayBuffer());
+          archive.append(buf, { name });
+        }
+      } else {
+        const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
+        archive.append(createReadStream(filePath), { name });
+      }
+    } catch {}
   }
 
   archive.finalize();

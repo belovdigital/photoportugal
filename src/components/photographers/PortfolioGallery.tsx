@@ -9,6 +9,8 @@ interface PortfolioItem {
   caption: string | null;
   location_slug: string | null;
   shoot_type: string | null;
+  width?: number | null;
+  height?: number | null;
 }
 
 interface LocationOption {
@@ -16,25 +18,62 @@ interface LocationOption {
   name: string;
 }
 
-function PortfolioImage({ item, alt, onClick }: { item: PortfolioItem; alt: string; onClick: () => void }) {
-  const src = item.url.startsWith("/uploads/")
+function getThumbSrc(item: PortfolioItem): string {
+  if (item.thumbnail_url) return item.thumbnail_url;
+  return item.url.startsWith("/uploads/")
+    ? `/api/img/${item.url.replace("/uploads/", "")}?w=600&q=80&f=webp`
+    : item.url;
+}
+
+function getFullSrc(item: PortfolioItem): string {
+  return item.url.startsWith("/uploads/")
     ? `/api/img/${item.url.replace("/uploads/", "")}?w=1200&q=85&f=webp`
     : item.url;
+}
+
+function PortfolioImage({ item, alt, onClick }: { item: PortfolioItem; alt: string; onClick: () => void }) {
+  const aspectStyle = item.width && item.height
+    ? { aspectRatio: `${item.width} / ${item.height}` }
+    : undefined;
 
   return (
     <div
       className="mb-3 cursor-pointer overflow-hidden rounded-xl break-inside-avoid bg-warm-100 transition hover:opacity-90"
       onClick={onClick}
       onContextMenu={(e) => e.preventDefault()}
+      style={aspectStyle}
     >
       <img
-        src={src}
+        src={getThumbSrc(item)}
         alt={alt}
         loading="lazy"
         draggable={false}
-        className="w-full select-none"
+        className="w-full h-full object-cover select-none"
       />
     </div>
+  );
+}
+
+function LightboxImage({ item, alt }: { item: PortfolioItem; alt: string }) {
+  const thumbSrc = getThumbSrc(item);
+  const fullSrc = getFullSrc(item);
+  const [src, setSrc] = useState(thumbSrc);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = fullSrc;
+    img.onload = () => setSrc(fullSrc);
+  }, [fullSrc]);
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="h-[90vh] w-[90vw] object-contain select-none"
+      draggable={false}
+      onContextMenu={(e) => e.preventDefault()}
+      onClick={(e) => e.stopPropagation()}
+    />
   );
 }
 
@@ -98,6 +137,16 @@ export function PortfolioGallery({
       document.body.style.overflow = "";
     };
   }, [lightbox, navigate]);
+
+  // Preload adjacent full-res images when lightbox is open
+  useEffect(() => {
+    if (lightbox === null) return;
+    const toPreload = [lightbox - 1, lightbox + 1].filter(i => i >= 0 && i < filtered.length);
+    toPreload.forEach(i => {
+      const img = new Image();
+      img.src = getFullSrc(filtered[i]);
+    });
+  }, [lightbox, filtered]);
 
   return (
     <section>
@@ -190,23 +239,12 @@ export function PortfolioGallery({
             </button>
           )}
 
-          {/* Image */}
-          {(() => {
-            const imgSrc = filtered[lightbox].url;
-            const url = imgSrc.startsWith("/uploads/")
-              ? `/api/img/${imgSrc.replace("/uploads/", "")}?w=1200&q=85&f=webp`
-              : imgSrc;
-            return (
-              <img
-                src={url}
-                alt={describePhoto(filtered[lightbox])}
-                className="max-h-[90vh] max-w-[90vw] object-contain select-none"
-                draggable={false}
-                onContextMenu={(e) => e.preventDefault()}
-                onClick={(e) => e.stopPropagation()}
-              />
-            );
-          })()}
+          {/* Image — progressive: show thumb instantly, swap to full when loaded */}
+          <LightboxImage
+            key={lightbox}
+            item={filtered[lightbox]}
+            alt={describePhoto(filtered[lightbox])}
+          />
 
           {/* Next */}
           {lightbox < filtered.length - 1 && (

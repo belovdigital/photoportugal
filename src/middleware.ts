@@ -1,6 +1,6 @@
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -12,7 +12,7 @@ const EXCLUDED_PREFIXES = [
 ];
 
 export default function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
 
   // Skip excluded paths
   if (
@@ -25,6 +25,16 @@ export default function middleware(request: NextRequest) {
     pathname === "/hero-family.webp"
   ) {
     return;
+  }
+
+  // 301 redirect: /blog?page=N → /blog/page/N
+  const blogMatch = pathname.match(/^(\/pt)?\/blog\/?$/);
+  if (blogMatch && searchParams.get("page")) {
+    const page = searchParams.get("page");
+    if (page && parseInt(page) > 1) {
+      const prefix = blogMatch[1] || "";
+      return NextResponse.redirect(new URL(`${prefix}/blog/page/${page}`, request.url), 301);
+    }
   }
 
   return intlMiddleware(request);

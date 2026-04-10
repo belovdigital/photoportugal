@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { parsePhone } from "@/lib/phone-codes";
 import { useTranslations } from "next-intl";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -45,8 +46,9 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
         setPreviewUrl(data.url);
         onMessage(t("photoUpdated"));
       } else {
+        const err = await res.json().catch(() => null);
         setPreviewUrl(initialUrl);
-        onMessage(t("uploadFailed"));
+        onMessage(err?.error || t("uploadFailed"));
       }
     } catch {
       setPreviewUrl(initialUrl);
@@ -113,6 +115,7 @@ export default function SettingsPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const { modal, confirm } = useConfirmModal();
 
   // Load preferences from DB
   useEffect(() => {
@@ -167,7 +170,10 @@ export default function SettingsPage() {
         body: JSON.stringify({ first_name: firstName, last_name: lastName, phone: phoneNumber ? `${phoneCode}${phoneNumber}` : null }),
       });
       if (res.ok) showMessage(t("settingsSaved"));
-      else showMessage(t("failedToSave"));
+      else {
+        const data = await res.json().catch(() => null);
+        showMessage(data?.error || t("failedToSave"));
+      }
     } catch { showMessage(t("failedToSave")); }
     setSaving(false);
   }
@@ -229,7 +235,7 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-gray-700">{t("email")}</label>
             <input type="email" value={user.email || ""} disabled
               className="mt-1 block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500" />
-            <p className="mt-1 text-xs text-gray-400">{t("emailCannotBeChanged")} <a href="/dashboard/support" className="text-primary-500 hover:text-primary-600 underline">Contact support</a></p>
+            <p className="mt-1 text-xs text-gray-400">{t("emailCannotBeChanged")} <a href="/dashboard/support" className="text-primary-500 hover:text-primary-600 underline">{t("contactSupport")}</a></p>
           </div>
           {!isPhotographer && (
             <div className="max-w-sm">
@@ -347,7 +353,7 @@ export default function SettingsPage() {
                       const res = await fetch("/api/dashboard/telegram", { method: "POST" });
                       const data = await res.json();
                       if (data.url) {
-                        window.open(data.url, "_blank");
+                        window.location.href = data.url;
                         // Poll for connection status
                         const poll = setInterval(async () => {
                           try {
@@ -406,7 +412,8 @@ export default function SettingsPage() {
                 <div className="px-6 py-3">
                   <button
                     onClick={async () => {
-                      if (!confirm(t("telegramDisconnectConfirm"))) return;
+                      const ok = await confirm(t("telegramDisconnectTitle") || "Disconnect Telegram", t("telegramDisconnectConfirm"));
+                      if (!ok) return;
                       try {
                         await fetch("/api/dashboard/telegram", { method: "DELETE" });
                         setTelegramConnected(false);
@@ -510,6 +517,7 @@ export default function SettingsPage() {
           )}
         </div>
       </section>
+      {modal}
     </div>
   );
 }

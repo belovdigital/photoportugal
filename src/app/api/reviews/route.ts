@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         // Telegram: notify admin of new review
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`⭐ <b>New Review!</b>\n\n${"★".repeat(rating)}${"☆".repeat(5-rating)} from ${client!.name}\nFor: ${info!.name}${title ? `\n"${title}"` : ""}`);
-        }).catch(() => {});
+        }).catch((err) => console.error("[reviews] telegram error:", err));
 
         // Email: notify admin of new review
         import("@/lib/email").then(({ sendEmail, getAdminEmail }) => {
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
               </div>`
             );
           });
-        }).catch(() => {});
+        }).catch((err) => console.error("[reviews] admin email error:", err));
       }
     } catch {}
 
