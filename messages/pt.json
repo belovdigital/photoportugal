@@ -354,9 +354,9 @@
     "findYourPhotographer": "Encontre o Seu Fotógrafo",
     "steps": {
       "browse": {
-        "title": "Explorar e Escolher",
-        "description": "Explore os perfis dos nossos fotógrafos selecionados, veja portfólios impressionantes e leia avaliações verificadas de viajantes reais.",
-        "detail": "Filtre por localização, estilo e orçamento"
+        "title": "Escolha o Seu Caminho",
+        "description": "Explore os perfis dos fotógrafos e escolha o seu favorito — ou diga-nos as suas preferências e a nossa equipa encontra a combinação perfeita para si.",
+        "detail": "Autoatendimento ou concierge — à sua escolha"
       },
       "book": {
         "title": "Reservar Instantaneamente",
@@ -392,8 +392,8 @@
       "forPhotographersSubtitle": "Junte-se à comunidade crescente de fotógrafos de férias em Portugal e alcance clientes internacionais.",
       "travelerSteps": {
         "browseCompare": {
-          "title": "Explorar e Comparar",
-          "text": "Veja portfólios de fotógrafos, leia avaliações verificadas, compare pacotes e preços. Filtre por localização, estilo e orçamento."
+          "title": "Explorar e Comparar — ou Nós Escolhemos por Si",
+          "text": "Quer escolher sozinho? Veja portfólios, leia avaliações verificadas, compare pacotes e preços. Prefere um toque pessoal? Diga-nos as suas preferências — localização, datas, orçamento — e a nossa equipa seleciona 2-3 fotógrafos disponíveis e perfeitos para a sua sessão."
         },
         "bookInstantly": {
           "title": "Reservar Instantaneamente",
@@ -445,6 +445,10 @@
         "whatToWear": {
           "q": "O que devo vestir?",
           "a": "O seu fotógrafo pode dar dicas de estilo com base no local escolhido. Em geral, cores sólidas e estilos clássicos ficam melhor em fotografia. Evite logótipos grandes e padrões muito carregados."
+        },
+        "conciergeMatching": {
+          "q": "E se não souber qual fotógrafo escolher?",
+          "a": "Sem problema! Utilize o nosso serviço gratuito de concierge. Diga-nos a sua localização, datas, tamanho do grupo e orçamento — a nossa equipa analisará o seu pedido, falará com os fotógrafos e enviará 2-3 opções selecionadas que estão disponíveis e são perfeitas para a sua sessão. Depois é só escolher o seu favorito e reservar."
         }
       },
       "helpCenterCta": "Saiba mais sobre a proteção de pagamentos e como a plataforma funciona no nosso <link>Centro de Ajuda</link>."
@@ -458,7 +462,7 @@
     "questions": {
       "howDoesItWork": {
         "question": "Como funciona a Photo Portugal?",
-        "answer": "Explore a nossa seleção de <a href=\"/photographers\">fotógrafos profissionais</a> em todo o Portugal. Veja os seus portfólios, leia avaliações verificadas e reserve uma sessão fotográfica diretamente na nossa plataforma. Saiba mais na nossa página <a href=\"/how-it-works\">Como Funciona</a>."
+        "answer": "Tem duas formas de reservar: <a href=\"/photographers\">explore os fotógrafos</a> — veja portfólios, leia avaliações verificadas e reserve diretamente. Ou utilize o nosso <a href=\"/find-photographer\">serviço gratuito de concierge</a> — diga-nos as suas preferências e selecionamos 2-3 fotógrafos para si. Em ambos os casos, os pagamentos são seguros e as fotos são entregues numa galeria privada. Saiba mais na nossa página <a href=\"/how-it-works\">Como Funciona</a>."
       },
       "cost": {
         "question": "Quanto custa uma sessão fotográfica?",
@@ -466,7 +470,11 @@
       },
       "howToBook": {
         "question": "Como reservo um fotógrafo?",
-        "answer": "<a href=\"/photographers\">Encontre um fotógrafo</a> de que goste, escolha um pacote, selecione a data e hora preferidas e envie um pedido de reserva. O fotógrafo irá analisar o seu pedido e confirmar dentro de 24 horas. O pagamento é cobrado na reserva e retido em segurança até as suas fotos serem entregues."
+        "answer": "Pode <a href=\"/photographers\">explorar os fotógrafos</a> — escolha um de que goste, selecione um pacote, data e hora, e envie o pedido. Ou utilize o nosso <a href=\"/find-photographer\">serviço gratuito de concierge</a> — diga-nos as suas preferências e enviamos 2-3 opções selecionadas para escolher. Em ambos os casos, o fotógrafo confirma dentro de 24 horas e o pagamento é retido em segurança até as fotos serem entregues."
+      },
+      "conciergeMatching": {
+        "question": "E se não souber qual fotógrafo escolher?",
+        "answer": "Utilize o nosso <a href=\"/find-photographer\">serviço gratuito de concierge</a>. Diga-nos a sua localização, datas, tamanho do grupo e orçamento — a nossa equipa falará com os fotógrafos, verificará a disponibilidade e enviará 2-3 opções perfeitas para a sua sessão. Basta escolher o seu favorito e reservar. É totalmente gratuito e sem compromisso."
       },
       "paymentSecure": {
         "question": "Como funciona o pagamento? É seguro?",
@@ -565,7 +573,7 @@
     },
     "howItWorks": {
       "title": "Como funciona",
-      "text": "Explore portfólios de fotógrafos, leia avaliações verificadas de viajantes reais e reserve a sua sessão em minutos. Pague em segurança através do Stripe — o seu dinheiro é retido em segurança até as fotos serem entregues. O seu fotógrafo irá encontrá-lo no local, guiá-lo até aos pontos mais fotogénicos e tornar toda a experiência relaxante e divertida. Receberá fotos editadas profissionalmente numa galeria privada e protegida por palavra-passe — veja online, descarregue individualmente ou transfira a coleção completa como ficheiro ZIP."
+      "text": "Escolha o seu caminho: explore os portfólios dos fotógrafos e reserve diretamente, ou utilize o nosso serviço gratuito de concierge — diga-nos as suas preferências e selecionamos 2-3 fotógrafos para si. Pague em segurança através do Stripe — o seu dinheiro é retido em segurança até as fotos serem entregues. O seu fotógrafo irá encontrá-lo no local, guiá-lo até aos pontos mais fotogénicos e tornar toda a experiência relaxante e divertida. Receberá fotos editadas profissionalmente numa galeria privada e protegida por palavra-passe — veja online, descarregue individualmente ou transfira a coleção completa como ficheiro ZIP."
     },
     "whatMakesUsDifferent": {
       "title": "O que nos diferencia"
@@ -876,8 +884,8 @@
         "desc": "A nossa equipa analisa o seu perfil para garantir qualidade. Uma vez aprovado, ficará visível para milhares de turistas."
       },
       "startBooking": {
-        "title": "Comece a receber reservas",
-        "desc": "Receba pedidos de reserva e simplesmente confirme o horário que lhe convém. Nós tratamos dos pagamentos, lembretes e entrega — basta aparecer e fotografar."
+        "title": "Comece a receber clientes",
+        "desc": "Os clientes encontram-no ao explorar o nosso catálogo ou através do nosso serviço de concierge — onde a nossa equipa seleciona fotógrafos para os clientes com base nas suas preferências. Em ambos os casos, recebe pedidos de reserva e simplesmente confirma. Nós tratamos dos pagamentos, lembretes e entrega."
       }
     },
     "whyJoin": {

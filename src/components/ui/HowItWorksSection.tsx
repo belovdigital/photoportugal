@@ -100,7 +100,7 @@ export async function HowItWorksSection() {
 
         <div className="mt-12 text-center">
           <Link
-            href="/photographers"
+            href="/choose-booking-type"
             className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-primary-700 hover:shadow-xl"
           >
             {t("findYourPhotographer")}

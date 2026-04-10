@@ -21,6 +21,7 @@ const FAQ_KEYS = [
   "howDoesItWork",
   "cost",
   "howToBook",
+  "conciergeMatching",
   "paymentSecure",
   "cancelBooking",
   "reschedule",

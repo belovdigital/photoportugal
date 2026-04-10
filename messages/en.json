@@ -357,9 +357,9 @@
     "findYourPhotographer": "Find Your Photographer",
     "steps": {
       "browse": {
-        "title": "Browse & Choose",
-        "description": "Explore our hand-picked photographer profiles, view stunning portfolios, and read verified reviews from real travelers.",
-        "detail": "Filter by location, style, and budget"
+        "title": "Choose Your Path",
+        "description": "Browse photographer profiles yourself and pick your favorite — or tell us your preferences and let our team hand-pick the perfect match for you.",
+        "detail": "Self-service or concierge — your choice"
       },
       "book": {
         "title": "Book Instantly",
@@ -395,8 +395,8 @@
       "forPhotographersSubtitle": "Join Portugal's growing community of vacation photographers and reach international clients.",
       "travelerSteps": {
         "browseCompare": {
-          "title": "Browse & Compare",
-          "text": "View photographer portfolios, read verified reviews, compare packages and prices. Filter by location, style, and budget."
+          "title": "Browse & Compare — or Let Us Match You",
+          "text": "Want to choose yourself? View photographer portfolios, read verified reviews, compare packages and prices. Prefer a personal touch? Tell us your preferences — location, dates, budget — and our team will hand-pick 2-3 photographers who are available and perfect for your shoot."
         },
         "bookInstantly": {
           "title": "Book Instantly",
@@ -448,6 +448,10 @@
         "whatToWear": {
           "q": "What should I wear?",
           "a": "Your photographer can provide styling tips based on your chosen location. Generally, solid colors and classic styles photograph best. Avoid large logos and busy patterns."
+        },
+        "conciergeMatching": {
+          "q": "What if I don't know which photographer to choose?",
+          "a": "No problem! Use our free concierge matching service. Just tell us your location, dates, group size, and budget — our team will review your request, talk to photographers, and send you 2-3 hand-picked options who are available and perfect for your shoot. You then simply choose your favorite and book."
         }
       },
       "helpCenterCta": "Learn more about payment protection and how the platform works in our <link>Help Center</link>."
@@ -461,7 +465,7 @@
     "questions": {
       "howDoesItWork": {
         "question": "How does Photo Portugal work?",
-        "answer": "Browse our curated selection of <a href=\"/photographers\">professional photographers</a> across Portugal. View their portfolios, read verified reviews, and book a photoshoot directly through our platform. Learn more on our <a href=\"/how-it-works\">How It Works</a> page."
+        "answer": "You have two ways to book: <a href=\"/photographers\">browse photographers yourself</a> — view portfolios, read verified reviews, and book directly. Or use our free <a href=\"/find-photographer\">concierge matching service</a> — tell us your preferences and we'll hand-pick 2-3 photographers for you. Either way, payments are secure and your photos are delivered to a private gallery. Learn more on our <a href=\"/how-it-works\">How It Works</a> page."
       },
       "cost": {
         "question": "How much does a photoshoot cost?",
@@ -469,7 +473,11 @@
       },
       "howToBook": {
         "question": "How do I book a photographer?",
-        "answer": "<a href=\"/photographers\">Find a photographer</a> you like, choose a package, select your preferred date and time, and send a booking request. The photographer will review your request and confirm within 24 hours. Your payment is collected at booking and held securely until your photos are delivered."
+        "answer": "You can <a href=\"/photographers\">browse photographers yourself</a> — pick one you like, choose a package, select your date and time, and send a booking request. Or use our free <a href=\"/find-photographer\">concierge matching</a> — tell us your preferences and we'll send you 2-3 hand-picked options to choose from. Either way, the photographer confirms within 24 hours and your payment is held securely until photos are delivered."
+      },
+      "conciergeMatching": {
+        "question": "What if I don't know which photographer to choose?",
+        "answer": "Use our free <a href=\"/find-photographer\">concierge matching service</a>. Tell us your location, dates, group size, and budget — our team will talk to photographers, check availability, and send you 2-3 hand-picked options who are perfect for your shoot. You simply choose your favorite and book. It's completely free and there's no obligation."
       },
       "paymentSecure": {
         "question": "How does payment work? Is it secure?",
@@ -568,7 +576,7 @@
     },
     "howItWorks": {
       "title": "How it works",
-      "text": "Browse photographer portfolios, read verified reviews from real travelers, and book your session in minutes. Pay securely through Stripe — your money is held safely until your photos are delivered. Your photographer will meet you at the location, guide you to the most photogenic spots, and make the whole experience relaxed and fun. You'll receive professionally edited photos in a private, password-protected gallery — view online, download individually, or grab the full collection as a ZIP archive."
+      "text": "Choose your path: browse photographer portfolios yourself and book directly, or use our free concierge service — tell us your preferences and we'll hand-pick 2-3 photographers for you. Pay securely through Stripe — your money is held safely until your photos are delivered. Your photographer will meet you at the location, guide you to the most photogenic spots, and make the whole experience relaxed and fun. You'll receive professionally edited photos in a private, password-protected gallery — view online, download individually, or grab the full collection as a ZIP archive."
     },
     "whatMakesUsDifferent": {
       "title": "What makes us different"
@@ -879,8 +887,8 @@
         "desc": "Our team reviews your profile to ensure quality. Once approved, you'll be visible to thousands of tourists."
       },
       "startBooking": {
-        "title": "Start booking",
-        "desc": "Receive booking requests and simply confirm the time that works for you. We handle payments, reminders, and delivery — you just show up and shoot."
+        "title": "Start getting clients",
+        "desc": "Clients find you by browsing our catalog or through our concierge matching service — where our team hand-picks photographers for clients based on their preferences. Either way, you receive booking requests and simply confirm. We handle payments, reminders, and delivery."
       }
     },
     "whyJoin": {
