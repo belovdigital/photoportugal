@@ -23,8 +23,7 @@ export async function GET(req: NextRequest) {
        COUNT(*) as count
      FROM bookings b
      WHERE b.created_at >= NOW() - INTERVAL '${days} days'
-       AND b.status NOT IN ('cancelled', 'inquiry')
-       AND b.total_price > 0
+       AND b.payment_status = 'paid'
      GROUP BY DATE(b.created_at)
      ORDER BY day ASC`
   );

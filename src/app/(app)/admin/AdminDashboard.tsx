@@ -114,11 +114,54 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
   }
 }
 
-function RevenueChart() {
+function BarChart({ title, subtitle, data, field, color, range }: {
+  title: string; subtitle: string;
+  data: { day: string; turnover: number; revenue: number; count: number }[];
+  field: "turnover" | "revenue"; color: string; range: number;
+}) {
+  const filled: typeof data = [];
+  const start = new Date();
+  start.setDate(start.getDate() - range + 1);
+  for (let i = 0; i < range; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const found = data.find(r => r.day.startsWith(key));
+    filled.push(found || { day: key, turnover: 0, revenue: 0, count: 0 });
+  }
+  const max = Math.max(...filled.map(d => d[field]), 1);
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+      <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+      <div className="mt-3 flex items-end gap-px" style={{ height: 100 }}>
+        {filled.map((d) => {
+          const val = d[field];
+          const h = Math.max((val / max) * 100, val > 0 ? 4 : 0);
+          return (
+            <div key={d.day} className="group relative flex-1 cursor-default" style={{ height: "100%" }}>
+              <div
+                className={`absolute bottom-0 w-full rounded-t transition-colors ${val > 0 ? color : "bg-gray-100"}`}
+                style={{ height: `${h}%`, minHeight: val > 0 ? 3 : 1 }}
+              />
+              {val > 0 && (
+                <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
+                  {new Date(d.day + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}: &euro;{val}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function RevenueCharts() {
   const [data, setData] = useState<{ day: string; turnover: number; revenue: number; count: number }[]>([]);
   const [range, setRange] = useState(30);
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<"turnover" | "revenue">("turnover");
 
   useEffect(() => {
     setLoading(true);
@@ -130,50 +173,11 @@ function RevenueChart() {
 
   const totalTurnover = data.reduce((s, d) => s + d.turnover, 0);
   const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
-  const totalBookings = data.reduce((s, d) => s + d.count, 0);
-
-  // Fill in missing days (use local dates to match API's DATE() output)
-  const filled: typeof data = [];
-  const start = new Date();
-  start.setDate(start.getDate() - range + 1);
-  for (let i = 0; i < range; i++) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const found = data.find(r => r.day.startsWith(key));
-    filled.push(found || { day: key, turnover: 0, revenue: 0, count: 0 });
-  }
-  const filledMax = Math.max(...filled.map(d => d[mode]), 1);
+  const paidBookings = data.reduce((s, d) => s + d.count, 0);
 
   return (
     <div className="mt-6 rounded-xl border border-warm-200 bg-white p-4 sm:p-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMode("turnover")}
-              className={`text-sm font-semibold transition ${mode === "turnover" ? "text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
-            >
-              Turnover
-            </button>
-            <span className="text-gray-300">/</span>
-            <button
-              onClick={() => setMode("revenue")}
-              className={`text-sm font-semibold transition ${mode === "revenue" ? "text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
-            >
-              Revenue
-            </button>
-          </div>
-          {!loading && (
-            <p className="text-xs text-gray-500 mt-0.5">
-              {mode === "turnover"
-                ? <>&euro;{totalTurnover.toLocaleString()} turnover</>
-                : <>&euro;{totalRevenue.toLocaleString()} revenue (commission)</>
-              }
-              {" "}&middot; {totalBookings} booking{totalBookings !== 1 ? "s" : ""}
-            </p>
-          )}
-        </div>
+      <div className="flex items-center justify-end mb-4">
         <div className="flex gap-1">
           {[7, 30, 60].map(d => (
             <button
@@ -192,30 +196,18 @@ function RevenueChart() {
         <div className="flex items-center justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
         </div>
-      ) : filled.length === 0 ? (
-        <p className="py-12 text-center text-sm text-gray-400">No data yet</p>
       ) : (
-        <div className="mt-4 flex items-end gap-px" style={{ height: 120 }}>
-          {filled.map((d) => {
-            const val = d[mode];
-            const h = Math.max((val / filledMax) * 100, val > 0 ? 4 : 0);
-            return (
-              <div key={d.day} className="group relative flex-1 cursor-default" style={{ height: "100%" }}>
-                <div
-                  className={`absolute bottom-0 w-full rounded-t transition-colors ${
-                    val > 0 ? (mode === "revenue" ? "bg-green-500 hover:bg-green-600" : "bg-primary-500 hover:bg-primary-600") : "bg-gray-100"
-                  }`}
-                  style={{ height: `${h}%`, minHeight: val > 0 ? 3 : 1 }}
-                />
-                {val > 0 && (
-                  <div className="pointer-events-none absolute -top-12 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
-                    {new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    <br />&euro;{d.turnover} turnover &middot; &euro;{d.revenue} revenue
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="space-y-6">
+          <BarChart
+            title="Turnover"
+            subtitle={`€${totalTurnover.toLocaleString()} from ${paidBookings} paid booking${paidBookings !== 1 ? "s" : ""}`}
+            data={data} field="turnover" color="bg-primary-500 hover:bg-primary-600" range={range}
+          />
+          <BarChart
+            title="Revenue (Commission)"
+            subtitle={totalRevenue > 0 ? `€${totalRevenue.toLocaleString()} earned` : "No completed payouts yet"}
+            data={data} field="revenue" color="bg-green-500 hover:bg-green-600" range={range}
+          />
         </div>
       )}
     </div>
@@ -565,8 +557,8 @@ export function AdminDashboard({
                 </div>
               </div>
 
-              {/* Revenue Chart */}
-              <RevenueChart />
+              {/* Revenue Charts */}
+              <RevenueCharts />
 
               {/* Quick navigation */}
               <div className="mt-4 sm:mt-6 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-4">
