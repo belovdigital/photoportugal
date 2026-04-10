@@ -13,6 +13,8 @@ interface AdminStats {
   bookingsPending: number;
   bookingsConfirmed: number;
   bookingsCompleted: number;
+  turnover: number;
+  turnoverThisMonth: number;
   revenue: number;
   revenueThisMonth: number;
   reviews: number;
@@ -113,9 +115,10 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
 }
 
 function RevenueChart() {
-  const [data, setData] = useState<{ day: string; revenue: number; count: number }[]>([]);
+  const [data, setData] = useState<{ day: string; turnover: number; revenue: number; count: number }[]>([]);
   const [range, setRange] = useState(30);
   const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<"turnover" | "revenue">("turnover");
 
   useEffect(() => {
     setLoading(true);
@@ -125,33 +128,49 @@ function RevenueChart() {
       .catch(() => setLoading(false));
   }, [range]);
 
-  const max = Math.max(...data.map(d => d.revenue), 1);
-  const total = data.reduce((s, d) => s + d.revenue, 0);
+  const totalTurnover = data.reduce((s, d) => s + d.turnover, 0);
+  const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
   const totalBookings = data.reduce((s, d) => s + d.count, 0);
 
   // Fill in missing days
-  const filled: { day: string; revenue: number; count: number }[] = [];
-  if (data.length > 0) {
-    const start = new Date();
-    start.setDate(start.getDate() - range + 1);
-    for (let i = 0; i < range; i++) {
-      const d = new Date(start);
-      d.setDate(d.getDate() + i);
-      const key = d.toISOString().split("T")[0];
-      const found = data.find(r => r.day === key);
-      filled.push(found || { day: key, revenue: 0, count: 0 });
-    }
+  const filled: typeof data = [];
+  const start = new Date();
+  start.setDate(start.getDate() - range + 1);
+  for (let i = 0; i < range; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().split("T")[0];
+    const found = data.find(r => r.day === key);
+    filled.push(found || { day: key, turnover: 0, revenue: 0, count: 0 });
   }
-  const filledMax = Math.max(...filled.map(d => d.revenue), 1);
+  const filledMax = Math.max(...filled.map(d => d[mode]), 1);
 
   return (
     <div className="mt-6 rounded-xl border border-warm-200 bg-white p-4 sm:p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Revenue</h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMode("turnover")}
+              className={`text-sm font-semibold transition ${mode === "turnover" ? "text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
+            >
+              Turnover
+            </button>
+            <span className="text-gray-300">/</span>
+            <button
+              onClick={() => setMode("revenue")}
+              className={`text-sm font-semibold transition ${mode === "revenue" ? "text-gray-900" : "text-gray-400 hover:text-gray-600"}`}
+            >
+              Revenue
+            </button>
+          </div>
           {!loading && (
             <p className="text-xs text-gray-500 mt-0.5">
-              &euro;{total.toLocaleString()} total &middot; {totalBookings} booking{totalBookings !== 1 ? "s" : ""}
+              {mode === "turnover"
+                ? <>&euro;{totalTurnover.toLocaleString()} turnover</>
+                : <>&euro;{totalRevenue.toLocaleString()} revenue (commission)</>
+              }
+              {" "}&middot; {totalBookings} booking{totalBookings !== 1 ? "s" : ""}
             </p>
           )}
         </div>
@@ -174,26 +193,24 @@ function RevenueChart() {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
         </div>
       ) : filled.length === 0 ? (
-        <p className="py-12 text-center text-sm text-gray-400">No revenue data yet</p>
+        <p className="py-12 text-center text-sm text-gray-400">No data yet</p>
       ) : (
         <div className="mt-4 flex items-end gap-px" style={{ height: 120 }}>
           {filled.map((d) => {
-            const h = Math.max((d.revenue / filledMax) * 100, d.revenue > 0 ? 4 : 0);
+            const val = d[mode];
+            const h = Math.max((val / filledMax) * 100, val > 0 ? 4 : 0);
             return (
-              <div
-                key={d.day}
-                className="group relative flex-1 cursor-default"
-                style={{ height: "100%" }}
-              >
+              <div key={d.day} className="group relative flex-1 cursor-default" style={{ height: "100%" }}>
                 <div
                   className={`absolute bottom-0 w-full rounded-t transition-colors ${
-                    d.revenue > 0 ? "bg-primary-500 hover:bg-primary-600" : "bg-gray-100"
+                    val > 0 ? (mode === "revenue" ? "bg-green-500 hover:bg-green-600" : "bg-primary-500 hover:bg-primary-600") : "bg-gray-100"
                   }`}
-                  style={{ height: `${h}%`, minHeight: d.revenue > 0 ? 3 : 1 }}
+                  style={{ height: `${h}%`, minHeight: val > 0 ? 3 : 1 }}
                 />
-                {d.revenue > 0 && (
-                  <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
-                    {new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}: &euro;{d.revenue}
+                {val > 0 && (
+                  <div className="pointer-events-none absolute -top-12 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
+                    {new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    <br />&euro;{d.turnover} turnover &middot; &euro;{d.revenue} revenue
                   </div>
                 )}
               </div>
@@ -332,7 +349,14 @@ export function AdminDashboard({
   }
 
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    // Sync active tab from hash on mount (handles SSR → client hydration)
+    const hash = window.location.hash.slice(1) as TabKey;
+    if (hash && tabs.some((t) => t.key === hash)) {
+      setActiveTabState(hash);
+    }
+  }, []);
 
   function getBadge(key: string): number {
     if (key === "photographers") return stats.photographersReady;
@@ -443,9 +467,12 @@ export function AdminDashboard({
               {/* Key metrics — 2 rows */}
               <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Revenue</p>
-                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">&euro;{stats.revenue.toLocaleString()}</p>
-                  <p className="mt-1 text-xs text-gray-400">&euro;{stats.revenueThisMonth.toLocaleString()} this month</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">Turnover</p>
+                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">&euro;{stats.turnover.toLocaleString()}</p>
+                  <p className="mt-1 text-xs text-gray-400">&euro;{stats.turnoverThisMonth.toLocaleString()} this month</p>
+                  {stats.revenue > 0 && (
+                    <p className="mt-0.5 text-xs text-green-600">Revenue: &euro;{stats.revenue.toLocaleString()}</p>
+                  )}
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Bookings</p>
@@ -502,11 +529,11 @@ export function AdminDashboard({
                 <div className="mt-4 space-y-2">
                   {(() => {
                     const steps = [
-                      { label: "Inquiries / Messages", value: stats.funnelMessages, color: "bg-blue-500" },
-                      { label: "Bookings Created", value: stats.funnelBookings, color: "bg-indigo-500" },
+                      { label: "Messaged", value: stats.funnelMessages, color: "bg-blue-500" },
+                      { label: "Booked", value: stats.funnelBookings, color: "bg-indigo-500" },
                       { label: "Paid", value: stats.funnelPaid, color: "bg-purple-500" },
-                      { label: "Photos Delivered", value: stats.funnelDelivered, color: "bg-amber-500" },
-                      { label: "Accepted by Client", value: stats.funnelAccepted, color: "bg-green-500" },
+                      { label: "Delivered", value: stats.funnelDelivered, color: "bg-amber-500" },
+                      { label: "Accepted", value: stats.funnelAccepted, color: "bg-green-500" },
                       { label: "Reviewed", value: stats.funnelReviewed, color: "bg-primary-500" },
                     ];
                     const max = Math.max(...steps.map(s => s.value), 1);

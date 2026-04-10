@@ -15,10 +15,11 @@ export async function GET(req: NextRequest) {
   const range = req.nextUrl.searchParams.get("range") || "30";
   const days = Math.min(Number(range) || 30, 90);
 
-  const rows = await query<{ day: string; revenue: string; count: string }>(
+  const rows = await query<{ day: string; turnover: string; revenue: string; count: string }>(
     `SELECT
        DATE(b.created_at) as day,
-       COALESCE(SUM(b.total_price), 0) as revenue,
+       COALESCE(SUM(b.total_price), 0) as turnover,
+       COALESCE(SUM(b.platform_fee + b.service_fee), 0) as revenue,
        COUNT(*) as count
      FROM bookings b
      WHERE b.created_at >= NOW() - INTERVAL '${days} days'
@@ -30,6 +31,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(rows.map(r => ({
     day: r.day,
+    turnover: Number(r.turnover),
     revenue: Number(r.revenue),
     count: Number(r.count),
   })));

@@ -271,21 +271,23 @@ export default async function AdminPage() {
     bookingsPending: parseInt(bookingsPending?.count || "0"),
     bookingsConfirmed: parseInt(bookingsConfirmed?.count || "0"),
     bookingsCompleted: parseInt(bookingsCompleted?.count || "0"),
-    revenue: parseFloat(revenue?.total || "0"),
-    revenueThisMonth: parseFloat(revenueThisMonth?.total || "0"),
+    turnover: parseFloat(revenue?.total || "0"),
+    turnoverThisMonth: parseFloat(revenueThisMonth?.total || "0"),
+    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(platform_fee + service_fee), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0"),
+    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(platform_fee + service_fee), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0"),
     reviews: parseInt(reviewCount?.count || "0"),
     messages: parseInt(messageCount?.count || "0"),
     blogPosts: parseInt(blogCount?.count || "0"),
     disputesOpen: parseInt(disputeCount?.count || "0"),
     inquiriesCount: inquiries.filter(i => !i.has_reply && !i.converted_to_booking_id).length,
     matchRequestsNew: parseInt(matchRequestsNewCount?.count || "0"),
-    // Funnel data from DB
-    funnelMessages: parseInt(messageCount?.count || "0"),
-    funnelBookings: parseInt(bookingsTotal?.count || "0"),
-    funnelPaid: parseInt((await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.count || "0"),
-    funnelDelivered: parseInt((await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status IN ('delivered', 'completed')").catch(() => null))?.count || "0"),
-    funnelAccepted: parseInt((await queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE delivery_accepted = TRUE").catch(() => null))?.count || "0"),
-    funnelReviewed: parseInt(reviewCount?.count || "0"),
+    // Funnel: unique clients at each stage
+    funnelMessages: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT sender_id) as count FROM messages WHERE is_system = FALSE").catch(() => null))?.count || "0"),
+    funnelBookings: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT client_id) as count FROM bookings WHERE status != 'inquiry'").catch(() => null))?.count || "0"),
+    funnelPaid: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT client_id) as count FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.count || "0"),
+    funnelDelivered: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT client_id) as count FROM bookings WHERE status IN ('delivered', 'completed')").catch(() => null))?.count || "0"),
+    funnelAccepted: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT client_id) as count FROM bookings WHERE delivery_accepted = TRUE").catch(() => null))?.count || "0"),
+    funnelReviewed: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT client_id) as count FROM reviews").catch(() => null))?.count || "0"),
   };
 
   // Check for below-minimum packages per photographer
