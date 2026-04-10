@@ -114,11 +114,7 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
   }
 }
 
-function BarChart({ title, subtitle, data, field, color, range }: {
-  title: string; subtitle: string;
-  data: { day: string; turnover: number; revenue: number; count: number }[];
-  field: "turnover" | "revenue"; color: string; range: number;
-}) {
+function fillDays(data: { day: string; turnover: number; revenue: number; count: number }[], range: number) {
   const filled: typeof data = [];
   const start = new Date();
   start.setDate(start.getDate() - range + 1);
@@ -129,10 +125,24 @@ function BarChart({ title, subtitle, data, field, color, range }: {
     const found = data.find(r => r.day.startsWith(key));
     filled.push(found || { day: key, turnover: 0, revenue: 0, count: 0 });
   }
+  return filled;
+}
+
+function fmtDate(day: string) {
+  return new Date(day + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function BarChart({ title, subtitle, filled, field, color }: {
+  title: string; subtitle: string;
+  filled: { day: string; turnover: number; revenue: number; count: number }[];
+  field: "turnover" | "revenue"; color: string;
+}) {
   const max = Math.max(...filled.map(d => d[field]), 1);
+  // Show ~5 date labels evenly spaced
+  const labelInterval = Math.max(Math.floor(filled.length / 5), 1);
 
   return (
-    <div>
+    <div className="rounded-xl border border-warm-200 bg-white p-4 sm:p-6">
       <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
       <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
       <div className="mt-3 flex items-end gap-px" style={{ height: 100 }}>
@@ -147,12 +157,22 @@ function BarChart({ title, subtitle, data, field, color, range }: {
               />
               {val > 0 && (
                 <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
-                  {new Date(d.day + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}: &euro;{val}
+                  {fmtDate(d.day)}: &euro;{val}
                 </div>
               )}
             </div>
           );
         })}
+      </div>
+      {/* Date labels */}
+      <div className="mt-1 flex">
+        {filled.map((d, i) => (
+          <div key={d.day} className="flex-1 text-center">
+            {(i % labelInterval === 0 || i === filled.length - 1) && (
+              <span className="text-[9px] text-gray-400">{fmtDate(d.day).replace(/ /g, "\u00A0")}</span>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -174,42 +194,45 @@ function RevenueCharts() {
   const totalTurnover = data.reduce((s, d) => s + d.turnover, 0);
   const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
   const paidBookings = data.reduce((s, d) => s + d.count, 0);
+  const filled = fillDays(data, range);
+
+  const rangeButtons = (
+    <div className="flex gap-1">
+      {[7, 30, 60].map(d => (
+        <button
+          key={d}
+          onClick={() => setRange(d)}
+          className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+            range === d ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+          }`}
+        >
+          {d}d
+        </button>
+      ))}
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="mt-6 flex items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
-    <div className="mt-6 rounded-xl border border-warm-200 bg-white p-4 sm:p-6">
-      <div className="flex items-center justify-end mb-4">
-        <div className="flex gap-1">
-          {[7, 30, 60].map(d => (
-            <button
-              key={d}
-              onClick={() => setRange(d)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
-                range === d ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-              }`}
-            >
-              {d}d
-            </button>
-          ))}
-        </div>
-      </div>
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <BarChart
-            title="Turnover"
-            subtitle={`€${totalTurnover.toLocaleString()} from ${paidBookings} paid booking${paidBookings !== 1 ? "s" : ""}`}
-            data={data} field="turnover" color="bg-primary-500 hover:bg-primary-600" range={range}
-          />
-          <BarChart
-            title="Revenue (Commission)"
-            subtitle={totalRevenue > 0 ? `€${totalRevenue.toLocaleString()} earned` : "No completed payouts yet"}
-            data={data} field="revenue" color="bg-green-500 hover:bg-green-600" range={range}
-          />
-        </div>
-      )}
+    <div className="mt-6 space-y-4">
+      <div className="flex justify-end">{rangeButtons}</div>
+      <BarChart
+        title="Turnover"
+        subtitle={`€${totalTurnover.toLocaleString()} from ${paidBookings} paid booking${paidBookings !== 1 ? "s" : ""}`}
+        filled={filled} field="turnover" color="bg-primary-500 hover:bg-primary-600"
+      />
+      <BarChart
+        title="Revenue (Commission)"
+        subtitle={totalRevenue > 0 ? `€${totalRevenue.toLocaleString()} earned` : "No completed payouts yet"}
+        filled={filled} field="revenue" color="bg-green-500 hover:bg-green-600"
+      />
     </div>
   );
 }
