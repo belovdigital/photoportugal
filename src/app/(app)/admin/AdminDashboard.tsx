@@ -210,28 +210,29 @@ export function AdminDashboard({
     <div className="mx-auto max-w-screen-xl px-3 sm:px-6 lg:px-8 pb-20">
       {/* Header — full width above sidebar */}
       <div className="flex items-center justify-between pt-4 sm:pt-8">
-        <div>
-          <h1 className="font-display text-xl sm:text-3xl font-bold text-gray-900">Admin Panel</h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-500">Platform overview and management</p>
+        <div className="flex items-center gap-3">
+          {/* Mobile burger — top-left inline */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-warm-100 text-gray-600 md:hidden"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {sidebarOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+          <div>
+            <h1 className="font-display text-xl sm:text-3xl font-bold text-gray-900">Admin Panel</h1>
+            <p className="mt-1 text-xs sm:text-sm text-gray-500">Platform overview and management</p>
+          </div>
         </div>
         {logoutButton}
       </div>
 
       <div className="mt-6 flex min-h-[calc(100vh-200px)]">
-        {/* Mobile toggle */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg md:hidden"
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            {sidebarOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
-
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
