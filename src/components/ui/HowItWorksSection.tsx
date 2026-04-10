@@ -85,7 +85,22 @@ export async function HowItWorksSection() {
               </span>
 
               <h3 className="mt-2 text-lg font-bold text-gray-900">{t(`steps.${key}.title`)}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-500">{t(`steps.${key}.description`)}</p>
+              <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                {key === "browse"
+                  ? t.rich(`steps.${key}.description`, {
+                      browse: (chunks) => (
+                        <Link href="/photographers" className="font-medium text-primary-600 underline decoration-primary-300 hover:text-primary-700">
+                          {chunks}
+                        </Link>
+                      ),
+                      concierge: (chunks) => (
+                        <Link href="/find-photographer" className="font-medium text-primary-600 underline decoration-primary-300 hover:text-primary-700">
+                          {chunks}
+                        </Link>
+                      ),
+                    })
+                  : t(`steps.${key}.description`)}
+              </p>
 
               {/* Detail */}
               <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-gray-400">

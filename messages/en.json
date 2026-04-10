@@ -358,7 +358,7 @@
     "steps": {
       "browse": {
         "title": "Choose Your Path",
-        "description": "Browse photographer profiles yourself and pick your favorite — or tell us your preferences and let our team hand-pick the perfect match for you.",
+        "description": "<browse>Browse photographer profiles</browse> yourself and pick your favorite — or <concierge>tell us your preferences</concierge> and let our team hand-pick the perfect match for you.",
         "detail": "Self-service or concierge — your choice"
       },
       "book": {

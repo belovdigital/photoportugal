@@ -355,7 +355,7 @@
     "steps": {
       "browse": {
         "title": "Escolha o Seu Caminho",
-        "description": "Explore os perfis dos fotógrafos e escolha o seu favorito — ou diga-nos as suas preferências e a nossa equipa encontra a combinação perfeita para si.",
+        "description": "<browse>Explore os perfis dos fotógrafos</browse> e escolha o seu favorito — ou <concierge>diga-nos as suas preferências</concierge> e a nossa equipa encontra a combinação perfeita para si.",
         "detail": "Autoatendimento ou concierge — à sua escolha"
       },
       "book": {
