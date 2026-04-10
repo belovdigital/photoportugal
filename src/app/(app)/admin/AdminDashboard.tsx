@@ -132,15 +132,15 @@ function RevenueChart() {
   const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
   const totalBookings = data.reduce((s, d) => s + d.count, 0);
 
-  // Fill in missing days
+  // Fill in missing days (use local dates to match API's DATE() output)
   const filled: typeof data = [];
   const start = new Date();
   start.setDate(start.getDate() - range + 1);
   for (let i = 0; i < range; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    const key = d.toISOString().split("T")[0];
-    const found = data.find(r => r.day === key);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const found = data.find(r => r.day.startsWith(key));
     filled.push(found || { day: key, turnover: 0, revenue: 0, count: 0 });
   }
   const filledMax = Math.max(...filled.map(d => d[mode]), 1);
