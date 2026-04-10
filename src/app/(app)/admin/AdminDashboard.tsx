@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useTransition, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { AdminToastProvider } from "./AdminToast";
 
@@ -112,6 +112,99 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
   }
 }
 
+function RevenueChart() {
+  const [data, setData] = useState<{ day: string; revenue: number; count: number }[]>([]);
+  const [range, setRange] = useState(30);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/admin/revenue-chart?range=${range}`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [range]);
+
+  const max = Math.max(...data.map(d => d.revenue), 1);
+  const total = data.reduce((s, d) => s + d.revenue, 0);
+  const totalBookings = data.reduce((s, d) => s + d.count, 0);
+
+  // Fill in missing days
+  const filled: { day: string; revenue: number; count: number }[] = [];
+  if (data.length > 0) {
+    const start = new Date();
+    start.setDate(start.getDate() - range + 1);
+    for (let i = 0; i < range; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().split("T")[0];
+      const found = data.find(r => r.day === key);
+      filled.push(found || { day: key, revenue: 0, count: 0 });
+    }
+  }
+  const filledMax = Math.max(...filled.map(d => d.revenue), 1);
+
+  return (
+    <div className="mt-6 rounded-xl border border-warm-200 bg-white p-4 sm:p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">Revenue</h3>
+          {!loading && (
+            <p className="text-xs text-gray-500 mt-0.5">
+              &euro;{total.toLocaleString()} total &middot; {totalBookings} booking{totalBookings !== 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+        <div className="flex gap-1">
+          {[7, 30, 60].map(d => (
+            <button
+              key={d}
+              onClick={() => setRange(d)}
+              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                range === d ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              {d}d
+            </button>
+          ))}
+        </div>
+      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+        </div>
+      ) : filled.length === 0 ? (
+        <p className="py-12 text-center text-sm text-gray-400">No revenue data yet</p>
+      ) : (
+        <div className="mt-4 flex items-end gap-px" style={{ height: 120 }}>
+          {filled.map((d) => {
+            const h = Math.max((d.revenue / filledMax) * 100, d.revenue > 0 ? 4 : 0);
+            return (
+              <div
+                key={d.day}
+                className="group relative flex-1 cursor-default"
+                style={{ height: "100%" }}
+              >
+                <div
+                  className={`absolute bottom-0 w-full rounded-t transition-colors ${
+                    d.revenue > 0 ? "bg-primary-500 hover:bg-primary-600" : "bg-gray-100"
+                  }`}
+                  style={{ height: `${h}%`, minHeight: d.revenue > 0 ? 3 : 1 }}
+                />
+                {d.revenue > 0 && (
+                  <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
+                    {new Date(d.day).toLocaleDateString("en-US", { month: "short", day: "numeric" })}: &euro;{d.revenue}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminDashboard({
   stats,
   logoutButton,
@@ -170,6 +263,50 @@ export function AdminDashboard({
     window.location.reload();
   }, []);
 
+  // Pull-to-refresh gesture
+  const [pullDistance, setPullDistance] = useState(0);
+  const touchStartY = useRef(0);
+  const isPulling = useRef(false);
+  const PULL_THRESHOLD = 80;
+
+  useEffect(() => {
+    function onTouchStart(e: TouchEvent) {
+      if (window.scrollY === 0 && e.touches.length === 1) {
+        touchStartY.current = e.touches[0].clientY;
+        isPulling.current = true;
+      }
+    }
+    function onTouchMove(e: TouchEvent) {
+      if (!isPulling.current) return;
+      const dy = e.touches[0].clientY - touchStartY.current;
+      if (dy > 0) {
+        setPullDistance(Math.min(dy * 0.5, 120));
+        if (dy > 10) e.preventDefault();
+      } else {
+        isPulling.current = false;
+        setPullDistance(0);
+      }
+    }
+    function onTouchEnd() {
+      if (isPulling.current && pullDistance >= PULL_THRESHOLD) {
+        setRefreshing(true);
+        setPullDistance(0);
+        window.location.reload();
+      } else {
+        setPullDistance(0);
+      }
+      isPulling.current = false;
+    }
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [pullDistance]);
+
   // Listen for hash changes
   useEffect(() => {
     function syncHash() {
@@ -208,6 +345,17 @@ export function AdminDashboard({
 
   return (
     <div className="mx-auto max-w-screen-xl px-3 sm:px-6 lg:px-8 pb-20">
+      {/* Pull-to-refresh indicator */}
+      {(pullDistance > 0 || refreshing) && (
+        <div
+          className="flex items-center justify-center transition-all md:hidden"
+          style={{ height: refreshing ? 48 : pullDistance, overflow: "hidden" }}
+        >
+          <div className={`h-6 w-6 rounded-full border-2 border-primary-600 border-t-transparent ${
+            pullDistance >= PULL_THRESHOLD || refreshing ? "animate-spin" : ""
+          }`} style={!refreshing && pullDistance < PULL_THRESHOLD ? { transform: `rotate(${pullDistance * 3}deg)` } : undefined} />
+        </div>
+      )}
       {/* Header — full width above sidebar */}
       <div className="flex items-center justify-between pt-4 sm:pt-8">
         <div className="flex items-center gap-3">
@@ -347,6 +495,51 @@ export function AdminDashboard({
                   </div>
                 </div>
               )}
+
+              {/* Conversion Funnel */}
+              <div className="mt-6 rounded-xl border border-warm-200 bg-white p-4 sm:p-6">
+                <h3 className="text-sm font-semibold text-gray-900">Conversion Funnel</h3>
+                <div className="mt-4 space-y-2">
+                  {(() => {
+                    const steps = [
+                      { label: "Inquiries / Messages", value: stats.funnelMessages, color: "bg-blue-500" },
+                      { label: "Bookings Created", value: stats.funnelBookings, color: "bg-indigo-500" },
+                      { label: "Paid", value: stats.funnelPaid, color: "bg-purple-500" },
+                      { label: "Photos Delivered", value: stats.funnelDelivered, color: "bg-amber-500" },
+                      { label: "Accepted by Client", value: stats.funnelAccepted, color: "bg-green-500" },
+                      { label: "Reviewed", value: stats.funnelReviewed, color: "bg-primary-500" },
+                    ];
+                    const max = Math.max(...steps.map(s => s.value), 1);
+                    return steps.map((step, i) => {
+                      const pct = Math.round((step.value / max) * 100);
+                      const convRate = i > 0 && steps[i - 1].value > 0
+                        ? Math.round((step.value / steps[i - 1].value) * 100)
+                        : null;
+                      return (
+                        <div key={step.label}>
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="text-gray-600">{step.label}</span>
+                            <span className="font-semibold text-gray-900">
+                              {step.value}
+                              {convRate !== null && (
+                                <span className={`ml-1.5 font-normal ${convRate >= 50 ? "text-green-600" : convRate >= 25 ? "text-amber-600" : "text-red-500"}`}>
+                                  ({convRate}%)
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
+                            <div className={`h-full rounded-full ${step.color} transition-all`} style={{ width: `${Math.max(pct, 2)}%` }} />
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Revenue Chart */}
+              <RevenueChart />
 
               {/* Quick navigation */}
               <div className="mt-4 sm:mt-6 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-4">
