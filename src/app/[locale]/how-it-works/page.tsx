@@ -114,7 +114,7 @@ export default async function HowItWorksPage({
 
       {/* For Travelers */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <h2 className="font-display text-3xl font-bold text-gray-900">
+        <h2 className="text-center font-display text-3xl font-bold text-gray-900">
           {t("forTravelers")}
         </h2>
         <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2">
@@ -137,10 +137,10 @@ export default async function HowItWorksPage({
       {/* For Photographers */}
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-gray-900">
+          <h2 className="text-center font-display text-3xl font-bold text-gray-900">
             {t("forPhotographers")}
           </h2>
-          <p className="mt-4 text-lg text-gray-500">
+          <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-gray-500">
             {t("forPhotographersSubtitle")}
           </p>
           <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3">
@@ -155,7 +155,7 @@ export default async function HowItWorksPage({
               </div>
             ))}
           </div>
-          <div className="mt-10">
+          <div className="mt-10 text-center">
             <Link
               href="/for-photographers/join"
               className="inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
