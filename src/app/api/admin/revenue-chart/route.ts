@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     `SELECT
        DATE(b.created_at) as day,
        COALESCE(SUM(b.total_price), 0) as turnover,
-       COALESCE(SUM(b.platform_fee + b.service_fee), 0) as revenue,
+       COALESCE(SUM(CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee + b.service_fee ELSE 0 END), 0) as revenue,
        COUNT(*) as count
      FROM bookings b
      WHERE b.created_at >= NOW() - INTERVAL '${days} days'
