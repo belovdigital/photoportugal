@@ -23,9 +23,11 @@ export async function POST(req: NextRequest) {
 
     const topicLabel = TOPIC_LABELS[topic] || topic;
 
-    // Get admin emails from DB settings — never trust client-provided recipients
+    // Always send to CTO + CEO, plus any admin emails from DB
+    const CONTACT_RECIPIENTS = ["cto@photoportugal.com", "ceo@photoportugal.com"];
     const adminEmailStr = await getAdminEmail();
-    const recipients = adminEmailStr.split(",").map((e: string) => e.trim()).filter(Boolean);
+    const adminEmails = adminEmailStr.split(",").map((e: string) => e.trim()).filter(Boolean);
+    const recipients = [...new Set([...CONTACT_RECIPIENTS, ...adminEmails])];
 
     const emailBody = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">

@@ -601,7 +601,8 @@
     "ctaSubtitle": "Explore os nossos fotógrafos e reserve a sua sessão hoje.",
     "findAPhotographer": "Encontrar um Fotógrafo",
     "seeHowItWorks": "Ver Como Funciona",
-    "questionsEmail": "Perguntas? Envie-nos um email para"
+    "questionsContact": "Tem perguntas?",
+    "contactUs": "Contacte-nos"
   },
   "contact": {
     "metaTitle": "Contacte-nos — Photo Portugal",
@@ -2614,7 +2615,7 @@
     "cta": {
       "title": "Ainda tem dúvidas?",
       "description": "Não encontra o que procura? A nossa equipa terá todo o gosto em ajudar.",
-      "emailButton": "Enviar email",
+      "contactButton": "Contacte-nos",
       "faqButton": "Ver FAQ"
     }
   }

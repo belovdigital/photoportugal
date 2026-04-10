@@ -191,10 +191,10 @@ export default async function AboutPage({
           </div>
 
           <p className="mt-8 text-sm text-gray-400">
-            {t("questionsEmail")}{" "}
-            <a href="mailto:info@photoportugal.com" className="text-primary-500 hover:underline">
-              info@photoportugal.com
-            </a>
+            {t("questionsContact")}{" "}
+            <Link href="/contact" className="text-primary-500 hover:underline">
+              {t("contactUs")}
+            </Link>
           </p>
         </div>
       </section>
