@@ -129,7 +129,10 @@ function fillDays(data: { day: string; turnover: number; revenue: number; count:
 }
 
 function fmtDate(day: string) {
-  return new Date(day + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const parts = day.split("-");
+  if (parts.length !== 3) return day;
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function BarChart({ title, subtitle, filled, field, color }: {
