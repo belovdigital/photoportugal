@@ -100,7 +100,7 @@ export default async function HowItWorksPage({
         ]}
       />
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="max-w-3xl">
+        <div className="mx-auto max-w-3xl text-center">
           <h1 className="font-display text-4xl font-bold text-gray-900 sm:text-5xl">
             {t("title")}
           </h1>
