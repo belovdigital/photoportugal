@@ -201,11 +201,14 @@
       "verifiedReviews": "Verified reviews",
       "securePayments": "Secure Stripe payments"
     },
-    "floatingReview": {
-      "text": "Maria made us feel so comfortable. The photos are incredible!",
-      "author": "Sarah T.",
-      "location": "Lisbon"
-    },
+    "floatingReviews": [
+      { "text": "Aleksandra made us feel so comfortable. The photos are incredible!", "author": "Sarah T.", "location": "Lisbon" },
+      { "text": "Cindy captured our proposal perfectly. We couldn't stop crying looking at the photos!", "author": "James R.", "location": "Algarve" },
+      { "text": "Monica knew the most beautiful hidden spots in Sintra. Absolutely magical session!", "author": "Emma L.", "location": "Sintra" },
+      { "text": "Kate was so fun to work with! Our family photos turned out beyond amazing.", "author": "Rachel M.", "location": "Lisbon" },
+      { "text": "Jonathan made our sunset shoot in Lagos an unforgettable experience. Truly talented!", "author": "David K.", "location": "Lagos" },
+      { "text": "Elena took the most stunning solo portraits of me in Porto. Best souvenir ever!", "author": "Sophie W.", "location": "Porto" }
+    ],
     "stats": {
       "stunningLocations": "Stunning Locations",
       "averageRating": "Average Rating",

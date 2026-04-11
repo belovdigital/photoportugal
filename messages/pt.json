@@ -198,11 +198,14 @@
       "verifiedReviews": "Avaliações verificadas",
       "securePayments": "Pagamentos seguros via Stripe"
     },
-    "floatingReview": {
-      "text": "A Maria fez-nos sentir tão à vontade. As fotos estão incríveis!",
-      "author": "Sarah T.",
-      "location": "Lisboa"
-    },
+    "floatingReviews": [
+      { "text": "A Aleksandra fez-nos sentir tão à vontade. As fotos estão incríveis!", "author": "Sarah T.", "location": "Lisboa" },
+      { "text": "A Cindy captou o nosso pedido de casamento na perfeição. Não conseguimos parar de chorar ao ver as fotos!", "author": "James R.", "location": "Algarve" },
+      { "text": "A Monica conhecia os locais escondidos mais bonitos de Sintra. Sessão absolutamente mágica!", "author": "Emma L.", "location": "Sintra" },
+      { "text": "A Kate foi tão divertida! As nossas fotos de família ficaram além do incrível.", "author": "Rachel M.", "location": "Lisboa" },
+      { "text": "O Jonathan fez da nossa sessão ao pôr-do-sol em Lagos uma experiência inesquecível. Verdadeiro talento!", "author": "David K.", "location": "Lagos" },
+      { "text": "A Elena tirou os retratos solo mais deslumbrantes de mim no Porto. A melhor recordação de sempre!", "author": "Sophie W.", "location": "Porto" }
+    ],
     "stats": {
       "stunningLocations": "Localizações Deslumbrantes",
       "averageRating": "Classificação Média",
