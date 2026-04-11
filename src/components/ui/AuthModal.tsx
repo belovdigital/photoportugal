@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 
@@ -11,18 +11,30 @@ interface AuthModalProps {
   callbackUrl?: string;
   title?: string;
   subtitle?: string;
+  prefillFirstName?: string;
+  prefillLastName?: string;
+  prefillEmail?: string;
 }
 
-export function AuthModal({ open, onClose, onSuccess, callbackUrl = "/dashboard", title, subtitle }: AuthModalProps) {
+export function AuthModal({ open, onClose, onSuccess, callbackUrl = "/dashboard", title, subtitle, prefillFirstName = "", prefillLastName = "", prefillEmail = "" }: AuthModalProps) {
   const t = useTranslations("auth");
   const [mode, setMode] = useState<"signup" | "signin">("signup");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState(prefillFirstName);
+  const [lastName, setLastName] = useState(prefillLastName);
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Sync prefill values when modal opens
+  useEffect(() => {
+    if (open) {
+      if (prefillFirstName) setFirstName(prefillFirstName);
+      if (prefillLastName) setLastName(prefillLastName);
+      if (prefillEmail) setEmail(prefillEmail);
+    }
+  }, [open, prefillFirstName, prefillLastName, prefillEmail]);
 
   if (!open) return null;
 

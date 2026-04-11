@@ -33,7 +33,8 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
   const tb = useTranslations("book");
   const searchParams = useSearchParams();
 
-  const [name, setName] = useState(defaultName);
+  const [firstName, setFirstName] = useState(defaultName.split(" ")[0] || "");
+  const [lastName, setLastName] = useState(defaultName.split(" ").slice(1).join(" ") || "");
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState(defaultPhone);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -66,7 +67,8 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !phone.trim() || !locationSlug || !shootType || !budgetRange) return;
+    if (!firstName.trim() || !email.trim() || !phone.trim() || !locationSlug || !shootType || !budgetRange) return;
+    const name = `${firstName.trim()} ${lastName.trim()}`.trim();
 
     // If not logged in, show auth modal
     if (status !== "authenticated") {
@@ -143,6 +145,9 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
       callbackUrl={typeof window !== "undefined" ? window.location.href : "/find-photographer"}
       title={t("signInToSubmit")}
       subtitle={t("signInToSubmitDesc")}
+      prefillFirstName={firstName}
+      prefillLastName={lastName}
+      prefillEmail={email}
     />
     <form ref={formRef} onSubmit={handleSubmit} className="rounded-2xl border border-warm-200 bg-white p-6 shadow-sm sm:p-8">
       {error && (
@@ -150,22 +155,28 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
       )}
 
       <div className="space-y-5">
-        {/* Name + Email row */}
+        {/* First Name + Last Name row */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">{t("nameLabel")} *</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder={t("namePlaceholder")} className={inputCls} />
+            <label className="block text-sm font-medium text-gray-700">{t("firstNameLabel")} *</label>
+            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required placeholder={t("firstNamePlaceholder")} className={inputCls} />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">{t("lastNameLabel")}</label>
+            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t("lastNamePlaceholder")} className={inputCls} />
+          </div>
+        </div>
+
+        {/* Email + Phone row */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-gray-700">{t("emailLabel")} *</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder={t("emailPlaceholder")} className={inputCls} />
           </div>
-        </div>
-
-        {/* Phone */}
-        <div className="max-w-xs">
-          <label className="block text-sm font-medium text-gray-700">{t("phoneLabel")} *</label>
-          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder={t("phonePlaceholder")} className={inputCls} />
+          <div>
+            <label className="block text-sm font-medium text-gray-700">{t("phoneLabel")} *</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder={t("phonePlaceholder")} className={inputCls} />
+          </div>
         </div>
 
         {/* Location + Shoot Type row */}
