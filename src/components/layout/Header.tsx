@@ -252,8 +252,10 @@ export function Header() {
             ) : pathname.startsWith("/dashboard") ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-warm-200" />
             ) : (
-              <Link href="/auth/signin" className="text-sm font-medium text-gray-600 transition hover:text-gray-900">
-                {t("logIn")}
+              <Link href="/auth/signup" className="flex h-8 w-8 items-center justify-center rounded-full bg-warm-100 text-gray-500 transition hover:bg-warm-200 hover:text-gray-700" aria-label={t("logIn")}>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
               </Link>
             )}
 
@@ -535,7 +537,7 @@ export function Header() {
                   </button>
                 </>
               ) : !isLoading ? (
-                <MobileDashLink href="/auth/signin" label={t("logIn")} onClick={() => setMobileOpen(false)} />
+                <MobileDashLink href="/auth/signup" label={t("signUp")} onClick={() => setMobileOpen(false)} />
               ) : null}
               {!isPhotographer && (
                 <Link href="/choose-booking-type" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white">
