@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useTransition, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { AdminToastProvider } from "./AdminToast";
 
 interface AdminStats {
@@ -357,15 +356,10 @@ export function AdminDashboard({
     return () => window.removeEventListener("hashchange", syncHash);
   }, []);
 
-  const router = useRouter();
-  const [, startTransition] = useTransition();
-
   function setActiveTab(tab: TabKey) {
     setActiveTabState(tab);
     window.history.replaceState(null, "", `#${tab}`);
     try { sessionStorage.setItem("admin-tab", tab); } catch {}
-    // Refresh server data in background
-    startTransition(() => { router.refresh(); });
   }
 
   const [mounted, setMounted] = useState(false);
