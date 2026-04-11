@@ -1775,6 +1775,7 @@
   },
   "matchRequests": {
     "title": "As Minhas Sugestões",
+    "subtitle": "Acompanhe os seus pedidos de seleção de fotógrafo",
     "noRequests": "Ainda não tem pedidos de match",
     "noRequestsDesc": "Deixe a nossa equipa encontrar o fotógrafo perfeito para si.",
     "findPhotographer": "Encontrar Fotógrafo",
@@ -1789,7 +1790,10 @@
     "booking": "A reservar...",
     "choose": "Escolher",
     "error": "Algo correu mal. Tente novamente.",
-    "inLocation": "em"
+    "inLocation": "em",
+    "statusProcessing": "Em análise",
+    "processingTitle": "Estamos a analisar o seu pedido",
+    "processingDesc": "A nossa equipa está a verificar a disponibilidade e a selecionar os melhores fotógrafos para si. Respondemos dentro de 2 horas."
   },
   "photographerDashboard": {
     "title": "Painel do Fotógrafo",

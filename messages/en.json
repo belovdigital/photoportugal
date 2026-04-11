@@ -1778,6 +1778,7 @@
   },
   "matchRequests": {
     "title": "My Matches",
+    "subtitle": "Track your concierge photographer matching requests",
     "noRequests": "No match requests yet",
     "noRequestsDesc": "Let our concierge team find the perfect photographer for you.",
     "findPhotographer": "Find Me a Photographer",
@@ -1792,7 +1793,10 @@
     "booking": "Booking...",
     "choose": "Choose",
     "error": "Something went wrong. Please try again.",
-    "inLocation": "in"
+    "inLocation": "in",
+    "statusProcessing": "Being reviewed",
+    "processingTitle": "We're reviewing your request",
+    "processingDesc": "Our team is checking availability and selecting the best photographers for you. We'll get back to you within 2 hours."
   },
   "photographerDashboard": {
     "title": "Photographer Dashboard",

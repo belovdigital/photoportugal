@@ -63,7 +63,7 @@ export default async function MatchRequestsPage() {
         WHERE mrp.match_request_id = mr.id
       ), '[]'::json) as photographers
     FROM match_requests mr
-    WHERE mr.user_id = $1 AND mr.status IN ('matched', 'booked')
+    WHERE mr.user_id = $1
     ORDER BY mr.created_at DESC`,
     [userId]
   );
@@ -77,9 +77,12 @@ export default async function MatchRequestsPage() {
   const t = await getTranslations("matchRequests");
 
   return (
-    <div className="w-full max-w-4xl">
-      <h1 className="mb-6 text-2xl font-bold text-warm-900">{t("title")}</h1>
-      <MatchRequestsList matchRequests={matchRequests} />
+    <div className="p-6 sm:p-8">
+      <h1 className="font-display text-2xl font-bold text-gray-900">{t("title")}</h1>
+      <p className="mt-1 text-gray-500">{t("subtitle")}</p>
+      <div className="mt-6">
+        <MatchRequestsList matchRequests={matchRequests} />
+      </div>
     </div>
   );
 }

@@ -134,10 +134,12 @@ export function MatchRequestsList({ matchRequests }: { matchRequests: MatchReque
                 className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                   mr.status === "booked"
                     ? "bg-green-100 text-green-700"
-                    : "bg-amber-100 text-amber-700"
+                    : mr.status === "matched"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-blue-100 text-blue-700"
                 }`}
               >
-                {mr.status === "booked" ? `${t("statusBooked")} \u2713` : t("statusAwaiting")}
+                {mr.status === "booked" ? `${t("statusBooked")} \u2713` : mr.status === "matched" ? t("statusAwaiting") : t("statusProcessing")}
               </span>
             </div>
 
@@ -149,9 +151,20 @@ export function MatchRequestsList({ matchRequests }: { matchRequests: MatchReque
               </div>
             )}
 
-            {/* Photographer cards */}
+            {/* Photographer cards or processing message */}
             <div className="p-5">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {mr.photographers.length === 0 && (
+                <div className="rounded-lg border border-blue-100 bg-blue-50 px-5 py-8 text-center">
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                    <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <p className="font-semibold text-blue-900">{t("processingTitle")}</p>
+                  <p className="mt-1 text-sm text-blue-700">{t("processingDesc")}</p>
+                </div>
+              )}
+              <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${mr.photographers.length === 0 ? "hidden" : ""}`}>
                 {mr.photographers.map((p) => {
                   const isChosen = mr.status === "booked" && mr.chosen_photographer_id === p.id;
                   const isChoosing = choosingId === `${mr.id}-${p.id}`;
