@@ -274,18 +274,7 @@ export function AdminDashboard({
   locationsSection: ReactNode;
   settingsSection: ReactNode;
 }) {
-  const [activeTab, setActiveTabState] = useState<TabKey>(() => {
-    if (typeof window !== "undefined") {
-      const hash = window.location.hash.slice(1) as TabKey;
-      if (hash && tabs.some((t) => t.key === hash)) return hash;
-      // Fallback: sessionStorage preserves tab across router.refresh()
-      try {
-        const stored = sessionStorage.getItem("admin-tab") as TabKey;
-        if (stored && tabs.some((t) => t.key === stored)) return stored;
-      } catch {}
-    }
-    return "overview";
-  });
+  const [activeTab, setActiveTabState] = useState<TabKey>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -365,10 +354,18 @@ export function AdminDashboard({
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
-    // Sync active tab from hash on mount (handles SSR → client hydration)
+    // Sync active tab from hash or sessionStorage on mount
     const hash = window.location.hash.slice(1) as TabKey;
     if (hash && tabs.some((t) => t.key === hash)) {
       setActiveTabState(hash);
+    } else {
+      try {
+        const stored = sessionStorage.getItem("admin-tab") as TabKey;
+        if (stored && tabs.some((t) => t.key === stored)) {
+          setActiveTabState(stored);
+          window.history.replaceState(null, "", `#${stored}`);
+        }
+      } catch {}
     }
   }, []);
 
