@@ -531,7 +531,9 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className="text-xs font-medium">{session.country ? `${getCountry(session.country).flag} ${getCountry(session.country).name}` : "🏳️ Unknown"}</span>
                         {session.utm_source ? (
-                          <span className="rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs font-semibold">{session.utm_source}{session.utm_term ? ` — "${session.utm_term}"` : ""}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${session.utm_medium === "cpc" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                            {session.utm_source}{session.utm_medium === "cpc" ? " ads" : ""}{session.utm_term ? ` — "${session.utm_term}"` : ""}
+                          </span>
                         ) : session.referrer ? (
                           <span className="rounded-full bg-warm-100 text-gray-700 px-2 py-0.5 text-xs font-medium">{session.referrer.replace(/^https?:\/\//, "").split("/")[0]}</span>
                         ) : null}
