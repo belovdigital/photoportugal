@@ -122,17 +122,19 @@ function fillDays(data: { day: string; turnover: number; revenue: number; count:
     const d = new Date(start);
     d.setDate(d.getDate() + i);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const found = data.find(r => r.day.startsWith(key));
+    const found = data.find(r => r.day.split("T")[0] === key);
     filled.push(found || { day: key, turnover: 0, revenue: 0, count: 0 });
   }
   return filled;
 }
 
 function fmtDate(day: string) {
-  const parts = day.split("-");
-  if (parts.length !== 3) return day;
-  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  // Handle both "2026-03-25" and "2026-03-25T00:00:00.000Z"
+  const clean = day.split("T")[0];
+  const [y, m, d] = clean.split("-").map(Number);
+  if (!y || !m || !d) return day;
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[m - 1]} ${d}`;
 }
 
 function BarChart({ title, subtitle, filled, field, color }: {
