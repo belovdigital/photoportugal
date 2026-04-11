@@ -23,7 +23,10 @@ export function FloatingReviews() {
   const review = reviews[index];
 
   return (
-    <div className="absolute -left-6 bottom-8 rounded-xl border border-warm-200 bg-white p-4 shadow-lg" style={{ maxWidth: "240px" }}>
+    <div
+      className={`absolute -left-6 bottom-8 rounded-xl border border-warm-200 bg-white p-4 shadow-lg transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
+      style={{ maxWidth: "240px" }}
+    >
       <div className="flex items-center gap-2">
         <div className="flex gap-0.5">
           {[...Array(5)].map((_, i) => (
@@ -34,12 +37,10 @@ export function FloatingReviews() {
         </div>
         <span className="text-xs font-semibold text-gray-900">5.0</span>
       </div>
-      <div className={`transition-opacity duration-400 ${visible ? "opacity-100" : "opacity-0"}`}>
-        <p className="mt-1.5 text-xs text-gray-600 leading-relaxed">
-          &ldquo;{review.text}&rdquo;
-        </p>
-        <p className="mt-1 text-[11px] text-gray-400">{review.author} &middot; {review.location}</p>
-      </div>
+      <p className="mt-1.5 text-xs text-gray-600 leading-relaxed">
+        &ldquo;{review.text}&rdquo;
+      </p>
+      <p className="mt-1 text-[11px] text-gray-400">{review.author} &middot; {review.location}</p>
     </div>
   );
 }
