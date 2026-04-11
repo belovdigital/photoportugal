@@ -58,7 +58,7 @@ function SignInForm() {
           </p>
           <p className="mt-3 text-sm text-gray-500">
             {t("noAccount")}{" "}
-            <Link href="/auth/signup" className="font-semibold text-primary-600 hover:text-primary-700">
+            <Link href={`/auth/signup${searchParams.get("callbackUrl") ? `?callbackUrl=${encodeURIComponent(searchParams.get("callbackUrl")!)}` : ""}`} className="font-semibold text-primary-600 hover:text-primary-700">
               {tc("signUp")}
             </Link>
           </p>

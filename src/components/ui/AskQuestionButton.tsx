@@ -20,9 +20,9 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
         setOpen(true);
         window.history.replaceState(null, "", window.location.pathname);
       } else if (session === null) {
-        // Not logged in — redirect to sign in with return URL
+        // Not logged in — redirect to sign up with return URL
         const returnUrl = window.location.pathname + "#message";
-        router.replace(`/auth/signin?callbackUrl=${encodeURIComponent(returnUrl)}`);
+        router.replace(`/auth/signup?callbackUrl=${encodeURIComponent(returnUrl)}`);
       }
     }
   }, [session, autoOpen, router]);

@@ -268,7 +268,7 @@ function SignUpForm() {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           {t("alreadyHaveAccount")}{" "}
-          <Link href="/auth/signin" className="font-semibold text-primary-600 hover:text-primary-700">
+          <Link href={`/auth/signin${searchParams.get("callbackUrl") ? `?callbackUrl=${encodeURIComponent(searchParams.get("callbackUrl")!)}` : ""}`} className="font-semibold text-primary-600 hover:text-primary-700">
             {tc("signIn")}
           </Link>
         </p>
