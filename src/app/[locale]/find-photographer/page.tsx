@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
@@ -28,11 +27,7 @@ export default async function FindPhotographerPage({
   setRequestLocale(locale);
 
   const session = await auth();
-  if (!session?.user) {
-    redirect("/auth/signup?callbackUrl=/find-photographer");
-  }
-
-  const userId = (session.user as { id?: string }).id;
+  const userId = (session?.user as { id?: string } | undefined)?.id;
   const userInfo = userId ? await queryOne<{ name: string; email: string; phone: string | null }>(
     "SELECT name, email, phone FROM users WHERE id = $1", [userId]
   ) : null;

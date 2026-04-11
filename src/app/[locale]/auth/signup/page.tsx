@@ -67,7 +67,22 @@ function SignUpForm() {
       }
 
       trackSignUp("credentials", role);
-      // Redirect to sign-in with verification message
+
+      if (role === "client" && data.autoLogin) {
+        // Auto-login for clients (no email verification needed)
+        const signInRes = await signIn("credentials", {
+          email: email.trim(),
+          password,
+          redirect: false,
+        });
+        if (signInRes?.ok) {
+          const redirectTo = searchParams.get("callbackUrl") || "/dashboard";
+          window.location.href = redirectTo;
+          return;
+        }
+      }
+
+      // Photographers: redirect to sign-in with verification message
       router.push("/auth/signin?verify=pending");
     } catch {
       setError(t("errors.somethingWentWrong"));

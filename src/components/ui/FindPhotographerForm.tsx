@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { locations } from "@/lib/locations-data";
 import DatePicker from "@/components/ui/DatePicker";
+import { AuthModal } from "@/components/ui/AuthModal";
 
 const SHOOT_TYPES = ["couples", "family", "proposal", "wedding", "honeymoon", "elopement", "solo", "engagement", "birthday", "friends"] as const;
 
@@ -26,6 +28,7 @@ const TIME_OPTIONS = [
 ] as const;
 
 export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defaultPhone = "", userId }: { defaultName?: string; defaultEmail?: string; defaultPhone?: string; userId?: string }) {
+  const { data: session, status } = useSession();
   const t = useTranslations("findPhotographer");
   const tb = useTranslations("book");
   const searchParams = useSearchParams();
@@ -33,6 +36,9 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
   const [name, setName] = useState(defaultName);
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState(defaultPhone);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const pendingSubmit = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const [locationSlug, setLocationSlug] = useState(searchParams.get("location") || "");
   const [shootType, setShootType] = useState(searchParams.get("shootType") || "");
   const [shootDate, setShootDate] = useState("");
@@ -49,9 +55,25 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
 
   const minDate = new Date().toISOString().split("T")[0];
 
+  // Auto-resubmit after auth
+  useEffect(() => {
+    if (status === "authenticated" && pendingSubmit.current) {
+      pendingSubmit.current = false;
+      setShowAuthModal(false);
+      formRef.current?.requestSubmit();
+    }
+  }, [status]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !phone.trim() || !locationSlug || !shootType || !budgetRange) return;
+
+    // If not logged in, show auth modal
+    if (status !== "authenticated") {
+      pendingSubmit.current = true;
+      setShowAuthModal(true);
+      return;
+    }
 
     setSending(true);
     setError("");
@@ -113,7 +135,16 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
   const inputCls = "mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200";
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-warm-200 bg-white p-6 shadow-sm sm:p-8">
+    <>
+    <AuthModal
+      open={showAuthModal}
+      onClose={() => { setShowAuthModal(false); pendingSubmit.current = false; }}
+      onSuccess={() => {}}
+      callbackUrl={typeof window !== "undefined" ? window.location.href : "/find-photographer"}
+      title={t("signInToSubmit")}
+      subtitle={t("signInToSubmitDesc")}
+    />
+    <form ref={formRef} onSubmit={handleSubmit} className="rounded-2xl border border-warm-200 bg-white p-6 shadow-sm sm:p-8">
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
       )}
@@ -244,5 +275,6 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
         </button>
       </div>
     </form>
+    </>
   );
 }

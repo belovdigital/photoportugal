@@ -107,8 +107,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate verification token and send email
-    if (user) {
+    if (user && validRole === "photographer") {
+      // Photographers: require email verification
       const token = crypto.randomBytes(32).toString("hex");
       const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -120,11 +120,23 @@ export async function POST(req: NextRequest) {
       sendVerificationEmail(user.email, user.name, token).catch((err) =>
         console.error("Failed to send verification email:", err)
       );
+    } else if (user && validRole === "client") {
+      // Clients: mark as verified immediately, send welcome email + admin notification
+      await queryOne(
+        "UPDATE users SET email_verified = TRUE WHERE id = $1",
+        [user.id]
+      );
 
-      // Admin notification sent after email verification (verify-email/route.ts)
+      import("@/lib/email").then(({ sendWelcomeEmail }) => {
+        sendWelcomeEmail(user.email, user.name, "client").catch(console.error);
+      });
+
+      import("@/lib/telegram").then(({ sendTelegram }) => {
+        sendTelegram(`👤 New client registered: ${user.name} (${user.email})`);
+      }).catch(console.error);
     }
 
-    return NextResponse.json({ success: true, user });
+    return NextResponse.json({ success: true, user, autoLogin: validRole === "client" });
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(

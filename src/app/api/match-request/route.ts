@@ -3,6 +3,7 @@ import { queryOne } from "@/lib/db";
 import { sendEmail, getAdminEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { locations } from "@/lib/locations-data";
+import { auth } from "@/lib/auth";
 
 const VALID_BUDGETS = ["150-299", "300-599", "600+"];
 const VALID_SHOOT_TYPES = ["couples", "family", "proposal", "wedding", "honeymoon", "elopement", "solo", "engagement", "birthday", "friends"];
@@ -20,7 +21,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, phone, location_slug, shoot_date, shoot_time, date_flexible, flexible_date_from, flexible_date_to, shoot_type, group_size, budget_range, message, user_id } = body;
+    const { name, email, phone, location_slug, shoot_date, shoot_time, date_flexible, flexible_date_from, flexible_date_to, shoot_type, group_size, budget_range, message, user_id: bodyUserId } = body;
+    // Get user_id from session if not provided in body
+    let user_id = bodyUserId;
+    if (!user_id) {
+      const session = await auth();
+      user_id = (session?.user as { id?: string } | undefined)?.id || null;
+    }
 
     // Validate required fields
     if (!name?.trim() || !email?.trim() || !location_slug || !shoot_type || !budget_range) {

@@ -31,9 +31,12 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
   const [error, setError] = useState("");
 
   if (!session?.user) {
+    const returnUrl = typeof window !== "undefined"
+      ? `${window.location.pathname}#message`
+      : "#message";
     return (
       <Link
-        href="/auth/signin"
+        href={`/auth/signup?callbackUrl=${encodeURIComponent(returnUrl)}`}
         className="flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 whitespace-nowrap"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

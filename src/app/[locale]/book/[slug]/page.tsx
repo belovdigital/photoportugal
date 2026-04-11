@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
@@ -9,6 +9,7 @@ import { SERVICE_FEE_RATE } from "@/lib/stripe";
 import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
 import DatePicker, { UnavailableRange } from "@/components/ui/DatePicker";
 import { formatDuration } from "@/lib/package-pricing";
+import { AuthModal } from "@/components/ui/AuthModal";
 
 interface Package {
   id: string;
@@ -53,6 +54,9 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [occasion, setOccasion] = useState("");
   const [locationDetail, setLocationDetail] = useState("");
   const [message, setMessage] = useState("");
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const pendingSubmit = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     params.then(({ slug }) => {
@@ -104,6 +108,13 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       return;
     }
 
+    // If not logged in, show auth modal
+    if (status !== "authenticated") {
+      pendingSubmit.current = true;
+      setShowAuthModal(true);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -146,7 +157,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
     }
   }
 
-  if (status === "loading" || loading) {
+  if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-gray-400">{tc("loading")}</p>
@@ -154,19 +165,14 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
     );
   }
 
-  if (!session?.user) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">{t("signInToBook")}</h1>
-          <p className="mt-2 text-gray-500">{t("needAccount")}</p>
-          <Link href="/auth/signin" className="mt-6 inline-flex rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
-            {tc("signIn")}
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // After auth modal success, auto-resubmit the form
+  useEffect(() => {
+    if (status === "authenticated" && pendingSubmit.current) {
+      pendingSubmit.current = false;
+      setShowAuthModal(false);
+      formRef.current?.requestSubmit();
+    }
+  }, [status]);
 
   if (success) {
     return (
@@ -220,7 +226,18 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
       )}
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <AuthModal
+        open={showAuthModal}
+        onClose={() => { setShowAuthModal(false); pendingSubmit.current = false; }}
+        onSuccess={() => {
+          // session will update via useSession, triggering the useEffect above
+        }}
+        callbackUrl={typeof window !== "undefined" ? window.location.href : "/dashboard"}
+        title={t("signInToBook")}
+        subtitle={t("needAccount")}
+      />
+
+      <form ref={formRef} onSubmit={handleSubmit} className="mt-8 space-y-6">
         {/* Package selection */}
         {photographer.packages.length > 0 && (
           <div>
