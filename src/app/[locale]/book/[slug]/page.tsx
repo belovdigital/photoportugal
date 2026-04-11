@@ -157,14 +157,6 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-gray-400">{tc("loading")}</p>
-      </div>
-    );
-  }
-
   // After auth modal success, auto-resubmit the form
   useEffect(() => {
     if (status === "authenticated" && pendingSubmit.current) {
@@ -173,6 +165,14 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       formRef.current?.requestSubmit();
     }
   }, [status]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-gray-400">{tc("loading")}</p>
+      </div>
+    );
+  }
 
   if (success) {
     return (
