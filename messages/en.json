@@ -1101,8 +1101,8 @@
   "book": {
     "title": "Book {photographer}",
     "subtitle": "Fill in the details for your photoshoot request",
-    "signInToBook": "Sign in to book",
-    "needAccount": "You need an account to book a photographer.",
+    "signInToBook": "Create an account to book",
+    "needAccount": "Quick free signup to send your booking request.",
     "success": {
       "title": "Booking Request Sent!",
       "message": "{photographer} will review your request and get back to you soon.",

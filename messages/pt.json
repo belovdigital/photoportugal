@@ -1098,8 +1098,8 @@
   "book": {
     "title": "Reservar {photographer}",
     "subtitle": "Preencha os detalhes para o seu pedido de sessão fotográfica",
-    "signInToBook": "Inicie sessão para reservar",
-    "needAccount": "Precisa de uma conta para reservar um fotógrafo.",
+    "signInToBook": "Crie uma conta para reservar",
+    "needAccount": "Registo rápido e gratuito para enviar o seu pedido.",
     "success": {
       "title": "Pedido de Reserva Enviado!",
       "message": "{photographer} irá analisar o seu pedido e responder em breve.",

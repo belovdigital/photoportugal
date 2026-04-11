@@ -108,9 +108,16 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       return;
     }
 
-    // If not logged in, show auth modal
+    // If not logged in, save form data and show auth modal
     if (status !== "authenticated") {
       pendingSubmit.current = true;
+      try {
+        sessionStorage.setItem("booking_form", JSON.stringify({
+          selectedPackage, selectedLocation, shootDate, shootTime,
+          flexibleDate, flexibleDateFrom, flexibleDateTo,
+          groupSize, occasion, locationDetail, message,
+        }));
+      } catch {}
       setShowAuthModal(true);
       return;
     }
@@ -157,14 +164,39 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
     }
   }
 
-  // After auth modal success, auto-resubmit the form
+  // After auth (modal or Google OAuth redirect), restore form and auto-submit
   useEffect(() => {
     if (status === "authenticated" && pendingSubmit.current) {
+      // Came from AuthModal email/password login
       pendingSubmit.current = false;
       setShowAuthModal(false);
-      formRef.current?.requestSubmit();
+      setTimeout(() => formRef.current?.requestSubmit(), 100);
+      return;
     }
-  }, [status]);
+    if (status === "authenticated" && photographer) {
+      // Came back from Google OAuth redirect — check for saved form data
+      try {
+        const saved = sessionStorage.getItem("booking_form");
+        if (saved) {
+          const data = JSON.parse(saved);
+          sessionStorage.removeItem("booking_form");
+          if (data.selectedPackage) setSelectedPackage(data.selectedPackage);
+          if (data.selectedLocation) setSelectedLocation(data.selectedLocation);
+          if (data.shootDate) setShootDate(data.shootDate);
+          if (data.shootTime) setShootTime(data.shootTime);
+          if (data.flexibleDate) setFlexibleDate(data.flexibleDate);
+          if (data.flexibleDateFrom) setFlexibleDateFrom(data.flexibleDateFrom);
+          if (data.flexibleDateTo) setFlexibleDateTo(data.flexibleDateTo);
+          if (data.groupSize) setGroupSize(data.groupSize);
+          if (data.occasion) setOccasion(data.occasion);
+          if (data.locationDetail) setLocationDetail(data.locationDetail);
+          if (data.message) setMessage(data.message);
+          // Auto-submit after state updates
+          setTimeout(() => formRef.current?.requestSubmit(), 300);
+        }
+      } catch {}
+    }
+  }, [status, photographer]);
 
   if (loading) {
     return (

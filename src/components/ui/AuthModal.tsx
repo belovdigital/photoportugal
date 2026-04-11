@@ -117,9 +117,10 @@ export function AuthModal({ open, onClose, onSuccess, callbackUrl = "/dashboard"
         </button>
 
         <h2 className="text-xl font-bold text-gray-900">
-          {title || (mode === "signup" ? t("signUp.title") : t("signIn.title"))}
+          {mode === "signin" ? t("signIn.title") : (title || t("signUp.title"))}
         </h2>
-        {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+        {mode === "signup" && subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+        {mode === "signin" && <p className="mt-1 text-sm text-gray-500">{t("signIn.subtitle")}</p>}
 
         {error && (
           <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
@@ -141,7 +142,7 @@ export function AuthModal({ open, onClose, onSuccess, callbackUrl = "/dashboard"
 
         <div className="my-4 flex items-center gap-4">
           <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs text-gray-400">{t("signIn.orSignInWithEmail")}</span>
+          <span className="text-xs text-gray-400">{mode === "signup" ? t("signUp.orWithEmail") : t("signIn.orSignInWithEmail")}</span>
           <div className="h-px flex-1 bg-gray-200" />
         </div>
 
