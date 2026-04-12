@@ -933,8 +933,8 @@ export async function GET(req: NextRequest) {
        WHERE b.status = 'delivered'
          AND b.delivery_accepted = TRUE
          AND b.delivery_accepted_at < NOW() - INTERVAL '5 days'
-         AND b.delivery_accepted_at > NOW() - INTERVAL '6 days'
          AND cu.phone IS NOT NULL
+         AND COALESCE(b.review_sms_sent, FALSE) = FALSE
          AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = b.id)`
     );
 
@@ -946,6 +946,7 @@ export async function GET(req: NextRequest) {
           booking.client_phone,
           `Hi ${firstName}! We'd love to hear about your photoshoot with ${booking.photographer_name}. A quick review helps other travelers: https://photoportugal.com/dashboard/bookings`
         ).catch((err) => console.error("[cron] SMS review reminder error:", err));
+        await query("UPDATE bookings SET review_sms_sent = TRUE WHERE id = $1", [booking.id]);
         smsReviewReminders++;
       } catch (err) {
         results.errors.push(`SMS review reminder for booking ${booking.id}: ${err}`);
@@ -1331,8 +1332,8 @@ export async function GET(req: NextRequest) {
         pu.email as photographer_email,
         pu.phone as photographer_phone,
         cu.name as client_name,
-        last_client_msg.created_at as last_client_msg_at,
-        EXTRACT(EPOCH FROM (NOW() - last_client_msg.created_at))/3600 as hours_since,
+        first_client_msg.created_at as first_client_msg_at,
+        EXTRACT(EPOCH FROM (NOW() - first_client_msg.created_at))/3600 as hours_since,
         COALESCE(b.reminder_6h_sent, FALSE) as reminder_6h_sent,
         COALESCE(b.reminder_12h_sent, FALSE) as reminder_12h_sent,
         COALESCE(b.reminder_24h_sent, FALSE) as reminder_24h_sent
@@ -1343,17 +1344,16 @@ export async function GET(req: NextRequest) {
       JOIN LATERAL (
         SELECT m.created_at FROM messages m
         WHERE m.booking_id = b.id AND m.sender_id = b.client_id AND m.is_system = FALSE
-        ORDER BY m.created_at DESC LIMIT 1
-      ) last_client_msg ON TRUE
+        ORDER BY m.created_at ASC LIMIT 1
+      ) first_client_msg ON TRUE
       WHERE b.status = 'inquiry'
         AND NOT EXISTS (
           SELECT 1 FROM messages m2
           WHERE m2.booking_id = b.id
             AND m2.sender_id = pp.user_id
             AND m2.is_system = FALSE
-            AND m2.created_at > last_client_msg.created_at
         )
-        AND EXTRACT(EPOCH FROM (NOW() - last_client_msg.created_at))/3600 >= 6
+        AND EXTRACT(EPOCH FROM (NOW() - first_client_msg.created_at))/3600 >= 6
     `);
 
     const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
