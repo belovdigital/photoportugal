@@ -433,21 +433,9 @@ export default async function PhotographerProfilePage({
                 )}
               </div>
 
-              {/* Locations as pill tags */}
-              {photographer.locations && photographer.locations.length > 0 && (
-                <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  {photographer.locations.map((loc: { slug: string; name: string }) => (
-                    <Link key={loc.slug} href={`/locations/${loc.slug}`} className="inline-flex items-center gap-1 rounded-full bg-warm-100 px-3 py-1.5 text-xs font-medium text-warm-700 transition hover:bg-warm-200 hover:text-primary-600">
-                      <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                      {loc.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
-
-              {/* Experience, languages, sessions */}
+              {/* Experience, languages, active status */}
               {(photographer.experience_years > 0 || (photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "") || photographer.session_count > 0) && (
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
                   {photographer.experience_years > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600">
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -464,14 +452,26 @@ export default async function PhotographerProfilePage({
                       {tc("sessions", { count: photographer.session_count })}
                     </span>
                   )}
+                  <ActiveBadge lastSeenAt={photographer.last_seen_at} size="md" />
                 </div>
               )}
 
-              {/* Activity & Response */}
-              <div className="mt-2.5 flex flex-wrap items-center gap-3">
-                <ActiveBadge lastSeenAt={photographer.last_seen_at} size="md" />
+              {/* Response time */}
+              <div className="mt-2">
                 <ResponseTimeBadge />
               </div>
+
+              {/* Locations as pill tags */}
+              {photographer.locations && photographer.locations.length > 0 && (
+                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                  {photographer.locations.map((loc: { slug: string; name: string }) => (
+                    <Link key={loc.slug} href={`/locations/${loc.slug}`} className="inline-flex items-center gap-1 rounded-full bg-warm-100 px-3 py-1.5 text-xs font-medium text-warm-700 transition hover:bg-warm-200 hover:text-primary-600">
+                      <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      {loc.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               {/* Specialties */}
               {photographer.shoot_types && photographer.shoot_types.length > 0 && (
