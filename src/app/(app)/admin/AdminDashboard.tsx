@@ -5,7 +5,7 @@ import { AdminToastProvider } from "./AdminToast";
 import { AuditLog as AuditLogTab } from "./AuditLog";
 
 function NotificationLogsTab({ channel, title }: { channel: "email" | "sms"; title: string }) {
-  const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; created_at: string }[]>([]);
+  const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; error_message?: string | null; from?: string; created_at: string; price?: string | null; direction?: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,22 +17,31 @@ function NotificationLogsTab({ channel, title }: { channel: "email" | "sms"; tit
 
   if (loading) return <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" /></div>;
 
+  const statusColor = (s: string) => {
+    if (s === "delivered" || s === "sent") return "bg-green-100 text-green-700";
+    if (s === "failed" || s === "undelivered") return "bg-red-100 text-red-700";
+    if (s === "queued" || s === "sending") return "bg-blue-100 text-blue-700";
+    return "bg-gray-100 text-gray-700";
+  };
+
   return (
     <div>
-      <h2 className="text-lg font-bold text-gray-900 mb-4">{title}</h2>
+      <h2 className="text-lg font-bold text-gray-900 mb-1">{title}</h2>
+      <p className="text-xs text-gray-400 mb-4">{channel === "sms" ? "Live from Twilio API" : "From notification logs"} · Last {logs.length} entries</p>
       {logs.length === 0 ? (
         <p className="text-gray-400 text-center py-8">No logs found</p>
       ) : (
         <div className="space-y-1.5">
           {logs.map((log) => (
             <div key={log.id} className="flex items-start gap-3 rounded-lg border border-warm-200 bg-white px-3 py-2.5 text-sm">
-              <span className={`shrink-0 mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                log.status === "sent" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-              }`}>{log.status}</span>
+              <span className={`shrink-0 mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor(log.status)}`}>{log.status}</span>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-gray-900 truncate">{log.event}</p>
-                <p className="text-xs text-gray-500 truncate">{log.recipient}</p>
-                {log.error_code && <p className="text-xs text-red-500">Error: {log.error_code}</p>}
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="truncate">{log.recipient}</span>
+                  {log.from && <span className="text-gray-300">from {log.from}</span>}
+                </div>
+                {log.error_code && <p className="text-xs text-red-500">Error {log.error_code}{log.error_message ? `: ${log.error_message}` : ""}</p>}
               </div>
               <span className="shrink-0 text-xs text-gray-400 whitespace-nowrap">
                 {new Date(log.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}{" "}

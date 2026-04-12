@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
+import twilio from "twilio";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,31 @@ export async function GET(req: NextRequest) {
 
   const channel = req.nextUrl.searchParams.get("channel") || "email";
 
+  if (channel === "sms") {
+    // Fetch directly from Twilio API
+    try {
+      const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+      const messages = await client.messages.list({ limit: 100 });
+      return NextResponse.json(messages.map(m => ({
+        id: m.sid,
+        channel: "sms",
+        recipient: m.to,
+        event: m.body?.slice(0, 100) || "",
+        status: m.status,
+        error_code: m.errorCode ? String(m.errorCode) : null,
+        error_message: m.errorMessage || null,
+        from: m.from,
+        created_at: m.dateCreated?.toISOString() || "",
+        price: m.price,
+        direction: m.direction,
+      })));
+    } catch (err) {
+      console.error("[notification-logs] Twilio error:", err);
+      return NextResponse.json({ error: "Failed to fetch Twilio logs" }, { status: 500 });
+    }
+  }
+
+  // Email logs from DB
   const logs = await query<{
     id: string; channel: string; recipient: string; event: string;
     status: string; error_code: string | null; created_at: string;
