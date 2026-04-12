@@ -129,6 +129,7 @@
     "signUp": "Sign Up",
     "signOut": "Sign Out",
     "bookings": "Bookings",
+    "wishlist": "Wishlist",
     "accountMenu": "Account menu",
     "closeMenu": "Close menu",
     "openMenu": "Open menu",
@@ -192,7 +193,9 @@
     "legalEntityLocation": "Lisbon, Portugal",
     "appTitle": "Take Photo Portugal with you",
     "appSubtitle": "Browse photographers, book sessions, and manage everything from your phone.",
-    "soon": "Soon"
+    "soon": "Soon",
+    "appStoreAlt": "Download on the App Store",
+    "googlePlayAlt": "Get it on Google Play"
   },
   "home": {
     "trustBadge": "Trusted by {count}+ happy travelers",
@@ -1094,7 +1097,8 @@
     "title": "Travel Photography Blog",
     "subtitle": "Tips, guides, and inspiration for capturing your perfect moments in Portugal. From the best photo spots to planning your dream photoshoot.",
     "noPosts": "No blog posts yet. Check back soon!",
-    "readMore": "Read more"
+    "readMore": "Read more",
+    "blogPagination": "Blog pagination"
   },
   "blogCategories": {
     "all": "All Posts",
@@ -1414,7 +1418,8 @@
     "readyToBookSubtitle": "Browse our talented photographers across Portugal and capture your perfect vacation memories.",
     "findAPhotographer": "Find a Photographer",
     "moreFromBlog": "More from the Blog",
-    "relatedLocations": "Related Locations"
+    "relatedLocations": "Related Locations",
+    "breadcrumb": "Breadcrumb"
   },
   "photographersMeta": {
     "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve | Photo Portugal",
@@ -1970,7 +1975,9 @@
     "privateOnlyViaLink": "Private — only via link or messages",
     "privateBadge": "Private",
     "editTooltip": "Edit",
-    "deleteTooltip": "Delete"
+    "deleteTooltip": "Delete",
+    "profilePhotoPreview": "Profile photo preview",
+    "coverAlt": "Cover"
   },
   "subscriptions": {
     "title": "Subscriptions",
@@ -2364,7 +2371,7 @@
     "cancelRefundConfirm": "Cancel this booking? Your payment will be refunded. Refunds typically take 5-10 business days.",
     "failedUpdate": "Failed to update booking",
     "markSessionDoneHint": "Confirm that the session took place successfully. If there was a problem (client no-show, issues), contact support instead.",
-    "markSessionDoneWait": "This button will become active on the session date",
+    "markSessionDoneWait": "Available on {date}",
     "uploadDeliverHint": "Upload your photos and share them with the client. They'll receive an email with a link to review and accept."
   },
   "clientDashboard": {
@@ -2392,7 +2399,10 @@
     "sharePackage": "Share package",
     "shareAPackage": "Share a Package",
     "noPackagesYet": "No packages yet",
-    "online": "Online"
+    "online": "Online",
+    "sharedPhoto": "Shared photo",
+    "pdfLabel": "PDF",
+    "pendingPhotoAttachment": "Pending photo attachment"
   },
   "settings": {
     "title": "Settings",
@@ -2452,7 +2462,8 @@
     "deleteAccountFailed": "Failed to delete account. Please try again.",
     "cancel": "Cancel",
     "signIn": "Sign in",
-    "contactSupport": "Contact support"
+    "contactSupport": "Contact support",
+    "profilePhotoPreview": "Profile photo preview"
   },
   "bookings": {
     "bookingRequests": "Booking Requests",
@@ -2609,7 +2620,8 @@
       "discountAfterApproval": "Your discount code will be sent to your email once our team approves the video review.",
       "done": "Done",
       "cameraError": "Could not access camera. Please allow camera and microphone permissions."
-    }
+    },
+    "reviewPhotoPreview": "Review photo preview"
   },
   "payButton": {
     "pay": "Pay €{total}",

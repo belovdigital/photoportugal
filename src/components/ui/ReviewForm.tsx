@@ -206,7 +206,7 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
                   <div className="flex gap-2 flex-wrap mb-2">
                     {photoPreviews.map((src, i) => (
                       <div key={i} className="relative h-16 w-16 rounded-lg overflow-hidden border border-gray-200">
-                        <img src={src} alt="Review photo preview" aria-hidden="true" className="h-full w-full object-cover" />
+                        <img src={src} alt={t("reviewPhotoPreview")} aria-hidden="true" className="h-full w-full object-cover" />
                         <button
                           type="button"
                           onClick={() => removePhoto(i)}

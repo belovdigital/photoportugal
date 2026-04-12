@@ -169,7 +169,7 @@ export function Header() {
             ) : user ? (
               <div className="flex items-center gap-1">
                 {!isPhotographer && (
-                  <Link href="/dashboard/wishlist" aria-label="Wishlist" className="rounded-lg p-2 text-gray-400 transition hover:bg-warm-50 hover:text-red-400">
+                  <Link href="/dashboard/wishlist" aria-label={t("wishlist")} className="rounded-lg p-2 text-gray-400 transition hover:bg-warm-50 hover:text-red-400">
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>

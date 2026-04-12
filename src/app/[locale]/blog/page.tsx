@@ -214,7 +214,7 @@ export default async function BlogPage({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <nav className="mt-12 flex items-center justify-center gap-1" aria-label="Blog pagination">
+              <nav className="mt-12 flex items-center justify-center gap-1" aria-label={t("blogPagination")}>
                 {/* Previous */}
                 {currentPage > 1 ? (
                   <Link

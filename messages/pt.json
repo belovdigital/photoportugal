@@ -123,6 +123,7 @@
     "signUp": "Criar Conta",
     "signOut": "Terminar Sessão",
     "bookings": "Reservas",
+    "wishlist": "Favoritos",
     "accountMenu": "Menu da conta",
     "closeMenu": "Fechar menu",
     "openMenu": "Abrir menu",
@@ -189,7 +190,9 @@
     "legalEntityLocation": "Lisboa, Portugal",
     "appTitle": "Leve o Photo Portugal consigo",
     "appSubtitle": "Explore fotógrafos, reserve sessões e faça tudo pelo telemóvel.",
-    "soon": "Em breve"
+    "soon": "Em breve",
+    "appStoreAlt": "Descarregar na App Store",
+    "googlePlayAlt": "Obter no Google Play"
   },
   "home": {
     "trustBadge": "A confiança de {count}+ viajantes satisfeitos",
@@ -1091,7 +1094,8 @@
     "title": "Blogue de Fotografia de Viagem",
     "subtitle": "Dicas, guias e inspiração para capturar os seus momentos perfeitos em Portugal. Dos melhores locais para fotos ao planeamento da sua sessão fotográfica de sonho.",
     "noPosts": "Ainda sem artigos no blogue. Volte em breve!",
-    "readMore": "Ler mais"
+    "readMore": "Ler mais",
+    "blogPagination": "Paginação do blog"
   },
   "blogCategories": {
     "all": "Todos os Artigos",
@@ -1411,7 +1415,8 @@
     "readyToBookSubtitle": "Explore os nossos talentosos fotógrafos em Portugal e capture as suas memórias de férias perfeitas.",
     "findAPhotographer": "Encontrar um Fotógrafo",
     "moreFromBlog": "Mais do Blogue",
-    "relatedLocations": "Localizações Relacionadas"
+    "relatedLocations": "Localizações Relacionadas",
+    "breadcrumb": "Navegação"
   },
   "photographersMeta": {
     "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve | Photo Portugal",
@@ -1967,7 +1972,9 @@
     "privateOnlyViaLink": "Privado — apenas via link ou mensagens",
     "privateBadge": "Privado",
     "editTooltip": "Editar",
-    "deleteTooltip": "Eliminar"
+    "deleteTooltip": "Eliminar",
+    "profilePhotoPreview": "Pré-visualização da foto de perfil",
+    "coverAlt": "Capa"
   },
   "subscriptions": {
     "title": "Subscrições",
@@ -2201,7 +2208,7 @@
     "cancelRefundConfirm": "Cancelar esta reserva? O seu pagamento será reembolsado. Os reembolsos demoram normalmente 5 a 10 dias úteis.",
     "failedUpdate": "Falha ao atualizar a reserva",
     "markSessionDoneHint": "Confirme que a sessão decorreu com sucesso. Se houve algum problema (cliente não apareceu, imprevistos), contacte o suporte.",
-    "markSessionDoneWait": "Este botão ficará ativo na data da sessão",
+    "markSessionDoneWait": "Disponível a {date}",
     "uploadDeliverHint": "Carregue as suas fotos e partilhe-as com o cliente. Receberão um email com um link para rever e aceitar."
   },
   "clientDashboard": {
@@ -2229,7 +2236,10 @@
     "sharePackage": "Partilhar pacote",
     "shareAPackage": "Partilhar um Pacote",
     "noPackagesYet": "Sem pacotes ainda",
-    "online": "Online"
+    "online": "Online",
+    "sharedPhoto": "Foto partilhada",
+    "pdfLabel": "PDF",
+    "pendingPhotoAttachment": "Anexo de foto pendente"
   },
   "settings": {
     "title": "Definições",
@@ -2289,7 +2299,8 @@
     "deleteAccountFailed": "Falha ao eliminar a conta. Por favor tente novamente.",
     "cancel": "Cancelar",
     "signIn": "Iniciar sessão",
-    "contactSupport": "Contactar suporte"
+    "contactSupport": "Contactar suporte",
+    "profilePhotoPreview": "Pré-visualização da foto de perfil"
   },
   "bookings": {
     "bookingRequests": "Pedidos de Reserva",
@@ -2446,7 +2457,8 @@
       "discountAfterApproval": "O seu código de desconto será enviado por email assim que a nossa equipa aprovar o vídeo.",
       "done": "Concluído",
       "cameraError": "Não foi possível aceder à câmara. Por favor, permita o acesso à câmara e ao microfone."
-    }
+    },
+    "reviewPhotoPreview": "Pré-visualização da foto da avaliação"
   },
   "payButton": {
     "pay": "Pagar €{total}",

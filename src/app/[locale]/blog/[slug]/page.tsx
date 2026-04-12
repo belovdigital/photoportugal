@@ -589,7 +589,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         {/* Content */}
         <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="mb-6 text-sm text-gray-400">
+          <nav aria-label={t("breadcrumb")} className="mb-6 text-sm text-gray-400">
             <ol className="flex flex-wrap items-center gap-1.5">
               <li className="flex items-center gap-1.5">
                 <Link href="/" className="hover:text-primary-600 transition">{tc("home")}</Link>

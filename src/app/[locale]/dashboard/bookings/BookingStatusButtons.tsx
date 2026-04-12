@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, deliveryAccepted, shootDate }: { bookingId: string; currentStatus: string; paymentStatus?: string | null; deliveryAccepted?: boolean; shootDate?: string | null }) {
@@ -10,6 +10,8 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
   const t = useTranslations("bookingActions");
+  const locale = useLocale();
+  const dateLocale = locale === "pt" ? "pt-PT" : "en-US";
   const { modal, confirm } = useConfirmModal();
 
   async function updateStatus(status: string) {
@@ -77,14 +79,14 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
         <button
           onClick={() => updateStatus("completed")}
           disabled={updating || !!isFutureDate}
-          title={isFutureDate ? t("markSessionDoneWait") || `Available on ${new Date(shootDateStr! + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : undefined}
+          title={isFutureDate ? t("markSessionDoneWait", { date: new Date(shootDateStr! + "T12:00:00").toLocaleDateString(dateLocale, { month: "short", day: "numeric" }) }) : undefined}
           className={`rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${isFutureDate ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
         >
           {t("markSessionDone")}
         </button>
         <p className="mt-1.5 text-[11px] text-gray-400 max-w-sm">
           {isFutureDate
-            ? (t("markSessionDoneWait") || `Available on ${new Date(shootDateStr! + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`)
+            ? t("markSessionDoneWait", { date: new Date(shootDateStr! + "T12:00:00").toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" }) })
             : t("markSessionDoneHint")}
         </p>
         {errorBanner}
@@ -115,7 +117,7 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
-        {t("deliveryAccepted") || "Delivery Accepted"}
+        {t("deliveryAccepted")}
       </span>
     );
   }

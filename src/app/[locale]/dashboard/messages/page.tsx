@@ -833,7 +833,7 @@ function MessagesContent() {
                                     <div className="rounded-lg bg-warm-200 animate-pulse" style={{ width: 200, height: 150 }} />
                                     <img
                                       src={msg.media_url!}
-                                      alt="Shared photo"
+                                      alt={t("sharedPhoto")}
                                       style={{ maxWidth: 240, maxHeight: 300 }}
                                       className="rounded-lg object-cover absolute inset-0"
                                       onLoad={(e) => {
@@ -916,9 +916,9 @@ function MessagesContent() {
                   {pendingPreviews.map((preview, i) => (
                     <div key={i} className="relative shrink-0">
                       {pendingFiles[i]?.type === "application/pdf" || pendingFiles[i]?.name?.toLowerCase().endsWith(".pdf") ? (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-warm-200 text-2xl" role="img" aria-label="PDF">&#x1F4C4;</div>
+                        <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-warm-200 text-2xl" role="img" aria-label={t("pdfLabel")}>&#x1F4C4;</div>
                       ) : (
-                        <img src={preview} alt="Pending photo attachment" aria-hidden="true" className="h-14 w-14 rounded-lg object-cover" />
+                        <img src={preview} alt={t("pendingPhotoAttachment")} aria-hidden="true" className="h-14 w-14 rounded-lg object-cover" />
                       )}
                       <button
                         type="button"

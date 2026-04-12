@@ -181,7 +181,7 @@ export default async function BlogPaginatedPage({
             </div>
 
             {totalPages > 1 && (
-              <nav className="mt-12 flex items-center justify-center gap-1" aria-label="Blog pagination">
+              <nav className="mt-12 flex items-center justify-center gap-1" aria-label={t("blogPagination")}>
                 {currentPage > 1 ? (
                   <Link href={currentPage === 2 ? "/blog" : `/blog/page/${currentPage - 1}`} className="inline-flex items-center gap-1 rounded-lg border border-warm-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:border-primary-200">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
