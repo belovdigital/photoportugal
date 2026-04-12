@@ -197,6 +197,7 @@ export default async function AdminPage() {
     created_at: string; first_message: string | null; message_count: number;
     last_message_at: string | null; has_reply: boolean; client_country: string | null;
     converted_to_booking_id: string | null;
+    archived: boolean;
   }>(
     `SELECT b.id, cu.name as client_name, cu.email as client_email, pu.name as photographer_name,
             b.created_at,
@@ -205,7 +206,8 @@ export default async function AdminPage() {
             (SELECT MAX(m.created_at) FROM messages m WHERE m.booking_id = b.id) as last_message_at,
             EXISTS(SELECT 1 FROM messages m WHERE m.booking_id = b.id AND m.sender_id != b.client_id) as has_reply,
             (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,
-            b.converted_to_booking_id
+            b.converted_to_booking_id,
+            COALESCE(b.archived, FALSE) as archived
      FROM bookings b JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users pu ON pu.id = pp.user_id
@@ -279,7 +281,7 @@ export default async function AdminPage() {
     messages: parseInt(messageCount?.count || "0"),
     blogPosts: parseInt(blogCount?.count || "0"),
     disputesOpen: parseInt(disputeCount?.count || "0"),
-    inquiriesCount: inquiries.filter(i => !i.has_reply && !i.converted_to_booking_id).length,
+    inquiriesCount: inquiries.filter(i => !i.has_reply && !i.converted_to_booking_id && !i.archived).length,
     matchRequestsNew: parseInt(matchRequestsNewCount?.count || "0"),
     // Funnel: unique clients at each stage
     funnelMessages: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT sender_id) as count FROM messages WHERE is_system = FALSE").catch(() => null))?.count || "0"),

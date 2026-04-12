@@ -18,26 +18,45 @@ export interface AdminInquiry {
   has_reply: boolean;
   client_country: string | null;
   converted_to_booking_id: string | null;
+  archived: boolean;
 }
 
-export function AdminInquiriesList({ inquiries }: { inquiries: AdminInquiry[] }) {
+export function AdminInquiriesList({ inquiries: initialInquiries }: { inquiries: AdminInquiry[] }) {
+  const [inquiries, setInquiries] = useState(initialInquiries);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "unreplied" | "replied" | "converted">("all");
+  const [filter, setFilter] = useState<"all" | "unreplied" | "replied" | "converted" | "archived">("all");
+  const [archiving, setArchiving] = useState<string | null>(null);
 
-  const filtered = filter === "all" ? inquiries
-    : filter === "unreplied" ? inquiries.filter((i) => !i.has_reply && !i.converted_to_booking_id)
-    : filter === "converted" ? inquiries.filter((i) => !!i.converted_to_booking_id)
-    : inquiries.filter((i) => i.has_reply && !i.converted_to_booking_id);
+  async function handleArchive(id: string) {
+    setArchiving(id);
+    const res = await fetch(`/api/admin/bookings`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, archived: true }),
+    });
+    if (res.ok) {
+      setInquiries(prev => prev.map(i => i.id === id ? { ...i, archived: true } : i));
+    }
+    setArchiving(null);
+  }
+
+  const nonArchived = inquiries.filter(i => !i.archived);
+  const filtered = filter === "all" ? nonArchived
+    : filter === "unreplied" ? nonArchived.filter((i) => !i.has_reply && !i.converted_to_booking_id)
+    : filter === "converted" ? nonArchived.filter((i) => !!i.converted_to_booking_id)
+    : filter === "archived" ? inquiries.filter((i) => i.archived)
+    : nonArchived.filter((i) => i.has_reply && !i.converted_to_booking_id);
 
   return (
     <div className="space-y-3">
       {/* Filter pills */}
       <div className="flex gap-1">
-        {(["all", "unreplied", "replied", "converted"] as const).map((f) => {
-          const count = f === "all" ? inquiries.length
-            : f === "unreplied" ? inquiries.filter((i) => !i.has_reply && !i.converted_to_booking_id).length
-            : f === "converted" ? inquiries.filter((i) => !!i.converted_to_booking_id).length
-            : inquiries.filter((i) => i.has_reply && !i.converted_to_booking_id).length;
+        {(["all", "unreplied", "replied", "converted", "archived"] as const).map((f) => {
+          const count = f === "all" ? nonArchived.length
+            : f === "unreplied" ? nonArchived.filter((i) => !i.has_reply && !i.converted_to_booking_id).length
+            : f === "converted" ? nonArchived.filter((i) => !!i.converted_to_booking_id).length
+            : f === "archived" ? inquiries.filter((i) => i.archived).length
+            : nonArchived.filter((i) => i.has_reply && !i.converted_to_booking_id).length;
           return (
             <button
               key={f}
@@ -48,7 +67,7 @@ export function AdminInquiriesList({ inquiries }: { inquiries: AdminInquiry[] })
                   : "bg-white border border-warm-200 text-gray-500 hover:text-gray-700"
               }`}
             >
-              {f === "all" ? "All" : f === "unreplied" ? "Awaiting Reply" : f === "converted" ? "Converted" : "Replied"}
+              {f === "all" ? "All" : f === "unreplied" ? "Awaiting Reply" : f === "converted" ? "Converted" : f === "archived" ? "Archived" : "Replied"}
               {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
             </button>
           );
@@ -186,6 +205,18 @@ export function AdminInquiriesList({ inquiries }: { inquiries: AdminInquiry[] })
                   </div>
 
                   <div className="mt-3 flex items-center border-t border-warm-100 pt-3">
+                    {!inq.archived && (
+                      <button
+                        onClick={() => handleArchive(inq.id)}
+                        disabled={archiving === inq.id}
+                        className="text-xs text-gray-400 hover:text-gray-600 transition disabled:opacity-50"
+                      >
+                        {archiving === inq.id ? "Archiving..." : "Archive"}
+                      </button>
+                    )}
+                    {inq.archived && (
+                      <span className="text-xs text-gray-400">Archived</span>
+                    )}
                     <span className="text-[10px] text-gray-300 ml-auto">ID: {inq.id.slice(0, 8)}</span>
                   </div>
                 </div>

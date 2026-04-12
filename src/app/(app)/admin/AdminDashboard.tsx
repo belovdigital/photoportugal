@@ -2,6 +2,49 @@
 
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { AdminToastProvider } from "./AdminToast";
+import { AuditLog as AuditLogTab } from "./AuditLog";
+
+function NotificationLogsTab({ channel, title }: { channel: "email" | "sms"; title: string }) {
+  const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/admin/notification-logs?channel=${channel}`)
+      .then(r => r.json())
+      .then(d => { setLogs(Array.isArray(d) ? d : []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [channel]);
+
+  if (loading) return <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" /></div>;
+
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-gray-900 mb-4">{title}</h2>
+      {logs.length === 0 ? (
+        <p className="text-gray-400 text-center py-8">No logs found</p>
+      ) : (
+        <div className="space-y-1.5">
+          {logs.map((log) => (
+            <div key={log.id} className="flex items-start gap-3 rounded-lg border border-warm-200 bg-white px-3 py-2.5 text-sm">
+              <span className={`shrink-0 mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                log.status === "sent" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+              }`}>{log.status}</span>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-gray-900 truncate">{log.event}</p>
+                <p className="text-xs text-gray-500 truncate">{log.recipient}</p>
+                {log.error_code && <p className="text-xs text-red-500">Error: {log.error_code}</p>}
+              </div>
+              <span className="shrink-0 text-xs text-gray-400 whitespace-nowrap">
+                {new Date(log.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}{" "}
+                {new Date(log.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface AdminStats {
   clients: number;
@@ -66,6 +109,14 @@ const tabGroups = [
     ],
   },
   {
+    label: "Logs",
+    items: [
+      { key: "auditLog", label: "Audit Log", icon: "document" },
+      { key: "emailLogs", label: "Email Logs", icon: "message" },
+      { key: "smsLogs", label: "SMS Logs", icon: "message" },
+    ],
+  },
+  {
     label: null,
     items: [
       { key: "settings", label: "Settings", icon: "settings" },
@@ -75,7 +126,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "bookings" | "inquiries" | "matchRequests" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "bookings" | "inquiries" | "matchRequests" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "auditLog" | "emailLogs" | "smsLogs" | "settings";
 
 function SidebarIcon({ type, active }: { type: string; active: boolean }) {
   const cls = `h-4.5 w-4.5 ${active ? "text-primary-600" : "text-gray-400"}`;
@@ -615,6 +666,9 @@ export function AdminDashboard({
           {activeTab === "blog" && blogSection}
           {activeTab === "promos" && promosSection}
           {activeTab === "locations" && locationsSection}
+          {activeTab === "auditLog" && <AuditLogTab />}
+          {activeTab === "emailLogs" && <NotificationLogsTab channel="email" title="Email Logs" />}
+          {activeTab === "smsLogs" && <NotificationLogsTab channel="sms" title="SMS Logs" />}
           {activeTab === "settings" && settingsSection}
           </>}
         </div>

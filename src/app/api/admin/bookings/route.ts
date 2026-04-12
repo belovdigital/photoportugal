@@ -14,7 +14,15 @@ async function isAdmin() {
 export async function PATCH(req: NextRequest) {
   if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, action } = await req.json();
+  const body = await req.json();
+  const { id, action, archived } = body;
+
+  // Archive/unarchive
+  if (id && archived !== undefined) {
+    await queryOne("UPDATE bookings SET archived = $1 WHERE id = $2", [!!archived, id]);
+    return NextResponse.json({ success: true });
+  }
+
   if (!id || !action) return NextResponse.json({ error: "Missing id or action" }, { status: 400 });
 
   try {
