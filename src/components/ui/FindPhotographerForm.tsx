@@ -185,7 +185,12 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
             <label className="block text-sm font-medium text-gray-700">{t("locationLabel")} *</label>
             <select value={locationSlug} onChange={(e) => setLocationSlug(e.target.value)} required className={inputCls}>
               <option value="">{t("locationPlaceholder")}</option>
-              {locations.map((loc) => (
+              {/* Lisbon first, then separator, then alphabetical */}
+              {locations.filter(l => l.slug === "lisbon").map((loc) => (
+                <option key={loc.slug} value={loc.slug}>{loc.name}</option>
+              ))}
+              <option disabled>───────────</option>
+              {[...locations].filter(l => l.slug !== "lisbon").sort((a, b) => a.name.localeCompare(b.name)).map((loc) => (
                 <option key={loc.slug} value={loc.slug}>{loc.name}</option>
               ))}
             </select>
