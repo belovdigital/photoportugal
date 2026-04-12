@@ -614,7 +614,14 @@
     "findAPhotographer": "Find a Photographer",
     "seeHowItWorks": "See How It Works",
     "questionsContact": "Have questions?",
-    "contactUs": "Contact us"
+    "contactUs": "Contact us",
+    "founder": {
+      "title": "Meet the Founder",
+      "alt": "Kate Belova, founder of Photo Portugal",
+      "bio1": "<strong>Kate Belova</strong> is a professional portrait and lifestyle photographer with over 10 years of experience, based in Lisbon, Portugal. Known for her \"soul portrait\" style, Kate has a rare ability to make people feel completely at ease in front of the camera — revealing authentic emotions and genuine personality in every frame.",
+      "bio2": "After years of shooting family and lifestyle sessions across Lisbon, Sintra, and Cascais, Kate realized that tourists visiting Portugal wanted beautiful photos but finding a trustworthy local photographer was surprisingly hard. She created Photo Portugal to solve this — a curated marketplace where every photographer is personally vetted and every session delivers an exceptional experience.",
+      "bio3": "Kate personally oversees the <link>photographer selection process</link>, ensuring that only professionals who share her commitment to authenticity and quality join the platform."
+    }
   },
   "contact": {
     "metaTitle": "Contact Us — Photo Portugal",
@@ -877,7 +884,12 @@
       "title": "Don't Miss Your Spot",
       "subtitle": "Once the founding spots are gone, they're gone forever. Join now and lock in your lifetime benefits.",
       "freeToSignUp": "Free to sign up. No credit card required."
-    }
+    },
+    "founderAlt": "Kate Belova, founder of Photo Portugal",
+    "founderQuote": "I built Photo Portugal because I know how hard it is for talented photographers to find consistent clients. This platform brings tourists directly to you — no chasing leads, no haggling over prices. You focus on what you love: creating beautiful photos.",
+    "founderName": "Kate Belova",
+    "founderRole": "Founder & Photographer, 10+ years experience",
+    "viewProfile": "View Kate's profile →"
   },
   "forPhotographers": {
     "metaTitle": "Join Photo Portugal — Earn Money as a Vacation Photographer in Portugal",

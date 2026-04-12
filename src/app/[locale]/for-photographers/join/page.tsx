@@ -316,16 +316,16 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
           <div className="flex flex-col items-center text-center">
             <img
               src="/api/img/avatars/686ad75a-fa5b-4dcb-bdd7-7ec30d9e8910.jpg?w=160&q=85&f=webp"
-              alt="Kate Belova, founder of Photo Portugal"
+              alt={t("founderAlt")}
               className="h-20 w-20 rounded-full object-cover"
             />
             <blockquote className="mt-6 text-lg leading-relaxed text-gray-700 italic max-w-xl">
-              &ldquo;I built Photo Portugal because I know how hard it is for talented photographers to find consistent clients. This platform brings tourists directly to you — no chasing leads, no haggling over prices. You focus on what you love: creating beautiful photos.&rdquo;
+              &ldquo;{t("founderQuote")}&rdquo;
             </blockquote>
-            <p className="mt-4 font-semibold text-gray-900">Kate Belova</p>
-            <p className="text-sm text-gray-500">Founder &amp; Photographer, 10+ years experience</p>
+            <p className="mt-4 font-semibold text-gray-900">{t("founderName")}</p>
+            <p className="text-sm text-gray-500">{t("founderRole")}</p>
             <Link href="/photographers/kate-belova" className="mt-2 text-xs text-primary-600 hover:underline">
-              View Kate&apos;s profile →
+              {t("viewProfile")}
             </Link>
           </div>
         </div>

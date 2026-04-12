@@ -611,7 +611,14 @@
     "findAPhotographer": "Encontrar um Fotógrafo",
     "seeHowItWorks": "Ver Como Funciona",
     "questionsContact": "Tem perguntas?",
-    "contactUs": "Contacte-nos"
+    "contactUs": "Contacte-nos",
+    "founder": {
+      "title": "Conheça a Fundadora",
+      "alt": "Kate Belova, fundadora da Photo Portugal",
+      "bio1": "<strong>Kate Belova</strong> é uma fotógrafa profissional de retrato e lifestyle com mais de 10 anos de experiência, baseada em Lisboa, Portugal. Conhecida pelo seu estilo de \"retrato de alma\", Kate tem uma rara capacidade de fazer as pessoas sentirem-se completamente à vontade em frente à câmara — revelando emoções autênticas e personalidade genuína em cada fotografia.",
+      "bio2": "Após anos a fotografar sessões de família e lifestyle em Lisboa, Sintra e Cascais, Kate percebeu que os turistas que visitavam Portugal queriam fotografias bonitas, mas encontrar um fotógrafo local de confiança era surpreendentemente difícil. Criou a Photo Portugal para resolver isto — um marketplace curado onde cada fotógrafo é pessoalmente verificado e cada sessão proporciona uma experiência excecional.",
+      "bio3": "Kate supervisiona pessoalmente o <link>processo de seleção de fotógrafos</link>, garantindo que apenas profissionais que partilham o seu compromisso com a autenticidade e qualidade se juntam à plataforma."
+    }
   },
   "contact": {
     "metaTitle": "Contacte-nos — Photo Portugal",
@@ -874,7 +881,12 @@
     },
     "spotsRemaining": "{tier} lugares restantes",
     "spotsClaimed": "{tier} lugares ocupados",
-    "spotsLeft": "lugares restantes"
+    "spotsLeft": "lugares restantes",
+    "founderAlt": "Kate Belova, fundadora da Photo Portugal",
+    "founderQuote": "Criei a Photo Portugal porque sei como é difícil para fotógrafos talentosos encontrar clientes de forma consistente. Esta plataforma traz turistas diretamente até si — sem perseguir contactos, sem negociar preços. Concentre-se no que ama: criar fotografias bonitas.",
+    "founderName": "Kate Belova",
+    "founderRole": "Fundadora e Fotógrafa, 10+ anos de experiência",
+    "viewProfile": "Ver perfil da Kate →"
   },
   "forPhotographers": {
     "metaTitle": "Junte-se à Photo Portugal — Ganhe Dinheiro como Fotógrafo de Férias em Portugal",
