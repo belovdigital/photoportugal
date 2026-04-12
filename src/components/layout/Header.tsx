@@ -101,21 +101,10 @@ export function Header() {
 
           {/* Desktop nav */}
           <div className="hidden items-center gap-1 lg:flex" ref={menuRef}>
-            {/* For Clients dropdown — highlighted */}
-            <div className="relative">
-              <button
-                onClick={() => toggleMenu("forClients")}
-                aria-expanded={activeMenu === "forClients"}
-                className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  activeMenu === "forClients" ? "bg-primary-50 text-primary-700" : "text-primary-600 hover:bg-primary-50"
-                }`}
-              >
-                {t("forClients")}
-                <svg className={`h-3.5 w-3.5 transition ${activeMenu === "forClients" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
+            {/* Photographers — direct link */}
+            <Link href="/photographers" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
+              {t("photographers")}
+            </Link>
 
             {/* Destinations dropdown */}
             <div className="relative">
@@ -132,6 +121,22 @@ export function Header() {
                 </svg>
               </button>
             </div>
+
+            {/* For Clients dropdown — hidden for now */}
+            {/* <div className="relative">
+              <button
+                onClick={() => toggleMenu("forClients")}
+                aria-expanded={activeMenu === "forClients"}
+                className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                  activeMenu === "forClients" ? "bg-primary-50 text-primary-700" : "text-primary-600 hover:bg-primary-50"
+                }`}
+              >
+                {t("forClients")}
+                <svg className={`h-3.5 w-3.5 transition ${activeMenu === "forClients" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div> */}
 
             {!isLoading && (!user || role === "photographer") && <div className="relative">
               <button
