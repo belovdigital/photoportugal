@@ -121,8 +121,8 @@ const tabGroups = [
     label: "Logs",
     items: [
       { key: "auditLog", label: "Audit Log", icon: "document" },
-      { key: "emailLogs", label: "Email Logs", icon: "message" },
-      { key: "smsLogs", label: "SMS Logs", icon: "message" },
+      { key: "emailLogs", label: "Email Log", icon: "message" },
+      { key: "smsLogs", label: "SMS Log", icon: "message" },
     ],
   },
   {
