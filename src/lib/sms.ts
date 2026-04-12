@@ -4,6 +4,17 @@ import { queryOne } from "@/lib/db";
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const phoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const US_TOLL_FREE = "+18559462221";
+
+// Countries that don't support alphanumeric sender ID — need a phone number
+const NUMERIC_ONLY_COUNTRIES = ["+1"]; // US/Canada
+
+function getSender(to: string): string {
+  for (const prefix of NUMERIC_ONLY_COUNTRIES) {
+    if (to.startsWith(prefix)) return US_TOLL_FREE;
+  }
+  return phoneNumber || "PHOTO PT";
+}
 
 export async function sendSMS(to: string, message: string): Promise<boolean> {
   if (!accountSid || !authToken) {
@@ -11,7 +22,7 @@ export async function sendSMS(to: string, message: string): Promise<boolean> {
     return false;
   }
 
-  const sender = phoneNumber || "PHOTO PT";
+  const sender = getSender(to);
 
   try {
     const client = twilio(accountSid, authToken);
