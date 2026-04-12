@@ -24,6 +24,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Prevent concurrent cron runs with advisory lock
+  try {
+    const lock = await queryOne<{ acquired: boolean }>(
+      "SELECT pg_try_advisory_lock(123456789) as acquired"
+    );
+    if (!lock?.acquired) {
+      return NextResponse.json({ error: "Cron already running", skipped: true });
+    }
+  } catch {}
+
   const results = {
     paymentReminders: 0,
     autoCancelled: 0,
@@ -1450,5 +1460,7 @@ export async function GET(req: NextRequest) {
     unansweredReminders12h,
     unansweredAdminAlerts,
   });
-
 }
+
+// Release advisory lock in finally-like fashion is not needed —
+// pg_try_advisory_lock is session-scoped and auto-releases when connection closes
