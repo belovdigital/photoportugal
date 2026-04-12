@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
 
       // Determine early bird tier
       const photographerCount = await queryOne<{ count: string; next_num: string }>(
-        "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0"
+        "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE"
       );
       const count = parseInt(photographerCount?.count || "0");
       const nextNumber = parseInt(photographerCount?.next_num || "1");
