@@ -8,6 +8,7 @@ import { BookingStatusButtons } from "./BookingStatusButtons";
 import { DateNegotiation } from "./DateNegotiation";
 import { Avatar } from "@/components/ui/Avatar";
 import { PaymentTracker } from "./PaymentTracker";
+import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { BookingJourney } from "./BookingJourney";
 import { normalizeName } from "@/lib/format-name";
 
@@ -48,7 +49,7 @@ export default async function BookingsPage() {
   if (!session?.user) return null;
 
   const userId = (session.user as { id?: string }).id;
-  const user = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
+  const user = await queryOne<{ role: string; avatar_url: string | null; phone: string | null }>("SELECT role, avatar_url, phone FROM users WHERE id = $1", [userId]);
   const isPhotographer = user?.role === "photographer";
 
   let bookings: {
@@ -134,6 +135,25 @@ export default async function BookingsPage() {
   return (
     <div className="p-6 sm:p-8">
       <PaymentTracker bookingAmounts={bookingAmounts} />
+      {!isPhotographer && (
+        <div className="mb-6">
+          <OnboardingChecklist
+            role="client"
+            userId={userId!}
+            checks={{
+              avatar: !!user?.avatar_url,
+              cover: false,
+              bio: false,
+              portfolio: 0,
+              packages: 0,
+              locations: 0,
+              stripeConnected: false,
+              phone: !!user?.phone,
+              bookings: bookings.length,
+            }}
+          />
+        </div>
+      )}
       <h1 className="font-display text-2xl font-bold text-gray-900">
         {isPhotographer ? t("bookingRequests") : t("myBookings")}
       </h1>

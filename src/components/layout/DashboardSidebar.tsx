@@ -24,7 +24,7 @@ export function DashboardSidebar() {
   const t = useTranslations("dashboard");
 
   const navItems: NavItem[] = [
-    { href: "/dashboard", labelKey: "sidebarOverview", icon: "home", roles: ["client", "photographer"] },
+    { href: "/dashboard", labelKey: "sidebarOverview", icon: "home", roles: ["photographer"] },
     { href: "/dashboard/bookings", labelKey: "sidebarBookings", icon: "calendar", roles: ["client", "photographer"], badge: notifications.pending_bookings },
     { href: "/dashboard/match-requests", labelKey: "sidebarMatchRequests", icon: "search", roles: ["client"] },
     { href: "/dashboard/messages", labelKey: "sidebarMessages", icon: "chat", roles: ["client", "photographer"], badge: notifications.unread_messages },

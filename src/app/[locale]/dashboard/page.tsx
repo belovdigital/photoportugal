@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
+import { redirect } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
@@ -19,11 +20,12 @@ export default async function DashboardOverview() {
   const role = user?.role || "client";
   const name = user?.name || session.user.name || "there";
 
-  if (role === "photographer") {
-    return <PhotographerOverview userId={userId!} name={name} />;
+  // Clients go straight to bookings
+  if (role === "client") {
+    redirect("/dashboard/bookings");
   }
 
-  return <ClientOverview userId={userId!} name={name} />;
+  return <PhotographerOverview userId={userId!} name={name} />;
 }
 
 async function ClientOverview({ userId, name }: { userId: string; name: string }) {
