@@ -850,7 +850,7 @@ export function PhotographerDashboardClient({
                       {maxLocations !== Infinity && <> &middot; <a href="/dashboard/subscriptions" className="text-primary-600 hover:underline">{t("upgradeForMore")}</a></>}
                     </p>
                     <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                      {allLocations.map((loc) => {
+                      {[...allLocations].sort((a, b) => a.name.localeCompare(b.name)).map((loc) => {
                         const isSelected = selectedLocations.includes(loc.slug);
                         const isDisabled = !isSelected && atLimit;
                         return (
