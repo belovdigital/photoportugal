@@ -89,6 +89,7 @@ export interface PhotographerProfile {
   review_count: number;
   session_count: number;
   created_at: string;
+  last_seen_at?: string | null;
 }
 
 export interface Package {

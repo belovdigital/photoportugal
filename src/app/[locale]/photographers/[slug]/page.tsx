@@ -12,6 +12,7 @@ import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
 import { PackageCard } from "@/components/ui/PackageCard";
 import { localeAlternates } from "@/lib/seo";
 import { normalizeName } from "@/lib/format-name";
+import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
@@ -465,6 +466,12 @@ export default async function PhotographerProfilePage({
                   )}
                 </div>
               )}
+
+              {/* Activity & Response */}
+              <div className="mt-2.5 flex flex-wrap items-center gap-3">
+                <ActiveBadge lastSeenAt={photographer.last_seen_at} size="md" />
+                <ResponseTimeBadge />
+              </div>
 
               {/* Specialties */}
               {photographer.shoot_types && photographer.shoot_types.length > 0 && (

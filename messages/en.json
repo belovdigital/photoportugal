@@ -2638,5 +2638,12 @@
       "addPhoneNumberTip": "So your photographer can reach you about the shoot",
       "findPhotographer": "Find your photographer"
     }
+  },
+  "activity": {
+    "now": "Online now",
+    "today": "Active today",
+    "thisWeek": "Active this week",
+    "thisMonth": "Active this month",
+    "responseTime": "Usually responds within a few hours"
   }
 }

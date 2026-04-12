@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { trackViewPhotographer } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
 import { WishlistButton } from "@/components/ui/WishlistButton";
+import { ActiveBadge } from "@/components/ui/ActiveBadge";
 
 export function PhotographerCard({
   photographer,
@@ -67,6 +68,7 @@ export function PhotographerCard({
               {normalizeName(photographer.name)}
             </h3>
             <p className="text-sm text-gray-500">{photographer.tagline}</p>
+            <ActiveBadge lastSeenAt={photographer.last_seen_at} />
           </div>
           {photographer.is_verified && (
             <span className="shrink-0 text-accent-500" title={t("verified")}>

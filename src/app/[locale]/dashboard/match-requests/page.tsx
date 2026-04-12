@@ -32,6 +32,7 @@ interface MatchRequestRow {
     review_count: number;
     price: number | null;
     bio: string | null;
+    last_seen_at: string | null;
   }[];
 }
 
@@ -55,7 +56,8 @@ export default async function MatchRequestsPage() {
           'rating', COALESCE(pp.rating, 0),
           'review_count', COALESCE(pp.review_count, 0),
           'price', COALESCE(mrp.price, (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)),
-          'bio', LEFT(pp.bio, 150)
+          'bio', LEFT(pp.bio, 150),
+          'last_seen_at', u.last_seen_at
         ))
         FROM match_request_photographers mrp
         JOIN photographer_profiles pp ON pp.id = mrp.photographer_id

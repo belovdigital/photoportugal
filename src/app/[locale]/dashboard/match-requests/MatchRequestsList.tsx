@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
+import { ActiveBadge } from "@/components/ui/ActiveBadge";
 import { Link } from "@/i18n/navigation";
 
 interface Photographer {
@@ -15,6 +16,7 @@ interface Photographer {
   review_count: number;
   price: number | null;
   bio: string | null;
+  last_seen_at: string | null;
 }
 
 interface MatchRequest {
@@ -188,6 +190,7 @@ export function MatchRequestsList({ matchRequests }: { matchRequests: MatchReque
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-warm-900">{p.name}</p>
                           <StarRating rating={p.rating} reviewCount={p.review_count} />
+                          <ActiveBadge lastSeenAt={p.last_seen_at} />
                           {p.price && (
                             <p className="mt-1 text-lg font-bold text-warm-900">€{p.price}</p>
                           )}
