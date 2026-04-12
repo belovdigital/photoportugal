@@ -18,13 +18,13 @@ const BUDGET_OPTIONS = [
 ] as const;
 
 const TIME_OPTIONS = [
-  { value: "flexible", label: "I'm flexible" },
-  { value: "sunrise", label: "Sunrise (6-8 AM)" },
-  { value: "morning", label: "Morning (8-11 AM)" },
-  { value: "midday", label: "Midday (11 AM-2 PM)" },
-  { value: "afternoon", label: "Afternoon (2-5 PM)" },
-  { value: "golden_hour", label: "Golden Hour (5-7 PM)" },
-  { value: "sunset", label: "Sunset (7-9 PM)" },
+  { value: "flexible", key: "flexible" },
+  { value: "sunrise", key: "sunrise" },
+  { value: "morning", key: "morning" },
+  { value: "midday", key: "midday" },
+  { value: "afternoon", key: "afternoon" },
+  { value: "golden_hour", key: "goldenHour" },
+  { value: "sunset", key: "sunset" },
 ] as const;
 
 export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defaultPhone = "", userId }: { defaultName?: string; defaultEmail?: string; defaultPhone?: string; userId?: string }) {
@@ -219,7 +219,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
               <label className="block text-sm font-medium text-gray-700">{t("timeLabel")}</label>
               <select value={shootTime} onChange={(e) => setShootTime(e.target.value)} className={inputCls}>
                 {TIME_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{tb(`time.${opt.value === "golden_hour" ? "goldenHour" : opt.value}` as any)}</option>
+                  <option key={opt.value} value={opt.value}>{tb(`time.${opt.key}` as any)}</option>
                 ))}
               </select>
             </div>
