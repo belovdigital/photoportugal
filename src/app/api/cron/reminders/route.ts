@@ -1304,7 +1304,134 @@ export async function GET(req: NextRequest) {
     results.errors.push(`New client notifications: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders });
+  // === UNANSWERED MESSAGE REMINDERS ===
+  // Find conversations where a client sent a message and the photographer hasn't replied
+  let unansweredReminders6h = 0;
+  let unansweredReminders12h = 0;
+  let unansweredAdminAlerts = 0;
+  try {
+    // Get all bookings with unread messages from clients (photographer hasn't replied)
+    const unanswered = await query<{
+      booking_id: string;
+      photographer_user_id: string;
+      photographer_name: string;
+      photographer_email: string;
+      photographer_phone: string | null;
+      client_name: string;
+      last_client_msg_at: string;
+      hours_since: number;
+      reminder_6h_sent: boolean;
+      reminder_12h_sent: boolean;
+      reminder_24h_sent: boolean;
+    }>(`
+      SELECT
+        b.id as booking_id,
+        pp.user_id as photographer_user_id,
+        pu.name as photographer_name,
+        pu.email as photographer_email,
+        pu.phone as photographer_phone,
+        cu.name as client_name,
+        last_client_msg.created_at as last_client_msg_at,
+        EXTRACT(EPOCH FROM (NOW() - last_client_msg.created_at))/3600 as hours_since,
+        COALESCE(b.reminder_6h_sent, FALSE) as reminder_6h_sent,
+        COALESCE(b.reminder_12h_sent, FALSE) as reminder_12h_sent,
+        COALESCE(b.reminder_24h_sent, FALSE) as reminder_24h_sent
+      FROM bookings b
+      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+      JOIN users pu ON pu.id = pp.user_id
+      JOIN users cu ON cu.id = b.client_id
+      JOIN LATERAL (
+        SELECT m.created_at FROM messages m
+        WHERE m.booking_id = b.id AND m.sender_id = b.client_id AND m.is_system = FALSE
+        ORDER BY m.created_at DESC LIMIT 1
+      ) last_client_msg ON TRUE
+      WHERE b.status = 'inquiry'
+        AND NOT EXISTS (
+          SELECT 1 FROM messages m2
+          WHERE m2.booking_id = b.id
+            AND m2.sender_id = pp.user_id
+            AND m2.is_system = FALSE
+            AND m2.created_at > last_client_msg.created_at
+        )
+        AND EXTRACT(EPOCH FROM (NOW() - last_client_msg.created_at))/3600 >= 6
+    `);
+
+    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+
+    for (const u of unanswered) {
+      try {
+        const firstName = u.photographer_name.split(" ")[0];
+
+        // 6-hour reminder
+        if (u.hours_since >= 6 && !u.reminder_6h_sent) {
+          // SMS
+          if (u.photographer_phone) {
+            await sendSMS(
+              u.photographer_phone,
+              `Hi ${firstName}! ${u.client_name} is waiting for your reply on Photo Portugal. Please respond soon: ${BASE_URL}/dashboard/messages`
+            ).catch(console.error);
+          }
+          // Email
+          await sendEmail(
+            u.photographer_email,
+            `${u.client_name} is waiting for your reply`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">You have an unanswered message</h2>
+              <p>Hi ${firstName},</p>
+              <p><strong>${u.client_name}</strong> sent you a message and is waiting for your reply. Quick responses help you win more bookings!</p>
+              <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reply Now</a></p>
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          ).catch(console.error);
+          await query("UPDATE bookings SET reminder_6h_sent = TRUE WHERE id = $1", [u.booking_id]);
+          unansweredReminders6h++;
+        }
+
+        // 12-hour reminder
+        if (u.hours_since >= 12 && !u.reminder_12h_sent) {
+          if (u.photographer_phone) {
+            await sendSMS(
+              u.photographer_phone,
+              `Reminder: ${u.client_name} has been waiting ${Math.round(u.hours_since)}h for your reply on Photo Portugal. Respond now to avoid losing this client: ${BASE_URL}/dashboard/messages`
+            ).catch(console.error);
+          }
+          await sendEmail(
+            u.photographer_email,
+            `Reminder: ${u.client_name} is still waiting for your reply`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">Don't miss this opportunity!</h2>
+              <p>Hi ${firstName},</p>
+              <p><strong>${u.client_name}</strong> sent you a message <strong>${Math.round(u.hours_since)} hours ago</strong> and hasn't received a reply yet.</p>
+              <p>Clients who don't hear back quickly often book someone else. Please reply as soon as possible!</p>
+              <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reply Now</a></p>
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          ).catch(console.error);
+          await query("UPDATE bookings SET reminder_12h_sent = TRUE WHERE id = $1", [u.booking_id]);
+          unansweredReminders12h++;
+        }
+
+        // 24-hour admin alert
+        if (u.hours_since >= 24 && !u.reminder_24h_sent) {
+          const { sendTelegram } = await import("@/lib/telegram");
+          await sendTelegram(
+            `⚠️ <b>Unanswered message (${Math.round(u.hours_since)}h)</b>\n\n` +
+            `Client: ${u.client_name}\n` +
+            `Photographer: ${u.photographer_name}\n` +
+            `Waiting since: ${Math.round(u.hours_since)} hours`
+          ).catch(console.error);
+          await query("UPDATE bookings SET reminder_24h_sent = TRUE WHERE id = $1", [u.booking_id]);
+          unansweredAdminAlerts++;
+        }
+      } catch (err) {
+        results.errors.push(`Unanswered reminder for booking ${u.booking_id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Unanswered reminders: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts });
 
   return NextResponse.json({
     success: true,
@@ -1319,6 +1446,9 @@ export async function GET(req: NextRequest) {
     abandonedBookingEmails,
     noBookingNudges,
     newClientNotifications,
+    unansweredReminders6h,
+    unansweredReminders12h,
+    unansweredAdminAlerts,
   });
 
 }
