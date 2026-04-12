@@ -101,9 +101,9 @@ export function Header() {
 
           {/* Desktop nav */}
           <div className="hidden items-center gap-1 lg:flex" ref={menuRef}>
-            {/* Photographers — direct link */}
+            {/* Our Photographers — direct link */}
             <Link href="/photographers" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
-              {t("photographers")}
+              {t("ourPhotographers")}
             </Link>
 
             {/* Destinations dropdown */}
@@ -122,35 +122,18 @@ export function Header() {
               </button>
             </div>
 
-            {/* For Clients dropdown — hidden for now */}
-            {/* <div className="relative">
-              <button
-                onClick={() => toggleMenu("forClients")}
-                aria-expanded={activeMenu === "forClients"}
-                className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  activeMenu === "forClients" ? "bg-primary-50 text-primary-700" : "text-primary-600 hover:bg-primary-50"
-                }`}
-              >
-                {t("forClients")}
-                <svg className={`h-3.5 w-3.5 transition ${activeMenu === "forClients" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div> */}
-
-            {!isLoading && (!user || role === "photographer") && <div className="relative">
-              <button
-                onClick={() => toggleMenu("photographers")}
-                className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                  activeMenu === "photographers" ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50"
-                }`}
-              >
-                {t("forPhotographers")}
-                <svg className={`h-3.5 w-3.5 transition ${activeMenu === "photographers" ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>}
+            {/* Explore menu burger */}
+            <button
+              onClick={() => toggleMenu("explore")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                activeMenu === "explore" ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50"
+              }`}
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              {t("explore")}
+            </button>
           </div>
 
           {/* Right side */}
@@ -347,7 +330,94 @@ export function Header() {
         )}
 
         {/* For Clients mega menu — overlay */}
-        {activeMenu === "forClients" && (
+        {/* Combined Explore mega menu */}
+        {activeMenu === "explore" && (
+          <div className="hidden lg:block absolute left-0 right-0 top-full z-40 border-t border-warm-200 bg-white shadow-xl">
+            <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-2 gap-0">
+                {/* Left: For Travelers */}
+                <div className="pr-8 border-r border-warm-200">
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-primary-500">{t("megaForTravelers")}</p>
+                  <div className="space-y-0.5">
+                    <Link href="/photographers" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Search className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("findPhotographers")}</p>
+                        <p className="text-xs text-gray-400">{t("megaBrowseDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/find-photographer" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg bg-primary-50 px-3 py-2.5 transition hover:bg-primary-100">
+                      <Heart className="h-[18px] w-[18px] shrink-0 text-primary-500 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-semibold text-primary-700">{t("findMePhotographer")}</p>
+                        <p className="text-xs text-primary-500/70">{t("megaMatchDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/how-it-works" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Compass className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("howItWorks")}</p>
+                        <p className="text-xs text-gray-400">{t("forClientsHowItWorksDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/faq" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <HelpCircle className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("faq")}</p>
+                        <p className="text-xs text-gray-400">{t("forClientsFaqDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/contact" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Mail className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("contact")}</p>
+                        <p className="text-xs text-gray-400">{t("megaContactDesc")}</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Right: For Photographers */}
+                <div className="pl-8">
+                  <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{t("megaForPhotographers")}</p>
+                  <div className="space-y-0.5">
+                    <Link href="/for-photographers/join" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <UserPlus className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("joinAsPhotographer")}</p>
+                        <p className="text-xs text-gray-400">{t("megaJoinDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/for-photographers/pricing" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <CreditCard className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("pricingPlans")}</p>
+                        <p className="text-xs text-gray-400">{t("megaPricingDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/for-photographers/how-we-select" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <ShieldCheck className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("howWeSelect")}</p>
+                        <p className="text-xs text-gray-400">{t("megaSelectionDesc")}</p>
+                      </div>
+                    </Link>
+                    <Link href="/blog" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <BookOpen className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("megaBlog")}</p>
+                        <p className="text-xs text-gray-400">{t("megaBlogDesc")}</p>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Old forClients mega menu — kept but hidden */}
+        {false && activeMenu === "forClients" && (
           <div className="hidden lg:block absolute left-0 right-0 top-full z-40 border-t border-warm-200 bg-white shadow-xl">
             <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
               <div className="grid grid-cols-3 gap-10">
@@ -442,8 +512,8 @@ export function Header() {
           </div>
         )}
 
-        {/* For Photographers mega menu — overlay */}
-        {activeMenu === "photographers" && (
+        {/* Old For Photographers mega menu — kept but hidden */}
+        {false && activeMenu === "photographers" && (
           <div className="hidden lg:block absolute left-0 right-0 top-full z-40 border-t border-warm-200 bg-white shadow-xl">
             <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
               <div className="grid grid-cols-3 gap-10">
