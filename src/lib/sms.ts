@@ -7,7 +7,7 @@ const phoneNumber = process.env.TWILIO_PHONE_NUMBER;
 const US_TOLL_FREE = "+18559462221";
 
 // Countries that don't support alphanumeric sender ID — need a phone number
-const NUMERIC_ONLY_COUNTRIES = ["+1"]; // US/Canada
+const NUMERIC_ONLY_COUNTRIES = ["+1", "+55", "+86"]; // US/Canada, Brazil, China
 
 function getSender(to: string): string {
   for (const prefix of NUMERIC_ONLY_COUNTRIES) {
