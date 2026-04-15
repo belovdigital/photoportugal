@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       sendWelcomeEmail(email.toLowerCase(), name, "client").catch((err) => console.error("[auth/apple] welcome email error:", err));
       sendAdminNewClientNotification(name, email.toLowerCase()).catch((err) => console.error("[auth/apple] admin notification error:", err));
       import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`👤 <b>New Client (Apple, mobile)</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}`);
+        sendTelegram(`👤 <b>New Client (Apple, mobile)</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}`, "clients");
       }).catch((err) => console.error("[auth/apple] telegram error:", err));
     }
 

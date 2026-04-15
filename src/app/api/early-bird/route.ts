@@ -5,13 +5,13 @@ import { queryOne } from "@/lib/db";
 const TIERS = [
   { key: "founding", label: "Founding Photographer", limit: 10, planReward: "premium", duration: null, badge: "Founding Photographer" },
   { key: "early50", label: "Early Adopter", limit: 35, planReward: "premium", duration: 180, badge: null }, // 6 months — spots 11-35
-  { key: "first100", label: "First 50", limit: 60, planReward: "pro", duration: 90, badge: null }, // 3 months — spots 36-60
+  { key: "first50", label: "First 50", limit: 85, planReward: "pro", duration: 90, badge: null }, // 3 months — spots 36-85
 ] as const;
 
 export async function GET() {
   try {
     const countRow = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_test = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE"
+      "SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE"
     );
     const totalPhotographers = parseInt(countRow?.count || "0");
 

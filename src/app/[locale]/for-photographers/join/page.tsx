@@ -25,12 +25,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-const TIER_KEYS = ["founding", "early50", "first100"] as const;
+const TIER_KEYS = ["founding", "early50", "first50"] as const;
 
 const TIER_CONFIG = [
   { key: "founding" as const, spots: 10, color: "from-amber-500 to-orange-500", textColor: "text-amber-700", bgColor: "bg-amber-50", borderColor: "border-amber-200" },
   { key: "early50" as const, spots: 25, color: "from-primary-500 to-primary-700", textColor: "text-primary-700", bgColor: "bg-primary-50", borderColor: "border-primary-200" },
-  { key: "first100" as const, spots: 50, color: "from-accent-500 to-accent-700", textColor: "text-accent-700", bgColor: "bg-accent-50", borderColor: "border-accent-200" },
+  { key: "first50" as const, spots: 50, color: "from-accent-500 to-accent-700", textColor: "text-accent-700", bgColor: "bg-accent-50", borderColor: "border-accent-200" },
 ];
 
 export default async function JoinPage({ params }: { params: Promise<{ locale: string }> }) {

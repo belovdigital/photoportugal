@@ -4,14 +4,17 @@ import {
   sendEmail,
   getAdminEmail,
   sendPaymentReminderToClient,
-  sendShootReminderToClient,
-  sendShootReminderToPhotographer,
-  sendDeliveryReminderToPhotographer,
-  sendTrustpilotFollowUpToClient,
-  sendTrustpilotFollowUpToPhotographer,
   sendAdminAutoCancelNotification,
+  renderShootReminderToClient,
+  renderShootReminderToPhotographer,
+  renderDeliveryReminderToPhotographer,
+  renderTrustpilotFollowUpToClient,
+  renderTrustpilotFollowUpToPhotographer,
+  emailLayout,
+  emailButton,
 } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
+import { queueNotification, processNotificationQueue } from "@/lib/notification-queue";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { rm } from "fs/promises";
 import path from "path";
@@ -80,7 +83,7 @@ export async function GET(req: NextRequest) {
           booking.client_email,
           booking.client_name,
           booking.photographer_name,
-          null, // Don't use stored payment_url — Stripe checkout sessions expire after 24h
+          null,
           booking.total_price
         );
         // SMS reminder
@@ -236,7 +239,7 @@ export async function GET(req: NextRequest) {
 
         results.autoCancelled++;
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`⏰ <b>Booking Auto-Cancelled</b>\n\n${booking.client_name} → ${booking.photographer_name}\nReason: Payment not received within 48h`);
+          sendTelegram(`⏰ <b>Booking Auto-Cancelled</b>\n\n${booking.client_name} → ${booking.photographer_name}\nReason: Payment not received within 48h`, "bookings");
         }).catch((err) => console.error("[cron] telegram auto-cancel error:", err));
         sendAdminAutoCancelNotification(booking.client_name, booking.photographer_name)
           .catch((err) => console.error("[cron] admin email auto-cancel error:", err));
@@ -252,10 +255,12 @@ export async function GET(req: NextRequest) {
             [booking.photographer_user_id]
           );
           if (photographerPhone?.phone && smsPrefs?.sms_bookings !== false) {
-            sendSMS(
-              photographerPhone.phone,
-              `Photo Portugal: Booking with ${booking.client_name} has been auto-cancelled (payment not received within 48h). Log in to view: https://photoportugal.com/dashboard/bookings`
-            ).catch(err => console.error("[cron] sms auto-cancel error:", err));
+            queueNotification({
+              channel: "sms",
+              recipient: photographerPhone.phone,
+              body: `Photo Portugal: Booking with ${booking.client_name} has been auto-cancelled (payment not received within 48h). Log in to view: https://photoportugal.com/dashboard/bookings`,
+              dedupKey: `auto_cancel_sms:${booking.id}`,
+            }).catch(err => console.error("[cron] sms auto-cancel error:", err));
           }
         } catch (smsErr) {
           console.error("[cron] auto-cancel sms error:", smsErr);
@@ -302,33 +307,47 @@ export async function GET(req: NextRequest) {
 
     for (const booking of upcomingBookings) {
       try {
-        await sendShootReminderToClient(
-          booking.client_email,
-          booking.client_name,
-          booking.photographer_name,
-          booking.shoot_date
+        // Get phone numbers for timezone-aware queuing
+        const smsInfo = await queryOne<{
+          photographer_phone: string | null; photographer_user_id: string;
+          client_phone: string | null; client_id: string;
+        }>(
+          `SELECT pu.phone as photographer_phone, pu.id as photographer_user_id,
+                  cu.phone as client_phone, cu.id as client_id
+           FROM bookings b
+           JOIN users cu ON cu.id = b.client_id
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
+           WHERE b.id = $1`,
+          [booking.id]
         );
-        await sendShootReminderToPhotographer(
-          booking.photographer_email,
-          booking.photographer_name,
-          booking.client_name,
-          booking.shoot_date
-        );
+
+        // Queue email reminders (timezone-aware — "tomorrow" must be accurate)
+        {
+          const rendered = renderShootReminderToClient(booking.client_name, booking.photographer_name, booking.shoot_date);
+          await queueNotification({
+            channel: "email",
+            recipient: booking.client_email,
+            subject: rendered.subject,
+            body: rendered.html,
+            dedupKey: `shoot_reminder_email_client:${booking.id}`,
+            recipientPhone: smsInfo?.client_phone || undefined,
+          });
+        }
+        {
+          const rendered = renderShootReminderToPhotographer(booking.photographer_name, booking.client_name, booking.shoot_date);
+          await queueNotification({
+            channel: "email",
+            recipient: booking.photographer_email,
+            subject: rendered.subject,
+            body: rendered.html,
+            dedupKey: `shoot_reminder_email_photographer:${booking.id}`,
+            recipientPhone: smsInfo?.photographer_phone || undefined,
+          });
+        }
+
         // SMS reminders to both parties
         try {
-          const smsInfo = await queryOne<{
-            photographer_phone: string | null; photographer_user_id: string;
-            client_phone: string | null; client_id: string;
-          }>(
-            `SELECT pu.phone as photographer_phone, pu.id as photographer_user_id,
-                    cu.phone as client_phone, cu.id as client_id
-             FROM bookings b
-             JOIN users cu ON cu.id = b.client_id
-             JOIN photographer_profiles pp ON pp.id = b.photographer_id
-             JOIN users pu ON pu.id = pp.user_id
-             WHERE b.id = $1`,
-            [booking.id]
-          );
           if (smsInfo) {
             // Photographer WhatsApp/SMS
             if (smsInfo.photographer_phone) {
@@ -337,10 +356,12 @@ export async function GET(req: NextRequest) {
                 [smsInfo.photographer_user_id]
               );
               if (pPrefs?.sms_bookings !== false) {
-                sendSMS(
-                  smsInfo.photographer_phone,
-                  `Photo Portugal: Reminder — you have a photoshoot with ${booking.client_name} tomorrow. Check your dashboard for details.`
-                ).catch(err => console.error("[sms] error:", err));
+                queueNotification({
+                  channel: "sms",
+                  recipient: smsInfo.photographer_phone,
+                  body: `Photo Portugal: Reminder — you have a photoshoot with ${booking.client_name} tomorrow. Check your dashboard for details.`,
+                  dedupKey: `shoot_reminder_sms_photographer:${booking.id}`,
+                }).catch(err => console.error("[sms] error:", err));
               }
             }
             // Client WhatsApp/SMS
@@ -350,10 +371,12 @@ export async function GET(req: NextRequest) {
                 [smsInfo.client_id]
               );
               if (cPrefs?.sms_bookings !== false) {
-                sendSMS(
-                  smsInfo.client_phone,
-                  `Photo Portugal: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`
-                ).catch(err => console.error("[sms] error:", err));
+                queueNotification({
+                  channel: "sms",
+                  recipient: smsInfo.client_phone,
+                  body: `Photo Portugal: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`,
+                  dedupKey: `shoot_reminder_sms_client:${booking.id}`,
+                }).catch(err => console.error("[sms] error:", err));
               }
             }
           }
@@ -414,15 +437,14 @@ export async function GET(req: NextRequest) {
 
         await sendEmail(
           booking.photographer_email,
-          `How did the session go? Mark it as completed`,
-          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #C94536;">How did the session go?</h2>
-            <p>Hi ${booking.photographer_name.split(" ")[0]},</p>
-            <p>Your session with <strong>${booking.client_name}</strong> was scheduled for ${dateDisplay}. If the session went well, please mark it as completed and upload your photos.</p>
-            <p>If something went wrong or the client didn't show up, please contact our support team.</p>
-            <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Bookings</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
-          </div>`
+          `Did your session with ${booking.client_name} take place?`,
+          emailLayout(`
+            <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Did the session take place?</h2>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${booking.photographer_name.split(" ")[0]},</p>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Your session with <strong>${booking.client_name}</strong> was scheduled for ${dateDisplay}. Please confirm that the session took place by marking it in your dashboard.</p>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">If something went wrong or the client didn't show up, please contact our support team.</p>
+            ${emailButton(`${baseUrl}/dashboard/bookings`, "Confirm Session")}
+          `)
         );
 
         // Telegram notification
@@ -430,7 +452,7 @@ export async function GET(req: NextRequest) {
           const { notifyPhotographerViaTelegram } = await import("@/lib/notify-photographer");
           await notifyPhotographerViaTelegram(
             booking.photographer_profile_id,
-            `How did the session with ${booking.client_name} go?\n\nPlease mark it as completed in your dashboard:\n${baseUrl}/dashboard/bookings`
+            `Did the session with ${booking.client_name} take place?\n\nPlease confirm in your dashboard:\n${baseUrl}/dashboard/bookings`
           );
         } catch {}
 
@@ -453,10 +475,11 @@ export async function GET(req: NextRequest) {
       id: string;
       photographer_email: string;
       photographer_name: string;
+      photographer_phone: string | null;
       client_name: string;
     }>(
       `SELECT b.id, pu.email as photographer_email, pu.name as photographer_name,
-              cu.name as client_name
+              pu.phone as photographer_phone, cu.name as client_name
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
        JOIN users pu ON pu.id = pp.user_id
@@ -470,11 +493,17 @@ export async function GET(req: NextRequest) {
 
     for (const booking of overdueDeliveries) {
       try {
-        await sendDeliveryReminderToPhotographer(
-          booking.photographer_email,
-          booking.photographer_name,
-          booking.client_name
-        );
+        {
+          const rendered = renderDeliveryReminderToPhotographer(booking.photographer_name, booking.client_name);
+          await queueNotification({
+            channel: "email",
+            recipient: booking.photographer_email,
+            subject: rendered.subject,
+            body: rendered.html,
+            dedupKey: `delivery_reminder_email:${booking.id}`,
+            recipientPhone: booking.photographer_phone || undefined,
+          });
+        }
         await queryOne(
           "UPDATE bookings SET delivery_reminder_sent = TRUE WHERE id = $1 RETURNING id",
           [booking.id]
@@ -951,11 +980,12 @@ export async function GET(req: NextRequest) {
     for (const booking of needsSmsReview) {
       try {
         const firstName = booking.client_name.split(" ")[0];
-        const { sendSMS } = await import("@/lib/sms");
-        await sendSMS(
-          booking.client_phone,
-          `Hi ${firstName}! We'd love to hear about your photoshoot with ${booking.photographer_name}. A quick review helps other travelers: https://photoportugal.com/dashboard/bookings`
-        ).catch((err) => console.error("[cron] SMS review reminder error:", err));
+        await queueNotification({
+          channel: "sms",
+          recipient: booking.client_phone,
+          body: `Hi ${firstName}! We'd love to hear about your photoshoot with ${booking.photographer_name}. A quick review helps other travelers: https://photoportugal.com/dashboard/bookings`,
+          dedupKey: `review_sms:${booking.id}`,
+        });
         await query("UPDATE bookings SET review_sms_sent = TRUE WHERE id = $1", [booking.id]);
         smsReviewReminders++;
       } catch (err) {
@@ -972,11 +1002,15 @@ export async function GET(req: NextRequest) {
       id: string;
       client_email: string;
       client_name: string;
+      client_phone: string | null;
       photographer_email: string;
       photographer_name: string;
+      photographer_phone: string | null;
     }>(
       `SELECT b.id, cu.email as client_email, cu.name as client_name,
-              pu.email as photographer_email, pu.name as photographer_name
+              cu.phone as client_phone,
+              pu.email as photographer_email, pu.name as photographer_name,
+              pu.phone as photographer_phone
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -990,15 +1024,28 @@ export async function GET(req: NextRequest) {
 
     for (const booking of recentlyAccepted) {
       try {
-        await sendTrustpilotFollowUpToClient(
-          booking.client_email,
-          booking.client_name,
-          booking.photographer_name
-        );
-        await sendTrustpilotFollowUpToPhotographer(
-          booking.photographer_email,
-          booking.photographer_name
-        );
+        {
+          const rendered = renderTrustpilotFollowUpToClient(booking.client_name, booking.photographer_name);
+          await queueNotification({
+            channel: "email",
+            recipient: booking.client_email,
+            subject: rendered.subject,
+            body: rendered.html,
+            dedupKey: `trustpilot_email_client:${booking.id}`,
+            recipientPhone: booking.client_phone || undefined,
+          });
+        }
+        {
+          const rendered = renderTrustpilotFollowUpToPhotographer(booking.photographer_name);
+          await queueNotification({
+            channel: "email",
+            recipient: booking.photographer_email,
+            subject: rendered.subject,
+            body: rendered.html,
+            dedupKey: `trustpilot_email_photographer:${booking.id}`,
+            recipientPhone: booking.photographer_phone || undefined,
+          });
+        }
         await queryOne(
           "UPDATE bookings SET trustpilot_sent = TRUE WHERE id = $1 RETURNING id",
           [booking.id]
@@ -1170,7 +1217,7 @@ export async function GET(req: NextRequest) {
         checklistDeactivated++;
         console.log(`[cron/reminders] deactivated incomplete photographer ${p.name} (${p.email})`);
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`🚫 <b>Photographer Deactivated</b>\n\n${p.name} (${p.email})\nReason: Profile not completed within 7 days`);
+          sendTelegram(`🚫 <b>Photographer Deactivated</b>\n\n${p.name} (${p.email})\nReason: Profile not completed within 7 days`, "photographers");
         }).catch((err) => console.error("[cron] telegram deactivation error:", err));
       } catch (err) {
         results.errors.push(`Checklist deactivation for ${p.email}: ${err}`);
@@ -1306,7 +1353,7 @@ export async function GET(req: NextRequest) {
         const { sendAdminNewClientNotification } = await import("@/lib/email");
         const { sendTelegram } = await import("@/lib/telegram");
         await sendAdminNewClientNotification(c.name || "Unknown", c.email);
-        await sendTelegram(`👤 <b>New Client (Google)</b>\n\n<b>Name:</b> ${c.name || "Unknown"}\n<b>Email:</b> ${c.email}`);
+        await sendTelegram(`👤 <b>New Client (Google)</b>\n\n<b>Name:</b> ${c.name || "Unknown"}\n<b>Email:</b> ${c.email}`, "clients");
         await query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [c.id]);
         newClientNotifications++;
       } catch {}
@@ -1376,23 +1423,27 @@ export async function GET(req: NextRequest) {
         if (u.hours_since >= 6 && !u.reminder_6h_sent) {
           // SMS
           if (u.photographer_phone) {
-            await sendSMS(
-              u.photographer_phone,
-              `Hi ${firstName}! ${u.client_name} is waiting for your reply on Photo Portugal. Please respond soon: ${BASE_URL}/dashboard/messages`
-            ).catch(console.error);
+            await queueNotification({
+              channel: "sms",
+              recipient: u.photographer_phone,
+              body: `Hi ${firstName}! ${u.client_name} is waiting for your reply on Photo Portugal. Please respond soon: ${BASE_URL}/dashboard/messages`,
+              dedupKey: `unanswered_6h_sms:${u.booking_id}`,
+            }).catch(console.error);
           }
           // Email
-          await sendEmail(
-            u.photographer_email,
-            `${u.client_name} is waiting for your reply`,
-            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-              <h2 style="color: #C94536;">You have an unanswered message</h2>
-              <p>Hi ${firstName},</p>
-              <p><strong>${u.client_name}</strong> sent you a message and is waiting for your reply. Quick responses help you win more bookings!</p>
-              <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reply Now</a></p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
-            </div>`
-          ).catch(console.error);
+          await queueNotification({
+            channel: "email",
+            recipient: u.photographer_email,
+            subject: `${u.client_name} is waiting for your reply`,
+            body: emailLayout(`
+              <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#C94536;">You have an unanswered message</h2>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${u.client_name}</strong> sent you a message and is waiting for your reply. Quick responses help you win more bookings!</p>
+              ${emailButton(`${BASE_URL}/dashboard/messages`, "Reply Now")}
+            `),
+            dedupKey: `unanswered_6h_email:${u.booking_id}`,
+            recipientPhone: u.photographer_phone || undefined,
+          }).catch(console.error);
           await query("UPDATE bookings SET reminder_6h_sent = TRUE WHERE id = $1", [u.booking_id]);
           unansweredReminders6h++;
         }
@@ -1400,23 +1451,26 @@ export async function GET(req: NextRequest) {
         // 12-hour reminder
         if (u.hours_since >= 12 && !u.reminder_12h_sent) {
           if (u.photographer_phone) {
-            await sendSMS(
-              u.photographer_phone,
-              `Reminder: ${u.client_name} has been waiting ${Math.round(u.hours_since)}h for your reply on Photo Portugal. Respond now to avoid losing this client: ${BASE_URL}/dashboard/messages`
-            ).catch(console.error);
+            await queueNotification({
+              channel: "sms",
+              recipient: u.photographer_phone,
+              body: `Reminder: ${u.client_name} has been waiting ${Math.round(u.hours_since)}h for your reply on Photo Portugal. Respond now to avoid losing this client: ${BASE_URL}/dashboard/messages`,
+              dedupKey: `unanswered_12h_sms:${u.booking_id}`,
+            }).catch(console.error);
           }
-          await sendEmail(
-            u.photographer_email,
-            `Reminder: ${u.client_name} is still waiting for your reply`,
-            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-              <h2 style="color: #C94536;">Don't miss this opportunity!</h2>
-              <p>Hi ${firstName},</p>
-              <p><strong>${u.client_name}</strong> sent you a message <strong>${Math.round(u.hours_since)} hours ago</strong> and hasn't received a reply yet.</p>
-              <p>Clients who don't hear back quickly often book someone else. Please reply as soon as possible!</p>
-              <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reply Now</a></p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
-            </div>`
-          ).catch(console.error);
+          await queueNotification({
+            channel: "email",
+            recipient: u.photographer_email,
+            subject: `Reminder: ${u.client_name} is still waiting for your reply`,
+            body: emailLayout(`
+              <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#C94536;">Don't miss this opportunity!</h2>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${u.client_name}</strong> sent you a message <strong>${Math.round(u.hours_since)} hours ago</strong> and hasn't received a reply yet.</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Clients who don't hear back quickly often book someone else. Please reply as soon as possible!</p>
+            `),
+            dedupKey: `unanswered_12h_email:${u.booking_id}`,
+            recipientPhone: u.photographer_phone || undefined,
+          }).catch(console.error);
           await query("UPDATE bookings SET reminder_12h_sent = TRUE WHERE id = $1", [u.booking_id]);
           unansweredReminders12h++;
         }
@@ -1428,7 +1482,8 @@ export async function GET(req: NextRequest) {
             `⚠️ <b>Unanswered message (${Math.round(u.hours_since)}h)</b>\n\n` +
             `Client: ${u.client_name}\n` +
             `Photographer: ${u.photographer_name}\n` +
-            `Waiting since: ${Math.round(u.hours_since)} hours`
+            `Waiting since: ${Math.round(u.hours_since)} hours`,
+            "clients"
           ).catch(console.error);
           await query("UPDATE bookings SET reminder_24h_sent = TRUE WHERE id = $1", [u.booking_id]);
           unansweredAdminAlerts++;
@@ -1441,7 +1496,171 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Unanswered reminders: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts });
+  // === SILENT CLIENT FOLLOW-UP (48h after photographer replied, client hasn't responded) ===
+  let clientFollowUps = 0;
+  try {
+    const silentClients = await query<{
+      booking_id: string;
+      client_name: string;
+      client_email: string;
+      client_phone: string | null;
+      photographer_name: string;
+      photographer_slug: string;
+      hours_since_reply: number;
+    }>(`
+      SELECT
+        b.id as booking_id,
+        cu.name as client_name,
+        cu.email as client_email,
+        cu.phone as client_phone,
+        pu.name as photographer_name,
+        pp.slug as photographer_slug,
+        EXTRACT(EPOCH FROM (NOW() - last_photographer_msg.created_at))/3600 as hours_since_reply
+      FROM bookings b
+      JOIN users cu ON cu.id = b.client_id
+      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+      JOIN users pu ON pu.id = pp.user_id
+      JOIN LATERAL (
+        SELECT m.created_at FROM messages m
+        WHERE m.booking_id = b.id AND m.sender_id = pp.user_id AND m.is_system = FALSE
+        ORDER BY m.created_at DESC LIMIT 1
+      ) last_photographer_msg ON TRUE
+      WHERE b.status = 'inquiry'
+        AND COALESCE(b.client_followup_sent, FALSE) = FALSE
+        AND EXTRACT(EPOCH FROM (NOW() - last_photographer_msg.created_at))/3600 >= 24
+        AND NOT EXISTS (
+          SELECT 1 FROM messages m2
+          WHERE m2.booking_id = b.id
+            AND m2.sender_id = b.client_id
+            AND m2.is_system = FALSE
+            AND m2.created_at > last_photographer_msg.created_at
+        )
+    `);
+
+    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+
+    for (const c of silentClients) {
+      try {
+        const firstName = c.client_name.split(" ")[0];
+        // Email
+        await queueNotification({
+          channel: "email",
+          recipient: c.client_email,
+          subject: `${c.photographer_name} is waiting for your reply`,
+          body: emailLayout(`
+            <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Still interested?</h2>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${c.photographer_name}</strong> replied to your message and is waiting to hear back from you. Don't miss out — great photographers get booked fast!</p>
+            ${emailButton(`${BASE_URL}/dashboard/messages`, "Reply Now")}
+            <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">If you're no longer interested, no action needed.</p>
+          `),
+          dedupKey: `client_followup_email:${c.booking_id}`,
+          recipientPhone: c.client_phone || undefined,
+        }).catch(console.error);
+        // SMS
+        if (c.client_phone) {
+          await queueNotification({
+            channel: "sms",
+            recipient: c.client_phone,
+            body: `Hi ${firstName}! ${c.photographer_name} replied to your message on Photo Portugal and is waiting for you. Check it out: ${BASE_URL}/dashboard/messages`,
+            dedupKey: `client_followup_sms:${c.booking_id}`,
+          }).catch(console.error);
+        }
+        await query("UPDATE bookings SET client_followup_sent = TRUE WHERE id = $1", [c.booking_id]);
+        clientFollowUps++;
+      } catch (err) {
+        results.errors.push(`Client follow-up for booking ${c.booking_id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Client follow-ups: ${err}`);
+  }
+
+  // === MATCH REQUEST CHOICE REMINDER (24h after matches sent, client hasn't chosen) ===
+  let matchChoiceReminders = 0;
+  try {
+    const pendingChoices = await query<{
+      id: string; name: string; email: string; phone: string | null;
+      location_slug: string; shoot_type: string;
+    }>(
+      `SELECT id, name, email, phone, location_slug, shoot_type
+       FROM match_requests
+       WHERE status = 'matched'
+         AND matched_at < NOW() - INTERVAL '24 hours'
+         AND COALESCE(choice_reminder_sent, FALSE) = FALSE
+         AND chosen_photographer_id IS NULL`
+    );
+
+    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+
+    for (const mr of pendingChoices) {
+      try {
+        const firstName = mr.name.split(" ")[0];
+        await queueNotification({
+          channel: "email",
+          recipient: mr.email,
+          subject: `${firstName}, your photographer matches are waiting!`,
+          body: emailLayout(`
+            <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Your matches are waiting!</h2>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We sent you hand-picked photographer recommendations yesterday. Our photographers are in high demand — don't miss out!</p>
+            ${emailButton(`${BASE_URL}/dashboard/match-requests`, "View Your Matches")}
+          `),
+          dedupKey: `match_choice_reminder_email:${mr.id}`,
+          recipientPhone: mr.phone || undefined,
+        }).catch(console.error);
+        if (mr.phone) {
+          await queueNotification({
+            channel: "sms",
+            recipient: mr.phone,
+            body: `Hi ${firstName}! Your photographer matches on Photo Portugal are waiting. Our photographers are in high demand — choose yours now: ${BASE_URL}/dashboard/match-requests`,
+            dedupKey: `match_choice_reminder_sms:${mr.id}`,
+          }).catch(console.error);
+        }
+        await query("UPDATE match_requests SET choice_reminder_sent = TRUE WHERE id = $1", [mr.id]);
+        matchChoiceReminders++;
+      } catch (err) {
+        results.errors.push(`Match choice reminder for ${mr.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Match choice reminders: ${err}`);
+  }
+
+  // === Recalculate photographer avg response times ===
+  try {
+    await query(`
+      UPDATE photographer_profiles pp SET avg_response_minutes = sub.avg_min FROM (
+        SELECT pp2.id as profile_id,
+               ROUND(AVG(EXTRACT(EPOCH FROM (first_reply.created_at - first_msg.created_at)) / 60))::int as avg_min
+        FROM bookings b
+        JOIN photographer_profiles pp2 ON pp2.id = b.photographer_id
+        JOIN LATERAL (
+          SELECT m.created_at FROM messages m
+          WHERE m.booking_id = b.id AND m.sender_id = b.client_id AND m.is_system = FALSE
+          ORDER BY m.created_at ASC LIMIT 1
+        ) first_msg ON TRUE
+        JOIN LATERAL (
+          SELECT m.created_at FROM messages m
+          WHERE m.booking_id = b.id AND m.sender_id = pp2.user_id AND m.is_system = FALSE AND m.created_at > first_msg.created_at
+          ORDER BY m.created_at ASC LIMIT 1
+        ) first_reply ON TRUE
+        GROUP BY pp2.id
+      ) sub WHERE sub.profile_id = pp.id
+    `);
+  } catch (err) {
+    results.errors.push(`Avg response time update: ${err}`);
+  }
+
+  // === Process notification queue (timezone-aware deferred SMS/email) ===
+  let queueProcessed = 0;
+  try {
+    queueProcessed = await processNotificationQueue();
+  } catch (err) {
+    results.errors.push(`Notification queue processing: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, clientFollowUps, queueProcessed });
 
   return NextResponse.json({
     success: true,
@@ -1459,6 +1678,8 @@ export async function GET(req: NextRequest) {
     unansweredReminders6h,
     unansweredReminders12h,
     unansweredAdminAlerts,
+    clientFollowUps,
+    queueProcessed,
   });
 }
 

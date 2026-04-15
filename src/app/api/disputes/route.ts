@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
           ).catch(e => console.error("[dispute] admin email error:", e));
         }
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`⚠️ <b>New Dispute!</b>\n\n${escapeHtml(info.client_name)} vs ${escapeHtml(info.photographer_name)}\nReason: ${reasonText}\n${escapeHtml(description.slice(0, 200))}`);
+          sendTelegram(`⚠️ <b>New Dispute!</b>\n\n${escapeHtml(info.client_name)} vs ${escapeHtml(info.photographer_name)}\nReason: ${reasonText}\n${escapeHtml(description.slice(0, 200))}`, "clients");
         }).catch((err) => console.error("[disputes] telegram admin error:", err));
 
         // Telegram notification to photographer

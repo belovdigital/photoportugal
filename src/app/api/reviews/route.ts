@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 
         // Telegram: notify admin of new review
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`⭐ <b>New Review!</b>\n\n${"★".repeat(rating)}${"☆".repeat(5-rating)} from ${client!.name}\nFor: ${info!.name}${title ? `\n"${title}"` : ""}`);
+          sendTelegram(`⭐ <b>New Review!</b>\n\n${"★".repeat(rating)}${"☆".repeat(5-rating)} from ${client!.name}\nFor: ${info!.name}${title ? `\n"${title}"` : ""}`, "clients");
         }).catch((err) => console.error("[reviews] telegram error:", err));
 
         // Email: notify admin of new review

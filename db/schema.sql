@@ -388,3 +388,26 @@ CREATE TABLE IF NOT EXISTS managed_locations (
 
 CREATE TRIGGER managed_locations_updated_at
   BEFORE UPDATE ON managed_locations FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================================
+-- NOTIFICATION QUEUE (timezone-aware deferred SMS/email)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS notification_queue (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  channel VARCHAR(10) NOT NULL CHECK (channel IN ('sms', 'email')),
+  recipient VARCHAR(255) NOT NULL,
+  subject VARCHAR(500),
+  body TEXT NOT NULL,
+  dedup_key VARCHAR(255) NOT NULL,
+  recipient_timezone VARCHAR(50) NOT NULL DEFAULT 'Europe/Lisbon',
+  send_after TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'cancelled')),
+  attempts INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  sent_at TIMESTAMPTZ,
+  CONSTRAINT uq_notification_dedup UNIQUE (dedup_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_queue_pending ON notification_queue (status, send_after) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_notification_queue_created ON notification_queue (created_at);

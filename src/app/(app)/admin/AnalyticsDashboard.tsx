@@ -248,6 +248,7 @@ interface VisitorData {
     landing_page: string | null; referrer: string | null; utm_source: string | null;
     utm_medium: string | null; utm_term: string | null;
     pageview_count: number; started_at: string; pageviews: { path: string; ts: string; duration_ms?: number }[];
+    visit_number: number; total_visits: number;
   }[];
   dailySessions: { day: string; sessions: string; visitors: string }[];
 }
@@ -332,17 +333,16 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
             </div>
           </div>
           <div className="relative rounded-xl border border-warm-200 bg-white p-4">
-            {/* Grid lines */}
-            <div className="absolute inset-x-4 top-4 bottom-10" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              {[1, 0.75, 0.5, 0.25, 0].map((pct) => (
-                <div key={pct} className="flex items-center gap-2">
-                  <span className="text-[9px] text-gray-300 w-6 text-right">{Math.round(maxDaily * pct)}</span>
-                  <div className="flex-1 border-t border-dashed border-gray-100" />
-                </div>
-              ))}
-            </div>
-            {/* Bars */}
-            <div className="relative flex items-end gap-2 pl-9" style={{ height: 180 }}>
+            <div className="flex">
+              {/* Fixed Y-axis */}
+              <div className="shrink-0 w-8 flex flex-col justify-between pr-1" style={{ height: 180 }}>
+                {[1, 0.75, 0.5, 0.25, 0].map((pct) => (
+                  <span key={pct} className="text-[9px] text-gray-300 text-right leading-none">{Math.round(maxDaily * pct)}</span>
+                ))}
+              </div>
+              {/* Scrollable chart area */}
+              <div className="flex-1 overflow-x-auto min-w-0">
+                <div className="relative flex items-end gap-1 sm:gap-2" style={{ height: 180 }}>
               {[...vd.dailySessions].reverse().map(d => {
                 const sessCount = parseInt(d.sessions);
                 const visCount = parseInt(d.visitors);
@@ -359,6 +359,8 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
                   </div>
                 );
               })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -444,7 +446,7 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
               { key: "client", label: "Clients", icon: "🧳" },
               { key: "photographer", label: "Photographers", icon: "📸" },
               { key: "guest", label: "Guests", icon: "👻" },
-            ].map(f => (
+            ].filter(f => f.key === "all" || vd.recentSessions.some(s => f.key === "guest" ? !s.user_role : s.user_role === f.key)).map(f => (
               <button
                 key={f.key}
                 onClick={() => { setRoleFilter(f.key); setSessionLimit(30); setSessionsLoading(true); }}
@@ -477,6 +479,8 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
         </div>
         <div className={`space-y-2 transition-opacity ${sessionsLoading ? "opacity-50" : ""}`}>
           {vd.recentSessions.map(session => {
+            const visitNum = session.user_role !== "photographer" && session.user_role !== "admin" && session.total_visits > 1
+              ? session.visit_number : null;
             const isExpanded = expandedSession === session.id;
             const time = new Date(session.started_at);
             const ago = Math.round((Date.now() - time.getTime()) / 60000);
@@ -507,7 +511,10 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
               <button
                 key={session.id}
                 onClick={() => setExpandedSession(isExpanded ? null : session.id)}
-                className={`w-full text-left rounded-xl border bg-white p-3 hover:shadow-sm transition ${isExpanded ? "border-primary-300 shadow-sm" : "border-warm-200"}`}
+                className={`w-full text-left rounded-xl border p-3 hover:shadow-sm transition ${isExpanded ? "border-primary-300 shadow-sm" : "border-warm-200"} ${
+                  session.user_role === "client" ? "bg-gradient-to-r from-emerald-50 to-white border-emerald-200" :
+                  "bg-white"
+                }`}
               >
                 {/* Header row */}
                 <div className="flex items-center justify-between gap-2">
@@ -518,7 +525,7 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
                         {session.user_name ? (
-                          <span className={`text-sm font-semibold truncate ${session.user_role === "photographer" ? "text-blue-600" : "text-primary-600"}`}>{session.user_name}</span>
+                          <span className={`text-sm font-semibold truncate ${session.user_role === "photographer" ? "text-blue-600" : session.user_role === "client" ? "text-emerald-600" : "text-gray-900"}`}>{session.user_name}</span>
                         ) : (
                           <span className="text-sm text-gray-500 truncate font-mono">{session.visitor_id.slice(0, 8)}</span>
                         )}
@@ -527,6 +534,7 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
                             session.user_role === "photographer" ? "bg-blue-50 text-blue-600" : session.user_role === "admin" ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
                           }`}>{session.user_role}</span>
                         )}
+                        {visitNum && <span className="text-[10px] text-gray-400 font-medium">visit #{visitNum}</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className="text-xs font-medium">{session.country ? `${getCountry(session.country).flag} ${getCountry(session.country).name}` : "🏳️ Unknown"}</span>

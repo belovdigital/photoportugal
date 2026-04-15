@@ -50,7 +50,7 @@ export function AdminInquiriesList({ inquiries: initialInquiries }: { inquiries:
   return (
     <div className="space-y-3">
       {/* Filter pills */}
-      <div className="flex gap-1">
+      <div className="flex gap-1 overflow-x-auto -mx-4 px-4 pb-1">
         {(["all", "unreplied", "replied", "converted", "archived"] as const).map((f) => {
           const count = f === "all" ? nonArchived.length
             : f === "unreplied" ? nonArchived.filter((i) => !i.has_reply && !i.converted_to_booking_id).length

@@ -146,7 +146,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Telegram to admin
     import("@/lib/telegram").then(({ sendTelegram }) => {
       sendTelegram(
-        `🎯 <b>Match Chosen!</b>\n\n<b>Client:</b> ${matchReq.name}\n<b>Photographer:</b> ${photographerInfo!.name}\n<b>Location:</b> ${locationName}\n<b>Type:</b> ${shootTypeLabel}\n${price ? `<b>Price:</b> €${price}\n` : ""}\n<a href="${BASE_URL}/admin#matchRequests">Open Admin →</a>`
+        `🎯 <b>Match Chosen!</b>\n\n<b>Client:</b> ${matchReq.name}\n<b>Photographer:</b> ${photographerInfo!.name}\n<b>Location:</b> ${locationName}\n<b>Type:</b> ${shootTypeLabel}\n${price ? `<b>Price:</b> €${price}\n` : ""}\n<a href="${BASE_URL}/admin#matchRequests">Open Admin →</a>`,
+        "match_requests"
       );
     }).catch((err) => console.error("[match-request/choose] telegram error:", err));
 

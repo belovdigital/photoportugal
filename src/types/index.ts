@@ -90,6 +90,7 @@ export interface PhotographerProfile {
   session_count: number;
   created_at: string;
   last_seen_at?: string | null;
+  avg_response_minutes?: number | null;
 }
 
 export interface Package {

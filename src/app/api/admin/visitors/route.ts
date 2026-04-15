@@ -110,7 +110,7 @@ export async function GET(req: Request) {
   const roleWhere = roleFilter === "guest" ? "AND vs.user_id IS NULL"
     : roleFilter === "client" ? "AND u.role = 'client'"
     : roleFilter === "photographer" ? "AND u.role = 'photographer'"
-    : "";
+    : "AND (u.role IS NULL OR u.role != 'admin')";
   const countryWhere = countryFilter !== "all" ? `AND vs.country = $1` : "";
   const params: (string | number)[] = [];
   if (countryFilter !== "all") params.push(countryFilter);
@@ -123,17 +123,25 @@ export async function GET(req: Request) {
     landing_page: string | null; referrer: string | null; utm_source: string | null;
     utm_medium: string | null; utm_term: string | null;
     pageview_count: number; started_at: string; pageviews: string | null;
+    visit_number: number; total_visits: number;
   }>(`
-    SELECT vs.id, vs.visitor_id,
-           u.name as user_name, u.email as user_email, u.role as user_role,
-           vs.device_type, vs.country, vs.language,
-           vs.landing_page, vs.referrer, vs.utm_source, vs.utm_medium, vs.utm_term,
-           vs.pageview_count, vs.started_at,
-           vs.pageviews::text
-    FROM visitor_sessions vs
-    LEFT JOIN users u ON u.id = vs.user_id
-    WHERE 1=1 ${botFilter} ${roleWhere} ${countryWhere}
-    ORDER BY vs.started_at DESC LIMIT ${limitParam}
+    SELECT sub.*, vc.total_visits FROM (
+      SELECT vs.id, vs.visitor_id, vs.user_id,
+             u.name as user_name, u.email as user_email, u.role as user_role,
+             vs.device_type, vs.country, vs.language,
+             vs.landing_page, vs.referrer, vs.utm_source, vs.utm_medium, vs.utm_term,
+             vs.pageview_count, vs.started_at,
+             vs.pageviews::text,
+             ROW_NUMBER() OVER (PARTITION BY COALESCE(vs.user_id::text, vs.visitor_id) ORDER BY vs.started_at) as visit_number
+      FROM visitor_sessions vs
+      LEFT JOIN users u ON u.id = vs.user_id
+      WHERE 1=1 ${botFilter} ${roleWhere} ${countryWhere}
+    ) sub
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*)::int as total_visits FROM visitor_sessions vs2
+      WHERE COALESCE(vs2.user_id::text, vs2.visitor_id) = COALESCE(sub.user_id::text, sub.visitor_id)
+    ) vc ON TRUE
+    ORDER BY sub.started_at DESC LIMIT ${limitParam}
   `, params);
 
   // Sessions by day (last 14 days)

@@ -37,6 +37,17 @@ export default function middleware(request: NextRequest) {
     }
   }
 
+  // Redirect /pt/blog/page/N → /blog/page/N (PT has very few posts, pagination doesn't exist)
+  const ptBlogPageMatch = pathname.match(/^\/pt\/blog\/page\/(\d+)$/);
+  if (ptBlogPageMatch) {
+    return NextResponse.redirect(new URL(`/blog/page/${ptBlogPageMatch[1]}`, request.url), 301);
+  }
+
+  // Redirect /book and /pt/book (no slug) → /photographers
+  if (pathname === "/book" || pathname === "/pt/book") {
+    return NextResponse.redirect(new URL("/photographers", request.url), 301);
+  }
+
   return intlMiddleware(request);
 }
 

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { AdminToggleClient, AdminPlanSelectClient, AdminDeactivatePhotographer, AdminReviewsLink } from "./AdminControls";
+import { AdminRevisionForm } from "./AdminRevisionForm";
 import { normalizeName } from "@/lib/format-name";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
@@ -36,15 +37,17 @@ export interface AdminPhotographer {
   stripe_ready: boolean;
   has_phone: boolean;
   phone: string | null;
+  revision_status: string | null;
 }
 
 const PAGE_SIZE = 50;
 
-type Filter = "active" | "ready_review" | "deactivated" | "not_ready" | "founding" | "early50" | "premium" | "pro" | "free" | "below_min" | "all";
+type Filter = "active" | "ready_review" | "needs_revision" | "deactivated" | "not_ready" | "founding" | "early50" | "premium" | "pro" | "free" | "below_min" | "all";
 
 const FILTERS: { key: Filter; label: string; color: string; activeColor: string }[] = [
   { key: "active", label: "Active", color: "text-green-700 border-green-300", activeColor: "bg-green-100 text-green-800 border-green-400" },
   { key: "ready_review", label: "Ready for Review", color: "text-emerald-700 border-emerald-300", activeColor: "bg-emerald-100 text-emerald-800 border-emerald-400" },
+  { key: "needs_revision", label: "Needs Revision", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
   { key: "not_ready", label: "Not Ready", color: "text-orange-700 border-orange-300", activeColor: "bg-orange-100 text-orange-800 border-orange-400" },
   { key: "founding", label: "Founding", color: "text-purple-700 border-purple-300", activeColor: "bg-purple-100 text-purple-800 border-purple-400" },
   { key: "early50", label: "Early 25", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
@@ -60,8 +63,9 @@ function matchesFilter(p: AdminPhotographer, f: Filter, belowMinPackages?: Recor
   switch (f) {
     case "active": return p.is_approved && !p.is_banned;
     case "deactivated": return p.is_banned;
-    case "ready_review": return !p.is_approved && p.checklist_complete && !p.is_banned;
-    case "not_ready": return !p.is_approved && !p.checklist_complete && !p.is_banned;
+    case "ready_review": return !p.is_approved && p.checklist_complete && !p.is_banned && (!p.revision_status || p.revision_status === "submitted");
+    case "needs_revision": return !p.is_approved && !p.is_banned && p.revision_status === "pending";
+    case "not_ready": return !p.is_approved && !p.checklist_complete && !p.is_banned && !p.revision_status;
     case "founding": return p.is_founding;
     case "early50": return p.early_bird_tier === "early50";
     case "premium": return p.plan === "premium";
@@ -198,9 +202,19 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                       {p.early_bird_tier === "early50" ? "Early 25" : "First 50"}
                     </span>
                   )}
-                  {!p.is_approved && !p.is_banned && p.checklist_complete && (
+                  {!p.is_approved && !p.is_banned && p.checklist_complete && !p.revision_status && (
                     <span className="shrink-0 animate-pulse rounded-full bg-green-100 px-1.5 py-0.5 text-[9px] font-bold text-green-700">
                       Ready
+                    </span>
+                  )}
+                  {p.revision_status === "pending" && (
+                    <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
+                      Revisions Sent
+                    </span>
+                  )}
+                  {p.revision_status === "submitted" && (
+                    <span className="shrink-0 animate-pulse rounded-full bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">
+                      Fixes Submitted
                     </span>
                   )}
                   {p.is_banned && (
@@ -399,6 +413,11 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                   <span>{p.session_count} session{p.session_count !== 1 ? "s" : ""}</span>
                   <span>Joined {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                 </div>
+
+                {/* Revisions */}
+                {(p.checklist_complete || p.revision_status) && (
+                  <AdminRevisionForm photographerId={p.id} photographerName={normalizeName(p.display_name)} />
+                )}
 
                 {/* Actions */}
                 <div className="mt-4 flex items-center gap-2 border-t border-warm-100 pt-3">

@@ -199,7 +199,7 @@ export async function GET(req: NextRequest) {
         lines.push(`💰 Turnover: €${Math.round(grossRevenue)}`);
         lines.push(`📈 Platform revenue: €${Math.round(platformRevenue)}`);
       }
-      await sendTelegram(lines.join("\n"));
+      await sendTelegram(lines.join("\n"), "daily_digest");
     } catch {}
 
     // Daily Intercom sync

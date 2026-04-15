@@ -141,6 +141,7 @@ export default async function AdminPage() {
     days_until_deactivation: number | null;
     has_avatar: boolean; has_cover: boolean; has_bio: boolean; portfolio_count: number;
     package_count: number; location_count: number; stripe_ready: boolean; has_phone: boolean; phone: string | null;
+    revision_status: string | null;
   }>(
     `SELECT pp.id, u.id as user_id, u.name as display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
             pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, COALESCE(u.is_banned, FALSE) as is_banned, pp.created_at, u.email,
@@ -159,6 +160,7 @@ export default async function AdminPage() {
              AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
              AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
              AND u.phone IS NOT NULL) as checklist_complete,
+            pp.revision_status,
             CASE WHEN pp.is_approved = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE
               THEN GREATEST(0, 7 - EXTRACT(DAY FROM NOW() - pp.created_at)::int)
               ELSE NULL END as days_until_deactivation
@@ -176,6 +178,8 @@ export default async function AdminPage() {
     flexible_date_from: string | null; flexible_date_to: string | null; date_note: string | null;
     delivery_accepted: boolean | null; location_detail: string | null;
     client_country: string | null;
+    client_phone: string | null; client_email: string | null;
+    photographer_phone: string | null; photographer_email: string | null;
   }>(
     `SELECT b.id, cu.name as client_name, pu.name as photographer_name,
             b.status, b.shoot_date, b.total_price, b.created_at, b.payment_status,
@@ -183,7 +187,9 @@ export default async function AdminPage() {
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,
             b.flexible_date_from, b.flexible_date_to, b.date_note,
             b.delivery_accepted, b.location_detail,
-            (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country
+            (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,
+            cu.phone as client_phone, cu.email as client_email,
+            pu.phone as photographer_phone, pu.email as photographer_email
      FROM bookings b JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users pu ON pu.id = pp.user_id
@@ -341,10 +347,6 @@ export default async function AdminPage() {
         <label className="block text-sm font-medium text-gray-700 mb-2">Admin notification phones</label>
         <p className="text-xs text-gray-400 mb-3">SMS notifications for critical events (new bookings, disputes).</p>
         <AdminNotificationPhone initialValue={adminNotificationPhone} />
-      </div>
-      <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-3">Audit Log</h3>
-        <AuditLog />
       </div>
     </div>
   );

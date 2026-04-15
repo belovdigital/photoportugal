@@ -30,7 +30,7 @@ export function Footer() {
             className="transition hover:opacity-80"
           >
             <img
-              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+              src="/badges/app-store.svg"
               alt={t("appStoreAlt")}
               width={120}
               height={40}

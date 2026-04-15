@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
 
     // Telegram
     import("@/lib/telegram").then(({ sendTelegram }) => {
-      sendTelegram(`🔍 <b>New Match Request!</b>\n\n<b>Client:</b> ${name}\n<b>Location:</b> ${locationName}\n<b>Date:</b> ${dateDisplay}\n<b>Type:</b> ${shootTypeLabel}\n<b>Budget:</b> ${budgetLabel}\n${message ? `\n"${message.slice(0, 100)}"` : ""}\n\n<a href="${BASE_URL}/admin#matchRequests">Open Admin →</a>`);
+      sendTelegram(`🔍 <b>New Match Request!</b>\n\n<b>Client:</b> ${name}\n<b>Location:</b> ${locationName}\n<b>Date:</b> ${dateDisplay}\n<b>Type:</b> ${shootTypeLabel}\n<b>Budget:</b> ${budgetLabel}\n${message ? `\n"${message.slice(0, 100)}"` : ""}\n\n<a href="${BASE_URL}/admin#matchRequests">Open Admin →</a>`, "match_requests");
     }).catch(err => console.error("[match-request] telegram error:", err));
 
     // SMS to admin

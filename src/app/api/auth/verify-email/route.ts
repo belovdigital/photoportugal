@@ -47,14 +47,14 @@ export async function GET(req: NextRequest) {
           console.error("[verify-email] Failed to send admin notification:", err)
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`);
+          sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`, "photographers");
         }).catch((err) => console.error("[verify-email] telegram error:", err));
       } else {
         sendAdminNewClientNotification(user.name, user.email).catch((err) =>
           console.error("[verify-email] Failed to send admin notification:", err)
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}`);
+          sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}`, "clients");
         }).catch((err) => console.error("[verify-email] telegram error:", err));
       }
       query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch(() => {});

@@ -227,7 +227,7 @@ export async function POST(
            WHERE b.id = $1`, [id]
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`🎁 <b>Photos Delivered!</b>\n\n${tgNames?.photographer_name || "Photographer"} delivered ${count} photos to ${tgNames?.client_name || "Client"}`);
+          sendTelegram(`🎁 <b>Photos Delivered!</b>\n\n${tgNames?.photographer_name || "Photographer"} delivered ${count} photos to ${tgNames?.client_name || "Client"}`, "bookings");
         }).catch((err) => console.error("[delivery] telegram error:", err));
       } catch {}
 

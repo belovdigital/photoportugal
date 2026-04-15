@@ -5,12 +5,25 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations, getLocationBySlug, getNearbyLocations, locationFaqs } from "@/lib/locations-data";
 import { photoSpots } from "@/lib/photo-spots-data";
 import { getLocationServices } from "@/lib/location-services-data";
-import { locationImage } from "@/lib/unsplash-images";
+import { locationImage, unsplashUrl } from "@/lib/unsplash-images";
+
+const SHOOT_TYPE_IMAGES: Record<string, string> = {
+  couples: "photo-1529634597503-139d3726fed5",
+  family: "photo-1609220136736-443140cffec6",
+  proposal: "photo-1515934751635-c81c6bc9a2d8",
+  honeymoon: "photo-1519741497674-611481863552",
+  elopement: "photo-1532712938310-34cb3982ef74",
+  solo: "photo-1494790108377-be9c29b29330",
+  engagement: "photo-1522673607200-164d1b6ce486",
+  friends: "photo-1529156069898-49953e39b3ac",
+  wedding: "photo-1606216794079-73f85bbd57d5",
+};
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { queryOne, query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
+import { LocationCard } from "@/components/ui/LocationCard";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -298,7 +311,7 @@ export default async function LocationPage({
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
-                href={`/choose-booking-type?location=${location.slug}`}
+                href={`/photographers?location=${location.slug}`}
                 className="inline-flex rounded-xl bg-white px-8 py-4 text-base font-semibold text-primary-700 shadow-lg transition hover:bg-primary-50 hover:shadow-xl"
               >
                 {t("viewPhotographers", { location: location.name })}
@@ -481,74 +494,60 @@ export default async function LocationPage({
             <p className="mt-2 text-gray-500">
               {t("dedicatedPhotographers", { location: location.name })}
             </p>
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {services.map((service) => (
-                <div
-                  key={service.shootTypeSlug}
-                  className="flex flex-col rounded-xl border border-warm-200 bg-white p-6 shadow-sm transition hover:border-primary-200 hover:shadow-md"
-                >
-                  <h3 className="text-lg font-bold text-gray-900">
-                    {service.label} {t("photoshootIn")} {location.name}
-                  </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-600">
-                    {service.description}
-                  </p>
+            <div className={`mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
+              services.length <= 2 ? "lg:grid-cols-2" :
+              services.length === 4 ? "lg:grid-cols-2" :
+              "lg:grid-cols-3"
+            }`}>
+              {services.map((service) => {
+                const imgId = SHOOT_TYPE_IMAGES[service.shootTypeSlug];
+                return (
                   <Link
+                    key={service.shootTypeSlug}
                     href={`/photographers?location=${slug}&shoot=${service.shootTypeSlug}`}
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 transition hover:text-primary-700"
+                    className="group relative overflow-hidden rounded-2xl bg-gray-900 shadow-lg transition hover:shadow-xl"
                   >
-                    {t("browsePhotographers", { type: service.label.toLowerCase(), location: location.name })}
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 8l4 4m0 0l-4 4m4-4H3"
-                      />
-                    </svg>
+                    <div className="aspect-[4/3] w-full overflow-hidden">
+                      {imgId ? (
+                        <OptimizedImage
+                          src={unsplashUrl(imgId, 400)}
+                          alt={`${service.label} photoshoot in ${location.name}`}
+                          width={400}
+                          className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-gradient-to-br from-primary-400 to-primary-700" />
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <h3 className="font-display text-xl font-bold text-white">
+                        {service.label} {t("photoshootIn")} {location.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-200 line-clamp-2">
+                        {service.description}
+                      </p>
+                    </div>
                   </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
       )}
 
-      {/* Explore Photoshoot Types — internal links to /photoshoots/{type} */}
+      {/* Explore Photoshoot Types — compact internal links for SEO */}
       <section className="border-t border-warm-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <h2 className="font-display text-2xl font-bold text-gray-900">
-            Explore Photoshoot Types in {location.name}
-          </h2>
-          <p className="mt-2 text-gray-500">
-            Learn more about the different photography experiences we offer in {location.name}.
-          </p>
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-gray-700">Explore:</span>
             {shootTypeLinks.map((st) => (
               <Link
                 key={st.slug}
                 href={`/photoshoots/${st.slug}`}
-                className="flex items-center gap-3 rounded-xl border border-warm-200 bg-warm-50 p-5 transition hover:border-primary-200 hover:shadow-md"
+                className="rounded-full border border-warm-200 bg-warm-50 px-4 py-1.5 text-sm font-medium text-gray-600 transition hover:border-primary-300 hover:text-primary-600"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 group-hover:text-primary-600">
-                    {st.label}
-                  </h3>
-                  <p className="mt-0.5 text-xs text-primary-600">
-                    Learn more &rarr;
-                  </p>
-                </div>
+                {st.label}
               </Link>
             ))}
           </div>
@@ -565,7 +564,11 @@ export default async function LocationPage({
             <p className="mt-2 text-gray-500">
               {t("mostPhotogenic", { location: location.name })}
             </p>
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={`mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 ${
+              spots.length <= 2 ? "lg:grid-cols-2" :
+              spots.length === 4 ? "lg:grid-cols-2" :
+              "lg:grid-cols-3"
+            }`}>
               {spots.map((spot) => (
                 <div
                   key={spot.name}
@@ -592,10 +595,10 @@ export default async function LocationPage({
                 </div>
               ))}
             </div>
-            <div className="mt-8">
+            <div className="mt-10 text-center">
               <Link
                 href={`/photographers?location=${slug}`}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-primary-700 hover:shadow-xl"
               >
                 {t("findPhotographersAtSpots")}
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -651,30 +654,14 @@ export default async function LocationPage({
             <p className="mt-2 text-gray-500">
               {t("exploreMore", { location: location.name })}
             </p>
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {nearby.map((loc) => {
-                const nearbyDesc = isPt && loc.description_pt ? loc.description_pt : loc.description;
-                return (
-                  <Link
-                    key={loc.slug}
-                    href={`/locations/${loc.slug}`}
-                    className="group rounded-xl border border-warm-200 bg-white p-6 transition hover:border-primary-200 hover:shadow-md"
-                  >
-                    <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition">
-                      {loc.name}
-                    </h3>
-                    <p className="mt-2 text-sm text-gray-500 line-clamp-2">
-                      {nearbyDesc}
-                    </p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary-600">
-                      {t("viewPhotographersLink")}
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                  </Link>
-                );
-              })}
+            <div className={`mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
+              nearby.length <= 2 ? "lg:grid-cols-2" :
+              nearby.length === 4 ? "lg:grid-cols-2" :
+              "lg:grid-cols-3"
+            }`}>
+              {nearby.map((loc) => (
+                <LocationCard key={loc.slug} location={loc} locale={locale} />
+              ))}
             </div>
           </div>
         </section>
@@ -746,7 +733,7 @@ export default async function LocationPage({
             {t("cta.subtitle")}
           </p>
           <Link
-            href={`/choose-booking-type?location=${location.slug}`}
+            href={`/photographers?location=${location.slug}`}
             className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
           >
             {t("cta.browsePhotographers", { location: location.name })}

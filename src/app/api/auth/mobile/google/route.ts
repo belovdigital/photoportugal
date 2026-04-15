@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       sendWelcomeEmail(googleUser.email, googleUser.name, "client").catch((err) => console.error("[auth/google] welcome email error:", err));
       sendAdminNewClientNotification(googleUser.name, googleUser.email).catch((err) => console.error("[auth/google] admin notification error:", err));
       import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`👤 <b>New Client (Google, mobile)</b>\n\n<b>Name:</b> ${googleUser.name}\n<b>Email:</b> ${googleUser.email}`);
+        sendTelegram(`👤 <b>New Client (Google, mobile)</b>\n\n<b>Name:</b> ${googleUser.name}\n<b>Email:</b> ${googleUser.email}`, "clients");
       }).catch((err) => console.error("[auth/google] telegram error:", err));
       query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch((err) => console.error("[auth/google] admin_notified update error:", err));
     } else {

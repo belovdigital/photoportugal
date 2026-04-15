@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
           await withTransaction(async (client) => {
             await client.query("LOCK TABLE photographer_profiles IN EXCLUSIVE MODE");
             const countResult = await client.query(
-              "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0"
+              "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE"
             );
             const photographerCount = countResult.rows[0] as { count: string; next_num: string } | undefined;
             const count = parseInt(photographerCount?.count || "0");
@@ -75,13 +75,13 @@ export async function GET(request: NextRequest) {
               isFounding = true;
               plan = "premium";
             } else if (count < 35) {
-              // Early 50: Premium for 6 months
+              // Early Bird 25: Premium for 6 months
               earlyBirdTier = "early50";
               plan = "premium";
               earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-            } else if (count < 60) {
-              // First 100: Pro for 3 months
-              earlyBirdTier = "first100";
+            } else if (count < 85) {
+              // First 50: Pro for 3 months
+              earlyBirdTier = "first50";
               plan = "pro";
               earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
             }
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
               console.error("[set-role] Failed to send admin notification:", err)
             );
             import("@/lib/telegram").then(({ sendTelegram }) => {
-              sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`);
+              sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`, "photographers");
             }).catch((err) => console.error("[set-role] telegram new photographer error:", err));
             query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch((err) => console.error("[set-role] admin_notified update error:", err));
           }
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
               console.error("[set-role] Failed to send admin client notification:", err)
             );
             import("@/lib/telegram").then(({ sendTelegram }) => {
-              sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}`);
+              sendTelegram(`👤 <b>New Client!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}`, "clients");
             }).catch((err) => console.error("[set-role] telegram new client error:", err));
             query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch((err) => console.error("[set-role] admin_notified update error:", err));
           }

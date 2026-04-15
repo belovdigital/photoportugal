@@ -264,7 +264,7 @@ export async function PATCH(
             cancelInfo.client_name, cancelInfo.photographer_name, cancelledBy, refundAmount
           ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)`);
+            sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)`, "bookings");
           }).catch((err) => console.error("[bookings] telegram cancellation error:", err));
 
           // SMS/WhatsApp to photographer
@@ -365,7 +365,7 @@ export async function PATCH(
             cancelInfo.client_name, cancelInfo.photographer_name, cancelledBy, null
           ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}`);
+            sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}`, "bookings");
           }).catch((err) => console.error("[bookings] telegram cancellation error:", err));
 
           // SMS/WhatsApp to photographer
@@ -401,7 +401,7 @@ export async function PATCH(
       }
     }
 
-    // Increment session_count when completed
+    // Increment session_count when completed + notify about photo delivery
     if (status === "completed") {
       try {
         await queryOne(
@@ -409,6 +409,54 @@ export async function PATCH(
           [id]
         );
       } catch {}
+
+      // Notify photographer: session confirmed, upload photos when ready
+      try {
+        const completedInfo = await queryOne<{
+          photographer_email: string; photographer_name: string;
+          client_name: string; photographer_profile_id: string;
+        }>(
+          `SELECT pu.email as photographer_email, pu.name as photographer_name,
+                  cu.name as client_name, pp.id as photographer_profile_id
+           FROM bookings b
+           JOIN users cu ON cu.id = b.client_id
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
+           WHERE b.id = $1`,
+          [id]
+        );
+        if (completedInfo) {
+          const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+          const firstName = completedInfo.photographer_name.split(" ")[0];
+          const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
+          await sendEmail(
+            completedInfo.photographer_email,
+            `Session confirmed! Upload photos when ready`,
+            emailLayout(`
+              <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#16A34A;">Session Confirmed</h2>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Great! The session with <strong>${completedInfo.client_name}</strong> has been marked as completed.</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">When your photos are ready, you can upload them directly in the booking. ${completedInfo.client_name} will be notified automatically and can review them right away.</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#9B8E82;">No rush — take your time to edit. We'll send you a reminder if the delivery deadline is approaching.</p>
+              ${emailButton(`${baseUrl}/dashboard/bookings`, "Go to Bookings")}
+            `)
+          );
+
+          import("@/lib/notify-photographer").then(({ notifyPhotographerViaTelegram }) => {
+            notifyPhotographerViaTelegram(
+              completedInfo.photographer_profile_id,
+              `Session with ${completedInfo.client_name} confirmed! When your photos are ready, upload them in your dashboard:\n${baseUrl}/dashboard/bookings`
+            );
+          }).catch(() => {});
+
+          // Notify admin
+          import("@/lib/telegram").then(({ sendTelegram }) => {
+            sendTelegram(`📷 <b>Session Completed!</b>\n\n<b>Photographer:</b> ${completedInfo!.photographer_name}\n<b>Client:</b> ${completedInfo!.client_name}\n\nAwaiting photo delivery.`, "bookings");
+          }).catch(() => {});
+        }
+      } catch (err) {
+        console.error("[bookings] session completed notification error:", err);
+      }
     }
 
     // When booking is confirmed, create Stripe checkout and send email with payment link
@@ -552,7 +600,7 @@ export async function PATCH(
             bookingDetails.package_name
           ).catch(err => console.error("[bookings] admin confirmed notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`✅ <b>Booking Confirmed!</b>\n\n${bookingDetails!.client_name} → ${bookingDetails!.photographer_name}\n${bookingDetails!.package_name || ""}\n€${Math.round(bookingDetails!.total_price || 0)}`);
+            sendTelegram(`✅ <b>Booking Confirmed!</b>\n\n${bookingDetails!.client_name} → ${bookingDetails!.photographer_name}\n${bookingDetails!.package_name || ""}\n€${Math.round(bookingDetails!.total_price || 0)}`, "bookings");
           }).catch((err) => console.error("[bookings] telegram confirmation error:", err));
         }
       } catch (emailErr) {

@@ -39,7 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   try {
     const matchReq = await queryOne<{
-      id: string; name: string; email: string; location_slug: string;
+      id: string; name: string; email: string; phone: string | null; location_slug: string;
       shoot_type: string; shoot_date: string | null; date_flexible: boolean;
       flexible_date_from: string | null; flexible_date_to: string | null;
       shoot_time: string | null; group_size: number; budget_range: string;
@@ -228,10 +228,44 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       emailHtml
     ).catch((err) => console.error("[send-matches] email error:", err));
 
+    // SMS to client
+    if (matchReq.phone) {
+      import("@/lib/sms").then(({ sendSMS }) => {
+        sendSMS(
+          matchReq.phone!,
+          `Hi ${firstName}! Your photographer matches for ${locationName} are ready. Check them out and choose your favorite: ${BASE_URL}/dashboard/match-requests`
+        );
+      }).catch((err) => console.error("[send-matches] client sms error:", err));
+    }
+
+    // Notify matched photographers that they were recommended
+    for (const p of photographers) {
+      try {
+        const pUser = await queryOne<{ email: string; phone: string | null; user_id: string }>(
+          "SELECT u.email, u.phone, u.id as user_id FROM users u JOIN photographer_profiles pp ON pp.user_id = u.id WHERE pp.id = $1",
+          [p.id]
+        );
+        if (pUser) {
+          sendEmail(
+            pUser.email,
+            `You've been recommended to ${firstName}!`,
+            `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+              <h2 style="color: #C94536;">You've Been Matched!</h2>
+              <p>Hi ${p.name.split(" ")[0]},</p>
+              <p>Great news — we've recommended you to <strong>${matchReq.name}</strong> for a ${shootTypeLabel.toLowerCase()} photoshoot in ${locationName}.</p>
+              <p>The client is reviewing your profile now. If they choose you, you'll receive a booking notification with all the details.</p>
+              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            </div>`
+          ).catch(() => {});
+        }
+      } catch {}
+    }
+
     // Telegram
     import("@/lib/telegram").then(({ sendTelegram }) => {
       sendTelegram(
-        `✅ <b>Matches Sent!</b>\n\n<b>Client:</b> ${matchReq.name}\n<b>Location:</b> ${locationName}\n<b>Photographers:</b> ${photographers.map((p) => p.name).join(", ")}${admin_comment ? `\n<b>Note:</b> ${admin_comment}` : ""}\n\n<a href="${BASE_URL}/admin#matchRequests">Open Admin →</a>`
+        `✅ <b>Matches Sent!</b>\n\n<b>Client:</b> ${matchReq.name}\n<b>Location:</b> ${locationName}\n<b>Photographers:</b> ${photographers.map((p) => p.name).join(", ")}${admin_comment ? `\n<b>Note:</b> ${admin_comment}` : ""}\n\n<a href="${BASE_URL}/admin#matchRequests">Open Admin →</a>`,
+        "match_requests"
       );
     }).catch((err) => console.error("[send-matches] telegram error:", err));
 
@@ -263,7 +297,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   try {
     const matchReq = await queryOne<{
-      id: string; name: string; email: string; location_slug: string;
+      id: string; name: string; email: string; phone: string | null; location_slug: string;
       shoot_type: string; shoot_date: string | null; date_flexible: boolean;
       flexible_date_from: string | null; flexible_date_to: string | null;
       shoot_time: string | null; group_size: number; budget_range: string;
@@ -426,7 +460,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
       import("@/lib/telegram").then(({ sendTelegram }) => {
         sendTelegram(
-          `✏️ <b>Matches Updated!</b>\n\n<b>Client:</b> ${matchReq.name}\n<b>Location:</b> ${locationName}\n<b>Photographers:</b> ${photographers.map((p) => p.name).join(", ")}${admin_comment ? `\n<b>Note:</b> ${admin_comment}` : ""}\n<b>Email resent:</b> Yes\n\n<a href="${BASE_URL}/admin#matchRequests">Open Admin →</a>`
+          `✏️ <b>Matches Updated!</b>\n\n<b>Client:</b> ${matchReq.name}\n<b>Location:</b> ${locationName}\n<b>Photographers:</b> ${photographers.map((p) => p.name).join(", ")}${admin_comment ? `\n<b>Note:</b> ${admin_comment}` : ""}\n<b>Email resent:</b> Yes\n\n<a href="${BASE_URL}/admin#matchRequests">Open Admin →</a>`,
+          "match_requests"
         );
       }).catch((err) => console.error("[send-matches] PATCH telegram error:", err));
     }

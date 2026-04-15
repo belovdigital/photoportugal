@@ -9,6 +9,7 @@ import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { FloatingReviews } from "@/components/ui/FloatingReviews";
+import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 
@@ -92,6 +93,26 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     t("heroImages.alt4"),
     t("heroImages.alt5"),
   ];
+
+  // Fetch social proof data
+  let socialProofCountries: string[] = [];
+  let socialProofPhotographers = 22;
+  try {
+    const { query, queryOne } = await import("@/lib/db");
+    const [countryRows, countRow] = await Promise.all([
+      query<{ country: string }>(
+        `SELECT country FROM visitor_sessions
+         WHERE country IS NOT NULL AND country != '??' AND country != 'PT'
+         GROUP BY country ORDER BY COUNT(*) DESC LIMIT 25`
+      ),
+      queryOne<{ count: number }>(
+        `SELECT COUNT(*)::int as count FROM photographer_profiles
+         WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE`
+      ),
+    ]);
+    socialProofCountries = countryRows.map((r) => r.country);
+    if (countRow) socialProofPhotographers = countRow.count;
+  } catch {}
 
   const base = "https://photoportugal.com";
 
@@ -327,44 +348,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </section>
 
-      {/* ===== STATS ===== */}
-      <section className="border-y border-warm-200 bg-white">
-        <div className="mx-auto grid max-w-5xl grid-cols-1 sm:grid-cols-3 gap-6 px-4 py-10 sm:px-6 lg:gap-8 lg:px-8">
-          {[
-            {
-              value: `${locations.length}`,
-              label: t("stats.stunningLocations"),
-              icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />,
-              color: "text-primary-500 bg-primary-50",
-            },
-            {
-              value: "5.0",
-              label: t("stats.averageRating"),
-              icon: <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />,
-              color: "text-yellow-500 bg-yellow-50",
-              filled: true,
-            },
-            {
-              value: "100%",
-              label: t("stats.paymentProtection"),
-              icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
-              color: "text-accent-500 bg-accent-50",
-            },
-          ].map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center text-center">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.color}`}>
-                <svg className="h-5 w-5" fill={stat.filled ? "currentColor" : "none"} viewBox={stat.filled ? "0 0 20 20" : "0 0 24 24"} stroke={stat.filled ? undefined : "currentColor"}>
-                  {stat.icon}
-                </svg>
-              </div>
-              <p className="mt-2 font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-                {stat.value}
-              </p>
-              <p className="mt-0.5 text-xs font-medium text-gray-400">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ===== SOCIAL PROOF ===== */}
+      <SocialProofStrip
+        countryCodes={socialProofCountries}
+        photographerCount={socialProofPhotographers}
+        locationCount={locations.length}
+        texts={{
+          trustedBy: t("socialProofStrip.trustedBy"),
+          photographers: t("socialProofStrip.photographers"),
+          locations: t("socialProofStrip.locations"),
+          securePayment: t("socialProofStrip.securePayment"),
+        }}
+      />
 
       {/* ===== FEATURED PHOTOGRAPHERS ===== */}
       <FeaturedPhotographers />

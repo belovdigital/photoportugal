@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       await withTransaction(async (client) => {
         await client.query("LOCK TABLE photographer_profiles IN EXCLUSIVE MODE");
         const countResult = await client.query(
-          "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles WHERE registration_number > 0"
+          "SELECT COUNT(*) as count, COALESCE(MAX(registration_number), 0) + 1 as next_num FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.registration_number > 0 AND pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE"
         );
         const row = countResult.rows[0] as { count: string; next_num: string };
         const count = parseInt(row?.count || "0");
@@ -92,8 +92,8 @@ export async function POST(req: NextRequest) {
           earlyBirdTier = "early50";
           plan = "premium";
           earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-        } else if (count < 60) {
-          earlyBirdTier = "first100";
+        } else if (count < 85) {
+          earlyBirdTier = "first50";
           plan = "pro";
           earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
         }

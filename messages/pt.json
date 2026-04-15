@@ -219,6 +219,12 @@
       "averageRating": "Classificação Média",
       "paymentProtection": "Proteção de Pagamento"
     },
+    "socialProofStrip": {
+      "trustedBy": "países confiam em nós",
+      "photographers": "fotógrafos verificados",
+      "locations": "localizações incríveis",
+      "securePayment": "Pagamento seguro"
+    },
     "featured": {
       "badge": "Destaque",
       "title": "Melhores Fotógrafos em Portugal",
@@ -769,7 +775,7 @@
         "reward": "6 meses de Premium grátis",
         "rewardDetail": "Plano Premium (valor de €59/mês) gratuito durante 6 meses. Depois escolha qualquer plano."
       },
-      "first100": {
+      "first50": {
         "label": "Primeiros 50",
         "reward": "3 meses de Pro grátis",
         "rewardDetail": "Plano Pro (valor de €29/mês) gratuito durante 3 meses. Depois escolha qualquer plano."
@@ -1759,6 +1765,17 @@
     "profilePendingDescriptionComplete": "O seu perfil está completo e foi enviado para revisão. A nossa equipa irá aprová-lo em breve e ficará visível para os clientes.",
     "profileApproved": "O seu perfil está ativo!",
     "profileApprovedDescription": "Os clientes já podem encontrá-lo e reservar sessões fotográficas. Mantenha o seu calendário atualizado.",
+    "revisions": {
+      "title": "Revisões de Perfil Necessárias",
+      "description": "A nossa equipa analisou o seu perfil e encontrou alguns pontos que precisam de atenção. Por favor, resolva cada um abaixo.",
+      "submittedDescription": "Resolveu todos os pontos. A nossa equipa está a analisar as suas correções.",
+      "round": "Ronda {round}",
+      "adminNote": "Nota do revisor",
+      "waitingReview": "Todas as correções enviadas — aguardando revisão",
+      "yourProof": "A sua prova:",
+      "uploadProof": "Carregar prova (opcional)",
+      "uploading": "A carregar..."
+    },
     "viewPublicProfile": "Ver Perfil Público",
     "previewProfile": "Pré-visualizar Perfil",
     "statRating": "Classificação",
@@ -1981,7 +1998,7 @@
     "subtitle": "Gerir o seu plano, extras e pagamentos",
     "foundingPhotographer": "Fotógrafo Fundador",
     "earlyAdopter": "Adotante Inicial",
-    "first100": "Primeiros 50",
+    "first50": "Primeiros 50",
     "foundingPlanFree": "O seu plano {plan} é gratuito para sempre como Fotógrafo Fundador.",
     "earlyBirdPlanFree": "O seu plano {plan} é gratuito até {date}. Depois disso, pode escolher qualquer plano.",
     "perMonth": "/mês",
@@ -2670,6 +2687,10 @@
     "today": "Ativo hoje",
     "thisWeek": "Ativo esta semana",
     "thisMonth": "Ativo este mês",
-    "responseTime": "Normalmente responde em poucas horas"
+    "responseTime": "Normalmente responde em poucas horas",
+    "respondsMinutes": "Responde em minutos",
+    "respondsUnderHour": "Responde em menos de uma hora",
+    "respondsFewHours": "Responde em poucas horas",
+    "respondsSameDay": "Responde no mesmo dia"
   }
 }

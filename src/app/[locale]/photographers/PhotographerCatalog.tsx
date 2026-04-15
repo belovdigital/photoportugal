@@ -6,6 +6,46 @@ import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { trackSearch } from "@/lib/analytics";
 
+function TeamOnlineIndicator() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Portugal time (Europe/Lisbon)
+  const ptHour = parseInt(now.toLocaleString("en-US", { timeZone: "Europe/Lisbon", hour: "numeric", hour12: false }));
+  const isOnline = ptHour >= 8 && ptHour < 23;
+
+  if (isOnline) {
+    return (
+      <span className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-600">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        </span>
+        Team is online now
+      </span>
+    );
+  }
+
+  // Calculate hours until 8:00 AM Portugal time
+  const ptNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Lisbon" }));
+  let hoursUntil: number;
+  if (ptHour >= 23) {
+    hoursUntil = 24 - ptHour + 8;
+  } else {
+    hoursUntil = 8 - ptHour;
+  }
+
+  return (
+    <span className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
+      <span className="inline-flex h-2 w-2 rounded-full bg-gray-300" />
+      Team will be online in {hoursUntil}h
+    </span>
+  );
+}
+
 interface Props {
   photographers: PhotographerProfile[];
   locations: Location[];
@@ -129,32 +169,38 @@ export function PhotographerCatalog({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div>
-        <h1 className="font-display text-3xl font-bold text-gray-900">
-          {selectedLocationNames.length === 1
-            ? t("photographersIn", { location: selectedLocationNames[0] || "" })
-            : selectedLocationNames.length > 1
-            ? t("photographersInMultiple", { count: selectedLocationNames.length })
-            : t("findYourPhotographer")}
-        </h1>
-        <p className="mt-2 text-gray-500">
-          {filtered.length === 1
-            ? t("available", { count: filtered.length })
-            : t("availablePlural", { count: filtered.length })}
-        </p>
-        <p className="mt-1 text-sm text-gray-400">{t("trustLine")}</p>
-      </div>
-
-      {/* Concierge banner */}
-      <a href="/find-photographer" className="mt-6 inline-flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-5 py-3 transition hover:bg-amber-50 hover:shadow-sm">
-        <span className="text-lg">✨</span>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-gray-800">{t("concierge.title")}</p>
-          <p className="text-xs text-gray-500">{t("concierge.desc")}</p>
+      {/* Header + Concierge */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h1 className="font-display text-3xl font-bold text-gray-900">
+            {selectedLocationNames.length === 1
+              ? t("photographersIn", { location: selectedLocationNames[0] || "" })
+              : selectedLocationNames.length > 1
+              ? t("photographersInMultiple", { count: selectedLocationNames.length })
+              : t("findYourPhotographer")}
+          </h1>
+          <p className="mt-2 text-gray-500">
+            {filtered.length === 1
+              ? t("available", { count: filtered.length })
+              : t("availablePlural", { count: filtered.length })}
+          </p>
+          <p className="mt-1 text-sm text-gray-400">{t("trustLine")}</p>
         </div>
-        <svg className="h-4 w-4 shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-      </a>
+
+        <a href="/find-photographer" className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/70 px-5 py-4 shadow-lg backdrop-blur-xl transition hover:shadow-xl hover:bg-white/90 lg:w-1/2 lg:shrink-0">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 shadow-md">
+            <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900">{t("concierge.title")}</p>
+            <p className="text-xs text-gray-500">{t("concierge.desc")}</p>
+            <TeamOnlineIndicator />
+          </div>
+          <svg className="h-4 w-4 shrink-0 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </a>
+      </div>
 
       {/* Filter bar */}
       <div className="mt-6 space-y-3">

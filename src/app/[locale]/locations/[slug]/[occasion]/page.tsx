@@ -349,7 +349,7 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Link
-            href={`/choose-booking-type?location=${slug}`}
+            href={`/photographers?location=${slug}`}
             className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700"
           >
             {locale === "pt" ? "Ver Fotógrafos" : "Browse Photographers"}

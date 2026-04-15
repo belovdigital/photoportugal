@@ -18,9 +18,9 @@ export function EarlyBirdCounter({ totalPhotographers }: { totalPhotographers: n
     tierKey = "early50";
     spotsLeft = 35 - totalPhotographers;
     totalSpots = 25;
-  } else if (totalPhotographers < 60) {
-    tierKey = "first100";
-    spotsLeft = 60 - totalPhotographers;
+  } else if (totalPhotographers < 85) {
+    tierKey = "first50";
+    spotsLeft = 85 - totalPhotographers;
     totalSpots = 50;
   }
 

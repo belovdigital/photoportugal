@@ -42,7 +42,7 @@ export async function sendEmail(to: string, subject: string, html: string, optio
 }
 
 // === Email template wrapper ===
-function emailLayout(body: string): string {
+export function emailLayout(body: string): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -83,7 +83,7 @@ function emailLayout(body: string): string {
 </html>`;
 }
 
-function emailButton(href: string, label: string, color: string = "#C94536"): string {
+export function emailButton(href: string, label: string, color: string = "#C94536"): string {
   return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td align="center">
     <a href="${href}" style="display:inline-block;background:${color};color:#FFFFFF;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">${label}</a>
   </td></tr></table>`;
@@ -638,6 +638,109 @@ export async function sendDeliveryReminderToPhotographer(
       ${emailButton(`${BASE_URL}/dashboard/bookings`, "Go to Bookings")}
     `)
   );
+}
+
+// === Render-only versions (for notification queue) ===
+
+export function renderPaymentReminderToClient(
+  clientName: string, photographerName: string, paymentUrl: string | null, totalPrice: number | null
+): { subject: string; html: string } {
+  const ctaSection = paymentUrl && totalPrice
+    ? emailButton(paymentUrl, `Pay Now — €${totalPrice}`, "#16A34A")
+    : emailButton(`${BASE_URL}/dashboard/bookings`, "View Booking");
+  return {
+    subject: `Reminder: Complete your payment for the session with ${photographerName}`,
+    html: emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Payment Reminder</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Your booking with <strong>${photographerName}</strong> has been confirmed, but we haven't received your payment yet.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Please complete your payment to secure your photoshoot session.</p>
+      ${ctaSection}
+    `),
+  };
+}
+
+export function renderShootReminderToClient(
+  clientName: string, photographerName: string, shootDate: string
+): { subject: string; html: string } {
+  return {
+    subject: `Tomorrow: Your photoshoot with ${photographerName}!`,
+    html: emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Your Photoshoot is Tomorrow!</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Just a reminder that your photoshoot with <strong>${photographerName}</strong> is scheduled for <strong>${shootDate}</strong>.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Make sure to confirm the meeting point and any last-minute details with your photographer.</p>
+      ${emailButton(`${BASE_URL}/dashboard/messages`, "Open Messages")}
+    `),
+  };
+}
+
+export function renderShootReminderToPhotographer(
+  photographerName: string, clientName: string, shootDate: string
+): { subject: string; html: string } {
+  const clientFirstName = clientName.split(" ")[0];
+  return {
+    subject: `Tomorrow: Photoshoot with ${clientFirstName}`,
+    html: emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Photoshoot Tomorrow!</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Reminder: you have a photoshoot with <strong>${clientFirstName}</strong> scheduled for <strong>${shootDate}</strong>.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Make sure to confirm the meeting point and any details with your client.</p>
+      ${emailButton(`${BASE_URL}/dashboard/messages`, "Open Messages")}
+    `),
+  };
+}
+
+export function renderDeliveryReminderToPhotographer(
+  photographerName: string, clientName: string
+): { subject: string; html: string } {
+  const clientFirstName = clientName.split(" ")[0];
+  return {
+    subject: `Reminder: ${clientFirstName} is waiting for their photos`,
+    html: emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Delivery Reminder</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Your client <strong>${clientFirstName}</strong> is waiting for their photos. The expected delivery time has passed.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Please upload and deliver the photos as soon as possible.</p>
+      ${emailButton(`${BASE_URL}/dashboard/bookings`, "Go to Bookings")}
+    `),
+  };
+}
+
+export function renderTrustpilotFollowUpToClient(
+  clientName: string, photographerName: string
+): { subject: string; html: string } {
+  return {
+    subject: `One last thing, ${clientName} — it means a lot to us`,
+    html: emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Thank You for Your Review!</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We really appreciate you sharing your experience with <strong>${photographerName}</strong> on our platform.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover Photo Portugal:</p>
+      ${emailButton("https://g.page/r/CbWG7PogT_K2EBI/review", "Review Us on Google", "#4285F4")}
+      <div style="height:8px"></div>
+      ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", "Review Us on Trustpilot", "#16A34A")}
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">Even a few words make a huge difference. Thank you for supporting independent photography in Portugal!</p>
+    `),
+  };
+}
+
+export function renderTrustpilotFollowUpToPhotographer(
+  photographerName: string
+): { subject: string; html: string } {
+  return {
+    subject: `Quick favour, ${photographerName}?`,
+    html: emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Help Us Grow!</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Thank you for being part of Photo Portugal. Your work is what makes this platform great.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:</p>
+      ${emailButton("https://g.page/r/CbWG7PogT_K2EBI/review", "Review Us on Google", "#4285F4")}
+      <div style="height:8px"></div>
+      ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", "Review Us on Trustpilot", "#16A34A")}
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">It takes less than a minute. Thank you for your support!</p>
+    `),
+  };
 }
 
 // === Additional notifications ===

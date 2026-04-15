@@ -198,7 +198,7 @@ export async function POST(
   // Telegram: notify admin of delivery acceptance
   import("@/lib/telegram").then(({ sendTelegram }) => {
     const estimatedPayout = booking.payout_amount ? Number(booking.payout_amount) : (booking.total_price ? Math.round(booking.total_price * 0.8) : 0);
-    sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${Math.round(estimatedPayout)}` : ""}`);
+    sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${Math.round(estimatedPayout)}` : ""}`, "bookings");
   }).catch((err) => console.error("[delivery/accept] telegram admin error:", err));
 
   // Telegram: notify photographer of delivery acceptance

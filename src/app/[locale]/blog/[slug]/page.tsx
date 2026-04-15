@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
@@ -40,6 +40,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   );
 
   if (!post) {
+    // Try other locale for metadata
+    const otherLocale = locale === "pt" ? "en" : "pt";
+    const otherPost = await queryOne<BlogPost>(
+      "SELECT id, slug, title, excerpt, meta_title, meta_description, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
+      [slug, otherLocale]
+    );
+    if (otherPost) {
+      return { title: otherPost.meta_title || otherPost.title, robots: { index: false } };
+    }
     return { title: "Post Not Found" };
   }
 
@@ -390,6 +399,15 @@ export default async function BlogPostPage({ params }: PageProps) {
   );
 
   if (!post) {
+    // If not found in this locale, check if it exists in the other locale and redirect
+    const otherLocale = locale === "pt" ? "en" : "pt";
+    const otherPost = await queryOne<{ slug: string }>(
+      "SELECT slug FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
+      [slug, otherLocale]
+    );
+    if (otherPost) {
+      redirect(`/${otherLocale}/blog/${slug}`);
+    }
     notFound();
   }
 

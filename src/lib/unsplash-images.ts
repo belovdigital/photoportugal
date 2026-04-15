@@ -49,7 +49,7 @@ const HERO_ID = "photo-1765854638659-aa17a6b00543"; // Couple on beach
 export function unsplashUrl(
   id: string,
   width: number = 400,
-  quality: number = 70
+  quality: number = 80
 ): string {
   return `https://images.unsplash.com/${id}?w=${width}&q=${quality}&auto=format&fit=crop`;
 }

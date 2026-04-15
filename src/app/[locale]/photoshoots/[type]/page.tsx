@@ -3,6 +3,8 @@ import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { shootTypes, getShootTypeBySlug } from "@/lib/shoot-types-data";
+import { locations } from "@/lib/locations-data";
+import { LocationCard } from "@/components/ui/LocationCard";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
 import { query } from "@/lib/db";
@@ -101,7 +103,7 @@ export default async function ShootTypePage({
           </p>
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <Link
-              href={`/choose-booking-type?shootType=${shootType.slug}`}
+              href={`/photographers?shootType=${shootType.slug}`}
               className="inline-flex items-center justify-center rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
             >
               {t("findPhotographers", { name: shootType.name })}
@@ -124,63 +126,73 @@ export default async function ShootTypePage({
         <p className="mt-4 max-w-3xl text-gray-500">
           {t("bestLocationsSubtitle", { name: shootType.name.toLowerCase() })}
         </p>
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {shootType.bestLocations.map((loc) => (
-            <Link
-              key={loc.slug}
-              href={`/locations/${loc.slug}`}
-              className="group rounded-xl border border-warm-200 bg-white p-6 transition hover:border-primary-200 hover:shadow-md"
-            >
-              <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition">
-                {loc.name}
-              </h3>
-              <p className="mt-2 text-sm text-gray-500">{loc.reason}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary-600">
-                {t("viewPhotographers", { name: loc.name })}
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </span>
-            </Link>
-          ))}
+        <div className={`mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
+          shootType.bestLocations.length <= 2 ? "lg:grid-cols-2" :
+          shootType.bestLocations.length === 4 ? "lg:grid-cols-2" :
+          shootType.bestLocations.length === 3 ? "lg:grid-cols-3" :
+          "lg:grid-cols-3"
+        }`}>
+          {shootType.bestLocations.map((loc) => {
+            const location = locations.find((l) => l.slug === loc.slug);
+            if (!location) return null;
+            return <LocationCard key={loc.slug} location={location} locale={locale} />;
+          })}
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="border-y border-warm-200 bg-warm-50">
-        <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-          <h2 className="text-center font-display text-3xl font-bold text-gray-900">
+      <section className="relative overflow-hidden border-y border-warm-200 bg-warm-50">
+        <div className="absolute -left-20 top-10 h-64 w-64 rounded-full bg-primary-100/30 blur-3xl" />
+        <div className="absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-accent-100/30 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <h2 className="text-center font-display text-3xl font-bold text-gray-900 sm:text-4xl">
             {t("howToBookTitle", { name: shootType.name })}
           </h2>
-          <div className="mt-12 grid gap-8 sm:grid-cols-4">
+          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-0">
             {[
               {
-                step: "1",
                 title: t("stepBrowse"),
                 desc: t("stepBrowseDesc", { name: shootType.name.toLowerCase() }),
+                iconBg: "bg-primary-500",
+                numberBg: "bg-primary-100 text-primary-700",
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />,
               },
               {
-                step: "2",
                 title: t("stepChoose"),
                 desc: t("stepChooseDesc"),
+                iconBg: "bg-accent-500",
+                numberBg: "bg-accent-50 text-accent-700",
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
               },
               {
-                step: "3",
                 title: t("stepBook"),
                 desc: t("stepBookDesc"),
+                iconBg: "bg-yellow-500",
+                numberBg: "bg-yellow-50 text-yellow-700",
+                icon: <><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></>,
               },
               {
-                step: "4",
                 title: t("stepGetPhotos"),
                 desc: t("stepGetPhotosDesc"),
+                iconBg: "bg-blue-500",
+                numberBg: "bg-blue-50 text-blue-700",
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />,
               },
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
-                  {item.step}
+            ].map((item, i) => (
+              <div key={i} className="relative flex flex-col items-center text-center lg:px-6">
+                {i < 3 && (
+                  <div className="absolute left-[calc(50%+32px)] right-[calc(-50%+32px)] top-6 hidden border-t-2 border-dashed border-warm-300 lg:block" />
+                )}
+                <div className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-xl ${item.iconBg} shadow-lg`}>
+                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {item.icon}
+                  </svg>
                 </div>
-                <h3 className="mt-3 text-sm font-bold text-gray-900">{item.title}</h3>
-                <p className="mt-2 text-sm text-gray-500">{item.desc}</p>
+                <span className={`mt-4 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${item.numberBg}`}>
+                  {i + 1}
+                </span>
+                <h3 className="mt-2 text-lg font-bold text-gray-900">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-500">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -264,7 +276,7 @@ export default async function ShootTypePage({
             {t("ctaReadySubtitle", { name: shootType.name.toLowerCase() })}
           </p>
           <Link
-            href={`/choose-booking-type?shootType=${shootType.slug}`}
+            href={`/photographers?shootType=${shootType.slug}`}
             className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
           >
             {t("findPhotographers", { name: shootType.name })}

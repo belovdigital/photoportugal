@@ -222,6 +222,12 @@
       "averageRating": "Average Rating",
       "paymentProtection": "Payment Protection"
     },
+    "socialProofStrip": {
+      "trustedBy": "countries trust us",
+      "photographers": "verified photographers",
+      "locations": "stunning locations",
+      "securePayment": "Secure payment"
+    },
     "featured": {
       "badge": "Featured",
       "title": "Top Photographers in Portugal",
@@ -772,7 +778,7 @@
         "reward": "6 months Premium free",
         "rewardDetail": "Premium plan (€59/mo value) free for 6 months. Then choose any plan."
       },
-      "first100": {
+      "first50": {
         "label": "First 50",
         "reward": "3 months Pro free",
         "rewardDetail": "Pro plan (€29/mo value) free for 3 months. Then choose any plan."
@@ -1762,6 +1768,17 @@
     "profilePendingDescriptionComplete": "Your profile is complete and has been submitted for review. Our team will approve it shortly and it will become visible to clients.",
     "profileApproved": "Your profile is live!",
     "profileApprovedDescription": "Clients can now find you and book photoshoots. Make sure your calendar is up to date.",
+    "revisions": {
+      "title": "Profile Revisions Required",
+      "description": "Our team reviewed your profile and found a few items that need attention. Please resolve each one below.",
+      "submittedDescription": "You've resolved all items. Our team is reviewing your fixes.",
+      "round": "Round {round}",
+      "adminNote": "Note from reviewer",
+      "waitingReview": "All fixes submitted — waiting for review",
+      "yourProof": "Your proof:",
+      "uploadProof": "Upload proof (optional)",
+      "uploading": "Uploading..."
+    },
     "viewPublicProfile": "View Public Profile",
     "previewProfile": "Preview Profile",
     "statRating": "Rating",
@@ -1984,7 +2001,7 @@
     "subtitle": "Manage your plan, add-ons, and payments",
     "foundingPhotographer": "Founding Photographer",
     "earlyAdopter": "Early Adopter",
-    "first100": "First 50",
+    "first50": "First 50",
     "foundingPlanFree": "Your {plan} plan is free forever as a Founding Photographer.",
     "earlyBirdPlanFree": "Your {plan} plan is free until {date}. After that, you can choose any plan.",
     "perMonth": "/month",
@@ -2673,6 +2690,10 @@
     "today": "Active today",
     "thisWeek": "Active this week",
     "thisMonth": "Active this month",
-    "responseTime": "Usually responds within a few hours"
+    "responseTime": "Usually responds within a few hours",
+    "respondsMinutes": "Responds within minutes",
+    "respondsUnderHour": "Responds within an hour",
+    "respondsFewHours": "Responds within a few hours",
+    "respondsSameDay": "Responds same day"
   }
 }

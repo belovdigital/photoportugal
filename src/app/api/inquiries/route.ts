@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
       // Admin notifications (new inquiries only)
       if (isNewInquiry) {
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`💬 <b>New Inquiry</b>\n\n<b>Client:</b> ${senderName}\n<b>Photographer:</b> ${recipient!.name}\n\n"${msgPreview}"\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`);
+          sendTelegram(`💬 <b>New Inquiry</b>\n\n<b>Client:</b> ${senderName}\n<b>Photographer:</b> ${recipient!.name}\n\n"${msgPreview}"\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`, "clients");
         }).catch((err) => console.error("[inquiries] telegram admin error:", err));
         sendAdminNewInquiryNotification(senderName, recipient!.name, msgPreview)
           .catch((err) => console.error("[inquiries] admin email error:", err));

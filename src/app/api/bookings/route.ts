@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
           dateDisplay
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`📅 <b>New Booking!</b>\n\n<b>Client:</b> ${clientInfo!.name}\n<b>Photographer:</b> ${photographerInfo!.display_name}\n<b>Package:</b> ${pkgInfo?.name || "Custom"}\n<b>Date:</b> ${dateDisplay || "Flexible"}\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`);
+          sendTelegram(`📅 <b>New Booking!</b>\n\n<b>Client:</b> ${clientInfo!.name}\n<b>Photographer:</b> ${photographerInfo!.display_name}\n<b>Package:</b> ${pkgInfo?.name || "Custom"}\n<b>Date:</b> ${dateDisplay || "Flexible"}\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`, "bookings");
         }).catch((err) => console.error("[bookings] telegram new booking error:", err));
       }
 
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
         );
         if (clientUtm?.utm_source) {
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`🎯 <b>Ad Visitor Booked!</b>\n\nSource: ${clientUtm!.utm_source}\n${clientInfo!.name} → ${photographerInfo!.display_name}`);
+            sendTelegram(`🎯 <b>Ad Visitor Booked!</b>\n\nSource: ${clientUtm!.utm_source}\n${clientInfo!.name} → ${photographerInfo!.display_name}`, "bookings");
           }).catch((err) => console.error("[bookings] telegram ad visitor error:", err));
         }
       } catch {}

@@ -42,14 +42,30 @@ export function ActiveBadge({ lastSeenAt, size = "sm" }: { lastSeenAt?: string |
   );
 }
 
-export function ResponseTimeBadge() {
+export function ResponseTimeBadge({ avgMinutes, compact }: { avgMinutes?: number | null; compact?: boolean }) {
   const t = useTranslations("activity");
+
+  let label: string;
+  if (avgMinutes != null && avgMinutes > 0) {
+    if (avgMinutes < 15) label = t("respondsMinutes");
+    else if (avgMinutes < 60) label = t("respondsUnderHour");
+    else if (avgMinutes < 180) label = t("respondsFewHours");
+    else if (avgMinutes < 1440) label = t("respondsSameDay");
+    else label = t("responseTime");
+  } else {
+    label = t("responseTime");
+  }
+
+  if (compact) {
+    return <span className="text-[11px] text-gray-400">{label}</span>;
+  }
+
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
       <svg className="h-3.5 w-3.5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      {t("responseTime")}
+      {label}
     </span>
   );
 }

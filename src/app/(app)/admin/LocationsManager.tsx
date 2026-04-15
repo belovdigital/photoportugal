@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { locations } from "@/lib/locations-data";
 
 interface ManagedLocation {
   id: string;
@@ -133,7 +134,7 @@ export function LocationsManager() {
       </div>
 
       <p className="mt-1 text-sm text-gray-500">
-        These are additional locations managed via admin. The 23 default locations are hardcoded in the codebase.
+        These are additional locations managed via admin. The {locations.length} default locations are hardcoded in the codebase.
       </p>
 
       {message && <div className="mt-3 rounded-lg bg-primary-50 p-3 text-sm text-primary-700">{message}</div>}
@@ -224,7 +225,7 @@ export function LocationsManager() {
             {loading ? (
               <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
             ) : locations.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No managed locations yet. The 23 default locations are in the codebase.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No managed locations yet. The {locations.length} default locations are in the codebase.</td></tr>
             ) : (
               locations.map((loc) => (
                 <tr key={loc.id}>

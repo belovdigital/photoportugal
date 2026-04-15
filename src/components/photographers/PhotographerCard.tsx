@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { trackViewPhotographer } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
 import { WishlistButton } from "@/components/ui/WishlistButton";
-import { ActiveBadge } from "@/components/ui/ActiveBadge";
+import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 
 export function PhotographerCard({
   photographer,
@@ -61,14 +61,16 @@ export function PhotographerCard({
         </div>
       </div>
 
-      <div className="flex-1 p-6 pt-10 pb-3">
+      <div className="relative flex-1 p-6 pt-10 pb-3">
+        <div className="absolute right-4 top-2">
+          <ActiveBadge lastSeenAt={photographer.last_seen_at} />
+        </div>
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition">
               {normalizeName(photographer.name)}
             </h3>
             <p className="text-sm text-gray-500">{photographer.tagline}</p>
-            <ActiveBadge lastSeenAt={photographer.last_seen_at} />
           </div>
           {photographer.is_verified && (
             <span className="shrink-0 text-accent-500" title={t("verified")}>
@@ -142,7 +144,7 @@ export function PhotographerCard({
             <span className="text-sm text-gray-400">{t("contactForPricing")}</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {!isPhotographer && (
             <Link
               href={`/photographers/${photographer.slug}#message`}
@@ -156,11 +158,14 @@ export function PhotographerCard({
           )}
           <Link
             href={`/photographers/${photographer.slug}`}
-            className="rounded-lg bg-primary-50 px-3 py-2 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white"
+            className="flex h-10 items-center rounded-lg bg-primary-50 px-3 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white whitespace-nowrap"
           >
             {t("viewProfile")}
           </Link>
         </div>
+      </div>
+      <div className="px-6 pb-3 -mt-2 text-center">
+        <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} compact />
       </div>
     </div>
   );

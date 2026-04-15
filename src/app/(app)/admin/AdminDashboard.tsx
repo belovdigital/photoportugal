@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { AdminToastProvider } from "./AdminToast";
 import { AuditLog as AuditLogTab } from "./AuditLog";
+import AdminCalendarTab from "./AdminCalendarTab";
 
-function NotificationLogsTab({ channel, title }: { channel: "email" | "sms"; title: string }) {
+function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "telegram"; title: string }) {
   const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; error_message?: string | null; from?: string; created_at: string; price?: string | null; direction?: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +56,91 @@ function NotificationLogsTab({ channel, title }: { channel: "email" | "sms"; tit
   );
 }
 
+function NotificationQueueTab() {
+  const [items, setItems] = useState<{ id: string; channel: string; recipient: string; subject: string | null; body: string; dedup_key: string; recipient_timezone: string; send_after: string; status: string; attempts: number; last_error: string | null; created_at: string; sent_at: string | null }[]>([]);
+  const [stats, setStats] = useState<{ status: string; count: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/notification-queue", { credentials: "include" })
+      .then(r => r.json())
+      .then(d => { setItems(d.items || []); setStats(d.stats || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" /></div>;
+
+  const statusColor = (s: string) => {
+    if (s === "sent") return "bg-green-100 text-green-700";
+    if (s === "failed") return "bg-red-100 text-red-700";
+    if (s === "pending") return "bg-blue-100 text-blue-700";
+    if (s === "cancelled") return "bg-gray-100 text-gray-500";
+    return "bg-gray-100 text-gray-700";
+  };
+
+  const statCounts = Object.fromEntries(stats.map(s => [s.status, parseInt(s.count)]));
+
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-gray-900 mb-1">Notification Queue</h2>
+      <p className="text-xs text-gray-400 mb-4">Timezone-aware deferred SMS &amp; email notifications</p>
+
+      <div className="flex gap-3 mb-4">
+        {["pending", "failed"].map(s => (
+          <div key={s} className={`rounded-lg px-3 py-2 text-center ${statusColor(s)}`}>
+            <div className="text-lg font-bold">{statCounts[s] || 0}</div>
+            <div className="text-[11px] font-medium capitalize">{s}</div>
+          </div>
+        ))}
+      </div>
+
+      {items.length === 0 ? (
+        <p className="text-gray-400 text-center py-8">Queue is empty</p>
+      ) : (
+        <div className="space-y-1.5">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-start gap-3 rounded-lg border border-warm-200 bg-white px-3 py-2.5 text-sm">
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor(item.status)}`}>{item.status}</span>
+                <span className="text-[10px] text-gray-400 uppercase">{item.channel}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-gray-900 truncate">{item.subject || item.body.slice(0, 80)}</p>
+                <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                  <span className="truncate">{item.recipient}</span>
+                  <span className="text-gray-300">·</span>
+                  <span>{item.recipient_timezone}</span>
+                </div>
+                <div className="text-[11px] text-gray-400 mt-0.5">{item.dedup_key}</div>
+                {item.last_error && <p className="text-xs text-red-500 mt-0.5">{item.last_error}</p>}
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="text-xs text-gray-400 whitespace-nowrap">
+                  {new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}{" "}
+                  {new Date(item.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                </div>
+                {item.status === "pending" && (
+                  <div className="text-[11px] text-blue-500 mt-0.5">
+                    Send after {new Date(item.send_after).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                )}
+                {item.sent_at && (
+                  <div className="text-[11px] text-green-600 mt-0.5">
+                    Sent {new Date(item.sent_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                )}
+                {item.attempts > 0 && item.status !== "sent" && (
+                  <div className="text-[11px] text-amber-500">Attempts: {item.attempts}</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface AdminStats {
   clients: number;
   photographersApproved: number;
@@ -87,6 +173,7 @@ const tabGroups = [
   {
     label: null, // no header for top group
     items: [
+      { key: "calendar", label: "Calendar", icon: "calendar" },
       { key: "overview", label: "Overview", icon: "home" },
       { key: "analytics", label: "Analytics", icon: "chart" },
       { key: "visitors", label: "Recent Visitors", icon: "eye" },
@@ -118,16 +205,9 @@ const tabGroups = [
     ],
   },
   {
-    label: "Logs",
-    items: [
-      { key: "auditLog", label: "Audit Log", icon: "document" },
-      { key: "emailLogs", label: "Email Log", icon: "message" },
-      { key: "smsLogs", label: "SMS Log", icon: "message" },
-    ],
-  },
-  {
     label: null,
     items: [
+      { key: "logs", label: "Logs", icon: "document" },
       { key: "settings", label: "Settings", icon: "settings" },
     ],
   },
@@ -135,7 +215,9 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "bookings" | "inquiries" | "matchRequests" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "auditLog" | "emailLogs" | "smsLogs" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "logs" | "settings";
+
+type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
 function SidebarIcon({ type, active }: { type: string; active: boolean }) {
   const cls = `h-4.5 w-4.5 ${active ? "text-primary-600" : "text-gray-400"}`;
@@ -242,6 +324,62 @@ function BarChart({ title, subtitle, filled, field, color }: {
   );
 }
 
+function UpcomingEvents({ onNavigate }: { onNavigate: () => void }) {
+  const [events, setEvents] = useState<{ id: string; shoot_date: string; client_name: string; photographer_name: string; total_price: number | null; payment_status: string; package_name: string | null }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const today = new Date();
+    const nextWeek = new Date(today.getTime() + 14 * 86400000);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    fetch(`/api/admin/calendar?from=${fmt(today)}&to=${fmt(nextWeek)}`, { credentials: "include" })
+      .then(r => r.json())
+      .then(data => {
+        setEvents((data.shoots || []).slice(0, 5));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) return null;
+  if (events.length === 0) return null;
+
+  return (
+    <div className="mt-4 sm:mt-6">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-semibold text-gray-900">Upcoming Photoshoots</h3>
+        <button onClick={onNavigate} className="text-xs text-primary-600 hover:text-primary-700 font-medium">View Calendar →</button>
+      </div>
+      <div className="space-y-1.5">
+        {events.map((e) => {
+          const d = new Date(e.shoot_date + "T12:00:00");
+          const today = new Date();
+          const diffDays = Math.ceil((d.getTime() - today.getTime()) / 86400000);
+          const dateLabel = diffDays === 0 ? "Today" : diffDays === 1 ? "Tomorrow" : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+          const isUrgent = diffDays <= 1;
+          return (
+            <div key={e.id} className={`flex items-center justify-between rounded-lg border px-3 py-2.5 ${isUrgent ? "border-blue-200 bg-blue-50/50" : "border-warm-200 bg-white"}`}>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isUrgent ? "bg-blue-500" : "bg-gray-300"}`} />
+                <div className="min-w-0">
+                  <span className="text-sm text-gray-900"><strong>{e.client_name}</strong> → {e.photographer_name}</span>
+                  <div className="text-xs text-gray-500">{dateLabel}{e.package_name ? ` · ${e.package_name}` : ""}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {e.total_price && <span className="text-sm font-semibold text-gray-900">€{Math.round(e.total_price)}</span>}
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${e.payment_status === "paid" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}>
+                  {e.payment_status === "paid" ? "Paid" : "Unpaid"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function RevenueCharts() {
   const [data, setData] = useState<{ day: string; turnover: number; revenue: number; count: number }[]>([]);
   const [range, setRange] = useState(30);
@@ -339,6 +477,16 @@ export function AdminDashboard({
   const [isStandalone, setIsStandalone] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Lock body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
+
   useEffect(() => {
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches || (navigator as unknown as { standalone?: boolean }).standalone === true);
   }, []);
@@ -356,6 +504,9 @@ export function AdminDashboard({
 
   useEffect(() => {
     function onTouchStart(e: TouchEvent) {
+      // Don't intercept touches on sidebar (allows scrolling sidebar back up)
+      const target = e.target as HTMLElement;
+      if (target.closest("aside")) return;
       if (window.scrollY === 0 && e.touches.length === 1) {
         touchStartY.current = e.touches[0].clientY;
         isPulling.current = true;
@@ -392,13 +543,40 @@ export function AdminDashboard({
     };
   }, [pullDistance]);
 
+  const [logSubTab, setLogSubTab] = useState<LogSubTab>("audit");
+
+  // Map old hash names to new format
+  const LEGACY_HASH_MAP: Record<string, { tab: TabKey; logSub?: LogSubTab }> = {
+    auditLog: { tab: "logs", logSub: "audit" },
+    emailLogs: { tab: "logs", logSub: "email" },
+    smsLogs: { tab: "logs", logSub: "sms" },
+    telegramLogs: { tab: "logs", logSub: "telegram" },
+    notificationQueue: { tab: "logs", logSub: "queue" },
+  };
+
+  function parseHash(hash: string): { tab: TabKey; logSub?: LogSubTab } | null {
+    // New format: #logs-email
+    if (hash.startsWith("logs-")) {
+      const sub = hash.slice(5) as LogSubTab;
+      if (["audit", "email", "sms", "telegram", "queue"].includes(sub)) {
+        return { tab: "logs", logSub: sub };
+      }
+    }
+    // Legacy format
+    if (LEGACY_HASH_MAP[hash]) return LEGACY_HASH_MAP[hash];
+    // Normal tab
+    if (tabs.some((t) => t.key === hash)) return { tab: hash as TabKey };
+    return null;
+  }
+
   // Listen for hash changes
   useEffect(() => {
     function syncHash() {
-      const hash = window.location.hash.slice(1) as TabKey;
-      if (hash && tabs.some((t) => t.key === hash)) {
-        setActiveTabState(hash);
-        try { sessionStorage.setItem("admin-tab", hash); } catch {}
+      const parsed = parseHash(window.location.hash.slice(1));
+      if (parsed) {
+        setActiveTabState(parsed.tab);
+        if (parsed.logSub) setLogSubTab(parsed.logSub);
+        try { sessionStorage.setItem("admin-tab", parsed.logSub ? `logs-${parsed.logSub}` : parsed.tab); } catch {}
       }
     }
     window.addEventListener("hashchange", syncHash);
@@ -411,18 +589,28 @@ export function AdminDashboard({
     try { sessionStorage.setItem("admin-tab", tab); } catch {}
   }
 
+  function setLogTab(sub: LogSubTab) {
+    setLogSubTab(sub);
+    window.history.replaceState(null, "", `#logs-${sub}`);
+    try { sessionStorage.setItem("admin-tab", `logs-${sub}`); } catch {}
+  }
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
     // Sync active tab from hash or sessionStorage on mount
-    const hash = window.location.hash.slice(1) as TabKey;
-    if (hash && tabs.some((t) => t.key === hash)) {
-      setActiveTabState(hash);
+    const rawHash = window.location.hash.slice(1);
+    const parsed = parseHash(rawHash);
+    if (parsed) {
+      setActiveTabState(parsed.tab);
+      if (parsed.logSub) setLogSubTab(parsed.logSub);
     } else {
       try {
-        const stored = sessionStorage.getItem("admin-tab") as TabKey;
-        if (stored && tabs.some((t) => t.key === stored)) {
-          setActiveTabState(stored);
+        const stored = sessionStorage.getItem("admin-tab") || "";
+        const storedParsed = parseHash(stored);
+        if (storedParsed) {
+          setActiveTabState(storedParsed.tab);
+          if (storedParsed.logSub) setLogSubTab(storedParsed.logSub);
           window.history.replaceState(null, "", `#${stored}`);
         }
       } catch {}
@@ -483,11 +671,11 @@ export function AdminDashboard({
 
         {/* Sidebar */}
         <aside className={`
-          fixed left-0 top-0 z-30 h-full w-56 shrink-0 bg-warm-50 pt-[100px] transition-transform
-          md:sticky md:top-0 md:h-auto md:translate-x-0 md:bg-transparent md:pt-0
+          fixed left-0 top-0 z-30 h-full w-56 shrink-0 bg-warm-50 pt-[60px] transition-transform overflow-y-auto
+          md:sticky md:top-0 md:h-screen md:translate-x-0 md:bg-transparent md:pt-0 md:overflow-y-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         `}>
-          <nav className="flex flex-col pr-3">
+          <nav className="flex flex-col pr-3 pb-8">
             {tabGroups.map((group, gi) => (
               <div key={gi} className={gi > 0 ? "mt-4" : ""}>
                 {group.label && (
@@ -636,36 +824,16 @@ export function AdminDashboard({
                 </div>
               </div>
 
+              {/* Upcoming Events */}
+              <UpcomingEvents onNavigate={() => setActiveTab("calendar")} />
+
               {/* Revenue Charts */}
               <RevenueCharts />
-
-              {/* Quick navigation */}
-              <div className="mt-4 sm:mt-6 grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-4">
-                {[
-                  { label: "Analytics", sub: "Traffic & search data", icon: "chart", tab: "analytics" as TabKey },
-                  { label: "Bookings", sub: "Manage requests", icon: "calendar", tab: "bookings" as TabKey },
-                  { label: "Blog", sub: `${stats.blogPosts} published posts`, icon: "document", tab: "blog" as TabKey },
-                  { label: "Promo Codes", sub: "Create discounts", icon: "tag", tab: "promos" as TabKey },
-                ].map((action) => (
-                  <button
-                    key={action.tab}
-                    onClick={() => setActiveTab(action.tab)}
-                    className="flex items-center gap-2 sm:gap-3 rounded-xl border border-warm-200 bg-white p-3 sm:p-4 text-left transition hover:border-primary-200 hover:shadow-sm"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warm-100">
-                      <SidebarIcon type={action.icon} active={false} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">{action.label}</p>
-                      <p className="text-[11px] text-gray-400">{action.sub}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
             </div>
           )}
           {activeTab === "photographers" && photographersSection}
           {activeTab === "clients" && clientsSection}
+          {activeTab === "calendar" && <AdminCalendarTab />}
           {activeTab === "bookings" && bookingsSection}
           {activeTab === "inquiries" && inquiriesSection}
           {activeTab === "matchRequests" && matchRequestsSection}
@@ -675,26 +843,41 @@ export function AdminDashboard({
           {activeTab === "blog" && blogSection}
           {activeTab === "promos" && promosSection}
           {activeTab === "locations" && locationsSection}
-          {activeTab === "auditLog" && <AuditLogTab />}
-          {activeTab === "emailLogs" && <NotificationLogsTab channel="email" title="Email Logs" />}
-          {activeTab === "smsLogs" && <NotificationLogsTab channel="sms" title="SMS Logs" />}
+          {activeTab === "logs" && (
+            <div>
+              <div className="flex gap-1 overflow-x-auto mb-4 pb-1">
+                {([
+                  { key: "audit" as LogSubTab, label: "Audit" },
+                  { key: "email" as LogSubTab, label: "Email" },
+                  { key: "sms" as LogSubTab, label: "SMS" },
+                  { key: "telegram" as LogSubTab, label: "Telegram" },
+                  { key: "queue" as LogSubTab, label: "Queue" },
+                ]).map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setLogTab(t.key)}
+                    className={`shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      logSubTab === t.key
+                        ? "bg-primary-600 text-white shadow-sm"
+                        : "bg-white border border-warm-200 text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              {logSubTab === "audit" && <AuditLogTab />}
+              {logSubTab === "email" && <NotificationLogsTab channel="email" title="Email Logs" />}
+              {logSubTab === "sms" && <NotificationLogsTab channel="sms" title="SMS Logs" />}
+              {logSubTab === "telegram" && <NotificationLogsTab channel="telegram" title="Telegram Logs" />}
+              {logSubTab === "queue" && <NotificationQueueTab />}
+            </div>
+          )}
           {activeTab === "settings" && settingsSection}
           </>}
         </div>
       </div>
       <AdminToastProvider />
-      {/* PWA refresh button — only visible when saved to home screen */}
-      {isStandalone && (
-        <button
-          onClick={handleRefresh}
-          className="fixed bottom-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white border border-gray-200 shadow-lg text-gray-500 active:bg-gray-100"
-          aria-label="Refresh"
-        >
-          <svg className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 }

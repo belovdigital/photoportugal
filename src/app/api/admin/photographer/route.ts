@@ -144,7 +144,7 @@ export async function PATCH(req: NextRequest) {
             }
             // Telegram notification to admins with phone for WhatsApp group addition
             import("@/lib/telegram").then(({ sendTelegram }) => {
-              sendTelegram(`✅ <b>Photographer Approved!</b>\n\n<b>Name:</b> ${photographer.name}\n<b>Phone:</b> ${photographerPhone?.phone || "not set"}\n\n👉 Add to WhatsApp group`);
+              sendTelegram(`✅ <b>Photographer Approved!</b>\n\n<b>Name:</b> ${photographer.name}\n<b>Phone:</b> ${photographerPhone?.phone || "not set"}\n\n👉 Add to WhatsApp group`, "photographers");
             }).catch((err) => console.error("[admin] telegram approval error:", err));
           } catch (smsErr) {
             console.error("[admin] approval whatsapp/sms error:", smsErr);

@@ -40,10 +40,11 @@ async function getPhotographer(slug: string, isAdmin = false) {
       review_count: number;
       session_count: number;
       last_seen_at: string | null;
+      avg_response_minutes: number | null;
     }>(
       `SELECT p.id, p.slug, u.name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               p.experience_years, p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding, p.is_approved, p.plan,
-              p.rating, p.review_count, p.session_count, u.last_seen_at
+              p.rating, p.review_count, p.session_count, u.last_seen_at, p.avg_response_minutes
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.slug = $1`,
@@ -452,10 +453,12 @@ export default async function PhotographerProfilePage({
                   <><span>{tc("yrsExperience", { years: photographer.experience_years })}</span><span className="text-gray-300">·</span></>
                 )}
                 {photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "" && (
-                  <><span>{photographer.languages.join(", ")}</span><span className="text-gray-300">·</span></>
+                  <span>{photographer.languages.join(", ")}</span>
                 )}
-                <ResponseTimeBadge />
               </p>
+              <div className="mt-1.5 hidden sm:block">
+                <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
+              </div>
 
               {/* Specialties — separated */}
               {photographer.shoot_types && photographer.shoot_types.length > 0 && (
@@ -476,6 +479,10 @@ export default async function PhotographerProfilePage({
                 <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} />
               </div>
             )}
+            {/* Response time — mobile only, after actions */}
+            <div className="sm:hidden">
+              <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
+            </div>
           </div>
         </div>
       </div>

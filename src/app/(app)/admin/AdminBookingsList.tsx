@@ -27,6 +27,10 @@ export interface AdminBooking {
   delivery_accepted: boolean | null;
   location_detail: string | null;
   client_country: string | null;
+  client_phone: string | null;
+  client_email: string | null;
+  photographer_phone: string | null;
+  photographer_email: string | null;
 }
 
 const TIME_LABELS: Record<string, string> = {
@@ -82,7 +86,9 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const statuses = ["all", ...Array.from(new Set(bookings.map((b) => b.status)))];
+  const statusOrder = ["all", "inquiry", "pending", "confirmed", "completed", "delivered", "cancelled"];
+  const existingStatuses = new Set(bookings.map((b) => b.status));
+  const statuses = statusOrder.filter((s) => s === "all" || existingStatuses.has(s));
 
   return (
     <div className="space-y-3">
@@ -257,6 +263,26 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                         <p className="mt-1 text-sm text-gray-700">{codeToFlag(b.client_country)} {new Intl.DisplayNames(["en"], { type: "region" }).of(b.client_country)}</p>
                       </div>
                     )}
+                  </div>
+
+                  {/* Contact info */}
+                  <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+                    <div>
+                      <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Client Phone</label>
+                      <p className="mt-0.5 text-sm text-gray-700">{b.client_phone ? <a href={`tel:${b.client_phone}`} className="text-primary-600 hover:underline">{b.client_phone}</a> : <span className="text-gray-300">&mdash;</span>}</p>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Client Email</label>
+                      <p className="mt-0.5 text-sm text-gray-700 truncate">{b.client_email ? <a href={`mailto:${b.client_email}`} className="text-primary-600 hover:underline">{b.client_email}</a> : <span className="text-gray-300">&mdash;</span>}</p>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Photographer Phone</label>
+                      <p className="mt-0.5 text-sm text-gray-700">{b.photographer_phone ? <a href={`tel:${b.photographer_phone}`} className="text-primary-600 hover:underline">{b.photographer_phone}</a> : <span className="text-gray-300">&mdash;</span>}</p>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Photographer Email</label>
+                      <p className="mt-0.5 text-sm text-gray-700 truncate">{b.photographer_email ? <a href={`mailto:${b.photographer_email}`} className="text-primary-600 hover:underline">{b.photographer_email}</a> : <span className="text-gray-300">&mdash;</span>}</p>
+                    </div>
                   </div>
 
                   {/* Client message */}

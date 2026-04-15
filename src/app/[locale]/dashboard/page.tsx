@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { RevisionChecklist } from "@/components/dashboard/RevisionChecklist";
 
 export const dynamic = "force-dynamic";
 
@@ -115,11 +116,11 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     id: string; rating: number; review_count: number; session_count: number; plan: string; slug: string; is_approved: boolean;
     avatar_url: string | null; cover_url: string | null; bio: string | null;
     stripe_account_id: string | null; stripe_onboarding_complete: boolean;
-    phone: string | null; created_at: string;
+    phone: string | null; created_at: string; revision_status: string | null;
   }>(
     `SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved,
             u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete,
-            u.phone, pp.created_at
+            u.phone, pp.created_at, pp.revision_status
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      WHERE pp.user_id = $1`,
@@ -189,8 +190,15 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
         <OnboardingChecklist role="photographer" checks={onboardingChecks} userId={userId} createdAt={profile.created_at} isApproved={profile.is_approved} />
       </div>
 
-      {/* Approval notice — only show when all checklist steps are complete */}
-      {!profile.is_approved && allStepsComplete && (
+      {/* Revision checklist — show when revisions exist */}
+      {profile.revision_status && (
+        <div className="mt-4">
+          <RevisionChecklist />
+        </div>
+      )}
+
+      {/* Approval notice — only show when all checklist steps are complete and no revisions */}
+      {!profile.is_approved && allStepsComplete && !profile.revision_status && (
         <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
           <div className="flex items-start gap-3">
             <svg className="mt-0.5 h-5 w-5 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
