@@ -181,6 +181,16 @@ export async function POST(req: NextRequest) {
       ]);
     } catch {}
 
+    // Telegram notification to Messages topic
+    try {
+      const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name || "Unknown";
+      const recipientId = userId === booking.client_id ? booking.photographer_user_id : booking.client_id;
+      const recipientName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [recipientId]))?.name || "Unknown";
+      const msgPreview = text?.trim() || (media_url ? "[photo]" : "");
+      import("@/lib/telegram").then(({ sendTelegram }) => {
+        sendTelegram(`💬 <b>${senderName}</b> → ${recipientName}\n\n${msgPreview.replace(/</g, "&lt;").replace(/>/g, "&gt;")}`, "messages");
+      }).catch(() => {});
+    } catch {}
 
     // Send email notification to the other person (if they have it enabled, throttled to 1 per 15 min)
     try {

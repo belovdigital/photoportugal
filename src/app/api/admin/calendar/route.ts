@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     has_delivery: boolean;
   }>(
     `SELECT b.id,
-            (b.updated_at + COALESCE(p.delivery_days, 7) * INTERVAL '1 day')::date::text as due_date,
+            (b.shoot_date + COALESCE(p.delivery_days, 7) * INTERVAL '1 day')::date::text as due_date,
             b.status,
             cu.name as client_name, pu.name as photographer_name,
             (b.delivery_token IS NOT NULL) as has_delivery
@@ -64,8 +64,8 @@ export async function GET(req: NextRequest) {
      LEFT JOIN packages p ON p.id = b.package_id
      WHERE b.status = 'completed'
        AND b.delivery_token IS NULL
-       AND (b.updated_at + COALESCE(p.delivery_days, 7) * INTERVAL '1 day')::date >= $1::date
-       AND (b.updated_at + COALESCE(p.delivery_days, 7) * INTERVAL '1 day')::date <= $2::date
+       AND (b.shoot_date + COALESCE(p.delivery_days, 7) * INTERVAL '1 day')::date >= $1::date
+       AND (b.shoot_date + COALESCE(p.delivery_days, 7) * INTERVAL '1 day')::date <= $2::date
      ORDER BY due_date`,
     [from, to]
   );

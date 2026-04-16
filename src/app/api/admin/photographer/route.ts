@@ -180,9 +180,12 @@ export async function PATCH(req: NextRequest) {
     );
     if (slugRow) revalidatePath(`/photographers/${slugRow.slug}`);
 
-    // Audit log
+    // Audit log — use real name instead of slug
+    const nameRow = await queryOne<{ name: string }>(
+      "SELECT u.name FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.id = $1", [id]
+    );
     const changedFields = Object.entries(updates).filter(([k]) => k !== "is_deactivated").map(([k, v]) => `${k}=${v}`).join(", ");
-    await logAudit(admin.email, "update", "photographer", id, slugRow?.slug, changedFields);
+    await logAudit(admin.email, "update", "photographer", id, nameRow?.name || slugRow?.slug || id, changedFields);
 
     // Sync to Intercom (approval/deactivation status)
     if ("is_approved" in updates || "is_deactivated" in updates) {

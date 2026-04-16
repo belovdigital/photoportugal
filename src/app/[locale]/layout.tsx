@@ -8,6 +8,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
+import { ExitIntentPopup } from "@/components/ui/ExitIntentPopup";
 import { VisitorTracker } from "@/components/ui/VisitorTracker";
 import { LazyIntercom } from "@/components/ui/LazyIntercom";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
@@ -46,6 +47,7 @@ export default async function LocaleLayout({
         <CookieConsent />
         <VisitorTracker />
         <GoogleAnalytics />
+        <ExitIntentPopup />
         <LazyIntercom />
       </SessionProvider>
     </NextIntlClientProvider>

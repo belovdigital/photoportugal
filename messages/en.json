@@ -133,6 +133,8 @@
     "accountMenu": "Account menu",
     "closeMenu": "Close menu",
     "openMenu": "Open menu",
+    "getMatched": "Get Matched for Free",
+    "contactUs": "Contact Us",
     "shootTypes": {
       "couples": "Couples",
       "family": "Family",
@@ -1415,7 +1417,10 @@
     "ctaReadyTitle": "Ready to Book Your {name} Photoshoot?",
     "ctaReadySubtitle": "Browse verified photographers, compare portfolios and pricing, and book your perfect {name} session in minutes.",
     "findPhotographers": "Find {name} Photographers",
-    "howItWorks": "How It Works"
+    "howItWorks": "How It Works",
+    "photographersTitle": "{name} Photographers in Portugal",
+    "photographersSubtitle": "Hand-picked professionals specializing in {name} photography",
+    "viewAllPhotographers": "View All {name} Photographers"
   },
   "blogDetail": {
     "home": "Home",
@@ -1425,7 +1430,21 @@
     "findAPhotographer": "Find a Photographer",
     "moreFromBlog": "More from the Blog",
     "relatedLocations": "Related Locations",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "blogCta": {
+      "title": "Ready to capture your Portugal trip?",
+      "titleLocation": "Want professional photos in {location}?",
+      "description": "Browse portfolios, compare packages, and book a verified local photographer in minutes.",
+      "browsePhotographers": "Browse Photographers",
+      "getMatched": "Get Matched for Free"
+    }
+  },
+  "exitIntent": {
+    "title": "Don't leave without your photos!",
+    "description": "Tell us your dates and preferences — our team will hand-pick 2-3 photographers perfect for your trip. Takes 2 minutes.",
+    "matchMe": "Get Matched with a Photographer",
+    "browse": "Browse Photographers",
+    "free": "Free concierge service — no commitment"
   },
   "photographersMeta": {
     "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve | Photo Portugal",

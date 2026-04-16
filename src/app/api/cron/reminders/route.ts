@@ -487,7 +487,7 @@ export async function GET(req: NextRequest) {
        LEFT JOIN packages p ON p.id = b.package_id
        WHERE b.status = 'completed'
          AND b.delivery_token IS NULL
-         AND b.updated_at < NOW() - (COALESCE(p.delivery_days, 7) * INTERVAL '1 day')
+         AND b.shoot_date < NOW() - (COALESCE(p.delivery_days, 7) * INTERVAL '1 day')
          AND b.delivery_reminder_sent = FALSE`
     );
 

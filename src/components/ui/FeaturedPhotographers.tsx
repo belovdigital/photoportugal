@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { normalizeName } from "@/lib/format-name";
+import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 
 interface FeaturedPhotographer {
   slug: string;
@@ -16,6 +17,8 @@ interface FeaturedPhotographer {
   review_count: number;
   min_price: number | null;
   locations: string;
+  last_active_at: string | null;
+  avg_response_minutes: number | null;
 }
 
 export async function FeaturedPhotographers() {
@@ -27,6 +30,7 @@ export async function FeaturedPhotographers() {
               u.avatar_url, pp.cover_url, pp.cover_position_y, pp.is_verified,
               pp.rating, pp.review_count,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,
+              u.last_seen_at as last_active_at, pp.avg_response_minutes,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations
        FROM photographer_profiles pp
@@ -93,6 +97,7 @@ export async function FeaturedPhotographers() {
                 <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
                   {normalizeName(p.name)}
                 </h3>
+                <ActiveBadge lastSeenAt={p.last_active_at} />
                 {p.is_verified && (
                   <svg className="h-4 w-4 shrink-0 text-accent-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -103,6 +108,7 @@ export async function FeaturedPhotographers() {
               {p.tagline && (
                 <p className="mt-0.5 truncate text-xs text-gray-500">{p.tagline}</p>
               )}
+              <ResponseTimeBadge avgMinutes={p.avg_response_minutes} compact />
 
               {/* Rating — only show if has reviews */}
               {p.review_count > 0 && (

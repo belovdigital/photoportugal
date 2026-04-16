@@ -23,6 +23,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { queryOne, query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
+import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { LocationCard } from "@/components/ui/LocationCard";
 
 export function generateStaticParams() {
@@ -111,6 +112,7 @@ export default async function LocationPage({
     cover_url: string | null; tagline: string | null;
     rating: number; review_count: number; starting_price: number | null;
     languages: string[]; location_names: string[];
+    last_active_at: string | null; avg_response_minutes: number | null;
   }[] = [];
   try {
     topPhotographers = await query<{
@@ -118,9 +120,11 @@ export default async function LocationPage({
       cover_url: string | null; tagline: string | null;
       rating: number; review_count: number; starting_price: number | null;
       languages: string[]; location_names: string[];
+      last_active_at: string | null; avg_response_minutes: number | null;
     }>(
       `SELECT pp.id, pp.slug, u.name, u.avatar_url,
               pp.cover_url, pp.tagline, pp.rating, pp.review_count, pp.languages,
+              u.last_seen_at as last_active_at, pp.avg_response_minutes,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price,
               ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
        FROM photographer_locations pl
@@ -430,9 +434,12 @@ export default async function LocationPage({
                   </div>
                   {/* Info */}
                   <div className="px-4 pb-4 pt-7">
-                    <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-                      {sp.name}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
+                        {sp.name}
+                      </h3>
+                      <ActiveBadge lastSeenAt={sp.last_active_at} />
+                    </div>
                     {sp.tagline && (
                       <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{sp.tagline}</p>
                     )}
@@ -447,6 +454,7 @@ export default async function LocationPage({
                       <span className="text-gray-400">({sp.review_count})</span>
                     </div>
                     ) : null}
+                    <ResponseTimeBadge avgMinutes={sp.avg_response_minutes} compact />
                     {sp.location_names.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {sp.location_names.map((loc) => (

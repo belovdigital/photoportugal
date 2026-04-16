@@ -543,7 +543,7 @@ export function AdminDashboard({
     };
   }, [pullDistance]);
 
-  const [logSubTab, setLogSubTab] = useState<LogSubTab>("audit");
+  const [logSubTab, setLogSubTab] = useState<LogSubTab>("sms");
 
   // Map old hash names to new format
   const LEGACY_HASH_MAP: Record<string, { tab: TabKey; logSub?: LogSubTab }> = {
@@ -847,11 +847,11 @@ export function AdminDashboard({
             <div>
               <div className="flex gap-1 overflow-x-auto mb-4 pb-1">
                 {([
-                  { key: "audit" as LogSubTab, label: "Audit" },
-                  { key: "email" as LogSubTab, label: "Email" },
                   { key: "sms" as LogSubTab, label: "SMS" },
+                  { key: "email" as LogSubTab, label: "Email" },
                   { key: "telegram" as LogSubTab, label: "Telegram" },
                   { key: "queue" as LogSubTab, label: "Queue" },
+                  { key: "audit" as LogSubTab, label: "System" },
                 ]).map(t => (
                   <button
                     key={t.key}

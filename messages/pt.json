@@ -127,6 +127,8 @@
     "accountMenu": "Menu da conta",
     "closeMenu": "Fechar menu",
     "openMenu": "Abrir menu",
+    "getMatched": "Encontrar Fotógrafo Ideal",
+    "contactUs": "Contacte-nos",
     "shootTypes": {
       "couples": "Casais",
       "family": "Família",
@@ -1412,7 +1414,10 @@
     "ctaReadyTitle": "Pronto para Reservar a Sua Sessão de {name}?",
     "ctaReadySubtitle": "Explore fotógrafos verificados, compare portfólios e preços, e reserve a sua sessão de {name} perfeita em minutos.",
     "findPhotographers": "Encontrar Fotógrafos de {name}",
-    "howItWorks": "Como Funciona"
+    "howItWorks": "Como Funciona",
+    "photographersTitle": "Fotógrafos de {name} em Portugal",
+    "photographersSubtitle": "Profissionais selecionados especializados em fotografia de {name}",
+    "viewAllPhotographers": "Ver Todos os Fotógrafos de {name}"
   },
   "blogDetail": {
     "home": "Início",
@@ -1422,7 +1427,21 @@
     "findAPhotographer": "Encontrar um Fotógrafo",
     "moreFromBlog": "Mais do Blogue",
     "relatedLocations": "Localizações Relacionadas",
-    "breadcrumb": "Navegação"
+    "breadcrumb": "Navegação",
+    "blogCta": {
+      "title": "Pronto para capturar a sua viagem a Portugal?",
+      "titleLocation": "Quer fotos profissionais em {location}?",
+      "description": "Explore portfólios, compare pacotes e reserve um fotógrafo local verificado em minutos.",
+      "browsePhotographers": "Ver Fotógrafos",
+      "getMatched": "Encontre o Fotógrafo Ideal"
+    }
+  },
+  "exitIntent": {
+    "title": "Não vá embora sem as suas fotos!",
+    "description": "Diga-nos as suas datas e preferências — a nossa equipa escolherá 2-3 fotógrafos perfeitos para a sua viagem. Demora 2 minutos.",
+    "matchMe": "Encontrar o Fotógrafo Ideal",
+    "browse": "Ver Fotógrafos",
+    "free": "Serviço de concierge gratuito — sem compromisso"
   },
   "photographersMeta": {
     "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve | Photo Portugal",

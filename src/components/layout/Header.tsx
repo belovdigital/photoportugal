@@ -590,17 +590,11 @@ export function Header() {
           <div className="border-t border-warm-200 bg-white px-4 py-4 lg:hidden">
             <div className="flex flex-col gap-1">
               <MobileNavLink href="/photographers" label={t("findPhotographers")} onClick={() => setMobileOpen(false)} />
+              <MobileNavLink href="/find-photographer" label={t("getMatched")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/locations" label={t("allDestinations")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/how-it-works" label={t("howItWorks")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/faq" label={t("faq")} onClick={() => setMobileOpen(false)} />
-              {!isLoading && !user && (
-                <>
-                  <hr className="my-2 border-warm-200" />
-                  <p className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">{t("forPhotographers")}</p>
-                  <MobileNavLink href="/for-photographers/join" label={t("joinAsPhotographer")} onClick={() => setMobileOpen(false)} />
-                  <MobileNavLink href="/for-photographers/pricing" label={t("pricingPlans")} onClick={() => setMobileOpen(false)} />
-                </>
-              )}
+              <MobileNavLink href="/contact" label={t("contactUs")} onClick={() => setMobileOpen(false)} />
               <hr className="my-2 border-warm-200" />
               {user ? (
                 <>
@@ -611,8 +605,6 @@ export function Header() {
                     {t("signOut")}
                   </button>
                 </>
-              ) : !isLoading ? (
-                <MobileDashLink href="/auth/signup" label={t("signUp")} onClick={() => setMobileOpen(false)} />
               ) : null}
               {!isPhotographer && (
                 <Link href="/choose-booking-type" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white">

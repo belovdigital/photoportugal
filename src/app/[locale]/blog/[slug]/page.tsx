@@ -646,6 +646,35 @@ export default async function BlogPostPage({ params }: PageProps) {
             {renderContent(post.content)}
           </div>
 
+          {/* Inline CTA */}
+          <div className="mt-10 rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50/50 to-warm-50 p-6 sm:p-8 text-center">
+            <h3 className="font-display text-xl font-bold text-gray-900 sm:text-2xl">
+              {mentionedLocations.length > 0
+                ? t("blogCta.titleLocation", { location: mentionedLocations[0].name })
+                : t("blogCta.title")}
+            </h3>
+            <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
+              {t("blogCta.description")}
+            </p>
+            <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                href={mentionedLocations.length > 0 ? `/photographers?location=${mentionedLocations[0].slug}` : "/photographers"}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-primary-700"
+              >
+                {t("blogCta.browsePhotographers")}
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+              <Link
+                href="/find-photographer"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition hover:border-primary-300 hover:shadow-md"
+              >
+                {t("blogCta.getMatched")}
+              </Link>
+            </div>
+          </div>
+
           {/* Related Locations — internal links based on location mentions */}
           {mentionedLocations.length > 0 && (
             <div className="mt-12 border-t border-warm-200 pt-8">

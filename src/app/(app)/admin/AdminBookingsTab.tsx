@@ -100,7 +100,7 @@ export function AdminInquiriesList({ inquiries: initialInquiries }: { inquiries:
               )}
               <button
                 onClick={() => setExpandedId(isOpen ? null : inq.id)}
-                className="w-full px-3 py-3 sm:px-4 text-left"
+                className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-left"
               >
                 {/* Row 1: status + time */}
                 <div className="flex items-center justify-between mb-1">
@@ -139,8 +139,8 @@ export function AdminInquiriesList({ inquiries: initialInquiries }: { inquiries:
 
                 {/* Message preview (collapsed) */}
                 {!isOpen && inq.first_message && (
-                  <p className="mt-1.5 text-xs text-gray-400 line-clamp-1 italic">
-                    &ldquo;{inq.first_message}&rdquo;
+                  <p className="mt-1 text-xs text-gray-400 line-clamp-1 italic truncate">
+                    &ldquo;{inq.first_message.slice(0, 100)}&rdquo;
                   </p>
                 )}
               </button>
