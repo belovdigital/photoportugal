@@ -1026,28 +1026,54 @@ function GoogleAdsSection() {
                 )}
               </div>
 
-              {/* Daily chart */}
-              {ga.daily.length > 1 && (
-                <div className="rounded-xl border border-warm-200 bg-white p-4">
-                  <p className="text-xs font-semibold text-gray-500 mb-2">Daily Spend & Clicks (14d)</p>
-                  <div className="flex items-end gap-1 h-24">
-                    {ga.daily.map((d) => {
-                      const maxClicks = Math.max(...ga.daily.map(v => v.clicks), 1);
-                      return (
-                        <div key={d.date} className="flex-1 flex flex-col items-center gap-0.5" title={`${d.date}: ${d.clicks} clicks, €${d.cost.toFixed(2)}`}>
-                          <span className="text-[8px] text-gray-400">{d.clicks}</span>
-                          <div className="w-full rounded-sm bg-blue-500 min-h-[2px]" style={{ height: `${(d.clicks / maxClicks) * 100}%` }} />
-                          <span className="text-[8px] text-gray-400">€{d.cost.toFixed(0)}</span>
-                        </div>
-                      );
-                    })}
+              {/* Daily charts — Clicks and Spend separately */}
+              {ga.daily.length > 1 && (() => {
+                const maxClicks = Math.max(...ga.daily.map(v => v.clicks), 1);
+                const maxCost = Math.max(...ga.daily.map(v => v.cost), 1);
+                return (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {/* Clicks chart */}
+                    <div className="rounded-xl border border-warm-200 bg-white p-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">Daily Clicks (14d)</p>
+                      <div className="flex items-end gap-1" style={{ height: 140 }}>
+                        {ga.daily.map((d) => (
+                          <div key={d.date} className="flex-1 flex flex-col items-center gap-1" title={`${d.date}: ${d.clicks} clicks`}>
+                            <span className="text-[11px] font-semibold text-gray-700">{d.clicks}</span>
+                            <div className="w-full rounded-t bg-blue-500" style={{ height: `${Math.max((d.clicks / maxClicks) * 100, 4)}%` }} />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex justify-between mt-2 border-t border-warm-100 pt-1.5">
+                        {ga.daily.map((d, i) => (
+                          <span key={d.date} className={`text-[10px] text-gray-400 flex-1 text-center ${i > 0 && i < ga.daily.length - 1 && ga.daily.length > 10 && i % 2 !== 0 ? "hidden sm:block" : ""}`}>
+                            {d.date.slice(5)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Spend chart */}
+                    <div className="rounded-xl border border-warm-200 bg-white p-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-3">Daily Spend (14d)</p>
+                      <div className="flex items-end gap-1" style={{ height: 140 }}>
+                        {ga.daily.map((d) => (
+                          <div key={d.date} className="flex-1 flex flex-col items-center gap-1" title={`${d.date}: €${d.cost.toFixed(2)}`}>
+                            <span className="text-[11px] font-semibold text-gray-700">€{d.cost.toFixed(0)}</span>
+                            <div className="w-full rounded-t bg-emerald-500" style={{ height: `${Math.max((d.cost / maxCost) * 100, 4)}%` }} />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex justify-between mt-2 border-t border-warm-100 pt-1.5">
+                        {ga.daily.map((d, i) => (
+                          <span key={d.date} className={`text-[10px] text-gray-400 flex-1 text-center ${i > 0 && i < ga.daily.length - 1 && ga.daily.length > 10 && i % 2 !== 0 ? "hidden sm:block" : ""}`}>
+                            {d.date.slice(5)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[9px] text-gray-400">{ga.daily[0]?.date?.slice(5)}</span>
-                    <span className="text-[9px] text-gray-400">{ga.daily[ga.daily.length - 1]?.date?.slice(5)}</span>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Ad Groups */}
               {ga.adGroups.length > 0 && (
