@@ -1035,18 +1035,27 @@ function GoogleAdsSection() {
                     {/* Clicks chart */}
                     <div className="rounded-xl border border-warm-200 bg-white p-4">
                       <p className="text-sm font-semibold text-gray-700 mb-3">Daily Clicks (14d)</p>
-                      <div className="flex items-end gap-1" style={{ height: 140 }}>
+                      {/* Value labels */}
+                      <div className="flex gap-1">
                         {ga.daily.map((d) => (
-                          <div key={d.date} className="flex-1 flex flex-col items-center gap-1" title={`${d.date}: ${d.clicks} clicks`}>
-                            <span className="text-[11px] font-semibold text-gray-700">{d.clicks}</span>
-                            <div className="w-full rounded-t bg-blue-500" style={{ height: `${Math.max((d.clicks / maxClicks) * 100, 4)}%` }} />
+                          <div key={d.date} className="flex-1 text-center">
+                            <span className="text-[11px] font-bold text-gray-800">{d.clicks}</span>
                           </div>
                         ))}
                       </div>
-                      <div className="flex justify-between mt-2 border-t border-warm-100 pt-1.5">
-                        {ga.daily.map((d, i) => (
-                          <span key={d.date} className={`text-[10px] text-gray-400 flex-1 text-center ${i > 0 && i < ga.daily.length - 1 && ga.daily.length > 10 && i % 2 !== 0 ? "hidden sm:block" : ""}`}>
-                            {d.date.slice(5)}
+                      {/* Bars */}
+                      <div className="flex items-end gap-1 mt-1" style={{ height: 120 }}>
+                        {ga.daily.map((d) => (
+                          <div key={d.date} className="flex-1" title={`${d.date}: ${d.clicks} clicks`}>
+                            <div className="w-full rounded-t bg-blue-500 transition-all" style={{ height: Math.max((d.clicks / maxClicks) * 120, 6) }} />
+                          </div>
+                        ))}
+                      </div>
+                      {/* Date labels */}
+                      <div className="flex gap-1 mt-2 border-t border-warm-100 pt-1.5">
+                        {ga.daily.map((d) => (
+                          <span key={d.date} className="flex-1 text-center text-[9px] text-gray-400">
+                            {d.date.slice(8)}/{d.date.slice(5, 7)}
                           </span>
                         ))}
                       </div>
@@ -1055,18 +1064,27 @@ function GoogleAdsSection() {
                     {/* Spend chart */}
                     <div className="rounded-xl border border-warm-200 bg-white p-4">
                       <p className="text-sm font-semibold text-gray-700 mb-3">Daily Spend (14d)</p>
-                      <div className="flex items-end gap-1" style={{ height: 140 }}>
+                      {/* Value labels */}
+                      <div className="flex gap-1">
                         {ga.daily.map((d) => (
-                          <div key={d.date} className="flex-1 flex flex-col items-center gap-1" title={`${d.date}: €${d.cost.toFixed(2)}`}>
-                            <span className="text-[11px] font-semibold text-gray-700">€{d.cost.toFixed(0)}</span>
-                            <div className="w-full rounded-t bg-emerald-500" style={{ height: `${Math.max((d.cost / maxCost) * 100, 4)}%` }} />
+                          <div key={d.date} className="flex-1 text-center">
+                            <span className="text-[11px] font-bold text-gray-800">€{d.cost.toFixed(0)}</span>
                           </div>
                         ))}
                       </div>
-                      <div className="flex justify-between mt-2 border-t border-warm-100 pt-1.5">
-                        {ga.daily.map((d, i) => (
-                          <span key={d.date} className={`text-[10px] text-gray-400 flex-1 text-center ${i > 0 && i < ga.daily.length - 1 && ga.daily.length > 10 && i % 2 !== 0 ? "hidden sm:block" : ""}`}>
-                            {d.date.slice(5)}
+                      {/* Bars */}
+                      <div className="flex items-end gap-1 mt-1" style={{ height: 120 }}>
+                        {ga.daily.map((d) => (
+                          <div key={d.date} className="flex-1" title={`${d.date}: €${d.cost.toFixed(2)}`}>
+                            <div className="w-full rounded-t bg-emerald-500 transition-all" style={{ height: Math.max((d.cost / maxCost) * 120, 6) }} />
+                          </div>
+                        ))}
+                      </div>
+                      {/* Date labels */}
+                      <div className="flex gap-1 mt-2 border-t border-warm-100 pt-1.5">
+                        {ga.daily.map((d) => (
+                          <span key={d.date} className="flex-1 text-center text-[9px] text-gray-400">
+                            {d.date.slice(8)}/{d.date.slice(5, 7)}
                           </span>
                         ))}
                       </div>
