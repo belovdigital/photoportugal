@@ -19,22 +19,22 @@ export function ExitIntentPopup() {
   }, []);
 
   useEffect(() => {
-    // Desktop: mouse leaves viewport top
+    // Only show to unauthenticated guests — not photographers, admins, or logged-in clients
+    if (session) return;
+
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 0) trigger();
     };
 
-    // Mobile: back/scroll-up pattern — use beforeunload as proxy
-    // Actually, on mobile exit intent doesn't work well. Skip it.
     const isMobile = window.innerWidth < 768;
-    if (!isMobile && userRole !== "photographer" && userRole !== "admin") {
+    if (!isMobile) {
       document.addEventListener("mouseout", handleMouseLeave);
     }
 
     return () => {
       document.removeEventListener("mouseout", handleMouseLeave);
     };
-  }, [trigger]);
+  }, [trigger, session]);
 
   if (!show) return null;
 
