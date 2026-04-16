@@ -1192,50 +1192,6 @@ function GoogleAdsSection() {
             </>
           )}
 
-          {/* Recent Ad Visitors */}
-          {stats.recentVisitors && stats.recentVisitors.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-2">Recent Ad Visitors (on-site journeys)</p>
-              <div className="space-y-2">
-                {stats.recentVisitors.map((v, i) => {
-                  const depth = v.pages.length;
-                  const isEngaged = depth >= 3;
-                  const shortPages = v.pages.map(p => p.replace(/^\/[a-z]{2}\//, "/").replace(/^\//, "") || "home");
-                  return (
-                    <div key={i} className={`rounded-xl border bg-white p-3 transition-shadow hover:shadow-sm ${isEngaged ? "border-blue-200" : "border-warm-200"}`}
-                      style={!isEngaged ? {} : { borderLeftWidth: 3, borderLeftColor: "#3b82f6" }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                            isEngaged ? "bg-blue-50 text-blue-600" : "bg-warm-100 text-gray-500"
-                          }`}>
-                            {isEngaged ? `👀 ${depth} pages` : "↩ Bounced"}
-                          </span>
-                          <span className="text-sm font-semibold text-gray-900">🔍 {v.keyword}</span>
-                        </div>
-                        <span className="text-[10px] text-gray-400 shrink-0">{timeAgo(v.time)}</span>
-                      </div>
-                      <div className="mt-2 flex items-center gap-1 flex-wrap">
-                        {shortPages.slice(0, 6).map((p, j) => (
-                          <span key={j} className="inline-flex items-center">
-                            {j > 0 && <span className="text-gray-300 text-[10px] mx-0.5">→</span>}
-                            <span className={`rounded-md px-1.5 py-0.5 text-[10px] ${
-                              j === 0 ? "bg-primary-50 text-primary-700 font-medium" :
-                              p.includes("book") ? "bg-green-50 text-green-700 font-medium" :
-                              p.includes("photographer") ? "bg-blue-50 text-blue-700" :
-                              "bg-warm-50 text-gray-600"
-                            }`}>{p}</span>
-                          </span>
-                        ))}
-                        {shortPages.length > 6 && <span className="text-[10px] text-gray-400 ml-1">+{shortPages.length - 6} more</span>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
