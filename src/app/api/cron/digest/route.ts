@@ -191,8 +191,11 @@ export async function GET(req: NextRequest) {
     try {
       const { sendTelegram } = await import("@/lib/telegram");
       const lines = [`📊 <b>Daily Digest</b>\n`];
-      lines.push(`📅 Bookings: ${bookings.length}`);
-      lines.push(`💬 Messages: ${messageCount}`);
+      const confirmedBookings = bookings.filter(b => b.status !== 'inquiry' && b.status !== 'pending');
+      const inquiries = bookings.filter(b => b.status === 'inquiry' || b.status === 'pending');
+      if (confirmedBookings.length > 0) lines.push(`📅 Bookings: ${confirmedBookings.length}`);
+      lines.push(`💬 Inquiries: ${inquiries.length}`);
+      lines.push(`✉️ Messages: ${messageCount}`);
       lines.push(`👤 New users: ${users.length}`);
       lines.push(`👁 Visitors: ${visitorCount}`);
       if (grossRevenue > 0) {

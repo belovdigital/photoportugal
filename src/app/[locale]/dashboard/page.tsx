@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { RevisionChecklist } from "@/components/dashboard/RevisionChecklist";
+import { AddOnsSection } from "@/app/[locale]/dashboard/subscriptions/AddOnsSection";
 
 export const dynamic = "force-dynamic";
 
@@ -117,10 +118,12 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     avatar_url: string | null; cover_url: string | null; bio: string | null;
     stripe_account_id: string | null; stripe_onboarding_complete: boolean;
     phone: string | null; created_at: string; revision_status: string | null;
+    is_verified: boolean; is_featured: boolean; phone_verified: boolean; phone_number: string | null;
   }>(
     `SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved,
             u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete,
-            u.phone, pp.created_at, pp.revision_status
+            u.phone, pp.created_at, pp.revision_status,
+            pp.is_verified, pp.is_featured, pp.phone_verified, pp.phone_number
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      WHERE pp.user_id = $1`,
@@ -264,6 +267,30 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
           </Link>
         )}
       </div>
+
+      {/* Add-ons promo — show when not both active */}
+      {(!profile.is_verified || !profile.is_featured) && profile.is_approved && (
+        <div className="mt-6 rounded-xl border border-warm-200 bg-white p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-yellow-100">
+              <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">{t("boostVisibility")}</h3>
+              <p className="text-xs text-gray-500">{t("boostVisibilityDesc")}</p>
+            </div>
+          </div>
+          <AddOnsSection
+            isVerified={profile.is_verified}
+            isFeatured={profile.is_featured}
+            phoneVerified={profile.phone_verified}
+            phoneNumber={profile.phone_number}
+            compact
+          />
+        </div>
+      )}
 
       <div className="mt-8 text-center">
         <Link href="/support" className="text-sm text-gray-400 hover:text-primary-600">

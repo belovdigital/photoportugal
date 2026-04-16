@@ -85,7 +85,7 @@ export default async function ShootTypePage({
        AND $1 = ANY(pp.shoot_types)
      ORDER BY pp.is_featured DESC, pp.review_count DESC, RANDOM()
      LIMIT 6`,
-    [shootType.slug]
+    [shootType.name]
   ).catch(() => []);
 
   const faqJsonLd = {
