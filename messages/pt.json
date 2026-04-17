@@ -1795,6 +1795,27 @@
     "profilePendingDescriptionComplete": "O seu perfil está completo e foi enviado para revisão. A nossa equipa irá aprová-lo em breve e ficará visível para os clientes.",
     "profileApproved": "O seu perfil está ativo!",
     "profileApprovedDescription": "Os clientes já podem encontrá-lo e reservar sessões fotográficas. Mantenha o seu calendário atualizado.",
+    "actionNeeded": {
+      "title": "Ação necessária",
+      "respond": {
+        "title": "Responder a {name}",
+        "subtitle": "Nova consulta — responda em 24h"
+      },
+      "propose_date": {
+        "title": "Propor data para {name}",
+        "subtitle": "Cliente escolheu datas flexíveis — escolha uma"
+      },
+      "mark_done": {
+        "title": "Marcar sessão concluída — {name}",
+        "subtitle": "A data da sessão já passou"
+      },
+      "upload_delivery": {
+        "title": "Enviar entrega para {name}",
+        "subtitle": "Sessão concluída — entregue as fotos"
+      },
+      "unread": "{count} {count, plural, one {mensagem não lida} other {mensagens não lidas}}",
+      "unreadSubtitle": "Novas mensagens de clientes"
+    },
     "revisions": {
       "title": "Revisões de Perfil Necessárias",
       "description": "A nossa equipa analisou o seu perfil e encontrou alguns pontos que precisam de atenção. Por favor, resolva cada um abaixo.",

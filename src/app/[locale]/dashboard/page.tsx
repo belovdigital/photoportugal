@@ -5,7 +5,10 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { RevisionChecklist } from "@/components/dashboard/RevisionChecklist";
+import { ActionNeededWidget } from "@/components/dashboard/ActionNeededWidget";
 import { AddOnsSection } from "@/app/[locale]/dashboard/subscriptions/AddOnsSection";
+import { getPhotographerTasks } from "@/lib/photographer-tasks";
+import { getLocale } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -138,6 +141,9 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     );
   }
 
+  const locale = await getLocale();
+  const tasks = await getPhotographerTasks(profile.id, userId);
+
   const [pendingBookings, totalBookings, portfolioCount, packageCount, locationCount] = await Promise.all([
     queryOne<{ count: string }>(
       "SELECT COUNT(*) as count FROM bookings WHERE photographer_id = $1 AND status = 'pending'",
@@ -228,6 +234,13 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
               <p className="mt-1 text-sm text-primary-700">{t("profileApprovedDescription")}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Action needed */}
+      {tasks.length > 0 && (
+        <div className="mt-6">
+          <ActionNeededWidget tasks={tasks} locale={locale} />
         </div>
       )}
 

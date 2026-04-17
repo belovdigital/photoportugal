@@ -1798,6 +1798,27 @@
     "profilePendingDescriptionComplete": "Your profile is complete and has been submitted for review. Our team will approve it shortly and it will become visible to clients.",
     "profileApproved": "Your profile is live!",
     "profileApprovedDescription": "Clients can now find you and book photoshoots. Make sure your calendar is up to date.",
+    "actionNeeded": {
+      "title": "Action needed",
+      "respond": {
+        "title": "Respond to {name}",
+        "subtitle": "New inquiry — reply within 24h"
+      },
+      "propose_date": {
+        "title": "Propose a date for {name}",
+        "subtitle": "Client booked flexible dates — pick one"
+      },
+      "mark_done": {
+        "title": "Mark session done — {name}",
+        "subtitle": "Shoot date has passed"
+      },
+      "upload_delivery": {
+        "title": "Upload delivery for {name}",
+        "subtitle": "Session complete — deliver the photos"
+      },
+      "unread": "{count} unread {count, plural, one {message} other {messages}}",
+      "unreadSubtitle": "New messages from clients"
+    },
     "revisions": {
       "title": "Profile Revisions Required",
       "description": "Our team reviewed your profile and found a few items that need attention. Please resolve each one below.",
