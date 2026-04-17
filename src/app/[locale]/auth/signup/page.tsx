@@ -46,15 +46,17 @@ function SignUpForm() {
     setLoading(true);
 
     try {
+      const { getAllAttribution } = await import("@/lib/attribution");
+      const attribution = getAllAttribution();
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           first_name: firstName, last_name: lastName, email, password, role,
-          utm_source: typeof window !== "undefined" ? sessionStorage.getItem("utm_source") : null,
-          utm_medium: typeof window !== "undefined" ? sessionStorage.getItem("utm_medium") : null,
-          utm_campaign: typeof window !== "undefined" ? sessionStorage.getItem("utm_campaign") : null,
-          utm_term: typeof window !== "undefined" ? sessionStorage.getItem("utm_term") : null,
+          utm_source: attribution.utm_source,
+          utm_medium: attribution.utm_medium,
+          utm_campaign: attribution.utm_campaign,
+          utm_term: attribution.utm_term,
         }),
       });
 

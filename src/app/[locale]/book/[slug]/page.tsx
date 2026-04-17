@@ -125,6 +125,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
     setSubmitting(true);
     setError("");
 
+    const { getAllAttribution } = await import("@/lib/attribution");
+    const attribution = getAllAttribution();
     const res = await fetch("/api/bookings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -140,13 +142,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         group_size: parseInt(groupSize) || 2,
         occasion: occasion || null,
         message,
-        // UTM tracking for ads attribution
-        utm_source: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_source") || sessionStorage.getItem("utm_source")) : null,
-        utm_medium: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_medium") || sessionStorage.getItem("utm_medium")) : null,
-        utm_campaign: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_campaign") || sessionStorage.getItem("utm_campaign")) : null,
-        utm_term: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("utm_term") || sessionStorage.getItem("utm_term")) : null,
-        // Google Ads click ID for offline conversion tracking
-        gclid: typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("gclid") || sessionStorage.getItem("gclid")) : null,
+        ...attribution,
       }),
     });
 

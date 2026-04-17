@@ -62,18 +62,20 @@ export function VisitorTracker() {
       const effectiveSource = utmSource || (gclid ? "google" : null);
       const effectiveMedium = utmMedium || (gclid ? "cpc" : null);
 
-      // Persist UTMs for signup forms
+      // Persist UTMs for signup/booking forms — store in localStorage with 90-day attribution window
+      const persist = (key: string, value: string) => {
+        try {
+          sessionStorage.setItem(key, value);
+          localStorage.setItem(`pp_${key}`, JSON.stringify({ v: value, ts: Date.now() }));
+        } catch {}
+      };
       if (effectiveSource) {
-        sessionStorage.setItem("utm_source", effectiveSource);
-        if (effectiveMedium) sessionStorage.setItem("utm_medium", effectiveMedium);
-        if (utmCampaign) sessionStorage.setItem("utm_campaign", utmCampaign);
-        if (utmTerm) sessionStorage.setItem("utm_term", utmTerm);
+        persist("utm_source", effectiveSource);
+        if (effectiveMedium) persist("utm_medium", effectiveMedium);
+        if (utmCampaign) persist("utm_campaign", utmCampaign);
+        if (utmTerm) persist("utm_term", utmTerm);
       }
-
-      // Persist gclid for Google Ads offline conversion tracking
-      if (gclid) {
-        sessionStorage.setItem("gclid", gclid);
-      }
+      if (gclid) persist("gclid", gclid);
 
       // Start new session
       fetch("/api/track-session", {
