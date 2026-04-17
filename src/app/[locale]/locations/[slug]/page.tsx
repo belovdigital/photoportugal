@@ -82,20 +82,33 @@ export default async function LocationPage({
   const spots = photoSpots[slug] || [];
   const services = getLocationServices(slug);
 
-  // Get real photographer count, average rating, total reviews, and min price for this location
+  // Get real photographer count, average rating, total reviews, min price and session duration range for this location
   let photographerCount = 0;
   let avgRating = 0;
   let totalReviews = 0;
   let minPrice: number | null = null;
+  let minDuration: number | null = null;
+  let maxDuration: number | null = null;
   try {
-    const row = await queryOne<{ count: string; avg_rating: string | null; total_reviews: string; min_price: string | null }>(
+    const row = await queryOne<{
+      count: string; avg_rating: string | null; total_reviews: string;
+      min_price: string | null; min_duration: string | null; max_duration: string | null;
+    }>(
       `SELECT COUNT(DISTINCT pp.id) as count,
               AVG(pp.rating) FILTER (WHERE pp.rating IS NOT NULL AND pp.review_count > 0) as avg_rating,
               COALESCE(SUM(pp.review_count), 0) as total_reviews,
               (SELECT MIN(pk.price) FROM packages pk
                JOIN photographer_locations pl2 ON pl2.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
-               WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE) as min_price
+               WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE AND pk.is_public = TRUE) as min_price,
+              (SELECT MIN(pk.duration_minutes) FROM packages pk
+               JOIN photographer_locations pl3 ON pl3.photographer_id = pk.photographer_id
+               JOIN photographer_profiles pp3 ON pp3.id = pk.photographer_id
+               WHERE pl3.location_slug = $1 AND pp3.is_approved = TRUE AND pk.is_public = TRUE AND pk.duration_minutes IS NOT NULL) as min_duration,
+              (SELECT MAX(pk.duration_minutes) FROM packages pk
+               JOIN photographer_locations pl4 ON pl4.photographer_id = pk.photographer_id
+               JOIN photographer_profiles pp4 ON pp4.id = pk.photographer_id
+               WHERE pl4.location_slug = $1 AND pp4.is_approved = TRUE AND pk.is_public = TRUE AND pk.duration_minutes IS NOT NULL) as max_duration
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        WHERE pl.location_slug = $1 AND pp.is_approved = TRUE`,
@@ -105,7 +118,19 @@ export default async function LocationPage({
     avgRating = row?.avg_rating ? parseFloat(parseFloat(row.avg_rating).toFixed(1)) : 0;
     totalReviews = parseInt(row?.total_reviews || "0");
     minPrice = row?.min_price ? parseFloat(row.min_price) : null;
+    minDuration = row?.min_duration ? parseInt(row.min_duration) : null;
+    maxDuration = row?.max_duration ? parseInt(row.max_duration) : null;
   } catch {}
+
+  // Format duration range: "60 min", "1 hour", "1-2 hours", "90 min-2 hours" etc.
+  function formatDuration(min: number): string {
+    if (min < 60) return `${min} min`;
+    if (min % 60 === 0) return `${min / 60} ${min / 60 === 1 ? "hour" : "hours"}`;
+    return `${(min / 60).toFixed(1)} hours`;
+  }
+  const durationText = minDuration && maxDuration
+    ? (minDuration === maxDuration ? formatDuration(minDuration) : `${formatDuration(minDuration)} – ${formatDuration(maxDuration)}`)
+    : null;
 
   // Fetch top photographers for this location (max 6)
   let topPhotographers: {
@@ -377,18 +402,18 @@ export default async function LocationPage({
                     {t("quickFacts.bestTimeValue")}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-sm text-gray-500">{t("quickFacts.averageSession")}</dt>
-                  <dd className="text-sm font-semibold text-gray-900">
-                    {t("quickFacts.averageSessionValue")}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-gray-500">{t("quickFacts.startingFrom")}</dt>
-                  <dd className="text-sm font-semibold text-primary-600">
-                    {t("quickFacts.startingFromValue")}
-                  </dd>
-                </div>
+                {durationText && (
+                  <div>
+                    <dt className="text-sm text-gray-500">{t("quickFacts.averageSession")}</dt>
+                    <dd className="text-sm font-semibold text-gray-900">{durationText}</dd>
+                  </div>
+                )}
+                {minPrice !== null && (
+                  <div>
+                    <dt className="text-sm text-gray-500">{t("quickFacts.startingFrom")}</dt>
+                    <dd className="text-sm font-semibold text-primary-600">€{Math.round(minPrice)} / session</dd>
+                  </div>
+                )}
               </dl>
               <Link
                 href={`/photographers?location=${location.slug}`}
