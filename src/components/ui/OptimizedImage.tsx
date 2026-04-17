@@ -72,9 +72,11 @@ export function OptimizedImage({
         onLoad={() => setLoaded(true)}
         onError={() => { setError(true); setLoaded(true); }}
         onClick={onClick}
-        className={`h-full w-full object-cover transition-opacity duration-300 ${
-          loaded ? "opacity-100" : "opacity-0"
-        }`}
+        className={
+          priority
+            ? "h-full w-full object-cover"
+            : `h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`
+        }
         style={style}
       />
 

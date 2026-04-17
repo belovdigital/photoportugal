@@ -203,7 +203,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
-      <link rel="preload" href="/hero-family.webp" as="image" type="image/webp" />
+      <link rel="preload" href="/hero-family.webp" as="image" type="image/webp" fetchPriority="high" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
