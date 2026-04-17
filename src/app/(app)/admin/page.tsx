@@ -171,6 +171,7 @@ export default async function AdminPage() {
 
   const bookings = await query<{
     id: string; client_name: string; photographer_name: string; status: string;
+    client_id: string; photographer_slug: string;
     shoot_date: string | null; total_price: number | null; created_at: string; payment_status: string | null;
     message: string | null; location_slug: string | null; occasion: string | null;
     group_size: number | null; shoot_time: string | null; package_name: string | null;
@@ -181,7 +182,7 @@ export default async function AdminPage() {
     client_phone: string | null; client_email: string | null;
     photographer_phone: string | null; photographer_email: string | null;
   }>(
-    `SELECT b.id, cu.name as client_name, pu.name as photographer_name,
+    `SELECT b.id, b.client_id, cu.name as client_name, pu.name as photographer_name, pp.slug as photographer_slug,
             b.status, b.shoot_date, b.total_price, b.created_at, b.payment_status,
             b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,

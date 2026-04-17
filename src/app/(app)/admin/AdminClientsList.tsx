@@ -141,7 +141,8 @@ export function AdminClientsList({ clients, bookingsByClient }: { clients: Admin
           return (
             <div
               key={c.id}
-              className={`rounded-xl border bg-white transition-shadow ${
+              id={`client-${c.id}`}
+              className={`scroll-mt-24 rounded-xl border bg-white transition-shadow ${
                 c.is_banned ? "border-red-200 bg-red-50/30" : "border-warm-200"
               } ${isOpen ? "shadow-md" : "hover:shadow-sm"}`}
             >

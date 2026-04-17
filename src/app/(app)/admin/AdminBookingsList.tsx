@@ -5,8 +5,10 @@ import { AdminBookingActions } from "./AdminControls";
 
 export interface AdminBooking {
   id: string;
+  client_id: string;
   client_name: string;
   photographer_name: string;
+  photographer_slug: string;
   status: string;
   shoot_date: string | null;
   total_price: number | null;
@@ -138,9 +140,12 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                 b.status === "cancelled" ? "border-gray-200 opacity-60" : "border-warm-200"
               } ${isOpen ? "shadow-md" : "hover:shadow-sm"}`}
             >
-              <button
+              <div
                 onClick={() => setExpandedId(isOpen ? null : b.id)}
-                className="w-full px-3 py-3 sm:px-4 text-left"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isOpen ? null : b.id); } }}
+                className="w-full cursor-pointer px-3 py-3 sm:px-4 text-left"
               >
                 {/* Row 1: status left, price right */}
                 <div className="flex items-center justify-between mb-1">
@@ -177,9 +182,23 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1">
                     {b.client_country && <span className="mr-1" title={b.client_country}>{codeToFlag(b.client_country)}</span>}
-                    <span className="text-sm font-semibold text-gray-900">{b.client_name}</span>
+                    <a
+                      href={`/admin#client-${b.client_id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-sm font-semibold text-gray-900 hover:text-primary-600 hover:underline"
+                    >
+                      {b.client_name}
+                    </a>
                     <span className="mx-1.5 text-gray-300">&rarr;</span>
-                    <span className="text-sm text-gray-600">{b.photographer_name}</span>
+                    <a
+                      href={`/photographers/${b.photographer_slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-sm text-gray-600 hover:text-primary-600 hover:underline"
+                    >
+                      {b.photographer_name}
+                    </a>
                     {daysPending > 1 && (
                       <span className="ml-2 text-[10px] font-medium text-orange-500">{daysPending}d pending</span>
                     )}
@@ -190,7 +209,7 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                     </span>
                   )}
                 </div>
-              </button>
+              </div>
 
               {isOpen && (
                 <div className="border-t border-warm-100 px-3 py-3 sm:px-4 sm:py-4">

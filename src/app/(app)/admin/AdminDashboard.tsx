@@ -491,6 +491,18 @@ export function AdminDashboard({
     setIsStandalone(window.matchMedia("(display-mode: standalone)").matches || (navigator as unknown as { standalone?: boolean }).standalone === true);
   }, []);
 
+  // Deep-link handling: #client-<id> → switch to Clients tab and scroll to the row
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith("#client-")) {
+      setActiveTabState("clients");
+      // Wait for the tab to render, then scroll
+      setTimeout(() => {
+        document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, []);
+
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
     window.location.reload();
