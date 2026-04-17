@@ -25,6 +25,7 @@ import { localeAlternates } from "@/lib/seo";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { LocationCard } from "@/components/ui/LocationCard";
+import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -346,11 +347,9 @@ export default async function LocationPage({
               >
                 {t("viewPhotographers", { location: location.name })}
               </Link>
-              {photographerCount > 0 && (
+              {photographerCount >= 6 && (
                 <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
-                  {photographerCount !== 1
-                    ? t("photographersAvailable", { count: photographerCount })
-                    : t("photographerAvailable", { count: photographerCount })}
+                  {t("photographersAvailable", { count: photographerCount })}
                 </span>
               )}
             </div>
@@ -436,7 +435,10 @@ export default async function LocationPage({
             <p className="mt-2 text-gray-500">
               {t("dedicatedPhotographers", { location: location.name })}
             </p>
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-6">
+              <ScarcityBanner count={photographerCount} locationName={location.name} locale={locale} />
+            </div>
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {topPhotographers.map((sp) => (
                 <Link
                   key={sp.id}

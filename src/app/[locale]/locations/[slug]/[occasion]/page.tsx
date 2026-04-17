@@ -9,6 +9,7 @@ import { query, queryOne } from "@/lib/db";
 import { Avatar } from "@/components/ui/Avatar";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { normalizeName } from "@/lib/format-name";
+import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 
 export const revalidate = 86400;
 
@@ -219,6 +220,9 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
               ? `Fotógrafos disponíveis em ${location.name}`
               : `Available photographers in ${location.name}`}
           </h2>
+          <div className="mt-4">
+            <ScarcityBanner count={photographers.length} locationName={location.name} locale={locale} />
+          </div>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {photographers.map((p) => (
               <Link
