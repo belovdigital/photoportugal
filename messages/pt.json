@@ -1799,7 +1799,7 @@
       "title": "Ação necessária",
       "respond": {
         "title": "Responder a {name}",
-        "subtitle": "Nova consulta — responda em 24h"
+        "subtitle": "O cliente está à espera da sua resposta"
       },
       "propose_date": {
         "title": "Propor data para {name}",
@@ -1812,9 +1812,7 @@
       "upload_delivery": {
         "title": "Enviar entrega para {name}",
         "subtitle": "Sessão concluída — entregue as fotos"
-      },
-      "unread": "{count} {count, plural, one {mensagem não lida} other {mensagens não lidas}}",
-      "unreadSubtitle": "Novas mensagens de clientes"
+      }
     },
     "revisions": {
       "title": "Revisões de Perfil Necessárias",

@@ -1,6 +1,6 @@
 import { query } from "@/lib/db";
 
-export type TaskType = "respond" | "propose_date" | "mark_done" | "upload_delivery" | "unread";
+export type TaskType = "respond" | "propose_date" | "mark_done" | "upload_delivery";
 export type TaskUrgency = "overdue" | "soon" | "normal";
 
 export interface PhotographerTask {
@@ -8,16 +8,15 @@ export interface PhotographerTask {
   type: TaskType;
   clientName?: string;
   bookingId?: string;
-  count?: number;
   deadline?: string;
   urgency: TaskUrgency;
   href: string;
 }
 
-interface InquiryRow {
+interface RespondRow {
   id: string;
   client_name: string;
-  created_at: string;
+  last_message_at: string;
 }
 
 interface FlexibleRow {
@@ -39,10 +38,6 @@ interface DeliveryRow {
   shoot_date: string;
 }
 
-interface CountRow {
-  count: string;
-}
-
 const HOURS = (h: number) => h * 60 * 60 * 1000;
 const DAYS = (d: number) => d * 24 * HOURS(1);
 
@@ -56,13 +51,23 @@ function urgencyFromDeadline(deadlineISO: string, buffer: { soon: number; overdu
 }
 
 export async function getPhotographerTasks(profileId: string, userId: string): Promise<PhotographerTask[]> {
-  const [inquiries, flexible, markDone, deliveries, unread] = await Promise.all([
-    query<InquiryRow>(
-      `SELECT b.id, u.name AS client_name, b.created_at
-       FROM bookings b JOIN users u ON u.id = b.client_id
-       WHERE b.photographer_id = $1 AND b.status = 'inquiry'
-       ORDER BY b.created_at ASC LIMIT 10`,
-      [profileId]
+  const [respond, flexible, markDone, deliveries] = await Promise.all([
+    query<RespondRow>(
+      `SELECT b.id, u.name AS client_name, last_msg.created_at AS last_message_at
+       FROM bookings b
+       JOIN users u ON u.id = b.client_id
+       JOIN LATERAL (
+         SELECT sender_id, created_at
+         FROM messages m
+         WHERE m.booking_id = b.id
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) last_msg ON true
+       WHERE b.photographer_id = $1
+         AND last_msg.sender_id <> $2
+         AND b.status NOT IN ('cancelled', 'delivered')
+       ORDER BY last_msg.created_at ASC LIMIT 10`,
+      [profileId, userId]
     ),
     query<FlexibleRow>(
       `SELECT b.id, u.name AS client_name, b.flexible_date_from
@@ -98,29 +103,21 @@ export async function getPhotographerTasks(profileId: string, userId: string): P
        ORDER BY b.shoot_date ASC LIMIT 10`,
       [profileId]
     ),
-    query<CountRow>(
-      `SELECT COUNT(*)::text AS count
-       FROM messages m
-       JOIN bookings b ON b.id = m.booking_id
-       WHERE b.photographer_id = $1
-         AND m.sender_id <> $2
-         AND m.read_at IS NULL`,
-      [profileId, userId]
-    ),
   ]);
 
   const tasks: PhotographerTask[] = [];
 
-  for (const row of inquiries) {
-    const deadline = new Date(new Date(row.created_at).getTime() + HOURS(24)).toISOString();
+  for (const row of respond) {
+    const ageMs = Date.now() - new Date(row.last_message_at).getTime();
+    const urgency: TaskUrgency = ageMs > HOURS(24) ? "overdue" : ageMs > HOURS(6) ? "soon" : "normal";
     tasks.push({
-      id: `inquiry-${row.id}`,
+      id: `respond-${row.id}`,
       type: "respond",
       clientName: row.client_name,
       bookingId: row.id,
-      deadline,
-      urgency: urgencyFromDeadline(deadline, { soon: HOURS(6), overdue: 0 }),
-      href: `/dashboard/bookings/${row.id}`,
+      deadline: row.last_message_at,
+      urgency,
+      href: `/dashboard/messages?chat=${row.id}`,
     });
   }
 
@@ -132,7 +129,7 @@ export async function getPhotographerTasks(profileId: string, userId: string): P
       bookingId: row.id,
       deadline: new Date(row.flexible_date_from).toISOString(),
       urgency: urgencyFromDeadline(row.flexible_date_from, { soon: DAYS(3), overdue: 0 }),
-      href: `/dashboard/bookings/${row.id}`,
+      href: `/dashboard/bookings#${row.id}`,
     });
   }
 
@@ -144,7 +141,7 @@ export async function getPhotographerTasks(profileId: string, userId: string): P
       bookingId: row.id,
       deadline: new Date(row.shoot_date).toISOString(),
       urgency: "overdue",
-      href: `/dashboard/bookings/${row.id}`,
+      href: `/dashboard/bookings#${row.id}`,
     });
   }
 
@@ -157,18 +154,7 @@ export async function getPhotographerTasks(profileId: string, userId: string): P
       bookingId: row.id,
       deadline: deadlineISO,
       urgency: urgencyFromDeadline(deadlineISO, { soon: DAYS(2), overdue: 0 }),
-      href: `/dashboard/bookings/${row.id}`,
-    });
-  }
-
-  const unreadCount = parseInt(unread[0]?.count || "0", 10);
-  if (unreadCount > 0) {
-    tasks.push({
-      id: "unread",
-      type: "unread",
-      count: unreadCount,
-      urgency: "normal",
-      href: "/dashboard/messages",
+      href: `/dashboard/bookings/${row.id}/deliver`,
     });
   }
 

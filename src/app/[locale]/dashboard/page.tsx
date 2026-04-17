@@ -259,13 +259,6 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
         ))}
       </div>
 
-      {/* Quick actions */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <OverviewCard href="/dashboard/bookings" title={t("bookings")} description={t("viewManageRequests")} icon="calendar" />
-        <OverviewCard href="/dashboard/messages" title={t("messages")} description={t("chatWithClients")} icon="chat" />
-        <OverviewCard href="/dashboard/profile" title={t("editProfile")} description={t("updateYourInfo")} icon="user" />
-      </div>
-
       {/* Plan */}
       <div className="mt-6 flex items-center gap-3 rounded-xl border border-warm-200 bg-white p-4">
         <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold uppercase text-primary-600">

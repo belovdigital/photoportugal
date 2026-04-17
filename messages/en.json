@@ -1802,7 +1802,7 @@
       "title": "Action needed",
       "respond": {
         "title": "Respond to {name}",
-        "subtitle": "New inquiry — reply within 24h"
+        "subtitle": "Client is waiting for your reply"
       },
       "propose_date": {
         "title": "Propose a date for {name}",
@@ -1815,9 +1815,7 @@
       "upload_delivery": {
         "title": "Upload delivery for {name}",
         "subtitle": "Session complete — deliver the photos"
-      },
-      "unread": "{count} unread {count, plural, one {message} other {messages}}",
-      "unreadSubtitle": "New messages from clients"
+      }
     },
     "revisions": {
       "title": "Profile Revisions Required",

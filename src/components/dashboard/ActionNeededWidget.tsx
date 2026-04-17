@@ -54,12 +54,10 @@ export async function ActionNeededWidget({
                 <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 group-hover:text-primary-700">
-                    {task.type === "unread"
-                      ? t("unread", { count: task.count ?? 0 })
-                      : t(`${task.type}.title`, { name: task.clientName || "" })}
+                    {t(`${task.type}.title`, { name: task.clientName || "" })}
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500">
-                    {task.type === "unread" ? t("unreadSubtitle") : t(`${task.type}.subtitle`)}
+                    {t(`${task.type}.subtitle`)}
                   </p>
                 </div>
                 {task.deadline && (
