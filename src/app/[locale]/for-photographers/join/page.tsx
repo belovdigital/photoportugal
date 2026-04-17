@@ -134,7 +134,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
           <p className="mt-3 text-gray-500">{t("tiers.subtitle")}</p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 items-center gap-6 sm:grid-cols-[1fr_1.35fr_1fr]">
           {TIER_CONFIG.map((tier, i) => {
             const isFilled = i < activeTierIndex || activeTierIndex === -1;
             const isActive = i === activeTierIndex;
@@ -146,14 +146,14 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
             return (
               <div
                 key={tier.key}
-                className={`relative rounded-2xl border-2 p-6 transition ${
-                  isActive ? `${tier.borderColor} ${tier.bgColor} ring-2 ring-offset-2 ${tier.borderColor.replace("border", "ring")}` :
-                  isFilled ? "border-gray-200 bg-gray-50 opacity-60" :
-                  "border-warm-200 bg-white"
+                className={`relative rounded-2xl border-2 transition ${
+                  isActive
+                    ? "z-10 border-accent-500 bg-gradient-to-br from-accent-50 via-white to-accent-50/40 p-8 shadow-2xl shadow-accent-500/20 sm:scale-105 sm:p-10"
+                    : "border-gray-200 bg-gray-50 p-6 opacity-65"
                 }`}
               >
                 {isActive && (
-                  <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r ${tier.color} px-4 py-1 text-xs font-bold text-white shadow`}>
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-accent-500 to-accent-700 px-5 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg">
                     {tc("nowOpen")}
                   </span>
                 )}
@@ -163,27 +163,29 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
                   </span>
                 )}
 
-                <h3 className={`text-xl font-bold ${isActive ? tier.textColor : "text-gray-900"}`}>
+                <h3 className={`font-bold ${isActive ? "text-3xl text-accent-700" : "text-xl text-gray-500"}`}>
                   {t(`tiers.${tier.key}.label`)}
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">{tier.spots} {tc("spots")}</p>
+                <p className={`mt-1 text-sm ${isActive ? "text-gray-600" : "text-gray-400"}`}>{tier.spots} {tc("spots")}</p>
 
-                <div className="mt-4">
-                  <p className={`text-lg font-bold ${isActive ? tier.textColor : "text-gray-900"}`}>
+                <div className={isActive ? "mt-6" : "mt-4"}>
+                  <p className={`font-bold ${isActive ? "text-2xl text-accent-700" : "text-base text-gray-600"}`}>
                     {t(`tiers.${tier.key}.reward`)}
                   </p>
-                  <p className="mt-1 text-sm text-gray-500">{t(`tiers.${tier.key}.rewardDetail`)}</p>
+                  <p className={`mt-2 ${isActive ? "text-sm text-gray-700" : "text-xs text-gray-400"}`}>{t(`tiers.${tier.key}.rewardDetail`)}</p>
                 </div>
 
                 {/* Progress bar */}
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-gray-400">
+                <div className={isActive ? "mt-6" : "mt-4"}>
+                  <div className={`flex justify-between text-xs ${isActive ? "text-gray-600" : "text-gray-400"}`}>
                     <span>{spotsUsed} {tc("joined")}</span>
                     <span>{isFilled ? tc("full") : `${spotsLeft} ${tc("left")}`}</span>
                   </div>
-                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-gray-200">
+                  <div className={`mt-1 overflow-hidden rounded-full bg-gray-200 ${isActive ? "h-3" : "h-1.5"}`}>
                     <div
-                      className={`h-full rounded-full bg-gradient-to-r ${tier.color} transition-all`}
+                      className={`h-full rounded-full transition-all ${
+                        isActive ? "bg-gradient-to-r from-accent-500 to-accent-700" : "bg-gray-400"
+                      }`}
                       style={{ width: `${Math.min((spotsUsed / tier.spots) * 100, 100)}%` }}
                     />
                   </div>
