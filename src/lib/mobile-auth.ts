@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
+import { queryOne } from "@/lib/db";
 
 function getJwtSecret(): string {
   const s = process.env.NEXTAUTH_SECRET;
@@ -37,7 +38,15 @@ export async function authFromRequest(req?: NextRequest): Promise<MobileUser | n
       try {
         const token = authHeader.replace("Bearer ", "");
         const decoded = jwt.verify(token, getJwtSecret()) as MobileUser;
-        if (decoded.id) return decoded;
+        if (decoded.id) {
+          // Re-check ban status from DB — JWT lives 30 days, ban must be instant
+          const user = await queryOne<{ is_banned: boolean; role: string }>(
+            "SELECT is_banned, role FROM users WHERE id = $1",
+            [decoded.id]
+          );
+          if (!user || user.is_banned) return null;
+          return { id: decoded.id, email: decoded.email, role: user.role };
+        }
       } catch {}
     }
   }

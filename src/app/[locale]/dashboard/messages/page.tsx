@@ -91,7 +91,7 @@ function MessagesContent() {
   const lastTypingSent = useRef<number>(0);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const convoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isUserScrolledUp = useRef(false);
@@ -330,6 +330,7 @@ function MessagesContent() {
 
     setMessages((prev) => [...prev, ...tempMsgs]);
     setNewMessage("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
     setPendingFiles([]);
     setPendingPreviews([]);
     isUserScrolledUp.current = false;
@@ -732,8 +733,8 @@ function MessagesContent() {
                             <div key={msg.id} className="flex justify-center my-3">
                               <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-accent-200 bg-gradient-to-br from-accent-50 to-white p-5 text-center shadow-sm">
                                 <div className="text-3xl">📸</div>
-                                <p className="mt-2 text-base font-bold text-gray-900">{photoCount} photo previews ready for review</p>
-                                <p className="mt-1 text-xs text-gray-500">Review the photos and approve the delivery when you&apos;re happy</p>
+                                <p className="mt-2 text-base font-bold text-gray-900">{t("photoPreviewsReady", { count: photoCount })}</p>
+                                <p className="mt-1 text-xs text-gray-500">{t("deliveryReviewHint")}</p>
                                 <a href={`${url}?pw=${encodeURIComponent(pw)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block rounded-xl bg-accent-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-accent-700 transition">
                                   {t("viewGallery")}
                                 </a>
@@ -998,12 +999,16 @@ function MessagesContent() {
                     )}
                   </div>
                 )}
-                <input
+                <textarea
                   ref={inputRef}
-                  type="text"
+                  rows={1}
                   value={newMessage}
                   onChange={(e) => {
                     setNewMessage(e.target.value);
+                    // Auto-resize textarea
+                    const el = e.target;
+                    el.style.height = "auto";
+                    el.style.height = Math.min(el.scrollHeight, 120) + "px";
                     // Debounced typing indicator (max once per 2s)
                     const now = Date.now();
                     if (now - lastTypingSent.current > 2000) {
@@ -1011,8 +1016,15 @@ function MessagesContent() {
                       lastTypingSent.current = now;
                     }
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      (e.target as HTMLTextAreaElement).form?.requestSubmit();
+                    }
+                  }}
                   placeholder={t("typePlaceholder")}
-                  className="flex-1 rounded-full border border-warm-200 bg-warm-50 px-4 py-2 text-base outline-none focus:border-primary-300 focus:bg-white"
+                  className="flex-1 resize-none rounded-2xl border border-warm-200 bg-warm-50 px-4 py-2 text-base outline-none focus:border-primary-300 focus:bg-white"
+                  style={{ maxHeight: 120 }}
                 />
                 <button
                   type="submit"
@@ -1034,6 +1046,7 @@ function MessagesContent() {
                   </svg>
                 </button>
               </form>
+              <p className="hidden sm:block mt-1 text-[11px] text-gray-300 text-right pr-12">Enter — send · Shift+Enter — new line</p>
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center">

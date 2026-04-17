@@ -95,8 +95,8 @@ export async function POST(
       return false;
     }
 
-    // Update delivery expiry to 60 days from acceptance
-    const newExpiry = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+    // Update delivery expiry to 90 days from acceptance
+    const newExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
     await client.query(
       "UPDATE bookings SET delivery_expires_at = $1 WHERE id = $2",
       [newExpiry.toISOString(), booking.id]

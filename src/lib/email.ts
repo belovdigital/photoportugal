@@ -270,7 +270,7 @@ export async function sendDeliveryAcceptedToClient(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">You've accepted the photo delivery from <strong>${photographerName}</strong>. We hope you love your photos!</p>
       <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
-        <p style="margin:0;font-size:15px;line-height:1.6;color:#4A4A4A;">Your photos will be available for download for <strong>60 days</strong>. Make sure to download them before then!</p>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#4A4A4A;">Your photos will be available for download for <strong>90 days</strong>. Make sure to download them before then!</p>
       </div>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">If you enjoyed your experience, we'd love to hear from you! A quick review helps other travelers find great photographers:</p>
       ${emailButton(`${BASE_URL}/dashboard/bookings`, "Leave a Review")}

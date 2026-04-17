@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   if (!location) return {};
 
   const title = locale === "pt"
-    ? `Fotógrafos em ${location.name} — Reserve uma Sessão Fotográfica`
-    : `Photographers in ${location.name} — Book a Professional Photoshoot`;
+    ? `Encontre Fotógrafos em ${location.name} — Portfólios e Preços`
+    : `Find Photographers in ${location.name} — Portfolios & Prices`;
   const description = locale === "pt"
     ? `Encontre e reserve fotógrafos verificados em ${location.name}, Portugal. Veja portfólios, leia avaliações, compare pacotes. A partir de €150.`
     : `Find and book verified photographers in ${location.name}, Portugal. Browse portfolios, read reviews, compare packages. From €150. Instant booking.`;
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title,
     description,
     alternates: localeAlternates(`/photographers/location/${slug}`, locale),
-    openGraph: { title, description, url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/photographers/location/${slug}` },
+    openGraph: { title, description, url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/photographers/location/${slug}`, images: [{ url: location.cover_image || "/og-image.png", width: 1200, height: 630, alt: `Photographers in ${location.name}, Portugal` }] },
   };
 }
 

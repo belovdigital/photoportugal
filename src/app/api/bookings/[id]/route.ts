@@ -154,64 +154,71 @@ export async function PATCH(
       try {
         const stripeClient = requireStripe();
 
-        // Get booking details including shoot_date for refund calculation
-        const cancelInfo = await queryOne<{
-          client_email: string; client_name: string;
-          photographer_email: string; photographer_name: string;
-          photographer_user_id: string; photographer_profile_id: string;
-          total_price: number; service_fee: number | null;
-          shoot_date: string | null;
-        }>(
-          `SELECT cu.email as client_email, cu.name as client_name,
-                  pu.email as photographer_email, pu.name as photographer_name,
-                  pu.id as photographer_user_id, pp.id as photographer_profile_id,
-                  b.total_price, b.service_fee, b.shoot_date
-           FROM bookings b
-           JOIN users cu ON cu.id = b.client_id
-           JOIN photographer_profiles pp ON pp.id = b.photographer_id
-           JOIN users pu ON pu.id = pp.user_id
-           WHERE b.id = $1`,
-          [id]
-        );
-
-        // Calculate refund percentage based on cancellation policy:
-        // - 7+ days before shoot: 100% refund
-        // - 3-7 days before shoot: 50% refund
-        // - <3 days before shoot: no refund
-        // - No shoot_date set (flexible booking): 100% refund
-        let refundPercent = 100;
-        if (cancelInfo?.shoot_date) {
-          const shootDate = new Date(cancelInfo.shoot_date);
-          const now = new Date();
-          const daysUntilShoot = Math.ceil((shootDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          if (daysUntilShoot < 3) {
-            refundPercent = 0;
-          } else if (daysUntilShoot < 7) {
-            refundPercent = 50;
+        // Use transaction + FOR UPDATE to prevent double refund from concurrent requests
+        const cancelResult = await withTransaction(async (client) => {
+          const locked = await client.query(
+            "SELECT status, payment_status, stripe_payment_intent_id FROM bookings WHERE id = $1 FOR UPDATE",
+            [id]
+          );
+          const lockedBooking = locked.rows[0];
+          if (!lockedBooking || lockedBooking.status === "cancelled" || lockedBooking.payment_status !== "paid") {
+            return null; // Already cancelled or not paid — skip refund
           }
+
+          const cancelInfo = await client.query(
+            `SELECT cu.email as client_email, cu.name as client_name,
+                    pu.email as photographer_email, pu.name as photographer_name,
+                    pu.id as photographer_user_id, pp.id as photographer_profile_id,
+                    b.total_price, b.service_fee, b.shoot_date
+             FROM bookings b
+             JOIN users cu ON cu.id = b.client_id
+             JOIN photographer_profiles pp ON pp.id = b.photographer_id
+             JOIN users pu ON pu.id = pp.user_id
+             WHERE b.id = $1`,
+            [id]
+          );
+          const info = cancelInfo.rows[0];
+
+          let refundPercent = 100;
+          if (info?.shoot_date) {
+            const shootDate = new Date(info.shoot_date);
+            const now = new Date();
+            const daysUntilShoot = Math.ceil((shootDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            if (daysUntilShoot < 3) {
+              refundPercent = 0;
+            } else if (daysUntilShoot < 7) {
+              refundPercent = 50;
+            }
+          }
+
+          const totalPaid = Number(info?.total_price ?? 0) + Number(info?.service_fee ?? 0);
+          const refundAmount = Math.round((totalPaid * refundPercent) / 100 * 100) / 100;
+
+          if (refundPercent === 100) {
+            await stripeClient.refunds.create({
+              payment_intent: lockedBooking.stripe_payment_intent_id,
+            });
+          } else if (refundPercent > 0) {
+            await stripeClient.refunds.create({
+              payment_intent: lockedBooking.stripe_payment_intent_id,
+              amount: Math.round(refundAmount * 100),
+            });
+          }
+
+          const paymentStatus = refundPercent === 100 ? "refunded" : refundPercent > 0 ? "partially_refunded" : "no_refund";
+          await client.query(
+            "UPDATE bookings SET status = 'cancelled', payment_status = $1 WHERE id = $2",
+            [paymentStatus, id]
+          );
+
+          return { info, refundPercent, totalPaid, refundAmount, paymentStatus };
+        });
+
+        if (!cancelResult) {
+          return NextResponse.json({ error: "Booking already cancelled or not eligible for refund" }, { status: 400 });
         }
 
-        const totalPaid = Number(cancelInfo?.total_price ?? 0) + Number(cancelInfo?.service_fee ?? 0);
-        const refundAmount = Math.round((totalPaid * refundPercent) / 100 * 100) / 100; // round to cents
-
-        // Issue Stripe refund (skip if no refund due)
-        if (refundPercent === 100) {
-          await stripeClient.refunds.create({
-            payment_intent: currentBooking.stripe_payment_intent_id,
-          });
-        } else if (refundPercent > 0) {
-          await stripeClient.refunds.create({
-            payment_intent: currentBooking.stripe_payment_intent_id,
-            amount: Math.round(refundAmount * 100), // Stripe uses cents
-          });
-        }
-
-        // Update booking status and payment status
-        const paymentStatus = refundPercent === 100 ? "refunded" : refundPercent > 0 ? "partially_refunded" : "no_refund";
-        await queryOne(
-          "UPDATE bookings SET status = 'cancelled', payment_status = $1 WHERE id = $2 RETURNING id",
-          [paymentStatus, id]
-        );
+        const { info: cancelInfo, refundPercent, totalPaid, refundAmount, paymentStatus } = cancelResult;
 
         if (cancelInfo) {
           const cancelledBy = isClient ? "client" : "photographer";

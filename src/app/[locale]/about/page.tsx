@@ -155,7 +155,7 @@ export default async function AboutPage({
               />
             </Link>
             <div className="space-y-3 text-gray-600 leading-relaxed">
-              <p dangerouslySetInnerHTML={{ __html: t("founder.bio1") }} />
+              <p dangerouslySetInnerHTML={{ __html: t.raw("founder.bio1") }} />
               <p>{t("founder.bio2")}</p>
               <p>
                 {t.rich("founder.bio3", {

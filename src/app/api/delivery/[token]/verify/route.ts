@@ -20,6 +20,7 @@ export async function POST(
 
   const booking = await queryOne<{
     id: string;
+    client_id: string;
     delivery_password: string;
     delivery_expires_at: string;
     photographer_name: string;
@@ -33,7 +34,7 @@ export async function POST(
     zip_ready: boolean;
     zip_size: number | null;
   }>(
-    `SELECT b.id, b.delivery_password, b.delivery_expires_at,
+    `SELECT b.id, b.client_id, b.delivery_password, b.delivery_expires_at,
             u.name as photographer_name, u.avatar_url as photographer_avatar,
             pp.slug as photographer_slug, cu.name as client_name,
             b.shoot_date, b.location_slug,
@@ -93,6 +94,7 @@ export async function POST(
 
   return NextResponse.json({
     booking_id: booking.id,
+    client_id: booking.client_id,
     photographer_name: booking.photographer_name,
     photographer_avatar: booking.photographer_avatar,
     client_name: booking.client_name,

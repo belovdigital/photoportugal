@@ -8,7 +8,7 @@ import crypto from "crypto";
 import sharp from "sharp";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
-import { uploadToS3, deleteFromS3, isS3Path, s3KeyFromPath } from "@/lib/s3";
+import { uploadToS3, deleteFromS3, getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per delivery photo (high-res)
@@ -353,7 +353,9 @@ export async function POST(
         [id, url, previewUrl, file.name, file.size, sortOrder++]
       );
 
-      uploaded.push({ id: item?.id, url, filename: file.name, file_size: file.size });
+      // Return public URL, not s3:// internal path
+      const publicUrl = isS3Path(url) ? await getPresignedUrl(s3KeyFromPath(url), 3600) : url;
+      uploaded.push({ id: item?.id, url: publicUrl, filename: file.name, file_size: file.size });
     }
 
     return NextResponse.json({

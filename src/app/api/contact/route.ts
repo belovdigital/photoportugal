@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail, getAdminEmail } from "@/lib/email";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -15,6 +16,11 @@ const TOPIC_LABELS: Record<string, string> = {
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+    if (!checkRateLimit(`contact:${ip}`, 5, 3600000)) {
+      return NextResponse.json({ error: "Too many messages. Please try again later." }, { status: 429 });
+    }
+
     const { topic, name, email, message } = await req.json();
 
     if (!topic || !name?.trim() || !email?.trim() || !message?.trim()) {
@@ -50,8 +56,7 @@ export async function POST(req: NextRequest) {
         sendEmail(
           recipient,
           `[Photo Portugal] ${topicLabel}: ${name}`,
-          emailBody,
-          { replyTo: email }
+          emailBody
         )
       )
     ).catch((err) => console.error("[contact] email error:", err));

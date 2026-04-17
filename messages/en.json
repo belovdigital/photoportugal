@@ -965,7 +965,18 @@
       "createProfile": "Create Your Photographer Profile"
     },
     "helpCenterCta": "Have questions about how the platform works?",
-    "helpCenterLink": "Visit our Help Center"
+    "helpCenterLink": "Visit our Help Center",
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "items": [
+        { "q": "Do I need to be a professional photographer?", "a": "Yes. We hand-vet every photographer. You should have a strong portfolio, professional equipment, and experience shooting paid sessions. Hobbyists are not accepted." },
+        { "q": "Do I need to live in Portugal?", "a": "You must be based in Portugal or legally able to work here. Most of our photographers live in or near the cities they serve (Lisbon, Porto, Algarve, etc.)." },
+        { "q": "How much do you take from each booking?", "a": "We charge a 15% platform fee on each booking (reduced to 10% for Premium plan). You keep the rest. No upfront costs and no subscription required to get started." },
+        { "q": "How and when do I get paid?", "a": "Clients pay through Stripe when they book. Funds are released to you 24 hours after the client accepts the delivered photos. Payouts go directly to your bank account." },
+        { "q": "How do I get clients?", "a": "Two ways: (1) Clients browse our catalog and book you directly, and (2) Our concierge team hand-picks photographers for client requests — you just confirm the booking." },
+        { "q": "How long does approval take?", "a": "Usually 1–3 business days. We review your portfolio, check your identity, and make sure your profile meets our quality standards." }
+      ]
+    }
   },
   "cookie": {
     "message": "We use essential cookies for authentication and analytics cookies to improve our service. No advertising cookies are used.",
@@ -1447,7 +1458,7 @@
     "free": "Free concierge service — no commitment"
   },
   "photographersMeta": {
-    "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve | Photo Portugal",
+    "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve",
     "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 20+ locations across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €150."
   },
   "privacy": {
@@ -2092,7 +2103,7 @@
     "verifiedBenefit3": "Stand out from unverified photographers",
     "featuredBenefit1": "Shown first on the homepage and search results",
     "featuredBenefit2": "\"Featured\" gold badge on your profile and cards",
-    "featuredBenefit3": "Up to 3x more profile views and inquiries",
+    "featuredBenefit3": "Up to 3x more profile views and booking requests",
     "verifiedPreviewLabel": "How your card will look",
     "featuredPreviewLabel": "How your card will look",
     "boostVisibility": "Boost Your Visibility",
@@ -2283,7 +2294,7 @@
         },
         "contactSupport": {
           "question": "How do I contact support?",
-          "answer": "You can reach our support team through:\n\n• **Email:** hello@photoportugal.com\n• **Dashboard:** Photographers can submit support tickets directly from their dashboard\n• **Contact page:** Visit our contact page to send us a message\n\nWe aim to respond to all inquiries within 24 hours during business days."
+          "answer": "You can reach our support team through:\n\n• **Email:** info@photoportugal.com\n• **Dashboard:** Photographers can submit support tickets directly from their dashboard\n• **Contact page:** Visit our contact page to send us a message\n\nWe aim to respond to all inquiries within 24 hours during business days."
         }
       }
     },
@@ -2344,7 +2355,7 @@
     "availableUntil": "Available until {date}",
     "downloadAllZip": "Download All (ZIP)",
     "deliveryAccepted": "Delivery accepted",
-    "deliveryAcceptedThankYou": "Thank you! Your photos will be available for download for 60 days.",
+    "deliveryAcceptedThankYou": "Thank you! Your photos will be available for download for 90 days.",
     "happyWithPhotos": "Happy with your photos?",
     "acceptDeliveryPrompt": "Accept the delivery to confirm you've received your photos.",
     "acceptDeliveryPaymentNote": "This will release the payment to your photographer.",
@@ -2358,12 +2369,15 @@
     "next": "Next",
     "acceptToUnlockFullRes": "Accept delivery to unlock full resolution & downloads",
     "acceptToDownload": "Accept to download",
+    "loginToAccept": "Log in to your account to accept the delivery and unlock full resolution downloads.",
+    "logIn": "Log in",
     "deletingProgress": "Deleting {current}/{total}",
     "retryUpload": "Retry",
     "galleryExpiredTitle": "Gallery Expired",
     "galleryExpiredMessage": "This photo gallery has expired. Please contact your photographer to request a new link."
   },
   "availability": {
+    "pageTitle": "Availability",
     "description": "Mark dates when you're unavailable for photoshoots. Clients will see that you're fully booked during these periods.",
     "addUnavailableDates": "Add unavailable dates",
     "from": "From",
@@ -2438,6 +2452,8 @@
     "yesterday": "Yesterday",
     "signInPrompt": "Sign in",
     "viewGallery": "View Gallery",
+    "photoPreviewsReady": "{count} photo previews ready for review",
+    "deliveryReviewHint": "Review the photos and approve the delivery when you're happy",
     "packageLabel": "Package",
     "bookNow": "Book Now",
     "tapToOpen": "Tap to open",

@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("title"),
     description: t("description"),
     alternates: localeAlternates("/photographers", locale),
-    openGraph: { title: t("title"), description: t("description"), url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/photographers` },
+    openGraph: { title: t("title"), description: t("description"), url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/photographers`, images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal" }] },
   };
 }
 
@@ -166,12 +166,17 @@ export default async function PhotographersPage({
     "@type": "ItemList",
     name: "Professional Photographers in Portugal",
     numberOfItems: dbPhotographers.length,
-    itemListElement: dbPhotographers.slice(0, 20).map((p, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      url: `${base}/photographers/${p.slug}`,
-      name: p.name,
-    })),
+    itemListElement: dbPhotographers.slice(0, 20).map((p, i) => {
+      const imgSrc = p.cover_url || p.avatar_url;
+      const image = imgSrc ? `${base}/api/img/${imgSrc.replace("/uploads/", "")}?w=800&h=600&f=jpeg&q=80` : undefined;
+      return {
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${base}/photographers/${p.slug}`,
+        name: p.name,
+        ...(image ? { image } : {}),
+      };
+    }),
   };
 
   return (
@@ -185,6 +190,27 @@ export default async function PhotographersPage({
       initialLocation={initialLocation}
       initialShootType={resolvedShootType}
     />
+
+    {/* Browse by city — internal linking + SEO for /photographers/location/* */}
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
+        {locale === "pt" ? "Fotógrafos por cidade" : "Browse photographers by city"}
+      </h2>
+      <p className="mt-2 text-sm text-gray-500">
+        {locale === "pt" ? "Explore fotógrafos verificados nas principais cidades de Portugal." : "Explore verified photographers in Portugal's top destinations."}
+      </p>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {locations.map((loc) => (
+          <a
+            key={loc.slug}
+            href={`${locale === "pt" ? "/pt" : ""}/photographers/location/${loc.slug}`}
+            className="rounded-lg border border-warm-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:bg-warm-50"
+          >
+            {loc.name}
+          </a>
+        ))}
+      </div>
+    </section>
     </>
   );
 }

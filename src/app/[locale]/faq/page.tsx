@@ -55,7 +55,7 @@ export default async function FAQPage({
 
   const faqs = FAQ_KEYS.map((key) => ({
     question: t(`questions.${key}.question`),
-    answer: t(`questions.${key}.answer`, { locationCount: locations.length }),
+    answer: (t.raw(`questions.${key}.answer`) as string).replace(/\{locationCount\}/g, String(locations.length)),
   }));
 
   const jsonLd = {

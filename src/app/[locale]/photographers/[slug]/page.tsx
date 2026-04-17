@@ -110,8 +110,11 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "photographers.profile" });
 
   const p = result.data;
-  const locationNames = (p.locations || []).map((l: { name: string }) => l.name).join(", ");
-  const title = t("metaTitle", { name: normalizeName(p.name), locations: locationNames || "Portugal" });
+  const allLocationNames = (p.locations || []).map((l: { name: string }) => l.name);
+  const locationNames = allLocationNames.length <= 2
+    ? allLocationNames.join(", ") || "Portugal"
+    : `${allLocationNames.slice(0, 2).join(", ")} & ${allLocationNames.length - 2} more`;
+  const title = t("metaTitle", { name: normalizeName(p.name), locations: locationNames });
   const topShootTypes = (p.shoot_types || []).slice(0, 2);
   const shootTypeText = topShootTypes.length > 0 ? ` Specializing in ${topShootTypes.join(" & ").toLowerCase()} photography.` : "";
   const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })}${shootTypeText} ${p.tagline || ""}`.trim();
@@ -249,13 +252,27 @@ export default async function PhotographerProfilePage({
     } catch {}
   }
 
+  const profileUrl = `https://photoportugal.com/photographers/${slug}`;
+  const schemaImages = ([photographer.cover_url, photographer.avatar_url].filter(Boolean) as string[])
+    .map((src) => src.startsWith("http") ? src : `https://photoportugal.com${src}`);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
+    "@id": profileUrl,
     name: normalizeName(photographer.name),
     description: photographer.bio || photographer.tagline,
-    url: `https://photoportugal.com/photographers/${slug}`,
-    image: photographer.cover_url || photographer.avatar_url || undefined,
+    url: profileUrl,
+    image: schemaImages.length > 0 ? schemaImages : undefined,
+    ...(primaryLocation?.lat && primaryLocation?.lng
+      ? {
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: primaryLocation.lat,
+            longitude: primaryLocation.lng,
+          },
+        }
+      : {}),
     priceRange: photographer.packages?.length > 0 ? `From €${Math.round(Math.min(...photographer.packages.map((pkg: { price: number }) => Number(pkg.price))))}` : undefined,
     aggregateRating: photographer.review_count > 0
       ? {
@@ -288,18 +305,21 @@ export default async function PhotographerProfilePage({
     })),
   };
 
+  const packageImage = schemaImages[0];
   const productJsonLd = (photographer.packages || []).map(
     (pkg: { name: string; description: string | null; price: number }) => ({
       "@context": "https://schema.org",
       "@type": "Product",
       name: pkg.name,
       description: pkg.description || t("packageDescription", { packageName: pkg.name, name: normalizeName(photographer.name) }),
+      ...(packageImage ? { image: packageImage } : {}),
+      brand: { "@type": "Brand", name: normalizeName(photographer.name) },
       offers: {
         "@type": "Offer",
         price: String(pkg.price),
         priceCurrency: "EUR",
         availability: "https://schema.org/InStock",
-        url: `https://photoportugal.com/photographers/${slug}`,
+        url: profileUrl,
       },
     })
   );

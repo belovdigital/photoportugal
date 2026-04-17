@@ -40,8 +40,23 @@ export default async function ForPhotographersPage({
     "pricing",
   ] as const;
 
+  const faqItems = t.raw("faq.items") as Array<{ q: string; a: string }>;
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <Breadcrumbs
         items={[
           { name: tc("home"), href: "/" },
@@ -114,6 +129,26 @@ export default async function ForPhotographersPage({
           <p className="mx-auto mt-4 max-w-xl text-gray-500">
             {t("community.description")}
           </p>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-warm-200 py-16">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <h2 className="text-center font-display text-3xl font-bold text-gray-900">{t("faq.title")}</h2>
+          <div className="mt-10 space-y-4">
+            {faqItems.map((item, i) => (
+              <details key={i} className="group rounded-xl border border-warm-200 bg-white p-5 open:shadow-sm">
+                <summary className="flex cursor-pointer items-center justify-between gap-4 font-semibold text-gray-900 list-none">
+                  <span>{item.q}</span>
+                  <svg className="h-5 w-5 shrink-0 text-gray-400 transition group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <p className="mt-3 text-sm text-gray-600 leading-relaxed">{item.a}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 

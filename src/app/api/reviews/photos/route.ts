@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       [reviewId]
     );
 
-    if (!review || (!admin && review.client_id && review.client_id !== userId)) {
+    if (!review || (!admin && (!review.client_id || review.client_id !== userId))) {
       return NextResponse.json({ error: "Review not found" }, { status: 404 });
     }
 

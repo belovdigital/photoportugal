@@ -962,7 +962,18 @@
       "createProfile": "Criar o Seu Perfil de Fotógrafo"
     },
     "helpCenterCta": "Tem dúvidas sobre como a plataforma funciona?",
-    "helpCenterLink": "Visite o nosso Centro de Ajuda"
+    "helpCenterLink": "Visite o nosso Centro de Ajuda",
+    "faq": {
+      "title": "Perguntas Frequentes",
+      "items": [
+        { "q": "Preciso de ser fotógrafo profissional?", "a": "Sim. Verificamos cada fotógrafo manualmente. Deve ter um portfólio sólido, equipamento profissional e experiência em sessões pagas. Amadores não são aceites." },
+        { "q": "Preciso de viver em Portugal?", "a": "Tem de estar baseado em Portugal ou ter autorização legal para trabalhar cá. A maioria dos nossos fotógrafos vive nas cidades que cobrem (Lisboa, Porto, Algarve, etc.)." },
+        { "q": "Qual é a vossa comissão?", "a": "Cobramos uma taxa de plataforma de 15% por reserva (reduzida para 10% no plano Premium). Fica com o resto. Sem custos iniciais nem subscrição obrigatória." },
+        { "q": "Como e quando recebo o pagamento?", "a": "Os clientes pagam via Stripe no momento da reserva. Os fundos são transferidos 24 horas após o cliente aceitar a entrega das fotos. Os pagamentos vão diretamente para a sua conta bancária." },
+        { "q": "Como consigo clientes?", "a": "De duas formas: (1) Os clientes navegam pelo nosso catálogo e reservam-no diretamente; (2) A nossa equipa de concierge seleciona manualmente fotógrafos para cada pedido — você apenas confirma a reserva." },
+        { "q": "Quanto tempo demora a aprovação?", "a": "Normalmente 1 a 3 dias úteis. Avaliamos o seu portfólio, verificamos a identidade e garantimos que o perfil cumpre os nossos padrões de qualidade." }
+      ]
+    }
   },
   "cookie": {
     "message": "Utilizamos cookies essenciais para autenticação e cookies de análise para melhorar o nosso serviço. Não são utilizados cookies publicitários.",
@@ -1444,7 +1455,7 @@
     "free": "Serviço de concierge gratuito — sem compromisso"
   },
   "photographersMeta": {
-    "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve | Photo Portugal",
+    "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve",
     "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e 20+ localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €150."
   },
   "privacy": {
@@ -2181,7 +2192,7 @@
     "availableUntil": "Disponível até {date}",
     "downloadAllZip": "Transferir Tudo (ZIP)",
     "deliveryAccepted": "Entrega aceite",
-    "deliveryAcceptedThankYou": "Obrigado! As suas fotos estarão disponíveis para transferência durante 60 dias.",
+    "deliveryAcceptedThankYou": "Obrigado! As suas fotos estarão disponíveis para transferência durante 90 dias.",
     "happyWithPhotos": "Satisfeito com as suas fotos?",
     "acceptDeliveryPrompt": "Aceite a entrega para confirmar que recebeu as suas fotos.",
     "acceptDeliveryPaymentNote": "Isto irá libertar o pagamento para o seu fotógrafo.",
@@ -2195,12 +2206,15 @@
     "next": "Seguinte",
     "acceptToUnlockFullRes": "Aceite a entrega para desbloquear alta qualidade e downloads",
     "acceptToDownload": "Aceitar para baixar",
+    "loginToAccept": "Inicie sessão na sua conta para aceitar a entrega e desbloquear os downloads em resolução completa.",
+    "logIn": "Iniciar sessão",
     "deletingProgress": "A eliminar {current}/{total}",
     "retryUpload": "Tentar novamente",
     "galleryExpiredTitle": "Galeria Expirada",
     "galleryExpiredMessage": "Esta galeria de fotos expirou. Por favor, contacte o seu fotógrafo para solicitar uma nova ligação."
   },
   "availability": {
+    "pageTitle": "Disponibilidade",
     "description": "Marque as datas em que não está disponível para sessões fotográficas. Os clientes verão que está totalmente reservado durante estes períodos.",
     "addUnavailableDates": "Adicionar datas indisponíveis",
     "from": "De",
@@ -2275,6 +2289,8 @@
     "yesterday": "Ontem",
     "signInPrompt": "Iniciar sessão",
     "viewGallery": "Ver Galeria",
+    "photoPreviewsReady": "{count} pré-visualizações prontas para revisão",
+    "deliveryReviewHint": "Reveja as fotos e aprove a entrega quando estiver satisfeito",
     "packageLabel": "Pacote",
     "bookNow": "Reservar Agora",
     "tapToOpen": "Toque para abrir",
@@ -2702,7 +2718,7 @@
         },
         "contactSupport": {
           "question": "Como posso contactar o suporte?",
-          "answer": "Estamos aqui para ajudar! Pode contactar-nos de várias formas: envie um email para support@photoportugal.com e responderemos no prazo de 24 horas; se for fotógrafo, utilize o sistema de mensagens integrado no seu painel de controlo para assistência mais rápida; visite a nossa página de contacto para enviar um formulário detalhado. Para questões urgentes, recomendamos o email com o assunto marcado como urgente. A nossa equipa de suporte fala português, inglês, espanhol e francês."
+          "answer": "Estamos aqui para ajudar! Pode contactar-nos de várias formas: envie um email para info@photoportugal.com e responderemos no prazo de 24 horas; se for fotógrafo, utilize o sistema de mensagens integrado no seu painel de controlo para assistência mais rápida; visite a nossa página de contacto para enviar um formulário detalhado. Para questões urgentes, recomendamos o email com o assunto marcado como urgente. A nossa equipa de suporte fala português, inglês, espanhol e francês."
         }
       }
     },

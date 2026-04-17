@@ -8,6 +8,7 @@ import { DisputeForm } from "@/components/ui/DisputeForm";
 import { trackDeliveryAccepted } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
+import { useSession } from "next-auth/react";
 
 interface Photo {
   id: string;
@@ -18,6 +19,7 @@ interface Photo {
 
 interface GalleryData {
   booking_id: string;
+  client_id: string;
   photographer_name: string;
   photographer_avatar: string | null;
   client_name: string;
@@ -42,6 +44,7 @@ export function DeliveryPageClient({
 }) {
   const t = useTranslations("delivery");
   const locale = useLocale();
+  const { data: session } = useSession();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [autoLoading, setAutoLoading] = useState(true);
@@ -241,6 +244,8 @@ export function DeliveryPageClient({
   }
 
   // Gallery view (after password verified)
+  const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
+  const isOwner = !!sessionUserId && sessionUserId === gallery.client_id;
   const totalSize = gallery.photos.reduce((sum, p) => sum + (p.file_size || 0), 0);
   const dateLocale = locale === "pt" ? "pt-PT" : "en-US";
   const expiresDate = new Date(gallery.expires_at).toLocaleDateString(dateLocale, {
@@ -299,58 +304,67 @@ export function DeliveryPageClient({
               Preparing ZIP...
             </span>
           )
-        ) : (
+        ) : isOwner ? (
           <span className="inline-flex items-center gap-2 rounded-xl bg-amber-100 px-5 py-3 text-sm font-medium text-amber-800">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
             {t("acceptToUnlockFullRes")}
           </span>
-        )}
+        ) : null}
       </div>
 
-      {/* Accept Delivery Section */}
-      <div className="mt-6">
-        {accepted ? (
-          <div className="rounded-xl border border-green-200 bg-green-50 p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                <svg className="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-semibold text-green-700">{t("deliveryAccepted")}</p>
-                <p className="text-sm text-green-600">{t("deliveryAcceptedThankYou")}</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-semibold text-amber-800">{t("happyWithPhotos")}</p>
-                <p className="mt-1 text-sm text-amber-700">
-                  {t("acceptDeliveryPrompt")} {gallery.payment_status === "paid" ? t("acceptDeliveryPaymentNote") : ""}
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <DisputeForm bookingId={gallery.booking_id} />
-                <button
-                  onClick={handleAcceptDelivery}
-                  disabled={accepting}
-                  className="shrink-0 rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
-                >
-                  {accepting ? t("accepting") : t("acceptDelivery")}
-                </button>
+      {/* Accept Delivery Section — only for the logged-in client who owns this booking */}
+      {isOwner ? (
+        <div className="mt-6">
+          {accepted ? (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                  <svg className="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-green-700">{t("deliveryAccepted")}</p>
+                  <p className="text-sm text-green-600">{t("deliveryAcceptedThankYou")}</p>
+                </div>
               </div>
             </div>
-            {acceptError && (
-              <p className="mt-3 text-sm text-red-600">{acceptError}</p>
-            )}
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-semibold text-amber-800">{t("happyWithPhotos")}</p>
+                  <p className="mt-1 text-sm text-amber-700">
+                    {t("acceptDeliveryPrompt")} {gallery.payment_status === "paid" ? t("acceptDeliveryPaymentNote") : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <DisputeForm bookingId={gallery.booking_id} />
+                  <button
+                    onClick={handleAcceptDelivery}
+                    disabled={accepting}
+                    className="shrink-0 rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {accepting ? t("accepting") : t("acceptDelivery")}
+                  </button>
+                </div>
+              </div>
+              {acceptError && (
+                <p className="mt-3 text-sm text-red-600">{acceptError}</p>
+              )}
+            </div>
+          )}
+        </div>
+      ) : !accepted && (
+        <div className="mt-6 rounded-xl border border-warm-200 bg-warm-50 p-5 text-center">
+          <p className="text-sm text-gray-500">{t("loginToAccept")}</p>
+          <a href="/auth/signin" className="mt-3 inline-block rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700">
+            {t("logIn")}
+          </a>
+        </div>
+      )}
 
       {/* Gallery */}
       <DeliveryGalleryClient photos={gallery.photos} deliveryAccepted={accepted} />

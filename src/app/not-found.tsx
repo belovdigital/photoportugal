@@ -1,13 +1,14 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getMessages, getTranslations, getLocale } from "next-intl/server";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 
 export default async function NotFound() {
   const messages = await getMessages();
   const t = await getTranslations("notFound");
+  const locale = await getLocale();
 
   return (
     <NextIntlClientProvider messages={messages}>
@@ -25,18 +26,21 @@ export default async function NotFound() {
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link
+                  locale={locale}
                   href="/"
                   className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
                 >
                   {t("goHome")}
                 </Link>
                 <Link
+                  locale={locale}
                   href="/photographers"
                   className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                 >
                   {t("browsePhotographers")}
                 </Link>
                 <Link
+                  locale={locale}
                   href="/locations"
                   className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                 >

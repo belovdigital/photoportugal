@@ -31,13 +31,13 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-xl font-bold text-gray-900">{t("sections.informationWeCollect.title")}</h2>
           <p className="mt-3">{t("sections.informationWeCollect.intro")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationWeCollect.items.account") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationWeCollect.items.photographer") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationWeCollect.items.booking") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationWeCollect.items.messages") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationWeCollect.items.payment") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationWeCollect.items.usage") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationWeCollect.items.cookies") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationWeCollect.items.account") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationWeCollect.items.photographer") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationWeCollect.items.booking") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationWeCollect.items.messages") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationWeCollect.items.payment") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationWeCollect.items.usage") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationWeCollect.items.cookies") }} />
           </ul>
         </section>
 
@@ -46,10 +46,10 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-xl font-bold text-gray-900">{t("sections.legalBasis.title")}</h2>
           <p className="mt-3">{t("sections.legalBasis.intro")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.legalBasis.items.contract") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.legalBasis.items.consent") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.legalBasis.items.legitimateInterest") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.legalBasis.items.legalObligation") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.legalBasis.items.contract") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.legalBasis.items.consent") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.legalBasis.items.legitimateInterest") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.legalBasis.items.legalObligation") }} />
           </ul>
         </section>
 
@@ -74,17 +74,17 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-xl font-bold text-gray-900">{t("sections.informationSharing.title")}</h2>
           <p className="mt-3">{t("sections.informationSharing.intro")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationSharing.items.bookingParties") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationSharing.items.serviceProviders") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.items.bookingParties") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.items.serviceProviders") }} />
           </ul>
           <ul className="mt-2 list-disc pl-10 space-y-1">
-            <li><span dangerouslySetInnerHTML={{ __html: t("sections.informationSharing.processors.stripe") }} />{" "}<a href="https://stripe.com/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Stripe Privacy Policy</a></li>
-            <li><span dangerouslySetInnerHTML={{ __html: t("sections.informationSharing.processors.google") }} />{" "}<a href="https://policies.google.com/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a></li>
-            <li><span dangerouslySetInnerHTML={{ __html: t("sections.informationSharing.processors.digitalocean") }} />{" "}<a href="https://www.digitalocean.com/legal/privacy-policy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">DigitalOcean Privacy Policy</a></li>
-            <li><span dangerouslySetInnerHTML={{ __html: t("sections.informationSharing.processors.twilio") }} />{" "}<a href="https://www.twilio.com/legal/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Twilio Privacy Policy</a></li>
+            <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.stripe") }} />{" "}<a href="https://stripe.com/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Stripe Privacy Policy</a></li>
+            <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.google") }} />{" "}<a href="https://policies.google.com/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a></li>
+            <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.digitalocean") }} />{" "}<a href="https://www.digitalocean.com/legal/privacy-policy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">DigitalOcean Privacy Policy</a></li>
+            <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.twilio") }} />{" "}<a href="https://www.twilio.com/legal/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Twilio Privacy Policy</a></li>
           </ul>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.informationSharing.legalRequirements") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.legalRequirements") }} />
           </ul>
         </section>
 
@@ -99,8 +99,8 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-xl font-bold text-gray-900">{t("sections.internationalTransfers.title")}</h2>
           <p className="mt-3">{t("sections.internationalTransfers.intro")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.internationalTransfers.items.stripe") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.internationalTransfers.items.google") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.internationalTransfers.items.stripe") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.internationalTransfers.items.google") }} />
           </ul>
           <p className="mt-2">
             {t("sections.internationalTransfers.safeguards")}{" "}
@@ -113,11 +113,11 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-xl font-bold text-gray-900">{t("sections.dataRetention.title")}</h2>
           <p className="mt-3">{t("sections.dataRetention.intro")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.dataRetention.items.account") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.dataRetention.items.booking") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.dataRetention.items.messages") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.dataRetention.items.analytics") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.dataRetention.items.marketing") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.dataRetention.items.account") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.dataRetention.items.booking") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.dataRetention.items.messages") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.dataRetention.items.analytics") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.dataRetention.items.marketing") }} />
           </ul>
           <p className="mt-2">{t("sections.dataRetention.deletion")}</p>
         </section>
@@ -127,8 +127,8 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-xl font-bold text-gray-900">{t("sections.cookies.title")}</h2>
           <p className="mt-3">{t("sections.cookies.intro")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.cookies.items.essential") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.cookies.items.analytics") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.cookies.items.essential") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.cookies.items.analytics") }} />
           </ul>
           <p className="mt-2">{t("sections.cookies.noTracking")}</p>
         </section>
@@ -152,13 +152,13 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-xl font-bold text-gray-900">{t("sections.yourRights.title")}</h2>
           <p className="mt-3">{t("sections.yourRights.intro")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.yourRights.items.access") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.yourRights.items.rectification") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.yourRights.items.erasure") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.yourRights.items.restriction") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.yourRights.items.portability") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.yourRights.items.object") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.yourRights.items.withdrawConsent") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.yourRights.items.access") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.yourRights.items.rectification") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.yourRights.items.erasure") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.yourRights.items.restriction") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.yourRights.items.portability") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.yourRights.items.object") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.yourRights.items.withdrawConsent") }} />
           </ul>
           <p className="mt-2">
             {t("sections.yourRights.exercise")}{" "}

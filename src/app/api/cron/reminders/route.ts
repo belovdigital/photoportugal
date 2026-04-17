@@ -754,8 +754,8 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        // Update delivery expiry to 60 days from now
-        const newExpiry = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+        // Update delivery expiry to 90 days from now
+        const newExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
         await queryOne(
           "UPDATE bookings SET delivery_expires_at = $1 WHERE id = $2 RETURNING id",
           [newExpiry.toISOString(), booking.id]
@@ -771,7 +771,7 @@ export async function GET(req: NextRequest) {
             <h2 style="color: #C94536;">Photos Auto-Accepted</h2>
             <p>Hi ${booking.client_name},</p>
             <p>Your photos from <strong>${booking.photographer_name}</strong> have been automatically accepted after 14 days. The payment has been released to the photographer.</p>
-            <p>Your photos are still available for download for 60 days.</p>
+            <p>Your photos are still available for download for 90 days.</p>
             <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
             <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
           </div>`
@@ -1083,12 +1083,40 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Early bird expiration: ${err}`);
   }
 
+  // === 4.5. Retry stuck delivery ZIP builds ===
+  // Catches cases where the fire-and-forget buildDeliveryZip() trigger in /accept
+  // was lost (e.g. process restarted before the build finished).
+  let zipsBuilt = 0;
+  try {
+    const stuckZips = await query<{ id: string }>(
+      `SELECT b.id FROM bookings b
+       WHERE b.delivery_accepted = TRUE
+         AND COALESCE(b.zip_ready, FALSE) = FALSE
+         AND b.delivery_accepted_at < NOW() - INTERVAL '5 minutes'
+         AND EXISTS (SELECT 1 FROM delivery_photos dp WHERE dp.booking_id = b.id)
+       LIMIT 5`
+    );
+    if (stuckZips.length > 0) {
+      const { buildDeliveryZip } = await import("@/lib/build-zip");
+      for (const booking of stuckZips) {
+        try {
+          const result = await buildDeliveryZip(booking.id);
+          if (result) zipsBuilt++;
+        } catch (err) {
+          console.error(`[cron] zip rebuild error for booking ${booking.id}:`, err);
+        }
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Stuck ZIP rebuild: ${err}`);
+  }
+
   // === 5. Expired delivery file cleanup ===
   let expiredDeliveriesCleaned = 0;
   try {
     const expiredDeliveries = await query<{ id: string }>(
       `SELECT b.id FROM bookings b
-       WHERE b.delivery_expires_at < NOW() - INTERVAL '30 days'
+       WHERE b.delivery_expires_at < NOW() - INTERVAL '90 days'
          AND EXISTS (SELECT 1 FROM delivery_photos dp WHERE dp.booking_id = b.id)`
     );
 
@@ -1660,13 +1688,14 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Notification queue processing: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, clientFollowUps, queueProcessed });
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, clientFollowUps, queueProcessed });
 
   return NextResponse.json({
     success: true,
     ...results,
     earlyBirdExpired,
     expiredDeliveriesCleaned,
+    zipsBuilt,
     checklistDeadlineEmails,
     checklistDeactivated,
     deliveryReviewReminders,

@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description: t("subtitle"),
       url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog`,
       type: "website",
+      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal Blog" }],
     },
   };
 }
@@ -90,6 +91,39 @@ export default async function BlogPage({
     ],
   };
 
+  const blogJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "Photo Portugal Blog",
+    description: t("subtitle"),
+    url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog`,
+    blogPost: posts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      ...(p.excerpt ? { description: p.excerpt } : {}),
+      ...(p.cover_image_url ? { image: p.cover_image_url.startsWith("http") ? p.cover_image_url : `https://photoportugal.com${p.cover_image_url}` } : {}),
+      datePublished: new Date(p.published_at).toISOString(),
+      author: { "@type": "Person", name: p.author },
+      url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog/${p.slug}`,
+    })),
+  };
+
+  // Fetch featured photographers for internal linking module
+  let featuredPhotographers: { slug: string; name: string; avatar_url: string | null; location_name: string | null }[] = [];
+  try {
+    featuredPhotographers = await query<{ slug: string; name: string; avatar_url: string | null; location_name: string | null }>(
+      `SELECT p.slug, u.name, u.avatar_url,
+              (SELECT l.name FROM photographer_locations pl JOIN locations l ON l.slug = pl.location_slug WHERE pl.photographer_id = p.id LIMIT 1) as location_name
+       FROM photographer_profiles p
+       JOIN users u ON u.id = p.user_id
+       WHERE p.is_approved = TRUE
+       ORDER BY p.is_featured DESC, RANDOM()
+       LIMIT 6`
+    );
+  } catch (err) {
+    console.error("[blog] featured photographers error:", err);
+  }
+
   // Generate page numbers to display (with ellipsis logic)
   const getPageNumbers = () => {
     const pages: (number | "ellipsis")[] = [];
@@ -112,6 +146,10 @@ export default async function BlogPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
       />
 
       {/* Hero */}
@@ -290,6 +328,49 @@ export default async function BlogPage({
           </>
         )}
       </section>
+
+      {/* Featured Photographers — internal linking module */}
+      {featuredPhotographers.length > 0 && (
+        <section className="border-t border-warm-200 bg-warm-50">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
+              {locale === "pt" ? "Fotógrafos em destaque" : "Featured Photographers"}
+            </h2>
+            <p className="mt-2 text-sm text-gray-500">
+              {locale === "pt" ? "Conheça os fotógrafos mais procurados do Photo Portugal." : "Meet the photographers our clients love most."}
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              {featuredPhotographers.map((p) => (
+                <Link
+                  key={p.slug}
+                  href={`/photographers/${p.slug}`}
+                  className="group flex flex-col items-center text-center"
+                >
+                  <div className="h-20 w-20 overflow-hidden rounded-full bg-warm-200 ring-2 ring-white shadow-sm transition group-hover:ring-primary-200">
+                    {p.avatar_url ? (
+                      <img src={p.avatar_url} alt={p.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-lg font-bold text-gray-400">
+                        {p.name.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-2 truncate text-sm font-semibold text-gray-800 group-hover:text-primary-600 w-full">{p.name}</p>
+                  {p.location_name && <p className="truncate text-xs text-gray-400">{p.location_name}</p>}
+                </Link>
+              ))}
+            </div>
+            <div className="mt-6 text-center">
+              <Link href="/photographers" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700">
+                {locale === "pt" ? "Ver todos os fotógrafos" : "Browse all photographers"}
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
     </>
   );
 }

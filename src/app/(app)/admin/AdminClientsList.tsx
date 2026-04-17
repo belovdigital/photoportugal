@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { AdminBanToggle } from "./AdminControls";
 import { Avatar } from "@/components/ui/Avatar";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 function codeToFlag(code: string): string {
   if (!code || code.length !== 2) return "";
@@ -96,6 +97,7 @@ export function AdminClientsList({ clients, bookingsByClient }: { clients: Admin
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const { modal, confirm } = useConfirmModal();
 
   const filtered = useMemo(() => {
     if (!search.trim()) return clients;
@@ -202,8 +204,31 @@ export function AdminClientsList({ clients, bookingsByClient }: { clients: Admin
                     </div>
                     <div>
                       <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Status</label>
-                      <div className="mt-1">
+                      <div className="mt-1 flex items-center gap-2">
                         <AdminBanToggle id={c.id} value={c.is_banned} />
+                        <button
+                          onClick={async () => {
+                            const ok = await confirm(
+                              "Log in as " + c.name,
+                              "You will be redirected to their dashboard in a new tab.",
+                              { confirmLabel: "Log in" }
+                            );
+                            if (!ok) return;
+                            const res = await fetch("/api/admin/impersonate", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ user_id: c.id }),
+                            });
+                            if (res.ok) {
+                              window.open("/dashboard", "_blank");
+                            } else {
+                              alert("Failed to impersonate");
+                            }
+                          }}
+                          className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition"
+                        >
+                          Log in as
+                        </button>
                       </div>
                     </div>
                     <div>
@@ -357,6 +382,7 @@ export function AdminClientsList({ clients, bookingsByClient }: { clients: Admin
           </div>
         </div>
       )}
+      {modal}
     </div>
   );
 }

@@ -15,8 +15,9 @@ function localized(path: string, opts: Omit<MetadataRoute.Sitemap[0], "url">): M
     url: locale === "en" ? `${BASE}${path}` : `${BASE}/pt${path}`,
     alternates: {
       languages: {
-        en: `${BASE}${path}`,
-        pt: `${BASE}/pt${path}`,
+        "en-GB": `${BASE}${path}`,
+        "en-US": `${BASE}${path}`,
+        "pt-PT": `${BASE}/pt${path}`,
         "x-default": `${BASE}${path}`,
       },
     },

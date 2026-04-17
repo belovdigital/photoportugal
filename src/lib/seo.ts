@@ -11,8 +11,9 @@ export function localeAlternates(path: string, locale: string) {
   return {
     canonical: locale === "pt" ? ptUrl : enUrl,
     languages: {
-      en: enUrl,
-      pt: ptUrl,
+      "en-GB": enUrl,
+      "en-US": enUrl,
+      "pt-PT": ptUrl,
       "x-default": enUrl,
     },
   };

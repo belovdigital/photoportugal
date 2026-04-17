@@ -118,6 +118,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Accept the proposed date — update shoot_date, clear proposal
     if (!booking.proposed_date) return NextResponse.json({ error: "No date proposal to accept" }, { status: 400 });
 
+    // Prevent self-accept: the person who proposed cannot accept their own proposal
+    const proposerIsClient = booking.proposed_by === "client";
+    const proposerIsPhotographer = booking.proposed_by === "photographer";
+    if ((proposerIsClient && isClient) || (proposerIsPhotographer && isPhotographer)) {
+      return NextResponse.json({ error: "You cannot accept your own date proposal" }, { status: 400 });
+    }
+
     // Get proposed_time before clearing
     const proposalData = await queryOne<{ proposed_time: string | null }>(
       "SELECT proposed_time FROM bookings WHERE id = $1", [bookingId]

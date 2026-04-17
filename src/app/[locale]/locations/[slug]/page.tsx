@@ -51,6 +51,7 @@ export async function generateMetadata({
       description: seoDescription,
       type: "website",
       url: `https://photoportugal.com/locations/${slug}`,
+      images: [{ url: location.cover_image || "/og-image.png", width: 1200, height: 630, alt: `${location.name}, Portugal` }],
     },
   };
 }

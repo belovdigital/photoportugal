@@ -48,6 +48,12 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/photographers", request.url), 301);
   }
 
+  // 301 redirect: consolidate two cannibalized elopement posts into one
+  if (pathname === "/blog/elopement-in-portugal-guide" || pathname === "/pt/blog/elopement-in-portugal-guide") {
+    const prefix = pathname.startsWith("/pt") ? "/pt" : "";
+    return NextResponse.redirect(new URL(`${prefix}/blog/how-to-elope-in-portugal`, request.url), 301);
+  }
+
   return intlMiddleware(request);
 }
 

@@ -79,7 +79,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
             <li>{t("sections.paymentsEscrow.items.clientPays")}</li>
             <li>{t("sections.paymentsEscrow.items.fundsHeld")}</li>
             <li>{t("sections.paymentsEscrow.items.released")}</li>
-            <li dangerouslySetInnerHTML={{ __html: t("sections.paymentsEscrow.items.autoRelease") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.paymentsEscrow.items.autoRelease") }} />
             <li>{t("sections.paymentsEscrow.items.support")}</li>
           </ul>
         </section>
@@ -89,9 +89,9 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
           <h2 className="text-xl font-bold text-gray-900">{t("sections.commission.title")}</h2>
           <p className="mt-3">{t("sections.commission.intro")}</p>
           <ul className="mt-3 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.commission.items.free") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.commission.items.pro") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.commission.items.premium") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.commission.items.free") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.commission.items.pro") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.commission.items.premium") }} />
           </ul>
           <p className="mt-3">{t("sections.commission.details")}</p>
         </section>
@@ -122,7 +122,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
         {/* 8. Cancellation by Photographer */}
         <section>
           <h2 className="text-xl font-bold text-gray-900">{t("sections.cancellationByPhotographer.title")}</h2>
-          <p className="mt-3" dangerouslySetInnerHTML={{ __html: t("sections.cancellationByPhotographer.intro") }} />
+          <p className="mt-3" dangerouslySetInnerHTML={{ __html: t.raw("sections.cancellationByPhotographer.intro") }} />
           <ul className="mt-3 list-disc pl-6 space-y-1">
             <li>{t("sections.cancellationByPhotographer.items.replacement")}</li>
             <li>{t("sections.cancellationByPhotographer.items.repeated")}</li>
@@ -133,9 +133,9 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
         <section>
           <h2 className="text-xl font-bold text-gray-900">{t("sections.rescheduling.title")}</h2>
           <ul className="mt-3 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.rescheduling.items.free") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.rescheduling.items.late") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.rescheduling.items.weather") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.rescheduling.items.free") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.rescheduling.items.late") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.rescheduling.items.weather") }} />
           </ul>
         </section>
 
@@ -145,18 +145,18 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
           <p className="mt-3">{t("sections.photoDelivery.intro")}</p>
           <ul className="mt-3 list-disc pl-6 space-y-1">
             <li>{t("sections.photoDelivery.items.gallery")}</li>
-            <li dangerouslySetInnerHTML={{ __html: t("sections.photoDelivery.items.latePartial") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.photoDelivery.items.lateFullRefund") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.photoDelivery.items.acceptance") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.photoDelivery.items.autoRelease") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.photoDelivery.items.galleryAccess") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.latePartial") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.lateFullRefund") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.acceptance") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.autoRelease") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.photoDelivery.items.galleryAccess") }} />
           </ul>
         </section>
 
         {/* 11. Disputes & Quality Guarantee */}
         <section>
           <h2 className="text-xl font-bold text-gray-900">{t("sections.disputes.title")}</h2>
-          <p className="mt-3" dangerouslySetInnerHTML={{ __html: t("sections.disputes.intro") }} />
+          <p className="mt-3" dangerouslySetInnerHTML={{ __html: t.raw("sections.disputes.intro") }} />
           <p className="mt-3 font-medium text-gray-900">{t("sections.disputes.groundsTitle")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
             <li>{t("sections.disputes.grounds.fewer")}</li>
@@ -166,9 +166,9 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
           </ul>
           <p className="mt-3 font-medium text-gray-900">{t("sections.disputes.resolutionsTitle")}</p>
           <ul className="mt-2 list-disc pl-6 space-y-1">
-            <li dangerouslySetInnerHTML={{ __html: t("sections.disputes.resolutions.reshoot") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.disputes.resolutions.partial") }} />
-            <li dangerouslySetInnerHTML={{ __html: t("sections.disputes.resolutions.full") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.disputes.resolutions.reshoot") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.disputes.resolutions.partial") }} />
+            <li dangerouslySetInnerHTML={{ __html: t.raw("sections.disputes.resolutions.full") }} />
           </ul>
           <p className="mt-3 text-sm text-gray-500">{t("sections.disputes.subjectiveNote")}</p>
         </section>
