@@ -167,7 +167,7 @@ export default async function PhotographerProfilePage({
   }
 
   const photographer = result.data;
-  let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string; client_avatar: string | null }[] = [];
+  let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string; client_avatar: string | null; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
   const portfolioItems = (photographer as { portfolioItems?: { url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
   // Fetch real reviews from DB for DB photographers
@@ -184,10 +184,18 @@ export default async function PhotographerProfilePage({
         client_avatar: string | null;
         photos: { id: string; url: string }[];
         video_url: string | null;
+        package_id: string | null;
+        package_name: string | null;
+        client_country: string | null;
       }>(
         `SELECT r.id, r.rating, r.title, r.text, r.is_verified, r.created_at, r.video_url,
                 COALESCE(r.client_name_override, u.name, 'Client') as client_name,
                 u.avatar_url as client_avatar,
+                b.package_id,
+                pkg.name as package_name,
+                (SELECT vs.country FROM visitor_sessions vs
+                 WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL
+                 ORDER BY vs.started_at ASC LIMIT 1) as client_country,
                 COALESCE(
                   (SELECT json_agg(json_build_object('id', rp.id, 'url', rp.url) ORDER BY rp.created_at)
                    FROM review_photos rp WHERE rp.review_id = r.id AND rp.is_public = true),
@@ -195,6 +203,8 @@ export default async function PhotographerProfilePage({
                 ) as photos
          FROM reviews r
          LEFT JOIN users u ON u.id = r.client_id
+         LEFT JOIN bookings b ON b.id = r.booking_id
+         LEFT JOIN packages pkg ON pkg.id = b.package_id
          WHERE r.photographer_id = $1 AND r.is_approved = true
          ORDER BY r.created_at DESC`,
         [photographer.id]
@@ -214,6 +224,9 @@ export default async function PhotographerProfilePage({
         video_url: r.video_url || null,
         is_verified: r.is_verified,
         created_at: r.created_at,
+        package_id: r.package_id,
+        package_name: r.package_name,
+        client_country: r.client_country,
       }));
     } catch {}
   }
@@ -522,26 +535,26 @@ export default async function PhotographerProfilePage({
 
         <div className="mt-8 grid grid-cols-1 gap-6 pb-16 sm:gap-8 lg:grid-cols-3 lg:gap-12">
           {/* Main content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-12">
+            {/* Portfolio — always visible above tabs */}
+            {portfolioItems.length > 0 && (
+              <PortfolioGallery
+                items={portfolioItems}
+                locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
+                photographerName={normalizeName(photographer.name)}
+              />
+            )}
+
+            {/* About / Reviews tabs */}
             <ProfileTabs
               aboutLabel={t("about")}
-              reviewsLabel={tc("reviews")}
+              reviewsLabel="Reviews"
               reviewCount={photographer.review_count}
               about={
                 photographer.bio ? (
                   <section>
-                    <h2 className="text-xl font-bold text-gray-900">{t("about")}</h2>
-                    <p className="mt-3 text-gray-600 leading-relaxed">{photographer.bio}</p>
+                    <p className="text-gray-600 leading-relaxed">{photographer.bio}</p>
                   </section>
-                ) : null
-              }
-              portfolio={
-                portfolioItems.length > 0 ? (
-                  <PortfolioGallery
-                    items={portfolioItems}
-                    locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
-                    photographerName={normalizeName(photographer.name)}
-                  />
                 ) : null
               }
               reviews={

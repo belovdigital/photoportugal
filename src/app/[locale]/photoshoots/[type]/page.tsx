@@ -11,6 +11,7 @@ import { query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
+import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 
 export function generateStaticParams() {
   return shootTypes.map((t) => ({ type: t.slug }));
@@ -169,12 +170,17 @@ export default async function ShootTypePage({
         <section className="border-t border-warm-200 bg-warm-50">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <h2 className="font-display text-3xl font-bold text-gray-900">
-              {t("photographersTitle", { name: shootType.name })}
+              {locale === "pt"
+                ? `Melhores Fotógrafos para ${shootType.name}`
+                : `Best Photographers for ${shootType.name} Photoshoots`}
             </h2>
             <p className="mt-2 text-gray-500">
               {t("photographersSubtitle", { name: shootType.name.toLowerCase() })}
             </p>
-            <div className={`mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
+            <div className="mt-6">
+              <ScarcityBanner count={photographers.length} locationName={shootType.name} locale={locale} context="shootType" />
+            </div>
+            <div className={`mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
               photographers.length <= 2 ? "lg:grid-cols-2" :
               photographers.length === 4 ? "lg:grid-cols-2" :
               "lg:grid-cols-3"

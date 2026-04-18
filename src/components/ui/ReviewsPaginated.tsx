@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import { formatPublicName } from "@/lib/format-name";
 
 interface Review {
@@ -16,6 +15,14 @@ interface Review {
   client_avatar: string | null;
   photos?: { id: string; url: string }[];
   video_url?: string | null;
+  package_id?: string | null;
+  package_name?: string | null;
+  client_country?: string | null;
+}
+
+function codeToFlag(code: string): string {
+  if (!code || code.length !== 2) return "";
+  return code.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
 }
 
 const PAGE_SIZE = 5;
@@ -62,34 +69,57 @@ export function ReviewsPaginated({
       </div>
 
       <div className="mt-6 space-y-6">
-        {shown.map((review) => (
-          <div key={review.id} className="rounded-xl border border-warm-200 bg-white p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
-                  {review.client_name.charAt(0)}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{formatPublicName(review.client_name)}</p>
-                  <p className="text-xs text-gray-400">
-                    {t("reviewFor")}{" "}
-                    <Link href={`/photographers/${photographerSlug}`} className="text-primary-600 hover:underline">{photographerName}</Link>
-                    {" "}&middot;{" "}
-                    {new Date(review.created_at).toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", { month: "long", year: "numeric" })}
-                  </p>
-                </div>
+        {shown.map((review) => {
+          const flag = codeToFlag(review.client_country || "");
+          const monthYear = new Date(review.created_at).toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", { month: "long", year: "numeric" });
+          const packageHref = review.package_id ? `/book/${photographerSlug}?package=${review.package_id}` : null;
+          return (
+          <div key={review.id} className="rounded-xl border border-warm-200 bg-white p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
+                {review.client_name.charAt(0)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                  {flag && <span aria-hidden className="text-base leading-none">{flag}</span>}
+                  <span className="truncate">{formatPublicName(review.client_name)}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-gray-400">
+                  {packageHref && review.package_name ? (
+                    <>
+                      <a href={packageHref} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
+                        {review.package_name}
+                      </a>
+                      {" · "}
+                    </>
+                  ) : null}
+                  {monthYear}
+                </p>
               </div>
               {review.is_verified && (
-                <span className="rounded-full bg-accent-50 px-2.5 py-1 text-xs font-medium text-accent-700">{tc("verifiedBooking")}</span>
+                <span className="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full bg-accent-50 px-2.5 py-1 text-xs font-medium text-accent-700">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                  {tc("verifiedBooking")}
+                </span>
               )}
             </div>
-            <div className="mt-3 flex gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <svg key={i} className={`h-4 w-4 ${i < review.rating ? "text-yellow-400" : "text-gray-200"}`} fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
+
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <svg key={i} className={`h-4 w-4 ${i < review.rating ? "text-yellow-400" : "text-gray-200"}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              {review.is_verified && (
+                <span className="sm:hidden inline-flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-medium text-accent-700">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                  {tc("verifiedBooking")}
+                </span>
+              )}
             </div>
+
             {review.title && <h4 className="mt-2 font-semibold text-gray-900">{review.title}</h4>}
             {review.text && <p className="mt-2 text-sm text-gray-600 leading-relaxed">{review.text}</p>}
             {review.video_url && (
@@ -117,7 +147,8 @@ export function ReviewsPaginated({
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
 
         {reviews.length === 0 && (
           <p className="text-gray-400">{t("noReviews")}</p>
