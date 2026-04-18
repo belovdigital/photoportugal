@@ -525,7 +525,7 @@ export default async function PhotographerProfilePage({
           <div className="lg:col-span-2">
             <ProfileTabs
               aboutLabel={t("about")}
-              reviewsLabel={photographer.review_count !== 1 ? tc("reviews") : tc("review")}
+              reviewsLabel={tc("reviews")}
               reviewCount={photographer.review_count}
               about={
                 photographer.bio ? (
