@@ -64,8 +64,8 @@ export async function PATCH(
   // Notify photographer that a review was approved
   if (body.is_approved === true) {
     try {
-      const reviewDetails = await queryOne<{ rating: number; client_name: string; photographer_email: string; photographer_name: string; slug: string }>(
-        `SELECT r.rating, COALESCE(r.client_name_override, cu.name, 'A client') as client_name,
+      const reviewDetails = await queryOne<{ rating: number; client_name: string; photographer_email: string; photographer_name: string; slug: string; title: string | null; text: string | null }>(
+        `SELECT r.rating, r.title, r.text, COALESCE(r.client_name_override, cu.name, 'A client') as client_name,
                 pu.email as photographer_email, pu.name as photographer_name, pp.slug
          FROM reviews r
          LEFT JOIN users cu ON cu.id = r.client_id
@@ -76,7 +76,8 @@ export async function PATCH(
       if (reviewDetails) {
         sendReviewApprovedToPhotographer(
           reviewDetails.photographer_email, reviewDetails.photographer_name,
-          reviewDetails.client_name, reviewDetails.rating, reviewDetails.slug
+          reviewDetails.client_name, reviewDetails.rating, reviewDetails.slug,
+          reviewDetails.title, reviewDetails.text
         ).catch(err => console.error("[reviews] review approved email error:", err));
       }
     } catch (err) {

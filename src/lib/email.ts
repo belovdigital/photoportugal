@@ -903,21 +903,32 @@ export async function sendReviewApprovedToPhotographer(
   photographerName: string,
   clientName: string,
   rating: number,
-  profileSlug: string
+  profileSlug: string,
+  title?: string | null,
+  text?: string | null
 ) {
-  const stars = "\u2605".repeat(rating) + "\u2606".repeat(5 - rating);
+  const filledStar = "\u2605";
+  const emptyStar = "\u2606";
+  const stars = filledStar.repeat(rating) + emptyStar.repeat(5 - rating);
   const clientFirstName = clientName.split(" ")[0];
+  const safeTitle = title ? String(title).replace(/</g, "&lt;") : "";
+  const safeText = text ? String(text).replace(/</g, "&lt;").replace(/\n/g, "<br>") : "";
+
   await sendEmail(
     photographerEmail,
-    `New ${rating}-star review published on your profile!`,
+    `You have a new ${rating}-star review`,
     emailLayout(`
-      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">New Review Published!</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">A review from <strong>${clientFirstName}</strong> has been approved and is now visible on your profile.</p>
-      <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
-        <p style="margin:0;font-size:20px;color:#F59E0B;">${stars}</p>
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">You have a new review</h2>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName.split(" ")[0]},</p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${clientFirstName}</strong> left you a review.</p>
+
+      <div style="margin:16px 0;padding:20px;background:#FAF8F5;border-radius:12px;border:1px solid #F3EDE6;">
+        <p style="margin:0 0 8px;font-size:24px;letter-spacing:2px;color:#F59E0B;">${stars}</p>
+        ${safeTitle ? `<p style="margin:12px 0 8px;font-size:16px;font-weight:700;color:#1F1F1F;">${safeTitle}</p>` : ""}
+        ${safeText ? `<p style="margin:0;font-size:15px;line-height:1.6;color:#4A4A4A;font-style:italic;">"${safeText}"</p>` : ""}
       </div>
-      ${emailButton(`${BASE_URL}/photographers/${profileSlug}`, "View Your Profile")}
+
+      ${emailButton(`${BASE_URL}/photographers/${profileSlug}#reviews`, "View on Your Profile")}
     `)
   );
 }

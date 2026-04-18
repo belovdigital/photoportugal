@@ -3,7 +3,6 @@ import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { sendReviewNotification } from "@/lib/email";
 
 // Create a review (client only, after completed booking)
 export async function POST(req: NextRequest) {
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     // Don't update photographer rating yet — admin must approve first
 
-    // Notify photographer
+    // Admin-only notifications (photographer is notified after approval, not before)
     try {
       const info = await queryOne<{ email: string; name: string }>(
         `SELECT u.email, u.name FROM photographer_profiles pp
@@ -67,8 +66,6 @@ export async function POST(req: NextRequest) {
       );
       const client = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
       if (info && client) {
-        sendReviewNotification(info.email, info.name, client.name, rating);
-
         // Telegram: notify admin of new review
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`⭐ <b>New Review!</b>\n\n${"★".repeat(rating)}${"☆".repeat(5-rating)} from ${client!.name}\nFor: ${info!.name}${title ? `\n"${title}"` : ""}`, "clients");

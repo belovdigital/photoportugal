@@ -9,6 +9,7 @@ import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
+import { ProfileTabs } from "@/components/ui/ProfileTabs";
 import { PackageCard } from "@/components/ui/PackageCard";
 import { localeAlternates } from "@/lib/seo";
 import { normalizeName } from "@/lib/format-name";
@@ -409,9 +410,6 @@ export default async function PhotographerProfilePage({
                   normalizeName(photographer.name).charAt(0)
                 )}
               </div>
-              {result.type === "db" && (photographer as { last_seen_at?: string }).last_seen_at && (Date.now() - new Date((photographer as { last_seen_at: string }).last_seen_at).getTime()) < 5 * 60 * 1000 && (
-                <span className="absolute bottom-1 right-1 flex h-4 w-4 rounded-full ring-[3px] ring-white bg-green-500" title={tc("online")} />
-              )}
             </div>
 
             <div className="min-w-0 flex-1">
@@ -524,32 +522,37 @@ export default async function PhotographerProfilePage({
 
         <div className="mt-8 grid grid-cols-1 gap-6 pb-16 sm:gap-8 lg:grid-cols-3 lg:gap-12">
           {/* Main content */}
-          <div className="lg:col-span-2 space-y-12">
-            {/* About */}
-            {photographer.bio && (
-              <section>
-                <h2 className="text-xl font-bold text-gray-900">{t("about")}</h2>
-                <p className="mt-3 text-gray-600 leading-relaxed">{photographer.bio}</p>
-              </section>
-            )}
-
-            {/* Portfolio */}
-            {portfolioItems.length > 0 && (
-              <PortfolioGallery
-                items={portfolioItems}
-                locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
-                photographerName={normalizeName(photographer.name)}
-              />
-            )}
-
-            {/* Reviews */}
-            <div id="reviews" className="scroll-mt-24" />
-            <ReviewsPaginated
-              reviews={reviews}
+          <div className="lg:col-span-2">
+            <ProfileTabs
+              aboutLabel={t("about")}
+              reviewsLabel={photographer.review_count !== 1 ? tc("reviews") : tc("review")}
               reviewCount={photographer.review_count}
-              rating={photographer.rating}
-              photographerName={normalizeName(photographer.name)}
-              photographerSlug={slug}
+              about={
+                photographer.bio ? (
+                  <section>
+                    <h2 className="text-xl font-bold text-gray-900">{t("about")}</h2>
+                    <p className="mt-3 text-gray-600 leading-relaxed">{photographer.bio}</p>
+                  </section>
+                ) : null
+              }
+              portfolio={
+                portfolioItems.length > 0 ? (
+                  <PortfolioGallery
+                    items={portfolioItems}
+                    locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
+                    photographerName={normalizeName(photographer.name)}
+                  />
+                ) : null
+              }
+              reviews={
+                <ReviewsPaginated
+                  reviews={reviews}
+                  reviewCount={photographer.review_count}
+                  rating={photographer.rating}
+                  photographerName={normalizeName(photographer.name)}
+                  photographerSlug={slug}
+                />
+              }
             />
           </div>
 
