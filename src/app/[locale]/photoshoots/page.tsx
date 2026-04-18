@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
+import { query, queryOne } from "@/lib/db";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -27,12 +28,48 @@ const shootTypeIcons: Record<string, string> = {
   friends: "M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z",
 };
 
+async function getShootTypeStats(): Promise<Record<string, { count: number; minPrice: number | null }>> {
+  // For each shoot type slug we resolve aliases, then query counts + min price per alias set.
+  const result: Record<string, { count: number; minPrice: number | null }> = {};
+  await Promise.all(
+    shootTypes.map(async (st) => {
+      const aliases = st.photographerShootTypeNames || [st.name];
+      try {
+        const row = await queryOne<{ count: string; min_price: string | null }>(
+          `SELECT COUNT(DISTINCT pp.id)::text as count,
+                  (SELECT MIN(pk.price) FROM packages pk
+                   JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
+                   WHERE pp2.is_approved = TRUE AND pk.is_public = TRUE
+                     AND pp2.shoot_types && $1::text[]) as min_price
+           FROM photographer_profiles pp
+           WHERE pp.is_approved = TRUE AND pp.shoot_types && $1::text[]`,
+          [aliases]
+        );
+        result[st.slug] = {
+          count: parseInt(row?.count || "0"),
+          minPrice: row?.min_price ? parseFloat(row.min_price) : null,
+        };
+      } catch {
+        result[st.slug] = { count: 0, minPrice: null };
+      }
+    })
+  );
+  return result;
+}
+
 export default async function PhotoshootsHubPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
 
   const t = await getTranslations("shootTypesPage");
   const tc = await getTranslations("common");
+
+  const [stats, totalPhotogs] = await Promise.all([
+    getShootTypeStats(),
+    queryOne<{ count: string }>(
+      `SELECT COUNT(*)::text as count FROM photographer_profiles WHERE is_approved = TRUE`
+    ).then((r) => parseInt(r?.count || "0")).catch(() => 0),
+  ]);
 
   const itemListJsonLd = {
     "@context": "https://schema.org",
@@ -59,60 +96,145 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
         ]}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="max-w-3xl">
-          <h1 className="font-display text-4xl font-bold text-gray-900 sm:text-5xl">
-            {t("title")}
-          </h1>
-          <p className="mt-4 text-lg text-gray-500">
-            {t("subtitle")}
-          </p>
-        </div>
+      {/* Hero */}
+      <section className="border-b border-warm-200 bg-gradient-to-b from-warm-50 to-white">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+          <div className="max-w-3xl">
+            <h1 className="font-display text-4xl font-bold text-gray-900 sm:text-5xl">
+              {t("title")}
+            </h1>
+            <p className="mt-4 text-lg text-gray-500">
+              {t("subtitle")}
+            </p>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {shootTypes.map((type) => (
-            <Link
-              key={type.slug}
-              href={`/photoshoots/${type.slug}`}
-              className="group rounded-2xl border border-warm-200 bg-white p-6 transition hover:border-primary-200 hover:shadow-lg"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition group-hover:bg-primary-100">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d={shootTypeIcons[type.slug] || shootTypeIcons.couples} />
-                </svg>
+            {/* Stat row */}
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+              <div className="flex items-center gap-1.5">
+                <span className="flex h-2 w-2 rounded-full bg-accent-500" />
+                <span className="font-semibold text-gray-900">{totalPhotogs}+</span>
+                <span className="text-gray-500">{locale === "pt" ? "fotógrafos verificados" : "verified photographers"}</span>
               </div>
-              <h2 className="mt-4 text-lg font-bold text-gray-900 group-hover:text-primary-600 transition">
-                {t("photoshoot", { name: type.name })}
-              </h2>
-              <p className="mt-2 text-sm text-gray-500 line-clamp-3">
-                {type.heroText.slice(0, 150)}...
-              </p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary-600">
-                {t("learnMore")}
-                <svg className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </span>
-            </Link>
-          ))}
+              <div className="flex items-center gap-1.5">
+                <span className="flex h-2 w-2 rounded-full bg-amber-400" />
+                <span className="font-semibold text-gray-900">{shootTypes.length}</span>
+                <span className="text-gray-500">{locale === "pt" ? "tipos de sessão" : "photoshoot types"}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="flex h-2 w-2 rounded-full bg-primary-500" />
+                <span className="font-semibold text-gray-900">32</span>
+                <span className="text-gray-500">{locale === "pt" ? "locais" : "locations across Portugal"}</span>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        {/* CTA */}
-        <div className="mt-16 rounded-2xl bg-gray-900 px-8 py-12 text-center sm:px-12">
+      {/* Cards */}
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {shootTypes.map((type) => {
+            const s = stats[type.slug] || { count: 0, minPrice: null };
+            return (
+              <Link
+                key={type.slug}
+                href={`/photoshoots/${type.slug}`}
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-lg"
+              >
+                {/* Icon + count */}
+                <div className="flex items-start justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-50 to-amber-50 text-primary-600 ring-1 ring-primary-100">
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d={shootTypeIcons[type.slug] || shootTypeIcons.couples} />
+                    </svg>
+                  </div>
+                  {s.count > 0 && (
+                    <span className="rounded-full bg-accent-50 px-2.5 py-1 text-[11px] font-semibold text-accent-700">
+                      {s.count} {locale === "pt" ? (s.count === 1 ? "fotógrafo" : "fotógrafos") : (s.count === 1 ? "photographer" : "photographers")}
+                    </span>
+                  )}
+                </div>
+
+                {/* Title */}
+                <h2 className="mt-4 font-display text-xl font-bold text-gray-900 transition group-hover:text-primary-600">
+                  {type.name}
+                </h2>
+
+                {/* Short description */}
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-500 line-clamp-3">
+                  {type.heroText.slice(0, 150)}...
+                </p>
+
+                {/* Footer: price + CTA */}
+                <div className="mt-5 flex items-end justify-between border-t border-warm-100 pt-4">
+                  <div>
+                    {s.minPrice !== null ? (
+                      <>
+                        <p className="text-[11px] uppercase tracking-wider text-gray-400">{locale === "pt" ? "A partir de" : "From"}</p>
+                        <p className="font-bold text-gray-900">€{Math.round(s.minPrice)}</p>
+                      </>
+                    ) : (
+                      <p className="text-[11px] uppercase tracking-wider text-gray-400">{locale === "pt" ? "Em breve" : "Coming soon"}</p>
+                    )}
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 transition group-hover:bg-primary-100">
+                    {locale === "pt" ? "Ver" : "View"}
+                    <svg className="h-3 w-3 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* How it works strip */}
+      <section className="border-y border-warm-200 bg-warm-50">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {[
+              { step: "01", title: locale === "pt" ? "Escolha" : "Choose", desc: locale === "pt" ? "Tipo de sessão + local" : "Pick shoot type + location" },
+              { step: "02", title: locale === "pt" ? "Reserve" : "Book", desc: locale === "pt" ? "Pagamento seguro — retido até à entrega" : "Secure payment held until delivery" },
+              { step: "03", title: locale === "pt" ? "Receba" : "Receive", desc: locale === "pt" ? "Fotos editadas em alta resolução" : "Edited high-res photos, delivered" },
+            ].map((s) => (
+              <div key={s.step} className="flex gap-3">
+                <span className="font-display text-2xl font-bold text-primary-300">{s.step}</span>
+                <div>
+                  <p className="font-semibold text-gray-900">{s.title}</p>
+                  <p className="mt-0.5 text-sm text-gray-500">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="overflow-hidden rounded-2xl bg-gray-900 px-8 py-12 text-center sm:px-12">
           <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
             {t("ctaTitle")}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-gray-300">
             {t("ctaSubtitle")}
           </p>
-          <Link
-            href="/photographers"
-            className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white transition hover:bg-primary-700"
-          >
-            {t("browseAllPhotographers")}
-          </Link>
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/photographers"
+              className="inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white transition hover:bg-primary-700"
+            >
+              {t("browseAllPhotographers")}
+            </Link>
+            <Link
+              href="/find-photographer"
+              className="inline-flex rounded-xl border border-gray-700 bg-gray-800 px-8 py-4 text-base font-semibold text-white transition hover:bg-gray-700"
+            >
+              {locale === "pt" ? "Ajuda-me a escolher" : "Help me choose"}
+            </Link>
+          </div>
         </div>
-      </div>
+      </section>
     </>
   );
 }

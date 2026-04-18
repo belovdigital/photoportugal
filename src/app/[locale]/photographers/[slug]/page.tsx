@@ -536,16 +536,7 @@ export default async function PhotographerProfilePage({
         <div className="mt-8 grid grid-cols-1 gap-6 pb-16 sm:gap-8 lg:grid-cols-3 lg:gap-12">
           {/* Main content */}
           <div className="lg:col-span-2 space-y-12">
-            {/* Portfolio — always visible above tabs */}
-            {portfolioItems.length > 0 && (
-              <PortfolioGallery
-                items={portfolioItems}
-                locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
-                photographerName={normalizeName(photographer.name)}
-              />
-            )}
-
-            {/* About / Reviews tabs */}
+            {/* About / Reviews tabs — above portfolio */}
             <ProfileTabs
               aboutLabel={t("about")}
               reviewsLabel="Reviews"
@@ -567,6 +558,15 @@ export default async function PhotographerProfilePage({
                 />
               }
             />
+
+            {/* Portfolio — always visible below tabs */}
+            {portfolioItems.length > 0 && (
+              <PortfolioGallery
+                items={portfolioItems}
+                locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
+                photographerName={normalizeName(photographer.name)}
+              />
+            )}
           </div>
 
           {/* Sidebar — packages */}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { getShootTypeBySlug } from "@/lib/shoot-types-data";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +33,12 @@ export async function GET(req: NextRequest) {
     }
 
     if (shootType) {
-      sql += ` AND $${paramIdx} = ANY(p.shoot_types)`;
-      params.push(shootType);
+      // `shootType` may arrive as a slug (e.g. "solo") or as a stored label (e.g. "Solo Portrait").
+      // Resolve to the full list of aliases when it's a known slug, else pass through.
+      const st = getShootTypeBySlug(shootType);
+      const aliases = st?.photographerShootTypeNames ?? (st ? [st.name] : [shootType]);
+      sql += ` AND p.shoot_types && $${paramIdx}::text[]`;
+      (params as unknown as (string | string[])[]).push(aliases);
       paramIdx++;
     }
 

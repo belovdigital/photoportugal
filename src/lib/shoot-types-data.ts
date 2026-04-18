@@ -1,6 +1,9 @@
 export interface ShootType {
   slug: string;
   name: string;
+  /** Names used by photographers in their profiles (photographer_profiles.shoot_types).
+   * Defaults to [name] when not set. Used to match photographers on the shoot type page. */
+  photographerShootTypeNames?: string[];
   title: string;
   metaDescription: string;
   h1: string;
@@ -127,6 +130,7 @@ export const shootTypes: ShootType[] = [
   {
     slug: "solo",
     name: "Solo Travel",
+    photographerShootTypeNames: ["Solo Travel", "Solo Portrait"],
     title: "Solo Travel Photoshoot Portugal — Professional Portraits",
     metaDescription:
       "Book a solo travel photoshoot in Portugal. Confident portraits at iconic locations in Lisbon, Porto & beyond. From €150.",

@@ -83,10 +83,10 @@ export default async function ShootTypePage({
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      WHERE pp.is_approved = TRUE
-       AND $1 = ANY(pp.shoot_types)
+       AND pp.shoot_types && $1::text[]
      ORDER BY pp.is_featured DESC, pp.review_count DESC, RANDOM()
      LIMIT 6`,
-    [shootType.name]
+    [shootType.photographerShootTypeNames || [shootType.name]]
   ).catch(() => []);
 
   const faqJsonLd = {
