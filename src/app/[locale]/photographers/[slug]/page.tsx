@@ -118,9 +118,11 @@ export async function generateMetadata({
   const title = t("metaTitle", { name: normalizeName(p.name), locations: locationNames });
   const topShootTypes = (p.shoot_types || []).slice(0, 2);
   const shootTypeText = topShootTypes.length > 0 ? ` Specializing in ${topShootTypes.join(" & ").toLowerCase()} photography.` : "";
-  const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })}${shootTypeText} ${p.tagline || ""}`.trim();
+  const ratingText = p.review_count > 0 ? ` ★ ${Number(p.rating).toFixed(1)} (${p.review_count} ${p.review_count === 1 ? "review" : "reviews"}).` : "";
+  const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })}${shootTypeText}${ratingText} ${p.tagline || ""}`.trim();
   const rawImage = p.cover_url || p.avatar_url;
   const ogImage = rawImage ? `https://photoportugal.com/api/img/${rawImage.replace("/uploads/", "")}?w=1200&h=630&f=jpeg&q=80` : "https://photoportugal.com/og-image.png";
+  const profileUrl = `https://photoportugal.com/photographers/${slug}`;
   return {
     title,
     description,
@@ -129,9 +131,21 @@ export async function generateMetadata({
       title,
       description,
       type: "profile",
-      url: `https://photoportugal.com/photographers/${slug}`,
-      images: [{ url: ogImage, alt: title }],
+      url: profileUrl,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      siteName: "Photo Portugal",
     },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+    other: p.review_count > 0 ? {
+      "og:rating": String(Number(p.rating).toFixed(1)),
+      "og:rating_scale": "5",
+      "og:rating_count": String(p.review_count),
+    } : {},
   };
 }
 
@@ -298,13 +312,22 @@ export default async function PhotographerProfilePage({
       : undefined,
     ...(reviews.length > 0
       ? {
-          review: reviews.map((r) => ({
-            "@type": "Review",
-            author: { "@type": "Person", name: r.client_name },
-            reviewRating: { "@type": "Rating", ratingValue: r.rating },
-            reviewBody: r.text || r.title || "",
-            datePublished: new Date(r.created_at).toISOString().split("T")[0],
-          })),
+          review: reviews.map((r) => {
+            const body = r.text || r.title;
+            return {
+              "@type": "Review",
+              author: { "@type": "Person", name: r.client_name },
+              reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
+              ...(body ? { reviewBody: body } : {}),
+              ...(r.title ? { name: r.title } : {}),
+              datePublished: new Date(r.created_at).toISOString().split("T")[0],
+              itemReviewed: {
+                "@type": "LocalBusiness",
+                "@id": profileUrl,
+                name: normalizeName(photographer.name),
+              },
+            };
+          }),
         }
       : {}),
     address: {
