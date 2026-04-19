@@ -18,7 +18,12 @@ export function IntercomWidget() {
         .then(r => r.json())
         .catch(() => null)
         .then(user => {
-          const settings: Record<string, unknown> = { app_id: "d02q0i7w" };
+          const isMobile = window.matchMedia("(max-width: 767px)").matches;
+          const settings: Record<string, unknown> = {
+            app_id: "d02q0i7w",
+            is_mobile: isMobile,
+            device_type: isMobile ? "mobile" : "desktop",
+          };
           if (user && user.id) {
             settings.user_id = user.id;
             settings.name = user.name || "";
