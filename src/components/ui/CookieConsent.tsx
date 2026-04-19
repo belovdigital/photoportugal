@@ -11,8 +11,9 @@ export function CookieConsent() {
   useEffect(() => {
     const consent = localStorage.getItem("cookie-consent");
     if (!consent) {
-      // Small delay so it doesn't flash on page load
-      const timer = setTimeout(() => setVisible(true), 1000);
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      const delay = isMobile ? 15000 : 1000;
+      const timer = setTimeout(() => setVisible(true), delay);
       return () => clearTimeout(timer);
     }
   }, []);

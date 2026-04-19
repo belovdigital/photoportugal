@@ -1,16 +1,21 @@
 "use client";
 
 import Script from "next/script";
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 const CLARITY_ID = "we7hzvxpom";
 
-/**
- * Microsoft Clarity — session recordings + heatmaps.
- * TODO: gate behind cookie consent after 2 weeks of data collection.
- */
 export function ClarityWidget() {
+  const { data: session, status } = useSession();
+  const pathname = usePathname();
   const id = process.env.NEXT_PUBLIC_CLARITY_ID || CLARITY_ID;
   if (!id) return null;
+
+  if (status === "loading") return null;
+  if (pathname?.startsWith("/admin")) return null;
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (role === "admin" || role === "photographer") return null;
 
   return (
     <Script id="ms-clarity" strategy="afterInteractive">
