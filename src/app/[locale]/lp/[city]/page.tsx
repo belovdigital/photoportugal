@@ -119,6 +119,17 @@ export default async function LandingPage({ params, searchParams }: {
   ).catch(() => null);
   const minPrice = minPriceRow?.min_price ? Math.round(parseFloat(minPriceRow.min_price)) : null;
 
+  // Total matching photographers (for "View all N" link)
+  const totalRow = await queryOne<{ count: string }>(
+    `SELECT COUNT(DISTINCT pp.id)::text as count
+     FROM photographer_profiles pp
+     JOIN photographer_locations pl ON pl.photographer_id = pp.id
+     WHERE pp.is_approved = TRUE AND pl.location_slug = $1
+       ${shootTypeAliases ? "AND pp.shoot_types && $2::text[]" : ""}`,
+    shootTypeAliases ? [city, shootTypeAliases] : [city]
+  ).catch(() => null);
+  const totalMatching = parseInt(totalRow?.count || "0");
+
   // Pass-through UTM so Book CTA preserves attribution
   const bookParams = new URLSearchParams();
   for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "gclid"] as const) {
@@ -285,6 +296,19 @@ export default async function LandingPage({ params, searchParams }: {
                 </article>
               );
             })}
+          </div>
+        )}
+
+        {/* View all — only when supply > shown */}
+        {totalMatching > photographers.length && (
+          <div className="mt-6 text-center">
+            <Link
+              href={`/photographers?location=${city}${sp.type ? `&shoot=${sp.type}` : ""}${utmQuery ? `&${utmQuery}` : ""}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-700 hover:text-primary-800 hover:underline"
+            >
+              View all {totalMatching} {st ? `${st.name.toLowerCase()} ` : ""}photographers in {loc.name}
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </Link>
           </div>
         )}
 

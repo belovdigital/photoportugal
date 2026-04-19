@@ -104,6 +104,15 @@ export default async function LandingPagePortugal({ params, searchParams }: {
   ).catch(() => null);
   const minPrice = minPriceRow?.min_price ? Math.round(parseFloat(minPriceRow.min_price)) : null;
 
+  // Total matching photographers across Portugal
+  const totalRow = await queryOne<{ count: string }>(
+    shootTypeAliases
+      ? `SELECT COUNT(DISTINCT pp.id)::text as count FROM photographer_profiles pp WHERE pp.is_approved = TRUE AND pp.shoot_types && $1::text[]`
+      : `SELECT COUNT(DISTINCT pp.id)::text as count FROM photographer_profiles pp WHERE pp.is_approved = TRUE`,
+    shootTypeAliases ? [shootTypeAliases] : []
+  ).catch(() => null);
+  const totalMatching = parseInt(totalRow?.count || "0");
+
   const bookParams = new URLSearchParams();
   for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "gclid"] as const) {
     const v = (sp as Record<string, string | undefined>)[k];
@@ -266,6 +275,18 @@ export default async function LandingPagePortugal({ params, searchParams }: {
                 </article>
               );
             })}
+          </div>
+        )}
+
+        {totalMatching > photographers.length && (
+          <div className="mt-6 text-center">
+            <Link
+              href={`/photographers${sp.type ? `?shoot=${sp.type}` : ""}${utmQuery ? `${sp.type ? "&" : "?"}${utmQuery}` : ""}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-700 hover:text-primary-800 hover:underline"
+            >
+              View all {totalMatching} {st ? `${st.name.toLowerCase()} ` : ""}photographers across Portugal
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </Link>
           </div>
         )}
 
