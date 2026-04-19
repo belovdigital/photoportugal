@@ -186,7 +186,7 @@ export default async function LandingPage({ params, searchParams }: {
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {photographers.map((p, idx) => {
               const firstPkg = p.packages[0];
-              const href = `/photographers/${p.slug}${utmQuery ? `?${utmQuery}` : ""}#packages`;
+              const href = `/photographers/${p.slug}${utmQuery ? `?${utmQuery}` : ""}`;
               return (
                 <article key={p.id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
                   {/* Cover */}
