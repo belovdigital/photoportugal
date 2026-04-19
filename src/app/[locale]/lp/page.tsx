@@ -1,33 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { locations, getLocationBySlug } from "@/lib/locations-data";
-import { shootTypes, getShootTypeBySlug } from "@/lib/shoot-types-data";
+import { getShootTypeBySlug } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ActiveBadge } from "@/components/ui/ActiveBadge";
 import { normalizeName } from "@/lib/format-name";
-import { locationImage } from "@/lib/unsplash-images";
 
 // Fully dynamic so each visit randomises the photographer lineup (only when >6 match)
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params, searchParams }: {
-  params: Promise<{ locale: string; city: string }>;
+export async function generateMetadata({ searchParams }: {
   searchParams: Promise<{ type?: string }>;
 }): Promise<Metadata> {
-  const { city } = await params;
   const { type } = await searchParams;
-  const loc = getLocationBySlug(city);
   const st = type ? getShootTypeBySlug(type) : null;
-  const locName = loc?.name || city;
-  const label = st ? `${st.name} Photographers in ${locName}` : `Photographers in ${locName}`;
+  const label = st ? `${st.name} Photographers in Portugal` : `Photographers in Portugal`;
   return {
     title: `${label} — Book Instantly | Photo Portugal`,
-    description: `Professional ${st?.name.toLowerCase() || "photoshoot"} photographers in ${locName}. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.`,
-    robots: { index: false, follow: false }, // paid-ad LP — don't index
+    description: `Professional ${st?.name.toLowerCase() || "photoshoot"} photographers across Portugal — Lisbon, Porto, Algarve, Sintra & more. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.`,
+    robots: { index: false, follow: false },
   };
 }
 
@@ -43,29 +36,27 @@ interface LPPhotographer {
   is_verified: boolean;
   is_founding: boolean;
   last_seen_at: string | null;
+  location_names: string[];
   packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number }[];
 }
 
-export default async function LandingPage({ params, searchParams }: {
-  params: Promise<{ locale: string; city: string }>;
-  searchParams: Promise<{ type?: string; utm_source?: string; utm_campaign?: string; utm_term?: string; gclid?: string }>;
+export default async function LandingPagePortugal({ params, searchParams }: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ type?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_term?: string; gclid?: string }>;
 }) {
-  const { locale, city } = await params;
+  const { locale } = await params;
   const sp = await searchParams;
   setRequestLocale(locale);
-
-  const loc = getLocationBySlug(city);
-  if (!loc) notFound();
 
   const st = sp.type ? getShootTypeBySlug(sp.type) : null;
   const shootTypeAliases = st?.photographerShootTypeNames || (st ? [st.name] : null);
 
-  // Fetch 6 photographers matching city + (optional) shoot type
   const rows = shootTypeAliases
-    ? await query<LPPhotographer & { min_price: string | null }>(
+    ? await query<LPPhotographer>(
         `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.tagline,
                 pp.rating, pp.review_count, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
                 u.last_seen_at,
+                ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names,
                 COALESCE(
                   (SELECT json_agg(json_build_object('id', pk.id, 'name', pk.name, 'price', pk.price,
                                                      'duration_minutes', pk.duration_minutes, 'num_photos', pk.num_photos)
@@ -75,18 +66,16 @@ export default async function LandingPage({ params, searchParams }: {
                 ) as packages
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
-         JOIN photographer_locations pl ON pl.photographer_id = pp.id
-         WHERE pp.is_approved = TRUE
-           AND pl.location_slug = $1
-           AND pp.shoot_types && $2::text[]
+         WHERE pp.is_approved = TRUE AND pp.shoot_types && $1::text[]
          ORDER BY pp.is_featured DESC, RANDOM()
          LIMIT 6`,
-        [city, shootTypeAliases]
+        [shootTypeAliases]
       ).catch(() => [])
-    : await query<LPPhotographer & { min_price: string | null }>(
+    : await query<LPPhotographer>(
         `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.tagline,
                 pp.rating, pp.review_count, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
                 u.last_seen_at,
+                ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names,
                 COALESCE(
                   (SELECT json_agg(json_build_object('id', pk.id, 'name', pk.name, 'price', pk.price,
                                                      'duration_minutes', pk.duration_minutes, 'num_photos', pk.num_photos)
@@ -96,30 +85,25 @@ export default async function LandingPage({ params, searchParams }: {
                 ) as packages
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
-         JOIN photographer_locations pl ON pl.photographer_id = pp.id
-         WHERE pp.is_approved = TRUE AND pl.location_slug = $1
+         WHERE pp.is_approved = TRUE
          ORDER BY pp.is_featured DESC, RANDOM()
-         LIMIT 6`,
-        [city]
+         LIMIT 6`
       ).catch(() => []);
 
   const photographers: LPPhotographer[] = rows.map((r) => ({
     ...r,
     packages: Array.isArray(r.packages) ? r.packages : [],
+    location_names: Array.isArray(r.location_names) ? r.location_names : [],
   }));
 
   const minPriceRow = await queryOne<{ min_price: string | null }>(
-    `SELECT MIN(pk.price) as min_price
-     FROM packages pk
-     JOIN photographer_profiles pp ON pp.id = pk.photographer_id
-     JOIN photographer_locations pl ON pl.photographer_id = pp.id
-     WHERE pp.is_approved = TRUE AND pk.is_public = TRUE AND pl.location_slug = $1
-       ${shootTypeAliases ? "AND pp.shoot_types && $2::text[]" : ""}`,
-    shootTypeAliases ? [city, shootTypeAliases] : [city]
+    shootTypeAliases
+      ? `SELECT MIN(pk.price) as min_price FROM packages pk JOIN photographer_profiles pp ON pp.id = pk.photographer_id WHERE pp.is_approved = TRUE AND pk.is_public = TRUE AND pp.shoot_types && $1::text[]`
+      : `SELECT MIN(pk.price) as min_price FROM packages pk JOIN photographer_profiles pp ON pp.id = pk.photographer_id WHERE pp.is_approved = TRUE AND pk.is_public = TRUE`,
+    shootTypeAliases ? [shootTypeAliases] : []
   ).catch(() => null);
   const minPrice = minPriceRow?.min_price ? Math.round(parseFloat(minPriceRow.min_price)) : null;
 
-  // Pass-through UTM so Book CTA preserves attribution
   const bookParams = new URLSearchParams();
   for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "gclid"] as const) {
     const v = (sp as Record<string, string | undefined>)[k];
@@ -128,17 +112,16 @@ export default async function LandingPage({ params, searchParams }: {
   const utmQuery = bookParams.toString();
 
   const shootLabel = st?.name || "Professional";
-  const heroTitle = `${shootLabel} Photographers in ${loc.name}`;
+  const heroTitle = `${shootLabel} Photographers in Portugal`;
   const heroSubtitle = minPrice
-    ? `Hand-picked, verified photographers — from €${minPrice}. Book instantly, pay securely.`
-    : "Hand-picked, verified photographers — book instantly, pay securely.";
+    ? `Hand-picked, verified photographers across Portugal — from €${minPrice}. Book instantly, pay securely.`
+    : "Hand-picked, verified photographers across Portugal — book instantly, pay securely.";
 
   return (
     <div className="bg-warm-50 min-h-screen">
-      {/* Hero */}
       <section className="relative overflow-hidden border-b border-warm-200">
         <div className="absolute inset-0 z-0">
-          <OptimizedImage src={locationImage(city, "hero")} alt="" className="h-full w-full opacity-30" priority />
+          <OptimizedImage src="/hero-family.webp" alt="" className="h-full w-full opacity-30" priority />
           <div className="absolute inset-0 bg-gradient-to-b from-warm-50/70 via-warm-50/90 to-warm-50" />
         </div>
         <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:py-14 lg:px-8">
@@ -148,7 +131,6 @@ export default async function LandingPage({ params, searchParams }: {
           <p className="mt-3 max-w-2xl text-base text-gray-600 sm:text-lg">
             {heroSubtitle}
           </p>
-          {/* Trust strip */}
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-600">
             <span className="flex items-center gap-1.5">
               <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
@@ -166,18 +148,15 @@ export default async function LandingPage({ params, searchParams }: {
         </div>
       </section>
 
-      {/* Main content */}
       <section className="mx-auto max-w-6xl px-4 py-8 sm:py-12 lg:px-8">
-        {/* Scarcity banner */}
         {photographers.length > 0 && (
-          <ScarcityBanner count={photographers.length} locationName={loc.name} locale={locale} />
+          <ScarcityBanner count={photographers.length} locationName={st?.name || "Portugal"} locale={locale} context={st ? "shootType" : "location"} />
         )}
 
-        {/* Photographer cards */}
         {photographers.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-warm-200 bg-white p-8 text-center">
             <p className="text-gray-600">
-              {st ? `No ${st.name.toLowerCase()} photographers yet in ${loc.name}.` : `No photographers yet in ${loc.name}.`}
+              {st ? `No ${st.name.toLowerCase()} photographers yet.` : "No photographers yet."}
             </p>
             <Link href="/find-photographer" className="mt-4 inline-flex rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
               Let us match you with the right photographer
@@ -186,11 +165,10 @@ export default async function LandingPage({ params, searchParams }: {
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {photographers.map((p, idx) => {
-              const firstPkg = p.packages[0];
+              const firstLocation = p.location_names[0];
               const href = `/photographers/${p.slug}${utmQuery ? `?${utmQuery}` : ""}`;
               return (
                 <article key={p.id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-                  {/* Cover */}
                   <Link href={href} className="block h-44 overflow-hidden bg-warm-100">
                     {p.cover_url ? (
                       <OptimizedImage src={p.cover_url} alt={`${normalizeName(p.name)} portfolio`} priority={idx < 3} className="h-full w-full transition duration-300 group-hover:scale-[1.03]" />
@@ -202,9 +180,13 @@ export default async function LandingPage({ params, searchParams }: {
                         Founding
                       </span>
                     )}
+                    {firstLocation && (
+                      <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-gray-800 shadow">
+                        📍 {firstLocation.replace(/-/g, " ")}
+                      </span>
+                    )}
                   </Link>
 
-                  {/* Body */}
                   <div className="flex flex-1 flex-col p-5">
                     <div className="flex items-start gap-3">
                       <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 ring-white bg-primary-100">
@@ -243,7 +225,6 @@ export default async function LandingPage({ params, searchParams }: {
                       </div>
                     </div>
 
-                    {/* Package CTAs */}
                     {p.packages.length > 0 ? (
                       <div className="mt-4 space-y-2">
                         {p.packages.slice(0, 2).map((pkg) => (
@@ -288,7 +269,6 @@ export default async function LandingPage({ params, searchParams }: {
           </div>
         )}
 
-        {/* Fallback: "not seeing the right match?" */}
         {photographers.length > 0 && (
           <div className="mt-10 flex flex-col items-center gap-3 rounded-2xl border border-warm-200 bg-white p-6 text-center sm:flex-row sm:justify-between sm:text-left">
             <div>
@@ -301,10 +281,9 @@ export default async function LandingPage({ params, searchParams }: {
           </div>
         )}
 
-        {/* How it works strip */}
         <div className="mt-10 grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 sm:grid-cols-3 sm:gap-6">
           {[
-            { n: "1", title: "Pick a package", desc: "See real photographers in " + loc.name + " with real prices." },
+            { n: "1", title: "Pick a package", desc: "See real photographers across Portugal with real prices." },
             { n: "2", title: "Book instantly", desc: "Secure payment — held in escrow until delivery." },
             { n: "3", title: "Get your photos", desc: "Edited high-res photos delivered privately." },
           ].map((s) => (
@@ -323,10 +302,3 @@ export default async function LandingPage({ params, searchParams }: {
     </div>
   );
 }
-
-export function generateStaticParams() {
-  return locations.map((l) => ({ city: l.slug }));
-}
-
-// Suppress TS warning — shootTypes imported for type validation in generateMetadata
-void shootTypes;
