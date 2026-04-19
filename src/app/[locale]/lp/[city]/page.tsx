@@ -264,7 +264,10 @@ export default async function LandingPage({ params, searchParams }: {
                           </Link>
                         ))}
                         {p.packages.length > 2 && (
-                          <Link href={href} className="block text-center text-xs font-medium text-primary-600 hover:underline">
+                          <Link
+                            href={href}
+                            className="mt-3 block rounded-xl border border-warm-200 bg-white px-4 py-3 text-center text-sm font-semibold text-primary-700 transition hover:border-primary-400 hover:bg-primary-50"
+                          >
                             View all {p.packages.length} packages →
                           </Link>
                         )}
