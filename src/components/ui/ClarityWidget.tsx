@@ -1,15 +1,26 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect, useState } from "react";
 
-/**
- * Microsoft Clarity — free unlimited session recordings + heatmaps.
- * Loaded with `afterInteractive` so it doesn't block LCP.
- * Project ID read from NEXT_PUBLIC_CLARITY_ID env var.
- */
 const CLARITY_ID = "we7hzvxpom";
 
+/**
+ * Microsoft Clarity — session recordings + heatmaps.
+ * GDPR-gated: only loads after user accepts cookies (same as GoogleAnalytics).
+ */
 export function ClarityWidget() {
+  const [consent, setConsent] = useState<string | null>(null);
+
+  useEffect(() => {
+    setConsent(localStorage.getItem("cookie-consent"));
+    const onConsentUpdate = () => setConsent(localStorage.getItem("cookie-consent"));
+    window.addEventListener("cookie-consent-update", onConsentUpdate);
+    return () => window.removeEventListener("cookie-consent-update", onConsentUpdate);
+  }, []);
+
+  if (consent !== "accepted") return null;
+
   const id = process.env.NEXT_PUBLIC_CLARITY_ID || CLARITY_ID;
   if (!id) return null;
 
