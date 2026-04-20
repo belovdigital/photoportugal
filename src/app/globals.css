@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 @theme {
   --color-primary-50: #fdf4f3;
   --color-primary-100: #fce8e6;
