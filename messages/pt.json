@@ -326,6 +326,8 @@
     "subtitle": "Histórias reais de viajantes que capturaram memórias inesquecíveis em Portugal",
     "averageRating": "classificação média",
     "allReviewsVerified": "Todas as avaliações verificadas de reservas reais",
+    "aboutPhotographer": "sobre {name}",
+    "browseAll": "Ver todos os fotógrafos",
     "items": {
       "sarah": {
         "name": "Sarah & James",

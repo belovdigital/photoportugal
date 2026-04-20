@@ -8,7 +8,6 @@ import { ShootTypesSection } from "@/components/ui/ShootTypesSection";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { FloatingReviews } from "@/components/ui/FloatingReviews";
 import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
@@ -329,8 +328,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
               </div>
 
-              {/* Floating review card — rotating */}
-              <FloatingReviews />
             </div>
 
             {/* Mobile hero image */}
@@ -360,6 +357,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           securePayment: t("socialProofStrip.securePayment"),
         }}
       />
+
+      {/* ===== REAL REVIEWS (moved up) ===== */}
+      <TestimonialsSection />
 
       {/* ===== FEATURED PHOTOGRAPHERS ===== */}
       <FeaturedPhotographers />
@@ -400,9 +400,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </Link>
         </div>
       </section>
-
-      {/* ===== TESTIMONIALS ===== */}
-      <TestimonialsSection />
 
       {/* ===== CTA ===== */}
       <section className="relative overflow-hidden bg-gray-900 -mb-16 sm:-mb-24">
