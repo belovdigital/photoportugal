@@ -1022,6 +1022,8 @@
       "messagePhotographer": "Message {name}"
     },
     "profile": {
+      "previewBannerTitle": "Preview mode",
+      "previewBannerText": "Your profile isn't published yet. Only you can see this page.",
       "about": "About",
       "packages": "Packages",
       "reviews": "Reviews",
@@ -1830,6 +1832,7 @@
     },
     "viewPublicProfile": "View Public Profile",
     "previewProfile": "Preview Profile",
+    "previewProfileHint": "Only you can see this — profile isn't approved yet",
     "statRating": "Rating",
     "statReviews": "Reviews",
     "statTotalBookings": "Total Bookings",

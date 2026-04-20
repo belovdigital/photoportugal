@@ -1019,6 +1019,8 @@
       "messagePhotographer": "Enviar mensagem a {name}"
     },
     "profile": {
+      "previewBannerTitle": "Modo pré-visualização",
+      "previewBannerText": "O teu perfil ainda não está publicado. Só tu podes ver esta página.",
       "about": "Sobre",
       "packages": "Pacotes",
       "reviews": "Avaliações",
@@ -1827,6 +1829,7 @@
     },
     "viewPublicProfile": "Ver Perfil Público",
     "previewProfile": "Pré-visualizar Perfil",
+    "previewProfileHint": "Apenas tu podes ver — o perfil ainda não está aprovado",
     "statRating": "Classificação",
     "statReviews": "Avaliações",
     "statTotalBookings": "Total de Reservas",

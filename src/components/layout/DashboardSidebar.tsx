@@ -15,10 +15,11 @@ interface NavItem {
   roles: string[];
 }
 
-export function DashboardSidebar() {
+export function DashboardSidebar({ initialRole }: { initialRole?: string }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const role = (session?.user as { role?: string })?.role || "client";
+  const { data: session, status } = useSession();
+  const sessionRole = (session?.user as { role?: string })?.role;
+  const role = sessionRole || (status === "loading" ? initialRole : undefined) || initialRole || "client";
   const notifications = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const t = useTranslations("dashboard");
@@ -113,29 +114,39 @@ export function DashboardSidebar() {
 }
 
 function ViewPublicProfileLink() {
-  const [slug, setSlug] = useState<string | null>(null);
+  const [data, setData] = useState<{ slug: string; is_approved: boolean } | null>(null);
   const t = useTranslations("dashboard");
 
   useEffect(() => {
     fetch("/api/dashboard/profile")
       .then(r => r.json())
-      .then(d => { if (d.slug) setSlug(d.slug); })
+      .then(d => { if (d.slug) setData({ slug: d.slug, is_approved: !!d.is_approved }); })
       .catch(() => {});
   }, []);
 
-  if (!slug) return null;
+  if (!data) return null;
+
+  const label = data.is_approved ? t("viewPublicProfile") : t("previewProfile");
 
   return (
     <a
-      href={`/photographers/${slug}`}
+      href={`/photographers/${data.slug}`}
       target="_blank"
       rel="noopener noreferrer"
+      title={data.is_approved ? undefined : t("previewProfileHint")}
       className="mt-3 flex items-center gap-3 rounded-xl border border-dashed border-gray-300 px-3 py-2.5 text-sm font-medium text-gray-500 transition hover:border-primary-300 hover:text-primary-600"
     >
       <svg className="h-4.5 w-4.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        {data.is_approved ? (
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        ) : (
+          <>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </>
+        )}
       </svg>
-      {t("viewPublicProfile")}
+      {label}
     </a>
   );
 }

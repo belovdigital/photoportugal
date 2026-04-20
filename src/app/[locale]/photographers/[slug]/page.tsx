@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { queryOne, query } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
@@ -19,7 +20,8 @@ import { StickyBookBar } from "@/components/ui/StickyBookBar";
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
 
-async function getPhotographer(slug: string, isAdmin = false) {
+async function getPhotographer(slug: string, canViewUnapproved = false, viewerUserId?: string) {
+  const isAdmin = canViewUnapproved;
   try {
     const profile = await queryOne<{
       id: string;
@@ -52,7 +54,12 @@ async function getPhotographer(slug: string, isAdmin = false) {
        WHERE p.slug = $1`,
       [slug]
     );
-    if (!profile || (!profile.is_approved && !isAdmin)) return null;
+    if (!profile) return null;
+    const isOwner = !!viewerUserId && await queryOne<{ id: string }>(
+      "SELECT id FROM photographer_profiles WHERE slug = $1 AND user_id = $2",
+      [slug, viewerUserId]
+    ).catch(() => null) !== null;
+    if (!profile.is_approved && !isAdmin && !isOwner) return null;
 
     const locationRows = await query<{ location_slug: string }>(
       "SELECT location_slug FROM photographer_locations WHERE photographer_id = $1",
@@ -164,7 +171,9 @@ export default async function PhotographerProfilePage({
   const tc = await getTranslations("common");
 
   const isPreview = !!process.env.ADMIN_PREVIEW_SECRET && sp.preview === process.env.ADMIN_PREVIEW_SECRET;
-  const result = await getPhotographer(slug, isPreview);
+  const session = await auth();
+  const viewerUserId = (session?.user as { id?: string } | undefined)?.id;
+  const result = await getPhotographer(slug, isPreview, viewerUserId);
 
   if (!result) {
     // Check slug_redirects for old slugs
@@ -411,8 +420,20 @@ export default async function PhotographerProfilePage({
     ],
   };
 
+  const showPreviewBanner = result.type === "db" && !(photographer as { is_approved?: boolean }).is_approved;
+
   return (
     <>
+      {showPreviewBanner && (
+        <div className="sticky top-0 z-40 border-b border-amber-200 bg-amber-50">
+          <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
+            <p className="text-sm text-amber-900">
+              <span className="font-semibold">{t("previewBannerTitle")}.</span>{" "}
+              {t("previewBannerText")}
+            </p>
+          </div>
+        </div>
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
