@@ -187,7 +187,7 @@ export function PhotographerCatalog({
       </div>
 
       {/* Mobile sticky filter bar (< sm only) */}
-      <div className="sticky top-[72px] z-20 -mx-4 mt-3 border-b border-warm-200 bg-warm-50/95 px-4 py-2 backdrop-blur sm:hidden">
+      <div className="sticky top-16 z-20 -mx-4 mt-3 border-b border-warm-200 bg-warm-50/95 px-4 py-2 backdrop-blur sm:hidden">
         <div className="flex gap-2 overflow-x-auto">
           <button
             onClick={() => setMobileSheet("location")}

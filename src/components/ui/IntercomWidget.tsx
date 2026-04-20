@@ -70,7 +70,7 @@ export function IntercomWidget() {
     const isAdmin = pathname.includes("/admin");
     (window as any).Intercom("update", {
       hide_default_launcher: isMobile && isAdmin,
-      vertical_padding: isMobile && isDashboard ? 88 : 20,
+      vertical_padding: isMobile && isDashboard ? 110 : 20,
       page: pathname,
     });
   }, [pathname]);
