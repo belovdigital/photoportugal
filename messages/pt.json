@@ -1022,7 +1022,7 @@
       "sortMostReviews": "Mais Avaliações",
       "sortNewest": "Mais recentes",
       "sortFastest": "Resposta Rápida",
-      "quick": "Filtros rápidos",
+      "allFilters": "Todos os filtros",
       "sortPriceLow": "Preço: Menor → Maior",
       "sortPriceHigh": "Preço: Maior → Menor",
       "clearAll": "Limpar tudo ({count})",

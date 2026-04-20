@@ -1025,7 +1025,7 @@
       "sortMostReviews": "Most Reviews",
       "sortNewest": "Newest",
       "sortFastest": "Fastest Reply",
-      "quick": "Quick filters",
+      "allFilters": "All filters",
       "sortPriceLow": "Price: Low → High",
       "sortPriceHigh": "Price: High → Low",
       "clearAll": "Clear all ({count})",

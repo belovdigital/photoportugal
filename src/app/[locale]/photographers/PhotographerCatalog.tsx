@@ -70,40 +70,31 @@ export function PhotographerCatalog({
   const [languageFilter, setLanguageFilter] = useState("");
   type SortKey = "featured" | "rating" | "reviews" | "newest" | "fastest";
   const [sortBy, setSortBy] = useState<SortKey>("featured");
-  type ChipKey = "rating45" | "verified" | "activeWeek" | "fastReply" | "founding";
-  const [chips, setChips] = useState<Set<ChipKey>>(new Set());
+  type BucketFlag = "rating45" | "activeWeek" | "fastReply" | "founding";
+  const [bucketFlags, setBucketFlags] = useState<Set<BucketFlag>>(new Set());
   const [activeBucket, setActiveBucket] = useState<string | null>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
   const [mobileSheet, setMobileSheet] = useState<null | "location" | "filters">(null);
-
-  function toggleChip(key: ChipKey) {
-    setActiveBucket(null);
-    setChips((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
 
   function applyBucket(key: string) {
     if (activeBucket === key) {
       setActiveBucket(null);
-      setChips(new Set());
+      setBucketFlags(new Set());
       setSortBy("featured");
       return;
     }
     setActiveBucket(key);
-    const newChips = new Set<ChipKey>();
+    const flags = new Set<BucketFlag>();
     let sort: SortKey = "featured";
     switch (key) {
       case "popular": sort = "reviews"; break;
-      case "topRated": sort = "rating"; newChips.add("rating45"); break;
+      case "topRated": sort = "rating"; flags.add("rating45"); break;
       case "new": sort = "newest"; break;
-      case "founding": newChips.add("founding"); break;
-      case "fast": sort = "fastest"; newChips.add("fastReply"); break;
+      case "founding": flags.add("founding"); break;
+      case "fast": sort = "fastest"; flags.add("fastReply"); break;
     }
-    setChips(newChips);
+    setBucketFlags(flags);
     setSortBy(sort);
   }
 
@@ -178,21 +169,18 @@ export function PhotographerCatalog({
       );
     }
 
-    // Quick chips
-    if (chips.has("rating45")) {
+    // Bucket-driven flags
+    if (bucketFlags.has("rating45")) {
       result = result.filter((p) => Number(p.rating) >= 4.5 && p.review_count > 0);
     }
-    if (chips.has("verified")) {
-      result = result.filter((p) => p.is_verified);
-    }
-    if (chips.has("activeWeek")) {
+    if (bucketFlags.has("activeWeek")) {
       const oneWeekAgo = Date.now() - 7 * 86400e3;
       result = result.filter((p) => p.last_seen_at && new Date(p.last_seen_at).getTime() >= oneWeekAgo);
     }
-    if (chips.has("fastReply")) {
+    if (bucketFlags.has("fastReply")) {
       result = result.filter((p) => p.avg_response_minutes != null && p.avg_response_minutes <= 60);
     }
-    if (chips.has("founding")) {
+    if (bucketFlags.has("founding")) {
       result = result.filter((p) => p.is_founding);
     }
 
@@ -226,13 +214,10 @@ export function PhotographerCatalog({
     }
 
     return result;
-  }, [photographers, locationFilters, shootTypeFilters, languageFilter, chips, sortBy]);
+  }, [photographers, locationFilters, shootTypeFilters, languageFilter, bucketFlags, sortBy]);
 
-  const activeFilterCount =
-    locationFilters.length +
-    shootTypeFilters.length +
-    (languageFilter ? 1 : 0) +
-    chips.size;
+  const secondaryCount = shootTypeFilters.length + (languageFilter ? 1 : 0);
+  const activeFilterCount = locationFilters.length + secondaryCount;
 
   const BUCKETS: { key: string; label: string; icon: string }[] = [
     { key: "popular", label: t("buckets.popular"), icon: "🔥" },
@@ -240,14 +225,6 @@ export function PhotographerCatalog({
     { key: "new", label: t("buckets.new"), icon: "🆕" },
     { key: "founding", label: t("buckets.founding"), icon: "💎" },
     { key: "fast", label: t("buckets.fast"), icon: "⚡" },
-  ];
-
-  const CHIPS: { key: ChipKey; label: string }[] = [
-    { key: "rating45", label: t("chips.rating45") },
-    { key: "verified", label: t("chips.verified") },
-    { key: "activeWeek", label: t("chips.activeWeek") },
-    { key: "fastReply", label: t("chips.fastReply") },
-    { key: "founding", label: t("chips.founding") },
   ];
 
   const selectedLocationNames = locationFilters
@@ -320,7 +297,7 @@ export function PhotographerCatalog({
           </select>
           {activeFilterCount > 0 && (
             <button
-              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setChips(new Set()); setActiveBucket(null); }}
+              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setBucketFlags(new Set()); setActiveBucket(null); }}
               className="shrink-0 rounded-full px-3 py-2 text-sm text-gray-500"
             >
               {t("filters.clearAllShort")}
@@ -470,19 +447,77 @@ export function PhotographerCatalog({
             )}
           </div>
 
-          {/* Language select */}
-          <select
-            value={languageFilter}
-            onChange={(e) => setLanguageFilter(e.target.value)}
-            className={`rounded-lg border px-3 py-2 text-sm outline-none transition ${
-              languageFilter ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700"
-            }`}
-          >
-            <option value="">{t("filters.anyLanguage")}</option>
-            {allLanguages.map((l) => (
-              <option key={l} value={l}>{l}</option>
-            ))}
-          </select>
+          {/* All filters — unified dropdown (occasion + language) */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFiltersDropdown((o) => !o)}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                secondaryCount > 0 ? "border-primary-300 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              {t("filters.allFilters")}
+              {secondaryCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[11px] font-bold text-white">
+                  {secondaryCount}
+                </span>
+              )}
+              <svg className={`h-3.5 w-3.5 text-gray-400 transition ${showFiltersDropdown ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showFiltersDropdown && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowFiltersDropdown(false)} />
+                <div className="absolute left-0 top-full z-20 mt-1 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-warm-200 bg-white p-4 shadow-lg">
+                  <div>
+                    <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.occasion")}</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {shootTypes.map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => toggleShootType(type)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                            shootTypeFilters.includes(type)
+                              ? "bg-primary-600 text-white"
+                              : "bg-warm-100 text-gray-600 hover:bg-warm-200"
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-5">
+                    <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.language")}</h4>
+                    <select
+                      value={languageFilter}
+                      onChange={(e) => setLanguageFilter(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-primary-400"
+                    >
+                      <option value="">{t("filters.anyLanguage")}</option>
+                      {allLanguages.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {secondaryCount > 0 && (
+                    <div className="mt-4 flex justify-end border-t border-warm-100 pt-3">
+                      <button
+                        onClick={() => { setShootTypeFilters([]); setLanguageFilter(""); }}
+                        className="text-xs font-medium text-primary-600 hover:underline"
+                      >
+                        {t("filters.clearAllShort")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Sort */}
           <select
@@ -500,46 +535,12 @@ export function PhotographerCatalog({
           {/* Clear */}
           {activeFilterCount > 0 && (
             <button
-              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setChips(new Set()); setActiveBucket(null); }}
+              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setBucketFlags(new Set()); setActiveBucket(null); }}
               className="rounded-lg px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-50"
             >
               {t("filters.clearAll", { count: activeFilterCount })}
             </button>
           )}
-        </div>
-
-        {/* Quick chips */}
-        <div className="flex flex-wrap gap-1.5">
-          {CHIPS.map((chip) => (
-            <button
-              key={chip.key}
-              onClick={() => toggleChip(chip.key)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                chips.has(chip.key)
-                  ? "bg-primary-600 text-white"
-                  : "border border-warm-200 bg-white text-gray-600 hover:border-primary-300 hover:text-primary-700"
-              }`}
-            >
-              {chip.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Shoot type pills (multi-select) */}
-        <div className="flex flex-wrap gap-1.5">
-          {shootTypes.map((type) => (
-            <button
-              key={type}
-              onClick={() => toggleShootType(type)}
-              className={`rounded-full px-3 py-2 text-sm font-medium transition ${
-                shootTypeFilters.includes(type)
-                  ? "bg-primary-600 text-white"
-                  : "bg-warm-100 text-gray-600 hover:bg-warm-200"
-              }`}
-            >
-              {type}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -656,24 +657,6 @@ export function PhotographerCatalog({
               ) : (
                 <>
                   <div>
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.quick")}</h3>
-                    <div className="flex flex-wrap gap-1.5">
-                      {CHIPS.map((chip) => (
-                        <button
-                          key={chip.key}
-                          onClick={() => toggleChip(chip.key)}
-                          className={`rounded-full px-3 py-2 text-xs font-medium transition ${
-                            chips.has(chip.key)
-                              ? "bg-primary-600 text-white"
-                              : "border border-warm-200 bg-white text-gray-600"
-                          }`}
-                        >
-                          {chip.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="mt-6">
                     <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.occasion")}</h3>
                     <div className="flex flex-wrap gap-1.5">
                       {shootTypes.map((type) => (
@@ -710,7 +693,7 @@ export function PhotographerCatalog({
             <div className="flex gap-2 border-t border-warm-100 px-4 py-3">
               {activeFilterCount > 0 && (
                 <button
-                  onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setLocationSearch(""); setChips(new Set()); setActiveBucket(null); }}
+                  onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setLocationSearch(""); setBucketFlags(new Set()); setActiveBucket(null); }}
                   className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700"
                 >
                   {t("filters.clearAllShort")}
