@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { AdminToggleClient, AdminPlanSelectClient, AdminDeactivatePhotographer, AdminReviewsLink } from "./AdminControls";
 import { AdminRevisionForm } from "./AdminRevisionForm";
@@ -42,39 +42,53 @@ export interface AdminPhotographer {
 
 const PAGE_SIZE = 50;
 
-type Filter = "active" | "ready_review" | "needs_revision" | "deactivated" | "not_ready" | "founding" | "early50" | "premium" | "pro" | "free" | "below_min" | "all";
+type StatusKey = "all" | "active" | "ready_review" | "needs_revision" | "not_ready" | "deactivated";
+type PlanKey = "all" | "free" | "pro" | "premium";
+type BadgeKey = "all" | "founding" | "early50";
 
-const FILTERS: { key: Filter; label: string; color: string; activeColor: string }[] = [
-  { key: "active", label: "Active", color: "text-green-700 border-green-300", activeColor: "bg-green-100 text-green-800 border-green-400" },
-  { key: "ready_review", label: "Ready for Review", color: "text-emerald-700 border-emerald-300", activeColor: "bg-emerald-100 text-emerald-800 border-emerald-400" },
-  { key: "needs_revision", label: "Needs Revision", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
-  { key: "not_ready", label: "Not Ready", color: "text-orange-700 border-orange-300", activeColor: "bg-orange-100 text-orange-800 border-orange-400" },
-  { key: "founding", label: "Founding", color: "text-purple-700 border-purple-300", activeColor: "bg-purple-100 text-purple-800 border-purple-400" },
-  { key: "early50", label: "Early 25", color: "text-amber-700 border-amber-300", activeColor: "bg-amber-100 text-amber-800 border-amber-400" },
-  { key: "premium", label: "Premium", color: "text-indigo-700 border-indigo-300", activeColor: "bg-indigo-100 text-indigo-800 border-indigo-400" },
-  { key: "pro", label: "Pro", color: "text-blue-700 border-blue-300", activeColor: "bg-blue-100 text-blue-800 border-blue-400" },
-  { key: "free", label: "Free", color: "text-gray-700 border-gray-300", activeColor: "bg-gray-200 text-gray-800 border-gray-400" },
-  { key: "below_min", label: "⚠ Below Min Price", color: "text-red-700 border-red-300", activeColor: "bg-red-100 text-red-800 border-red-400" },
-  { key: "deactivated", label: "Deactivated", color: "text-red-700 border-red-300", activeColor: "bg-red-100 text-red-800 border-red-400" },
-  { key: "all", label: "All", color: "text-gray-600 border-gray-300", activeColor: "bg-gray-800 text-white border-gray-800" },
+const STATUS_OPTIONS: { key: StatusKey; label: string; dot: string }[] = [
+  { key: "all", label: "All statuses", dot: "bg-gray-300" },
+  { key: "active", label: "Active", dot: "bg-green-500" },
+  { key: "ready_review", label: "Ready for Review", dot: "bg-emerald-500" },
+  { key: "needs_revision", label: "Needs Revision", dot: "bg-amber-500" },
+  { key: "not_ready", label: "Not Ready", dot: "bg-orange-500" },
+  { key: "deactivated", label: "Deactivated", dot: "bg-red-500" },
 ];
 
-function matchesFilter(p: AdminPhotographer, f: Filter, belowMinPackages?: Record<string, BelowMinPackage[]>): boolean {
-  switch (f) {
+const PLAN_OPTIONS: { key: PlanKey; label: string; dot: string }[] = [
+  { key: "all", label: "All plans", dot: "bg-gray-300" },
+  { key: "free", label: "Free", dot: "bg-gray-500" },
+  { key: "pro", label: "Pro", dot: "bg-blue-500" },
+  { key: "premium", label: "Premium", dot: "bg-indigo-500" },
+];
+
+const BADGE_OPTIONS: { key: BadgeKey; label: string; dot: string }[] = [
+  { key: "all", label: "All badges", dot: "bg-gray-300" },
+  { key: "founding", label: "Founding", dot: "bg-purple-500" },
+  { key: "early50", label: "Early 25", dot: "bg-amber-500" },
+];
+
+function matchesStatus(p: AdminPhotographer, s: StatusKey): boolean {
+  switch (s) {
+    case "all": return true;
     case "active": return p.is_approved && !p.is_banned;
     case "deactivated": return p.is_banned;
     case "ready_review": return !p.is_approved && p.checklist_complete && !p.is_banned && (!p.revision_status || p.revision_status === "submitted");
     case "needs_revision": return !p.is_approved && !p.is_banned && p.revision_status === "pending";
     case "not_ready": return !p.is_approved && !p.checklist_complete && !p.is_banned && !p.revision_status;
-    case "founding": return p.is_founding;
-    case "early50": return p.early_bird_tier === "early50";
-    case "premium": return p.plan === "premium";
-    case "pro": return p.plan === "pro";
-    case "free": return p.plan === "free";
-    case "below_min": return !!(belowMinPackages?.[p.id]?.length);
-    case "all": return true;
-    default: return true;
   }
+}
+
+function matchesPlan(p: AdminPhotographer, pl: PlanKey): boolean {
+  if (pl === "all") return true;
+  return p.plan === pl;
+}
+
+function matchesBadge(p: AdminPhotographer, b: BadgeKey): boolean {
+  if (b === "all") return true;
+  if (b === "founding") return p.is_founding;
+  if (b === "early50") return p.early_bird_tier === "early50";
+  return true;
 }
 
 export interface BelowMinPackage {
@@ -90,15 +104,19 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("active");
+  const [statusFilter, setStatusFilter] = useState<StatusKey>("active");
+  const [planFilter, setPlanFilter] = useState<PlanKey>("all");
+  const [badgeFilter, setBadgeFilter] = useState<BadgeKey>("all");
+  const [belowMinOnly, setBelowMinOnly] = useState(false);
   const [page, setPage] = useState(0);
   const { modal, confirm } = useConfirmModal();
 
   const filtered = useMemo(() => {
-    let list = photographers;
-    if (filter !== "all") {
-      list = list.filter(p => matchesFilter(p, filter, belowMinPackages));
-    }
+    let list = photographers
+      .filter(p => matchesStatus(p, statusFilter))
+      .filter(p => matchesPlan(p, planFilter))
+      .filter(p => matchesBadge(p, badgeFilter));
+    if (belowMinOnly) list = list.filter(p => !!belowMinPackages[p.id]?.length);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
@@ -106,7 +124,40 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
       );
     }
     return list;
-  }, [photographers, search, filter]);
+  }, [photographers, search, statusFilter, planFilter, badgeFilter, belowMinOnly, belowMinPackages]);
+
+  // Counts per option respecting other active filters (except the one the option belongs to).
+  const statusCounts = useMemo(() => {
+    const base = photographers
+      .filter(p => matchesPlan(p, planFilter))
+      .filter(p => matchesBadge(p, badgeFilter))
+      .filter(p => !belowMinOnly || !!belowMinPackages[p.id]?.length);
+    return Object.fromEntries(STATUS_OPTIONS.map(o => [o.key, base.filter(p => matchesStatus(p, o.key)).length])) as Record<StatusKey, number>;
+  }, [photographers, planFilter, badgeFilter, belowMinOnly, belowMinPackages]);
+  const planCounts = useMemo(() => {
+    const base = photographers
+      .filter(p => matchesStatus(p, statusFilter))
+      .filter(p => matchesBadge(p, badgeFilter))
+      .filter(p => !belowMinOnly || !!belowMinPackages[p.id]?.length);
+    return Object.fromEntries(PLAN_OPTIONS.map(o => [o.key, base.filter(p => matchesPlan(p, o.key)).length])) as Record<PlanKey, number>;
+  }, [photographers, statusFilter, badgeFilter, belowMinOnly, belowMinPackages]);
+  const badgeCounts = useMemo(() => {
+    const base = photographers
+      .filter(p => matchesStatus(p, statusFilter))
+      .filter(p => matchesPlan(p, planFilter))
+      .filter(p => !belowMinOnly || !!belowMinPackages[p.id]?.length);
+    return Object.fromEntries(BADGE_OPTIONS.map(o => [o.key, base.filter(p => matchesBadge(p, o.key)).length])) as Record<BadgeKey, number>;
+  }, [photographers, statusFilter, planFilter, belowMinOnly, belowMinPackages]);
+  const belowMinCount = useMemo(() => {
+    return photographers
+      .filter(p => matchesStatus(p, statusFilter))
+      .filter(p => matchesPlan(p, planFilter))
+      .filter(p => matchesBadge(p, badgeFilter))
+      .filter(p => !!belowMinPackages[p.id]?.length)
+      .length;
+  }, [photographers, statusFilter, planFilter, badgeFilter, belowMinPackages]);
+
+  const hasNonDefault = statusFilter !== "active" || planFilter !== "all" || badgeFilter !== "all" || belowMinOnly;
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -132,21 +183,49 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-1.5">
-        {FILTERS.map(f => {
-          const count = photographers.filter(p => matchesFilter(p, f.key, belowMinPackages)).length;
-          const isActive = filter === f.key;
-          return (
-            <button
-              key={f.key}
-              onClick={() => { setFilter(f.key); setPage(0); }}
-              className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${isActive ? f.activeColor : `bg-white ${f.color} hover:bg-warm-50`}`}
-            >
-              {f.label} <span className="opacity-60">{count}</span>
-            </button>
-          );
-        })}
+      {/* Grouped filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterDropdown
+          label="Status"
+          options={STATUS_OPTIONS}
+          value={statusFilter}
+          counts={statusCounts}
+          onChange={(v) => { setStatusFilter(v); setPage(0); }}
+        />
+        <FilterDropdown
+          label="Plan"
+          options={PLAN_OPTIONS}
+          value={planFilter}
+          counts={planCounts}
+          onChange={(v) => { setPlanFilter(v); setPage(0); }}
+        />
+        <FilterDropdown
+          label="Badge"
+          options={BADGE_OPTIONS}
+          value={badgeFilter}
+          counts={badgeCounts}
+          onChange={(v) => { setBadgeFilter(v); setPage(0); }}
+        />
+        <button
+          onClick={() => { setBelowMinOnly((v) => !v); setPage(0); }}
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+            belowMinOnly ? "border-red-300 bg-red-50 text-red-700" : "border-warm-200 bg-white text-gray-600 hover:border-red-200 hover:text-red-700"
+          }`}
+        >
+          ⚠ Below Min Price
+          <span className="opacity-60">{belowMinCount}</span>
+        </button>
+        {hasNonDefault && (
+          <button
+            onClick={() => { setStatusFilter("active"); setPlanFilter("all"); setBadgeFilter("all"); setBelowMinOnly(false); setPage(0); }}
+            className="ml-auto text-xs font-medium text-gray-500 hover:text-gray-700"
+          >
+            Reset filters
+          </button>
+        )}
+        <span className="text-xs text-gray-400">
+          {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+        </span>
       </div>
 
       <div className="space-y-2">
@@ -511,4 +590,67 @@ function getMissingSteps(p: AdminPhotographer): string[] {
 function getCompleteness(p: AdminPhotographer): number {
   const checks = [p.has_avatar, p.has_cover, p.has_bio, p.portfolio_count >= 5, p.package_count >= 1, p.location_count >= 1, p.stripe_ready, p.has_phone];
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
+function FilterDropdown<T extends string>({
+  label,
+  options,
+  value,
+  counts,
+  onChange,
+}: {
+  label: string;
+  options: { key: T; label: string; dot: string }[];
+  value: T;
+  counts: Record<T, number>;
+  onChange: (v: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+  const current = options.find((o) => o.key === value) || options[0];
+  const isNonDefault = value !== "all";
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+          isNonDefault ? "border-primary-300 bg-primary-50 text-primary-700" : "border-warm-200 bg-white text-gray-700 hover:border-primary-300"
+        }`}
+      >
+        <span className={`h-2 w-2 rounded-full ${current.dot}`} aria-hidden />
+        <span>{label}:</span>
+        <span className="font-semibold">{current.label.replace(/^All /, "All")}</span>
+        <span className="opacity-60">{counts[value] ?? 0}</span>
+        <svg className={`h-3 w-3 text-gray-400 transition ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-1 w-56 overflow-hidden rounded-xl border border-warm-200 bg-white shadow-lg">
+          {options.map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => { onChange(o.key); setOpen(false); }}
+              className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs transition hover:bg-warm-50 ${
+                o.key === value ? "bg-primary-50 font-semibold text-primary-700" : "text-gray-700"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${o.dot}`} aria-hidden />
+                {o.label}
+              </span>
+              <span className="text-[10px] text-gray-400">{counts[o.key] ?? 0}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

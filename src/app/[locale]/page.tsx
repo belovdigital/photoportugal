@@ -8,6 +8,7 @@ import { ShootTypesSection } from "@/components/ui/ShootTypesSection";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
 import { getHomepageReviews } from "@/lib/reviews-data";
+import { query } from "@/lib/db";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
@@ -88,6 +89,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const tc = await getTranslations("common");
   const featuredReviews = await getHomepageReviews(1);
   const featuredReview = featuredReviews[0] || null;
+
+  // Pick 5 random approved photographer covers for the hero collage.
+  const heroCovers = await query<{ cover_url: string; slug: string; name: string; locations: string[] }>(
+    `SELECT pp.cover_url, pp.slug, u.name,
+            ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 1) as locations
+     FROM photographer_profiles pp
+     JOIN users u ON u.id = pp.user_id
+     WHERE pp.is_approved = TRUE AND pp.cover_url IS NOT NULL
+     ORDER BY RANDOM() LIMIT 5`
+  ).catch(() => []);
 
   const heroAlts = [
     t("heroImages.alt1"),
@@ -286,63 +297,86 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </div>
             </div>
 
-            {/* Right — Photo grid */}
+            {/* Right — Photo grid built from real photographer covers */}
             <div className="relative hidden lg:block">
               <div className="grid grid-cols-6 grid-rows-6 gap-3" style={{ height: "520px" }}>
                 {/* Main large photo */}
-                <div className="col-span-4 row-span-4 overflow-hidden rounded-2xl shadow-xl">
+                <Link
+                  href={`/photographers/${heroCovers[0]?.slug || ""}`}
+                  className="col-span-4 row-span-4 overflow-hidden rounded-2xl shadow-xl group"
+                >
                   <OptimizedImage
-                    src="/hero-family.webp"
-                    alt={heroAlts[0]}
+                    src={heroCovers[0]?.cover_url || "/hero-family.webp"}
+                    alt={heroCovers[0] ? `Photo by ${heroCovers[0].name} in Portugal` : heroAlts[0]}
                     priority
-                    className="h-full w-full"
+                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
-                </div>
+                </Link>
                 {/* Top right */}
-                <div className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg">
+                <Link
+                  href={`/photographers/${heroCovers[1]?.slug || ""}`}
+                  className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg group"
+                >
                   <OptimizedImage
-                    src={unsplashUrl(heroPhotoIds[1], 350)}
-                    alt={heroAlts[1]}
-                    className="h-full w-full"
+                    src={heroCovers[1]?.cover_url || unsplashUrl(heroPhotoIds[1], 350)}
+                    alt={heroCovers[1] ? `Photo by ${heroCovers[1].name} in Portugal` : heroAlts[1]}
+                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
-                </div>
+                </Link>
                 {/* Bottom left */}
-                <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg">
+                <Link
+                  href={`/photographers/${heroCovers[2]?.slug || ""}`}
+                  className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg group"
+                >
                   <OptimizedImage
-                    src={unsplashUrl(heroPhotoIds[2], 350)}
-                    alt={heroAlts[2]}
-                    className="h-full w-full"
+                    src={heroCovers[2]?.cover_url || unsplashUrl(heroPhotoIds[2], 350)}
+                    alt={heroCovers[2] ? `Photo by ${heroCovers[2].name} in Portugal` : heroAlts[2]}
+                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
-                </div>
+                </Link>
                 {/* Bottom center */}
-                <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg">
+                <Link
+                  href={`/photographers/${heroCovers[3]?.slug || ""}`}
+                  className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg group"
+                >
                   <OptimizedImage
-                    src={unsplashUrl(heroPhotoIds[3], 350)}
-                    alt={heroAlts[3]}
-                    className="h-full w-full"
+                    src={heroCovers[3]?.cover_url || unsplashUrl(heroPhotoIds[3], 350)}
+                    alt={heroCovers[3] ? `Photo by ${heroCovers[3].name} in Portugal` : heroAlts[3]}
+                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
-                </div>
+                </Link>
                 {/* Bottom right */}
-                <div className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg">
+                <Link
+                  href={`/photographers/${heroCovers[4]?.slug || ""}`}
+                  className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg group"
+                >
                   <OptimizedImage
-                    src={unsplashUrl(heroPhotoIds[4], 350)}
-                    alt={heroAlts[4]}
-                    className="h-full w-full"
+                    src={heroCovers[4]?.cover_url || unsplashUrl(heroPhotoIds[4], 350)}
+                    alt={heroCovers[4] ? `Photo by ${heroCovers[4].name} in Portugal` : heroAlts[4]}
+                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
-                </div>
+                </Link>
               </div>
 
             </div>
 
-            {/* Mobile hero image */}
+            {/* Mobile hero — rotating photographer cover montage */}
             <div className="relative -mx-4 overflow-hidden rounded-2xl sm:mx-0 lg:hidden">
-              <div className="aspect-[4/3]">
-                <OptimizedImage
-                  src="/hero-family.webp"
-                  alt={heroAlts[0]}
-                  priority
-                  className="h-full w-full"
-                />
+              <div className="grid grid-cols-2 grid-rows-2 gap-2 aspect-[4/3]">
+                {heroCovers.slice(0, 4).map((c, idx) => (
+                  <Link
+                    key={c.slug}
+                    href={`/photographers/${c.slug}`}
+                    className={`relative overflow-hidden ${idx === 0 ? "row-span-2 rounded-l-2xl" : idx === 1 ? "rounded-tr-2xl" : idx === 3 ? "rounded-br-2xl" : ""}`}
+                  >
+                    <OptimizedImage
+                      src={c.cover_url}
+                      alt={`Photo by ${c.name} in Portugal`}
+                      priority={idx === 0}
+                      className="h-full w-full"
+                    />
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
