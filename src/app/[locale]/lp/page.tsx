@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Link from "next/link";
 import { setRequestLocale } from "next-intl/server";
 import { getShootTypeBySlug } from "@/lib/shoot-types-data";
@@ -129,18 +130,22 @@ export default async function LandingPagePortugal({ params, searchParams }: {
   return (
     <div className="bg-warm-50 min-h-screen">
       <section className="relative overflow-hidden border-b border-warm-200">
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 hidden sm:block">
           <OptimizedImage src="/hero-family.webp" alt="" className="h-full w-full opacity-30" priority />
           <div className="absolute inset-0 bg-gradient-to-b from-warm-50/70 via-warm-50/90 to-warm-50" />
         </div>
-        <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:py-14 lg:px-8">
-          <h1 className="font-display text-3xl font-bold text-gray-900 sm:text-4xl lg:text-5xl">
+        <div className="relative z-10 mx-auto max-w-6xl px-4 py-5 sm:py-14 lg:px-8">
+          <h1 className="font-display text-2xl font-bold text-gray-900 sm:text-4xl lg:text-5xl">
             {heroTitle}
           </h1>
-          <p className="mt-3 max-w-2xl text-base text-gray-600 sm:text-lg">
+          <p className="mt-1 text-sm text-gray-600 sm:hidden">
+            {minPrice ? `From €${minPrice}` : "Verified photographers"}
+            {totalMatching > 0 ? ` · ${totalMatching} verified photographer${totalMatching === 1 ? "" : "s"}` : ""}
+          </p>
+          <p className="mt-3 hidden max-w-2xl text-base text-gray-600 sm:block sm:text-lg">
             {heroSubtitle}
           </p>
-          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-600">
+          <div className="mt-5 hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-600 sm:flex">
             <span className="flex items-center gap-1.5">
               <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
               Secure payment
@@ -157,7 +162,7 @@ export default async function LandingPagePortugal({ params, searchParams }: {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-8 sm:py-12 lg:px-8">
+      <section className="mx-auto max-w-6xl px-4 py-4 sm:py-12 lg:px-8">
         {photographers.length > 0 && (
           <ScarcityBanner count={photographers.length} locationName={st?.name || "Portugal"} locale={locale} context={st ? "shootType" : "location"} />
         )}
@@ -172,12 +177,29 @@ export default async function LandingPagePortugal({ params, searchParams }: {
             </Link>
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-5 sm:mt-6 sm:grid-cols-2 lg:grid-cols-3">
             {photographers.map((p, idx) => {
               const firstLocation = p.location_names[0];
               const href = `/photographers/${p.slug}${utmQuery ? `?${utmQuery}` : ""}`;
               return (
-                <article key={p.id} className="group relative flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+                <Fragment key={p.id}>
+                {idx === 3 && (
+                  <div className="flex items-center justify-around gap-3 rounded-xl border border-warm-200 bg-white px-3 py-3 text-[11px] font-medium text-gray-600 sm:hidden">
+                    <span className="flex items-center gap-1">
+                      <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                      Secure
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                      Money-back
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                      Instant
+                    </span>
+                  </div>
+                )}
+                <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
                   <Link href={href} className="block h-44 overflow-hidden bg-warm-100">
                     {p.cover_url ? (
                       <OptimizedImage src={p.cover_url} alt={`${normalizeName(p.name)} portfolio`} priority={idx < 3} className="h-full w-full transition duration-300 group-hover:scale-[1.03]" />
@@ -273,6 +295,7 @@ export default async function LandingPagePortugal({ params, searchParams }: {
                     )}
                   </div>
                 </article>
+                </Fragment>
               );
             })}
           </div>
