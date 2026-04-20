@@ -998,14 +998,31 @@
     },
     "noMatch": "Nenhum fotógrafo corresponde aos seus filtros.",
     "noMatchSuggestion": "Tente ajustar os filtros de localização, tipo de sessão ou idioma para ver mais fotógrafos.",
+    "buckets": {
+      "popular": "Populares agora",
+      "topRated": "Melhor classificação",
+      "new": "Recém-chegados",
+      "founding": "Membros fundadores",
+      "fast": "Mais rápidos a responder"
+    },
+    "chips": {
+      "rating45": "4.5★+",
+      "verified": "Verificados",
+      "activeWeek": "Ativos esta semana",
+      "fastReply": "Respondem em <1h",
+      "founding": "Fundadores"
+    },
     "filters": {
       "allLocations": "Todas as localizações",
       "locations": "{count} localizações",
       "searchLocations": "Pesquisar localizações...",
       "anyLanguage": "Qualquer idioma",
-      "sortFeatured": "Destaque",
+      "sortFeatured": "Recomendado",
       "sortTopRated": "Melhor Classificação",
       "sortMostReviews": "Mais Avaliações",
+      "sortNewest": "Mais recentes",
+      "sortFastest": "Resposta Rápida",
+      "quick": "Filtros rápidos",
       "sortPriceLow": "Preço: Menor → Maior",
       "sortPriceHigh": "Preço: Maior → Menor",
       "clearAll": "Limpar tudo ({count})",

@@ -1,7 +1,97 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+
+function PhotographerPicker({
+  photographers,
+  value,
+  onChange,
+  placeholder,
+}: {
+  photographers: { id: string; name: string }[];
+  value: string;
+  onChange: (id: string) => void;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 40);
+  }, [open]);
+
+  const sorted = [...photographers].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  const selected = sorted.find((p) => p.id === value);
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? sorted.filter((p) => p.name.toLowerCase().includes(q))
+    : sorted;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm outline-none transition ${
+          selected ? "border-gray-300 text-gray-900" : "border-gray-300 text-gray-400"
+        } hover:border-primary-300`}
+      >
+        <span className="truncate">{selected?.name || placeholder || "Select photographer..."}</span>
+        <svg className={`h-4 w-4 shrink-0 text-gray-400 transition ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-warm-200 bg-white shadow-lg">
+          <div className="border-b border-warm-100 p-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full rounded-lg border border-warm-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
+            />
+          </div>
+          <div className="max-h-64 overflow-y-auto py-1">
+            {filtered.length === 0 ? (
+              <p className="py-4 text-center text-xs text-gray-400">No matches</p>
+            ) : (
+              filtered.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => { onChange(p.id); setOpen(false); setSearch(""); }}
+                  className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${
+                    p.id === value ? "bg-primary-50 font-semibold text-primary-700" : "text-gray-700"
+                  }`}
+                >
+                  {p.name}
+                  {p.id === value && (
+                    <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface Review {
   id: string;
@@ -168,10 +258,12 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Photographer</label>
-                <select value={newPhotographerId} onChange={e => setNewPhotographerId(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none">
-                  <option value="">Select photographer...</option>
-                  {photographers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+                <PhotographerPicker
+                  photographers={photographers}
+                  value={newPhotographerId}
+                  onChange={setNewPhotographerId}
+                  placeholder="Select photographer..."
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Client Name (optional)</label>

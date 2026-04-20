@@ -68,9 +68,49 @@ export function PhotographerCatalog({
   const [locationSearch, setLocationSearch] = useState("");
   const [shootTypeFilters, setShootTypeFilters] = useState<string[]>(initialShootType ? [initialShootType] : []);
   const [languageFilter, setLanguageFilter] = useState("");
-  const [sortBy, setSortBy] = useState<"featured" | "rating" | "reviews">("featured");
+  type SortKey = "featured" | "rating" | "reviews" | "newest" | "fastest";
+  const [sortBy, setSortBy] = useState<SortKey>("featured");
+  type ChipKey = "rating45" | "verified" | "activeWeek" | "fastReply" | "founding";
+  const [chips, setChips] = useState<Set<ChipKey>>(new Set());
+  const [activeBucket, setActiveBucket] = useState<string | null>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [mobileSheet, setMobileSheet] = useState<null | "location" | "filters">(null);
+
+  function toggleChip(key: ChipKey) {
+    setActiveBucket(null);
+    setChips((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  function applyBucket(key: string) {
+    if (activeBucket === key) {
+      setActiveBucket(null);
+      setChips(new Set());
+      setSortBy("featured");
+      return;
+    }
+    setActiveBucket(key);
+    const newChips = new Set<ChipKey>();
+    let sort: SortKey = "featured";
+    switch (key) {
+      case "popular": sort = "reviews"; break;
+      case "topRated": sort = "rating"; newChips.add("rating45"); break;
+      case "new": sort = "newest"; break;
+      case "founding": newChips.add("founding"); break;
+      case "fast": sort = "fastest"; newChips.add("fastReply"); break;
+    }
+    setChips(newChips);
+    setSortBy(sort);
+  }
+
+  function handleSortChange(next: SortKey) {
+    setActiveBucket(null);
+    setSortBy(next);
+  }
 
   const allLanguages = useMemo(() => {
     const langs = new Set<string>();
@@ -138,6 +178,24 @@ export function PhotographerCatalog({
       );
     }
 
+    // Quick chips
+    if (chips.has("rating45")) {
+      result = result.filter((p) => Number(p.rating) >= 4.5 && p.review_count > 0);
+    }
+    if (chips.has("verified")) {
+      result = result.filter((p) => p.is_verified);
+    }
+    if (chips.has("activeWeek")) {
+      const oneWeekAgo = Date.now() - 7 * 86400e3;
+      result = result.filter((p) => p.last_seen_at && new Date(p.last_seen_at).getTime() >= oneWeekAgo);
+    }
+    if (chips.has("fastReply")) {
+      result = result.filter((p) => p.avg_response_minutes != null && p.avg_response_minutes <= 60);
+    }
+    if (chips.has("founding")) {
+      result = result.filter((p) => p.is_founding);
+    }
+
     // Sort
     const featuredFirst = (a: PhotographerProfile, b: PhotographerProfile) => {
       if (a.is_featured && !b.is_featured) return -1;
@@ -147,7 +205,6 @@ export function PhotographerCatalog({
 
     switch (sortBy) {
       case "featured":
-        // Featured first (random within), then rest (random within)
         result = [...result].sort((a, b) => featuredFirst(a, b) || (Math.random() - 0.5));
         break;
       case "rating":
@@ -156,15 +213,42 @@ export function PhotographerCatalog({
       case "reviews":
         result = [...result].sort((a, b) => b.review_count - a.review_count);
         break;
+      case "newest":
+        result = [...result].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case "fastest":
+        result = [...result].sort((a, b) => {
+          const am = a.avg_response_minutes ?? Number.MAX_SAFE_INTEGER;
+          const bm = b.avg_response_minutes ?? Number.MAX_SAFE_INTEGER;
+          return am - bm;
+        });
+        break;
     }
 
     return result;
-  }, [photographers, locationFilters, shootTypeFilters, languageFilter, sortBy]);
+  }, [photographers, locationFilters, shootTypeFilters, languageFilter, chips, sortBy]);
 
   const activeFilterCount =
     locationFilters.length +
     shootTypeFilters.length +
-    (languageFilter ? 1 : 0);
+    (languageFilter ? 1 : 0) +
+    chips.size;
+
+  const BUCKETS: { key: string; label: string; icon: string }[] = [
+    { key: "popular", label: t("buckets.popular"), icon: "🔥" },
+    { key: "topRated", label: t("buckets.topRated"), icon: "⭐" },
+    { key: "new", label: t("buckets.new"), icon: "🆕" },
+    { key: "founding", label: t("buckets.founding"), icon: "💎" },
+    { key: "fast", label: t("buckets.fast"), icon: "⚡" },
+  ];
+
+  const CHIPS: { key: ChipKey; label: string }[] = [
+    { key: "rating45", label: t("chips.rating45") },
+    { key: "verified", label: t("chips.verified") },
+    { key: "activeWeek", label: t("chips.activeWeek") },
+    { key: "fastReply", label: t("chips.fastReply") },
+    { key: "founding", label: t("chips.founding") },
+  ];
 
   const selectedLocationNames = locationFilters
     .map((s) => locations.find((l) => l.slug === s)?.name)
@@ -231,10 +315,12 @@ export function PhotographerCatalog({
             <option value="featured">{t("filters.sortFeatured")}</option>
             <option value="rating">{t("filters.sortTopRated")}</option>
             <option value="reviews">{t("filters.sortMostReviews")}</option>
+            <option value="newest">{t("filters.sortNewest")}</option>
+            <option value="fastest">{t("filters.sortFastest")}</option>
           </select>
           {activeFilterCount > 0 && (
             <button
-              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); }}
+              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setChips(new Set()); setActiveBucket(null); }}
               className="shrink-0 rounded-full px-3 py-2 text-sm text-gray-500"
             >
               {t("filters.clearAllShort")}
@@ -289,8 +375,29 @@ export function PhotographerCatalog({
         ) : null;
       })()}
 
+      {/* Buckets row — curated quick shortcuts (all viewports) */}
+      <div className="mt-4 -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+        {BUCKETS.map((b) => {
+          const active = activeBucket === b.key;
+          return (
+            <button
+              key={b.key}
+              onClick={() => applyBucket(b.key)}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition sm:text-sm ${
+                active
+                  ? "border-primary-500 bg-primary-600 text-white shadow-sm"
+                  : "border-warm-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-700"
+              }`}
+            >
+              <span aria-hidden>{b.icon}</span>
+              {b.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Desktop filter bar (>= sm) */}
-      <div className="mt-6 hidden space-y-3 sm:block">
+      <div className="mt-4 hidden space-y-3 sm:block">
         {/* Top row: Location + Language + Price + Sort */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Location dropdown with multi-select */}
@@ -380,23 +487,42 @@ export function PhotographerCatalog({
           {/* Sort */}
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            onChange={(e) => handleSortChange(e.target.value as SortKey)}
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none"
           >
             <option value="featured">{t("filters.sortFeatured")}</option>
             <option value="rating">{t("filters.sortTopRated")}</option>
             <option value="reviews">{t("filters.sortMostReviews")}</option>
+            <option value="newest">{t("filters.sortNewest")}</option>
+            <option value="fastest">{t("filters.sortFastest")}</option>
           </select>
 
           {/* Clear */}
           {activeFilterCount > 0 && (
             <button
-              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); }}
+              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setChips(new Set()); setActiveBucket(null); }}
               className="rounded-lg px-3 py-2 text-sm text-gray-500 transition hover:bg-gray-50"
             >
               {t("filters.clearAll", { count: activeFilterCount })}
             </button>
           )}
+        </div>
+
+        {/* Quick chips */}
+        <div className="flex flex-wrap gap-1.5">
+          {CHIPS.map((chip) => (
+            <button
+              key={chip.key}
+              onClick={() => toggleChip(chip.key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                chips.has(chip.key)
+                  ? "bg-primary-600 text-white"
+                  : "border border-warm-200 bg-white text-gray-600 hover:border-primary-300 hover:text-primary-700"
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
 
         {/* Shoot type pills (multi-select) */}
@@ -530,6 +656,24 @@ export function PhotographerCatalog({
               ) : (
                 <>
                   <div>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.quick")}</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {CHIPS.map((chip) => (
+                        <button
+                          key={chip.key}
+                          onClick={() => toggleChip(chip.key)}
+                          className={`rounded-full px-3 py-2 text-xs font-medium transition ${
+                            chips.has(chip.key)
+                              ? "bg-primary-600 text-white"
+                              : "border border-warm-200 bg-white text-gray-600"
+                          }`}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-6">
                     <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.occasion")}</h3>
                     <div className="flex flex-wrap gap-1.5">
                       {shootTypes.map((type) => (
@@ -566,7 +710,7 @@ export function PhotographerCatalog({
             <div className="flex gap-2 border-t border-warm-100 px-4 py-3">
               {activeFilterCount > 0 && (
                 <button
-                  onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setLocationSearch(""); }}
+                  onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setLocationSearch(""); setChips(new Set()); setActiveBucket(null); }}
                   className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700"
                 >
                   {t("filters.clearAllShort")}

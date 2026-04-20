@@ -1001,14 +1001,31 @@
     },
     "noMatch": "No photographers match your filters.",
     "noMatchSuggestion": "Try adjusting your location, shoot type, or language filters to see more photographers.",
+    "buckets": {
+      "popular": "Popular now",
+      "topRated": "Top rated",
+      "new": "New arrivals",
+      "founding": "Founding members",
+      "fast": "Fastest responders"
+    },
+    "chips": {
+      "rating45": "4.5★+",
+      "verified": "Verified",
+      "activeWeek": "Active this week",
+      "fastReply": "Responds in <1h",
+      "founding": "Founding"
+    },
     "filters": {
       "allLocations": "All locations",
       "locations": "{count} locations",
       "searchLocations": "Search locations...",
       "anyLanguage": "Any language",
-      "sortFeatured": "Featured",
+      "sortFeatured": "Recommended",
       "sortTopRated": "Top Rated",
       "sortMostReviews": "Most Reviews",
+      "sortNewest": "Newest",
+      "sortFastest": "Fastest Reply",
+      "quick": "Quick filters",
       "sortPriceLow": "Price: Low → High",
       "sortPriceHigh": "Price: High → Low",
       "clearAll": "Clear all ({count})",
