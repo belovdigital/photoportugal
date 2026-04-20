@@ -130,6 +130,31 @@ export async function generateMetadata({
   const rawImage = p.cover_url || p.avatar_url;
   const ogImage = rawImage ? `https://photoportugal.com/api/img/${rawImage.replace("/uploads/", "")}?w=1200&h=630&f=jpeg&q=80` : "https://photoportugal.com/og-image.png";
   const profileUrl = `https://photoportugal.com/photographers/${slug}`;
+
+  // Pull a handful of public review photos to enrich social previews.
+  let reviewPhotoUrls: string[] = [];
+  if (result.type === "db") {
+    try {
+      const rps = await query<{ url: string }>(
+        `SELECT rp.url FROM review_photos rp
+         JOIN reviews r ON r.id = rp.review_id
+         WHERE r.photographer_id = $1 AND r.is_approved = TRUE AND rp.is_public = TRUE
+         ORDER BY r.created_at DESC LIMIT 4`,
+        [p.id]
+      );
+      reviewPhotoUrls = rps.map((x) => {
+        const u = x.url;
+        if (u.startsWith("http")) return u;
+        if (u.startsWith("/uploads/")) return `https://photoportugal.com/api/img/${u.replace("/uploads/", "")}?w=1200&h=630&f=jpeg&q=80`;
+        return `https://photoportugal.com${u}`;
+      });
+    } catch {}
+  }
+
+  const ogImages = [
+    { url: ogImage, width: 1200, height: 630, alt: title },
+    ...reviewPhotoUrls.map((url, i) => ({ url, width: 1200, height: 630, alt: `Client review photo ${i + 1} — ${normalizeName(p.name)}` })),
+  ];
   return {
     title,
     description,
@@ -139,14 +164,14 @@ export async function generateMetadata({
       description,
       type: "profile",
       url: profileUrl,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      images: ogImages,
       siteName: "Photo Portugal",
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [ogImage],
+      images: [ogImage, ...reviewPhotoUrls],
     },
     other: p.review_count > 0 ? {
       "og:rating": String(Number(p.rating).toFixed(1)),
@@ -190,7 +215,7 @@ export default async function PhotographerProfilePage({
   }
 
   const photographer = result.data;
-  let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string; client_avatar: string | null; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
+  let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
   const portfolioItems = (photographer as { portfolioItems?: { url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
   // Fetch real reviews from DB for DB photographers
@@ -290,8 +315,15 @@ export default async function PhotographerProfilePage({
   }
 
   const profileUrl = `https://photoportugal.com/photographers/${slug}`;
-  const schemaImages = ([photographer.cover_url, photographer.avatar_url].filter(Boolean) as string[])
-    .map((src) => src.startsWith("http") ? src : `https://photoportugal.com${src}`);
+  const toAbsoluteUrl = (src: string) =>
+    src.startsWith("http") ? src : `https://photoportugal.com${src}`;
+  const reviewPhotoAbsolute = reviews
+    .flatMap((r) => (r.photos || []).map((p: { url: string }) => p.url))
+    .map(toAbsoluteUrl);
+  const schemaImages = [
+    ...([photographer.cover_url, photographer.avatar_url].filter(Boolean) as string[]).map(toAbsoluteUrl),
+    ...reviewPhotoAbsolute,
+  ];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -323,6 +355,7 @@ export default async function PhotographerProfilePage({
       ? {
           review: reviews.map((r) => {
             const body = r.text || r.title;
+            const photoUrls = (r.photos || []).map((p: { url: string }) => toAbsoluteUrl(p.url));
             return {
               "@type": "Review",
               author: { "@type": "Person", name: r.client_name },
@@ -330,6 +363,10 @@ export default async function PhotographerProfilePage({
               ...(body ? { reviewBody: body } : {}),
               ...(r.title ? { name: r.title } : {}),
               datePublished: new Date(r.created_at).toISOString().split("T")[0],
+              ...(photoUrls.length > 0 ? {
+                image: photoUrls,
+                associatedMedia: photoUrls.map((url: string) => ({ "@type": "ImageObject", contentUrl: url, url })),
+              } : {}),
               itemReviewed: {
                 "@type": "LocalBusiness",
                 "@id": profileUrl,

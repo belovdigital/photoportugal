@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { formatPublicName } from "@/lib/format-name";
 
@@ -41,12 +41,53 @@ export function ReviewsPaginated({
   photographerSlug: string;
 }) {
   const [visible, setVisible] = useState(PAGE_SIZE);
+  const [lightbox, setLightbox] = useState<number | null>(null);
   const t = useTranslations("photographers.profile");
   const tc = useTranslations("common");
   const locale = useLocale();
 
   const shown = reviews.slice(0, visible);
   const hasMore = visible < reviews.length;
+
+  // Flat list of ALL review photos across reviews (stable order).
+  const allPhotos: { url: string; reviewerName: string }[] = reviews.flatMap((r) =>
+    (r.photos || []).map((p) => ({ url: p.url, reviewerName: formatPublicName(r.client_name) }))
+  );
+
+  const navigate = useCallback((dir: number) => {
+    setLightbox((prev) => {
+      if (prev === null) return null;
+      const next = prev + dir;
+      if (next < 0 || next >= allPhotos.length) return prev;
+      return next;
+    });
+  }, [allPhotos.length]);
+
+  useEffect(() => {
+    if (lightbox === null) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") navigate(1);
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") navigate(-1);
+      else if (e.key === "Escape") setLightbox(null);
+    }
+    window.addEventListener("keydown", handleKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = "";
+    };
+  }, [lightbox, navigate]);
+
+  // Preload adjacent photos
+  useEffect(() => {
+    if (lightbox === null) return;
+    [lightbox - 1, lightbox + 1]
+      .filter((i) => i >= 0 && i < allPhotos.length)
+      .forEach((i) => {
+        const img = new Image();
+        img.src = allPhotos[i].url;
+      });
+  }, [lightbox, allPhotos]);
 
   return (
     <section>
@@ -73,6 +114,10 @@ export function ReviewsPaginated({
           const flag = codeToFlag(review.client_country || "");
           const monthYear = new Date(review.created_at).toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", { month: "long", year: "numeric" });
           const packageHref = review.package_id ? `/book/${photographerSlug}?package=${review.package_id}` : null;
+          // Compute photo offset for this review in the flat list
+          const reviewPhotoOffset = reviews
+            .slice(0, reviews.indexOf(review))
+            .reduce((sum, r) => sum + (r.photos?.length || 0), 0);
           return (
           <div key={review.id} className="rounded-xl border border-warm-200 bg-white p-5 sm:p-6">
             <div className="flex items-start gap-3">
@@ -135,15 +180,24 @@ export function ReviewsPaginated({
             )}
             {review.photos && review.photos.length > 0 && (
               <div className="mt-3 flex gap-2 flex-wrap">
-                {review.photos.map((photo) => (
-                  <a key={photo.id} href={photo.url} target="_blank" rel="noopener noreferrer" className="block">
-                    <img
-                      src={photo.url}
-                      alt={`Photo from ${review.client_name}'s review`}
-                      className="h-20 w-20 rounded-lg object-cover border border-warm-200 transition hover:opacity-90 hover:shadow-md"
-                    />
-                  </a>
-                ))}
+                {review.photos.map((photo, photoIdx) => {
+                  const globalIdx = reviewPhotoOffset + photoIdx;
+                  return (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      onClick={() => setLightbox(globalIdx)}
+                      className="block overflow-hidden rounded-lg border border-warm-200 transition hover:opacity-90 hover:shadow-md"
+                      aria-label={`Open photo ${photoIdx + 1} from ${review.client_name}'s review`}
+                    >
+                      <img
+                        src={photo.url}
+                        alt={`Photo from ${review.client_name}'s review`}
+                        className="h-20 w-20 object-cover"
+                      />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -163,6 +217,65 @@ export function ReviewsPaginated({
           </button>
         )}
       </div>
+
+      {/* Lightbox across ALL review photos */}
+      {lightbox !== null && allPhotos[lightbox] && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+          role="dialog"
+          aria-label="Review photo viewer"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            onClick={() => setLightbox(null)}
+            aria-label="Close"
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {lightbox > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+              aria-label="Previous photo"
+              className="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          <img
+            key={lightbox}
+            src={allPhotos[lightbox].url}
+            alt={`Review photo by ${allPhotos[lightbox].reviewerName}`}
+            className="h-[90vh] w-[90vw] object-contain select-none"
+            draggable={false}
+            onContextMenu={(e) => e.preventDefault()}
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {lightbox < allPhotos.length - 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(1); }}
+              aria-label="Next photo"
+              className="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 text-sm">
+            <p className="text-white/80">From {allPhotos[lightbox].reviewerName}&apos;s review</p>
+            <span className="text-white/50">{lightbox + 1} / {allPhotos.length}</span>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
