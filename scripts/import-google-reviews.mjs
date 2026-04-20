@@ -84,10 +84,11 @@ for (const r of reviews) {
   }
 
   const hasPhotos = Array.isArray(r.photos) && r.photos.length > 0;
+  const country = (r.country || "").trim().toUpperCase().slice(0, 2) || null;
   const reviewInsert = await pool.query(
-    `INSERT INTO reviews (photographer_id, rating, text, is_approved, is_verified, client_name_override, photos_public, created_at)
-     VALUES ($1, $2, $3, TRUE, TRUE, $4, $5, $6) RETURNING id`,
-    [photographerId, rating, text, author, hasPhotos, createdAt]
+    `INSERT INTO reviews (photographer_id, rating, text, is_approved, is_verified, client_name_override, photos_public, created_at, client_country_override)
+     VALUES ($1, $2, $3, TRUE, TRUE, $4, $5, $6, $7) RETURNING id`,
+    [photographerId, rating, text, author, hasPhotos, createdAt, country]
   );
   const reviewId = reviewInsert.rows[0].id;
 

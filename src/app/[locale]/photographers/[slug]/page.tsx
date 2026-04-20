@@ -241,9 +241,10 @@ export default async function PhotographerProfilePage({
                 u.avatar_url as client_avatar,
                 b.package_id,
                 pkg.name as package_name,
-                (SELECT vs.country FROM visitor_sessions vs
-                 WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL
-                 ORDER BY vs.started_at ASC LIMIT 1) as client_country,
+                COALESCE(r.client_country_override,
+                  (SELECT vs.country FROM visitor_sessions vs
+                   WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL
+                   ORDER BY vs.started_at ASC LIMIT 1)) as client_country,
                 COALESCE(
                   (SELECT json_agg(json_build_object('id', rp.id, 'url', rp.url) ORDER BY rp.created_at)
                    FROM review_photos rp WHERE rp.review_id = r.id AND rp.is_public = true),

@@ -15,6 +15,11 @@ function Stars({ count }: { count: number }) {
   );
 }
 
+function codeToFlag(code: string | null): string {
+  if (!code || code.length !== 2) return "";
+  return code.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text;
   const cut = text.slice(0, max).split(" ").slice(0, -1).join(" ");
@@ -48,17 +53,30 @@ export async function ReviewsStrip({ reviews, title, subtitle, maxPerRow = 3, co
       <div className={`-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory sm:mx-0 sm:gap-5 sm:overflow-visible sm:pb-0 ${gridCls}`}>
         {reviews.map((r) => {
           const displayName = r.client_name ? formatPublicName(r.client_name) : tc("privateClient");
+          const flag = codeToFlag(r.client_country);
           return (
             <article key={r.id} className="flex shrink-0 w-[85%] snap-start flex-col rounded-2xl border border-warm-200 bg-white p-5 shadow-sm transition hover:shadow-md sm:w-auto">
               {r.photo_url && (
                 <Link href={`/photographers/${r.photographer_slug}`} className="mb-3 -mx-1 block overflow-hidden rounded-xl">
-                  <img src={r.photo_url} alt={`Client review photo — ${r.photographer_name}`} className="h-40 w-full object-cover transition group-hover:scale-[1.02]" loading="lazy" />
+                  <img src={r.photo_url} alt={`Client review photo — ${r.photographer_name}`} className="h-40 w-full object-cover" loading="lazy" />
                 </Link>
               )}
-              <Stars count={r.rating} />
-              <p className="mt-2 text-sm leading-relaxed text-gray-700 line-clamp-5">
+              {/* Top: author + stars */}
+              <div>
+                <div className="flex items-center gap-1.5">
+                  {flag && <span aria-hidden className="text-base leading-none">{flag}</span>}
+                  <p className={`truncate text-sm font-semibold ${r.client_name ? "text-gray-900" : "text-gray-500 italic"}`}>
+                    {displayName}
+                  </p>
+                </div>
+                <div className="mt-1">
+                  <Stars count={r.rating} />
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-gray-700 line-clamp-5">
                 {truncate(r.text, 240)}
               </p>
+              {/* Bottom: photographer */}
               <div className="mt-4 flex items-center gap-3 border-t border-warm-100 pt-3">
                 <Link href={`/photographers/${r.photographer_slug}`} className="flex h-9 w-9 shrink-0 overflow-hidden rounded-full bg-primary-100 ring-1 ring-warm-200 transition hover:ring-primary-300">
                   {r.photographer_avatar ? (
@@ -70,13 +88,15 @@ export async function ReviewsStrip({ reviews, title, subtitle, maxPerRow = 3, co
                   )}
                 </Link>
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-semibold ${r.client_name ? "text-gray-900" : "text-gray-500 italic"}`}>
-                    {displayName}
-                  </p>
-                  <p className="truncate text-xs text-gray-400">
-                    <Link href={`/photographers/${r.photographer_slug}`} className="text-primary-600 hover:underline">
-                      {tc("reviewAbout", { name: r.photographer_name })}
-                    </Link>
+                  <Link href={`/photographers/${r.photographer_slug}`} className="block truncate text-sm font-semibold text-gray-900 hover:text-primary-600">
+                    {r.photographer_name}
+                  </Link>
+                  <p className="flex items-center gap-1 text-xs text-gray-400">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Photographer
                   </p>
                 </div>
               </div>

@@ -54,7 +54,7 @@ const BASE_SELECT = `
   pp.slug as photographer_slug,
   pu.avatar_url as photographer_avatar,
   (SELECT rp.url FROM review_photos rp WHERE rp.review_id = r.id AND rp.is_public = TRUE ORDER BY rp.created_at LIMIT 1) as photo_url,
-  (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at ASC LIMIT 1) as client_country
+  COALESCE(r.client_country_override, (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at ASC LIMIT 1)) as client_country
 `;
 
 const BASE_JOINS = `
