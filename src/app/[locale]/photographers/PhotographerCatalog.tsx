@@ -48,6 +48,7 @@ function TeamOnlineIndicator() {
 
 interface Props {
   photographers: PhotographerProfile[];
+  quotes?: Record<string, { text: string; client_name: string | null }>;
   locations: Location[];
   shootTypes: string[];
   initialLocation?: string;
@@ -56,6 +57,7 @@ interface Props {
 
 export function PhotographerCatalog({
   photographers,
+  quotes = {},
   locations,
   shootTypes,
   initialLocation,
@@ -419,7 +421,7 @@ export function PhotographerCatalog({
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((photographer, idx) => (
           <Fragment key={photographer.id}>
-            <PhotographerCard photographer={photographer} />
+            <PhotographerCard photographer={photographer} quote={quotes[photographer.id]} />
             {idx === 2 && filtered.length > 3 && (
               <a
                 href="/find-photographer"

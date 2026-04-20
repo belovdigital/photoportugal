@@ -89,6 +89,41 @@ export function emailButton(href: string, label: string, color: string = "#C9453
   </td></tr></table>`;
 }
 
+/**
+ * Small social-proof block with a real review + "Join N+ travelers" line.
+ * Returns ready-made HTML fragment (empty string if DB is empty).
+ */
+export async function emailSocialProof(): Promise<string> {
+  try {
+    const { queryOne } = await import("@/lib/db");
+    const row = await queryOne<{ text: string; client_name_override: string | null; photographer_slug: string; photographer_name: string; review_count: string }>(
+      `WITH top_review AS (
+         SELECT r.text, r.client_name_override, pp.slug as photographer_slug, pu.name as photographer_name
+         FROM reviews r
+         JOIN photographer_profiles pp ON pp.id = r.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+         WHERE r.is_approved = TRUE AND pp.is_approved = TRUE
+           AND r.text IS NOT NULL AND LENGTH(r.text) BETWEEN 60 AND 220
+         ORDER BY RANDOM()
+         LIMIT 1
+       ),
+       total AS (SELECT COUNT(*)::text as review_count FROM reviews WHERE is_approved = TRUE)
+       SELECT tr.text, tr.client_name_override, tr.photographer_slug, tr.photographer_name, t.review_count
+       FROM top_review tr CROSS JOIN total t`
+    );
+    if (!row) return "";
+    const quote = row.text.length > 220 ? row.text.slice(0, 220).replace(/\s\S*$/, "") + "…" : row.text;
+    const name = row.client_name_override || "Private Client";
+    return `<div style="margin:24px 0 0;padding:16px;background:#FAFAF8;border-radius:10px;border:1px solid #F3EDE6;">
+  <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.5px;color:#9B8E82;text-transform:uppercase;">Join ${row.review_count}+ travelers who loved their photoshoot</p>
+  <p style="margin:0 0 8px;font-size:14px;font-style:italic;line-height:1.5;color:#4A4A4A;">&ldquo;${quote}&rdquo;</p>
+  <p style="margin:0;font-size:12px;color:#9B8E82;">— ${name} · <a href="https://photoportugal.com/photographers/${row.photographer_slug}" style="color:#C94536;text-decoration:none;">${row.photographer_name}</a></p>
+</div>`;
+  } catch {
+    return "";
+  }
+}
+
 // === Email templates ===
 
 export async function sendBookingNotification(
@@ -139,6 +174,7 @@ export async function sendBookingConfirmation(
   photographerName: string,
   shootDate: string | null
 ) {
+  const socialProof = await emailSocialProof();
   await sendEmail(
     clientEmail,
     `Booking confirmed with ${photographerName}!`,
@@ -151,6 +187,7 @@ export async function sendBookingConfirmation(
         <p style="margin:0;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>Next step:</strong> Discuss the meeting point, outfit ideas, and any special requests with your photographer through our messaging system.</p>
       </div>
       ${emailButton(`${BASE_URL}/dashboard/messages`, "Open Messages")}
+      ${socialProof}
     `)
   );
 }
@@ -171,6 +208,7 @@ export async function sendBookingConfirmationWithPayment(
       ${emailButton(paymentUrl, "Pay Now — €" + price, "#16A34A")}`
     : emailButton(`${BASE_URL}/dashboard/bookings`, "View Booking");
 
+  const socialProof = await emailSocialProof();
   await sendEmail(
     clientEmail,
     `${photographerName} confirmed your booking${totalPrice ? ` — pay now to secure` : ""}!`,
@@ -183,6 +221,7 @@ export async function sendBookingConfirmationWithPayment(
         <p style="margin:0;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>Tip:</strong> We also recommend messaging your photographer to discuss meeting point, outfit ideas, and any special requests.</p>
       </div>
       ${emailButton(`${BASE_URL}/dashboard/messages`, "Open Messages")}
+      ${socialProof}
     `)
   );
 }

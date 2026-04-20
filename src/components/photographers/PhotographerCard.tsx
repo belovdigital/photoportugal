@@ -12,8 +12,10 @@ import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 
 export function PhotographerCard({
   photographer,
+  quote,
 }: {
   photographer: PhotographerProfile;
+  quote?: { text: string; client_name: string | null };
 }) {
   const { data: session } = useSession();
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
@@ -107,6 +109,12 @@ export function PhotographerCard({
             ({photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")})
           </span>
         </div>
+        )}
+
+        {quote && quote.text && (
+          <p className="mt-2 line-clamp-2 text-xs italic text-gray-500">
+            &ldquo;{quote.text.length > 120 ? quote.text.slice(0, 120).replace(/\s\S*$/, "") + "…" : quote.text}&rdquo;
+          </p>
         )}
 
         {/* Locations */}

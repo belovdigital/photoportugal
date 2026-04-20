@@ -80,10 +80,10 @@ export async function GET(
     // Reviews
     const reviews = await query<{
       id: string; rating: number; title: string | null; text: string | null;
-      client_name: string; created_at: string;
+      client_name: string | null; created_at: string;
     }>(
       `SELECT r.id, r.rating, r.title, r.text,
-              COALESCE(r.client_name_override, u.name, 'Anonymous') as client_name,
+              COALESCE(r.client_name_override, u.name) as client_name,
               r.created_at
        FROM reviews r
        LEFT JOIN users u ON u.id = r.client_id

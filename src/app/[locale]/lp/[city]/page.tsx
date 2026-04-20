@@ -8,6 +8,8 @@ import { shootTypes, getShootTypeBySlug } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
+import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
+import { getReviewsForLocation } from "@/lib/reviews-data";
 import { ActiveBadge } from "@/components/ui/ActiveBadge";
 import { normalizeName } from "@/lib/format-name";
 import { locationImage } from "@/lib/unsplash-images";
@@ -130,6 +132,8 @@ export default async function LandingPage({ params, searchParams }: {
     shootTypeAliases ? [city, shootTypeAliases] : [city]
   ).catch(() => null);
   const totalMatching = parseInt(totalRow?.count || "0");
+
+  const locationReviews = await getReviewsForLocation(city, 6);
 
   // Pass-through UTM so Book CTA preserves attribution
   const bookParams = new URLSearchParams();
@@ -349,6 +353,18 @@ export default async function LandingPage({ params, searchParams }: {
             <Link href={`/find-photographer${utmQuery ? `?${utmQuery}` : ""}`} className="inline-flex shrink-0 rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800">
               Free concierge matching
             </Link>
+          </div>
+        )}
+
+        {/* Reviews from travelers who booked photographers in this city */}
+        {locationReviews.length > 0 && (
+          <div className="mt-12">
+            <ReviewsStrip
+              reviews={locationReviews}
+              title={`What travelers say about ${loc.name} photoshoots`}
+              subtitle="Real reviews from verified Photo Portugal bookings"
+              compact
+            />
           </div>
         )}
 

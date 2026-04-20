@@ -26,6 +26,8 @@ import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
+import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
+import { getReviewsForLocation } from "@/lib/reviews-data";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -279,6 +281,8 @@ export default async function LocationPage({
     })),
   } : null;
 
+  const locationReviews = await getReviewsForLocation(slug, 6);
+
   // Shoot types available for internal linking
   const shootTypeLinks = [
     { slug: "couples", label: "Couples Photoshoots" },
@@ -513,6 +517,20 @@ export default async function LocationPage({
                 </Link>
               </div>
             )}
+          </div>
+        </section>
+      )}
+
+      {/* Reviews from photographers in this location */}
+      {locationReviews.length > 0 && (
+        <section className="border-t border-warm-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <ReviewsStrip
+              reviews={locationReviews}
+              title={`What travelers say about photoshoots in ${location.name}`}
+              subtitle="Real reviews from verified bookings"
+              compact
+            />
           </div>
         </section>
       )}

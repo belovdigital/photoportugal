@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations } from "@/lib/locations-data";
 import { SHOOT_TYPES, PhotographerProfile } from "@/types";
 import { PhotographerCatalog } from "./PhotographerCatalog";
+import { getOneLinerQuotesForPhotographers } from "@/lib/reviews-data";
 import { query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
 
@@ -158,6 +159,7 @@ export default async function PhotographersPage({
   const { location: initialLocation, shoot, shootType } = await searchParams;
   const initialShootType = shoot || shootType;
   const dbPhotographers = await getDbPhotographers();
+  const quotes = await getOneLinerQuotesForPhotographers(dbPhotographers.map((p) => p.id));
   const resolvedShootType = resolveShootType(initialShootType);
 
   const base = "https://photoportugal.com";
@@ -185,6 +187,7 @@ export default async function PhotographersPage({
     <PhotographerCatalog
       key={`${initialLocation || ""}_${resolvedShootType || ""}`}
       photographers={dbPhotographers}
+      quotes={quotes}
       locations={locations}
       shootTypes={SHOOT_TYPES as unknown as string[]}
       initialLocation={initialLocation}

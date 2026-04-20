@@ -6,6 +6,8 @@ import { getShootTypeBySlug } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
+import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
+import { getHomepageReviews, getReviewsForShootType } from "@/lib/reviews-data";
 import { ActiveBadge } from "@/components/ui/ActiveBadge";
 import { normalizeName } from "@/lib/format-name";
 
@@ -113,6 +115,10 @@ export default async function LandingPagePortugal({ params, searchParams }: {
     shootTypeAliases ? [shootTypeAliases] : []
   ).catch(() => null);
   const totalMatching = parseInt(totalRow?.count || "0");
+
+  const lpReviews = st
+    ? await getReviewsForShootType(st.photographerShootTypeNames || [st.name], 6)
+    : await getHomepageReviews(6);
 
   const bookParams = new URLSearchParams();
   for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "gclid"] as const) {
@@ -322,6 +328,17 @@ export default async function LandingPagePortugal({ params, searchParams }: {
             <Link href={`/find-photographer${utmQuery ? `?${utmQuery}` : ""}`} className="inline-flex shrink-0 rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800">
               Free concierge matching
             </Link>
+          </div>
+        )}
+
+        {lpReviews.length > 0 && (
+          <div className="mt-12">
+            <ReviewsStrip
+              reviews={lpReviews}
+              title={st ? `Real ${st.name.toLowerCase()} photoshoot reviews` : "What travelers say about Photo Portugal"}
+              subtitle="Verified reviews from real bookings"
+              compact
+            />
           </div>
         )}
 

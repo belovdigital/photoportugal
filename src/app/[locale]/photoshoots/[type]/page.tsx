@@ -3,6 +3,8 @@ import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { shootTypes, getShootTypeBySlug } from "@/lib/shoot-types-data";
+import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
+import { getReviewsForShootType } from "@/lib/reviews-data";
 import { locations } from "@/lib/locations-data";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
@@ -88,6 +90,11 @@ export default async function ShootTypePage({
      LIMIT 6`,
     [shootType.photographerShootTypeNames || [shootType.name]]
   ).catch(() => []);
+
+  const shootTypeReviews = await getReviewsForShootType(
+    shootType.photographerShootTypeNames || [shootType.name],
+    6
+  );
 
   const faqJsonLd = {
     "@context": "https://schema.org",
@@ -340,6 +347,20 @@ export default async function ShootTypePage({
           ))}
         </div>
       </section>
+
+      {/* Reviews for this shoot type */}
+      {shootTypeReviews.length > 0 && (
+        <section className="border-t border-warm-200 bg-warm-50">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <ReviewsStrip
+              reviews={shootTypeReviews}
+              title={`Real ${shootType.name.toLowerCase()} photoshoot reviews`}
+              subtitle="From clients who booked through Photo Portugal"
+              compact
+            />
+          </div>
+        </section>
+      )}
 
       {/* Related Blog Posts */}
       {relatedPosts.length > 0 && (
