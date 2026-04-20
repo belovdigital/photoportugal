@@ -10,7 +10,7 @@ export async function TestimonialsSection() {
   if (reviews.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
+    <section id="reviews" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 scroll-mt-20">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <span className="inline-block rounded-full bg-yellow-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-yellow-800">

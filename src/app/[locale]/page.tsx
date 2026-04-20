@@ -238,8 +238,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
             {/* Left — Content */}
             <div className="max-w-xl">
-              {/* Trust badge */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-warm-200 bg-white px-4 py-1.5 text-sm shadow-sm">
+              {/* Trust badge — scrolls to reviews section */}
+              <a
+                href="#reviews"
+                className="group inline-flex items-center gap-2 rounded-full border border-warm-200 bg-white px-4 py-1.5 text-sm shadow-sm transition hover:border-primary-300 hover:shadow-md"
+              >
                 <span className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <svg key={i} className="h-3.5 w-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -247,8 +250,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     </svg>
                   ))}
                 </span>
-                <span className="text-gray-600">{t("trustBadge", { count: 500 })}</span>
-              </div>
+                <span className="text-gray-600 group-hover:text-gray-900">{t("trustBadge", { count: 500 })}</span>
+                <svg className="h-3 w-3 text-gray-400 transition group-hover:translate-y-0.5 group-hover:text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </a>
 
               {/* Headline */}
               <h1 className="mt-6 font-display text-4xl font-bold leading-[1.1] text-gray-900 sm:text-5xl lg:text-[3.5rem]">
