@@ -8,7 +8,7 @@ import { ShootTypesSection } from "@/components/ui/ShootTypesSection";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
 import { getHomepageReviews } from "@/lib/reviews-data";
-import { query } from "@/lib/db";
+import { heroImages } from "@/lib/hero-images";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
@@ -90,15 +90,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const featuredReviews = await getHomepageReviews(1);
   const featuredReview = featuredReviews[0] || null;
 
-  // Pick 5 random approved photographer covers for the hero collage.
-  const heroCovers = await query<{ cover_url: string; slug: string; name: string; locations: string[] }>(
-    `SELECT pp.cover_url, pp.slug, u.name,
-            ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 1) as locations
-     FROM photographer_profiles pp
-     JOIN users u ON u.id = pp.user_id
-     WHERE pp.is_approved = TRUE AND pp.cover_url IS NOT NULL
-     ORDER BY RANDOM() LIMIT 5`
-  ).catch(() => []);
+  const heroCovers = heroImages.map((h) => ({
+    cover_url: h.url,
+    slug: h.photographerSlug,
+    name: h.photographerName,
+    alt: h.alt,
+  }));
 
   const heroAlts = [
     t("heroImages.alt1"),
@@ -307,7 +304,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 >
                   <OptimizedImage
                     src={heroCovers[0]?.cover_url || "/hero-family.webp"}
-                    alt={heroCovers[0] ? `Photo by ${heroCovers[0].name} in Portugal` : heroAlts[0]}
+                    alt={heroCovers[0].alt}
                     priority
                     className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
@@ -319,7 +316,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 >
                   <OptimizedImage
                     src={heroCovers[1]?.cover_url || unsplashUrl(heroPhotoIds[1], 350)}
-                    alt={heroCovers[1] ? `Photo by ${heroCovers[1].name} in Portugal` : heroAlts[1]}
+                    alt={heroCovers[1].alt}
                     className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
                 </Link>
@@ -330,7 +327,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 >
                   <OptimizedImage
                     src={heroCovers[2]?.cover_url || unsplashUrl(heroPhotoIds[2], 350)}
-                    alt={heroCovers[2] ? `Photo by ${heroCovers[2].name} in Portugal` : heroAlts[2]}
+                    alt={heroCovers[2].alt}
                     className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
                 </Link>
@@ -341,7 +338,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 >
                   <OptimizedImage
                     src={heroCovers[3]?.cover_url || unsplashUrl(heroPhotoIds[3], 350)}
-                    alt={heroCovers[3] ? `Photo by ${heroCovers[3].name} in Portugal` : heroAlts[3]}
+                    alt={heroCovers[3].alt}
                     className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
                 </Link>
@@ -352,7 +349,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 >
                   <OptimizedImage
                     src={heroCovers[4]?.cover_url || unsplashUrl(heroPhotoIds[4], 350)}
-                    alt={heroCovers[4] ? `Photo by ${heroCovers[4].name} in Portugal` : heroAlts[4]}
+                    alt={heroCovers[4].alt}
                     className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
                   />
                 </Link>

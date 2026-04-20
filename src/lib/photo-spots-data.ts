@@ -1,8 +1,13 @@
 export interface PhotoSpot {
   name: string;
   description: string;
+  /** Portuguese translations; when absent, EN fallback is used on /pt. */
+  namePt?: string;
+  descriptionPt?: string;
   best_time?: string;
+  best_timePt?: string;
   tips?: string;
+  tipsPt?: string;
 }
 
 export function spotSlug(name: string): string {
@@ -18,48 +23,113 @@ export function getSpot(citySlug: string, slug: string): PhotoSpot | undefined {
   return (photoSpots[citySlug] || []).find((s) => spotSlug(s.name) === slug);
 }
 
+/** Returns name/description in the requested locale, falling back to EN. */
+export function spotLocalized(spot: PhotoSpot, locale: string) {
+  const pt = locale === "pt";
+  return {
+    name: pt && spot.namePt ? spot.namePt : spot.name,
+    description: pt && spot.descriptionPt ? spot.descriptionPt : spot.description,
+    best_time: pt && spot.best_timePt ? spot.best_timePt : spot.best_time,
+    tips: pt && spot.tipsPt ? spot.tipsPt : spot.tips,
+  };
+}
+
 /** Top photography spots per location slug */
 export const photoSpots: Record<string, PhotoSpot[]> = {
   lisbon: [
-    { name: "Miradouro da Graca", description: "One of Lisbon's most scenic viewpoints with panoramic views over the city rooftops and the Tagus River — perfect for golden hour portraits." },
-    { name: "Alfama", description: "The oldest neighborhood in Lisbon, with narrow cobblestone streets, colorful azulejo-tiled facades, and authentic Portuguese atmosphere." },
-    { name: "Belem Tower", description: "The iconic 16th-century riverside fortress and UNESCO World Heritage site, ideal for dramatic architectural backdrops." },
-    { name: "LX Factory", description: "A trendy creative hub in a converted industrial complex, offering street art, vibrant murals, and an urban-cool photoshoot aesthetic." },
-    { name: "Praca do Comercio", description: "Lisbon's grand waterfront square with its striking yellow arcades and the Triumphal Arch — a wide-open, elegant setting for group and couple photos." },
+    { name: "Miradouro da Graca", namePt: "Miradouro da Graça",
+      description: "One of Lisbon's most scenic viewpoints with panoramic views over the city rooftops and the Tagus River — perfect for golden hour portraits.",
+      descriptionPt: "Um dos miradouros mais cénicos de Lisboa, com vistas panorâmicas sobre os telhados da cidade e o rio Tejo — perfeito para retratos ao pôr do sol." },
+    { name: "Alfama", namePt: "Alfama",
+      description: "The oldest neighborhood in Lisbon, with narrow cobblestone streets, colorful azulejo-tiled facades, and authentic Portuguese atmosphere.",
+      descriptionPt: "O bairro mais antigo de Lisboa, com ruas estreitas de calçada, fachadas coloridas de azulejos e uma atmosfera autenticamente portuguesa." },
+    { name: "Belem Tower", namePt: "Torre de Belém",
+      description: "The iconic 16th-century riverside fortress and UNESCO World Heritage site, ideal for dramatic architectural backdrops.",
+      descriptionPt: "A icónica fortaleza ribeirinha do século XVI, Património Mundial da UNESCO, ideal para cenários arquitetónicos dramáticos." },
+    { name: "LX Factory", namePt: "LX Factory",
+      description: "A trendy creative hub in a converted industrial complex, offering street art, vibrant murals, and an urban-cool photoshoot aesthetic.",
+      descriptionPt: "Um polo criativo num antigo complexo industrial reconvertido, com street art, murais vibrantes e uma estética urbana para sessões fotográficas." },
+    { name: "Praca do Comercio", namePt: "Praça do Comércio",
+      description: "Lisbon's grand waterfront square with its striking yellow arcades and the Triumphal Arch — a wide-open, elegant setting for group and couple photos.",
+      descriptionPt: "A grande praça ribeirinha de Lisboa, com os seus característicos arcos amarelos e o Arco da Rua Augusta — um cenário amplo e elegante para fotos de grupo e casal." },
   ],
   porto: [
-    { name: "Ribeira", description: "The colorful UNESCO-listed riverfront district with stacked houses cascading down to the Douro — Porto's most iconic photoshoot location." },
-    { name: "Dom Luis I Bridge", description: "The double-deck iron bridge offers dramatic framing with the Douro River and both sides of the city stretching below." },
-    { name: "Livraria Lello", description: "One of the world's most beautiful bookshops, with a stunning neo-Gothic interior and the famous crimson staircase." },
-    { name: "Sao Bento Station", description: "A railway station adorned with over 20,000 hand-painted azulejo tiles depicting Portuguese history — a unique indoor backdrop." },
-    { name: "Serra do Pilar", description: "A hilltop viewpoint on the Vila Nova de Gaia side, offering the classic panoramic shot of Porto's skyline and the Douro River." },
+    { name: "Ribeira", namePt: "Ribeira",
+      description: "The colorful UNESCO-listed riverfront district with stacked houses cascading down to the Douro — Porto's most iconic photoshoot location.",
+      descriptionPt: "O colorido bairro ribeirinho classificado pela UNESCO, com casas empilhadas em cascata até ao Douro — o local mais icónico do Porto para sessões fotográficas." },
+    { name: "Dom Luis I Bridge", namePt: "Ponte Dom Luís I",
+      description: "The double-deck iron bridge offers dramatic framing with the Douro River and both sides of the city stretching below.",
+      descriptionPt: "A ponte de ferro de dois tabuleiros oferece um enquadramento dramático com o rio Douro e ambas as margens da cidade em baixo." },
+    { name: "Livraria Lello", namePt: "Livraria Lello",
+      description: "One of the world's most beautiful bookshops, with a stunning neo-Gothic interior and the famous crimson staircase.",
+      descriptionPt: "Uma das livrarias mais bonitas do mundo, com um interior neogótico deslumbrante e a famosa escadaria vermelha." },
+    { name: "Sao Bento Station", namePt: "Estação de São Bento",
+      description: "A railway station adorned with over 20,000 hand-painted azulejo tiles depicting Portuguese history — a unique indoor backdrop.",
+      descriptionPt: "Uma estação ferroviária decorada com mais de 20 000 azulejos pintados à mão que retratam a história portuguesa — um cenário interior único." },
+    { name: "Serra do Pilar", namePt: "Serra do Pilar",
+      description: "A hilltop viewpoint on the Vila Nova de Gaia side, offering the classic panoramic shot of Porto's skyline and the Douro River.",
+      descriptionPt: "Um miradouro no topo da colina em Vila Nova de Gaia, oferecendo a vista panorâmica clássica do skyline do Porto e do rio Douro." },
   ],
   sintra: [
-    { name: "Pena Palace", description: "A Romanticist castle in vivid red and yellow perched on a misty hilltop, surrounded by enchanted gardens — pure fairytale magic." },
-    { name: "Quinta da Regaleira", description: "Mystical estate with the famous Initiation Well, underground tunnels, grottoes, and lush gardens that feel like a fantasy world." },
-    { name: "National Palace", description: "The medieval royal palace in the heart of Sintra village, with its distinctive twin conical chimneys and ornate Moorish interiors." },
-    { name: "Monserrate Palace", description: "An exotic 19th-century palace with Moorish, Gothic, and Indian influences, set in romantic botanical gardens with rare plant species." },
+    { name: "Pena Palace", namePt: "Palácio da Pena",
+      description: "A Romanticist castle in vivid red and yellow perched on a misty hilltop, surrounded by enchanted gardens — pure fairytale magic.",
+      descriptionPt: "Um castelo romântico em vermelho e amarelo vivos, no topo de uma colina enevoada, rodeado por jardins encantados — pura magia de conto de fadas." },
+    { name: "Quinta da Regaleira", namePt: "Quinta da Regaleira",
+      description: "Mystical estate with the famous Initiation Well, underground tunnels, grottoes, and lush gardens that feel like a fantasy world.",
+      descriptionPt: "Uma propriedade mística com o famoso Poço Iniciático, túneis subterrâneos, grutas e jardins exuberantes que parecem saídos de um mundo de fantasia." },
+    { name: "National Palace", namePt: "Palácio Nacional de Sintra",
+      description: "The medieval royal palace in the heart of Sintra village, with its distinctive twin conical chimneys and ornate Moorish interiors.",
+      descriptionPt: "O palácio real medieval no centro de Sintra, com as suas distintivas chaminés cónicas gémeas e interiores ornamentados de influência mourisca." },
+    { name: "Monserrate Palace", namePt: "Palácio de Monserrate",
+      description: "An exotic 19th-century palace with Moorish, Gothic, and Indian influences, set in romantic botanical gardens with rare plant species.",
+      descriptionPt: "Um palácio exótico do século XIX com influências mouriscas, góticas e indianas, rodeado de jardins botânicos românticos com espécies raras." },
   ],
   algarve: [
-    { name: "Benagil Cave", description: "A stunning sea cave with a natural skylight opening to the sky above a hidden beach — one of Portugal's most photographed natural wonders." },
-    { name: "Ponta da Piedade", description: "Dramatic golden sandstone cliffs, arches, and sea stacks rising from turquoise waters near Lagos — an unforgettable coastal backdrop." },
-    { name: "Praia da Marinha", description: "Consistently rated one of the most beautiful beaches in Europe, framed by sculpted limestone cliffs and crystal-clear water." },
-    { name: "Tavira Island", description: "A pristine barrier island in the Ria Formosa lagoon, accessible by ferry, with endless white sand and calm turquoise waters." },
+    { name: "Benagil Cave", namePt: "Gruta de Benagil",
+      description: "A stunning sea cave with a natural skylight opening to the sky above a hidden beach — one of Portugal's most photographed natural wonders.",
+      descriptionPt: "Uma deslumbrante gruta marinha com uma clarabóia natural que se abre para o céu sobre uma praia escondida — uma das maravilhas naturais mais fotografadas de Portugal." },
+    { name: "Ponta da Piedade", namePt: "Ponta da Piedade",
+      description: "Dramatic golden sandstone cliffs, arches, and sea stacks rising from turquoise waters near Lagos — an unforgettable coastal backdrop.",
+      descriptionPt: "Falésias dramáticas de arenito dourado, arcos e pilares marinhos que se erguem das águas turquesa perto de Lagos — um cenário costeiro inesquecível." },
+    { name: "Praia da Marinha", namePt: "Praia da Marinha",
+      description: "Consistently rated one of the most beautiful beaches in Europe, framed by sculpted limestone cliffs and crystal-clear water.",
+      descriptionPt: "Classificada consistentemente como uma das praias mais bonitas da Europa, emoldurada por falésias calcárias esculpidas e água cristalina." },
+    { name: "Tavira Island", namePt: "Ilha de Tavira",
+      description: "A pristine barrier island in the Ria Formosa lagoon, accessible by ferry, with endless white sand and calm turquoise waters.",
+      descriptionPt: "Uma ilha-barreira imaculada na Ria Formosa, acessível por ferry, com areia branca sem fim e águas turquesa calmas." },
   ],
   lagos: [
-    { name: "Ponta da Piedade", description: "Towering sandstone pillars and sea grottos carved by the Atlantic, offering the most dramatic coastal scenery in the Algarve." },
-    { name: "Praia do Camilo", description: "A small cove beach reached by a wooden staircase through the cliffs, creating an intimate and picturesque setting for portraits." },
-    { name: "Lagos Old Town", description: "Charming streets within 16th-century walls filled with colorful buildings, lively plazas, and waterfront cafes perfect for lifestyle shots." },
+    { name: "Ponta da Piedade", namePt: "Ponta da Piedade",
+      description: "Towering sandstone pillars and sea grottos carved by the Atlantic, offering the most dramatic coastal scenery in the Algarve.",
+      descriptionPt: "Imponentes pilares de arenito e grutas marinhas esculpidas pelo Atlântico, oferecendo o cenário costeiro mais dramático do Algarve." },
+    { name: "Praia do Camilo", namePt: "Praia do Camilo",
+      description: "A small cove beach reached by a wooden staircase through the cliffs, creating an intimate and picturesque setting for portraits.",
+      descriptionPt: "Uma pequena praia em enseada acedida por uma escadaria de madeira através das falésias, criando um cenário íntimo e pitoresco para retratos." },
+    { name: "Lagos Old Town", namePt: "Centro Histórico de Lagos",
+      description: "Charming streets within 16th-century walls filled with colorful buildings, lively plazas, and waterfront cafes perfect for lifestyle shots.",
+      descriptionPt: "Ruas encantadoras dentro de muralhas do século XVI, com edifícios coloridos, praças animadas e cafés à beira-mar perfeitos para fotos de estilo de vida." },
   ],
   cascais: [
-    { name: "Boca do Inferno", description: "A dramatic chasm in the coastal cliffs where Atlantic waves crash with spectacular force — raw, powerful, and unforgettable." },
-    { name: "Cascais Marina", description: "A sleek, modern marina surrounded by pastel-colored buildings and waterfront restaurants, blending seaside elegance with coastal charm." },
-    { name: "Casa de Santa Maria", description: "A beautifully restored aristocratic mansion on the waterfront with ornate tile work, arched windows, and ocean views." },
+    { name: "Boca do Inferno", namePt: "Boca do Inferno",
+      description: "A dramatic chasm in the coastal cliffs where Atlantic waves crash with spectacular force — raw, powerful, and unforgettable.",
+      descriptionPt: "Um abismo dramático nas falésias costeiras onde as ondas do Atlântico embatem com força espectacular — bruto, poderoso e inesquecível." },
+    { name: "Cascais Marina", namePt: "Marina de Cascais",
+      description: "A sleek, modern marina surrounded by pastel-colored buildings and waterfront restaurants, blending seaside elegance with coastal charm.",
+      descriptionPt: "Uma marina moderna e elegante rodeada por edifícios em tons pastel e restaurantes à beira-mar, unindo elegância à beira-mar e charme costeiro." },
+    { name: "Casa de Santa Maria", namePt: "Casa de Santa Maria",
+      description: "A beautifully restored aristocratic mansion on the waterfront with ornate tile work, arched windows, and ocean views.",
+      descriptionPt: "Uma mansão aristocrática lindamente restaurada à beira-mar, com azulejos ornamentados, janelas em arco e vistas para o oceano." },
   ],
   madeira: [
-    { name: "Cabo Girao", description: "Europe's highest sea cliff at 580 meters, with a glass-floor skywalk offering vertigo-inducing views over the Atlantic Ocean." },
-    { name: "Funchal Old Town", description: "Vibrant painted doors, flower-lined streets, and colorful markets make this historic district a photographer's playground." },
-    { name: "Levada Walks", description: "Ancient irrigation channel trails through lush laurel forests and misty mountains — perfect for adventurous, nature-immersed photoshoots." },
+    { name: "Cabo Girao", namePt: "Cabo Girão",
+      description: "Europe's highest sea cliff at 580 meters, with a glass-floor skywalk offering vertigo-inducing views over the Atlantic Ocean.",
+      descriptionPt: "A falésia marítima mais alta da Europa, com 580 metros, com um miradouro de piso de vidro que oferece vistas vertiginosas sobre o Oceano Atlântico." },
+    { name: "Funchal Old Town", namePt: "Zona Velha do Funchal",
+      description: "Vibrant painted doors, flower-lined streets, and colorful markets make this historic district a photographer's playground.",
+      descriptionPt: "Portas pintadas vibrantes, ruas floridas e mercados coloridos fazem deste bairro histórico um paraíso para fotógrafos." },
+    { name: "Levada Walks", namePt: "Levadas",
+      description: "Ancient irrigation channel trails through lush laurel forests and misty mountains — perfect for adventurous, nature-immersed photoshoots.",
+      descriptionPt: "Antigos canais de irrigação que atravessam florestas de laurissilva e montanhas enevoadas — perfeitos para sessões fotográficas aventureiras imersas na natureza." },
   ],
   azores: [
     { name: "Sete Cidades", description: "Twin crater lakes — one green, one blue — nestled inside a volcanic caldera, creating one of the most surreal landscapes in Europe." },

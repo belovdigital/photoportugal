@@ -625,7 +625,7 @@ function FilterDropdown<T extends string>({
       >
         <span className={`h-2 w-2 rounded-full ${current.dot}`} aria-hidden />
         <span>{label}:</span>
-        <span className="font-semibold">{current.label.replace(/^All /, "All")}</span>
+        <span className="font-semibold">{current.label}</span>
         <span className="opacity-60">{counts[value] ?? 0}</span>
         <svg className={`h-3 w-3 text-gray-400 transition ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />

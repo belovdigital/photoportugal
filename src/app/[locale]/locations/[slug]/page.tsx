@@ -28,7 +28,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
-import { spotSlug } from "@/lib/photo-spots-data";
+import { spotSlug, spotLocalized } from "@/lib/photo-spots-data";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -624,32 +624,35 @@ export default async function LocationPage({
               spots.length === 4 ? "lg:grid-cols-2" :
               "lg:grid-cols-3"
             }`}>
-              {spots.map((spot) => (
-                <Link
-                  key={spot.name}
-                  href={`/spots/${slug}/${spotSlug(spot.name)}`}
-                  className="group rounded-xl border border-warm-200 bg-warm-50 p-5 transition hover:border-primary-300 hover:bg-white hover:shadow-sm"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
+              {spots.map((spot) => {
+                const sl = spotLocalized(spot, locale);
+                return (
+                  <Link
+                    key={spot.name}
+                    href={`/spots/${slug}/${spotSlug(spot.name)}`}
+                    className="group rounded-xl border border-warm-200 bg-warm-50 p-5 transition hover:border-primary-300 hover:bg-white hover:shadow-sm"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 group-hover:text-primary-700">{sl.name}</h3>
+                        <p className="mt-1 text-sm text-gray-500 leading-relaxed">{sl.description}</p>
+                        {sl.best_time && (
+                          <p className="mt-2 text-xs text-gray-400">{t("bestTime", { time: sl.best_time })}</p>
+                        )}
+                        {sl.tips && (
+                          <p className="mt-1 text-xs text-primary-600">{sl.tips}</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 group-hover:text-primary-700">{spot.name}</h3>
-                      <p className="mt-1 text-sm text-gray-500 leading-relaxed">{spot.description}</p>
-                      {spot.best_time && (
-                        <p className="mt-2 text-xs text-gray-400">{t("bestTime", { time: spot.best_time })}</p>
-                      )}
-                      {spot.tips && (
-                        <p className="mt-1 text-xs text-primary-600">{spot.tips}</p>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
             <div className="mt-10 text-center">
               <Link
