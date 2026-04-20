@@ -27,7 +27,7 @@ for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const reviews = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
-const uploadsDir = "/var/www/photoportugal/uploads/reviews";
+const uploadsDir = `/var/www/photoportugal/uploads/reviews/${photographerId}`;
 fs.mkdirSync(uploadsDir, { recursive: true });
 
 function cleanText(text) {
@@ -63,21 +63,22 @@ async function downloadToBuffer(url) {
 let imported = 0, skipped = 0;
 for (const r of reviews) {
   const text = cleanText(r.text || "");
-  if (!text || !r.authorName) {
-    console.log(`  skip (no text/author): ${r.id}`);
+  if (!text) {
+    console.log(`  skip (no text): ${r.id || "(no id)"}`);
     skipped++;
     continue;
   }
+  const author = (r.authorName || "").trim() || null;
   const rating = r.rating || 5;
   const createdAt = dateAgoToTimestamp(r.date || "").toISOString();
 
-  // Dedup by (photographer_id, client_name_override, text) just in case of re-runs
+  // Dedup by (photographer_id, text) so re-runs are safe even with empty authors
   const existing = await pool.query(
-    `SELECT id FROM reviews WHERE photographer_id = $1 AND client_name_override = $2 AND text = $3 LIMIT 1`,
-    [photographerId, r.authorName, text]
+    `SELECT id FROM reviews WHERE photographer_id = $1 AND text = $2 LIMIT 1`,
+    [photographerId, text]
   );
   if (existing.rows.length > 0) {
-    console.log(`  dup: ${r.authorName}`);
+    console.log(`  dup: ${author || "(anonymous)"}`);
     skipped++;
     continue;
   }
@@ -86,7 +87,7 @@ for (const r of reviews) {
   const reviewInsert = await pool.query(
     `INSERT INTO reviews (photographer_id, rating, text, is_approved, is_verified, client_name_override, photos_public, created_at)
      VALUES ($1, $2, $3, TRUE, TRUE, $4, $5, $6) RETURNING id`,
-    [photographerId, rating, text, r.authorName, hasPhotos, createdAt]
+    [photographerId, rating, text, author, hasPhotos, createdAt]
   );
   const reviewId = reviewInsert.rows[0].id;
 
@@ -100,7 +101,7 @@ for (const r of reviews) {
         .toBuffer();
       const filename = `${crypto.randomUUID()}.jpg`;
       fs.writeFileSync(path.join(uploadsDir, filename), jpeg);
-      const url = `/uploads/reviews/${filename}`;
+      const url = `/uploads/reviews/${photographerId}/${filename}`;
       await pool.query(
         `INSERT INTO review_photos (review_id, url, is_public) VALUES ($1, $2, TRUE)`,
         [reviewId, url]
@@ -110,7 +111,7 @@ for (const r of reviews) {
       console.log(`    photo failed: ${err.message}`);
     }
   }
-  console.log(`  imported: ${r.authorName} (${rating}★) id=${reviewId}`);
+  console.log(`  imported: ${author || "(anonymous)"} (${rating}★) id=${reviewId}`);
   imported++;
 }
 

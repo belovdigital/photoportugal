@@ -11,7 +11,7 @@ interface Review {
   text: string | null;
   is_verified: boolean;
   created_at: string;
-  client_name: string;
+  client_name: string | null;
   client_avatar: string | null;
   photos?: { id: string; url: string }[];
   video_url?: string | null;
@@ -51,7 +51,10 @@ export function ReviewsPaginated({
 
   // Flat list of ALL review photos across reviews (stable order).
   const allPhotos: { url: string; reviewerName: string }[] = reviews.flatMap((r) =>
-    (r.photos || []).map((p) => ({ url: p.url, reviewerName: formatPublicName(r.client_name) }))
+    (r.photos || []).map((p) => ({
+      url: p.url,
+      reviewerName: r.client_name ? formatPublicName(r.client_name) : "",
+    }))
   );
 
   const navigate = useCallback((dir: number) => {
@@ -122,14 +125,22 @@ export function ReviewsPaginated({
           <div key={review.id} className="rounded-xl border border-warm-200 bg-white p-5 sm:p-6">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-600">
-                {review.client_name.charAt(0)}
+                {review.client_name ? (
+                  review.client_name.charAt(0)
+                ) : (
+                  <svg className="h-5 w-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
-                  {flag && <span aria-hidden className="text-base leading-none">{flag}</span>}
-                  <span className="truncate">{formatPublicName(review.client_name)}</span>
-                </p>
-                <p className="mt-0.5 text-xs text-gray-400">
+                {review.client_name && (
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                    {flag && <span aria-hidden className="text-base leading-none">{flag}</span>}
+                    <span className="truncate">{formatPublicName(review.client_name)}</span>
+                  </p>
+                )}
+                <p className={`${review.client_name ? "mt-0.5" : ""} text-xs text-gray-400`}>
                   {packageHref && review.package_name ? (
                     <>
                       <a href={packageHref} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
@@ -188,11 +199,11 @@ export function ReviewsPaginated({
                       type="button"
                       onClick={() => setLightbox(globalIdx)}
                       className="block overflow-hidden rounded-lg border border-warm-200 transition hover:opacity-90 hover:shadow-md"
-                      aria-label={`Open photo ${photoIdx + 1} from ${review.client_name}'s review`}
+                      aria-label={review.client_name ? `Open photo ${photoIdx + 1} from ${review.client_name}'s review` : `Open review photo ${photoIdx + 1}`}
                     >
                       <img
                         src={photo.url}
-                        alt={`Photo from ${review.client_name}'s review`}
+                        alt={review.client_name ? `Photo from ${review.client_name}'s review` : "Client review photo"}
                         className="h-20 w-20 object-cover"
                       />
                     </button>
@@ -251,7 +262,7 @@ export function ReviewsPaginated({
           <img
             key={lightbox}
             src={allPhotos[lightbox].url}
-            alt={`Review photo by ${allPhotos[lightbox].reviewerName}`}
+            alt={allPhotos[lightbox].reviewerName ? `Review photo by ${allPhotos[lightbox].reviewerName}` : "Client review photo"}
             className="h-[90vh] w-[90vw] object-contain select-none"
             draggable={false}
             onContextMenu={(e) => e.preventDefault()}
@@ -271,7 +282,9 @@ export function ReviewsPaginated({
           )}
 
           <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 text-sm">
-            <p className="text-white/80">From {allPhotos[lightbox].reviewerName}&apos;s review</p>
+            {allPhotos[lightbox].reviewerName && (
+              <p className="text-white/80">From {allPhotos[lightbox].reviewerName}&apos;s review</p>
+            )}
             <span className="text-white/50">{lightbox + 1} / {allPhotos.length}</span>
           </div>
         </div>

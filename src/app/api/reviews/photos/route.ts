@@ -41,10 +41,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Only images allowed" }, { status: 400 });
     }
 
-    // Verify review exists and belongs to user (or admin)
+    // Verify review exists and belongs to user (or admin); also need photographer_id for folder
     const userId = session?.user ? (session.user as { id?: string }).id : null;
-    const review = await queryOne<{ id: string; client_id: string | null }>(
-      "SELECT id, client_id FROM reviews WHERE id = $1",
+    const review = await queryOne<{ id: string; client_id: string | null; photographer_id: string }>(
+      "SELECT id, client_id, photographer_id FROM reviews WHERE id = $1",
       [reviewId]
     );
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Maximum 5 photos per review" }, { status: 400 });
     }
 
-    const dir = path.join(UPLOAD_DIR, "reviews");
+    const dir = path.join(UPLOAD_DIR, "reviews", review.photographer_id);
     await mkdir(dir, { recursive: true });
 
     const rawBuffer = Buffer.from(await file.arrayBuffer());
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     }
 
     await writeFile(path.join(dir, filename), finalBuffer);
-    const url = `/uploads/reviews/${filename}`;
+    const url = `/uploads/reviews/${review.photographer_id}/${filename}`;
 
     await queryOne(
       "INSERT INTO review_photos (review_id, url, is_public) VALUES ($1, $2, true) RETURNING id",

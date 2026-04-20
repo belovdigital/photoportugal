@@ -215,7 +215,7 @@ export default async function PhotographerProfilePage({
   }
 
   const photographer = result.data;
-  let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
+  let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string | null; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
   const portfolioItems = (photographer as { portfolioItems?: { url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
   // Fetch real reviews from DB for DB photographers
@@ -228,7 +228,7 @@ export default async function PhotographerProfilePage({
         text: string | null;
         is_verified: boolean;
         created_at: string;
-        client_name: string;
+        client_name: string | null;
         client_avatar: string | null;
         photos: { id: string; url: string }[];
         video_url: string | null;
@@ -237,7 +237,7 @@ export default async function PhotographerProfilePage({
         client_country: string | null;
       }>(
         `SELECT r.id, r.rating, r.title, r.text, r.is_verified, r.created_at, r.video_url,
-                COALESCE(r.client_name_override, u.name, 'Client') as client_name,
+                COALESCE(r.client_name_override, u.name) as client_name,
                 u.avatar_url as client_avatar,
                 b.package_id,
                 pkg.name as package_name,
@@ -358,7 +358,7 @@ export default async function PhotographerProfilePage({
             const photoUrls = (r.photos || []).map((p: { url: string }) => toAbsoluteUrl(p.url));
             return {
               "@type": "Review",
-              author: { "@type": "Person", name: r.client_name },
+              ...(r.client_name ? { author: { "@type": "Person", name: r.client_name } } : {}),
               reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
               ...(body ? { reviewBody: body } : {}),
               ...(r.title ? { name: r.title } : {}),

@@ -47,7 +47,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
   }
 
   async function handleAddReview() {
-    if (!newPhotographerId || !newClientName.trim() || !newRating) return;
+    if (!newPhotographerId || !newRating) return;
     setAdding(true);
     const res = await fetch("/api/admin/reviews", {
       method: "POST",
@@ -174,8 +174,8 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Client Name</label>
-                <input value={newClientName} onChange={e => setNewClientName(e.target.value)} placeholder="John Smith" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none" />
+                <label className="block text-xs font-medium text-gray-500 mb-1">Client Name (optional)</label>
+                <input value={newClientName} onChange={e => setNewClientName(e.target.value)} placeholder="Leave blank for anonymous" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none" />
               </div>
             </div>
             <div>
@@ -216,7 +216,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
               )}
             </div>
             <div className="flex gap-2">
-              <button onClick={handleAddReview} disabled={adding || !newPhotographerId || !newClientName.trim()} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+              <button onClick={handleAddReview} disabled={adding || !newPhotographerId} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
                 {adding ? "Adding..." : "Add Review"}
               </button>
               <button onClick={() => setShowAddForm(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>

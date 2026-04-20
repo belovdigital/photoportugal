@@ -16,15 +16,16 @@ export async function POST(req: NextRequest) {
   try {
     const { photographer_id, client_name, rating, title, text } = await req.json();
 
-    if (!photographer_id || !client_name || !rating || rating < 1 || rating > 5) {
-      return NextResponse.json({ error: "photographer_id, client_name, and rating (1-5) required" }, { status: 400 });
+    if (!photographer_id || !rating || rating < 1 || rating > 5) {
+      return NextResponse.json({ error: "photographer_id and rating (1-5) required" }, { status: 400 });
     }
 
+    const clientName = (client_name || "").trim() || null;
     const review = await queryOne<{ id: string }>(
       `INSERT INTO reviews (photographer_id, client_id, rating, title, text, is_approved, booking_id, client_name_override)
        VALUES ($1, NULL, $2, $3, $4, true, NULL, $5)
        RETURNING id`,
-      [photographer_id, rating, title || null, text || null, client_name]
+      [photographer_id, rating, title || null, text || null, clientName]
     );
 
     // Update photographer rating
