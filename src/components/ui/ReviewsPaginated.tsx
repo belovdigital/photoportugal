@@ -49,11 +49,13 @@ export function ReviewsPaginated({
   const shown = reviews.slice(0, visible);
   const hasMore = visible < reviews.length;
 
+  const displayName = (name: string | null) => (name ? formatPublicName(name) : t("privateClient"));
+
   // Flat list of ALL review photos across reviews (stable order).
   const allPhotos: { url: string; reviewerName: string }[] = reviews.flatMap((r) =>
     (r.photos || []).map((p) => ({
       url: p.url,
-      reviewerName: r.client_name ? formatPublicName(r.client_name) : "",
+      reviewerName: displayName(r.client_name),
     }))
   );
 
@@ -134,13 +136,11 @@ export function ReviewsPaginated({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                {review.client_name && (
-                  <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
-                    {flag && <span aria-hidden className="text-base leading-none">{flag}</span>}
-                    <span className="truncate">{formatPublicName(review.client_name)}</span>
-                  </p>
-                )}
-                <p className={`${review.client_name ? "mt-0.5" : ""} text-xs text-gray-400`}>
+                <p className={`flex items-center gap-1.5 text-sm font-semibold ${review.client_name ? "text-gray-900" : "text-gray-500 italic"}`}>
+                  {flag && <span aria-hidden className="text-base leading-none">{flag}</span>}
+                  <span className="truncate">{displayName(review.client_name)}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-gray-400">
                   {packageHref && review.package_name ? (
                     <>
                       <a href={packageHref} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
@@ -282,9 +282,7 @@ export function ReviewsPaginated({
           )}
 
           <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 text-sm">
-            {allPhotos[lightbox].reviewerName && (
-              <p className="text-white/80">From {allPhotos[lightbox].reviewerName}&apos;s review</p>
-            )}
+            <p className="text-white/80">From {allPhotos[lightbox].reviewerName}&apos;s review</p>
             <span className="text-white/50">{lightbox + 1} / {allPhotos.length}</span>
           </div>
         </div>

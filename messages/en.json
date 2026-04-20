@@ -1030,6 +1030,7 @@
     "profile": {
       "previewBannerTitle": "Preview mode",
       "previewBannerText": "Your profile isn't published yet. Only you can see this page.",
+      "privateClient": "Private Client",
       "about": "About",
       "packages": "Packages",
       "reviews": "Reviews",

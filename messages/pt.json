@@ -1027,6 +1027,7 @@
     "profile": {
       "previewBannerTitle": "Modo pré-visualização",
       "previewBannerText": "O teu perfil ainda não está publicado. Só tu podes ver esta página.",
+      "privateClient": "Cliente Privado",
       "about": "Sobre",
       "packages": "Pacotes",
       "reviews": "Avaliações",
