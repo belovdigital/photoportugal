@@ -107,7 +107,6 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
   const [statusFilter, setStatusFilter] = useState<StatusKey>("active");
   const [planFilter, setPlanFilter] = useState<PlanKey>("all");
   const [badgeFilter, setBadgeFilter] = useState<BadgeKey>("all");
-  const [belowMinOnly, setBelowMinOnly] = useState(false);
   const [page, setPage] = useState(0);
   const { modal, confirm } = useConfirmModal();
 
@@ -116,7 +115,6 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
       .filter(p => matchesStatus(p, statusFilter))
       .filter(p => matchesPlan(p, planFilter))
       .filter(p => matchesBadge(p, badgeFilter));
-    if (belowMinOnly) list = list.filter(p => !!belowMinPackages[p.id]?.length);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
@@ -124,40 +122,29 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
       );
     }
     return list;
-  }, [photographers, search, statusFilter, planFilter, badgeFilter, belowMinOnly, belowMinPackages]);
+  }, [photographers, search, statusFilter, planFilter, badgeFilter]);
 
   // Counts per option respecting other active filters (except the one the option belongs to).
   const statusCounts = useMemo(() => {
     const base = photographers
       .filter(p => matchesPlan(p, planFilter))
-      .filter(p => matchesBadge(p, badgeFilter))
-      .filter(p => !belowMinOnly || !!belowMinPackages[p.id]?.length);
+      .filter(p => matchesBadge(p, badgeFilter));
     return Object.fromEntries(STATUS_OPTIONS.map(o => [o.key, base.filter(p => matchesStatus(p, o.key)).length])) as Record<StatusKey, number>;
-  }, [photographers, planFilter, badgeFilter, belowMinOnly, belowMinPackages]);
+  }, [photographers, planFilter, badgeFilter]);
   const planCounts = useMemo(() => {
     const base = photographers
       .filter(p => matchesStatus(p, statusFilter))
-      .filter(p => matchesBadge(p, badgeFilter))
-      .filter(p => !belowMinOnly || !!belowMinPackages[p.id]?.length);
+      .filter(p => matchesBadge(p, badgeFilter));
     return Object.fromEntries(PLAN_OPTIONS.map(o => [o.key, base.filter(p => matchesPlan(p, o.key)).length])) as Record<PlanKey, number>;
-  }, [photographers, statusFilter, badgeFilter, belowMinOnly, belowMinPackages]);
+  }, [photographers, statusFilter, badgeFilter]);
   const badgeCounts = useMemo(() => {
     const base = photographers
       .filter(p => matchesStatus(p, statusFilter))
-      .filter(p => matchesPlan(p, planFilter))
-      .filter(p => !belowMinOnly || !!belowMinPackages[p.id]?.length);
+      .filter(p => matchesPlan(p, planFilter));
     return Object.fromEntries(BADGE_OPTIONS.map(o => [o.key, base.filter(p => matchesBadge(p, o.key)).length])) as Record<BadgeKey, number>;
-  }, [photographers, statusFilter, planFilter, belowMinOnly, belowMinPackages]);
-  const belowMinCount = useMemo(() => {
-    return photographers
-      .filter(p => matchesStatus(p, statusFilter))
-      .filter(p => matchesPlan(p, planFilter))
-      .filter(p => matchesBadge(p, badgeFilter))
-      .filter(p => !!belowMinPackages[p.id]?.length)
-      .length;
-  }, [photographers, statusFilter, planFilter, badgeFilter, belowMinPackages]);
+  }, [photographers, statusFilter, planFilter]);
 
-  const hasNonDefault = statusFilter !== "active" || planFilter !== "all" || badgeFilter !== "all" || belowMinOnly;
+  const hasNonDefault = statusFilter !== "active" || planFilter !== "all" || badgeFilter !== "all";
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -206,18 +193,9 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
           counts={badgeCounts}
           onChange={(v) => { setBadgeFilter(v); setPage(0); }}
         />
-        <button
-          onClick={() => { setBelowMinOnly((v) => !v); setPage(0); }}
-          className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition ${
-            belowMinOnly ? "border-red-300 bg-red-50 text-red-700" : "border-warm-200 bg-white text-gray-600 hover:border-red-200 hover:text-red-700"
-          }`}
-        >
-          ⚠ Below Min Price
-          <span className="opacity-60">{belowMinCount}</span>
-        </button>
         {hasNonDefault && (
           <button
-            onClick={() => { setStatusFilter("active"); setPlanFilter("all"); setBadgeFilter("all"); setBelowMinOnly(false); setPage(0); }}
+            onClick={() => { setStatusFilter("active"); setPlanFilter("all"); setBadgeFilter("all"); setPage(0); }}
             className="ml-auto text-xs font-medium text-gray-500 hover:text-gray-700"
           >
             Reset filters
