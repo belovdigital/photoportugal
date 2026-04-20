@@ -1005,7 +1005,13 @@
       "sortPriceLow": "Preço: Menor → Maior",
       "sortPriceHigh": "Preço: Maior → Menor",
       "clearAll": "Limpar tudo ({count})",
-      "clearAllFilters": "Limpar todos os filtros"
+      "clearAllShort": "Limpar tudo",
+      "clearAllFilters": "Limpar todos os filtros",
+      "mobileFilters": "Filtros",
+      "occasion": "Ocasião",
+      "language": "Idioma",
+      "showResults": "Ver {count} resultado",
+      "showResultsPlural": "Ver {count} resultados"
     },
     "card": {
       "founding": "Fundador",

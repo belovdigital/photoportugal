@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { Fragment, useState, useMemo, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
@@ -68,6 +68,7 @@ export function PhotographerCatalog({
   const [languageFilter, setLanguageFilter] = useState("");
   const [sortBy, setSortBy] = useState<"featured" | "rating" | "reviews">("featured");
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [mobileSheet, setMobileSheet] = useState<null | "location" | "filters">(null);
 
   const allLanguages = useMemo(() => {
     const langs = new Set<string>();
@@ -169,8 +170,79 @@ export function PhotographerCatalog({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Header + Concierge */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      {/* Mobile compact header (< sm only) */}
+      <div className="sm:hidden">
+        <h1 className="font-display text-2xl font-bold text-gray-900">
+          {selectedLocationNames.length === 1
+            ? t("photographersIn", { location: selectedLocationNames[0] || "" })
+            : selectedLocationNames.length > 1
+            ? t("photographersInMultiple", { count: selectedLocationNames.length })
+            : t("findYourPhotographer")}
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">
+          {filtered.length === 1
+            ? t("available", { count: filtered.length })
+            : t("availablePlural", { count: filtered.length })}
+        </p>
+      </div>
+
+      {/* Mobile sticky filter bar (< sm only) */}
+      <div className="sticky top-[72px] z-20 -mx-4 mt-3 border-b border-warm-200 bg-warm-50/95 px-4 py-2 backdrop-blur sm:hidden">
+        <div className="flex gap-2 overflow-x-auto">
+          <button
+            onClick={() => setMobileSheet("location")}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition ${
+              locationFilters.length > 0 ? "border-primary-500 bg-primary-50 text-primary-700" : "border-gray-300 bg-white text-gray-700"
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {locationFilters.length === 0
+              ? t("filters.allLocations")
+              : locationFilters.length === 1
+              ? selectedLocationNames[0]
+              : t("filters.locations", { count: locationFilters.length })}
+          </button>
+          <button
+            onClick={() => setMobileSheet("filters")}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition ${
+              (shootTypeFilters.length + (languageFilter ? 1 : 0)) > 0 ? "border-primary-500 bg-primary-50 text-primary-700" : "border-gray-300 bg-white text-gray-700"
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            {t("filters.mobileFilters")}
+            {(shootTypeFilters.length + (languageFilter ? 1 : 0)) > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-600 px-1.5 text-[11px] font-bold text-white">
+                {shootTypeFilters.length + (languageFilter ? 1 : 0)}
+              </span>
+            )}
+          </button>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="shrink-0 rounded-full border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none"
+          >
+            <option value="featured">{t("filters.sortFeatured")}</option>
+            <option value="rating">{t("filters.sortTopRated")}</option>
+            <option value="reviews">{t("filters.sortMostReviews")}</option>
+          </select>
+          {activeFilterCount > 0 && (
+            <button
+              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); }}
+              className="shrink-0 rounded-full px-3 py-2 text-sm text-gray-500"
+            >
+              {t("filters.clearAllShort")}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop header + concierge (>= sm) */}
+      <div className="hidden flex-col gap-4 sm:flex lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="font-display text-3xl font-bold text-gray-900">
             {selectedLocationNames.length === 1
@@ -215,8 +287,8 @@ export function PhotographerCatalog({
         ) : null;
       })()}
 
-      {/* Filter bar */}
-      <div className="mt-6 space-y-3">
+      {/* Desktop filter bar (>= sm) */}
+      <div className="mt-6 hidden space-y-3 sm:block">
         {/* Top row: Location + Language + Price + Sort */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Location dropdown with multi-select */}
@@ -345,8 +417,30 @@ export function PhotographerCatalog({
 
       {/* Grid */}
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((photographer) => (
-          <PhotographerCard key={photographer.id} photographer={photographer} />
+        {filtered.map((photographer, idx) => (
+          <Fragment key={photographer.id}>
+            <PhotographerCard photographer={photographer} />
+            {idx === 2 && filtered.length > 3 && (
+              <a
+                href="/find-photographer"
+                className="flex items-center gap-3 rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 to-accent-50 p-5 shadow-sm transition hover:shadow-md sm:hidden"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 shadow-md">
+                  <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  </svg>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-gray-900">{t("concierge.title")}</p>
+                  <p className="text-xs text-gray-500">{t("concierge.desc")}</p>
+                  <TeamOnlineIndicator />
+                </div>
+                <svg className="h-4 w-4 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            )}
+          </Fragment>
         ))}
       </div>
 
@@ -367,6 +461,125 @@ export function PhotographerCatalog({
           >
             {t("filters.clearAllFilters")}
           </button>
+        </div>
+      )}
+
+      {/* Mobile bottom sheet (< sm) */}
+      {mobileSheet && (
+        <div className="fixed inset-0 z-50 sm:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMobileSheet(null)}
+          />
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-warm-100 px-4 py-3">
+              <h2 className="text-base font-bold text-gray-900">
+                {mobileSheet === "location" ? t("filters.allLocations") : t("filters.mobileFilters")}
+              </h2>
+              <button
+                onClick={() => setMobileSheet(null)}
+                className="rounded-full p-1 text-gray-400 hover:bg-warm-50 hover:text-gray-700"
+                aria-label="Close"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {mobileSheet === "location" ? (
+                <>
+                  <input
+                    type="text"
+                    value={locationSearch}
+                    onChange={(e) => setLocationSearch(e.target.value)}
+                    placeholder={t("filters.searchLocations")}
+                    className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary-400"
+                  />
+                  <button
+                    onClick={() => { setLocationFilters([]); setLocationSearch(""); }}
+                    className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition ${locationFilters.length === 0 ? "bg-primary-50 font-semibold text-primary-700" : "text-gray-600"}`}
+                  >
+                    {t("filters.allLocations")}
+                  </button>
+                  {filteredLocations.map((loc, idx) => (
+                    <div key={loc.slug}>
+                      <button
+                        onClick={() => toggleLocation(loc.slug)}
+                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition ${locationFilters.includes(loc.slug) ? "bg-primary-50 font-semibold text-primary-700" : loc.slug === "lisbon" ? "font-bold text-gray-800" : "text-gray-600"}`}
+                      >
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
+                          locationFilters.includes(loc.slug) ? "border-primary-500 bg-primary-500" : "border-gray-300"
+                        }`}>
+                          {locationFilters.includes(loc.slug) && (
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </span>
+                        {loc.name}
+                      </button>
+                      {loc.slug === "lisbon" && idx < filteredLocations.length - 1 && (
+                        <div className="mx-3 my-1 border-b border-warm-200" />
+                      )}
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <div>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.occasion")}</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {shootTypes.map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => toggleShootType(type)}
+                          className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+                            shootTypeFilters.includes(type)
+                              ? "bg-primary-600 text-white"
+                              : "bg-warm-100 text-gray-600"
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.language")}</h3>
+                    <select
+                      value={languageFilter}
+                      onChange={(e) => setLanguageFilter(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-700 outline-none"
+                    >
+                      <option value="">{t("filters.anyLanguage")}</option>
+                      {allLanguages.map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex gap-2 border-t border-warm-100 px-4 py-3">
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); setLocationSearch(""); }}
+                  className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700"
+                >
+                  {t("filters.clearAllShort")}
+                </button>
+              )}
+              <button
+                onClick={() => setMobileSheet(null)}
+                className="flex-[2] rounded-lg bg-primary-600 px-4 py-3 text-sm font-semibold text-white"
+              >
+                {filtered.length === 1
+                  ? t("filters.showResults", { count: filtered.length })
+                  : t("filters.showResultsPlural", { count: filtered.length })}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

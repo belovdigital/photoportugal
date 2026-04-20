@@ -1008,7 +1008,13 @@
       "sortPriceLow": "Price: Low → High",
       "sortPriceHigh": "Price: High → Low",
       "clearAll": "Clear all ({count})",
-      "clearAllFilters": "Clear all filters"
+      "clearAllShort": "Clear all",
+      "clearAllFilters": "Clear all filters",
+      "mobileFilters": "Filters",
+      "occasion": "Occasion",
+      "language": "Language",
+      "showResults": "Show {count} result",
+      "showResultsPlural": "Show {count} results"
     },
     "card": {
       "founding": "Founding",
