@@ -171,11 +171,18 @@ body:has(.admin-layout) footer {
   }
 }
 
-/* Intercom launcher — lift above mobile dashboard bottom tab bar */
+/* Intercom launcher — fully hidden on mobile dashboard (tab bar overlaps it) */
 @media (max-width: 767px) {
   body[data-dashboard="true"] .intercom-lightweight-app-launcher,
   body[data-dashboard="true"] .intercom-launcher-frame,
-  body[data-dashboard="true"] iframe[name="intercom-launcher-frame"] {
-    bottom: 88px !important;
+  body[data-dashboard="true"] .intercom-lightweight-app,
+  body[data-dashboard="true"] .intercom-app,
+  body[data-dashboard="true"] iframe[name="intercom-launcher-frame"],
+  body[data-dashboard="true"] iframe[title*="Intercom" i],
+  body[data-dashboard="true"] iframe[src*="intercom"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 }

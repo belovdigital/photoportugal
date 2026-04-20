@@ -61,16 +61,19 @@ export function IntercomWidget() {
     };
   }, []);
 
-  // On mobile dashboard pages, push Intercom launcher up so it doesn't
-  // overlap the bottom tab bar.
+  // Hide Intercom on mobile dashboard and admin routes — the launcher
+  // can't be positioned reliably above our bottom tab bar, so keep the
+  // mobile dashboard clean and let photographers reach support via the
+  // sidebar Support link instead.
   useEffect(() => {
     if (!(window as any).Intercom) return;
     const isMobile = window.innerWidth < 768;
     const isDashboard = pathname.includes("/dashboard");
     const isAdmin = pathname.includes("/admin");
+    const hide = isMobile && (isDashboard || isAdmin);
     (window as any).Intercom("update", {
-      hide_default_launcher: isMobile && isAdmin,
-      vertical_padding: isMobile && isDashboard ? 110 : 20,
+      hide_default_launcher: hide,
+      vertical_padding: 20,
       page: pathname,
     });
   }, [pathname]);
