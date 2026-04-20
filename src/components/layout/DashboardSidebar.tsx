@@ -21,7 +21,6 @@ export function DashboardSidebar({ initialRole }: { initialRole?: string }) {
   const sessionRole = (session?.user as { role?: string })?.role;
   const role = sessionRole || (status === "loading" ? initialRole : undefined) || initialRole || "client";
   const notifications = useNotifications();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const t = useTranslations("dashboard");
 
   const navItems: NavItem[] = [
@@ -40,42 +39,11 @@ export function DashboardSidebar({ initialRole }: { initialRole?: string }) {
   ];
 
   const filteredItems = navItems.filter((item) => item.roles.includes(role));
-  const isMessagesPage = pathname.includes("/messages");
 
   return (
     <>
-      {/* Mobile toggle — hidden on messages page to avoid overlapping chat send button */}
-      {!isMessagesPage && (
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg md:hidden"
-      >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          {sidebarOpen ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          )}
-        </svg>
-        {notifications.unread_messages > 0 && !sidebarOpen && (
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-            {notifications.unread_messages}
-          </span>
-        )}
-      </button>
-      )}
-
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`
-        fixed left-0 top-0 z-30 h-full w-56 shrink-0 bg-warm-50 pt-[100px] transition-transform
-        md:sticky md:top-[100px] md:h-auto md:translate-x-0 md:bg-transparent md:pt-0
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `} style={{ maxHeight: "calc(100dvh - 100px)" }}>
+      {/* Sidebar — desktop only. Mobile uses DashboardMobileNav. */}
+      <aside className="sticky top-[100px] hidden h-auto w-56 shrink-0 bg-transparent md:block" style={{ maxHeight: "calc(100dvh - 100px)" }}>
         <nav className="flex flex-col gap-0.5 p-3">
           {filteredItems.map((item) => {
             const isActive = pathname === item.href || pathname.endsWith(item.href) || (item.href !== "/dashboard" && pathname.includes(item.href));
@@ -84,7 +52,6 @@ export function DashboardSidebar({ initialRole }: { initialRole?: string }) {
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setSidebarOpen(false)}
                 className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                   isActive
                     ? "bg-white text-primary-700 shadow-sm"

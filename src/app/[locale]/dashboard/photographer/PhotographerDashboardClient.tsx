@@ -892,8 +892,8 @@ export function PhotographerDashboardClient({
 
           </form>
 
-          {/* Fixed save bar — full width */}
-          <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-warm-200 bg-white/95 backdrop-blur-sm">
+          {/* Fixed save bar — full width. Sits above mobile bottom nav (64px + safe area). */}
+          <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-warm-200 bg-white/95 backdrop-blur-sm md:bottom-0" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
             <div className="flex items-center justify-center px-6 py-3">
               <button
                 type="button"

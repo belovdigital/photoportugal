@@ -1875,6 +1875,9 @@
     "sidebarPayouts": "Payouts",
     "sidebarSettings": "Settings",
     "sidebarSupport": "Support",
+    "sidebarWishlist": "Wishlist",
+    "sidebarMore": "More",
+    "signOut": "Sign out",
     "needHelp": "Need help?",
     "helpCenterLink": "Visit our Help Center"
   },

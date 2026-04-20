@@ -61,17 +61,18 @@ export function IntercomWidget() {
     };
   }, []);
 
-  // Hide Intercom on dashboard pages on mobile only (overlaps bottom nav)
+  // On mobile dashboard pages, push Intercom launcher up so it doesn't
+  // overlap the bottom tab bar.
   useEffect(() => {
-    if ((window as any).Intercom) {
-      const isMobile = window.innerWidth < 768;
-      const isDashboard = pathname.includes("/dashboard") || pathname.includes("/admin");
-      if (isMobile && isDashboard) {
-        (window as any).Intercom("update", { hide_default_launcher: true });
-      } else {
-        (window as any).Intercom("update", { hide_default_launcher: false, page: pathname });
-      }
-    }
+    if (!(window as any).Intercom) return;
+    const isMobile = window.innerWidth < 768;
+    const isDashboard = pathname.includes("/dashboard");
+    const isAdmin = pathname.includes("/admin");
+    (window as any).Intercom("update", {
+      hide_default_launcher: isMobile && isAdmin,
+      vertical_padding: isMobile && isDashboard ? 88 : 20,
+      page: pathname,
+    });
   }, [pathname]);
 
   return null;
