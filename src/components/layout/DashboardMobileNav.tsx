@@ -65,6 +65,12 @@ export function DashboardMobileNav({ initialRole }: { initialRole?: string }) {
     }
   }, [moreOpen]);
 
+  // Mark body so the Intercom launcher can be lifted above the tab bar via CSS.
+  useEffect(() => {
+    document.body.dataset.dashboard = "true";
+    return () => { delete document.body.dataset.dashboard; };
+  }, []);
+
   const tabs = role === "photographer" ? PHOTOGRAPHER_TABS : CLIENT_TABS;
   const more = role === "photographer" ? PHOTOGRAPHER_MORE : CLIENT_MORE;
 

@@ -170,3 +170,12 @@ body:has(.admin-layout) footer {
     padding-right: 2.5rem !important;
   }
 }
+
+/* Intercom launcher — lift above mobile dashboard bottom tab bar */
+@media (max-width: 767px) {
+  body[data-dashboard="true"] .intercom-lightweight-app-launcher,
+  body[data-dashboard="true"] .intercom-launcher-frame,
+  body[data-dashboard="true"] iframe[name="intercom-launcher-frame"] {
+    bottom: 88px !important;
+  }
+}
