@@ -8,6 +8,7 @@ import { RevisionChecklist } from "@/components/dashboard/RevisionChecklist";
 import { ActionNeededWidget } from "@/components/dashboard/ActionNeededWidget";
 import { AddOnsSection } from "@/app/[locale]/dashboard/subscriptions/AddOnsSection";
 import { getPhotographerTasks } from "@/lib/photographer-tasks";
+import { syncStripeOnboardingIfStale } from "@/lib/stripe-sync";
 import { getLocale } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -140,6 +141,13 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
       </div>
     );
   }
+
+  // Self-heal stale stripe_onboarding_complete by live-checking Stripe when the
+  // flag is false but an account exists. Webhooks get missed occasionally.
+  profile.stripe_onboarding_complete = await syncStripeOnboardingIfStale(
+    profile.stripe_account_id,
+    profile.stripe_onboarding_complete
+  );
 
   const locale = await getLocale();
   const tasks = await getPhotographerTasks(profile.id, userId);
