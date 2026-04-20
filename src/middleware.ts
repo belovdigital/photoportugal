@@ -20,6 +20,8 @@ export default function middleware(request: NextRequest) {
     /\.(svg|ico|png|jpg|jpeg|webp|gif|css|js|woff|woff2|ttf|map)$/.test(pathname) ||
     pathname === "/sitemap.xml" ||
     pathname === "/robots.txt" ||
+    pathname === "/llms.txt" ||
+    pathname === "/llms.json" ||
     pathname === "/og-image.png" ||
     pathname === "/logo.svg" ||
     pathname === "/hero-family.webp"
