@@ -37,6 +37,8 @@ export async function PATCH(
   if (body.title !== undefined) { sets.push(`title = $${paramIdx++}`); vals.push(body.title || null); }
   if (body.text !== undefined) { sets.push(`text = $${paramIdx++}`); vals.push(body.text || null); }
   if (body.is_approved !== undefined) { sets.push(`is_approved = $${paramIdx++}`); vals.push(body.is_approved); }
+  if (body.client_name !== undefined) { sets.push(`client_name_override = $${paramIdx++}`); vals.push((body.client_name || "").trim() || null); }
+  if (body.client_country !== undefined) { sets.push(`client_country_override = $${paramIdx++}`); vals.push((body.client_country || "").trim().toUpperCase().slice(0, 2) || null); }
 
   if (sets.length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });

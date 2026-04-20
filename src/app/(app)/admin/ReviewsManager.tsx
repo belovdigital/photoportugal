@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 function PhotographerPicker({
   photographers,
@@ -100,7 +101,7 @@ interface Review {
   text: string | null;
   video_url: string | null;
   created_at: string;
-  client_name: string;
+  client_name: string | null;
   photographer_name: string;
   photographer_slug: string;
   photographer_id?: string;
@@ -115,6 +116,8 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
   const [editRating, setEditRating] = useState(5);
   const [editTitle, setEditTitle] = useState("");
   const [editText, setEditText] = useState("");
+  const [editClientName, setEditClientName] = useState("");
+  const { modal, confirm } = useConfirmModal();
   const [saving, setSaving] = useState(false);
 
   // Add review form
@@ -199,10 +202,15 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
   }, []);
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this review?")) return;
+    const ok = await confirm("Delete this review?", "This cannot be undone.", { confirmLabel: "Delete", danger: true });
+    if (!ok) return;
     setDeleting(id);
     const res = await fetch(`/api/reviews/${id}`, { method: "DELETE" });
     if (res.ok) setReviews((prev) => prev.filter((r) => r.id !== id));
+    else {
+      const data = await res.json().catch(() => null);
+      alert(data?.error || "Failed to delete review");
+    }
     setDeleting(null);
   }
 
@@ -220,6 +228,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
     setEditRating(r.rating);
     setEditTitle(r.title || "");
     setEditText(r.text || "");
+    setEditClientName(r.client_name || "");
   }
 
   async function saveEdit() {
@@ -228,10 +237,16 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
     const res = await fetch(`/api/reviews/${editingId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rating: editRating, title: editTitle, text: editText }),
+      body: JSON.stringify({
+        rating: editRating,
+        title: editTitle,
+        text: editText,
+        client_name: editClientName,
+      }),
     });
     if (res.ok) {
-      setReviews((prev) => prev.map((r) => (r.id === editingId ? { ...r, rating: editRating, title: editTitle || null, text: editText || null } : r)));
+      const trimmed = editClientName.trim() || null;
+      setReviews((prev) => prev.map((r) => (r.id === editingId ? { ...r, rating: editRating, title: editTitle || null, text: editText || null, client_name: trimmed } : r)));
       setEditingId(null);
     }
     setSaving(false);
@@ -388,6 +403,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
                             </button>
                           ))}
                         </div>
+                        <input value={editClientName} onChange={(e) => setEditClientName(e.target.value)} placeholder="Client name (leave blank for Private Client)" className="w-full rounded border px-2 py-1 text-xs" />
                         <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Title" className="w-full rounded border px-2 py-1 text-xs" />
                         <textarea value={editText} onChange={(e) => setEditText(e.target.value)} placeholder="Review text" rows={2} className="w-full rounded border px-2 py-1 text-xs" />
                         <div className="flex gap-2">
@@ -435,6 +451,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
         </div>
         </>
       ) : null}
+      {modal}
     </div>
   );
 }
