@@ -5,6 +5,19 @@ export interface PhotoSpot {
   tips?: string;
 }
 
+export function spotSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function getSpot(citySlug: string, slug: string): PhotoSpot | undefined {
+  return (photoSpots[citySlug] || []).find((s) => spotSlug(s.name) === slug);
+}
+
 /** Top photography spots per location slug */
 export const photoSpots: Record<string, PhotoSpot[]> = {
   lisbon: [

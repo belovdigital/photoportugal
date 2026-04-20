@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
+import { photoSpots, spotSlug } from "@/lib/photo-spots-data";
 import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +62,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localized(`/photoshoots/${type.slug}`, { lastModified: now, changeFrequency: "weekly", priority: 0.8 })
   );
 
+  // Spot pages: /spots/[city]/[spot]
+  const spotPages = Object.entries(photoSpots).flatMap(([city, spots]) =>
+    spots.flatMap((s) =>
+      localized(`/spots/${city}/${spotSlug(s.name)}`, { lastModified: now, changeFrequency: "monthly", priority: 0.7 })
+    )
+  );
+
   let photographerPages: MetadataRoute.Sitemap = [];
   try {
     const dbProfiles = await query<{ slug: string; plan: string; updated_at: string }>(
@@ -106,5 +114,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localized(`/blog/category/${cat}`, { lastModified: now, changeFrequency: "weekly", priority: 0.7 })
   );
 
-  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...photographerLocationPages, ...photographerPages, ...blogPages, ...blogCategoryPages];
+  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...spotPages, ...photographerLocationPages, ...photographerPages, ...blogPages, ...blogCategoryPages];
 }

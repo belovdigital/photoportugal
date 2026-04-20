@@ -28,6 +28,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
+import { spotSlug } from "@/lib/photo-spots-data";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -624,9 +625,10 @@ export default async function LocationPage({
               "lg:grid-cols-3"
             }`}>
               {spots.map((spot) => (
-                <div
+                <Link
                   key={spot.name}
-                  className="rounded-xl border border-warm-200 bg-warm-50 p-5 transition hover:border-primary-200"
+                  href={`/spots/${slug}/${spotSlug(spot.name)}`}
+                  className="group rounded-xl border border-warm-200 bg-warm-50 p-5 transition hover:border-primary-300 hover:bg-white hover:shadow-sm"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
@@ -636,7 +638,7 @@ export default async function LocationPage({
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{spot.name}</h3>
+                      <h3 className="font-semibold text-gray-900 group-hover:text-primary-700">{spot.name}</h3>
                       <p className="mt-1 text-sm text-gray-500 leading-relaxed">{spot.description}</p>
                       {spot.best_time && (
                         <p className="mt-2 text-xs text-gray-400">{t("bestTime", { time: spot.best_time })}</p>
@@ -646,7 +648,7 @@ export default async function LocationPage({
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
             <div className="mt-10 text-center">
