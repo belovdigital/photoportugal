@@ -75,10 +75,12 @@ const WHERE_APPROVED = `
  */
 export async function getHomepageReviews(limit = 9): Promise<PublicReview[]> {
   try {
+    // Randomised across photographers: at most 2 per photographer, photos-first,
+    // then RANDOM() so each cache cycle surfaces a different cross-section.
     const rows = await query<DbRow>(
       `WITH ranked AS (
          SELECT ${BASE_SELECT},
-                ROW_NUMBER() OVER (PARTITION BY r.photographer_id ORDER BY LENGTH(COALESCE(r.text, '')) DESC) as rn_per_photographer
+                ROW_NUMBER() OVER (PARTITION BY r.photographer_id ORDER BY RANDOM()) as rn_per_photographer
          ${BASE_JOINS}
          WHERE ${WHERE_APPROVED}
        )
@@ -87,7 +89,7 @@ export async function getHomepageReviews(limit = 9): Promise<PublicReview[]> {
               photo_url, client_country
        FROM ranked
        WHERE rn_per_photographer <= 2
-       ORDER BY photo_url IS NULL, LENGTH(text) DESC
+       ORDER BY photo_url IS NULL, RANDOM()
        LIMIT $1`,
       [limit]
     );

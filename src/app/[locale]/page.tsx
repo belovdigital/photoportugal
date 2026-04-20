@@ -15,7 +15,7 @@ import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
