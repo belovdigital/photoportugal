@@ -55,13 +55,16 @@ export async function ReviewsStrip({ reviews, title, subtitle, maxPerRow = 3, co
           const displayName = r.client_name ? formatPublicName(r.client_name) : tc("privateClient");
           const flag = codeToFlag(r.client_country);
           return (
-            <article key={r.id} className="flex shrink-0 w-[85%] snap-start flex-col rounded-2xl border border-warm-200 bg-white p-5 shadow-sm transition hover:shadow-md sm:w-auto">
+            <Link
+              key={r.id}
+              href={`/photographers/${r.photographer_slug}`}
+              className="group flex shrink-0 w-[85%] snap-start flex-col rounded-2xl border border-warm-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-md sm:w-auto"
+            >
               {r.photo_url && (
-                <Link href={`/photographers/${r.photographer_slug}`} className="mb-3 -mx-1 block overflow-hidden rounded-xl">
-                  <img src={r.photo_url} alt={`Client review photo — ${r.photographer_name}`} className="h-40 w-full object-cover" loading="lazy" />
-                </Link>
+                <div className="mb-3 -mx-1 overflow-hidden rounded-xl">
+                  <img src={r.photo_url} alt={`Client review photo — ${r.photographer_name}`} className="h-40 w-full object-cover transition duration-300 group-hover:scale-[1.02]" loading="lazy" />
+                </div>
               )}
-              {/* Top: author + stars */}
               <div>
                 <div className="flex items-center gap-1.5">
                   {flag && <span aria-hidden className="text-base leading-none">{flag}</span>}
@@ -76,9 +79,8 @@ export async function ReviewsStrip({ reviews, title, subtitle, maxPerRow = 3, co
               <p className="mt-3 text-sm leading-relaxed text-gray-700 line-clamp-5">
                 {truncate(r.text, 240)}
               </p>
-              {/* Bottom: photographer */}
               <div className="mt-4 flex items-center gap-3 border-t border-warm-100 pt-3">
-                <Link href={`/photographers/${r.photographer_slug}`} className="flex h-9 w-9 shrink-0 overflow-hidden rounded-full bg-primary-100 ring-1 ring-warm-200 transition hover:ring-primary-300">
+                <div className="flex h-9 w-9 shrink-0 overflow-hidden rounded-full bg-primary-100 ring-1 ring-warm-200 transition group-hover:ring-primary-300">
                   {r.photographer_avatar ? (
                     <img src={r.photographer_avatar} alt={r.photographer_name} className="h-full w-full object-cover" />
                   ) : (
@@ -86,11 +88,11 @@ export async function ReviewsStrip({ reviews, title, subtitle, maxPerRow = 3, co
                       {r.photographer_name.charAt(0)}
                     </div>
                   )}
-                </Link>
+                </div>
                 <div className="min-w-0 flex-1">
-                  <Link href={`/photographers/${r.photographer_slug}`} className="block truncate text-sm font-semibold text-gray-900 hover:text-primary-600">
+                  <p className="truncate text-sm font-semibold text-gray-900 group-hover:text-primary-600">
                     {r.photographer_name}
-                  </Link>
+                  </p>
                   <p className="flex items-center gap-1 text-xs text-gray-400">
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -100,7 +102,7 @@ export async function ReviewsStrip({ reviews, title, subtitle, maxPerRow = 3, co
                   </p>
                 </div>
               </div>
-            </article>
+            </Link>
           );
         })}
       </div>
