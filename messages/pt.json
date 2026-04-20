@@ -1,5 +1,7 @@
 {
   "common": {
+    "privateClient": "Cliente Privado",
+    "reviewAbout": "sobre {name}",
     "siteName": "Photo Portugal",
     "bookAPhotoshoot": "Reservar Sessão Fotográfica",
     "bookNow": "Reservar Agora",

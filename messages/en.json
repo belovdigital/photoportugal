@@ -1,5 +1,7 @@
 {
   "common": {
+    "privateClient": "Private Client",
+    "reviewAbout": "about {name}",
     "siteName": "Photo Portugal",
     "bookAPhotoshoot": "Book a Photoshoot",
     "bookNow": "Book Now",

@@ -6,6 +6,8 @@ import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
 import { ShootTypesSection } from "@/components/ui/ShootTypesSection";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
+import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
+import { getHomepageReviews } from "@/lib/reviews-data";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
@@ -84,6 +86,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const t = await getTranslations("home");
   const tc = await getTranslations("common");
+  const featuredReviews = await getHomepageReviews(1);
+  const featuredReview = featuredReviews[0] || null;
 
   const heroAlts = [
     t("heroImages.alt1"),
