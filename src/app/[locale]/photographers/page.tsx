@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("title"),
     description: t("description"),
     alternates: localeAlternates("/photographers", locale),
-    openGraph: { title: t("title"), description: t("description"), url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/photographers`, images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal" }] },
+    openGraph: { title: t("title"), description: t("description"), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/photographers`, images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal" }] },
   };
 }
 
@@ -158,12 +158,14 @@ export default async function PhotographersPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const tMeta = await getTranslations("photographersMeta");
 
   const { location: initialLocation, shoot, shootType } = await searchParams;
   const initialShootType = shoot || shootType;
   const dbPhotographers = await getDbPhotographers();
   const quotes = await getOneLinerQuotesForPhotographers(dbPhotographers.map((p) => p.id));
   const resolvedShootType = resolveShootType(initialShootType);
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
 
   const base = "https://photoportugal.com";
   const itemListJsonLd = {
@@ -200,19 +202,19 @@ export default async function PhotographersPage({
     {/* Browse by city — internal linking + SEO for /photographers/location/* */}
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-        {locale === "pt" ? "Fotógrafos por cidade" : "Browse photographers by city"}
+        {tMeta("browseByCity")}
       </h2>
       <p className="mt-2 text-sm text-gray-500">
-        {locale === "pt" ? "Explore fotógrafos verificados nas principais cidades de Portugal." : "Explore verified photographers in Portugal's top destinations."}
+        {tMeta("browseByCitySub")}
       </p>
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {locations.map((loc) => (
           <a
             key={loc.slug}
-            href={`${locale === "pt" ? "/pt" : ""}/photographers/location/${loc.slug}`}
+            href={`${localePrefix}/photographers/location/${loc.slug}`}
             className="rounded-lg border border-warm-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:bg-warm-50"
           >
-            {loc.name}
+            {(loc as unknown as Record<string, string>)[`name_${locale}`] || loc.name}
           </a>
         ))}
       </div>

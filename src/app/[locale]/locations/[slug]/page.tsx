@@ -80,7 +80,6 @@ export default async function LocationPage({
 
   const nearby = getNearbyLocations(slug);
 
-  const isPt = locale === "pt";
   const description = locField(location, "description", locale) || location.description;
   const longDescription = locField(location, "long_description", locale) || location.long_description;
   const localizedName = locField(location, "name", locale) || location.name;

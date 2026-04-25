@@ -15,10 +15,10 @@ import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 // Fully dynamic so each visit randomises the photographer lineup (only when >6 match)
 export const dynamic = "force-dynamic";
 
-// Format a price for display per locale (PT: "150€", EN/DE: "150 €" / "€150")
+// Format a price for display per locale.
 function formatPrice(price: number, locale: string): string {
-  if (locale === "pt") return `${price}€`;
-  if (locale === "de") return `${price} €`;
+  if (locale === "pt" || locale === "fr") return `${price}€`;
+  if (locale === "de" || locale === "es") return `${price} €`;
   return `€${price}`;
 }
 
@@ -28,8 +28,11 @@ function localizedShootTypeName(
   locale: string
 ): string {
   if (!st) return "";
-  if (locale === "pt") return st.name_pt || st.name;
-  if (locale === "de") return st.name_de || st.name;
+  if (locale && locale !== "en") {
+    const key = `name_${locale}` as keyof typeof st;
+    const v = st[key] as string | undefined;
+    if (v) return v;
+  }
   return st.name;
 }
 

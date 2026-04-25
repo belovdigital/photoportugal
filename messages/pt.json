@@ -1159,7 +1159,13 @@
     "subtitle": "Dicas, guias e inspiração para capturar os seus momentos perfeitos em Portugal. Dos melhores locais para fotos ao planeamento da sua sessão fotográfica de sonho.",
     "noPosts": "Ainda sem artigos no blogue. Volte em breve!",
     "readMore": "Ler mais",
-    "blogPagination": "Paginação do blog"
+    "blogPagination": "Paginação do blog",
+    "featuredPhotographers": "Fotógrafos em destaque",
+    "featuredPhotographersDesc": "Conheça os fotógrafos mais procurados do Photo Portugal.",
+    "browseAllPhotographers": "Ver todos os fotógrafos",
+    "previous": "Anterior",
+    "next": "Seguinte",
+    "pageOf": "Página {current} de {total}"
   },
   "blogCategories": {
     "all": "Todos os Artigos",
@@ -1553,7 +1559,12 @@
   },
   "photographersMeta": {
     "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve",
-    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e 20+ localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €150."
+    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e 20+ localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €150.",
+    "locationTitle": "Encontre Fotógrafos em {location} — Portfólios e Preços",
+    "locationDescription": "Encontre e reserve fotógrafos verificados em {location}, Portugal. Veja portfólios, leia avaliações, compare pacotes. Desde €150.",
+    "ogAlt": "Fotógrafos em {location}, Portugal",
+    "browseByCity": "Fotógrafos por cidade",
+    "browseByCitySub": "Explore fotógrafos verificados nas principais cidades de Portugal."
   },
   "privacy": {
     "title": "Política de Privacidade",
@@ -2996,6 +3007,16 @@
       "step3Title": "Receba as suas fotos",
       "step3Desc": "Fotografias editadas em alta resolução, entregues em privado."
     }
+  },
+  "homepageMeta": {
+    "title": "Fotógrafo de Férias em Portugal — Reserve Sessões Fotográficas Profissionais",
+    "description": "Reserve um fotógrafo profissional de férias em Portugal. {photographers}+ fotógrafos em Lisboa, Porto, Algarve, Sintra e {locations}+ localizações. {reviews}A partir de €{price}.",
+    "ogTitle": "Fotógrafo de Férias em Portugal — Photo Portugal",
+    "ogDescription": "{photographers}+ fotógrafos profissionais em Portugal. A partir de €{price}.",
+    "schemaWebsite": "Encontre e reserve fotógrafos profissionais em Portugal para sessões fotográficas de férias.",
+    "schemaService": "Marketplace de fotografia de férias em Portugal. Reserve fotógrafos profissionais em Lisboa, Porto, Algarve e mais de 25 localizações.",
+    "reviewsCount": "{count}+ avaliações verificadas. ",
+    "inLanguage": "pt-PT"
   },
   "scarcity": {
     "shootTypeFew": "Apenas {count, plural, =1 {1 fotógrafo especializado} other {# fotógrafos especializados}} em {location} disponíveis agora",

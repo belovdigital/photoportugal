@@ -1439,7 +1439,13 @@
     "subtitle": "Conseils, guides et inspiration pour immortaliser vos moments parfaits au Portugal. Des meilleurs spots photo à la planification de votre séance de rêve.",
     "noPosts": "Pas encore d'articles. Revenez bientôt !",
     "readMore": "Lire la suite",
-    "blogPagination": "Pagination du blog"
+    "blogPagination": "Pagination du blog",
+    "featuredPhotographers": "Photographes mis en avant",
+    "featuredPhotographersDesc": "Découvrez les photographes que nos clients préfèrent.",
+    "browseAllPhotographers": "Voir tous les photographes",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {current} sur {total}"
   },
   "blogCategories": {
     "all": "Tous les articles",
@@ -1693,7 +1699,12 @@
   },
   "photographersMeta": {
     "title": "Engagez un photographe au Portugal — Lisbonne, Porto, Algarve",
-    "description": "Trouvez et engagez un photographe professionnel à Lisbonne, Porto, Sintra, Algarve et 20+ lieux au Portugal. Parcourez les portfolios, comparez les prix, lisez les avis vérifiés. Réservez votre séance de vacances en ligne — couples, famille, mariage, mariage intime. À partir de 150 €."
+    "description": "Trouvez et engagez un photographe professionnel à Lisbonne, Porto, Sintra, Algarve et 20+ lieux au Portugal. Parcourez les portfolios, comparez les prix, lisez les avis vérifiés. Réservez votre séance de vacances en ligne — couples, famille, mariage, mariage intime. À partir de 150 €.",
+    "locationTitle": "Trouvez des photographes à {location} — Portfolios et tarifs",
+    "locationDescription": "Trouvez et réservez des photographes vérifiés à {location}, Portugal. Parcourez les portfolios, lisez les avis, comparez les forfaits. À partir de 150 €. Réservation immédiate.",
+    "ogAlt": "Photographes à {location}, Portugal",
+    "browseByCity": "Photographes par ville",
+    "browseByCitySub": "Explorez les photographes vérifiés dans les plus belles villes du Portugal."
   },
   "privacy": {
     "title": "Politique de confidentialité",
@@ -2992,6 +3003,16 @@
       "addPhoneNumberTip": "Pour que votre photographe puisse vous joindre concernant la séance",
       "findPhotographer": "Trouver votre photographe"
     }
+  },
+  "homepageMeta": {
+    "title": "Photographe de voyage et de vacances au Portugal — Réservez en ligne",
+    "description": "Réservez un photographe de voyage ou de vacances professionnel au Portugal. {photographers}+ photographes triés sur le volet à Lisbonne, Porto, Algarve, Sintra et {locations}+ lieux. {reviews}Couples, familles et voyageurs solos. À partir de {price} €.",
+    "ogTitle": "Photographe de voyage et de vacances au Portugal — Réservez en ligne",
+    "ogDescription": "{photographers}+ photographes professionnels de voyage et de vacances au Portugal. {reviews}À partir de {price} €.",
+    "schemaWebsite": "Trouvez et réservez des photographes professionnels partout au Portugal pour vos séances de vacances.",
+    "schemaService": "Marketplace de photographie de vacances au Portugal. Réservez des photographes professionnels à Lisbonne, Porto, Algarve et plus de 25 lieux.",
+    "reviewsCount": "{count}+ avis vérifiés. ",
+    "inLanguage": "fr-FR"
   },
   "scarcity": {
     "shootTypeFew": "Plus que {count, plural, =1 {1 photographe spécialisé} other {# photographes spécialisés}} en {location} disponibles",

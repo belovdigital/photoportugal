@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title: `${t("title")} — Page ${page}`,
       description: t("subtitle"),
-      url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog/page/${page}`,
+      url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog/page/${page}`,
       type: "website",
     },
     robots: { index: false },
@@ -164,7 +164,7 @@ export default async function BlogPaginatedPage({
                       <span>{post.author}</span>
                       <span>&middot;</span>
                       <time dateTime={post.published_at}>
-                        {new Date(post.published_at).toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", { month: "long", day: "numeric", year: "numeric" })}
+                        {new Date(post.published_at).toLocaleDateString(({pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR"} as Record<string, string>)[locale] || "en-US", { month: "long", day: "numeric", year: "numeric" })}
                       </time>
                     </div>
                     <Link href={`/blog/${post.slug}`}>

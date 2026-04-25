@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: `${locations.length} ${t("title")}`,
     description: t("subtitle", { count: locations.length }),
     alternates: localeAlternates("/locations", locale),
-    openGraph: { title: `${locations.length} ${t("title")}`, description: t("subtitle", { count: locations.length }), url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/locations` },
+    openGraph: { title: `${locations.length} ${t("title")}`, description: t("subtitle", { count: locations.length }), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/locations` },
   };
 }
 

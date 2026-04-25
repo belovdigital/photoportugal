@@ -6,6 +6,8 @@ import { SHOOT_TYPES, PhotographerProfile } from "@/types";
 import { PhotographerCatalog } from "../../PhotographerCatalog";
 import { query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
+import { getTranslations } from "next-intl/server";
+import { locField } from "@/lib/locations-data";
 
 export async function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -16,17 +18,21 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const location = locations.find((l) => l.slug === slug);
   if (!location) return {};
 
-  const title = locale === "pt"
-    ? `Encontre Fotógrafos em ${location.name} — Portfólios e Preços`
-    : `Find Photographers in ${location.name} — Portfolios & Prices`;
-  const description = locale === "pt"
-    ? `Encontre e reserve fotógrafos verificados em ${location.name}, Portugal. Veja portfólios, leia avaliações, compare pacotes. A partir de €150.`
-    : `Find and book verified photographers in ${location.name}, Portugal. Browse portfolios, read reviews, compare packages. From €150. Instant booking.`;
+  const t = await getTranslations({ locale, namespace: "photographersMeta" });
+  const localizedName = locField(location, "name", locale) || location.name;
+  const title = t("locationTitle", { location: localizedName });
+  const description = t("locationDescription", { location: localizedName });
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
   return {
     title,
     description,
     alternates: localeAlternates(`/photographers/location/${slug}`, locale),
-    openGraph: { title, description, url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/photographers/location/${slug}`, images: [{ url: location.cover_image || "/og-image.png", width: 1200, height: 630, alt: `Photographers in ${location.name}, Portugal` }] },
+    openGraph: {
+      title,
+      description,
+      url: `https://photoportugal.com${localePrefix}/photographers/location/${slug}`,
+      images: [{ url: location.cover_image || "/og-image.png", width: 1200, height: 630, alt: t("ogAlt", { location: localizedName }) }],
+    },
   };
 }
 

@@ -22,7 +22,8 @@ export const revalidate = 60;
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const base = "https://photoportugal.com";
-  const url = locale === "pt" ? `${base}/pt` : base;
+  const url = locale === "en" ? base : `${base}/${locale}`;
+  const t = await getTranslations({ locale, namespace: "homepageMeta" });
 
   // Pull real numbers for meta descriptions
   let photographerCount = 20;
@@ -44,31 +45,22 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     }
   } catch {}
 
-  const reviewText = reviewCount > 0 ? `${reviewCount}+ verified reviews. ` : "";
-  const reviewTextPt = reviewCount > 0 ? `${reviewCount}+ avaliações verificadas. ` : "";
-
-  if (locale === "pt") {
-    return {
-      title: "Fotógrafo de Férias em Portugal — Reserve Sessões Fotográficas Profissionais",
-      description: `Reserve um fotógrafo profissional de férias em Portugal. ${photographerCount}+ fotógrafos em Lisboa, Porto, Algarve, Sintra e ${locations.length - 4}+ localizações. ${reviewTextPt}A partir de €${minPrice}.`,
-      alternates: localeAlternates("/", locale),
-      openGraph: {
-        title: "Fotógrafo de Férias em Portugal — Photo Portugal",
-        description: `${photographerCount}+ fotógrafos profissionais em Portugal. A partir de €${minPrice}.`,
-        url,
-        images: [{ url: `${base}/og-image.png`, width: 1200, height: 630 }],
-      },
-    };
-  }
+  const reviewText = reviewCount > 0 ? t("reviewsCount", { count: reviewCount }) : "";
+  const params2 = {
+    photographers: photographerCount,
+    locations: locations.length - 4,
+    reviews: reviewText,
+    price: minPrice,
+  };
 
   return {
-    title: "Travel & Vacation Photographer in Portugal — Book Online",
-    description: `Hire a professional travel or vacation photographer in Portugal. ${photographerCount}+ hand-picked photographers in Lisbon, Porto, Algarve, Sintra & ${locations.length - 4}+ locations. ${reviewText}Couples, families & solo travelers. From €${minPrice}.`,
+    title: t("title"),
+    description: t("description", params2),
     alternates: localeAlternates("/", locale),
     openGraph: {
-      title: "Travel & Vacation Photographer in Portugal — Book Online",
-      description: `${photographerCount}+ professional travel & vacation photographers in Portugal. ${reviewText}From €${minPrice}.`,
-      url: base,
+      title: t("ogTitle"),
+      description: t("ogDescription", params2),
+      url,
       images: [{ url: `${base}/og-image.png`, width: 1200, height: 630 }],
     },
   };
@@ -81,9 +73,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 // ============================================================
 
 async function SchemaLdScripts({ locale }: { locale: string }) {
-  const [siteStats, schemaReviews] = await Promise.all([
+  const [siteStats, schemaReviews, t] = await Promise.all([
     getSiteReviewStats(),
     getHomepageReviews(3),
+    getTranslations({ locale, namespace: "homepageMeta" }),
   ]);
   const base = "https://photoportugal.com";
   const schemaRating = siteStats.avgRating.toFixed(1);
@@ -94,10 +87,8 @@ async function SchemaLdScripts({ locale }: { locale: string }) {
     "@type": "WebSite",
     name: "Photo Portugal",
     url: base,
-    description: locale === "pt"
-      ? "Encontre e reserve fotógrafos profissionais em Portugal para sessões fotográficas de férias."
-      : "Find and book professional photographers across Portugal for vacation photoshoots.",
-    inLanguage: locale === "pt" ? "pt-PT" : "en",
+    description: t("schemaWebsite"),
+    inLanguage: t("inLanguage"),
     publisher: {
       "@type": "Organization",
       name: "Photo Portugal",
@@ -116,9 +107,7 @@ async function SchemaLdScripts({ locale }: { locale: string }) {
     name: "Photo Portugal",
     url: base,
     image: `${base}/og-image.png`,
-    description: locale === "pt"
-      ? "Marketplace de fotografia de férias em Portugal. Reserve fotógrafos profissionais em Lisboa, Porto, Algarve e mais de 25 localizações."
-      : "Vacation photography marketplace in Portugal. Book professional photographers in Lisbon, Porto, Algarve and 25+ locations.",
+    description: t("schemaService"),
     priceRange: "€€",
     address: { "@type": "PostalAddress", addressLocality: "Lisbon", addressCountry: "PT" },
     geo: { "@type": "GeoCoordinates", latitude: 38.7223, longitude: -9.1393 },

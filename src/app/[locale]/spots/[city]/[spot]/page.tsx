@@ -90,12 +90,62 @@ const L = {
     titleSuffix: "Fotoshooting buchen",
     hireDesc: "Buchen Sie einen professionellen Fotografen bei",
   },
+  es: {
+    portugal: "Portugal",
+    photographerAt: "Fotógrafo en",
+    about: "Sobre",
+    bestTime: "Mejor momento para fotografiar:",
+    tips: "Consejos:",
+    shootersAt: "Fotógrafos que trabajan en",
+    handpickedIn: "Profesionales seleccionados a mano que trabajan en",
+    viewAllIn: "Ver todos los fotógrafos en",
+    readyToBook: "¿Listo para reservar?",
+    conciergeDesc: "Nuestro equipo de concierge seleccionará 2-3 fotógrafos que conozcan",
+    freeOfCharge: "— gratis.",
+    getMatched: "Recibir recomendaciones gratis",
+    browsePhotographers: "Ver fotógrafos",
+    otherSpots: "Otros lugares en",
+    exploreMore: "Explorar más",
+    travelGuide: "guía de viaje",
+    allLocations: "Las {count} localizaciones de Portugal",
+    browseByType: "Explorar por tipo de sesión",
+    reviewsTitle: "Reseñas reales de sesiones en",
+    reviewsTitleSuffix: "",
+    realClient: "reservas verificadas",
+    newLabel: "Nuevo",
+    titleSuffix: "Reservar una sesión",
+    hireDesc: "Contrate un fotógrafo profesional en",
+  },
+  fr: {
+    portugal: "Portugal",
+    photographerAt: "Photographe à",
+    about: "À propos",
+    bestTime: "Meilleur moment pour photographier :",
+    tips: "Conseils :",
+    shootersAt: "Photographes qui travaillent à",
+    handpickedIn: "Professionnels triés sur le volet qui travaillent à",
+    viewAllIn: "Voir tous les photographes à",
+    readyToBook: "Prêt à réserver ?",
+    conciergeDesc: "Notre équipe concierge choisira 2-3 photographes qui connaissent",
+    freeOfCharge: "— gratuitement.",
+    getMatched: "Recevoir des suggestions gratuites",
+    browsePhotographers: "Voir les photographes",
+    otherSpots: "Autres lieux à",
+    exploreMore: "Explorer plus",
+    travelGuide: "guide de voyage",
+    allLocations: "Les {count} lieux du Portugal",
+    browseByType: "Parcourir par type de séance",
+    reviewsTitle: "Avis authentiques de séances à",
+    reviewsTitleSuffix: "",
+    realClient: "réservations vérifiées",
+    newLabel: "Nouveau",
+    titleSuffix: "Réserver une séance",
+    hireDesc: "Réservez un photographe professionnel à",
+  },
 };
 
 function pickL(locale: string): typeof L.en {
-  if (locale === "pt") return L.pt;
-  if (locale === "de") return L.de;
-  return L.en;
+  return (L as unknown as Record<string, typeof L.en>)[locale] || L.en;
 }
 
 export const revalidate = 86400;
@@ -118,11 +168,7 @@ export async function generateMetadata({
 
   const s = spotLocalized(spotData, locale);
   const t = pickL(locale);
-  const title = locale === "pt"
-    ? `Fotógrafo em ${s.name}, ${location.name} — ${t.titleSuffix}`
-    : locale === "de"
-    ? `Fotograf bei ${s.name}, ${location.name} — ${t.titleSuffix}`
-    : `${s.name} Photographer in ${location.name} — ${t.titleSuffix}`;
+  const title = `${t.photographerAt} ${s.name}, ${location.name} — ${t.titleSuffix}`;
   const description = `${t.hireDesc} ${s.name}, ${location.name}, Portugal. ${s.description.slice(0, 140)}`;
   const alt = localeAlternates(`/spots/${city}/${spot}`, locale);
 

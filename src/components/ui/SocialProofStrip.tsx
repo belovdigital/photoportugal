@@ -46,7 +46,7 @@ export function SocialProofStrip({
   };
 }) {
   const locale = useLocale();
-  const localePrefix = locale === "pt" ? "/pt" : "";
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
   const [hoveredPin, setHoveredPin] = useState<{ slug: string; name: string; x: number; y: number } | null>(null);
   const codes = countryCodes.length > 0 ? countryCodes : FALLBACK_COUNTRIES;
 

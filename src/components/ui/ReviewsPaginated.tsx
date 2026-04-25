@@ -148,7 +148,10 @@ export function ReviewsPaginated({
       <div className="mt-6 space-y-6">
         {shown.map((review) => {
           const flag = codeToFlag(review.client_country || "");
-          const monthYear = new Date(review.created_at).toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", { month: "long", year: "numeric" });
+          const monthYear = new Date(review.created_at).toLocaleDateString(
+            ({ pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR", en: "en-US" } as Record<string, string>)[locale] || "en-US",
+            { month: "long", year: "numeric" }
+          );
           const packageHref = review.package_id ? `/book/${photographerSlug}?package=${review.package_id}` : null;
           // Compute photo offset for this review in the flat list
           const reviewPhotoOffset = reviews

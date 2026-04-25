@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title: t("title"),
       description: t("subtitle"),
-      url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog`,
+      url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog`,
       type: "website",
       images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal Blog" }],
     },
@@ -96,7 +96,7 @@ export default async function BlogPage({
     "@type": "Blog",
     name: "Photo Portugal Blog",
     description: t("subtitle"),
-    url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog`,
+    url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog`,
     blogPost: posts.map((p) => ({
       "@type": "BlogPosting",
       headline: p.title,
@@ -104,7 +104,7 @@ export default async function BlogPage({
       ...(p.cover_image_url ? { image: p.cover_image_url.startsWith("http") ? p.cover_image_url : `https://photoportugal.com${p.cover_image_url}` } : {}),
       datePublished: new Date(p.published_at).toISOString(),
       author: { "@type": "Person", name: p.author },
-      url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog/${p.slug}`,
+      url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog/${p.slug}`,
     })),
   };
 
@@ -219,11 +219,10 @@ export default async function BlogPage({
                       <span>{post.author}</span>
                       <span>&middot;</span>
                       <time dateTime={post.published_at}>
-                        {new Date(post.published_at).toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {new Date(post.published_at).toLocaleDateString(
+                          ({ pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR", en: "en-US" } as Record<string, string>)[locale] || "en-US",
+                          { month: "long", day: "numeric", year: "numeric" }
+                        )}
                       </time>
                     </div>
                     <Link href={`/blog/${post.slug}`}>
@@ -253,7 +252,7 @@ export default async function BlogPage({
             {/* Pagination */}
             {totalPages > 1 && (
               <nav className="mt-12 flex items-center justify-center gap-1" aria-label={t("blogPagination")}>
-                {/* Previous */}
+                {/* {t("previous")} */}
                 {currentPage > 1 ? (
                   <Link
                     href={currentPage === 2 ? "/blog" : `/blog/page/${currentPage - 1}`}
@@ -262,14 +261,14 @@ export default async function BlogPage({
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Previous
+                    {t("previous")}
                   </Link>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-lg border border-warm-100 bg-warm-50 px-4 py-2 text-sm font-medium text-gray-300 cursor-not-allowed">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Previous
+                    {t("previous")}
                   </span>
                 )}
 
@@ -301,7 +300,7 @@ export default async function BlogPage({
 
                 {/* Mobile page indicator */}
                 <span className="sm:hidden px-3 py-2 text-sm text-gray-500">
-                  Page {currentPage} of {totalPages}
+                  {t("pageOf", { current: currentPage, total: totalPages })}
                 </span>
 
                 {/* Next */}
@@ -310,14 +309,14 @@ export default async function BlogPage({
                     href={`/blog/page/${currentPage + 1}`}
                     className="inline-flex items-center gap-1 rounded-lg border border-warm-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:border-primary-200"
                   >
-                    Next
+                    {t("next")}
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-lg border border-warm-100 bg-warm-50 px-4 py-2 text-sm font-medium text-gray-300 cursor-not-allowed">
-                    Next
+                    {t("next")}
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -334,10 +333,10 @@ export default async function BlogPage({
         <section className="border-t border-warm-200 bg-warm-50">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-              {locale === "pt" ? "Fotógrafos em destaque" : "Featured Photographers"}
+              {t("featuredPhotographers")}
             </h2>
             <p className="mt-2 text-sm text-gray-500">
-              {locale === "pt" ? "Conheça os fotógrafos mais procurados do Photo Portugal." : "Meet the photographers our clients love most."}
+              {t("featuredPhotographersDesc")}
             </p>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
               {featuredPhotographers.map((p) => (
@@ -362,7 +361,7 @@ export default async function BlogPage({
             </div>
             <div className="mt-6 text-center">
               <Link href="/photographers" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700">
-                {locale === "pt" ? "Ver todos os fotógrafos" : "Browse all photographers"}
+                {t("browseAllPhotographers")}
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>

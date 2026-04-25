@@ -19,8 +19,37 @@ interface DatePickerProps {
   unavailableRanges?: UnavailableRange[];
 }
 
-const WEEKDAYS_EN = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-const WEEKDAYS_PT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+// Map our app locales to BCP-47 codes for Intl APIs.
+const INTL_LOCALES: Record<string, string> = {
+  en: "en-US",
+  pt: "pt-PT",
+  de: "de-DE",
+  es: "es-ES",
+  fr: "fr-FR",
+};
+
+function buildWeekdays(locale: string): string[] {
+  // Build short weekday labels (Mon..Sun) for the active locale.
+  const fmt = new Intl.DateTimeFormat(INTL_LOCALES[locale] || locale, { weekday: "short" });
+  // 2024-01-01 is a Monday; iterate 7 days to get Mon..Sun.
+  const out: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(Date.UTC(2024, 0, 1 + i));
+    out.push(fmt.format(d).replace(/\.$/, "").slice(0, 3));
+  }
+  return out;
+}
+
+function buildMonths(locale: string): string[] {
+  const fmt = new Intl.DateTimeFormat(INTL_LOCALES[locale] || locale, { month: "long" });
+  const out: string[] = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(Date.UTC(2024, i, 1));
+    const name = fmt.format(d);
+    out.push(name.charAt(0).toUpperCase() + name.slice(1));
+  }
+  return out;
+}
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -40,15 +69,11 @@ function parseDate(str: string) {
   return { year: y, month: m - 1, day: d };
 }
 
-const MONTH_NAMES_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const MONTH_NAMES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-
 export default function DatePicker({ value, onChange, min, max, label, required, placeholder, unavailableRanges }: DatePickerProps) {
   const locale = useLocale();
   const t = useTranslations("common");
-  const isPT = locale === "pt";
-  const WEEKDAYS = isPT ? WEEKDAYS_PT : WEEKDAYS_EN;
-  const MONTH_NAMES = isPT ? MONTH_NAMES_PT : MONTH_NAMES_EN;
+  const WEEKDAYS = buildWeekdays(locale);
+  const MONTH_NAMES = buildMonths(locale);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -109,7 +134,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   const displayValue = value
-    ? new Date(value + "T12:00:00").toLocaleDateString(isPT ? "pt-PT" : "en-GB", { day: "numeric", month: "short", year: "numeric" })
+    ? new Date(value + "T12:00:00").toLocaleDateString(INTL_LOCALES[locale] || locale, { day: "numeric", month: "short", year: "numeric" })
     : "";
 
   return (

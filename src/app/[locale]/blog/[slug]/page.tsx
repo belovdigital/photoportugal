@@ -633,7 +633,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             <span className="font-medium text-gray-700">{post.author}</span>
             <span>&middot;</span>
             <time dateTime={post.published_at}>
-              {publishedDate.toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", {
+              {publishedDate.toLocaleDateString(({pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR"} as Record<string, string>)[locale] || "en-US", {
                 month: "long",
                 day: "numeric",
                 year: "numeric",
@@ -775,7 +775,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                   )}
                   <div className="p-4">
                     <p className="text-xs text-gray-400">
-                      {new Date(related.published_at).toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", {
+                      {new Date(related.published_at).toLocaleDateString(({pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR"} as Record<string, string>)[locale] || "en-US", {
                         month: "long",
                         day: "numeric",
                         year: "numeric",

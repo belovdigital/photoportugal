@@ -1003,13 +1003,10 @@ export function locField<K extends "name" | "description" | "long_description" |
   field: K,
   locale: string,
 ): string | undefined {
-  if (locale === "pt") {
-    const key = `${field}_pt` as keyof Location;
-    return (loc[key] as string | undefined) || (loc[field as keyof Location] as string | undefined);
-  }
-  if (locale === "de") {
-    const key = `${field}_de` as keyof Location;
-    return (loc[key] as string | undefined) || (loc[field as keyof Location] as string | undefined);
+  if (locale && locale !== "en") {
+    const key = `${field}_${locale}` as keyof Location;
+    const localized = loc[key] as string | undefined;
+    if (localized) return localized;
   }
   return loc[field as keyof Location] as string | undefined;
 }

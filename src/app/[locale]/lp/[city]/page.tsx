@@ -19,16 +19,14 @@ import { locationImage } from "@/lib/unsplash-images";
 // Fully dynamic so each visit randomises the photographer lineup (only when >6 match)
 export const dynamic = "force-dynamic";
 
-// PT names for the few cities whose Portuguese spelling differs from the English slug name
-const LOCATION_NAME_PT: Record<string, string> = {
-  lisbon: "Lisboa",
-};
-
 // Localize a city name for the active locale (falls back to English `name`).
 function localizedLocationName(loc: Location | undefined, slug: string, locale: string): string {
   if (!loc) return slug;
-  if (locale === "pt") return LOCATION_NAME_PT[loc.slug] || loc.name;
-  if (locale === "de") return loc.name_de || loc.name;
+  if (locale && locale !== "en") {
+    const key = `name_${locale}` as keyof Location;
+    const v = loc[key] as string | undefined;
+    if (v) return v;
+  }
   return loc.name;
 }
 
@@ -38,14 +36,18 @@ function localizedShootTypeName(
   locale: string
 ): string {
   if (!st) return "";
-  if (locale === "pt") return st.name_pt || st.name;
-  if (locale === "de") return st.name_de || st.name;
+  if (locale && locale !== "en") {
+    const key = `name_${locale}` as keyof typeof st;
+    const v = st[key] as string | undefined;
+    if (v) return v;
+  }
   return st.name;
 }
 
-// Format a price for display per locale (PT: "150€", DE: "150 €", EN: "€150")
+// Format a price for display per locale: PT/FR/ES suffix the symbol, DE has space, EN prefixes.
 function formatPrice(price: number, locale: string): string {
-  if (locale === "pt") return `${price}€`;
+  if (locale === "pt" || locale === "fr") return `${price}€`;
+  if (locale === "es") return `${price} €`;
   if (locale === "de") return `${price} €`;
   return `€${price}`;
 }

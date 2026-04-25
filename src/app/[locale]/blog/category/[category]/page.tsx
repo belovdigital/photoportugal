@@ -83,7 +83,7 @@ export default async function BlogCategoryPage({ params }: PageProps) {
     "@type": "CollectionPage",
     name: catLabel,
     description: catDescription,
-    url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog/category/${category}`,
+    url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog/category/${category}`,
     isPartOf: {
       "@type": "Blog",
       name: "Photo Portugal Blog",
@@ -96,7 +96,7 @@ export default async function BlogCategoryPage({ params }: PageProps) {
         itemListElement: posts.map((post, i) => ({
           "@type": "ListItem",
           position: i + 1,
-          url: `https://photoportugal.com${locale === "pt" ? "/pt" : ""}/blog/${post.slug}`,
+          url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog/${post.slug}`,
           name: post.title,
         })),
       },
@@ -184,7 +184,7 @@ export default async function BlogCategoryPage({ params }: PageProps) {
                     <span>{post.author}</span>
                     <span>&middot;</span>
                     <time dateTime={post.published_at}>
-                      {new Date(post.published_at).toLocaleDateString(locale === "pt" ? "pt-PT" : "en-US", {
+                      {new Date(post.published_at).toLocaleDateString(({pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR"} as Record<string, string>)[locale] || "en-US", {
                         month: "long",
                         day: "numeric",
                         year: "numeric",
