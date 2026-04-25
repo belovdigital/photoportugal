@@ -200,13 +200,15 @@ export default async function AdminPage() {
   );
 
   const inquiries = await query<{
-    id: string; client_name: string; client_email: string; photographer_name: string;
+    id: string; client_id: string; client_name: string; client_email: string;
+    photographer_name: string; photographer_slug: string;
     created_at: string; first_message: string | null; message_count: number;
     last_message_at: string | null; has_reply: boolean; client_country: string | null;
     converted_to_booking_id: string | null;
     archived: boolean;
   }>(
-    `SELECT b.id, cu.name as client_name, cu.email as client_email, pu.name as photographer_name,
+    `SELECT b.id, b.client_id, cu.name as client_name, cu.email as client_email,
+            pu.name as photographer_name, pp.slug as photographer_slug,
             b.created_at,
             (SELECT m.text FROM messages m WHERE m.booking_id = b.id ORDER BY m.created_at ASC LIMIT 1) as first_message,
             (SELECT COUNT(*)::int FROM messages m WHERE m.booking_id = b.id) as message_count,

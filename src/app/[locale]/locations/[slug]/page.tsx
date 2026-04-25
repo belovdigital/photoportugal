@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { locations, getLocationBySlug, getNearbyLocations, locationFaqs } from "@/lib/locations-data";
+import { locations, getLocationBySlug, getNearbyLocations, locationFaqs, locField } from "@/lib/locations-data";
 import { photoSpots } from "@/lib/photo-spots-data";
 import { getLocationServices } from "@/lib/location-services-data";
 import { locationImage, unsplashUrl } from "@/lib/unsplash-images";
@@ -28,6 +28,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
+import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 import { spotSlug, spotLocalized } from "@/lib/photo-spots-data";
 
 export function generateStaticParams() {
@@ -43,8 +44,8 @@ export async function generateMetadata({
   const location = getLocationBySlug(slug);
   if (!location) return {};
 
-  const seoTitle = locale === "pt" && location.seo_title_pt ? location.seo_title_pt : location.seo_title;
-  const seoDescription = locale === "pt" && location.seo_description_pt ? location.seo_description_pt : location.seo_description;
+  const seoTitle = locField(location, "seo_title", locale) || location.seo_title;
+  const seoDescription = locField(location, "seo_description", locale) || location.seo_description;
 
   return {
     title: seoTitle,
@@ -80,8 +81,9 @@ export default async function LocationPage({
   const nearby = getNearbyLocations(slug);
 
   const isPt = locale === "pt";
-  const description = isPt && location.description_pt ? location.description_pt : location.description;
-  const longDescription = isPt && location.long_description_pt ? location.long_description_pt : location.long_description;
+  const description = locField(location, "description", locale) || location.description;
+  const longDescription = locField(location, "long_description", locale) || location.long_description;
+  const localizedName = locField(location, "name", locale) || location.name;
 
   const spots = photoSpots[slug] || [];
   const services = getLocationServices(slug);
@@ -340,7 +342,7 @@ export default async function LocationPage({
               {location.region}
             </p>
             <h1 className="mt-2 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-              {tc("photographersIn", { location: location.name })}
+              {tc("photographersIn", { location: localizedName })}
             </h1>
             <p className="mt-6 text-lg text-primary-100/90">
               {description}
@@ -357,6 +359,14 @@ export default async function LocationPage({
                   {t("photographersAvailable", { count: photographerCount })}
                 </span>
               )}
+            </div>
+            <div className="mt-6 max-w-xl">
+              <MatchQuickForm
+                presetLocation={location.slug}
+                source={`location_${location.slug}`}
+                variant="dark"
+                size="md"
+              />
             </div>
           </div>
         </div>

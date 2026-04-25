@@ -194,3 +194,17 @@ body:has(.admin-layout) footer {
     pointer-events: none !important;
   }
 }
+
+/* Hide Intercom whenever the Concierge drawer is open — they would compete for the bottom-right corner. */
+body[data-concierge-open="true"] .intercom-lightweight-app-launcher,
+body[data-concierge-open="true"] .intercom-launcher-frame,
+body[data-concierge-open="true"] .intercom-lightweight-app,
+body[data-concierge-open="true"] .intercom-app,
+body[data-concierge-open="true"] iframe[name="intercom-launcher-frame"],
+body[data-concierge-open="true"] iframe[title*="Intercom" i],
+body[data-concierge-open="true"] iframe[src*="intercom"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

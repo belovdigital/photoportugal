@@ -91,7 +91,7 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
       <div className="space-y-2">
         <span className="text-sm font-medium text-accent-600">{t("submitted")}</span>
         <a
-          href="https://g.page/r/CbWG7PogT_K2EBI/review"
+          href="https://g.page/r/CbWG7PogT_K2EBM/review"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 w-fit"

@@ -7,6 +7,9 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/dashboard/", "/api/", "/auth/"],
     },
-    sitemap: "https://photoportugal.com/sitemap.xml",
+    sitemap: [
+      "https://photoportugal.com/sitemap.xml",
+      "https://photoportugal.com/sitemap-images.xml",
+    ],
   };
 }

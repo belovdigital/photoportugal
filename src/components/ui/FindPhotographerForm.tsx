@@ -50,6 +50,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
   const [groupSize, setGroupSize] = useState(2);
   const [budgetRange, setBudgetRange] = useState("");
   const [message, setMessage] = useState("");
+  const [smsConsent, setSmsConsent] = useState(true);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -67,7 +68,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!firstName.trim() || !email.trim() || !phone.trim() || !locationSlug || !shootType || !budgetRange) return;
+    if (!firstName.trim() || !email.trim() || !locationSlug || !shootType || !budgetRange) return;
     const name = `${firstName.trim()} ${lastName.trim()}`.trim();
 
     // If not logged in, show auth modal
@@ -98,6 +99,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
           group_size: groupSize,
           budget_range: budgetRange,
           message: message.trim() || null,
+          sms_consent: smsConsent,
           user_id: userId || null,
         }),
       });
@@ -174,8 +176,8 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder={t("emailPlaceholder")} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">{t("phoneLabel")} *</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder={t("phonePlaceholder")} className={inputCls} />
+            <label className="block text-sm font-medium text-gray-700">{t("phoneLabel")}</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t("phonePlaceholder")} className={inputCls} />
           </div>
         </div>
 
@@ -281,6 +283,25 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
           <label className="block text-sm font-medium text-gray-700">{t("messageLabel")}</label>
           <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} placeholder={t("messagePlaceholder")} className={inputCls} />
         </div>
+
+        <label className="flex items-start gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={smsConsent}
+            onChange={(e) => setSmsConsent(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+          />
+          <span className="text-xs text-gray-500 leading-relaxed">
+            {t.rich("smsConsent", {
+              terms: (chunks) => (
+                <Link href="/terms" className="text-primary-600 underline hover:text-primary-700" target="_blank">{chunks}</Link>
+              ),
+              privacy: (chunks) => (
+                <Link href="/privacy" className="text-primary-600 underline hover:text-primary-700" target="_blank">{chunks}</Link>
+              ),
+            })}
+          </span>
+        </label>
 
         <button
           type="submit"

@@ -8,20 +8,26 @@ export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 const BASE = "https://photoportugal.com";
-const LOCALES = ["en", "pt"] as const;
+const LOCALES = ["en", "pt", "de", "es", "fr"] as const;
+
+function urlFor(path: string, locale: string): string {
+  return locale === "en" ? `${BASE}${path}` : `${BASE}/${locale}${path}`;
+}
 
 function localized(path: string, opts: Omit<MetadataRoute.Sitemap[0], "url">): MetadataRoute.Sitemap {
+  const languages: Record<string, string> = {
+    "en-GB": urlFor(path, "en"),
+    "en-US": urlFor(path, "en"),
+    "pt-PT": urlFor(path, "pt"),
+    "de-DE": urlFor(path, "de"),
+    "es-ES": urlFor(path, "es"),
+    "fr-FR": urlFor(path, "fr"),
+    "x-default": urlFor(path, "en"),
+  };
   return LOCALES.map((locale) => ({
     ...opts,
-    url: locale === "en" ? `${BASE}${path}` : `${BASE}/pt${path}`,
-    alternates: {
-      languages: {
-        "en-GB": `${BASE}${path}`,
-        "en-US": `${BASE}${path}`,
-        "pt-PT": `${BASE}/pt${path}`,
-        "x-default": `${BASE}${path}`,
-      },
-    },
+    url: urlFor(path, locale),
+    alternates: { languages },
   }));
 }
 
@@ -87,16 +93,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let blogPages: MetadataRoute.Sitemap = [];
   try {
-    const blogPosts = await query<{ slug: string; published_at: string }>(
-      "SELECT slug, published_at FROM blog_posts WHERE is_published = TRUE ORDER BY published_at DESC"
+    const blogPosts = await query<{ slug: string; published_at: string; locale: string | null }>(
+      "SELECT slug, published_at, locale FROM blog_posts WHERE is_published = TRUE ORDER BY published_at DESC"
     );
-    blogPages = blogPosts.flatMap((p) =>
-      localized(`/blog/${p.slug}`, {
+    // Each blog post exists in ONE locale only — emit a single URL for that locale,
+    // not all-locale localized() output (would create false 404s for the other locales).
+    blogPages = blogPosts.map((p) => {
+      const loc = (p.locale || "en").toLowerCase();
+      return {
+        url: urlFor(`/blog/${p.slug}`, loc),
         lastModified: new Date(p.published_at),
-        changeFrequency: "monthly",
+        changeFrequency: "monthly" as const,
         priority: 0.7,
-      })
-    );
+      };
+    });
   } catch (err) {
     console.error("[sitemap] Failed to load blog pages:", err);
   }

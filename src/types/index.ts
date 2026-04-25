@@ -131,10 +131,17 @@ export interface Location {
   seo_title: string;
   seo_description: string;
   /** Portuguese (pt-PT) translations */
+  name_pt?: string;
   description_pt?: string;
   long_description_pt?: string;
   seo_title_pt?: string;
   seo_description_pt?: string;
+  /** German (de-DE) translations */
+  name_de?: string;
+  description_de?: string;
+  long_description_de?: string;
+  seo_title_de?: string;
+  seo_description_de?: string;
 }
 
 export interface Booking {

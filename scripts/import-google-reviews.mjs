@@ -70,7 +70,9 @@ for (const r of reviews) {
   }
   const author = (r.authorName || "").trim() || null;
   const rating = r.rating || 5;
-  const createdAt = dateAgoToTimestamp(r.date || "").toISOString();
+  const createdAt = r.createdAtISO
+    ? new Date(r.createdAtISO).toISOString()
+    : dateAgoToTimestamp(r.date || "").toISOString();
 
   // Dedup by (photographer_id, text) so re-runs are safe even with empty authors
   const existing = await pool.query(

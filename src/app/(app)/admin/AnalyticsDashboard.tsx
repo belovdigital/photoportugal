@@ -227,6 +227,9 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
 }
 
 const ANALYTICS_TABS = [
+  { key: "overview", label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+  { key: "behavior", label: "Behavior", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
+  { key: "clarity", label: "Clarity", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" },
   { key: "visitors", label: "Visitors", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
   { key: "traffic", label: "Traffic", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
   { key: "seo", label: "SEO", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
@@ -251,6 +254,681 @@ interface VisitorData {
     visit_number: number; total_visits: number;
   }[];
   dailySessions: { day: string; sessions: string; visitors: string }[];
+  seriesBucket?: "hour" | "day" | "week" | "month";
+  period?: string;
+}
+
+type PeriodKey = "today" | "yesterday" | "7d" | "30d" | "year" | "custom";
+const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
+  { key: "today", label: "Today" },
+  { key: "yesterday", label: "Yesterday" },
+  { key: "7d", label: "Last 7 days" },
+  { key: "30d", label: "Last 30 days" },
+  { key: "year", label: "Last year" },
+  { key: "custom", label: "Custom…" },
+];
+
+// Minimal SVG line chart — one series, responsive width, hover dot + tooltip.
+function LineChart({
+  data,
+  color,
+  bucket,
+  height = 200,
+}: {
+  data: { day: string; value: number }[];
+  color: string;
+  bucket: "hour" | "day" | "week" | "month";
+  height?: number;
+}) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const width = 800; // viewBox width; scales responsively
+  const padL = 40, padR = 12, padT = 10, padB = 28;
+  const innerW = width - padL - padR;
+  const innerH = height - padT - padB;
+  const max = Math.max(1, ...data.map(d => d.value));
+  const yTicks = 4;
+
+  const points = data.map((d, i) => {
+    const x = data.length === 1 ? padL + innerW / 2 : padL + (i / (data.length - 1)) * innerW;
+    const y = padT + innerH - (d.value / max) * innerH;
+    return { x, y, ...d };
+  });
+
+  const fmtLabel = (dayStr: string) => {
+    const d = new Date(dayStr);
+    if (bucket === "hour") return `${d.getHours().toString().padStart(2, "0")}:00`;
+    if (bucket === "week") return `${d.getDate()}.${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+    if (bucket === "month") return d.toLocaleString("en", { month: "short" });
+    return `${d.getDate()}.${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+  };
+
+  // Reduce x-axis labels for readability
+  const labelEvery = Math.max(1, Math.ceil(data.length / 8));
+
+  const pathD = points.length > 0
+    ? "M " + points.map(p => `${p.x},${p.y}`).join(" L ")
+    : "";
+
+  const areaD = points.length > 0
+    ? `M ${points[0].x},${padT + innerH} L ` + points.map(p => `${p.x},${p.y}`).join(" L ") + ` L ${points[points.length - 1].x},${padT + innerH} Z`
+    : "";
+
+  return (
+    <div className="relative w-full">
+      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="w-full h-auto" style={{ maxHeight: height }}>
+        {/* Y-axis grid + labels */}
+        {Array.from({ length: yTicks + 1 }).map((_, i) => {
+          const pct = i / yTicks;
+          const y = padT + innerH * pct;
+          const val = Math.round(max * (1 - pct));
+          return (
+            <g key={i}>
+              <line x1={padL} y1={y} x2={width - padR} y2={y} stroke="#E8E0D8" strokeWidth={1} strokeDasharray={i === yTicks ? "" : "2 3"} />
+              <text x={padL - 6} y={y + 3} fontSize="10" fill="#9CA3AF" textAnchor="end">{val}</text>
+            </g>
+          );
+        })}
+        {/* Area fill under line */}
+        {points.length > 1 && <path d={areaD} fill={color} opacity={0.1} />}
+        {/* Line */}
+        {points.length > 1 && <path d={pathD} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />}
+        {/* Dots */}
+        {points.map((p, i) => (
+          <g key={i}>
+            {/* Hit area (invisible) */}
+            <rect
+              x={p.x - (innerW / Math.max(data.length - 1, 1) / 2)}
+              y={padT}
+              width={innerW / Math.max(data.length - 1, 1)}
+              height={innerH}
+              fill="transparent"
+              onMouseEnter={() => setHoverIdx(i)}
+              onMouseLeave={() => setHoverIdx(null)}
+              style={{ cursor: "pointer" }}
+            />
+            <circle cx={p.x} cy={p.y} r={hoverIdx === i ? 5 : 3} fill={color} stroke="white" strokeWidth={2} style={{ transition: "r 0.15s" }} />
+          </g>
+        ))}
+        {/* X-axis labels */}
+        {points.map((p, i) => (
+          i % labelEvery === 0 || i === points.length - 1 ? (
+            <text key={i} x={p.x} y={height - 10} fontSize="10" fill="#9CA3AF" textAnchor="middle">{fmtLabel(p.day)}</text>
+          ) : null
+        ))}
+      </svg>
+      {/* Tooltip */}
+      {hoverIdx !== null && points[hoverIdx] && (() => {
+        const p = points[hoverIdx];
+        const leftPct = (p.x / width) * 100;
+        const topPct = (p.y / height) * 100;
+        return (
+          <div
+            className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs text-white shadow-lg"
+            style={{ left: `${leftPct}%`, top: `${topPct}%`, marginTop: "-8px" }}
+          >
+            <div className="font-semibold">{p.value}</div>
+            <div className="text-[10px] text-gray-300">{fmtLabel(p.day)}</div>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+// Minimal sparkline — just a small line, no axes, for KPI cards.
+function Sparkline({ data, color, height = 32 }: { data: number[]; color: string; height?: number }) {
+  if (data.length === 0) return <div style={{ height }} className="w-full" />;
+  const width = 100;
+  const max = Math.max(1, ...data);
+  const min = 0;
+  const range = max - min || 1;
+  const points = data.map((v, i) => {
+    const x = data.length === 1 ? width / 2 : (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * height;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  const areaPoints = data.length > 1 ? `0,${height} ${points} ${width},${height}` : "";
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="w-full" style={{ height }}>
+      {data.length > 1 && <polygon points={areaPoints} fill={color} opacity={0.12} />}
+      {data.length > 1 && <polyline points={points} fill="none" stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />}
+    </svg>
+  );
+}
+
+// Pretty format for revenue
+function fmtEur(n: number): string {
+  if (n >= 10000) return `€${Math.round(n / 1000)}k`;
+  if (n >= 1000) return `€${(n / 1000).toFixed(1)}k`;
+  return `€${Math.round(n)}`;
+}
+
+// Classify UTM source into a readable channel with color
+function sourceLabel(source: string, medium: string | null): { name: string; color: string } {
+  const s = source.toLowerCase();
+  if (medium === "cpc" || s.includes("ads")) return { name: `${source} (ads)`, color: "bg-amber-100 text-amber-700" };
+  if (s === "direct") return { name: "Direct", color: "bg-gray-100 text-gray-700" };
+  if (s === "google") return { name: "Google (organic)", color: "bg-blue-100 text-blue-700" };
+  if (s.includes("instagram") || s.includes("facebook") || s.includes("tiktok")) return { name: source, color: "bg-pink-100 text-pink-700" };
+  return { name: source, color: "bg-warm-100 text-gray-700" };
+}
+
+interface OverviewData {
+  period: string;
+  bucket: "hour" | "day" | "week" | "month";
+  summary: {
+    visitors: number; visitorsPrev: number;
+    sessions: number; sessionsPrev: number;
+    bookings: number; bookingsPrev: number;
+    revenue: number; revenuePrev: number;
+    conversionRate: number; conversionRatePrev: number;
+    inquiries: number; pending: number; cancelled: number;
+  };
+  live: { count: number };
+  sessionSeries: { day: string; sessions: string; visitors: string }[];
+  bookingSeries: { day: string; bookings: string; revenue: string }[];
+  revenueBySource: { source: string; medium: string | null; users: string; paid_bookings: string; revenue: string }[];
+  revenueByLocation: { location_slug: string; bookings: string; revenue: string }[];
+  funnel: { visitors: number; viewed: number; inquiry: number; created: number; paid: number };
+  heatmap: { dow: number; hour: number; count: number }[];
+}
+
+// Sessions heatmap: weekday × hour. Darker = more sessions.
+// Use the 90th percentile as the color scale max so rare spikes don't wash out the rest of the grid.
+function HeatmapChart({ data }: { data: { dow: number; hour: number; count: number }[] }) {
+  const matrix: Record<string, number> = {};
+  for (const d of data) matrix[`${d.dow}-${d.hour}`] = d.count;
+  const counts = data.map(d => d.count).filter(c => c > 0).sort((a, b) => a - b);
+  if (counts.length === 0) return <p className="text-xs text-gray-400">No data</p>;
+  const p90Index = Math.floor(counts.length * 0.9);
+  const colorMax = Math.max(1, counts[p90Index] || counts[counts.length - 1]);
+  // Display Monday first (ISO week order). dow values come from JS getDay(): 0=Sun..6=Sat.
+  const days: Array<{ label: string; dow: number }> = [
+    { label: "Mon", dow: 1 },
+    { label: "Tue", dow: 2 },
+    { label: "Wed", dow: 3 },
+    { label: "Thu", dow: 4 },
+    { label: "Fri", dow: 5 },
+    { label: "Sat", dow: 6 },
+    { label: "Sun", dow: 0 },
+  ];
+  return (
+    <div className="w-full overflow-x-auto">
+      <div className="inline-block min-w-full">
+        {/* Hour header */}
+        <div className="flex">
+          <div className="w-10 shrink-0" />
+          {Array.from({ length: 24 }).map((_, h) => (
+            <div key={h} className="flex-1 min-w-[14px] text-center text-[9px] text-gray-400">
+              {h % 3 === 0 ? h : ""}
+            </div>
+          ))}
+        </div>
+        {/* Rows */}
+        {days.map(({ label: day, dow }) => (
+          <div key={dow} className="flex items-center">
+            <div className="w-10 shrink-0 text-[10px] font-medium text-gray-500 pr-2 text-right">{day}</div>
+            {Array.from({ length: 24 }).map((_, h) => {
+              const count = matrix[`${dow}-${h}`] || 0;
+              // Cap intensity at 1 — anything above p90 stays at max opacity instead of spiking.
+              const intensity = Math.min(1, count / colorMax);
+              const bg = count === 0 ? "#F3EDE6" : `rgba(201, 69, 54, ${0.15 + intensity * 0.75})`;
+              return (
+                <div
+                  key={h}
+                  className="flex-1 min-w-[14px] aspect-square rounded-sm m-[1px]"
+                  style={{ backgroundColor: bg }}
+                  title={`${day} ${h.toString().padStart(2, "0")}:00 — ${count} sessions`}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OverviewTab({ period, customFrom, customTo }: { period: string; customFrom: string; customTo: string }) {
+  const [data, setData] = useState<OverviewData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const qs = new URLSearchParams({ period });
+    if (period === "custom" && customFrom && customTo) { qs.set("from", customFrom); qs.set("to", customTo); }
+    fetch(`/api/admin/overview?${qs.toString()}`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [period, customFrom, customTo]);
+
+  if (loading) return <p className="text-sm text-gray-400">Loading overview…</p>;
+  if (!data) return <p className="text-sm text-gray-400">No data</p>;
+
+  const { summary: s, funnel: f } = data;
+  const sessionSpark = data.sessionSeries.map(d => parseInt(d.visitors));
+  const bookingSpark = data.bookingSeries.map(d => parseInt(d.bookings));
+  const revenueSpark = data.bookingSeries.map(d => parseFloat(d.revenue));
+
+  const kpis = [
+    { label: "Unique Visitors", value: s.visitors.toLocaleString(), prev: s.visitorsPrev, current: s.visitors, spark: sessionSpark, color: "#6366F1" },
+    { label: "Sessions", value: s.sessions.toLocaleString(), prev: s.sessionsPrev, current: s.sessions, spark: data.sessionSeries.map(d => parseInt(d.sessions)), color: "#C94536" },
+    { label: "Paid Bookings", value: s.bookings.toLocaleString(), prev: s.bookingsPrev, current: s.bookings, spark: bookingSpark, color: "#10B981" },
+    { label: "Revenue", value: fmtEur(s.revenue), prev: s.revenuePrev, current: s.revenue, spark: revenueSpark, color: "#10B981" },
+    { label: "Conversion Rate", value: `${s.conversionRate}%`, prev: s.conversionRatePrev, current: s.conversionRate, spark: [], color: "#A855F7" },
+  ];
+
+  const funnelSteps = [
+    { key: "visitors", label: "Visitors", count: f.visitors },
+    { key: "viewed", label: "Viewed a photographer", count: f.viewed },
+    { key: "inquiry", label: "Sent inquiry", count: f.inquiry },
+    { key: "created", label: "Created booking", count: f.created },
+    { key: "paid", label: "Paid", count: f.paid },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* KPI cards with sparklines */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {kpis.map(k => (
+          <div key={k.label} className="rounded-xl border border-warm-200 bg-white p-4">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{k.label}</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">{k.value}</p>
+            {k.prev > 0 && typeof k.current === "number" && (
+              <Change current={k.current} previous={k.prev} />
+            )}
+            {k.spark.length > 0 && (
+              <div className="mt-2">
+                <Sparkline data={k.spark} color={k.color} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Funnel */}
+      <div className="rounded-xl border border-warm-200 bg-white p-5">
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">Conversion Funnel</h3>
+        <div className="space-y-2">
+          {funnelSteps.map((step, i) => {
+            const first = funnelSteps[0].count || 1;
+            const prev = i > 0 ? funnelSteps[i - 1].count || 1 : step.count;
+            const pctTotal = Math.round((step.count / first) * 100);
+            const pctStep = i === 0 ? 100 : Math.round((step.count / prev) * 100);
+            return (
+              <div key={step.key}>
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                  <span className="font-medium text-gray-700">{step.label}</span>
+                  <span>
+                    <strong className="text-gray-900">{step.count.toLocaleString()}</strong>
+                    <span className="ml-2 text-gray-400">· {pctTotal}% of visitors {i > 0 && `· ${pctStep}% from prev`}</span>
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-warm-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${pctTotal}%`, minWidth: step.count > 0 ? "4px" : "0" }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Revenue by Source + Location */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-warm-200 bg-white p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Revenue by Source</h3>
+          {data.revenueBySource.length === 0 ? (
+            <p className="text-xs text-gray-400">No data for this period</p>
+          ) : (
+            <div className="space-y-2">
+              {data.revenueBySource.map((r, i) => {
+                const lbl = sourceLabel(r.source, r.medium);
+                const rev = parseFloat(r.revenue);
+                const bookings = parseInt(r.paid_bookings);
+                const users = parseInt(r.users);
+                return (
+                  <div key={`${r.source}-${r.medium}-${i}`} className="flex items-center justify-between rounded-lg border border-warm-100 px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${lbl.color}`}>{lbl.name}</span>
+                      <div className="mt-0.5 text-[11px] text-gray-500">{users} users · {bookings} paid</div>
+                    </div>
+                    <div className="text-right ml-3 shrink-0">
+                      <div className="text-sm font-bold text-gray-900">{fmtEur(rev)}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="rounded-xl border border-warm-200 bg-white p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Revenue by Location</h3>
+          {data.revenueByLocation.length === 0 ? (
+            <p className="text-xs text-gray-400">No paid bookings for this period</p>
+          ) : (
+            <div className="space-y-2">
+              {data.revenueByLocation.map(r => {
+                const rev = parseFloat(r.revenue);
+                const bookings = parseInt(r.bookings);
+                return (
+                  <div key={r.location_slug} className="flex items-center justify-between rounded-lg border border-warm-100 px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm font-medium text-gray-900 capitalize">{r.location_slug}</span>
+                      <div className="text-[11px] text-gray-500">{bookings} bookings</div>
+                    </div>
+                    <div className="text-sm font-bold text-gray-900">{fmtEur(rev)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Secondary info: inquiries, pending, cancelled */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Inquiries (not booking)", value: s.inquiries, color: "text-blue-600" },
+          { label: "Pending bookings", value: s.pending, color: "text-amber-600" },
+          { label: "Cancelled", value: s.cancelled, color: "text-gray-500" },
+        ].map(c => (
+          <div key={c.label} className="rounded-xl border border-warm-200 bg-white p-3 text-center">
+            <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider">{c.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Heatmap: when visitors come (weekday × hour) */}
+      {data.heatmap && data.heatmap.length > 0 && (
+        <div className="rounded-xl border border-warm-200 bg-white p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">When do visitors come? <span className="font-normal text-gray-400">(sessions by weekday × hour)</span></h3>
+          <HeatmapChart data={data.heatmap} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Real-time plate — polls "live count" every 15 seconds
+function LiveCounter() {
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => {
+      fetch("/api/admin/overview?period=today")
+        .then(r => r.json())
+        .then(d => setCount(d.live?.count ?? 0))
+        .catch(() => {});
+    };
+    tick();
+    const id = setInterval(tick, 15000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+      </span>
+      {count === null ? "—" : count} visitor{count === 1 ? "" : "s"} on site now
+    </div>
+  );
+}
+
+interface ClarityData {
+  numOfDays: number;
+  period: string;
+  note: string;
+  dashboardUrl: string;
+  metrics: Record<string, Array<Record<string, string | number | null>>>;
+}
+
+function ClarityTab({ period }: { period: string }) {
+  const [data, setData] = useState<ClarityData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/admin/clarity?period=${period}`)
+      .then(async r => { if (!r.ok) throw new Error((await r.json()).error || "Failed"); return r.json(); })
+      .then(d => { setData(d); setError(""); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
+  }, [period]);
+
+  if (loading) return <p className="text-sm text-gray-400">Loading Clarity data…</p>;
+  if (error) return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+      <p className="font-semibold">Clarity API error</p>
+      <p className="mt-1 text-xs">{error}</p>
+    </div>
+  );
+  if (!data) return null;
+
+  const m = data.metrics;
+  const traffic = m.Traffic?.[0];
+  const engagement = m.EngagementTime?.[0];
+  const scroll = m.ScrollDepth?.[0];
+  const dead = m.DeadClickCount?.[0];
+  const rage = m.RageClickCount?.[0];
+  const quickback = m.QuickbackClick?.[0];
+  const scriptErr = m.ScriptErrorCount?.[0];
+  const scrollAvg = scroll?.averageScrollDepth;
+  const engActive = engagement?.activeTime ? Number(engagement.activeTime) : 0;
+  const engTotal = engagement?.totalTime ? Number(engagement.totalTime) : 0;
+
+  const headerMetrics = [
+    { label: "Sessions", value: traffic?.totalSessionCount ?? "0", color: "text-gray-900" },
+    { label: "Bot sessions", value: traffic?.totalBotSessionCount ?? "0", color: "text-gray-400" },
+    { label: "Unique Users", value: traffic?.distinctUserCount ?? "0", color: "text-gray-900" },
+    { label: "Pages / Session", value: traffic?.pagesPerSessionPercentage != null ? Number(traffic.pagesPerSessionPercentage).toFixed(2) : "—", color: "text-gray-900" },
+    { label: "Avg Scroll Depth", value: scrollAvg != null ? `${Number(scrollAvg).toFixed(0)}%` : "—", color: "text-gray-900" },
+    { label: "Active Time (avg)", value: `${engActive}s`, color: "text-gray-900", sub: `of ${engTotal}s total` },
+  ];
+
+  const issues = [
+    { label: "Dead Clicks", data: dead, color: "text-amber-700", desc: "Clicks that didn't do anything (users expected action)." },
+    { label: "Rage Clicks", data: rage, color: "text-red-600", desc: "Rapid repeated clicks → frustration." },
+    { label: "Quick Back", data: quickback, color: "text-orange-600", desc: "User landed on page and immediately hit back." },
+    { label: "Script Errors", data: scriptErr, color: "text-rose-600", desc: "JS errors during the session." },
+  ];
+
+  const renderTopList = (items: Array<Record<string, string | number | null>>, nameKey: string, countKey = "sessionsCount", limit = 10) => (
+    <div className="space-y-1.5">
+      {(items || []).slice(0, limit).map((it, i) => (
+        <div key={i} className="flex items-center justify-between rounded-lg border border-warm-100 px-3 py-2">
+          <span className="text-xs text-gray-700 truncate">{it[nameKey] || "(none)"}</span>
+          <span className="text-xs font-semibold text-gray-900">{it[countKey]}</span>
+        </div>
+      ))}
+      {(!items || items.length === 0) && <p className="text-xs text-gray-400">No data</p>}
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      {/* Clarity-specific note + Dashboard link */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <div>
+          <p className="text-sm font-semibold text-blue-800">Microsoft Clarity — behavior analytics</p>
+          <p className="mt-0.5 text-xs text-blue-700">
+            Data from Clarity Data Export API (last {data.numOfDays} day{data.numOfDays === 1 ? "" : "s"}).
+            Session recordings & visual heatmaps are in the Clarity dashboard.
+          </p>
+        </div>
+        <a
+          href={data.dashboardUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+        >
+          Open Clarity Dashboard →
+        </a>
+      </div>
+
+      {/* Top metrics */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {headerMetrics.map(h => (
+          <div key={h.label} className="rounded-xl border border-warm-200 bg-white p-3">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{h.label}</p>
+            <p className={`mt-1 text-lg font-bold ${h.color}`}>{h.value}</p>
+            {h.sub && <p className="text-[10px] text-gray-400">{h.sub}</p>}
+          </div>
+        ))}
+      </div>
+
+      {/* User frustration signals */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">User frustration signals</h3>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {issues.map(item => {
+            const pct = item.data?.sessionsWithMetricPercentage != null ? Number(item.data.sessionsWithMetricPercentage) : 0;
+            const subTotal = item.data?.subTotal != null ? String(item.data.subTotal) : "0";
+            return (
+              <div key={item.label} className="rounded-xl border border-warm-200 bg-white p-3">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{item.label}</p>
+                <p className={`mt-1 text-lg font-bold ${item.color}`}>{pct.toFixed(1)}%</p>
+                <p className="text-[10px] text-gray-400">{subTotal} events · of sessions</p>
+                <p className="mt-1 text-[10px] text-gray-500 leading-tight">{item.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Breakdowns in two columns */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Popular Pages</h3>
+          {renderTopList(m.PopularPages || [], "url", "visitsCount")}
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Top Referrers</h3>
+          {renderTopList(m.ReferrerUrl || [], "name", "sessionsCount")}
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">By Device</h3>
+          {renderTopList(m.Device || [], "name")}
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">By Browser</h3>
+          {renderTopList(m.Browser || [], "name", "sessionsCount", 8)}
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">By Country</h3>
+          {renderTopList(m.Country || [], "name", "sessionsCount", 10)}
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">By OS</h3>
+          {renderTopList(m.OS || [], "name")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface BehaviorData {
+  flows: { sequence: string; count: number }[];
+  landingPages: { page: string; sessions: number; bounced: number; bounceRate: number }[];
+  dropOff: { fromPage: string; toPage: string; count: number }[];
+}
+
+function BehaviorTab({ period, customFrom, customTo }: { period: string; customFrom: string; customTo: string }) {
+  const [data, setData] = useState<BehaviorData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const qs = new URLSearchParams({ period });
+    if (period === "custom" && customFrom && customTo) { qs.set("from", customFrom); qs.set("to", customTo); }
+    fetch(`/api/admin/behavior?${qs.toString()}`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [period, customFrom, customTo]);
+
+  if (loading) return <p className="text-sm text-gray-400">Loading behavior…</p>;
+  if (!data) return <p className="text-sm text-gray-400">No data</p>;
+
+  return (
+    <div className="space-y-5">
+      {/* Top user flows */}
+      <div className="rounded-xl border border-warm-200 bg-white p-5">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Top User Flows <span className="font-normal text-gray-400">(most common page sequences)</span></h3>
+        {data.flows.length === 0 ? (
+          <p className="text-xs text-gray-400">Not enough data</p>
+        ) : (
+          <div className="space-y-2">
+            {data.flows.map((f, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-warm-50 px-3 py-2">
+                <span className="text-[10px] font-bold text-gray-400">#{i + 1}</span>
+                <div className="flex-1 min-w-0 text-xs text-gray-700 truncate" title={f.sequence}>
+                  {f.sequence.split(" → ").map((page, idx, arr) => (
+                    <span key={idx}>
+                      <span className="font-mono">{page}</span>
+                      {idx < arr.length - 1 && <span className="mx-1 text-gray-400">→</span>}
+                    </span>
+                  ))}
+                </div>
+                <span className="shrink-0 text-xs font-semibold text-gray-900">{f.count} sessions</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Landing pages with bounce rate */}
+      <div className="rounded-xl border border-warm-200 bg-white p-5">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Landing Pages & Bounce Rate</h3>
+        <div className="overflow-auto max-h-96">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-warm-50 border-b border-warm-200">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium text-gray-500">Page</th>
+                <th className="px-3 py-2 text-right font-medium text-gray-500">Sessions</th>
+                <th className="px-3 py-2 text-right font-medium text-gray-500">Bounced</th>
+                <th className="px-3 py-2 text-right font-medium text-gray-500">Bounce Rate</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-warm-100">
+              {data.landingPages.map(p => (
+                <tr key={p.page}>
+                  <td className="px-3 py-2 font-mono text-gray-900 truncate max-w-md">{p.page}</td>
+                  <td className="px-3 py-2 text-right text-gray-700">{p.sessions}</td>
+                  <td className="px-3 py-2 text-right text-gray-500">{p.bounced}</td>
+                  <td className={`px-3 py-2 text-right font-semibold ${p.bounceRate >= 70 ? "text-red-600" : p.bounceRate >= 50 ? "text-amber-600" : "text-green-600"}`}>
+                    {p.bounceRate}%
+                  </td>
+                </tr>
+              ))}
+              {data.landingPages.length === 0 && (
+                <tr><td colSpan={4} className="px-3 py-4 text-center text-gray-400">No data</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Top drop-off transitions */}
+      <div className="rounded-xl border border-warm-200 bg-white p-5">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Drop-off Points <span className="font-normal text-gray-400">(pages where users leave the site after)</span></h3>
+        {data.dropOff.length === 0 ? (
+          <p className="text-xs text-gray-400">Not enough data</p>
+        ) : (
+          <div className="space-y-2">
+            {data.dropOff.map((d, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-warm-50 px-3 py-2">
+                <span className="text-xs font-mono text-gray-700 truncate flex-1" title={d.fromPage}>{d.fromPage}</span>
+                <span className="shrink-0 text-xs text-gray-400">→ exit</span>
+                <span className="shrink-0 text-xs font-semibold text-red-600">{d.count} sessions</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // Convert any ISO 3166-1 alpha-2 code to emoji flag
@@ -274,14 +952,27 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
   const [roleFilter, setRoleFilter] = useState("all");
   const [countryFilter, setCountryFilter] = useState("all");
   const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [period, setPeriod] = useState<PeriodKey>("30d");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   // Initial load + auto-refresh every 15s
   const fetchVisitors = useCallback(() => {
-    fetch(`/api/admin/visitors?limit=${sessionLimit}&role=${roleFilter}&country=${countryFilter}`)
+    const qs = new URLSearchParams({
+      limit: String(sessionLimit),
+      role: roleFilter,
+      country: countryFilter,
+      period,
+    });
+    if (period === "custom" && customFrom && customTo) {
+      qs.set("from", customFrom);
+      qs.set("to", customTo);
+    }
+    fetch(`/api/admin/visitors?${qs.toString()}`)
       .then(r => r.json())
       .then(d => { setVd(d); setVLoading(false); })
       .catch(() => setVLoading(false));
-  }, [sessionLimit, roleFilter, countryFilter]);
+  }, [sessionLimit, roleFilter, countryFilter, period, customFrom, customTo]);
 
   useEffect(() => {
     fetchVisitors();
@@ -298,7 +989,6 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
   if (!vd) return <p className="text-sm text-gray-400">No visitor data yet</p>;
 
   const { summary: s, today: t } = vd;
-  const maxDaily = Math.max(...vd.dailySessions.map(d => Math.max(parseInt(d.sessions), parseInt(d.visitors))), 1);
 
   return (
     <div className="space-y-6">
@@ -322,118 +1012,66 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
         ))}
       </div>}
 
-      {!recentOnly && <>{/* Daily chart */}
-      {vd.dailySessions.length > 0 && (
-        <div>
-          <div className="flex items-center gap-4 mb-2">
-            <h3 className="text-sm font-semibold text-gray-700">Sessions (last 14 days)</h3>
-            <div className="flex items-center gap-3 text-[11px] text-gray-500">
-              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary-500" /> Sessions</span>
-              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-indigo-400" /> Unique visitors</span>
+      {!recentOnly && <>
+      {/* Period selector + 2 line charts (sessions, unique visitors) */}
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {PERIOD_OPTIONS.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setPeriod(opt.key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                period === opt.key
+                  ? "bg-primary-600 text-white shadow-sm"
+                  : "bg-white border border-warm-200 text-gray-600 hover:border-primary-300"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+          {period === "custom" && (
+            <div className="flex items-center gap-2 ml-2">
+              <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className="rounded-lg border border-warm-200 bg-white px-2 py-1 text-xs" />
+              <span className="text-xs text-gray-400">→</span>
+              <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className="rounded-lg border border-warm-200 bg-white px-2 py-1 text-xs" />
+            </div>
+          )}
+        </div>
+
+        {vd.dailySessions.length > 0 ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-warm-200 bg-white p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary-500 mr-2 align-middle" />
+                Sessions
+              </h3>
+              <LineChart
+                data={vd.dailySessions.map(d => ({ day: d.day, value: parseInt(d.sessions) }))}
+                color="#C94536"
+                bucket={vd.seriesBucket || "day"}
+                height={260}
+              />
+            </div>
+            <div className="rounded-xl border border-warm-200 bg-white p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-indigo-500 mr-2 align-middle" />
+                Unique visitors
+              </h3>
+              <LineChart
+                data={vd.dailySessions.map(d => ({ day: d.day, value: parseInt(d.visitors) }))}
+                color="#6366F1"
+                bucket={vd.seriesBucket || "day"}
+                height={260}
+              />
             </div>
           </div>
-          <div className="relative rounded-xl border border-warm-200 bg-white p-4">
-            <div className="flex">
-              {/* Fixed Y-axis */}
-              <div className="shrink-0 w-8 flex flex-col justify-between pr-1" style={{ height: 180 }}>
-                {[1, 0.75, 0.5, 0.25, 0].map((pct) => (
-                  <span key={pct} className="text-[9px] text-gray-300 text-right leading-none">{Math.round(maxDaily * pct)}</span>
-                ))}
-              </div>
-              {/* Scrollable chart area */}
-              <div className="flex-1 overflow-x-auto min-w-0">
-                <div className="relative flex items-end gap-1 sm:gap-2" style={{ height: 180 }}>
-              {[...vd.dailySessions].reverse().map(d => {
-                const sessCount = parseInt(d.sessions);
-                const visCount = parseInt(d.visitors);
-                const barH = 140;
-                const sessH = maxDaily > 0 ? Math.max((sessCount / maxDaily) * barH, sessCount > 0 ? 4 : 0) : 0;
-                const visH = maxDaily > 0 ? Math.max((visCount / maxDaily) * barH, visCount > 0 ? 4 : 0) : 0;
-                return (
-                  <div key={d.day} className="flex-1 flex flex-col items-center justify-end" title={`${d.day}: ${sessCount} sessions, ${visCount} visitors`}>
-                    <div className="flex items-end gap-[2px] w-full justify-center">
-                      <div className="flex-1 max-w-3 rounded-t-sm bg-primary-400" style={{ height: sessH }} />
-                      <div className="flex-1 max-w-3 rounded-t-sm bg-indigo-300" style={{ height: visH }} />
-                    </div>
-                    <span className="text-[9px] text-gray-400 mt-2">{d.day.slice(8)}.{d.day.slice(5, 7)}</span>
-                  </div>
-                );
-              })}
-                </div>
-              </div>
-            </div>
+        ) : (
+          <div className="rounded-xl border border-warm-200 bg-white p-6 text-center text-sm text-gray-400">
+            No data for this period
           </div>
-        </div>
-      )}
-
-      {/* Devices + Countries + Sources */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {/* Devices */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Devices</h3>
-          <div className="space-y-1.5">
-            {vd.devices.map(d => (
-              <div key={d.device_type} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-3 py-2">
-                <span className="text-sm text-gray-700">
-                  {d.device_type === "mobile" ? "Mobile" : d.device_type === "desktop" ? "Desktop" : d.device_type === "tablet" ? "Tablet" : d.device_type}
-                </span>
-                <span className="text-sm font-semibold text-gray-900">{d.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Countries */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Countries</h3>
-          <div className="space-y-1.5 max-h-48 overflow-auto">
-            {vd.countries.map(c => (
-              <div key={c.country} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-3 py-2">
-                <span className="text-sm text-gray-700">{getCountry(c.country).flag} {getCountry(c.country).name}</span>
-                <span className="text-sm font-semibold text-gray-900">{c.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Sources */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Traffic Sources</h3>
-          <div className="space-y-1.5 max-h-48 overflow-auto">
-            {vd.sources.map(s => (
-              <div key={s.source} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-3 py-2">
-                <span className="text-sm text-gray-700 truncate">{s.source}</span>
-                <span className="text-sm font-semibold text-gray-900 ml-2">{s.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Top Landing Pages */}
-      {vd.landingPages.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Top Landing Pages</h3>
-          <div className="rounded-xl border border-warm-200 bg-white overflow-auto max-h-64">
-            <table className="w-full text-xs sm:text-sm">
-              <thead className="bg-warm-50 border-b border-warm-200 sticky top-0">
-                <tr>
-                  <th className="px-3 py-2 text-left text-gray-500 font-medium">Page</th>
-                  <th className="px-3 py-2 text-right text-gray-500 font-medium">Sessions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-warm-100">
-                {vd.landingPages.map(p => (
-                  <tr key={p.page}>
-                    <td className="px-3 py-2 text-gray-900 truncate max-w-xs">{p.page}</td>
-                    <td className="px-3 py-2 text-right text-gray-500">{p.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
       </>}
 
       {/* Recent Sessions */}
@@ -644,16 +1282,23 @@ export function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<string>("visitors");
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  // Global period — applies to Overview + Visitors charts. Other tabs (GSC, Ads) run on their own windows for now.
+  const [period, setPeriod] = useState<PeriodKey>("30d");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
   const queriesSort = useSortable<{ query: string; clicks: number; impressions: number; ctr: number; position: number }>("clicks", "desc");
   const pagesSort = useSortable<{ path: string; views: number; users: number }>("views", "desc");
 
   useEffect(() => {
-    fetch("/api/admin/analytics")
+    setLoading(true);
+    const qs = new URLSearchParams({ period });
+    if (period === "custom" && customFrom && customTo) { qs.set("from", customFrom); qs.set("to", customTo); }
+    fetch(`/api/admin/analytics?${qs.toString()}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch((e) => { setError(e.message); setLoading(false); });
-  }, []);
+  }, [period, customFrom, customTo]);
 
   if (loading) return <p className="text-sm text-gray-400">Loading analytics...</p>;
   if (error) return <p className="text-sm text-red-500">Error: {error}</p>;
@@ -664,6 +1309,33 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-5 sm:space-y-8">
+      {/* Header: global period selector + real-time counter */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {PERIOD_OPTIONS.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setPeriod(opt.key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                period === opt.key
+                  ? "bg-primary-600 text-white shadow-sm"
+                  : "bg-white border border-warm-200 text-gray-600 hover:border-primary-300"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+          {period === "custom" && (
+            <div className="flex items-center gap-2 ml-2">
+              <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className="rounded-lg border border-warm-200 bg-white px-2 py-1 text-xs" />
+              <span className="text-xs text-gray-400">→</span>
+              <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className="rounded-lg border border-warm-200 bg-white px-2 py-1 text-xs" />
+            </div>
+          )}
+        </div>
+        <LiveCounter />
+      </div>
+
       {/* Sub-tabs */}
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         <div className="inline-flex gap-1 rounded-xl bg-warm-100 p-1 min-w-full sm:min-w-0">
@@ -683,6 +1355,32 @@ export function AnalyticsDashboard() {
           ))}
         </div>
       </div>
+
+      {/* === OVERVIEW TAB === */}
+      {activeTab === "overview" && (
+        <>
+          {data.insights && data.insights.length > 0 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+              <h3 className="flex items-center gap-2 font-semibold text-amber-800">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                Smart Insights
+              </h3>
+              <ul className="mt-3 space-y-1.5">
+                {data.insights.map((insight, i) => (
+                  <li key={i} className="text-sm text-amber-700">• {insight}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <OverviewTab period={period} customFrom={customFrom} customTo={customTo} />
+        </>
+      )}
+
+      {/* === BEHAVIOR TAB === */}
+      {activeTab === "behavior" && <BehaviorTab period={period} customFrom={customFrom} customTo={customTo} />}
+
+      {/* === CLARITY TAB === */}
+      {activeTab === "clarity" && <ClarityTab period={period} />}
 
       {/* Smart Insights — at top of Visitors tab */}
       {activeTab === "visitors" && data.insights && data.insights.length > 0 && (
@@ -975,20 +1673,28 @@ function GoogleAdsSection() {
       ) : (
         <div className="space-y-4">
           {/* Google Ads API metrics */}
-          {ga && (
+          {ga && (() => {
+            const roas = ga.totalCost > 0 ? stats.revenueFromAds / ga.totalCost : 0;
+            const costPerPaid = stats.paidBookings > 0 ? ga.totalCost / stats.paidBookings : 0;
+            const roasColor = roas >= 1 ? "text-green-600" : roas >= 0.5 ? "text-amber-600" : "text-red-600";
+            const roasBgColor = roas >= 1 ? "bg-green-50 border-green-200" : roas >= 0.5 ? "bg-amber-50 border-amber-200" : "bg-red-50 border-red-200";
+            return (
             <>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
                 {[
                   { label: "Spend", value: `€${ga.totalCost.toFixed(0)}`, color: "text-gray-900" },
+                  { label: "Revenue from Ads", value: `€${Math.round(stats.revenueFromAds)}`, color: "text-green-600" },
+                  { label: "ROAS", value: `${roas.toFixed(2)}x`, color: roasColor, bg: roasBgColor, hint: roas >= 1 ? "Profitable" : roas >= 0.5 ? "Break-even zone" : "Losing money" },
+                  { label: "Cost / Paid Booking", value: stats.paidBookings > 0 ? `€${costPerPaid.toFixed(0)}` : "—", color: "text-gray-900" },
                   { label: "Impressions", value: ga.totalImpressions.toLocaleString(), color: "text-gray-900" },
                   { label: "Clicks", value: ga.totalClicks.toString(), color: "text-blue-600" },
                   { label: "CTR", value: `${ga.ctr}%`, color: "text-gray-900" },
                   { label: "Avg CPC", value: `€${ga.avgCpc}`, color: "text-gray-900" },
-                  { label: "Conversions", value: ga.totalConversions.toString(), color: "text-green-600" },
                 ].map((item, i) => (
-                  <div key={i} className="rounded-xl border border-warm-200 bg-white p-3">
+                  <div key={i} className={`rounded-xl border p-3 ${item.bg || "border-warm-200 bg-white"}`}>
                     <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">{item.label}</p>
                     <p className={`mt-1 text-lg font-bold ${item.color}`}>{item.value}</p>
+                    {item.hint && <p className={`text-[10px] font-medium mt-0.5 ${item.color}`}>{item.hint}</p>}
                   </div>
                 ))}
               </div>
@@ -1190,7 +1896,8 @@ function GoogleAdsSection() {
                 </div>
               )}
             </>
-          )}
+            );
+          })()}
 
         </div>
       )}

@@ -20,12 +20,51 @@ async function isAdmin(): Promise<boolean> {
   return user?.role === "admin";
 }
 
-export async function GET() {
+// Resolve period query param → GA4/GSC date range strings + friendly label.
+function resolvePeriodDates(period: string, from?: string | null, to?: string | null): {
+  startDate: string; endDate: string;
+  prevStartDate: string; prevEndDate: string;
+  label: string;
+  days: number;
+} {
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const yesterdayISO = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const dayBeforeYesterdayISO = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+  switch (period) {
+    case "today":
+      return { startDate: todayISO, endDate: todayISO, prevStartDate: yesterdayISO, prevEndDate: yesterdayISO, label: "Today", days: 1 };
+    case "yesterday":
+      return { startDate: yesterdayISO, endDate: yesterdayISO, prevStartDate: dayBeforeYesterdayISO, prevEndDate: dayBeforeYesterdayISO, label: "Yesterday", days: 1 };
+    case "7d":
+      return { startDate: "7daysAgo", endDate: "today", prevStartDate: "14daysAgo", prevEndDate: "8daysAgo", label: "Last 7 days", days: 7 };
+    case "year":
+      return { startDate: "365daysAgo", endDate: "today", prevStartDate: "730daysAgo", prevEndDate: "366daysAgo", label: "Last year", days: 365 };
+    case "custom": {
+      if (from && to && /^\d{4}-\d{2}-\d{2}$/.test(from) && /^\d{4}-\d{2}-\d{2}$/.test(to)) {
+        const spanDays = Math.max(1, Math.floor((new Date(to).getTime() - new Date(from).getTime()) / 86400000) + 1);
+        const prevToDate = new Date(new Date(from).getTime() - 86400000).toISOString().slice(0, 10);
+        const prevFromDate = new Date(new Date(from).getTime() - spanDays * 86400000).toISOString().slice(0, 10);
+        return { startDate: from, endDate: to, prevStartDate: prevFromDate, prevEndDate: prevToDate, label: `${from} → ${to}`, days: spanDays };
+      }
+    }
+    case "30d":
+    default:
+      return { startDate: "30daysAgo", endDate: "today", prevStartDate: "60daysAgo", prevEndDate: "31daysAgo", label: "Last 30 days", days: 30 };
+  }
+}
+
+export async function GET(req: Request) {
   if (!(await isAdmin())) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });
   }
 
-  const result: Record<string, unknown> = {};
+  const url = new URL(req.url);
+  const period = url.searchParams.get("period") || "30d";
+  const from = url.searchParams.get("from");
+  const to = url.searchParams.get("to");
+  const range = resolvePeriodDates(period, from, to);
+
+  const result: Record<string, unknown> = { periodLabel: range.label };
 
   // ===== GA4 Data =====
   try {
@@ -37,8 +76,8 @@ export async function GET() {
     const [overviewResponse] = await analyticsClient.runReport({
       property: `properties/${GA4_PROPERTY}`,
       dateRanges: [
-        { startDate: "30daysAgo", endDate: "today" },
-        { startDate: "60daysAgo", endDate: "31daysAgo" },
+        { startDate: range.startDate, endDate: range.endDate },
+        { startDate: range.prevStartDate, endDate: range.prevEndDate },
       ],
       metrics: [
         { name: "activeUsers" },
@@ -67,7 +106,7 @@ export async function GET() {
     // Top pages
     const [pagesResponse] = await analyticsClient.runReport({
       property: `properties/${GA4_PROPERTY}`,
-      dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+      dateRanges: [{ startDate: range.startDate, endDate: range.endDate }],
       dimensions: [{ name: "pagePath" }],
       metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }],
       orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
@@ -83,7 +122,7 @@ export async function GET() {
     // Traffic sources
     const [sourcesResponse] = await analyticsClient.runReport({
       property: `properties/${GA4_PROPERTY}`,
-      dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+      dateRanges: [{ startDate: range.startDate, endDate: range.endDate }],
       dimensions: [{ name: "sessionDefaultChannelGroup" }],
       metrics: [{ name: "sessions" }, { name: "activeUsers" }],
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
@@ -99,7 +138,7 @@ export async function GET() {
     // Top countries
     const [countriesResponse] = await analyticsClient.runReport({
       property: `properties/${GA4_PROPERTY}`,
-      dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+      dateRanges: [{ startDate: range.startDate, endDate: range.endDate }],
       dimensions: [{ name: "country" }],
       metrics: [{ name: "activeUsers" }],
       orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
@@ -114,7 +153,7 @@ export async function GET() {
     // Funnel events
     const [funnelResponse] = await analyticsClient.runReport({
       property: `properties/${GA4_PROPERTY}`,
-      dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+      dateRanges: [{ startDate: range.startDate, endDate: range.endDate }],
       dimensions: [{ name: "eventName" }],
       metrics: [{ name: "eventCount" }],
       dimensionFilter: {
@@ -147,9 +186,15 @@ export async function GET() {
 
     const searchConsole = google.searchconsole({ version: "v1", auth });
 
+    // GSC has a ~3 day delay, so shift everything back by 3 days.
+    const GSC_DELAY_MS = 3 * 86400000;
     const now = new Date();
-    const endDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000); // 3 days ago (GSC delay)
-    const startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = period === "custom" && to
+      ? new Date(Math.min(new Date(to).getTime(), now.getTime() - GSC_DELAY_MS))
+      : new Date(now.getTime() - GSC_DELAY_MS);
+    const startDate = period === "custom" && from
+      ? new Date(from)
+      : new Date(endDate.getTime() - range.days * 86400000);
 
     const fmt = (d: Date) => d.toISOString().split("T")[0];
 

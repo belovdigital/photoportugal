@@ -107,14 +107,22 @@ export async function GET(req: Request) {
       GROUP BY visitor_id HAVING COUNT(*) > 10
     )`;
 
-  const roleWhere = roleFilter === "guest" ? "AND vs.user_id IS NULL"
-    : roleFilter === "client" ? "AND u.role = 'client'"
+  // Base filters that can run cheaply against visitor_sessions alone (no users join needed).
+  // Role filter for "guest" is also cheap (just vs.user_id IS NULL). Other role filters need
+  // the users join — applied after we've limited to a small candidate set.
+  const baseRoleWhere = roleFilter === "guest" ? "AND vs.user_id IS NULL" : "";
+  const postRoleWhere = roleFilter === "client" ? "AND u.role = 'client'"
     : roleFilter === "photographer" ? "AND u.role = 'photographer'"
+    : roleFilter === "guest" ? ""
     : "AND (u.role IS NULL OR u.role != 'admin')";
   const countryWhere = countryFilter !== "all" ? `AND vs.country = $1` : "";
   const params: (string | number)[] = [];
   if (countryFilter !== "all") params.push(countryFilter);
-  const limitParam = `$${params.length + 1}`;
+  // Oversample when a post-join role filter could trim rows so we still fill the page.
+  const overSample = (roleFilter === "client" || roleFilter === "photographer") ? 5 : 2;
+  const baseLimitParam = `$${params.length + 1}`;
+  params.push(sessionLimit * overSample);
+  const outerLimitParam = `$${params.length + 1}`;
   params.push(sessionLimit);
   const recentSessions = await query<{
     id: string; visitor_id: string; user_name: string | null; user_email: string | null;
@@ -125,33 +133,96 @@ export async function GET(req: Request) {
     pageview_count: number; started_at: string; pageviews: string | null;
     visit_number: number; total_visits: number;
   }>(`
-    SELECT sub.*, vc.total_visits FROM (
+    WITH base AS (
       SELECT vs.id, vs.visitor_id, vs.user_id,
-             u.name as user_name, u.email as user_email, u.role as user_role,
              vs.device_type, vs.country, vs.language,
              vs.landing_page, vs.referrer, vs.utm_source, vs.utm_medium, vs.utm_term,
-             vs.pageview_count, vs.started_at,
-             vs.pageviews::text,
-             ROW_NUMBER() OVER (PARTITION BY COALESCE(vs.user_id::text, vs.visitor_id) ORDER BY vs.started_at) as visit_number
+             vs.pageview_count, vs.started_at, vs.pageviews::text
       FROM visitor_sessions vs
-      LEFT JOIN users u ON u.id = vs.user_id
-      WHERE 1=1 ${botFilter} ${roleWhere} ${countryWhere}
-    ) sub
+      WHERE 1=1 ${botFilter} ${baseRoleWhere} ${countryWhere}
+      ORDER BY vs.started_at DESC
+      LIMIT ${baseLimitParam}
+    )
+    SELECT b.id, b.visitor_id,
+           COALESCE(b.user_id, linked.linked_uid) AS user_id,
+           u.name AS user_name, u.email AS user_email, u.role AS user_role,
+           b.device_type, b.country, b.language,
+           b.landing_page, b.referrer, b.utm_source, b.utm_medium, b.utm_term,
+           b.pageview_count, b.started_at, b.pageviews,
+           COALESCE(vc.total_visits, 1) AS total_visits,
+           ROW_NUMBER() OVER (PARTITION BY COALESCE(COALESCE(b.user_id, linked.linked_uid)::text, b.visitor_id) ORDER BY b.started_at) AS visit_number
+    FROM base b
     LEFT JOIN LATERAL (
-      SELECT COUNT(*)::int as total_visits FROM visitor_sessions vs2
-      WHERE COALESCE(vs2.user_id::text, vs2.visitor_id) = COALESCE(sub.user_id::text, sub.visitor_id)
+      SELECT user_id AS linked_uid FROM (
+        SELECT vs3.user_id FROM visitor_sessions vs3
+        WHERE vs3.visitor_id = b.visitor_id AND vs3.user_id IS NOT NULL
+        ORDER BY vs3.started_at DESC LIMIT 1
+      ) s
+      UNION ALL
+      SELECT u2.id FROM users u2 WHERE u2.visitor_id = b.visitor_id
+      LIMIT 1
+    ) linked ON TRUE
+    LEFT JOIN users u ON u.id = COALESCE(b.user_id, linked.linked_uid)
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*)::int AS total_visits FROM visitor_sessions vs2
+      WHERE COALESCE(vs2.user_id::text, vs2.visitor_id) = COALESCE(COALESCE(b.user_id, linked.linked_uid)::text, b.visitor_id)
     ) vc ON TRUE
-    ORDER BY sub.started_at DESC LIMIT ${limitParam}
+    WHERE 1=1 ${postRoleWhere}
+    ORDER BY b.started_at DESC
+    LIMIT ${outerLimitParam}
   `, params);
 
-  // Sessions by day (last 14 days)
+  // Period-aware time series for the sessions chart.
+  // period: today | yesterday | 7d | 30d | year | custom
+  // For custom: accepts from/to (YYYY-MM-DD).
+  const period = url.searchParams.get("period") || "30d";
+  const customFrom = url.searchParams.get("from");
+  const customTo = url.searchParams.get("to");
+  let seriesWhere = "started_at >= NOW() - INTERVAL '30 days'";
+  let seriesBucket: "hour" | "day" | "week" | "month" = "day";
+  switch (period) {
+    case "today":
+      seriesWhere = "started_at >= DATE_TRUNC('day', NOW())";
+      seriesBucket = "hour";
+      break;
+    case "yesterday":
+      seriesWhere = "started_at >= DATE_TRUNC('day', NOW() - INTERVAL '1 day') AND started_at < DATE_TRUNC('day', NOW())";
+      seriesBucket = "hour";
+      break;
+    case "7d":
+      seriesWhere = "started_at >= NOW() - INTERVAL '7 days'";
+      seriesBucket = "day";
+      break;
+    case "30d":
+      seriesWhere = "started_at >= NOW() - INTERVAL '30 days'";
+      seriesBucket = "day";
+      break;
+    case "year":
+      seriesWhere = "started_at >= NOW() - INTERVAL '1 year'";
+      seriesBucket = "week";
+      break;
+    case "custom": {
+      if (customFrom && customTo && /^\d{4}-\d{2}-\d{2}$/.test(customFrom) && /^\d{4}-\d{2}-\d{2}$/.test(customTo)) {
+        seriesWhere = `started_at >= '${customFrom}'::date AND started_at < ('${customTo}'::date + INTERVAL '1 day')`;
+        const spanDays = Math.floor((new Date(customTo).getTime() - new Date(customFrom).getTime()) / 86400000);
+        seriesBucket = spanDays <= 2 ? "hour" : spanDays <= 62 ? "day" : spanDays <= 365 ? "week" : "month";
+      }
+      break;
+    }
+  }
+  // Skip the current (partial) bucket for non-"today" periods — an incomplete "today"
+  // would render as a misleading drop at the end of the chart.
+  const excludePartial = period !== "today"
+    ? `AND DATE_TRUNC('${seriesBucket}', started_at) < DATE_TRUNC('${seriesBucket}', NOW())`
+    : "";
   const dailySessions = await query<{ day: string; sessions: string; visitors: string }>(`
-    SELECT started_at::date::text as day,
+    SELECT DATE_TRUNC('${seriesBucket}', started_at)::text as day,
            COUNT(*)::text as sessions,
            COUNT(DISTINCT visitor_id)::text as visitors
     FROM visitor_sessions
-    WHERE started_at >= NOW() - INTERVAL '14 days'
-    GROUP BY started_at::date ORDER BY day DESC
+    WHERE ${seriesWhere} ${excludePartial}
+    GROUP BY DATE_TRUNC('${seriesBucket}', started_at)
+    ORDER BY day ASC
   `);
 
   return NextResponse.json({
@@ -177,5 +248,7 @@ export async function GET(req: Request) {
       pageviews: s.pageviews ? JSON.parse(s.pageviews) : [],
     })),
     dailySessions,
+    seriesBucket,
+    period,
   });
 }

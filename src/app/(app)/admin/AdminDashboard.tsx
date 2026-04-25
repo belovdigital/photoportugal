@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 import { AdminToastProvider } from "./AdminToast";
 import { AuditLog as AuditLogTab } from "./AuditLog";
 import AdminCalendarTab from "./AdminCalendarTab";
+import { AdminConciergeTab } from "./AdminConciergeTab";
 
 function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "telegram"; title: string }) {
   const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; error_message?: string | null; from?: string; created_at: string; price?: string | null; direction?: string }[]>([]);
@@ -169,6 +170,79 @@ interface AdminStats {
   funnelReviewed: number;
 }
 
+function SavedLeadsTab() {
+  const [items, setItems] = useState<{
+    id: string;
+    email: string;
+    photographer_name: string;
+    photographer_slug: string;
+    locale: string;
+    created_at: string;
+    email_sent: boolean;
+    converted_user_id: string | null;
+  }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/saved-photographers", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => {
+        setItems(d.items || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="mb-1 text-lg font-bold text-gray-900">Saved Leads</h2>
+      <p className="mb-4 text-xs text-gray-400">
+        Anonymous visitors who entered email on the exit-intent popup to save a photographer for later.
+        {" "}
+        {items.length} lead{items.length !== 1 ? "s" : ""}.
+      </p>
+      {items.length === 0 ? (
+        <p className="py-8 text-center text-gray-400">No saved leads yet</p>
+      ) : (
+        <div className="space-y-1.5">
+          {items.map((it) => (
+            <div key={it.id} className="flex items-start gap-3 rounded-lg border border-warm-200 bg-white px-3 py-2.5 text-sm">
+              <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${it.converted_user_id ? "bg-green-100 text-green-700" : it.email_sent ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>
+                {it.converted_user_id ? "converted" : it.email_sent ? "sent" : "pending"}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-gray-900">
+                  <a href={`mailto:${it.email}`} className="hover:text-primary-600">{it.email}</a>
+                </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>saved</span>
+                  <a href={`/photographers/${it.photographer_slug}`} target="_blank" rel="noreferrer" className="truncate font-medium text-primary-600 hover:underline">
+                    {it.photographer_name}
+                  </a>
+                  <span className="text-gray-300">·</span>
+                  <span className="uppercase">{it.locale}</span>
+                </div>
+              </div>
+              <span className="shrink-0 whitespace-nowrap text-xs text-gray-400">
+                {new Date(it.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}{" "}
+                {new Date(it.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const tabGroups = [
   {
     label: null, // no header for top group
@@ -185,6 +259,8 @@ const tabGroups = [
       { key: "bookings", label: "Bookings", icon: "calendar" },
       { key: "inquiries", label: "Inquiries", icon: "message" },
       { key: "matchRequests", label: "Match Requests", icon: "search" },
+      { key: "concierge", label: "Concierge AI", icon: "sparkles" },
+      { key: "savedLeads", label: "Saved Leads", icon: "heart" },
       { key: "disputes", label: "Disputes", icon: "flag" },
       { key: "reviews", label: "Reviews", icon: "star" },
     ],
@@ -215,7 +291,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "logs" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "savedLeads" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -248,8 +324,12 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
     case "search":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>;
+    case "heart":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>;
     case "settings":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+    case "sparkles":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.847.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" /></svg>;
     default:
       return null;
   }
@@ -849,6 +929,8 @@ export function AdminDashboard({
           {activeTab === "bookings" && bookingsSection}
           {activeTab === "inquiries" && inquiriesSection}
           {activeTab === "matchRequests" && matchRequestsSection}
+          {activeTab === "concierge" && <AdminConciergeTab />}
+          {activeTab === "savedLeads" && <SavedLeadsTab />}
           {activeTab === "visitors" && visitorsSection}
           {activeTab === "disputes" && disputesSection}
           {activeTab === "reviews" && reviewsSection}

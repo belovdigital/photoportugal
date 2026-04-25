@@ -46,6 +46,7 @@ interface Profile {
   shoot_types: string[];
   hourly_rate: number | null;
   experience_years: number;
+  career_start_year: number | null;
   plan: string;
   rating: number;
   review_count: number;
@@ -175,7 +176,14 @@ export function PhotographerDashboardClient({
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(profile.languages);
   const [selectedShootTypes, setSelectedShootTypes] = useState<string[]>(profile.shoot_types);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(profile.location_slugs);
-  const [experienceYears, setExperienceYears] = useState(profile.experience_years.toString());
+  const currentYear = new Date().getFullYear();
+  // Prefer career_start_year; fall back to year inferred from legacy experience_years for the input's initial value.
+  const initialCareerStartYear = profile.career_start_year != null
+    ? profile.career_start_year.toString()
+    : profile.experience_years > 0
+      ? (currentYear - profile.experience_years + 1).toString()
+      : "";
+  const [careerStartYear, setCareerStartYear] = useState(initialCareerStartYear);
   const [customSlug, setCustomSlug] = useState(profile.slug);
 
   // Package form state
@@ -203,10 +211,8 @@ export function PhotographerDashboardClient({
   // === Profile ===
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
-    if (selectedLanguages.length === 0) {
-      showMessage(t("selectOneLanguage"));
-      return;
-    }
+    // Allow partial saves — photographer can fill profile in stages.
+    // Completeness is tracked separately via the onboarding checklist; no fields are hard-required here.
     setSaving(true);
 
     const res = await fetch("/api/dashboard/profile", {
@@ -220,7 +226,7 @@ export function PhotographerDashboardClient({
         bio,
         languages: selectedLanguages,
         shoot_types: selectedShootTypes,
-        experience_years: parseInt(experienceYears) || 0,
+        career_start_year: careerStartYear ? parseInt(careerStartYear) : null,
         locations: selectedLocations,
         custom_slug: profile.plan === "premium" ? customSlug : undefined,
       }),
@@ -879,14 +885,24 @@ export function PhotographerDashboardClient({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">{t("yearsOfExperience")}</label>
+                <label className="block text-sm font-medium text-gray-700">{t("careerStartYear")}</label>
                 <input
                   type="number"
-                  value={experienceYears}
-                  onChange={(e) => setExperienceYears(e.target.value)}
-                  min="0"
+                  value={careerStartYear}
+                  onChange={(e) => setCareerStartYear(e.target.value)}
+                  min="1960"
+                  max={currentYear}
+                  placeholder={(currentYear - 5).toString()}
                   className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                 />
+                <p className="mt-1.5 text-xs text-gray-500">
+                  {(() => {
+                    const y = parseInt(careerStartYear);
+                    if (!y || y < 1960 || y > currentYear) return t("careerStartYearHint");
+                    const years = currentYear - y + 1;
+                    return t("careerStartYearComputed", { years });
+                  })()}
+                </p>
               </div>
             </div>
 
@@ -894,6 +910,12 @@ export function PhotographerDashboardClient({
 
           {/* Fixed save bar — full width. Sits above mobile bottom nav (64px + safe area). */}
           <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-warm-200 bg-white/95 backdrop-blur-sm md:bottom-0" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
+            {/* Inline toast right next to the save button so the user doesn't miss feedback */}
+            {message && (
+              <div className="border-b border-warm-100 bg-primary-50 px-6 py-2 text-center text-sm text-primary-700">
+                {message}
+              </div>
+            )}
             <div className="flex items-center justify-center px-6 py-3">
               <button
                 type="button"

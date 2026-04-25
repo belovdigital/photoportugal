@@ -17,6 +17,15 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+// Convert plain-text admin note with newlines into paragraphed HTML.
+// Double newline → paragraph break, single newline → <br>.
+function formatNoteHtml(text: string): string {
+  const paragraphs = escapeHtml(text.trim()).split(/\n{2,}/);
+  return paragraphs
+    .map((p) => `<p style="margin:0 0 10px;font-size:14px;color:#1E40AF;line-height:1.6;">${p.replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -104,7 +113,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     );
 
     const locationName = locations.find((l) => l.slug === matchReq.location_slug)?.name || matchReq.location_slug;
-    const shootTypeLabel = matchReq.shoot_type.charAt(0).toUpperCase() + matchReq.shoot_type.slice(1);
+    const shootTypeLabel = matchReq.shoot_type
+      ? matchReq.shoot_type.charAt(0).toUpperCase() + matchReq.shoot_type.slice(1)
+      : "Photoshoot";
     const firstName = matchReq.name.trim().split(" ")[0];
 
     // Format date for email
@@ -154,8 +165,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const adminNoteHtml = admin_comment?.trim()
       ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
           <tr><td style="padding:16px 20px;background:#EEF6FF;border-radius:10px;border:1px solid #DBEAFE;">
-            <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:0.5px;">A Note From Our Team</p>
-            <p style="margin:0;font-size:14px;color:#1E40AF;line-height:1.6;">${escapeHtml(admin_comment.trim())}</p>
+            <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:0.5px;">A Note From Our Team</p>
+            ${formatNoteHtml(admin_comment)}
           </td></tr>
         </table>`
       : "";
@@ -181,7 +192,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border-radius:10px;overflow:hidden;border:1px solid #F3EDE6;">
         <tr><td style="padding:16px 20px;background:#FEFCFB;">
           <p style="margin:0;font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Your Request</p>
-          <p style="margin:8px 0 0;font-size:14px;color:#4A4A4A;">📍 ${escapeHtml(locationName)} · 📅 ${escapeHtml(dateStr)} · 👥 ${matchReq.group_size} people · 💰 €${escapeHtml(matchReq.budget_range.replace("-", "–"))}</p>
+          <p style="margin:8px 0 0;font-size:14px;color:#4A4A4A;">📍 ${escapeHtml(locationName)} · 📅 ${escapeHtml(dateStr)} · 👥 ${matchReq.group_size} people · 💰 €${escapeHtml(matchReq.budget_range ? matchReq.budget_range.replace("-", "–") : "—")}</p>
         </td></tr>
       </table>
 
@@ -230,11 +241,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // SMS to client
     if (matchReq.phone) {
+      const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
+      const cLocale = await getUserLocaleByEmail(matchReq.email);
+      const smsBody = pickT({
+        en: `Hi ${firstName}! Your photographer matches for ${locationName} are ready. Check them out and choose your favorite: ${BASE_URL}/dashboard/match-requests`,
+        pt: `Olá ${firstName}! Os seus fotógrafos para ${locationName} estão prontos. Veja e escolha o seu favorito: ${BASE_URL}/dashboard/match-requests`,
+        de: `Hallo ${firstName}! Ihre Fotografen für ${locationName} sind bereit. Sehen Sie sie an und wählen Sie Ihren Favoriten: ${BASE_URL}/dashboard/match-requests`,
+        fr: `Bonjour ${firstName} ! Vos photographes pour ${locationName} sont prêts. Découvrez-les et choisissez votre favori : ${BASE_URL}/dashboard/match-requests`,
+      }, cLocale);
       import("@/lib/sms").then(({ sendSMS }) => {
-        sendSMS(
-          matchReq.phone!,
-          `Hi ${firstName}! Your photographer matches for ${locationName} are ready. Check them out and choose your favorite: ${BASE_URL}/dashboard/match-requests`
-        );
+        sendSMS(matchReq.phone!, smsBody);
       }).catch((err) => console.error("[send-matches] client sms error:", err));
     }
 
@@ -361,7 +377,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       );
 
       const locationName = locations.find((l) => l.slug === matchReq.location_slug)?.name || matchReq.location_slug;
-      const shootTypeLabel = matchReq.shoot_type.charAt(0).toUpperCase() + matchReq.shoot_type.slice(1);
+      const shootTypeLabel = matchReq.shoot_type
+      ? matchReq.shoot_type.charAt(0).toUpperCase() + matchReq.shoot_type.slice(1)
+      : "Photoshoot";
       const firstName = matchReq.name.trim().split(" ")[0];
 
       const fmtDate = (d: string | null) => d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
@@ -428,7 +446,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border-radius:10px;overflow:hidden;border:1px solid #F3EDE6;">
           <tr><td style="padding:16px 20px;background:#FEFCFB;">
             <p style="margin:0;font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Your Request</p>
-            <p style="margin:8px 0 0;font-size:14px;color:#4A4A4A;">📍 ${escapeHtml(locationName)} · 📅 ${escapeHtml(dateStr)} · 👥 ${matchReq.group_size} people · 💰 €${escapeHtml(matchReq.budget_range.replace("-", "–"))}</p>
+            <p style="margin:8px 0 0;font-size:14px;color:#4A4A4A;">📍 ${escapeHtml(locationName)} · 📅 ${escapeHtml(dateStr)} · 👥 ${matchReq.group_size} people · 💰 €${escapeHtml(matchReq.budget_range ? matchReq.budget_range.replace("-", "–") : "—")}</p>
           </td></tr>
         </table>
         ${adminNoteHtml}

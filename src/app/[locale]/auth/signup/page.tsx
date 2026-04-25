@@ -112,30 +112,40 @@ function SignUpForm() {
             </div>
           )}
 
-          {/* Role selector */}
+          {/* Role selector — prominent so users don't miss it */}
           <div className="mb-6">
-            <div className="relative flex rounded-xl bg-warm-100 p-1">
-              {/* Sliding pill */}
+            <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
+              {t("roleLabel")}
+            </p>
+            <div className="relative flex rounded-xl border-2 border-accent-200 bg-warm-50 p-1">
+              {/* Sliding pill — accent green so the active choice really pops */}
               <div
-                className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-white shadow-sm transition-all duration-200 ease-out"
+                className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-accent-600 shadow-md transition-all duration-200 ease-out"
                 style={{ left: role === "client" ? "4px" : "calc(50% + 0px)" }}
               />
               <button
                 type="button"
                 onClick={() => setRole("client")}
-                className={`relative z-10 flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors duration-200 ${
-                  role === "client" ? "text-gray-900" : "text-gray-400"
+                className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-colors duration-200 ${
+                  role === "client" ? "text-white" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
                 {t("roleClient")}
               </button>
               <button
                 type="button"
                 onClick={() => setRole("photographer")}
-                className={`relative z-10 flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors duration-200 ${
-                  role === "photographer" ? "text-gray-900" : "text-gray-400"
+                className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-bold transition-colors duration-200 ${
+                  role === "photographer" ? "text-white" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
                 {t("rolePhotographer")}
               </button>
             </div>

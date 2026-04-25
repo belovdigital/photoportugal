@@ -34,6 +34,7 @@ CREATE TABLE users (
   stripe_customer_id VARCHAR(255),
   is_banned BOOLEAN DEFAULT FALSE,
   last_seen_at TIMESTAMPTZ,
+  locale VARCHAR(5), -- 'en' / 'pt' / 'de' — used for email + SMS template selection
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -59,6 +60,7 @@ CREATE TABLE photographer_profiles (
   hourly_rate INTEGER, -- in EUR (whole euros)
   currency VARCHAR(3) DEFAULT 'EUR',
   experience_years INTEGER DEFAULT 0,
+  career_start_year INTEGER,
   is_verified BOOLEAN DEFAULT FALSE,
   is_featured BOOLEAN DEFAULT FALSE,
   is_approved BOOLEAN DEFAULT FALSE,
@@ -201,6 +203,9 @@ CREATE TABLE bookings (
   trustpilot_sent BOOLEAN DEFAULT FALSE,
   session_reminder_sent BOOLEAN DEFAULT FALSE,
   delivery_review_reminder_sent BOOLEAN DEFAULT FALSE,
+  client_followup_sent BOOLEAN DEFAULT FALSE,
+  client_followup_7d_sent BOOLEAN DEFAULT FALSE,
+  client_followup_14d_alerted BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -411,3 +416,52 @@ CREATE TABLE IF NOT EXISTS notification_queue (
 
 CREATE INDEX IF NOT EXISTS idx_notification_queue_pending ON notification_queue (status, send_after) WHERE status = 'pending';
 CREATE INDEX IF NOT EXISTS idx_notification_queue_created ON notification_queue (created_at);
+
+-- ============================================================
+-- SAVED PHOTOGRAPHERS (Save-for-later leads from exit-intent popup)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS saved_photographers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR(255) NOT NULL,
+  photographer_id UUID REFERENCES photographer_profiles(id) ON DELETE CASCADE,
+  visitor_id VARCHAR(36),
+  locale VARCHAR(5),
+  user_agent TEXT,
+  utm_source VARCHAR(100),
+  utm_medium VARCHAR(100),
+  utm_campaign VARCHAR(255),
+  email_sent BOOLEAN DEFAULT FALSE,
+  contacted_at TIMESTAMPTZ,
+  converted_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_saved_photographers_email ON saved_photographers(email);
+CREATE INDEX IF NOT EXISTS idx_saved_photographers_created ON saved_photographers(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_saved_photographers_photographer ON saved_photographers(photographer_id);
+
+-- ============================================================
+-- CONCIERGE (AI-powered photographer matching)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS concierge_chats (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  visitor_id VARCHAR(36),
+  user_id UUID REFERENCES users(id),
+  email VARCHAR(255),
+  first_name VARCHAR(100),
+  messages JSONB NOT NULL DEFAULT '[]'::jsonb,
+  matched_photographer_ids UUID[],
+  outcome VARCHAR(50),
+  utm_source TEXT, utm_medium TEXT, utm_campaign TEXT, utm_term TEXT, gclid TEXT,
+  country VARCHAR(2),
+  language VARCHAR(10),
+  total_tokens INTEGER DEFAULT 0,
+  total_cost_usd NUMERIC(10,4) DEFAULT 0,
+  inquiry_booking_ids UUID[],
+  match_request_id UUID,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_concierge_visitor ON concierge_chats(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_concierge_email ON concierge_chats(email) WHERE email IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_concierge_created ON concierge_chats(created_at DESC);

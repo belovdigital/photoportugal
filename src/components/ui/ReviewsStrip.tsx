@@ -50,7 +50,7 @@ export async function ReviewsStrip({ reviews, title, subtitle, maxPerRow = 3, co
           {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
         </div>
       )}
-      <div className={`-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory sm:mx-0 sm:gap-5 sm:overflow-visible sm:pb-0 ${gridCls}`}>
+      <div className={`-mx-4 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory sm:mx-0 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 ${gridCls}`}>
         {reviews.map((r) => {
           const displayName = r.client_name ? formatPublicName(r.client_name) : tc("privateClient");
           const flag = codeToFlag(r.client_country);
@@ -82,7 +82,7 @@ export async function ReviewsStrip({ reviews, title, subtitle, maxPerRow = 3, co
               <div className="mt-4 flex items-center gap-3 border-t border-warm-100 pt-3">
                 <div className="flex h-9 w-9 shrink-0 overflow-hidden rounded-full bg-primary-100 ring-1 ring-warm-200 transition group-hover:ring-primary-300">
                   {r.photographer_avatar ? (
-                    <img src={r.photographer_avatar} alt={r.photographer_name} className="h-full w-full object-cover" />
+                    <img src={r.photographer_avatar} alt={r.photographer_name} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-sm font-bold text-primary-600">
                       {r.photographer_name.charAt(0)}

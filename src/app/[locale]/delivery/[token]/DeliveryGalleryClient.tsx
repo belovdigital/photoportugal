@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useSwipeNavigation } from "@/lib/use-swipe";
 
 interface Photo {
   id: string;
@@ -42,6 +43,13 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [lightboxIndex, closeLightbox, navigate]);
+
+  useSwipeNavigation({
+    enabled: lightboxIndex !== null,
+    onPrev: () => navigate(-1),
+    onNext: () => navigate(1),
+    onDismiss: closeLightbox,
+  });
 
   return (
     <>

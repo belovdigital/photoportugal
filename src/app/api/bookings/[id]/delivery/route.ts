@@ -75,8 +75,9 @@ export async function POST(
   const { id } = await params;
   const userId = authUser.id;
 
-  const booking = await queryOne<{ photographer_id: string; photographer_user_id: string; client_id: string; status: string }>(
-    `SELECT b.photographer_id, u.id as photographer_user_id, b.client_id, b.status
+  const booking = await queryOne<{ photographer_id: string; photographer_user_id: string; client_id: string; status: string; delivery_accepted: boolean }>(
+    `SELECT b.photographer_id, u.id as photographer_user_id, b.client_id, b.status,
+            COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -89,6 +90,9 @@ export async function POST(
   }
   if (!["completed", "delivered"].includes(booking.status)) {
     return NextResponse.json({ error: "Booking must be completed first" }, { status: 400 });
+  }
+  if (booking.delivery_accepted) {
+    return NextResponse.json({ error: "Delivery has been accepted by the client and can no longer be modified" }, { status: 400 });
   }
 
 
@@ -206,9 +210,17 @@ export async function POST(
             [deliveryDetails.client_id]
           );
           if (smsPrefs?.sms_bookings !== false) {
+            const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+            const cLocale = await getUserLocaleById(deliveryDetails.client_id);
+            const smsBody = pickT({
+              en: `Photo Portugal: Your photos from ${deliveryDetails.photographer_name} are ready! Check your email for the gallery link.`,
+              pt: `Photo Portugal: As suas fotos de ${deliveryDetails.photographer_name} estão prontas! Veja o link da galeria no seu email.`,
+              de: `Photo Portugal: Ihre Fotos von ${deliveryDetails.photographer_name} sind bereit! Galerie-Link finden Sie in Ihrer E-Mail.`,
+              fr: `Photo Portugal : Vos photos de ${deliveryDetails.photographer_name} sont prêtes ! Le lien de la galerie est dans votre e-mail.`,
+            }, cLocale);
             sendSMS(
               deliveryDetails.client_phone,
-              `Photo Portugal: Your photos from ${deliveryDetails.photographer_name} are ready! Check your email for the gallery link.`
+              smsBody
             ).catch(err => console.error("[sms] error:", err));
           }
         }
@@ -385,8 +397,8 @@ export async function DELETE(
 
   if (!photoId) return NextResponse.json({ error: "photoId required" }, { status: 400 });
 
-  const booking = await queryOne<{ photographer_user_id: string }>(
-    `SELECT u.id as photographer_user_id
+  const booking = await queryOne<{ photographer_user_id: string; delivery_accepted: boolean }>(
+    `SELECT u.id as photographer_user_id, COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -395,6 +407,9 @@ export async function DELETE(
 
   if (!booking || booking.photographer_user_id !== userId) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  }
+  if (booking.delivery_accepted) {
+    return NextResponse.json({ error: "Delivery has been accepted by the client and can no longer be modified" }, { status: 400 });
   }
 
   const photo = await queryOne<{ url: string; preview_url: string | null }>(

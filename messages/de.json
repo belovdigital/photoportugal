@@ -1,0 +1,3045 @@
+{
+  "common": {
+    "summerSeasonNotice": "Die Sommersaison füllt sich — buchen Sie früh, um Ihren Wunschtermin zu sichern",
+    "privateClient": "Privatkunde",
+    "reviewAbout": "über {name}",
+    "featuredQuoteAbout": "über",
+    "siteName": "Photo Portugal",
+    "bookAPhotoshoot": "Fotoshooting buchen",
+    "bookNow": "Jetzt buchen",
+    "learnMore": "Mehr erfahren",
+    "viewAll": "Alle ansehen",
+    "findPhotographers": "Fotografen finden",
+    "browsePhotographers": "Fotografen durchsuchen",
+    "viewProfile": "Profil ansehen",
+    "readMore": "Mehr lesen",
+    "goHome": "Zur Startseite",
+    "exploreLocations": "Orte entdecken",
+    "browseMore": "Mehr ansehen",
+    "loading": "Lädt...",
+    "signIn": "Anmelden",
+    "signOut": "Abmelden",
+    "signUp": "Registrieren",
+    "logIn": "Einloggen",
+    "from": "Ab",
+    "contactForPricing": "Preis auf Anfrage",
+    "featured": "Empfohlen",
+    "verified": "Verifiziert",
+    "founding": "Gründungsmitglied",
+    "foundingPhotographer": "Gründungsfotograf",
+    "verifiedBooking": "Verifizierte Buchung",
+    "mostPopular": "Am beliebtesten",
+    "reviews": "Bewertungen",
+    "review": "Bewertung",
+    "photos": "Fotos",
+    "min": "Min.",
+    "perMonth": "/Monat",
+    "perYear": "/Jahr",
+    "book": "Buchen",
+    "total": "Gesamt",
+    "home": "Startseite",
+    "privacyPolicy": "Datenschutzerklärung",
+    "termsOfService": "Nutzungsbedingungen",
+    "terms": "AGB",
+    "privacy": "Datenschutz",
+    "and": "und",
+    "allRightsReserved": "Alle Rechte vorbehalten.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "clearAll": "Alle löschen",
+    "clearAllFilters": "Alle Filter zurücksetzen",
+    "showMore": "Mehr anzeigen",
+    "hideDetails": "Details ausblenden",
+    "viewDetails": "Details ansehen",
+    "online": "Online",
+    "new": "Neu",
+    "dayDelivery": "Lieferung in {days} Tagen",
+    "yrsExperience": "{years} Jahre Erfahrung",
+    "sessions": "{count}+ Sessions",
+    "speaks": "Spricht {languages}",
+    "photographersIn": "Fotografen in {location}",
+    "available": "verfügbar",
+    "nowOpen": "Jetzt geöffnet",
+    "filled": "Ausgebucht",
+    "joined": "beigetreten",
+    "left": "übrig",
+    "full": "Voll",
+    "spots": "Plätze",
+    "startingFrom": "Ab",
+    "photographyIn": "Fotografie in {location}, Portugal",
+    "blog": "Blog",
+    "photoshoots": "Fotoshootings",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "faq": "FAQ",
+    "pricing": "Preise",
+    "forPhotographers": "Für Fotografen",
+    "locations": "Orte",
+    "photographers": "Fotografen",
+    "breadcrumb": "Brotkrumen-Navigation",
+    "savedPhotographers": "Gespeicherte Fotografen",
+    "noSavedPhotographers": "Noch keine gespeicherten Fotografen",
+    "noSavedPhotographersHint": "Durchsuchen Sie Fotografen und tippen Sie auf das Herz, um Ihre Favoriten zu speichern",
+    "photographersSaved": "{count, plural, one {# Fotograf} other {# Fotografen}} gespeichert",
+    "removeFromWishlist": "Von der Merkliste entfernen",
+    "saveToWishlist": "Zur Merkliste hinzufügen",
+    "selectDate": "Datum auswählen",
+    "unavailable": "Nicht verfügbar",
+    "today": "Heute"
+  },
+  "nav": {
+    "announcement": "Professionelle Urlaubsfotografie",
+    "announcementSuffix": "an {count} atemberaubenden Orten in Portugal",
+    "browseNow": "Jetzt entdecken →",
+    "destinations": "Reiseziele",
+    "popularDestinations": "Beliebte Reiseziele",
+    "allLocations": "Alle {count} Orte →",
+    "byOccasion": "Nach Anlass",
+    "allTypes": "Alle Arten →",
+    "photographers": "Fotografen",
+    "ourPhotographers": "Unsere Fotografen",
+    "explore": "Entdecken",
+    "megaForTravelers": "Für Reisende",
+    "megaForPhotographers": "Für Fotografen",
+    "megaSelectionDesc": "Unsere Qualitätsstandards erklärt",
+    "howItWorks": "So funktioniert's",
+    "faq": "FAQ",
+    "forClients": "Für Kunden",
+    "forClientsHowItWorksDesc": "Der 4-Schritte-Buchungsprozess erklärt",
+    "forClientsFaqDesc": "Preise, Stornierung, Lieferung & mehr",
+    "howWeSelect": "So wählen wir unsere Fotografen aus",
+    "forClientsHowWeSelectDesc": "Unser sorgfältiges Auswahlverfahren",
+    "about": "Über uns",
+    "aboutDesc": "Unsere Geschichte und das Team hinter Photo Portugal",
+    "helpCenter": "Hilfe-Center",
+    "helpCenterDesc": "Anleitungen, Tutorials und Support",
+    "contact": "Kontakt",
+    "contactDesc": "Nehmen Sie Kontakt mit unserem Team auf",
+    "forPhotographers": "Für Fotografen",
+    "becomePhotographer": "Fotograf werden",
+    "becomePhotographerDesc": "Werden Sie Teil unseres Netzwerks und erreichen Sie Reisende aus aller Welt",
+    "joinAsPhotographer": "Als Fotograf beitreten",
+    "pricingPlans": "Preispläne",
+    "learnMore": "Mehr erfahren",
+    "bookPhotoshoot": "Fotoshooting buchen",
+    "conciergeAriaLabel": "KI-Concierge — finden Sie Ihren Fotografen",
+    "findMePhotographer": "Hilf mir bei der Auswahl",
+    "findPhotographers": "Fotografen finden",
+    "allDestinations": "Alle Reiseziele",
+    "dashboard": "Dashboard",
+    "myProfile": "Mein Profil",
+    "settings": "Einstellungen",
+    "messages": "Nachrichten",
+    "logIn": "Einloggen",
+    "signUp": "Registrieren",
+    "signOut": "Abmelden",
+    "bookings": "Buchungen",
+    "wishlist": "Merkliste",
+    "accountMenu": "Kontomenü",
+    "closeMenu": "Menü schließen",
+    "openMenu": "Menü öffnen",
+    "getMatched": "Kostenlos passenden Fotografen finden",
+    "contactUs": "Kontakt aufnehmen",
+    "shootTypes": {
+      "couples": "Paarfotos",
+      "family": "Familie",
+      "soloPortrait": "Solo-Porträt",
+      "engagement": "Verlobung",
+      "proposal": "Heiratsantrag",
+      "honeymoon": "Flitterwochen",
+      "elopement": "Elopement",
+      "wedding": "Hochzeit",
+      "birthday": "Geburtstag"
+    },
+    "megaGettingStarted": "Erste Schritte",
+    "megaTrustQuality": "Vertrauen & Qualität",
+    "megaCompany": "Unternehmen",
+    "megaBrowseDesc": "Fotografen nach Ort, Stil & Verfügbarkeit durchsuchen",
+    "megaMatchDesc": "Wir wählen den perfekten Fotografen für Sie aus",
+    "megaAboutDesc": "Unsere Geschichte und das Team hinter Photo Portugal",
+    "megaContactDesc": "Nehmen Sie Kontakt mit unserem Team auf",
+    "megaHelpDesc": "Anleitungen, Tutorials und Support-Artikel",
+    "megaCtaTitle": "Bereit zu buchen?",
+    "megaCtaDesc": "Finden Sie Ihren perfekten Fotografen in wenigen Minuten.",
+    "megaMoreLocations": "Weitere Orte",
+    "megaJoinUs": "Mitmachen",
+    "megaJoinDesc": "Early-Bird-Programm mit exklusiven Vorteilen",
+    "megaWhyJoin": "Warum Photo Portugal",
+    "megaWhyJoinDesc": "So hilft unsere Plattform Ihnen beim Wachsen",
+    "megaPlansAndPricing": "Tarife & Preise",
+    "megaPricingDesc": "Free-, Pro- und Premium-Tarife im Vergleich",
+    "megaHowItWorksPhotographer": "Buchungsablauf aus Ihrer Perspektive",
+    "megaResources": "Ressourcen",
+    "megaFaqPhotographerDesc": "Häufige Fragen von Fotografen",
+    "megaBlog": "Blog",
+    "megaBlogDesc": "Tipps, Anleitungen und Einblicke in die Fotografie"
+  },
+  "footer": {
+    "tagline": "Wir verbinden Reisende mit talentierten lokalen Fotografen in ganz Portugal. Halten Sie Ihre schönsten Momente fest.",
+    "topLocations": "Top-Orte",
+    "photographersIn": "Fotografen in {location}",
+    "viewAllLocations": "Alle {count} Orte ansehen",
+    "forPhotographers": "Für Fotografen",
+    "joinAsPhotographer": "Als Fotograf beitreten",
+    "pricingPlans": "Preispläne",
+    "howItWorks": "So funktioniert's",
+    "company": "Unternehmen",
+    "aboutUs": "Über uns",
+    "blog": "Blog",
+    "faq": "FAQ",
+    "helpCenter": "Hilfe-Center",
+    "contact": "Kontakt",
+    "privacyPolicy": "Datenschutzerklärung",
+    "termsOfService": "Nutzungsbedingungen",
+    "copyright": "Photo Portugal. Alle Rechte vorbehalten.",
+    "legalEntity": "Ekaterina Belova",
+    "legalEntityType": "Empresária em Nome Individual",
+    "legalEntityNif": "NIF: 319455327",
+    "legalEntityVat": "IVA exempt — Art. 53.º CIVA",
+    "legalEntityLocation": "Lissabon, Portugal",
+    "appTitle": "Photo Portugal immer dabei",
+    "appSubtitle": "Fotografen durchsuchen, Sessions buchen und alles vom Handy aus verwalten.",
+    "soon": "Demnächst",
+    "appStoreAlt": "Im App Store herunterladen",
+    "googlePlayAlt": "Bei Google Play erhältlich"
+  },
+  "home": {
+    "trustBadge": "Vertraut von {count}+ glücklichen Reisenden",
+    "heroTitle": "Buchen Sie einen Urlaubsfotografen in",
+    "heroTitleHighlight": "Portugal",
+    "heroDescription": "Der einfachste Weg, einen Reisefotografen oder ein Urlaubs-Fotoshooting in Portugal zu buchen — handverlesene lokale Profis, verifizierte Bewertungen, sofortige Buchung. Jeder Fotograf wird persönlich auf Qualität, Zuverlässigkeit und Stil geprüft.",
+    "heroBrowse": "Fotografen durchsuchen",
+    "heroMatch": "Hilf mir bei der Auswahl",
+    "socialProof": {
+      "handPicked": "Handverlesene Fotografen",
+      "verifiedReviews": "Verifizierte Bewertungen",
+      "securePayments": "Sichere Stripe-Zahlungen"
+    },
+    "floatingReviews": [
+      {
+        "text": "Aleksandra hat uns sofort wohlgefühlt. Die Fotos sind unglaublich!",
+        "author": "Sarah T.",
+        "location": "Lissabon"
+      },
+      {
+        "text": "Cindy hat unseren Heiratsantrag perfekt eingefangen. Wir konnten beim Anschauen der Fotos nicht aufhören zu weinen!",
+        "author": "James R.",
+        "location": "Algarve"
+      },
+      {
+        "text": "Monica kannte die schönsten versteckten Plätze in Sintra. Eine absolut magische Session!",
+        "author": "Emma L.",
+        "location": "Sintra"
+      },
+      {
+        "text": "Mit Kate zu arbeiten hat richtig Spaß gemacht! Unsere Familienfotos sind über alle Erwartungen hinaus geworden.",
+        "author": "Rachel M.",
+        "location": "Lissabon"
+      },
+      {
+        "text": "Jonathan hat unser Sonnenuntergangs-Shooting in Lagos zu einem unvergesslichen Erlebnis gemacht. Wirklich talentiert!",
+        "author": "David K.",
+        "location": "Lagos"
+      },
+      {
+        "text": "Elena hat die schönsten Solo-Porträts von mir in Porto gemacht. Das beste Souvenir überhaupt!",
+        "author": "Sophie W.",
+        "location": "Porto"
+      }
+    ],
+    "stats": {
+      "stunningLocations": "Atemberaubende Orte",
+      "averageRating": "Durchschnittliche Bewertung",
+      "paymentProtection": "Zahlungsschutz"
+    },
+    "socialProofStrip": {
+      "trustedBy": "Länder vertrauen uns",
+      "photographers": "verifizierte Fotografen",
+      "locations": "atemberaubende Orte",
+      "securePayment": "Sichere Zahlung",
+      "islandsCovered": "Inseln abgedeckt"
+    },
+    "featured": {
+      "badge": "Empfohlen",
+      "title": "Top-Fotografen in Portugal",
+      "subtitle": "Handverlesene Profis für unvergessliche Fotos",
+      "viewAll": "Alle Fotografen ansehen",
+      "portfolioAlt": "{name} — Portfolio eines professionellen Fotografen in Portugal"
+    },
+    "locations": {
+      "badge": "Reiseziele",
+      "title": "Portugals fotogenste Orte",
+      "subtitle": "Von Lissabons Kopfsteinpflasterstraßen bis zu den goldenen Klippen der Algarve — jedes Reiseziel bietet einzigartige Kulissen",
+      "viewAll": "Alle {count} Orte ansehen"
+    },
+    "heroImages": {
+      "alt1": "Familien-Urlaubs-Fotoshooting an einem goldenen Strand der Algarve in Portugal",
+      "alt2": "Paar-Fotosession in Lissabons historischen Tram-Straßen, Portugal",
+      "alt3": "Urlaubs-Fotoshooting in der Benagil-Meeresgrotte in der Algarve, Portugal",
+      "alt4": "Reisefotografie an den Kraterseen von Sete Cidades auf den Azoren, Portugal",
+      "alt5": "Romantisches Fotoshooting am Pena-Palast in Sintra, Portugal"
+    },
+    "cta": {
+      "title": "Bereit, Ihre Portugal-Geschichte festzuhalten?",
+      "subtitle": "Schließen Sie sich Hunderten glücklicher Reisender an, die ihren perfekten professionellen Fotografen über Photo Portugal gebucht haben.",
+      "browsePhotographers": "Fotografen durchsuchen",
+      "findMePhotographer": "Hilf mir bei der Auswahl",
+      "joinAsPhotographer": "Als Fotograf beitreten"
+    }
+  },
+  "heroSearch": {
+    "placeholder": "Wo in Portugal?",
+    "search": "Suchen"
+  },
+  "shootTypes": {
+    "badge": "Für jeden",
+    "title": "Was ist Ihr perfektes Shooting?",
+    "subtitle": "Ob ein romantischer Kurzurlaub, ein Familienausflug oder ein Solo-Abenteuer — wir haben den passenden Fotografen für Sie",
+    "viewAllTypes": "Alle Shooting-Arten ansehen",
+    "altSuffix": "{title}-Fotoshooting in Portugal",
+    "types": {
+      "couples": {
+        "title": "Paarfotos",
+        "description": "Romantische Momente in atemberaubender Kulisse"
+      },
+      "family": {
+        "title": "Familie",
+        "description": "Natürliche, fröhliche Familienerinnerungen"
+      },
+      "honeymoon": {
+        "title": "Flitterwochen",
+        "description": "Feiern Sie Ihre Liebesgeschichte in Portugal"
+      },
+      "solo": {
+        "title": "Solo",
+        "description": "Wunderschöne Porträts, ohne Selfie-Kampf"
+      },
+      "engagement": {
+        "title": "Verlobung",
+        "description": "Sagen Sie Ja mit Portugal als Kulisse"
+      },
+      "proposal": {
+        "title": "Heiratsantrag",
+        "description": "Halten Sie den Moment fest, in dem sie Ja sagt"
+      },
+      "elopement": {
+        "title": "Elopement",
+        "description": "Intime Zeremonien an atemberaubenden Orten"
+      },
+      "friends": {
+        "title": "Freunde",
+        "description": "Gruppenreisen verdienen großartige Fotos"
+      },
+      "wedding": {
+        "title": "Hochzeit",
+        "description": "Ihre Traumhochzeit am Wunschort, festgehalten"
+      },
+      "maternity": {
+        "title": "Schwangerschaft",
+        "description": "Schöne Schwangerschaftsporträts"
+      },
+      "anniversary": {
+        "title": "Jubiläum",
+        "description": "Feiern Sie Ihren Meilenstein in Portugal"
+      },
+      "birthday": {
+        "title": "Geburtstag",
+        "description": "Machen Sie Ihre Feier unvergesslich"
+      },
+      "contentCreator": {
+        "title": "Content Creator",
+        "description": "Scroll-stoppender Content für Ihre Marke"
+      }
+    }
+  },
+  "testimonials": {
+    "badge": "Bewertungen",
+    "title": "Geliebt von Reisenden weltweit",
+    "subtitle": "Echte Geschichten von echten Reisenden, die unvergessliche Erinnerungen in Portugal eingefangen haben",
+    "averageRating": "durchschnittliche Bewertung",
+    "reviewCount": "{count, plural, one {Bewertung} other {Bewertungen}}",
+    "allReviewsVerified": "Alle Bewertungen sind aus echten Buchungen verifiziert",
+    "aboutPhotographer": "über {name}",
+    "browseAll": "Alle Fotografen durchsuchen",
+    "items": {
+      "sarah": {
+        "name": "Sarah & James",
+        "location": "Lissabon",
+        "text": "Unser Fotograf kannte alle versteckten Schätze in Alfama. Die Fotos sind absolut atemberaubend geworden — unsere Freunde können nicht glauben, dass das Urlaubsfotos sind!",
+        "type": "Paarfotos-Shooting"
+      },
+      "martinez": {
+        "name": "Familie Martinez",
+        "location": "Algarve",
+        "text": "Wir wollten natürliche, ungestellte Familienfotos am Strand. Unser Fotograf hat unsere Kinder so wohlfühlen lassen und die echtesten Momente eingefangen. Jeden Cent wert.",
+        "type": "Familien-Session"
+      },
+      "emily": {
+        "name": "Emily Chen",
+        "location": "Sintra",
+        "text": "Ich war alleine unterwegs und wollte schöne Fotos am Pena-Palast. Meine Fotografin war wie eine freundliche Reiseführerin — sie kannte die besten Perspektiven und Zeiten, um Menschenmassen zu meiden.",
+        "type": "Solo-Porträt"
+      },
+      "david": {
+        "name": "David & Kate Williams",
+        "location": "Porto",
+        "text": "Wir haben eine Sonnenaufgangs-Session am Douro-Ufer gebucht. Das goldene Licht, die Spiegelungen — absolut magisch. Unser Fotograf hat unsere Verlobung perfekt festgehalten.",
+        "type": "Verlobung"
+      },
+      "anna": {
+        "name": "Anna Kowalski",
+        "location": "Lagos",
+        "text": "Das ganze Erlebnis war reibungslos — von der Buchung bis zum Erhalt der Fotos. Meine Fotografin hat mich zu geheimen Aussichtspunkten gebracht, die ich allein nie gefunden hätte. 10/10!",
+        "type": "Solo-Abenteuer"
+      },
+      "tanaka": {
+        "name": "Familie Tanaka",
+        "location": "Cascais",
+        "text": "Das erste Mal, dass wir so einen Service genutzt haben, und wir waren begeistert. Unser Fotograf hat die Kinder zum Lachen gebracht und so echte Ausdrücke eingefangen. Die beste Investition unserer Reise.",
+        "type": "Familien-Session"
+      }
+    }
+  },
+  "howItWorks": {
+    "badge": "Einfacher Ablauf",
+    "title": "Vier Schritte zu atemberaubenden Fotos",
+    "subtitle": "Von der Buchung bis zur Lieferung — wir machen professionelle Fotografie mühelos",
+    "whyUsTitle": "Warum Photo Portugal?",
+    "whyUsCurated": "Kuratiertes Netzwerk",
+    "whyUsCuratedDesc": "Wir prüfen jeden Fotografen persönlich auf Qualität, Zuverlässigkeit und Professionalität. Nur die Besten schaffen es auf unsere Plattform.",
+    "findYourPhotographer": "Finden Sie Ihren Fotografen",
+    "steps": {
+      "browse": {
+        "title": "Wählen Sie Ihren Weg",
+        "description": "<browse>Durchsuchen Sie Fotografenprofile</browse> selbst und wählen Sie Ihren Favoriten — oder <concierge>teilen Sie uns Ihre Wünsche mit</concierge> und unser Team wählt den perfekten Fotografen für Sie aus.",
+        "detail": "Selbstauswahl oder Concierge — Ihre Wahl"
+      },
+      "book": {
+        "title": "Sofort buchen",
+        "description": "Wählen Sie Ihr Datum, ein Paket und buchen Sie Ihre Session in wenigen Minuten. Chatten Sie mit Ihrem Fotografen, um die Details zu planen.",
+        "detail": "Sichere Zahlung mit Apple Pay & Google Pay"
+      },
+      "enjoy": {
+        "title": "Genießen Sie Ihr Shooting",
+        "description": "Treffen Sie Ihren Fotografen am perfekten Ort. Entspannen Sie sich, seien Sie Sie selbst und lassen Sie ihn Ihre besten Momente festhalten.",
+        "detail": "Durchschnittliche Session: 1-2 Stunden"
+      },
+      "receive": {
+        "title": "Erhalten Sie Ihre Fotos",
+        "description": "Erhalten Sie professionell bearbeitete Fotos in einer privaten, passwortgeschützten Galerie. Online ansehen, einzeln herunterladen oder das komplette ZIP-Archiv schnappen.",
+        "detail": "Sichere Galerie mit Passwortschutz"
+      }
+    },
+    "paymentProtection": {
+      "title": "Ihr Geld ist geschützt",
+      "description": "Wenn Sie eine Session buchen, wird Ihre Zahlung sicher von Stripe verwahrt — nicht direkt an den Fotografen ausgezahlt. Das Geld wird erst freigegeben, nachdem Sie Ihre bearbeiteten Fotos erhalten und bestätigt haben, dass Sie zufrieden sind. Falls etwas schiefgeht, können Sie eine Reklamation eröffnen und eine vollständige Rückerstattung erhalten. Null Risiko.",
+      "heldUntilDelivery": "Zahlung bis zur Lieferung verwahrt",
+      "confirmBeforeRelease": "Sie bestätigen, bevor das Geld freigegeben wird",
+      "fullRefund": "Vollständige Rückerstattung bei Unzufriedenheit",
+      "poweredBy": "Bereitgestellt von"
+    },
+    "page": {
+      "metaTitle": "So buchen Sie einen Fotografen in Portugal — 4 einfache Schritte",
+      "metaDescription": "Buchen Sie einen professionellen Fotografen in Portugal in 4 einfachen Schritten. Portfolios durchsuchen, sofort mit sicheren Stripe-Zahlungen buchen, Ihr Fotoshooting genießen und bearbeitete Fotos in einer privaten Galerie erhalten.",
+      "title": "So buchen Sie einen Fotografen in Portugal",
+      "subtitle": "Einen professionellen Fotografen in Portugal zu buchen ist einfach, sicher und macht Spaß. Hier ist alles, was Sie wissen müssen.",
+      "forTravelers": "Für Reisende",
+      "forPhotographers": "Für Fotografen",
+      "forPhotographersSubtitle": "Werden Sie Teil von Portugals wachsender Community von Urlaubsfotografen und erreichen Sie internationale Kunden.",
+      "travelerSteps": {
+        "browseCompare": {
+          "title": "Stöbern & vergleichen — oder von uns matchen lassen",
+          "text": "Möchten Sie selbst auswählen? Sehen Sie sich Fotografen-Portfolios an, lesen Sie verifizierte Bewertungen, vergleichen Sie Pakete und Preise. Bevorzugen Sie persönliche Beratung? Teilen Sie uns Ihre Wünsche mit — Ort, Daten, Budget — und unser Team wählt 2-3 Fotografen aus, die verfügbar und perfekt für Ihr Shooting sind."
+        },
+        "bookInstantly": {
+          "title": "Sofort buchen",
+          "text": "Wählen Sie Ihr Datum, Ihre Uhrzeit und Ihr Paket. Ihr Fotograf bestätigt innerhalb von 24 Stunden. Bezahlen Sie sicher über Stripe — Ihr Geld wird verwahrt, bis die Fotos geliefert sind."
+        },
+        "meetShoot": {
+          "title": "Treffen & Shooting",
+          "text": "Treffen Sie Ihren Fotografen am vereinbarten Ort. Entspannen Sie sich, seien Sie Sie selbst und genießen Sie ein unterhaltsames Fotoshooting-Erlebnis."
+        },
+        "getPhotos": {
+          "title": "Erhalten Sie Ihre Fotos",
+          "text": "Erhalten Sie Ihre professionell bearbeiteten Fotos in einer privaten, passwortgeschützten Galerie. Laden Sie sie in hoher Auflösung einzeln oder als komplettes ZIP-Archiv herunter. Die Lieferzeit hängt vom Fotografen und dem gewählten Paket ab."
+        }
+      },
+      "photographerSteps": {
+        "createProfile": {
+          "title": "Erstellen Sie Ihr Profil",
+          "text": "Präsentieren Sie Ihre besten Arbeiten auf einer schönen Portfolio-Seite. Fügen Sie Ihre Standorte, Pakete und Verfügbarkeiten hinzu."
+        },
+        "getDiscovered": {
+          "title": "Werden Sie entdeckt",
+          "text": "Unsere SEO-optimierten Seiten helfen internationalen Reisenden, Sie zu finden, wenn sie nach Fotografen in Ihrer Region suchen."
+        },
+        "growBusiness": {
+          "title": "Bauen Sie Ihr Geschäft auf",
+          "text": "Erhalten Sie Buchungsanfragen, verwalten Sie Ihren Kalender und bauen Sie Ihren Ruf mit verifizierten Bewertungen auf."
+        }
+      },
+      "joinAsPhotographer": "Als Fotograf beitreten",
+      "findMePhotographer": "Unsicher? Wir matchen Sie",
+      "faq": {
+        "title": "Häufig gestellte Fragen",
+        "howFarInAdvance": {
+          "q": "Wie weit im Voraus sollte ich buchen?",
+          "a": "Wir empfehlen, mindestens 3-5 Tage im Voraus zu buchen, besonders in der Hauptsaison (Juni-September). Einige Fotografen nehmen jedoch auch Last-Minute-Buchungen an."
+        },
+        "whatIfRains": {
+          "q": "Was, wenn es regnet?",
+          "a": "Ihr Fotograf schlägt alternative überdachte Orte vor oder verschiebt den Termin kostenlos, wenn die Wetterbedingungen ungünstig sind."
+        },
+        "howReceivePhotos": {
+          "q": "Wie erhalte ich meine Fotos?",
+          "a": "Sie erhalten einen Link zu Ihrer privaten, passwortgeschützten Galerie. Alle Fotos sind professionell bearbeitet und stehen in hoher Auflösung zum Download zur Verfügung — einzeln oder als komplettes ZIP-Archiv. Die Lieferzeit variiert je nach Fotograf und ist bei jedem Paket angegeben."
+        },
+        "requestLocations": {
+          "q": "Kann ich bestimmte Orte wünschen?",
+          "a": "Selbstverständlich! Während Ihr Fotograf die besten Plätze vorschlägt, können Sie gerne bestimmte Orte wünschen. Er wird Sie informieren, falls Genehmigungen oder bestimmte Zeiten zu beachten sind."
+        },
+        "whatToWear": {
+          "q": "Was soll ich anziehen?",
+          "a": "Ihr Fotograf kann Ihnen Styling-Tipps basierend auf dem gewählten Ort geben. Generell wirken einfarbige Kleidung und klassische Stile auf Fotos am besten. Vermeiden Sie große Logos und unruhige Muster."
+        },
+        "conciergeMatching": {
+          "q": "Was, wenn ich nicht weiß, welchen Fotografen ich wählen soll?",
+          "a": "Kein Problem! Nutzen Sie unseren kostenlosen Concierge-Matching-Service. Teilen Sie uns einfach Ort, Daten, Gruppengröße und Budget mit — unser Team prüft Ihre Anfrage, spricht mit Fotografen und sendet Ihnen 2-3 handverlesene Optionen, die verfügbar und perfekt für Ihr Shooting sind. Sie wählen dann einfach Ihren Favoriten und buchen."
+        }
+      },
+      "helpCenterCta": "Erfahren Sie mehr über den Zahlungsschutz und wie die Plattform funktioniert in unserem <link>Hilfe-Center</link>."
+    }
+  },
+  "faq": {
+    "metaTitle": "FAQ Urlaubs-Fotoshooting Portugal — Preise, Buchung & mehr",
+    "metaDescription": "Antworten auf häufige Fragen zur Buchung eines Urlaubsfotografen in Portugal. Preise, Stornierungsbedingungen, Lieferzeiten, Orte und mehr.",
+    "title": "Häufig gestellte Fragen",
+    "subtitle": "Urlaubs-Fotoshooting in Portugal — Preise, Buchung, Lieferung & mehr",
+    "questions": {
+      "howDoesItWork": {
+        "question": "Wie funktioniert Photo Portugal?",
+        "answer": "Sie haben zwei Möglichkeiten zu buchen: <a href=\"/photographers\">Fotografen selbst durchsuchen</a> — Portfolios ansehen, verifizierte Bewertungen lesen und direkt buchen. Oder nutzen Sie unseren kostenlosen <a href=\"/find-photographer\">Concierge-Matching-Service</a> — teilen Sie uns Ihre Wünsche mit und wir wählen 2-3 Fotografen für Sie aus. So oder so sind die Zahlungen sicher und Ihre Fotos werden in einer privaten Galerie geliefert. Erfahren Sie mehr auf unserer Seite <a href=\"/how-it-works\">So funktioniert's</a>."
+      },
+      "cost": {
+        "question": "Wie viel kostet ein Fotoshooting?",
+        "answer": "Die Preise variieren je nach Fotograf und Paket und reichen typischerweise von 120 € für eine 30-minütige Quick-Session bis 500 €+ für ein ganztägiges Erlebnis. Jeder Fotograf legt seine eigenen Preise und Pakete fest, die Sie auf seiner Profilseite einsehen können. Sehen Sie sich unsere <a href=\"/for-photographers/pricing\">Preisseite</a> für einen Überblick an."
+      },
+      "howToBook": {
+        "question": "Wie buche ich einen Fotografen?",
+        "answer": "Sie können <a href=\"/photographers\">Fotografen selbst durchsuchen</a> — wählen Sie einen, der Ihnen gefällt, suchen Sie ein Paket aus, wählen Sie Datum und Uhrzeit und senden Sie eine Buchungsanfrage. Oder nutzen Sie unser kostenloses <a href=\"/find-photographer\">Concierge-Matching</a> — teilen Sie uns Ihre Wünsche mit und wir senden Ihnen 2-3 handverlesene Optionen zur Auswahl. So oder so bestätigt der Fotograf innerhalb von 24 Stunden und Ihre Zahlung wird sicher verwahrt, bis die Fotos geliefert sind."
+      },
+      "conciergeMatching": {
+        "question": "Was, wenn ich nicht weiß, welchen Fotografen ich wählen soll?",
+        "answer": "Nutzen Sie unseren kostenlosen <a href=\"/find-photographer\">Concierge-Matching-Service</a>. Teilen Sie uns Ort, Daten, Gruppengröße und Budget mit — unser Team spricht mit Fotografen, prüft die Verfügbarkeit und sendet Ihnen 2-3 handverlesene Optionen, die perfekt für Ihr Shooting sind. Sie wählen einfach Ihren Favoriten und buchen. Komplett kostenlos und unverbindlich."
+      },
+      "paymentSecure": {
+        "question": "Wie funktioniert die Zahlung? Ist sie sicher?",
+        "answer": "Alle Zahlungen werden sicher über Stripe abgewickelt, dem Millionen Unternehmen weltweit vertrauen. Ihre Zahlung wird treuhänderisch verwahrt — wir geben sie erst an den Fotografen frei, wenn Sie Ihre Fotos erhalten und akzeptiert haben. So sind Sie immer geschützt. Sie können mit Kredit-/Debitkarten, Apple Pay oder Google Pay bezahlen."
+      },
+      "cancelBooking": {
+        "question": "Kann ich meine Buchung stornieren?",
+        "answer": "Ja, Sie können über Ihr <a href=\"/dashboard/bookings\">Dashboard</a> stornieren. Eine Stornierung 7+ Tage vor dem Shooting gibt Ihnen eine vollständige Rückerstattung. Zwischen 3-7 Tagen: 50 % Rückerstattung. Weniger als 3 Tage: keine Rückerstattung (der Fotograf hat sich seine Zeit für Sie reserviert). Siehe unsere <a href=\"/terms\">Nutzungsbedingungen</a> für alle Details."
+      },
+      "reschedule": {
+        "question": "Kann ich meine Buchung verschieben?",
+        "answer": "Ja. Eine kostenlose Verschiebung ist enthalten, wenn Sie sie 48+ Stunden vor dem Shooting beantragen. Verschiebungen wegen schlechten Wetters sind für beide Seiten immer kostenlos. Bei Änderungen innerhalb von 48 Stunden kontaktieren Sie Ihren Fotografen direkt — die meisten sind flexibel und finden gerne einen alternativen Termin."
+      },
+      "photographerCancels": {
+        "question": "Was passiert, wenn der Fotograf storniert?",
+        "answer": "Sie erhalten immer eine 100%ige Rückerstattung. Bei einer Last-Minute-Stornierung (weniger als 48 Stunden) versuchen wir auch, einen Ersatzfotografen für Sie zu finden. Fotografen, die wiederholt stornieren, können von der Plattform entfernt werden."
+      },
+      "deliveryTime": {
+        "question": "Wie lange dauert es, bis ich meine Fotos erhalte?",
+        "answer": "Die Lieferzeit hängt vom gewählten Paket ab — jedes Paket zeigt die geschätzten Liefertage auf dem Profil des Fotografen (typischerweise 3-14 Tage). Sobald sie fertig sind, erhalten Sie einen Link zu einer privaten, passwortgeschützten Galerie. Sie sehen zunächst Vorschauen mit Wasserzeichen, um die Fotos zu prüfen. Sobald Sie die Lieferung genehmigen, erhalten Sie Zugriff auf die hochauflösenden Bilder und können alles als ZIP-Archiv herunterladen."
+      },
+      "notHappy": {
+        "question": "Was, wenn ich mit den Fotos unzufrieden bin?",
+        "answer": "Sie haben 7 Tage nach Lieferung Zeit, Ihre Fotos zu akzeptieren oder eine Reklamation zu eröffnen. Triftige Gründe für eine Reklamation sind: deutlich weniger Fotos als versprochen, falscher Ort, schwerwiegende technische Probleme oder Nichterscheinen des Fotografen. Wir arbeiten mit beiden Seiten an einer fairen Lösung — Nachshooting, Teilrückerstattung oder vollständige Rückerstattung. Bitte beachten Sie, dass subjektive Stilpräferenzen kein Grund für eine Rückerstattung sind, daher prüfen Sie Portfolios sorgfältig vor der Buchung. Siehe unsere <a href=\"/terms\">Nutzungsbedingungen</a> für Details."
+      },
+      "galleryAccess": {
+        "question": "Wie lange kann ich auf meine Foto-Galerie zugreifen?",
+        "answer": "Ihre private Galerie bleibt 90 Tage nach der Lieferung zugänglich. Wir empfehlen, alle Fotos innerhalb dieses Zeitraums herunterzuladen. Sie können sie einzeln oder als vollständiges ZIP-Archiv herunterladen."
+      },
+      "rain": {
+        "question": "Was, wenn es am Tag meines Fotoshootings regnet?",
+        "answer": "Eine wetterbedingte Verschiebung ist für beide Seiten immer kostenlos — keine Strafen, keine Gebühren. Sowohl Sie als auch der Fotograf können bei für Außenaufnahmen ungeeigneten Wetterbedingungen eine Verschiebung beantragen. Besprechen Sie bei der Buchung einen Backup-Plan mit Ihrem Fotografen."
+      },
+      "reviewsVerified": {
+        "question": "Sind die Bewertungen verifiziert?",
+        "answer": "Ja. Alle Bewertungen auf Photo Portugal sind an abgeschlossene Buchungen gekoppelt. Nur Kunden, die ein bestätigtes Fotoshooting hatten, können eine Bewertung hinterlassen, was authentisches und vertrauenswürdiges Feedback gewährleistet."
+      },
+      "locationsAvailable": {
+        "question": "Welche Orte sind verfügbar?",
+        "answer": "Wir decken {locationCount}+ Orte in ganz Portugal ab, darunter <a href=\"/photographers/location/lisbon\">Lissabon</a>, <a href=\"/photographers/location/porto\">Porto</a>, <a href=\"/photographers/location/algarve\">Algarve</a>, <a href=\"/photographers/location/sintra\">Sintra</a>, <a href=\"/photographers/location/madeira\">Madeira</a>, <a href=\"/photographers/location/azores\">Azoren</a> und viele mehr."
+      },
+      "speakEnglish": {
+        "question": "Sprechen die Fotografen Englisch?",
+        "answer": "Die meisten Fotografen auf unserer Plattform sprechen Englisch. Sie können Fotografen auf der <a href=\"/photographers\">Katalogseite</a> nach Sprache filtern. Viele sprechen auch Portugiesisch, Spanisch, Französisch und Deutsch."
+      },
+      "becomePhotographer": {
+        "question": "Wie werde ich Fotograf bei Photo Portugal?",
+        "answer": "Klicken Sie auf '<a href=\"/for-photographers/join\">Als Fotograf beitreten</a>' und erstellen Sie Ihr Konto. Richten Sie Ihr Profil ein, laden Sie Portfolio-Fotos hoch, erstellen Sie Pakete und beginnen Sie, Buchungsanfragen zu erhalten. Wir bieten Free-, Pro- und Premium-Pläne mit unterschiedlichen Funktionen und Provisionssätzen."
+      },
+      "photographerPlans": {
+        "question": "Welche Fotografen-Pläne gibt es?",
+        "answer": "Wir bieten drei Pläne: Free (20 % Provision, 1 Standort), Pro für 29 €/Monat (15 % Provision, 5 Standorte) und Premium für 59 €/Monat (10 % Provision, alle Standorte, individuelle Profil-URL, Premium-Support). Alle Pläne enthalten bis zu 100 Portfolio-Fotos. Besuchen Sie unsere <a href=\"/for-photographers/pricing\">Preisseite</a> für einen vollständigen Vergleich."
+      },
+      "earlyBird": {
+        "question": "Was ist das Early-Bird-Programm?",
+        "answer": "Wir bieten unseren ersten Fotografen exklusive Vorteile. Die ersten 10 Fotografen (Founding-Stufe) erhalten den Premium-Plan für immer kostenlos mit einem exklusiven \"Founding Photographer\"-Abzeichen. Die nächsten 25 erhalten Premium 6 Monate kostenlos und die nächsten 50 erhalten Pro 3 Monate kostenlos. Die Plätze sind begrenzt und werden nach dem Prinzip „Wer zuerst kommt, mahlt zuerst\" vergeben. <a href=\"/for-photographers/join\">Verfügbare Plätze prüfen</a>."
+      },
+      "clientNoShow": {
+        "question": "Was passiert, wenn ich nicht zu meinem Fotoshooting erscheine?",
+        "answer": "Wenn Sie ohne vorherige Ankündigung nicht zu Ihrem geplanten Fotoshooting erscheinen, wird keine Rückerstattung gewährt. Die volle Zahlung geht an den Fotografen als Entschädigung für seine reservierte Zeit. Falls sich Ihre Pläne ändern, empfehlen wir dringend, im Voraus zu stornieren — eine Stornierung 7+ Tage vor dem Shooting gibt Ihnen eine vollständige Rückerstattung, 3-7 Tage eine 50%ige Rückerstattung."
+      },
+      "photographerNoShow": {
+        "question": "Was passiert, wenn mein Fotograf nicht erscheint?",
+        "answer": "Wenn Ihr Fotograf nicht erscheint, erhalten Sie eine vollständige 100%ige Rückerstattung. Wir empfehlen, 15 Minuten am Treffpunkt zu warten und dann eine Reklamation über Ihr Dashboard zu eröffnen. Unser Team bearbeitet Ihre Rückerstattung umgehend. Bei Fotografen, die wiederholt nicht erscheinen, versucht die Plattform, einen Ersatzfotografen für betroffene Kunden zu finden, und der Fotograf kann eine Kontosperrung erhalten."
+      },
+      "whenMoneyReleased": {
+        "question": "Wann wird meine Zahlung an den Fotografen freigegeben?",
+        "answer": "Ihre Zahlung wird von Stripe sicher treuhänderisch verwahrt, bis Ihre Fotos geliefert sind. Sobald der Fotograf Ihre Fotos liefert, haben Sie 7 Tage Zeit, die Lieferung zu prüfen und entweder zu akzeptieren oder eine Reklamation zu eröffnen. Wenn Sie akzeptieren, wird die Zahlung an den Fotografen freigegeben. Falls Sie nicht innerhalb von 14 Tagen nach der Lieferung antworten, wird die Zahlung automatisch freigegeben."
+      },
+      "forceMajeure": {
+        "question": "Was passiert bei extremem Wetter oder Notfällen?",
+        "answer": "In Fällen höherer Gewalt — Naturkatastrophen, schwere Wetterwarnungen, Pandemien oder andere außergewöhnliche Umstände, die niemand zu verantworten hat — haben beide Parteien Anspruch auf eine vollständige Rückerstattung oder eine kostenlose Verschiebung ohne Strafe. Weder der Kunde noch der Fotograf werden dafür haftbar gemacht. Kontaktieren Sie unser Support-Team oder eröffnen Sie eine Anfrage über Ihr Dashboard."
+      },
+      "lateDelivery": {
+        "question": "Was, wenn meine Fotos zu spät geliefert werden?",
+        "answer": "Die Fotos sollten innerhalb des im gewählten Paket vereinbarten Zeitrahmens geliefert werden. Bei einer Verspätung von 3 oder mehr Tagen können Sie eine Teilrückerstattung von bis zu 20 % des Paketpreises beantragen. Bei einer Verspätung von 14 oder mehr Tagen haben Sie Anspruch auf eine vollständige Rückerstattung. Sie können über Ihr Dashboard eine Reklamation eröffnen, um eine Rückerstattung wegen verspäteter Lieferung zu beantragen."
+      }
+    },
+    "helpCenterCta": "Brauchen Sie ausführlichere Antworten?",
+    "helpCenterCtaLink": "Besuchen Sie unser Hilfe-Center"
+  },
+  "about": {
+    "metaTitle": "Über Photo Portugal — Unsere Geschichte & Mission",
+    "metaDescription": "Photo Portugal verbindet Touristen mit talentierten lokalen Fotografen in ganz Portugal. Erfahren Sie mehr über unsere Mission und warum Reisende uns vertrauen.",
+    "heroTitle": "Warum wir",
+    "heroTitleHighlight": "Photo Portugal",
+    "heroSubtitle": "Weil die schönsten Erinnerungen mehr verdienen als einen Selfie-Stick.",
+    "theProblem": {
+      "title": "Das Problem",
+      "text": "Portugal ist eines der fotogensten Länder Europas. Lissabons goldenes Licht, Portos dramatisches Flussufer, Sintras märchenhafte Paläste, die rohe Küstenschönheit der Algarve — es ist ein Traum für jeden Fotografen. Doch jedes Jahr kommen Millionen von Touristen nach Hause mit nichts als unscharfen Selfies und peinlichen \"Können Sie ein Foto von uns machen?\"-Aufnahmen von Fremden."
+    },
+    "ourMission": {
+      "title": "Unsere Mission",
+      "text1": "Wir glauben, dass jede Reise nach Portugal verdient, schön festgehalten zu werden. Deshalb haben wir Photo Portugal geschaffen — eine Plattform, auf der Reisende sofort talentierte lokale Fotografen finden und buchen können, die die besten Plätze, den perfekten Zeitpunkt und die Kunst kennen, Sie vor der Kamera entspannt fühlen zu lassen.",
+      "text2": "Keine peinlichen Posen mehr. Kein Fragen von Fremden mehr. Kein Fehlen mehr auf Ihren eigenen Urlaubsfotos. Nur echte, schöne Erinnerungen, festgehalten von jemandem, der dieses Land in- und auswendig kennt."
+    },
+    "howItWorks": {
+      "title": "So funktioniert's",
+      "text": "Wählen Sie Ihren Weg: Durchsuchen Sie Fotografen-Portfolios selbst und buchen Sie direkt, oder nutzen Sie unseren kostenlosen Concierge-Service — teilen Sie uns Ihre Wünsche mit und wir wählen 2-3 Fotografen für Sie aus. Bezahlen Sie sicher über Stripe — Ihr Geld wird sicher verwahrt, bis Ihre Fotos geliefert sind. Ihr Fotograf trifft Sie am Ort, führt Sie zu den fotogensten Plätzen und macht das gesamte Erlebnis entspannt und unterhaltsam. Sie erhalten professionell bearbeitete Fotos in einer privaten, passwortgeschützten Galerie — online ansehen, einzeln herunterladen oder die ganze Sammlung als ZIP-Archiv schnappen."
+    },
+    "whatMakesUsDifferent": {
+      "title": "Was uns auszeichnet"
+    },
+    "trustPoints": {
+      "realReviews": {
+        "title": "Jede Bewertung ist echt",
+        "text": "Bewertungen sind an abgeschlossene Buchungen gekoppelt. Keine gefälschten Testimonials, keine bezahlten Bewertungen — nur ehrliches Feedback von Reisenden wie Ihnen."
+      },
+      "verifiedPhotographers": {
+        "title": "Verifizierte Fotografen",
+        "text": "Fotografen durchlaufen eine Telefonverifizierung und Identitätsprüfungen, bevor sie ein Verifizierungsabzeichen erhalten. Sie wissen immer, wen Sie buchen."
+      },
+      "securePayments": {
+        "title": "Sichere Zahlungen über Stripe",
+        "text": "Bezahlen Sie mit Karten, Apple Pay oder Google Pay — alles über Stripe abgewickelt, dem Millionen Unternehmen weltweit vertrauen. Ihre Zahlung wird sicher verwahrt, bis Ihre Fotos geliefert und akzeptiert sind, sodass Sie immer geschützt sind."
+      },
+      "locationsCovered": {
+        "title": "{count}+ Orte abgedeckt",
+        "text": "Von den Straßen Lissabons bis zu den Klippen der Algarve, von den Weinbergen des Douro-Tals bis zu den vulkanischen Azoren — wir decken ganz Portugal ab."
+      }
+    },
+    "ctaTitle": "Bereit, Ihre Portugal-Geschichte festzuhalten?",
+    "ctaSubtitle": "Durchsuchen Sie unsere Fotografen und buchen Sie noch heute Ihre Session.",
+    "findAPhotographer": "Fotografen finden",
+    "seeHowItWorks": "So funktioniert's ansehen",
+    "questionsContact": "Haben Sie Fragen?",
+    "contactUs": "Kontakt aufnehmen",
+    "founder": {
+      "title": "Lernen Sie die Gründerin kennen",
+      "alt": "Kate Belova, Gründerin von Photo Portugal",
+      "bio1": "<strong>Kate Belova</strong> ist eine professionelle Porträt- und Lifestyle-Fotografin mit über 10 Jahren Erfahrung mit Sitz in Lissabon, Portugal. Bekannt für ihren \"Soul-Portrait\"-Stil hat Kate die seltene Fähigkeit, Menschen vor der Kamera vollkommen entspannt fühlen zu lassen — und enthüllt in jedem Bild authentische Emotionen und echte Persönlichkeit.",
+      "bio2": "Nach Jahren des Fotografierens von Familien- und Lifestyle-Sessions in Lissabon, Sintra und Cascais erkannte Kate, dass Touristen, die Portugal besuchen, schöne Fotos wollten, aber einen vertrauenswürdigen lokalen Fotografen zu finden überraschend schwer war. Sie schuf Photo Portugal, um dies zu lösen — einen kuratierten Marktplatz, auf dem jeder Fotograf persönlich geprüft wird und jede Session ein außergewöhnliches Erlebnis bietet.",
+      "bio3": "Kate überwacht persönlich den <link>Fotografen-Auswahlprozess</link> und stellt sicher, dass nur Profis, die ihr Engagement für Authentizität und Qualität teilen, der Plattform beitreten."
+    }
+  },
+  "contact": {
+    "metaTitle": "Kontakt — Photo Portugal",
+    "metaDescription": "Nehmen Sie Kontakt mit Photo Portugal auf. Fragen zu Buchungen, Fotografen-Konten oder Partnerschaften? Wir sind für Sie da.",
+    "title": "Kontakt aufnehmen",
+    "subtitle": "Haben Sie eine Frage? Wählen Sie ein Thema und wir melden uns innerhalb von 24 Stunden bei Ihnen.",
+    "form": {
+      "topicLabel": "Wobei können wir Ihnen helfen?",
+      "topicPlaceholder": "Thema auswählen...",
+      "topics": {
+        "clientSupport": "Kunden-Support — Buchungen, Zahlungen, Fotolieferung",
+        "photographerSupport": "Fotografen-Support — Konto, Profil, Auszahlungen",
+        "sales": "Vertrieb & Partnerschaften — Hotels, Agenturen, Kooperationen",
+        "pr": "Presse & Medien — Interviews, Pressematerial",
+        "other": "Sonstiges"
+      },
+      "nameLabel": "Ihr Name",
+      "namePlaceholder": "Vollständiger Name",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "sie@beispiel.com",
+      "messageLabel": "Nachricht",
+      "messagePlaceholder": "Erzählen Sie uns, wie wir helfen können...",
+      "send": "Nachricht senden",
+      "sending": "Wird gesendet...",
+      "sendFailed": "Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+      "sentTitle": "Nachricht gesendet!",
+      "sentDescription": "Vielen Dank für Ihre Anfrage. Wir melden uns innerhalb von 24 Stunden bei Ihnen."
+    },
+    "responseTime": {
+      "title": "Antwortzeit",
+      "description": "Wir antworten in der Regel innerhalb von 24 Stunden an Werktagen. Bei dringenden Buchungsfragen kontaktieren Sie bitte Ihren Fotografen direkt über das Nachrichtensystem in Ihrem Dashboard."
+    },
+    "helpCenterNote": "Sehen Sie in unserem Hilfe-Center für sofortige Antworten auf häufige Fragen nach",
+    "helpCenterLink": "Zum Hilfe-Center"
+  },
+  "pricing": {
+    "metaTitle": "Foto-Pakete & Preise — Urlaubs-Fotoshootings in Portugal",
+    "metaDescription": "Urlaubs-Fotoshooting-Pakete in Portugal ab 150 EUR. Paar-, Familien-, Solo- und Heiratsantrag-Fotografie. Fotografen vergleichen, verifizierte Bewertungen lesen. Kostenlose Stornierung verfügbar.",
+    "title": "Einfache, transparente Preise",
+    "subtitle": "Kostenlos starten, upgraden, wenn Sie bereit zum Wachsen sind",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "description": "Starten Sie und testen Sie die Plattform",
+        "features": {
+          "portfolioPhotos": "Bis zu 100 Portfolio-Fotos",
+          "locations": "1 Standort",
+          "searchVisibility": "Grundlegende Suchsichtbarkeit",
+          "commission": "{rate} % Plattform-Provision",
+          "unlimitedPackages": "Unbegrenzte Pakete"
+        },
+        "cta": "Kostenlos starten"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Für Fotografen, die ihr Geschäft ausbauen möchten",
+        "features": {
+          "portfolioPhotos": "Bis zu 100 Portfolio-Fotos",
+          "locations": "5 Standorte",
+          "searchRanking": "Vorrangige Suchplatzierung",
+          "analytics": "Profil-Analytics",
+          "commission": "{rate} % Plattform-Provision",
+          "unlimitedPackages": "Unbegrenzte Pakete"
+        },
+        "cta": "Auf Pro upgraden"
+      },
+      "premium": {
+        "name": "Premium",
+        "description": "Maximale Sichtbarkeit und niedrigste Provision",
+        "features": {
+          "portfolioPhotos": "Bis zu 100 Portfolio-Fotos",
+          "locations": "Alle Standorte",
+          "searchRanking": "Top-Suchplatzierung",
+          "analytics": "Vollständiges Analytics-Dashboard",
+          "commission": "{rate} % Plattform-Provision",
+          "support": "Premium-Support",
+          "customUrl": "Individuelle Profil-URL",
+          "unlimitedPackages": "Unbegrenzte Pakete"
+        },
+        "cta": "Premium wählen"
+      }
+    },
+    "addOns": {
+      "title": "Zusatzoptionen",
+      "verifiedBadge": {
+        "title": "Verifizierungs-Abzeichen",
+        "subtitle": "Identitätsprüfung für Vertrauen",
+        "description": "Erhalten Sie ein Verifizierungs-Abzeichen, indem Sie Ihre Telefonnummer per SMS bestätigen. Schafft Vertrauen bei Kunden und steigert Ihre Buchungsrate.",
+        "price": "19 €/Jahr"
+      },
+      "featuredPlacement": {
+        "title": "Empfohlene Platzierung",
+        "subtitle": "Premium-Sichtbarkeitsboost",
+        "description": "Auf der Startseite empfohlen, an erster Stelle auf der Fotografen-Seite bei jeder Sortierreihenfolge angezeigt und mit einem \"Empfohlen\"-Abzeichen auf Ihrem Profil und Ihren Karten.",
+        "price": "19 €/Monat"
+      }
+    },
+    "allPlansInclude": {
+      "title": "Alle Pläne enthalten",
+      "bookingManagement": "Buchungsverwaltung",
+      "clientMessaging": "Kundennachrichten",
+      "verifiedReviews": "Verifizierte Bewertungen",
+      "stripePayments": "Stripe-Zahlungen",
+      "seoProfile": "SEO-optimiertes Profil"
+    },
+    "howPaymentsWork": {
+      "title": "So funktionieren Zahlungen",
+      "forClients": {
+        "title": "Für Kunden",
+        "description": "Zahlen Sie den Paketpreis + {rate} % Servicegebühr. Sichere Zahlung über Stripe mit Unterstützung für Karten, Apple Pay und Google Pay."
+      },
+      "forPhotographers": {
+        "title": "Für Fotografen",
+        "description": "Erhalten Sie den Paketpreis abzüglich Plattform-Provision. Automatische Auszahlungen auf Ihr Bankkonto."
+      },
+      "table": {
+        "examplePackage": "Beispiel: 300 €-Paket",
+        "clientPays": "Kunde zahlt",
+        "serviceFee": "Servicegebühr ({rate} %)",
+        "platformCommission": "Plattform-Provision",
+        "youReceive": "Sie erhalten"
+      }
+    },
+    "helpCenterLink": "Erfahren Sie mehr darüber, wie Zahlungen funktionieren",
+    "helpCenterLinkText": "in unserem Hilfe-Center"
+  },
+  "join": {
+    "badge": "Early-Bird-Programm",
+    "heroTitle": "Werden Sie Gründungsfotograf",
+    "heroTitleEarly": "Als Early-Photographer beitreten",
+    "heroTitleFirst": "Treten Sie den ersten 50 Fotografen bei",
+    "heroSubtitle": "Wir bauen Portugals führenden Fotografie-Marktplatz für Touristen auf. Treten Sie jetzt bei und sichern Sie sich exklusive Vorteile, bevor wir öffentlich starten.",
+    "claimYourSpot": "Platz sichern",
+    "claimYourSpotNow": "Jetzt Platz sichern",
+    "tiers": {
+      "title": "Early-Bird-Stufen",
+      "subtitle": "Je früher Sie beitreten, desto größer die Belohnung",
+      "founding": {
+        "label": "Founding 10",
+        "reward": "Premium für immer",
+        "rewardDetail": "Premium-Plan für immer kostenlos + exklusives Founding-Photographer-Abzeichen auf Ihrem Profil"
+      },
+      "early50": {
+        "label": "Early 25",
+        "reward": "6 Monate Premium kostenlos",
+        "rewardDetail": "Premium-Plan (Wert 59 €/Mon.) 6 Monate kostenlos. Danach freie Planwahl."
+      },
+      "first50": {
+        "label": "First 50",
+        "reward": "3 Monate Pro kostenlos",
+        "rewardDetail": "Pro-Plan (Wert 29 €/Mon.) 3 Monate kostenlos. Danach freie Planwahl."
+      }
+    },
+    "whatYouGet": {
+      "title": "Das bekommen Sie",
+      "subtitle": "Alles, was Sie brauchen, um vom ersten Tag an zu verdienen",
+      "touristClients": {
+        "title": "Touristen-Kunden",
+        "desc": "Wir bringen internationale Reisende, die professionelle Fotografen in Portugal suchen. Keine Kaltakquise nötig."
+      },
+      "securePayments": {
+        "title": "Sichere Zahlungen",
+        "desc": "Stripe wickelt alle Zahlungen ab. Geld treuhänderisch verwahrt, bis der Kunde die Fotos akzeptiert. Keine Zahlungsstreitigkeiten."
+      },
+      "portfolioProfile": {
+        "title": "Portfolio & Profil",
+        "desc": "Schönes öffentliches Profil mit Portfolio-Galerie, Paketen, Bewertungen und Verifizierungs-Abzeichen. Ihr Online-Schaufenster."
+      },
+      "bookingManagement": {
+        "title": "Buchungsverwaltung",
+        "desc": "Anfragen erhalten, Buchungen bestätigen, mit Kunden chatten, Kalender verwalten. Alles in einem Dashboard."
+      },
+      "photoDelivery": {
+        "title": "Foto-Lieferung",
+        "desc": "Passwortgeschützte Galerie mit ZIP-Download. Kunde akzeptiert die Lieferung, Zahlung wird automatisch freigegeben."
+      },
+      "verifiedReviews": {
+        "title": "Verifizierte Bewertungen",
+        "desc": "Nur Kunden mit abgeschlossenen Buchungen können Bewertungen hinterlassen. Bauen Sie Vertrauen mit authentischem, verifiziertem Feedback auf."
+      }
+    },
+    "howPaymentsWork": {
+      "title": "So funktionieren Zahlungen",
+      "subtitle": "Transparent, sicher und automatisch — bereitgestellt von Stripe",
+      "steps": {
+        "clientBooks": {
+          "title": "Kunde bucht",
+          "desc": "Kunde wählt Ihr Paket und zahlt. Der volle Betrag wird sicher von Stripe verwahrt."
+        },
+        "youShoot": {
+          "title": "Sie shooten",
+          "desc": "Treffen Sie den Kunden, machen Sie die Session. Das Geld bleibt die ganze Zeit verwahrt — sicher für beide Seiten."
+        },
+        "youDeliver": {
+          "title": "Sie liefern",
+          "desc": "Laden Sie bearbeitete Fotos in die sichere Galerie auf unserer Plattform hoch. Der Kunde erhält eine Benachrichtigung."
+        },
+        "youGetPaid": {
+          "title": "Sie werden bezahlt",
+          "desc": "Sobald der Kunde die Fotos akzeptiert, wird die Zahlung automatisch an Ihr Stripe-Konto abzüglich unserer Provision freigegeben."
+        }
+      },
+      "noUpfrontCosts": "Keine Vorabkosten.",
+      "commissionNote": "Sie zahlen nur Provision auf abgeschlossene Buchungen. Der Provisionssatz hängt von Ihrem Plan ab (10-20 %). Early-Bird-Fotografen erhalten niedrigere Sätze ab dem ersten Tag."
+    },
+    "transparentPricing": {
+      "title": "Transparente Preise",
+      "subtitle": "Keine versteckten Gebühren. Sie wissen immer genau, was Sie verdienen.",
+      "table": {
+        "plan": "Plan",
+        "monthly": "Monatlich",
+        "commission": "Provision",
+        "youEarn": "Sie verdienen bei einer 200 €-Buchung"
+      },
+      "earlyBirdNote": "Early-Bird-Fotografen erhalten ihr Plan-Upgrade kostenlos — Sie profitieren weiterhin von niedrigeren Provisionssätzen."
+    },
+    "calculator": {
+      "title": "Wie viel können Sie verdienen?",
+      "subtitle": "Stellen Sie die Schieberegler ein, um Ihren potenziellen Verdienst auf Photo Portugal zu sehen.",
+      "sessionsPerMonth": "Sessions pro Monat",
+      "avgPackagePrice": "Durchschnittlicher Paketpreis",
+      "yourPlan": "Ihr Plan",
+      "commission": "Provision",
+      "monthlyEarnings": "Monatlicher Verdienst",
+      "yearlyEarnings": "Jährlicher Verdienst"
+    },
+    "gettingStarted": {
+      "title": "Der Einstieg dauert 10 Minuten",
+      "steps": {
+        "createAccount": {
+          "title": "Konto erstellen",
+          "desc": "Mit Google oder E-Mail registrieren. Wählen Sie \"Fotograf\", wenn gefragt."
+        },
+        "setupProfile": {
+          "title": "Profil einrichten",
+          "desc": "Fügen Sie Bio, Avatar, Coverfoto hinzu und wählen Sie Ihre Standorte in Portugal."
+        },
+        "uploadPortfolio": {
+          "title": "Portfolio hochladen",
+          "desc": "Zeigen Sie Ihre besten Arbeiten. Wir empfehlen mindestens 10 Fotos in verschiedenen Stilen."
+        },
+        "createPackages": {
+          "title": "Pakete erstellen",
+          "desc": "Legen Sie Ihre Preise und enthaltene Leistungen fest. Wir empfehlen 2-3 Pakete in unterschiedlichen Preiskategorien."
+        },
+        "connectStripe": {
+          "title": "Stripe verbinden",
+          "desc": "Verknüpfen Sie Ihr Stripe-Konto, um Zahlungen direkt auf Ihr Bankkonto zu erhalten."
+        },
+        "getApproved": {
+          "title": "Freigabe erhalten & verdienen",
+          "desc": "Unser Team prüft Ihr Profil innerhalb von 24 Stunden. Nach der Freigabe sind Sie live!"
+        }
+      }
+    },
+    "spotsRemaining": "{tier} Plätze übrig",
+    "spotsClaimed": "{tier} Plätze vergeben",
+    "spotsLeft": "Plätze übrig",
+    "finalCta": {
+      "title": "Verpassen Sie nicht Ihren Platz",
+      "subtitle": "Sind die Founding-Plätze einmal weg, sind sie für immer weg. Treten Sie jetzt bei und sichern Sie sich Ihre lebenslangen Vorteile.",
+      "freeToSignUp": "Kostenlose Anmeldung. Keine Kreditkarte erforderlich."
+    },
+    "founderAlt": "Kate Belova, Gründerin von Photo Portugal",
+    "founderQuote": "Ich habe Photo Portugal gegründet, weil ich weiß, wie schwer es für talentierte Fotografen ist, beständig Kunden zu finden. Diese Plattform bringt Touristen direkt zu Ihnen — kein Hinterherlaufen, kein Feilschen über Preise. Sie konzentrieren sich auf das, was Sie lieben: schöne Fotos zu machen.",
+    "founderName": "Kate Belova",
+    "founderRole": "Gründerin & Fotografin, 10+ Jahre Erfahrung",
+    "viewProfile": "Kates Profil ansehen →"
+  },
+  "forPhotographers": {
+    "metaTitle": "Bei Photo Portugal mitmachen — Als Urlaubsfotograf in Portugal Geld verdienen",
+    "metaDescription": "Treten Sie Portugals wachsendem Fotografen-Marktplatz bei. Verbinden Sie sich mit internationalen Reisenden, verwalten Sie Buchungen und bauen Sie Ihr Fotografie-Geschäft auf. Kostenloser Einstieg.",
+    "heroTitle": "Konzentrieren Sie sich aufs Shooten. Den Rest übernehmen wir.",
+    "heroSubtitle": "Tausende Touristen träumen von schönen Fotos an Portugals atemberaubendsten Orten — und sie suchen nach Ihnen. Wir bringen die Kunden, verwalten Buchungen, kümmern uns um Zahlungen und lassen Sie tun, was Sie lieben.",
+    "joinEarlyBird": "Dem Early-Bird-Programm beitreten",
+    "viewPlans": "Pläne ansehen",
+    "earlyBirdNote": "Die ersten 10 Fotografen erhalten Premium für immer kostenlos",
+    "howItWorks": {
+      "title": "So funktioniert's",
+      "createProfile": {
+        "title": "Profil erstellen",
+        "desc": "Registrieren Sie sich, laden Sie Ihr Portfolio hoch, legen Sie Standorte und Pakete fest. Es dauert nur wenige Minuten."
+      },
+      "getApproved": {
+        "title": "Freigabe erhalten",
+        "desc": "Unser Team prüft Ihr Profil zur Qualitätssicherung. Nach der Freigabe sind Sie für Tausende von Touristen sichtbar."
+      },
+      "startBooking": {
+        "title": "Kunden gewinnen",
+        "desc": "Kunden finden Sie, indem sie unseren Katalog durchsuchen oder über unseren Concierge-Matching-Service — bei dem unser Team Fotografen für Kunden basierend auf deren Wünschen handverlesen auswählt. So oder so erhalten Sie Buchungsanfragen und bestätigen einfach. Wir kümmern uns um Zahlungen, Erinnerungen und Lieferung."
+      }
+    },
+    "whyJoin": {
+      "title": "Warum Photo Portugal beitreten?",
+      "benefits": {
+        "clients": {
+          "title": "Wir bringen Ihnen Kunden",
+          "desc": "Touristen aus den USA, Großbritannien, Deutschland und darüber hinaus — alle aktiv auf der Suche nach Fotografen in Portugal. Sie bestätigen einfach den Termin."
+        },
+        "payments": {
+          "title": "Wir kümmern uns um Zahlungen",
+          "desc": "Sichere Zahlungen über Stripe — Kunden zahlen im Voraus, Sie werden automatisch bezahlt, sobald die Fotos geliefert sind. Keine Rechnungen, kein Hinterherlaufen."
+        },
+        "management": {
+          "title": "Wir verwalten alles",
+          "desc": "Buchungsanfragen, Zahlungserinnerungen, Shooting-Erinnerungen, Foto-Lieferung — die Plattform automatisiert alles. Sie konzentrieren sich auf die kreative Arbeit."
+        },
+        "seo": {
+          "title": "SEO-optimiertes Profil",
+          "desc": "Ihre Profilseite ist für Google optimiert. Kunden, die nach 'Fotograf in Lissabon' suchen, finden Sie organisch."
+        },
+        "reviews": {
+          "title": "Verifizierte Bewertungen",
+          "desc": "Jede Bewertung ist an eine echte Buchung gekoppelt. Bauen Sie Vertrauen mit authentischer Sozialbestätigung auf, die konvertiert."
+        },
+        "pricing": {
+          "title": "Sie bestimmen die Preise",
+          "desc": "Erstellen Sie Ihre eigenen Pakete, legen Sie Ihre Preise fest, wählen Sie Ihre Standorte. Volle Kontrolle über Ihr Geschäft — wir diktieren niemals Ihre Preise."
+        }
+      }
+    },
+    "community": {
+      "badge": "Demnächst",
+      "title": "Fotografen-Community",
+      "description": "Wir bauen eine Community für Fotografen mit Sitz in Portugal — mit Treffen, Workshops und Lern-Sessions. Vernetzen Sie sich mit anderen Kreativen, teilen Sie Erfahrungen und wachsen Sie gemeinsam."
+    },
+    "cta": {
+      "title": "Bereit loszulegen?",
+      "subtitle": "Kostenlos beitreten, Profil einrichten und Buchungen erhalten.",
+      "createProfile": "Erstellen Sie Ihr Fotografenprofil"
+    },
+    "helpCenterCta": "Haben Sie Fragen, wie die Plattform funktioniert?",
+    "helpCenterLink": "Besuchen Sie unser Hilfe-Center",
+    "faq": {
+      "title": "Häufig gestellte Fragen",
+      "items": [
+        {
+          "q": "Muss ich ein professioneller Fotograf sein?",
+          "a": "Ja. Wir prüfen jeden Fotografen sorgfältig. Sie sollten ein starkes Portfolio, professionelle Ausrüstung und Erfahrung mit bezahlten Sessions haben. Hobbyisten werden nicht angenommen."
+        },
+        {
+          "q": "Muss ich in Portugal leben?",
+          "a": "Sie müssen in Portugal ansässig oder rechtlich berechtigt sein, hier zu arbeiten. Die meisten unserer Fotografen leben in oder in der Nähe der Städte, die sie bedienen (Lissabon, Porto, Algarve usw.)."
+        },
+        {
+          "q": "Wie viel nehmen Sie pro Buchung?",
+          "a": "Wir berechnen 15 % Plattform-Gebühr pro Buchung (reduziert auf 10 % beim Premium-Plan). Den Rest behalten Sie. Keine Vorabkosten und kein Abo erforderlich, um zu starten."
+        },
+        {
+          "q": "Wie und wann werde ich bezahlt?",
+          "a": "Kunden zahlen über Stripe, wenn sie buchen. Die Gelder werden 24 Stunden nach Annahme der gelieferten Fotos durch den Kunden freigegeben. Auszahlungen gehen direkt auf Ihr Bankkonto."
+        },
+        {
+          "q": "Wie bekomme ich Kunden?",
+          "a": "Auf zwei Arten: (1) Kunden durchsuchen unseren Katalog und buchen Sie direkt, und (2) Unser Concierge-Team wählt Fotografen für Kundenanfragen handverlesen aus — Sie bestätigen einfach die Buchung."
+        },
+        {
+          "q": "Wie lange dauert die Freigabe?",
+          "a": "In der Regel 1-3 Werktage. Wir prüfen Ihr Portfolio, Ihre Identität und stellen sicher, dass Ihr Profil unseren Qualitätsstandards entspricht."
+        }
+      ]
+    }
+  },
+  "cookie": {
+    "message": "Wir verwenden essenzielle Cookies für die Authentifizierung und Analyse-Cookies, um unseren Service zu verbessern. Es werden keine Werbe-Cookies verwendet.",
+    "privacyPolicy": "Datenschutzerklärung",
+    "essentialOnly": "Nur essenzielle",
+    "acceptAll": "Alle akzeptieren"
+  },
+  "photographers": {
+    "findYourPhotographer": "Finden Sie Ihren Fotografen",
+    "photographersIn": "Fotografen in {location}",
+    "photographersInMultiple": "Fotografen in {count} Orten",
+    "available": "{count} handverlesener Fotograf",
+    "availablePlural": "{count} handverlesene Fotografen",
+    "trustLine": "Jeder Fotograf wird von unserem Team persönlich geprüft und freigegeben",
+    "teamOnlineNow": "Team ist jetzt online",
+    "teamWillBeOnlineIn": "Team ist in {hours}h wieder online",
+    "summerSeasonNotice": "Die Sommersaison füllt sich — buchen Sie früh, um Ihren Wunschtermin zu sichern",
+    "concierge": {
+      "title": "Brauchen Sie Hilfe bei der Auswahl? Lassen Sie uns matchen!",
+      "desc": "Teilen Sie uns Ihre Wünsche mit und unser Team wählt 2-3 Fotografen perfekt für Sie aus — kostenlos."
+    },
+    "noMatch": "Keine Fotografen entsprechen Ihren Filtern.",
+    "noMatchSuggestion": "Versuchen Sie, Ort, Shooting-Art oder Sprachfilter anzupassen, um mehr Fotografen zu sehen.",
+    "buckets": {
+      "popular": "Aktuell beliebt",
+      "topRated": "Top bewertet",
+      "new": "Neu hinzugekommen",
+      "founding": "Gründungsmitglieder",
+      "fast": "Schnellste Antworten"
+    },
+    "chips": {
+      "rating45": "4,5★+",
+      "verified": "Verifiziert",
+      "activeWeek": "Diese Woche aktiv",
+      "fastReply": "Antwortet in <1 Std.",
+      "founding": "Founding"
+    },
+    "filters": {
+      "allLocations": "Alle Orte",
+      "locations": "{count} Orte",
+      "searchLocations": "Orte suchen...",
+      "searchPlaceholder": "Nach Name oder Ort suchen...",
+      "anyLanguage": "Beliebige Sprache",
+      "sortFeatured": "Empfohlen",
+      "sortTopRated": "Top bewertet",
+      "sortMostReviews": "Meiste Bewertungen",
+      "sortNewest": "Neueste",
+      "sortFastest": "Schnellste Antwort",
+      "allFilters": "Alle Filter",
+      "sortPriceLow": "Preis: niedrig → hoch",
+      "sortPriceHigh": "Preis: hoch → niedrig",
+      "clearAll": "Alle löschen ({count})",
+      "clearAllShort": "Alle löschen",
+      "clearAllFilters": "Alle Filter zurücksetzen",
+      "mobileFilters": "Filter",
+      "occasion": "Anlass",
+      "language": "Sprache",
+      "showResults": "{count} Ergebnis anzeigen",
+      "showResultsPlural": "{count} Ergebnisse anzeigen"
+    },
+    "card": {
+      "founding": "Founding",
+      "featured": "Empfohlen",
+      "verified": "Verifiziert",
+      "speaks": "Spricht {languages}",
+      "from": "Ab",
+      "contactForPricing": "Preis auf Anfrage",
+      "viewProfile": "Profil ansehen",
+      "coverAlt": "{name} — Urlaubsfotograf in Portugal",
+      "messagePhotographer": "{name} eine Nachricht senden"
+    },
+    "profile": {
+      "previewBannerTitle": "Vorschau-Modus",
+      "previewBannerText": "Ihr Profil ist noch nicht veröffentlicht. Nur Sie sehen diese Seite.",
+      "privateClient": "Privatkunde",
+      "about": "Über",
+      "packages": "Pakete",
+      "reviews": "Bewertungen",
+      "reviewFor": "Bewertung für",
+      "noReviews": "Noch keine Bewertungen.",
+      "showMoreReviews": "Mehr Bewertungen anzeigen ({count} verbleibend)",
+      "newPhotographer": "Neuer Fotograf",
+      "verifiedPhotographer": "Verifizierter Fotograf",
+      "interested": "Interessiert?",
+      "sendMessageAvailability": "Senden Sie eine Nachricht, um Verfügbarkeit zu besprechen und Ihre Session zu buchen.",
+      "sendMessagePricing": "Senden Sie eine Nachricht, um Pakete, Preise und Verfügbarkeit zu besprechen.",
+      "perHour": "/Stunde",
+      "portfolio": "Portfolio",
+      "metaTitle": "{name} — Fotograf in {locations}",
+      "metaDescription": "Buchen Sie {name}, einen professionellen Fotografen in {locations}. Portfolio, Pakete und Bewertungen ansehen.",
+      "packageDescription": "{packageName}-Fotografie-Paket von {name}",
+      "moreInLocation": "Weitere Fotografen in {location}",
+      "similarPhotographers": "Ähnliche Fotografen",
+      "from": "Ab"
+    },
+    "package": {
+      "mostPopular": "Am beliebtesten",
+      "hideDetails": "Details ausblenden",
+      "viewDetails": "Details ansehen",
+      "bookThisPackage": "Dieses Paket buchen",
+      "fullyBookedUntil": "Voll ausgebucht bis {date}"
+    },
+    "portfolioGallery": {
+      "title": "Portfolio",
+      "all": "Alle ({count})",
+      "photoAlt": "Portfolio-Foto",
+      "noPhotosMatch": "Keine Fotos entsprechen diesem Filter.",
+      "arrowKeysHint": "Pfeiltasten zum Navigieren verwenden",
+      "photoViewer": "Foto-Viewer",
+      "closeLightbox": "Lightbox schließen",
+      "previousPhoto": "Vorheriges Foto",
+      "nextPhoto": "Nächstes Foto"
+    }
+  },
+  "locations": {
+    "title": "Die besten Orte zum Fotografieren in Portugal",
+    "subtitle": "Von Lissabons Kopfsteinpflasterstraßen bis zu den goldenen Klippen der Algarve — {count}+ der besten Orte zum Fotografieren in Portugal, handverlesen für Urlaubs-Fotoshootings, Paare, Familien und Solo-Reisende.",
+    "detail": {
+      "viewPhotographers": "Fotografen in {location} ansehen",
+      "photographerAvailable": "{count} handverlesener Fotograf",
+      "photographersAvailable": "{count} handverlesene Fotografen",
+      "whyLocation": "Warum {location} für Ihr Fotoshooting",
+      "popularTypes": "Beliebte Fotoshooting-Arten in {location}",
+      "popularTypesSection": "Beliebte Fotoshooting-Arten in {location}",
+      "dedicatedPhotographers": "Spezialisierte Fotografen für jeden Anlass in {location}",
+      "browsePhotographers": "{type}-Fotografen in {location} durchsuchen",
+      "photography": "Fotografie",
+      "photoshootIn": "Fotoshooting in",
+      "topPhotoSpots": "Top-Foto-Spots in {location}",
+      "mostPhotogenic": "Die fotogensten Orte für Ihr {location}-Fotoshooting",
+      "findPhotographersAtSpots": "Finden Sie Fotografen, die an diesen Spots shooten",
+      "bestTime": "Beste Zeit: {time}",
+      "nearbyLocations": "Orte in der Nähe",
+      "exploreMore": "Entdecken Sie weitere Fotoshooting-Reiseziele in der Nähe von {location}",
+      "viewPhotographersLink": "Fotografen ansehen",
+      "quickFacts": {
+        "title": "Quick Facts",
+        "region": "Region",
+        "bestTimeForPhotos": "Beste Zeit für Fotos",
+        "bestTimeValue": "Goldene Stunde (Sonnenauf- & untergang)",
+        "averageSession": "Durchschnittliche Session",
+        "averageSessionValue": "1-2 Stunden",
+        "startingFrom": "Ab",
+        "startingFromValue": "150 € / Session"
+      },
+      "cta": {
+        "title": "Bereit für Ihr {location}-Fotoshooting?",
+        "subtitle": "Durchsuchen Sie unsere verifizierten Fotografen, prüfen Sie ihre Portfolios und buchen Sie Ihre Session in wenigen Minuten.",
+        "browsePhotographers": "{location}-Fotografen durchsuchen"
+      },
+      "topPhotographers": "Beste verfügbare Fotografen in {location}",
+      "relatedArticles": "Verwandte Artikel",
+      "readMore": "Mehr lesen",
+      "shootTypes": {
+        "couples": "Paarfotos",
+        "family": "Familie",
+        "soloPortrait": "Solo-Porträt",
+        "engagement": "Verlobung",
+        "proposal": "Heiratsantrag",
+        "honeymoon": "Flitterwochen",
+        "friendsTrip": "Freunde-Trip",
+        "anniversary": "Jubiläum"
+      }
+    }
+  },
+  "blog": {
+    "title": "Reisefotografie-Blog",
+    "subtitle": "Tipps, Anleitungen und Inspiration, um Ihre schönsten Momente in Portugal festzuhalten. Von den besten Foto-Spots bis zur Planung Ihres Traum-Fotoshootings.",
+    "noPosts": "Noch keine Blog-Beiträge. Schauen Sie bald wieder vorbei!",
+    "readMore": "Mehr lesen",
+    "blogPagination": "Blog-Paginierung"
+  },
+  "blogCategories": {
+    "all": "Alle Beiträge",
+    "locations": "Foto-Locations",
+    "pricing": "Preisratgeber",
+    "elopements": "Elopements",
+    "weddings": "Hochzeiten",
+    "couples": "Paare",
+    "family": "Familie",
+    "planning": "Planung & Tipps",
+    "proposals": "Heiratsanträge",
+    "solo": "Solo & Creators",
+    "comparisons": "Vergleiche",
+    "locationsDesc": "Entdecken Sie die besten Foto-Spots und Location-Guides in ganz Portugal",
+    "pricingDesc": "Was Fotoshootings in Portugal kosten — transparente Preisaufschlüsselungen",
+    "elopementsDesc": "Alles, was Sie über Eloping in Portugal wissen müssen",
+    "weddingsDesc": "Reise-Hochzeitsfotografie-Guides für Portugal",
+    "couplesDesc": "Romantische Paar-Fotoshooting-Ideen und Inspiration in Portugal",
+    "familyDesc": "Familien-Fotoshooting-Tipps, Locations und Ideen in ganz Portugal",
+    "planningDesc": "Was anziehen, wann shooten und wie Sie Ihr Portugal-Fotoshooting planen",
+    "proposalsDesc": "Planen Sie den perfekten Überraschungs-Heiratsantrag in Portugal",
+    "soloDesc": "Solo-Reise- und Content-Creator-Fotografie in Portugal",
+    "comparisonsDesc": "Wie Photo Portugal im Vergleich zu anderen Urlaubs-Fotografie-Diensten abschneidet"
+  },
+  "book": {
+    "title": "{photographer} buchen",
+    "subtitle": "Geben Sie die Details für Ihre Fotoshooting-Anfrage ein",
+    "signInToBook": "Erstellen Sie ein Konto, um zu buchen",
+    "needAccount": "Schnelle kostenlose Anmeldung, um Ihre Buchungsanfrage zu senden.",
+    "trust": {
+      "heading": "Dies ist eine kostenlose Anfrage — noch keine Verpflichtung",
+      "freeRequest": "Keine Zahlung jetzt — senden Sie die Anfrage, der Fotograf prüft sie",
+      "payAfterConfirm": "Sie zahlen erst, wenn der Fotograf Ihren Termin bestätigt",
+      "cancelAnytime": "Vor der Bestätigung jederzeit kostenlos stornierbar",
+      "stripeSecure": "Zahlungen geschützt durch Stripe (weltführender Zahlungsanbieter)"
+    },
+    "success": {
+      "title": "Buchungsanfrage gesendet!",
+      "message": "{photographer} prüft Ihre Anfrage und meldet sich bald bei Ihnen.",
+      "myBookings": "Meine Buchungen",
+      "browseMore": "Mehr ansehen"
+    },
+    "photographerNotFound": "Fotograf nicht gefunden",
+    "sampleProfile": "Dies ist ein Beispielprofil. Durchsuchen Sie echte Fotografen, um eine Session zu buchen.",
+    "failedToLoad": "Fotograf konnte nicht geladen werden",
+    "failedToSend": "Buchungsanfrage konnte nicht gesendet werden",
+    "form": {
+      "selectPackage": "Paket auswählen",
+      "preferredLocation": "Wunschort",
+      "locationDetail": "Treffpunkt oder bestimmtes Gebiet (optional)",
+      "locationDetailPlaceholder": "z. B. Praia Dona Ana, Hotel-Lobby, Stadtviertel Alfama...",
+      "preferredDate": "Wunschdatum",
+      "preferredTime": "Wunschuhrzeit",
+      "flexibleDates": "Ich bin flexibel bei den Daten",
+      "selectDate": "Datum auswählen",
+      "selectDateOrFlexible": "Bitte wählen Sie ein Datum oder aktivieren Sie \"Ich bin flexibel bei den Daten\"",
+      "selectDateRange": "Bitte wählen Sie einen Datumsbereich für Ihre flexiblen Daten",
+      "dateFrom": "Verfügbar ab",
+      "dateTo": "Verfügbar bis",
+      "groupSize": "Gruppengröße",
+      "occasion": "Anlass",
+      "messageTo": "Nachricht an den Fotografen",
+      "messagePlaceholder": "Besondere Wünsche, bevorzugte Plätze oder Fragen...",
+      "submit": "Buchungsanfrage senden",
+      "submitting": "Anfrage wird gesendet...",
+      "paymentNote": "Die Zahlung wird sicher abgewickelt, nachdem der Fotograf Ihre Buchung bestätigt hat."
+    },
+    "time": {
+      "flexible": "Ich bin flexibel",
+      "sunrise": "Sonnenaufgang (6-8 Uhr)",
+      "morning": "Vormittag (8-11 Uhr)",
+      "midday": "Mittag (11-14 Uhr)",
+      "afternoon": "Nachmittag (14-17 Uhr)",
+      "goldenHour": "Goldene Stunde (17-19 Uhr)",
+      "sunset": "Sonnenuntergang (19-21 Uhr)"
+    },
+    "groupSizes": {
+      "solo": "Solo (1 Person)",
+      "couple": "Paar (2 Personen)",
+      "small": "Kleine Gruppe (3-4)",
+      "group": "Gruppe (5-8)",
+      "large": "Große Gruppe (9+)"
+    },
+    "occasions": {
+      "select": "Anlass auswählen",
+      "vacation": "Urlaub",
+      "honeymoon": "Flitterwochen",
+      "engagement": "Verlobung",
+      "proposal": "Heiratsantrag",
+      "anniversary": "Jubiläum",
+      "birthday": "Geburtstag",
+      "family": "Familienreise",
+      "friends": "Freunde-Reise",
+      "solo": "Solo-Reise",
+      "elopement": "Elopement",
+      "maternity": "Schwangerschaft",
+      "other": "Sonstiges"
+    },
+    "summary": {
+      "serviceFee": "Servicegebühr ({rate} %)",
+      "total": "Gesamt"
+    }
+  },
+  "chooseBookingType": {
+    "metaTitle": "Fotoshooting in Portugal buchen",
+    "metaDescription": "Wählen Sie, wie Sie Ihren Fotografen buchen möchten — selbst stöbern und auswählen oder unser Concierge-Team den perfekten Match finden lassen.",
+    "title": "Wie möchten Sie buchen?",
+    "subtitle": "Zwei Wege, Ihren perfekten Fotografen in Portugal zu finden.",
+    "browseTitle": "Ich wähle selbst",
+    "browseDesc": "Fotografen-Portfolios durchsuchen, Preise und Bewertungen vergleichen und direkt buchen.",
+    "matchTitle": "Finden Sie mir den perfekten Match",
+    "matchDesc": "Erzählen Sie uns von Ihrem Traum-Fotoshooting und wir wählen 2-3 Fotografen für Sie aus — kostenlos.",
+    "browseCta": "Stöbern",
+    "matchCta": "Loslegen"
+  },
+  "chooseRole": {
+    "title": "Willkommen bei Photo Portugal!",
+    "subtitle": "Sagen Sie uns, wer Sie sind, damit wir Ihr Erlebnis personalisieren können.",
+    "tourist": "Ich bin Reisender",
+    "touristDesc": "Auf der Suche nach einem Fotografen, der meine Reise nach Portugal festhält.",
+    "photographer": "Ich bin Fotograf",
+    "photographerDesc": "Ich möchte Fotoshootings anbieten und mein Geschäft ausbauen."
+  },
+  "heroSingle": {
+    "coverAlt": "{name} — Fotograf in {location}",
+    "availableChip": "Diese Woche verfügbar in {location}",
+    "headline": "Lernen Sie <name>{firstName}</name> kennen,<br></br> Ihren {location}-Fotografen",
+    "viewProfile": "Profil ansehen",
+    "reviewsCount": "({count} Bewertungen)",
+    "shootsCompleted": "<strong>{count}+</strong> Shootings abgeschlossen",
+    "matchPrompt": "Möchten Sie {firstName} oder jemand anderen? Wir matchen Sie",
+    "browseAll": "Oder <link>alle 30+ Fotografen durchsuchen</link> in ganz Portugal"
+  },
+  "quickMatch": {
+    "locationLabel": "Ort",
+    "locationPlaceholder": "Ort",
+    "emailLabel": "E-Mail",
+    "emailPlaceholder": "ihre@email.com",
+    "matchMe": "Match finden",
+    "sending": "Wird gesendet…",
+    "successTitle": "Verstanden — wir kümmern uns darum!",
+    "successBody": "Wir senden Ihnen innerhalb weniger Stunden 2-3 handverlesene Fotografen-Empfehlungen per E-Mail.",
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "pleaseFillBoth": "Bitte füllen Sie beide Felder aus.",
+    "footnote": "Kostenloser Service · Kein Spam · Antwort innerhalb weniger Stunden"
+  },
+  "findPhotographer": {
+    "metaTitle": "Finden Sie meinen Fotografen in Portugal",
+    "metaDescription": "Erzählen Sie uns von Ihrem Fotoshooting und wir matchen Sie mit 2-3 handverlesenen Fotografen in Portugal. Kostenloser Concierge-Matching-Service.",
+    "title": "Finden Sie meinen Fotografen",
+    "subtitle": "Erzählen Sie uns von Ihrem Traum-Fotoshooting und wir wählen 2-3 Fotografen exklusiv für Sie aus — kostenlos.",
+    "nameLabel": "Ihr Name",
+    "namePlaceholder": "Vollständiger Name",
+    "firstNameLabel": "Vorname",
+    "firstNamePlaceholder": "Vorname",
+    "lastNameLabel": "Nachname",
+    "lastNamePlaceholder": "Nachname",
+    "emailLabel": "E-Mail",
+    "emailPlaceholder": "ihre@email.com",
+    "phoneLabel": "Telefon",
+    "phonePlaceholder": "+1 234 567 890",
+    "locationLabel": "Wo in Portugal?",
+    "locationPlaceholder": "Ort auswählen",
+    "shootTypeLabel": "Art des Fotoshootings",
+    "shootTypePlaceholder": "Shooting-Art auswählen",
+    "dateLabel": "Wunschdatum",
+    "dateFlexible": "Ich bin flexibel bei den Daten",
+    "dateFromLabel": "Frühestes Datum",
+    "dateToLabel": "Spätestes Datum",
+    "timeLabel": "Wunschuhrzeit",
+    "groupSizeLabel": "Gruppengröße",
+    "budgetLabel": "Budget-Bereich",
+    "budgetPlaceholder": "Budget auswählen",
+    "budget150": "150 € - 299 €",
+    "budget300": "300 € - 599 €",
+    "budget600": "600 €+",
+    "messageLabel": "Besondere Wünsche oder Details",
+    "messagePlaceholder": "Erzählen Sie uns von Ihrer Vision, besonderen Momenten, die Sie festgehalten haben möchten, Vorlieben...",
+    "submit": "Meinen Fotografen finden",
+    "submitting": "Wird gesendet...",
+    "smsConsent": "Ich willige ein, wichtige SMS-Updates zu meiner Anfrage zu erhalten (Fotografen-Matches, Bestätigungen, Erinnerungen) — keine Werbung. Siehe unsere <terms>Nutzungsbedingungen</terms> und <privacy>Datenschutzerklärung</privacy>.",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "successTitle": "Anfrage erhalten!",
+    "successMessage": "Vielen Dank! Wir melden uns innerhalb von 2 Stunden mit personalisierten Fotografen-Empfehlungen bei Ihnen.",
+    "successBrowse": "Fotografen durchsuchen",
+    "signInToSubmit": "Erstellen Sie ein Konto, um abzusenden",
+    "signInToSubmitDesc": "Schnelle Anmeldung, um Ihre Fotografen-Matching-Anfrage zu senden",
+    "howItWorksTitle": "So funktioniert's",
+    "step1Title": "Teilen Sie uns Ihre Wünsche mit",
+    "step1Desc": "Füllen Sie das Formular mit Ort, Daten und Stil aus.",
+    "step2Title": "Wir wählen Ihre Matches handverlesen aus",
+    "step2Desc": "Unser Team prüft Ihre Anfrage und wählt 2-3 Fotografen perfekt für Sie aus.",
+    "step3Title": "Sie wählen und buchen",
+    "step3Desc": "Prüfen Sie Ihre Matches, sehen Sie sich ihre Portfolios an und buchen Sie direkt."
+  },
+  "auth": {
+    "error": {
+      "deactivatedTitle": "Konto deaktiviert",
+      "deactivatedDescription": "Ihr Konto wurde deaktiviert. Wenn Sie der Meinung sind, dass dies ein Fehler ist, kontaktieren Sie bitte unser Support-Team und wir werden uns darum kümmern.",
+      "contactUs": "Support kontaktieren",
+      "genericTitle": "Anmeldefehler",
+      "genericDescription": "Beim Anmelden ist etwas schiefgelaufen. Bitte versuchen Sie es erneut.",
+      "tryAgain": "Erneut versuchen"
+    },
+    "signIn": {
+      "title": "Willkommen zurück",
+      "subtitle": "Melden Sie sich bei Ihrem Photo-Portugal-Konto an",
+      "continueWithGoogle": "Mit Google fortfahren",
+      "orSignInWithEmail": "oder mit E-Mail anmelden",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "sie@beispiel.com",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "Ihr Passwort",
+      "forgotPassword": "Passwort vergessen?",
+      "signInButton": "Anmelden",
+      "signingIn": "Wird angemeldet...",
+      "noAccount": "Noch kein Konto?",
+      "signUpLink": "Registrieren",
+      "invalidCredentials": "Ungültige E-Mail oder Passwort",
+      "emailNotVerified": "Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse. Prüfen Sie Ihren Posteingang auf den Verifizierungs-Link.",
+      "accountDeactivated": "Ihr Konto wurde deaktiviert. Bitte kontaktieren Sie den Support.",
+      "emailVerified": "E-Mail erfolgreich verifiziert! Sie können sich jetzt anmelden.",
+      "verifyEmailSent": "Konto erstellt! Bitte prüfen Sie Ihre E-Mail und klicken Sie auf den Verifizierungs-Link, um Ihr Konto zu aktivieren."
+    },
+    "signUp": {
+      "title": "Konto erstellen",
+      "subtitle": "Photo Portugal als Reisender oder Fotograf beitreten",
+      "iAmA": "Ich bin...",
+      "lookingForPhotographer": "Auf der Suche nach einem Fotografen",
+      "imAPhotographer": "Ich bin Fotograf",
+      "signUpWithGoogle": "Mit Google registrieren",
+      "orWithEmail": "oder mit E-Mail",
+      "fullNameLabel": "Vollständiger Name",
+      "fullNamePlaceholder": "Ihr Name",
+      "firstNameLabel": "Vorname",
+      "firstNamePlaceholder": "Vorname",
+      "lastNameLabel": "Nachname",
+      "lastNamePlaceholder": "Nachname",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "sie@beispiel.com",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "Mind. 8 Zeichen",
+      "createAccount": "Konto erstellen",
+      "creatingAccount": "Konto wird erstellt...",
+      "alreadyHaveAccount": "Sie haben bereits ein Konto?",
+      "signInLink": "Anmelden",
+      "continueWithGoogle": "Mit Google fortfahren",
+      "agreeToTerms": "Mit der Registrierung stimmen Sie zu unseren",
+      "passwordStrength": {
+        "tooShort": "Zu kurz",
+        "weak": "Schwach",
+        "good": "Gut",
+        "strong": "Stark"
+      },
+      "errors": {
+        "passwordMinLength": "Passwort muss mindestens 8 Zeichen lang sein",
+        "somethingWentWrong": "Etwas ist schiefgelaufen",
+        "accountCreatedButSignInFailed": "Konto erstellt, aber automatische Anmeldung fehlgeschlagen"
+      },
+      "lookingForPhotographerDesc": "Buchen Sie ein professionelles Fotoshooting in Portugal",
+      "imAPhotographerDesc": "Treten Sie unserem Netzwerk bei und erhalten Sie Buchungen",
+      "roleClient": "Ich brauche Fotos",
+      "rolePhotographer": "Ich mache Fotos",
+      "roleLabel": "Ich bin hier, um..."
+    },
+    "forgotPassword": {
+      "title": "Passwort zurücksetzen",
+      "subtitle": "Geben Sie Ihre E-Mail ein und wir senden Ihnen einen Reset-Link",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "sie@beispiel.com",
+      "sendResetLink": "Reset-Link senden",
+      "sending": "Wird gesendet...",
+      "successMessage": "Falls ein Konto mit dieser E-Mail existiert, haben wir einen Reset-Link gesendet. Bitte prüfen Sie Ihren Posteingang und Spam-Ordner.",
+      "backToSignIn": "Zurück zur Anmeldung",
+      "rememberPassword": "Erinnern Sie sich an Ihr Passwort?",
+      "tooManyRequests": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+      "somethingWentWrong": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    },
+    "resetPassword": {
+      "title": "Neues Passwort festlegen",
+      "subtitle": "Geben Sie unten Ihr neues Passwort ein",
+      "newPasswordLabel": "Neues Passwort",
+      "newPasswordPlaceholder": "Mindestens 8 Zeichen",
+      "confirmPasswordLabel": "Passwort bestätigen",
+      "confirmPasswordPlaceholder": "Geben Sie Ihr Passwort erneut ein",
+      "resetButton": "Passwort zurücksetzen",
+      "resetting": "Wird zurückgesetzt...",
+      "successMessage": "Ihr Passwort wurde erfolgreich zurückgesetzt.",
+      "invalidLink": "Ungültiger Reset-Link. Bitte fordern Sie ein neues Passwort-Reset an.",
+      "requestResetLink": "Reset-Link anfordern",
+      "errors": {
+        "passwordMinLength": "Passwort muss mindestens 8 Zeichen lang sein.",
+        "passwordsDoNotMatch": "Passwörter stimmen nicht überein.",
+        "somethingWentWrong": "Etwas ist schiefgelaufen.",
+        "tryAgain": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+      }
+    }
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Seite nicht gefunden",
+    "description": "Tut uns leid, wir konnten die gesuchte Seite nicht finden. Sie wurde möglicherweise verschoben oder existiert nicht.",
+    "goHome": "Zur Startseite",
+    "browsePhotographers": "Fotografen durchsuchen",
+    "exploreLocations": "Orte entdecken"
+  },
+  "error": {
+    "code": "500",
+    "title": "Hoppla, der Objektivdeckel ist drauf!",
+    "description": "Wir haben einen kleinen technischen Schluckauf. Unser Team arbeitet bereits daran. Die Seite wird gleich automatisch erneut geladen.",
+    "tryAgain": "Jetzt erneut versuchen",
+    "contactSupport": "Falls dies wiederholt auftritt, kontaktieren Sie ",
+    "dashboardError": {
+      "title": "Dashboard-Fehler",
+      "description": "Beim Laden Ihres Dashboards ist etwas schiefgelaufen. Bitte versuchen Sie es erneut.",
+      "tryAgain": "Erneut versuchen"
+    }
+  },
+  "shootTypesPage": {
+    "title": "Urlaubs-Fotoshooting-Arten in Portugal",
+    "subtitle": "Was auch immer Sie nach Portugal führt – wir haben den perfekten Fotografen für Ihren Anlass. Von romantischen Paarsessions bis hin zu fröhlichen Gruppenfotos auf Reisen mit Freunden – entdecken Sie alle Möglichkeiten, Ihre Erlebnisse in Portugal festzuhalten.",
+    "photoshoot": "{name}-Fotoshooting",
+    "learnMore": "Mehr erfahren",
+    "ctaTitle": "Sie sind sich nicht sicher, welche Art Sie wählen sollen?",
+    "ctaSubtitle": "Stöbern Sie in unseren Fotografen und filtern Sie nach Anlass. Viele Fotografen bieten verschiedene Shooting-Arten an und können die Session an Ihre Bedürfnisse anpassen.",
+    "browseAllPhotographers": "Alle Fotografen ansehen",
+    "bestLocationsTitle": "Die besten Orte für {name}-Fotografie in Portugal",
+    "bestLocationsSubtitle": "Unsere Fotografen sind in ganz Portugal tätig. Hier sind die Top-Reiseziele für Ihr {name}-Fotoshooting.",
+    "viewPhotographers": "{name}-Fotografen ansehen",
+    "howToBookTitle": "So buchen Sie Ihr {name}-Fotoshooting",
+    "stepBrowse": "Fotografen durchsuchen",
+    "stepBrowseDesc": "Sehen Sie sich Portfolios von Fotografen an, die in {name}-Fotografie in ganz Portugal erfahren sind.",
+    "stepChoose": "Wählen Sie Ihr Paket",
+    "stepChooseDesc": "Wählen Sie ein Paket, das Ihren Bedürfnissen entspricht. Die meisten Sessions dauern 1-2 Stunden und enthalten 40-100+ bearbeitete Fotos.",
+    "stepBook": "Buchen Sie Ihre Session",
+    "stepBookDesc": "Wählen Sie Datum, Uhrzeit und bevorzugten Ort. Ihr Fotograf bestätigt innerhalb von 24 Stunden.",
+    "stepGetPhotos": "Erhalten Sie Ihre Fotos",
+    "stepGetPhotosDesc": "Erhalten Sie professionell bearbeitete, hochauflösende Fotos in Ihrer privaten, passwortgeschützten Galerie.",
+    "faqTitle": "{name}-Fotoshooting FAQ",
+    "ctaReadyTitle": "Bereit, Ihr {name}-Fotoshooting zu buchen?",
+    "ctaReadySubtitle": "Stöbern Sie in verifizierten Fotografen, vergleichen Sie Portfolios und Preise und buchen Sie Ihre perfekte {name}-Session in wenigen Minuten.",
+    "findPhotographers": "{name}-Fotografen finden",
+    "howItWorks": "So funktioniert's",
+    "photographersTitle": "{name}-Fotografen in Portugal",
+    "photographersSubtitle": "Handverlesene Profis, spezialisiert auf {name}-Fotografie",
+    "viewAllPhotographers": "Alle {name}-Fotografen ansehen",
+    "bestPhotographers": "Die besten Fotografen für {name}-Fotoshootings",
+    "minutesAbbr": "Min.",
+    "photosLabel": "Fotos",
+    "bookCta": "Buchen →",
+    "reviewsTitle": "Echte Bewertungen von {nameLower}-Fotoshootings",
+    "reviewsSubtitleClients": "Von Kunden, die über Photo Portugal gebucht haben",
+    "guidesTitle": "{name}-Fotografie-Ratgeber",
+    "guidesSubtitle": "Tipps und Inspiration für Ihr {nameLower}-Fotoshooting in Portugal",
+    "popularPackages": "Beliebte {name}-Fotoshooting-Pakete",
+    "popularPackagesSub": "Echte Preise von verifizierten Fotografen, die {nameLower}-Fotoshooting-Pakete in Portugal anbieten."
+  },
+  "blogDetail": {
+    "home": "Startseite",
+    "blog": "Blog",
+    "readyToBook": "Bereit, Ihr Fotoshooting zu buchen?",
+    "readyToBookSubtitle": "Stöbern Sie in unseren talentierten Fotografen in ganz Portugal und halten Sie Ihre perfekten Urlaubserinnerungen fest.",
+    "findAPhotographer": "Einen Fotografen finden",
+    "moreFromBlog": "Weitere Beiträge aus dem Blog",
+    "relatedLocations": "Verwandte Orte",
+    "breadcrumb": "Navigationspfad",
+    "blogCta": {
+      "title": "Bereit, Ihre Portugal-Reise festzuhalten?",
+      "titleLocation": "Möchten Sie professionelle Fotos in {location}?",
+      "description": "Stöbern Sie in Portfolios, vergleichen Sie Pakete und buchen Sie in wenigen Minuten einen verifizierten lokalen Fotografen.",
+      "browsePhotographers": "Fotografen durchsuchen",
+      "getMatched": "Kostenlos vermitteln lassen"
+    }
+  },
+  "exitIntent": {
+    "title": "Gehen Sie nicht ohne Ihre Fotos!",
+    "description": "Teilen Sie uns Ihre Daten und Vorlieben mit – unser Team wählt 2-3 Fotografen aus, die perfekt zu Ihrer Reise passen. Dauert 2 Minuten.",
+    "matchMe": "Mit einem Fotografen vermitteln lassen",
+    "browse": "Fotografen durchsuchen",
+    "free": "Kostenloser Concierge-Service – keine Verpflichtung",
+    "saveTitle": "{name} für später speichern",
+    "saveDesc": "Hinterlassen Sie Ihre E-Mail-Adresse und wir senden Ihnen einen direkten Link – kommen Sie jederzeit zum Buchen zurück.",
+    "saveEmailPlaceholder": "ihre@email.com",
+    "saveCta": "Link per E-Mail senden",
+    "saveSending": "Wird gesendet...",
+    "saveError": "Etwas ist schiefgegangen. Erneut versuchen?",
+    "saveSentTitle": "Schauen Sie in Ihr Postfach",
+    "saveSentDesc": "Wir haben den Link an {email} gesendet.",
+    "saveClose": "Weiter stöbern",
+    "saveFooter": "Kein Spam. Eine E-Mail mit dem Link, sonst nichts."
+  },
+  "photographersMeta": {
+    "title": "Fotograf in Portugal buchen – Lissabon, Porto, Algarve",
+    "description": "Finden und buchen Sie einen professionellen Fotografen in Lissabon, Porto, Sintra, Algarve und über 20 weiteren Orten in Portugal. Stöbern Sie in Portfolios, vergleichen Sie Preise und lesen Sie verifizierte Bewertungen. Buchen Sie Ihr Urlaubs-Fotoshooting online – Paare, Familie, Hochzeit, Elopement. Ab 150 €."
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "lastUpdated": "Zuletzt aktualisiert: 19. März 2026",
+    "metaDescription": "Datenschutzerklärung von Photo Portugal – wie wir Ihre personenbezogenen Daten erheben, verwenden und schützen.",
+    "sections": {
+      "informationWeCollect": {
+        "title": "1. Welche Informationen wir erheben",
+        "intro": "Wenn Sie Photo Portugal nutzen, können wir die folgenden Informationen erheben:",
+        "items": {
+          "account": "<strong>Kontoinformationen:</strong> Name, E-Mail-Adresse, Profilfoto (über Google OAuth oder hochgeladen), Telefonnummer (sofern angegeben)",
+          "photographer": "<strong>Fotografenprofile:</strong> Bio, Sprachen, Standorte, Portfolio-Fotos, Preise, Verfügbarkeit",
+          "booking": "<strong>Buchungsdaten:</strong> Daten, Uhrzeiten, Standorte, Session-Art, Anzahl der Teilnehmenden sowie etwaige Sonderwünsche",
+          "messages": "<strong>Nachrichten:</strong> Kommunikation zwischen Kunden und Fotografen über unsere Plattform",
+          "payment": "<strong>Zahlungsinformationen:</strong> Abrechnungsdetails, die sicher von Stripe verarbeitet werden (wir speichern Ihre vollständige Kartennummer nicht)",
+          "usage": "<strong>Nutzungsdaten:</strong> besuchte Seiten, Gerätetyp, Browser, IP-Adresse, verweisende URL und Interaktionsmuster",
+          "cookies": "<strong>Cookies und ähnliche Technologien:</strong> Sitzungstoken, Authentifizierungsstatus und Analyse-Identifier (siehe Abschnitt 8)"
+        }
+      },
+      "legalBasis": {
+        "title": "2. Rechtsgrundlage für die Verarbeitung",
+        "intro": "Gemäß der Datenschutz-Grundverordnung (DSGVO) verarbeiten wir Ihre personenbezogenen Daten auf folgenden Rechtsgrundlagen:",
+        "items": {
+          "contract": "<strong>Vertragserfüllung (Artikel 6 Abs. 1 lit. b):</strong> Verarbeitung, die zur Erfüllung von Buchungen zwischen Kunden und Fotografen, zur Verwaltung Ihres Kontos, zur Abwicklung von Zahlungen und zur Bereitstellung der von Ihnen über unsere Plattform angeforderten Dienste erforderlich ist.",
+          "consent": "<strong>Einwilligung (Artikel 6 Abs. 1 lit. a):</strong> für nicht zwingend erforderliche Cookies, Marketing-E-Mails und werbliche Mitteilungen. Sie können Ihre Einwilligung jederzeit widerrufen, ohne dass die Rechtmäßigkeit der bis zum Widerruf erfolgten Verarbeitung berührt wird.",
+          "legitimateInterest": "<strong>Berechtigtes Interesse (Artikel 6 Abs. 1 lit. f):</strong> für Plattformsicherheit und Betrugsprävention, anonyme Analysen zur Verbesserung unseres Dienstes, zur Durchsetzung unserer Nutzungsbedingungen sowie zur Übermittlung wesentlicher Service-Updates.",
+          "legalObligation": "<strong>Rechtliche Verpflichtung (Artikel 6 Abs. 1 lit. c):</strong> zur Einhaltung steuerlicher, buchhalterischer und sonstiger gesetzlicher Anforderungen nach portugiesischem und EU-Recht."
+        }
+      },
+      "howWeUse": {
+        "title": "3. Wie wir Ihre Informationen verwenden",
+        "items": {
+          "provide": "Um unsere Dienste als Fotografie-Marktplatz bereitzustellen, zu betreiben und zu verbessern",
+          "facilitate": "Um Buchungen und die Kommunikation zwischen Kunden und Fotografen zu ermöglichen",
+          "display": "Um Fotografenprofile und Portfolios öffentlich auf der Plattform anzuzeigen",
+          "payments": "Um Zahlungen zu verarbeiten und Rechnungen auszustellen",
+          "notifications": "Um Buchungsbestätigungen, Erinnerungen und servicebezogene Benachrichtigungen zu senden",
+          "marketing": "Um Marketingmitteilungen zu senden (nur mit Ihrer Einwilligung, jederzeit widerrufbar)",
+          "fraud": "Um Betrug zu verhindern, Missbrauch zu erkennen und die Plattformsicherheit zu gewährleisten",
+          "analytics": "Um Nutzungsmuster zu analysieren und das Nutzererlebnis zu verbessern",
+          "legal": "Um gesetzliche Verpflichtungen einzuhalten, einschließlich steuerlicher und buchhalterischer Anforderungen"
+        }
+      },
+      "informationSharing": {
+        "title": "4. Weitergabe von Informationen & Drittanbieter-Dienste",
+        "intro": "Wir verkaufen Ihre personenbezogenen Daten nicht. Wir geben Daten nur in folgenden Fällen weiter:",
+        "items": {
+          "bookingParties": "<strong>Zwischen den Buchungsparteien:</strong> Kunden sehen Fotografenprofile und öffentliche Portfolios; Fotografen sehen Kundennamen, Kontaktdaten und Buchungsinformationen, die zur Erbringung der Dienstleistung erforderlich sind.",
+          "serviceProviders": "<strong>Dienstleister (Auftragsverarbeiter):</strong> Wir nutzen die folgenden Drittanbieter-Dienste, um unsere Plattform zu betreiben:"
+        },
+        "processors": {
+          "stripe": "<strong>Stripe</strong> – Zahlungsabwicklung. Stripe erhält Ihre Abrechnungsdaten, um Transaktionen sicher abzuwickeln.",
+          "google": "<strong>Google</strong> – OAuth-Authentifizierung und Anmeldung. Google erhält Ihren Authentifizierungstoken, wenn Sie sich mit Google anmelden.",
+          "digitalocean": "<strong>DigitalOcean</strong> – Cloud-Hosting und Infrastruktur. Ihre Daten werden auf DigitalOcean-Servern gespeichert.",
+          "twilio": "<strong>Twilio</strong> – SMS-Benachrichtigungen für Buchungsaktualisierungen und Verifizierung. Ihre Telefonnummer wird mit Twilio geteilt, wenn SMS-Benachrichtigungen aktiviert sind."
+        },
+        "legalRequirements": "<strong>Gesetzliche Anforderungen:</strong> sofern dies gesetzlich vorgeschrieben, durch Vorschriften, gerichtliche Verfahren oder eine durchsetzbare behördliche Anordnung erforderlich ist oder um die Rechte, das Eigentum oder die Sicherheit von Photo Portugal, unseren Nutzern oder der Öffentlichkeit zu schützen."
+      },
+      "dataProcessing": {
+        "title": "5. Auftragsverarbeitungsverträge",
+        "content": "Wir haben mit allen oben genannten Drittanbieter-Auftragsverarbeitern Auftragsverarbeitungsverträge (AVV) gemäß Artikel 28 DSGVO abgeschlossen. Diese Vereinbarungen stellen sicher, dass unsere Auftragsverarbeiter Ihre personenbezogenen Daten in Übereinstimmung mit dem europäischen Datenschutzrecht verarbeiten, angemessene technische und organisatorische Sicherheitsmaßnahmen umsetzen und Daten nur auf unsere dokumentierten Anweisungen hin verarbeiten."
+      },
+      "internationalTransfers": {
+        "title": "6. Internationale Datenübermittlungen",
+        "intro": "Photo Portugal hat seinen Sitz in Portugal und speichert Daten primär innerhalb der Europäischen Union. Einige unserer Drittanbieter-Auftragsverarbeiter können personenbezogene Daten jedoch außerhalb der EU/des EWR verarbeiten:",
+        "items": {
+          "stripe": "<strong>Stripe</strong> verarbeitet Zahlungsdaten in den Vereinigten Staaten und anderen Jurisdiktionen, in denen Stripe tätig ist.",
+          "google": "<strong>Google</strong> kann Authentifizierungsdaten in den Vereinigten Staaten und anderen weltweiten Rechenzentren verarbeiten."
+        },
+        "safeguards": "Wenn Daten außerhalb der EU/des EWR übermittelt werden, stellen wir sicher, dass angemessene Schutzmaßnahmen vorhanden sind, einschließlich Standardvertragsklauseln (SCCs), die von der Europäischen Kommission genehmigt wurden, ergänzender Maßnahmen, sofern erforderlich, sowie Angemessenheitsbeschlüssen, sofern anwendbar. Sie können eine Kopie der relevanten Schutzmaßnahmen anfordern, indem Sie uns kontaktieren unter"
+      },
+      "dataRetention": {
+        "title": "7. Datenspeicherung",
+        "intro": "Wir speichern Ihre personenbezogenen Daten nur so lange, wie dies für die in dieser Richtlinie beschriebenen Zwecke erforderlich ist:",
+        "items": {
+          "account": "<strong>Kontodaten:</strong> werden gespeichert, solange Ihr Konto aktiv ist, sowie 2 Jahre nach Kontolöschung, um etwaige nachträgliche Anfragen, Streitfälle oder rechtliche Ansprüche zu bearbeiten.",
+          "booking": "<strong>Buchungs- und Transaktionsdaten:</strong> werden 7 Jahre nach dem Buchungsdatum gespeichert, um portugiesische steuer- und buchhaltungsrechtliche Verpflichtungen zu erfüllen.",
+          "messages": "<strong>Nachrichten:</strong> werden 1 Jahr nach Abschluss der zugehörigen Buchung gespeichert und anschließend dauerhaft gelöscht.",
+          "analytics": "<strong>Analysedaten:</strong> werden 26 Monate gespeichert und anschließend automatisch aggregiert oder gelöscht.",
+          "marketing": "<strong>Marketing-Einwilligungsnachweise:</strong> werden so lange gespeichert, wie wir Marketingmitteilungen versenden, sowie 3 Jahre nach Widerruf der Einwilligung zu Nachweiszwecken."
+        },
+        "deletion": "Sobald Daten nicht mehr benötigt werden, werden sie sicher gelöscht oder unwiderruflich anonymisiert."
+      },
+      "cookies": {
+        "title": "8. Cookies",
+        "intro": "Wir verwenden die folgenden Arten von Cookies:",
+        "items": {
+          "essential": "<strong>Essenzielle Cookies:</strong> erforderlich für Authentifizierung, Sitzungsverwaltung und grundlegende Plattformfunktionen. Diese können nicht deaktiviert werden.",
+          "analytics": "<strong>Analyse-Cookies:</strong> werden verwendet, um zu verstehen, wie Besucher mit unserer Website interagieren, und um unseren Dienst zu verbessern. Diese werden nur mit Ihrer Einwilligung gesetzt."
+        },
+        "noTracking": "Wir verwenden keine Werbe- oder Tracking-Cookies von Drittanbietern. Sie können Ihre Cookie-Einstellungen jederzeit über die Einstellungen Ihres Browsers oder unser Cookie-Einwilligungsbanner verwalten."
+      },
+      "dataSecurity": {
+        "title": "9. Datensicherheit",
+        "intro": "Wir setzen angemessene technische und organisatorische Maßnahmen zum Schutz Ihrer personenbezogenen Daten ein, darunter:",
+        "items": {
+          "https": "HTTPS/TLS-Verschlüsselung für alle Daten während der Übertragung",
+          "hashing": "Sicheres Passwort-Hashing (bcrypt) für lokal erstellte Konten",
+          "rbac": "Rollenbasierte Zugriffskontrollen für unsere Datenbank und Admin-Systeme",
+          "reviews": "Regelmäßige Sicherheitsüberprüfungen und Aktualisierungen von Abhängigkeiten",
+          "backups": "Verschlüsselte Backups mit beschränktem Zugriff"
+        },
+        "disclaimer": "Allerdings ist keine Methode der Übertragung über das Internet oder der elektronischen Speicherung zu 100 % sicher. Obwohl wir bestrebt sind, Ihre personenbezogenen Daten zu schützen, können wir deren absolute Sicherheit nicht garantieren."
+      },
+      "yourRights": {
+        "title": "10. Ihre Rechte nach der DSGVO",
+        "intro": "Als betroffene Person haben Sie nach der DSGVO die folgenden Rechte:",
+        "items": {
+          "access": "<strong>Auskunftsrecht (Artikel 15):</strong> Anforderung einer Kopie aller personenbezogenen Daten, die wir über Sie gespeichert haben.",
+          "rectification": "<strong>Recht auf Berichtigung (Artikel 16):</strong> Anforderung der Korrektur unrichtiger oder unvollständiger personenbezogener Daten.",
+          "erasure": "<strong>Recht auf Löschung (Artikel 17):</strong> Anforderung der Löschung Ihrer personenbezogenen Daten, vorbehaltlich gesetzlicher Aufbewahrungspflichten.",
+          "restriction": "<strong>Recht auf Einschränkung der Verarbeitung (Artikel 18):</strong> Anforderung, dass wir die Nutzung Ihrer Daten unter bestimmten Umständen einschränken.",
+          "portability": "<strong>Recht auf Datenübertragbarkeit (Artikel 20):</strong> Erhalt Ihrer personenbezogenen Daten in einem strukturierten, gängigen und maschinenlesbaren Format (z. B. JSON oder CSV) sowie Übermittlung dieser Daten an einen anderen Verantwortlichen ohne Behinderung.",
+          "object": "<strong>Widerspruchsrecht (Artikel 21):</strong> Widerspruch gegen die Verarbeitung auf der Grundlage berechtigter Interessen, einschließlich Profiling.",
+          "withdrawConsent": "<strong>Recht auf Widerruf der Einwilligung:</strong> Sofern die Verarbeitung auf einer Einwilligung beruht, können Sie diese jederzeit widerrufen, ohne dass die Rechtmäßigkeit der zuvor erfolgten Verarbeitung berührt wird."
+        },
+        "exercise": "Um eines dieser Rechte auszuüben, kontaktieren Sie uns unter",
+        "responseTime": "Wir werden Ihre Anfrage innerhalb von 30 Tagen beantworten."
+      },
+      "complaint": {
+        "title": "11. Recht auf Beschwerde",
+        "intro": "Wenn Sie der Ansicht sind, dass unsere Verarbeitung Ihrer personenbezogenen Daten gegen die DSGVO verstößt, haben Sie das Recht, Beschwerde bei einer Aufsichtsbehörde einzulegen. In Portugal ist die zuständige Behörde:",
+        "cnpdName": "Comissão Nacional de Proteção de Dados (CNPD)",
+        "cnpdAddress1": "Av. D. Carlos I, 134 — 1.º",
+        "cnpdAddress2": "1200-651 Lisboa, Portugal",
+        "cnpdWebsite": "Webseite:",
+        "otherAuthority": "Sie können auch Beschwerde bei der Aufsichtsbehörde Ihres EU-/EWR-Mitgliedstaats des Wohnorts, des Arbeitsplatzes oder des Ortes des mutmaßlichen Verstoßes einlegen."
+      },
+      "children": {
+        "title": "12. Datenschutz für Kinder",
+        "content": "Photo Portugal ist nicht für die Nutzung durch Kinder unter 18 Jahren bestimmt. Wir erheben wissentlich keine personenbezogenen Daten von Kindern unter 18 Jahren. Wenn Sie Elternteil oder Erziehungsberechtigter sind und glauben, dass Ihr Kind uns personenbezogene Daten zur Verfügung gestellt hat, kontaktieren Sie uns bitte unter",
+        "contentAfterEmail": ", und wir werden Maßnahmen ergreifen, um diese Informationen umgehend zu löschen."
+      },
+      "businessTransfers": {
+        "title": "13. Unternehmensübertragungen",
+        "content": "Sollte Photo Portugal an einer Fusion, Übernahme, einem Verkauf von Vermögenswerten oder einer Insolvenz beteiligt sein, können Ihre personenbezogenen Daten als Teil dieser Transaktion übertragen werden. In einem solchen Fall werden wir alle betroffenen Nutzer mindestens 30 Tage vor der Übertragung der personenbezogenen Daten und vor Inkrafttreten einer neuen Datenschutzerklärung benachrichtigen. Sie haben die Möglichkeit, Ihr Konto und Ihre Daten vor Abschluss der Übertragung zu löschen."
+      },
+      "changes": {
+        "title": "14. Änderungen dieser Richtlinie",
+        "content": "Wir können diese Datenschutzerklärung von Zeit zu Zeit aktualisieren, um Änderungen unserer Praktiken, der Technologie, gesetzlicher Anforderungen oder anderer Faktoren widerzuspiegeln. Bei wesentlichen Änderungen werden wir Sie per E-Mail oder durch einen deutlich sichtbaren Hinweis auf unserer Plattform mindestens 14 Tage vor Inkrafttreten der Änderungen benachrichtigen. Ihre fortgesetzte Nutzung von Photo Portugal nach dem Wirksamkeitsdatum gilt als Zustimmung zur aktualisierten Richtlinie."
+      },
+      "contact": {
+        "title": "15. Kontakt",
+        "intro": "Bei Fragen zum Datenschutz, Anfragen betroffener Personen oder Bedenken zu dieser Richtlinie kontaktieren Sie uns unter:"
+      }
+    }
+  },
+  "terms": {
+    "title": "Nutzungsbedingungen",
+    "lastUpdated": "Zuletzt aktualisiert: 31. März 2026",
+    "metaDescription": "Nutzungsbedingungen von Photo Portugal – Buchung, Zahlungen, Stornierungen, Erstattungen und Plattformregeln.",
+    "sections": {
+      "overview": {
+        "title": "1. Überblick",
+        "content": "Photo Portugal („wir\", „uns\", „unser\") betreibt unter photoportugal.com eine Marktplatz-Plattform, die Touristen („Kunden\") mit professionellen Fotografen („Fotografen\") in Portugal verbindet. Mit der Nutzung unserer Plattform stimmen Sie diesen Bedingungen zu."
+      },
+      "accounts": {
+        "title": "2. Konten",
+        "items": {
+          "accurate": "Sie müssen bei der Erstellung eines Kontos zutreffende Informationen angeben",
+          "security": "Sie sind für die Sicherheit Ihres Kontos verantwortlich",
+          "oneAccount": "Eine Person darf nicht mehr als ein Konto unterhalten",
+          "age": "Sie müssen mindestens 18 Jahre alt sein, um ein Konto zu erstellen"
+        }
+      },
+      "forClients": {
+        "title": "3. Für Kunden",
+        "items": {
+          "confirmation": "Buchungsanfragen sind erst bestätigt, sobald der Fotograf sie annimmt",
+          "payment": "Die vollständige Zahlung wird zum Zeitpunkt der Buchung erhoben und sicher hinterlegt, bis die Fotos übermittelt werden",
+          "showUp": "Sie verpflichten sich, zur vereinbarten Zeit am vereinbarten Ort zu erscheinen",
+          "reviews": "Bewertungen müssen ehrlich sein und auf Ihrer tatsächlichen Erfahrung beruhen",
+          "commercial": "Sie dürfen die Bilder des Fotografen nicht ohne dessen schriftliche Zustimmung für kommerzielle Zwecke verwenden"
+        }
+      },
+      "forPhotographers": {
+        "title": "4. Für Fotografen",
+        "items": {
+          "skills": "Sie versichern, dass Sie über die Fähigkeiten und die Ausrüstung verfügen, um professionelle Fotografie-Dienste anzubieten",
+          "portfolio": "Portfolio-Fotos müssen Ihre eigenen Originalwerke sein",
+          "response": "Sie müssen innerhalb von 24 Stunden auf Buchungsanfragen antworten",
+          "delivery": "Sie verpflichten sich, die Fotos innerhalb des in Ihrem Paket angegebenen Zeitraums zu übermitteln",
+          "taxes": "Sie sind selbst für Ihre Steuern, Versicherungen und die Einhaltung gesetzlicher Vorschriften verantwortlich",
+          "subscription": "Abonnementgebühren (Pro-, Premium-Tarife) werden monatlich abgerechnet und sind nicht erstattungsfähig",
+          "noOffPlatform": "Es ist Ihnen strikt untersagt, mit Kunden, die Sie über Photo Portugal kontaktiert haben, Geschäfte außerhalb der Plattform anzubahnen oder durchzuführen. Dies umfasst den Austausch von Kontaktdaten, die Weiterleitung von Kunden auf persönliche Websites oder die Annahme von Direktzahlungen. Verstöße gegen diese Richtlinie führen zur sofortigen und dauerhaften Sperrung Ihres Kontos"
+        }
+      },
+      "paymentsEscrow": {
+        "title": "5. Zahlungen & Treuhand",
+        "intro": "Alle Zahlungen werden sicher über Stripe abgewickelt. Wenn ein Kunde ein Fotoshooting bucht, wird der volle Betrag belastet und von Photo Portugal treuhänderisch verwahrt. Der Zahlungsablauf ist wie folgt:",
+        "items": {
+          "clientPays": "Der Kunde zahlt zum Zeitpunkt der Buchung den vollen Paketpreis",
+          "fundsHeld": "Die Gelder werden sicher hinterlegt, bis der Fotograf die Fotos übermittelt und der Kunde die Übermittlung akzeptiert",
+          "released": "Sobald der Kunde die Übermittlung akzeptiert, wird der Anteil des Fotografen (abzüglich Plattformprovision) an ihn ausgezahlt",
+          "autoRelease": "Wenn der Kunde nicht innerhalb von <strong>14 Tagen</strong> nach der Übermittlung reagiert, wird die Zahlung automatisch an den Fotografen freigegeben",
+          "support": "Wenn der Kunde innerhalb von 7 Tagen weder akzeptiert noch eine Reklamation erhebt, kann sich der Fotograf an unser Support-Team wenden, um die Situation zu klären",
+          "autoCancellation": "Wenn der Fotograf die Buchung nicht bestätigt hat und die Zahlung nicht innerhalb von <strong>48 Stunden</strong> nach der Buchungsanfrage eingegangen ist, wird die Buchung automatisch storniert und dem Kunden eine vollständige Erstattung gewährt"
+        }
+      },
+      "commission": {
+        "title": "6. Plattformprovision",
+        "intro": "Photo Portugal erhebt eine Provision auf jede abgeschlossene Buchung. Die Provisionssätze richten sich nach dem Tarif des Fotografen:",
+        "items": {
+          "free": "<strong>Free-Tarif:</strong> 20 % Provision",
+          "pro": "<strong>Pro-Tarif</strong> (29 €/Monat): 15 % Provision",
+          "premium": "<strong>Premium-Tarif</strong> (59 €/Monat): 10 % Provision"
+        },
+        "details": "Die Provision wird bei Abschluss der Buchung von der Auszahlung des Fotografen abgezogen. Wenn eine Buchung vom Kunden 7 oder mehr Tage vor dem Shooting storniert wird, fällt keine Provision an. Bei kurzfristigen Stornierungen, bei denen der Fotograf eine Teilzahlung einbehält, gilt die Provision auf den einbehaltenen Betrag."
+      },
+      "cancellationByClient": {
+        "title": "7. Stornierung durch den Kunden",
+        "intro": "Kunden können eine bestätigte Buchung über ihr Dashboard stornieren. Die Höhe der Erstattung richtet sich nach dem Zeitpunkt:",
+        "table": {
+          "headerWhen": "Wann Sie stornieren",
+          "headerRefund": "Erstattung",
+          "row1When": "7 oder mehr Tage vor dem Shooting",
+          "row1Refund": "100 % Erstattung",
+          "row2When": "3–7 Tage vor dem Shooting",
+          "row2Refund": "50 % Erstattung",
+          "row3When": "Weniger als 3 Tage vor dem Shooting",
+          "row3Refund": "Keine Erstattung",
+          "row4When": "Nichterscheinen",
+          "row4Refund": "Keine Erstattung"
+        },
+        "note": "Wenn eine teilweise oder keine Erstattung gilt, wird der einbehaltene Betrag als Entschädigung für die reservierte Zeit an den Fotografen ausgezahlt."
+      },
+      "cancellationByPhotographer": {
+        "title": "8. Stornierung durch den Fotografen",
+        "intro": "Wenn ein Fotograf eine Buchung storniert, erhält der Kunde unabhängig vom Zeitpunkt stets eine <strong>100%ige Erstattung</strong>. Von Fotografen wird erwartet, dass sie bestätigte Buchungen einhalten.",
+        "items": {
+          "replacement": "Wenn der Fotograf weniger als 48 Stunden vor dem Shooting storniert, wird Photo Portugal versuchen, einen Ersatzfotografen zu finden",
+          "repeated": "Wiederholte Stornierungen (3 oder mehr innerhalb eines Zeitraums von 3 Monaten) können zum Verlust des Hervorgehoben-Status, zu reduzierter Sichtbarkeit oder zur Sperrung des Kontos führen"
+        }
+      },
+      "rescheduling": {
+        "title": "9. Terminverschiebung",
+        "items": {
+          "free": "<strong>Kostenlose Verschiebung:</strong> Eine Verschiebung pro Buchung ist kostenlos, wenn sie 48 oder mehr Stunden vor dem Shooting beantragt wird",
+          "late": "<strong>Späte Verschiebung:</strong> Anfragen innerhalb von 48 Stunden liegen im Ermessen des Fotografen",
+          "weather": "<strong>Wetterbedingte Verschiebung:</strong> Beide Parteien können aufgrund von Wetterbedingungen, die für Outdoor-Fotografie ungeeignet sind, eine kostenlose Verschiebung beantragen – es fallen keine Strafen oder Gebühren an"
+        }
+      },
+      "photoDelivery": {
+        "title": "10. Fotoübermittlung",
+        "intro": "Lieferzeiten werden vom Fotografen in jedem Paket festgelegt (in der Regel 3–14 Tage).",
+        "items": {
+          "gallery": "Fotos werden über eine private, passwortgeschützte Galerie auf Photo Portugal übermittelt",
+          "latePartial": "Wenn der Fotograf die Lieferfrist um <strong>3 oder mehr Tage</strong> überschreitet, kann der Kunde eine Teilerstattung verlangen (bis zu 20 % des Buchungsbetrags)",
+          "lateFullRefund": "Wenn der Fotograf nicht innerhalb von <strong>14 Tagen nach Ablauf der Frist</strong> liefert, erhält der Kunde eine vollständige Erstattung und das Konto des Fotografen kann gesperrt werden",
+          "acceptance": "Nach der Übermittlung hat der Kunde <strong>7 Tage</strong> Zeit, die Fotos zu akzeptieren oder eine Reklamation einzureichen",
+          "autoRelease": "Wenn der Kunde nicht innerhalb von 7 Tagen reagiert, kann der Fotograf den Support kontaktieren, um die Zahlungsfreigabe zu klären. Nach <strong>14 Tagen</strong> Inaktivität des Kunden wird die Zahlung automatisch an den Fotografen freigegeben",
+          "galleryAccess": "Übermittelte Foto-Galerien bleiben <strong>90 Tage</strong> lang zugänglich"
+        }
+      },
+      "disputes": {
+        "title": "11. Streitfälle & Qualitätsgarantie",
+        "intro": "Wenn Sie mit den übermittelten Fotos unzufrieden sind, können Sie innerhalb von 7 Tagen nach der Übermittlung eine Reklamation einreichen. Photo Portugal prüft die Reklamation und antwortet innerhalb von <strong>5 Werktagen</strong> und arbeitet mit beiden Parteien an einer fairen Lösung.",
+        "groundsTitle": "Gründe für eine berechtigte Reklamation:",
+        "grounds": {
+          "fewer": "Deutlich weniger Fotos als im Paket versprochen",
+          "wrongLocation": "Fotos am falschen Ort oder von den falschen Personen aufgenommen",
+          "technical": "Schwerwiegende technische Probleme (extreme Unschärfe, Überbelichtung, beschädigte Dateien)",
+          "noShow": "Fotograf nicht erschienen oder unvollständige Session"
+        },
+        "resolutionsTitle": "Mögliche Lösungen:",
+        "resolutions": {
+          "reshoot": "<strong>Neuaufnahme:</strong> Der Fotograf erklärt sich bereit, die Session ohne zusätzliche Kosten zu wiederholen",
+          "partial": "<strong>Teilerstattung:</strong> 20–50 % des Buchungsbetrags, je nach Schwere",
+          "full": "<strong>Vollständige Erstattung:</strong> in Fällen, in denen der Fotograf nicht erscheint oder die Lieferung vollständig ausbleibt"
+        },
+        "subjectiveNote": "Subjektive Vorlieben („Mir gefällt der Bearbeitungsstil nicht\") sind kein Grund für eine Erstattung. Wir empfehlen Kunden, sich vor der Buchung Portfolios von Fotografen anzusehen und ihre Vorstellungen zu besprechen."
+      },
+      "forceMajeure": {
+        "title": "12. Höhere Gewalt",
+        "content": "Keine der Parteien haftet für die Nichterfüllung aufgrund von Umständen, die außerhalb der zumutbaren Kontrolle liegen, einschließlich, aber nicht beschränkt auf: Naturkatastrophen, schwere Wetterbedingungen, behördliche Beschränkungen, Pandemien oder zivile Unruhen. In solchen Fällen haben beide Parteien Anspruch auf vollständige Erstattung oder kostenlose Terminverschiebung."
+      },
+      "intellectualProperty": {
+        "title": "13. Geistiges Eigentum",
+        "intro": "Fotografen behalten das volle Urheberrecht an allen von ihnen geschaffenen Bildern. Kunden erhalten eine Lizenz zur privaten Nutzung der Fotos aus ihrer Session.",
+        "personalUseTitle": "Die private Nutzung umfasst:",
+        "personalUse": {
+          "socialMedia": "Teilen auf persönlichen Social-Media-Konten (Instagram, Facebook usw.)",
+          "printing": "Drucke zur privaten Anzeige (zu Hause, Geschenke)",
+          "wallpaper": "Verwendung als Hintergrundbild für Telefon/Desktop oder als Profilfoto"
+        },
+        "notPermittedTitle": "Ohne schriftliche Zustimmung des Fotografen nicht gestattet:",
+        "notPermitted": {
+          "commercial": "Kommerzielle Nutzung (Werbung, Produktverpackung, Wiederverkauf)",
+          "stock": "Lizenzierung als Stockfotografie",
+          "ai": "Verwendung in KI-/ML-Trainingsdatensätzen",
+          "editing": "Bearbeiten oder Verändern von Fotos über einfaches Beschneiden und Filter hinaus"
+        },
+        "photographerUseTitle": "Nutzungsrechte des Fotografen:",
+        "photographerUse": "Mit der Buchung einer Session stimmt der Kunde zu, dass der Fotograf Fotos aus der Session in seinem Portfolio, auf seinem Photo-Portugal-Profil und für professionelle Marketingzwecke (Website, Social Media, Werbematerialien) verwenden darf. Wenn der Kunde nicht möchte, dass seine Fotos veröffentlicht werden, muss er den Fotografen vor oder während der Session darüber informieren. Der Fotograf ist verpflichtet, diesen Wunsch zu respektieren.",
+        "platformDisclaimer": "Photo Portugal beansprucht kein Eigentum an Fotos, die während über die Plattform gebuchter Sessions entstehen. Streitigkeiten über die Bildverwendung werden zwischen Kunde und Fotograf ausgetragen. Photo Portugal kann bei der Beilegung solcher Streitigkeiten unterstützen, haftet jedoch nicht für die unberechtigte Nutzung von Bildern durch eine der Parteien."
+      },
+      "prohibitedContent": {
+        "title": "14. Verbotene Inhalte & Verhaltensweisen",
+        "items": {
+          "fakeReviews": "Gefälschte Bewertungen oder manipulierte Sterne-Bewertungen",
+          "fakePortfolio": "Portfolio-Fotos, die nicht Ihre eigenen Werke sind",
+          "offensive": "Beleidigende, diskriminierende oder rechtswidrige Inhalte",
+          "spam": "Spam oder unaufgeforderte Werbenachrichten",
+          "offPlatform": "Versuche, Buchungen oder Zahlungen außerhalb der Plattform zu vereinbaren, um Gebühren zu umgehen",
+          "externalLinks": "Aufnahme von URLs persönlicher Websites, Social-Media-Links (Instagram, Facebook usw.), E-Mail-Adressen oder Telefonnummern in Ihre Profil-Bio, Ihren Slogan, Paketbeschreibungen oder Portfolio-Bildunterschriften. Die gesamte Kundenkommunikation muss über das Nachrichtensystem von Photo Portugal erfolgen."
+        }
+      },
+      "platformRole": {
+        "title": "15. Rolle der Plattform & Haftung",
+        "content": "Photo Portugal ist ein Marktplatz, der die Verbindung zwischen Kunden und Fotografen ermöglicht. Wir verifizieren Fotografenprofile, moderieren Bewertungen und bieten eine Streitbeilegung an, sind jedoch nicht Vertragspartei der Dienstleistungsvereinbarung zwischen Kunden und Fotografen. Photo Portugal wird „wie besehen\" ohne Gewährleistungen jeglicher Art bereitgestellt. Unsere Gesamthaftung ist auf den Betrag der betreffenden Buchung beschränkt."
+      },
+      "disputeResolution": {
+        "title": "16. Streitbeilegung & anwendbares Recht",
+        "content1": "Alle Streitigkeiten zwischen Nutzern werden zunächst über das interne Streitbeilegungsverfahren von Photo Portugal gemäß Abschnitt 11 beigelegt. Führt das interne Verfahren zu keiner zufriedenstellenden Lösung, vereinbaren die Parteien, vor einer rechtlichen Auseinandersetzung eine Mediation zu versuchen.",
+        "content2": "Diese Bedingungen unterliegen dem Recht Portugals. Etwaige rechtliche Verfahren sind vor den Gerichten in Lissabon, Portugal, anhängig zu machen."
+      },
+      "chargebacks": {
+        "title": "17. Zahlungsrückbuchungen",
+        "content": "Wenn ein Kunde eine Rückbuchung über seine Bank oder seinen Kreditkartenanbieter veranlasst, anstatt das Reklamationsverfahren von Photo Portugal zu nutzen, behalten wir uns vor, sein Konto bis zum Abschluss der Untersuchung zu sperren. Von Rückbuchungen betroffene Fotografen werden benachrichtigt und können Beweise zur Anfechtung der Rückbuchung vorlegen. Betrügerische Rückbuchungen können zu einer dauerhaften Kontosperrung führen."
+      },
+      "contact": {
+        "title": "18. Kontakt",
+        "intro": "Fragen zu diesen Bedingungen? Kontaktieren Sie uns unter",
+        "orThrough": "oder über unsere",
+        "contactPage": "Kontaktseite"
+      }
+    }
+  },
+  "dashboard": {
+    "welcomeBack": "Willkommen zurück, {name}",
+    "findPhotographer": "Finden Sie Ihren perfekten Fotografen in Portugal",
+    "managePhotographyBusiness": "Verwalten Sie Ihr Fotografie-Geschäft",
+    "noProfileFound": "Kein Fotografenprofil gefunden.",
+    "profilePendingApproval": "Profil zur Freigabe ausstehend",
+    "profilePendingDescription": "Ihr Profil wird von unserem Team geprüft. Nach der Freigabe ist es für Kunden sichtbar. Bitte vervollständigen Sie in der Zwischenzeit Ihr Profil, laden Sie Portfolio-Fotos hoch und erstellen Sie Pakete.",
+    "profilePendingDescriptionComplete": "Ihr Profil ist vollständig und wurde zur Prüfung eingereicht. Unser Team wird es in Kürze freigeben und es wird für Kunden sichtbar.",
+    "profileApproved": "Ihr Profil ist live!",
+    "profileApprovedDescription": "Kunden können Sie nun finden und Fotoshootings buchen.",
+    "actionNeeded": {
+      "title": "Aktion erforderlich",
+      "respond": {
+        "title": "Auf {name} antworten",
+        "subtitle": "Der Kunde wartet auf Ihre Antwort"
+      },
+      "propose_date": {
+        "title": "Datum für {name} vorschlagen",
+        "subtitle": "Der Kunde hat flexible Daten gebucht – wählen Sie eines aus"
+      },
+      "mark_done": {
+        "title": "Session als erledigt markieren – {name}",
+        "subtitle": "Das Shooting-Datum ist vorbei"
+      },
+      "upload_delivery": {
+        "title": "Übermittlung für {name} hochladen",
+        "subtitle": "Session abgeschlossen – übermitteln Sie die Fotos"
+      }
+    },
+    "revisions": {
+      "title": "Profil-Überarbeitungen erforderlich",
+      "description": "Unser Team hat Ihr Profil geprüft und einige Punkte gefunden, die Aufmerksamkeit erfordern. Bitte beheben Sie jeden Punkt unten.",
+      "submittedDescription": "Sie haben alle Punkte behoben. Unser Team prüft Ihre Korrekturen.",
+      "round": "Runde {round}",
+      "adminNote": "Hinweis vom Prüfer",
+      "waitingReview": "Alle Korrekturen eingereicht – wartet auf Prüfung",
+      "yourProof": "Ihr Nachweis:",
+      "uploadProof": "Nachweis hochladen (optional)",
+      "uploading": "Wird hochgeladen..."
+    },
+    "viewPublicProfile": "Öffentliches Profil ansehen",
+    "previewProfile": "Profil-Vorschau",
+    "previewProfileHint": "Nur Sie können dies sehen – das Profil ist noch nicht freigegeben",
+    "statRating": "Bewertung",
+    "statReviews": "Bewertungen",
+    "statTotalBookings": "Gesamtbuchungen",
+    "statPending": "Ausstehend",
+    "statSessions": "Sessions",
+    "findPhotographers": "Fotografen finden",
+    "browsePortfolios": "Stöbern Sie in Portfolios und buchen Sie Ihre Session",
+    "myBookings": "Meine Buchungen",
+    "bookingCount": "{count} Buchung",
+    "bookingCountPlural": "{count} Buchungen",
+    "messages": "Nachrichten",
+    "chatWithPhotographers": "Chatten Sie mit Ihren Fotografen",
+    "chatWithClients": "Chatten Sie mit Kunden",
+    "popularDestinations": "Beliebte Reiseziele",
+    "bookings": "Buchungen",
+    "viewManageRequests": "Anfragen ansehen und verwalten",
+    "editProfile": "Profil bearbeiten",
+    "updateYourInfo": "Aktualisieren Sie Ihre Informationen",
+    "plan": "{plan}-Tarif",
+    "upgradePrompt": "Upgraden Sie für mehr Sichtbarkeit und Funktionen",
+    "boostVisibility": "Steigern Sie Ihre Sichtbarkeit",
+    "boostVisibilityDesc": "Mit Add-ons mehr Kunden gewinnen",
+    "activeSubscription": "Aktives Abonnement",
+    "upgrade": "Upgrade",
+    "sidebarOverview": "Übersicht",
+    "sidebarBookings": "Buchungen",
+    "sidebarMatchRequests": "Meine Vermittlungen",
+    "sidebarMessages": "Nachrichten",
+    "sidebarProfile": "Profil",
+    "sidebarPortfolio": "Portfolio",
+    "sidebarPackages": "Pakete",
+    "sidebarAvailability": "Verfügbarkeit",
+    "sidebarSubscriptions": "Abonnements",
+    "sidebarPayouts": "Auszahlungen",
+    "sidebarSettings": "Einstellungen",
+    "sidebarSupport": "Support",
+    "sidebarWishlist": "Wunschliste",
+    "sidebarMore": "Mehr",
+    "signOut": "Abmelden",
+    "needHelp": "Brauchen Sie Hilfe?",
+    "helpCenterLink": "Besuchen Sie unser Hilfe-Center"
+  },
+  "matchRequests": {
+    "title": "Meine Vermittlungen",
+    "subtitle": "Verfolgen Sie Ihre Concierge-Vermittlungsanfragen für Fotografen",
+    "noRequests": "Noch keine Vermittlungsanfragen",
+    "noRequestsDesc": "Lassen Sie unser Concierge-Team den perfekten Fotografen für Sie finden.",
+    "findPhotographer": "Finden Sie mir einen Fotografen",
+    "flexibleDates": "Flexible Daten",
+    "person": "Person",
+    "people": "Personen",
+    "statusBooked": "Gebucht",
+    "statusAwaiting": "Wartet auf Ihre Auswahl",
+    "teamNote": "Eine Notiz von unserem Team",
+    "selected": "Ausgewählt",
+    "viewPortfolio": "Portfolio ansehen",
+    "booking": "Wird gebucht...",
+    "choose": "Auswählen",
+    "error": "Etwas ist schiefgegangen. Bitte versuchen Sie es erneut.",
+    "inLocation": "in",
+    "statusProcessing": "In Bearbeitung",
+    "processingTitle": "Wir prüfen Ihre Anfrage",
+    "processingDesc": "Unser Team prüft die Verfügbarkeit und wählt die besten Fotografen für Sie aus. Wir melden uns innerhalb von 12 Stunden bei Ihnen."
+  },
+  "photographerDashboard": {
+    "title": "Fotografen-Dashboard",
+    "subtitle": "Verwalten Sie Ihr Profil, Portfolio und Pakete",
+    "tabBookings": "Buchungen",
+    "tabBookingsNew": "Buchungen ({count} neu)",
+    "tabBookingsCount": "Buchungen ({count})",
+    "tabProfile": "Profil",
+    "tabPortfolio": "Portfolio ({count})",
+    "tabPackages": "Pakete ({count})",
+    "tabAvailability": "Verfügbarkeit",
+    "profilePhoto": "Profilfoto",
+    "uploadPhoto": "Foto hochladen",
+    "uploading": "Wird hochgeladen...",
+    "coverImage": "Titelbild",
+    "coverHintLandscape": "Dieses Foto erscheint als Hintergrund Ihrer Karte auf der Fotografenseite. Verwenden Sie ein Querformat-Foto, empfohlene Größe: 1200×600 px (max. 10 MB).",
+    "coverHintDrag": "",
+    "coverPreviewLabel": "Vorschau – ziehen Sie das Bild nach oben oder unten, um die Position anzupassen",
+    "uploadCover": "Titelbild hochladen",
+    "noCover": "Kein Titelbild",
+    "dragToReposition": "↕ Ziehen zum Neupositionieren",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "displayName": "Anzeigename",
+    "phone": "Telefonnummer",
+    "phoneHint": "Wird für SMS-Buchungsbenachrichtigungen verwendet",
+    "displayNameHint": "Dies ist der Name, der öffentlich auf Ihrem Profil angezeigt wird",
+    "profileUrl": "Profil-URL",
+    "premiumBadge": "Premium",
+    "customUrlPlaceholder": "ihre-individuelle-url",
+    "customUrlHint": "Nur Buchstaben, Zahlen und Bindestriche. Mindestens 3 Zeichen.",
+    "yourProfileUrl": "Ihre Profil-URL:",
+    "customUrlUpgrade": "Individuelle URLs sind im {plan}-Tarif verfügbar",
+    "tagline": "Slogan",
+    "taglineHintEnglish": "Auf Englisch schreiben – die meisten Kunden sind internationale Touristen",
+    "taglinePlaceholder": "z. B. Die Seele Lissabons durch Licht und Emotion einfangen",
+    "bio": "Bio",
+    "bioHintEnglish": "Auf Englisch schreiben für die beste Sichtbarkeit bei Touristen",
+    "bioPlaceholder": "Erzählen Sie potenziellen Kunden auf Englisch von sich, Ihrem Stil und Ihrer Erfahrung...",
+    "languages": "Sprachen",
+    "shootTypes": "Shooting-Arten",
+    "locationsCover": "Abgedeckte Standorte",
+    "locationsSelected": "{count}/{max} Standorte ausgewählt",
+    "locationsUnlimited": "{count}/unbegrenzte Standorte ausgewählt",
+    "limitReached": " (Limit erreicht)",
+    "upgradeForMore": "Upgrade für mehr",
+    "yearsOfExperience": "Jahre Erfahrung",
+    "careerStartYear": "Jahr, in dem Sie mit der Fotografie begonnen haben",
+    "careerStartYearHint": "Wir berechnen Ihre Jahre an Erfahrung automatisch.",
+    "careerStartYearComputed": "{years, plural, =1 {# Jahr Erfahrung} other {# Jahre Erfahrung}} – wird jedes Jahr automatisch aktualisiert.",
+    "hourlyRate": "Stundensatz (EUR)",
+    "saveProfile": "Profil speichern",
+    "saving": "Wird gespeichert...",
+    "saved": "Gespeichert",
+    "profileSaved": "Profil gespeichert!",
+    "errorSavingProfile": "Fehler beim Speichern des Profils",
+    "selectOneLanguage": "Bitte wählen Sie mindestens eine Sprache aus",
+    "dropPhotosHere": "Fotos hier ablegen",
+    "dragPhotosOrClick": "Fotos hierher ziehen oder klicken zum Durchsuchen",
+    "photoFormats": "JPG, PNG, WebP, HEIC – bis zu 15 MB pro Foto",
+    "uploadedOf": "{done} von {total} hochgeladen",
+    "failedCount": "({count} fehlgeschlagen)",
+    "photosUploaded": "{count} Foto hochgeladen!",
+    "photosUploadedPlural": "{count} Fotos hochgeladen!",
+    "uploadedAndFailed": "{done} hochgeladen, {failed} fehlgeschlagen",
+    "photoCount": "{count} Foto",
+    "photoCountPlural": "{count} Fotos",
+    "dragToReorder": " · Ziehen zum Neuanordnen",
+    "selectedCount": " · {count} ausgewählt",
+    "selectAll": "Alle auswählen",
+    "deleteCount": "Löschen ({count})",
+    "cancel": "Abbrechen",
+    "select": "Auswählen",
+    "allPhotos": "Alle ({count})",
+    "noPortfolioPhotos": "Noch keine Portfolio-Fotos",
+    "uploadBestWork": "Laden Sie Ihre besten Arbeiten hoch, um Kunden zu gewinnen.",
+    "noPhotosMatchFilter": "Keine Fotos entsprechen diesem Filter.",
+    "locationTag": "Standort",
+    "shootTypeTag": "Shooting-Art",
+    "deleteThisPhoto": "Dieses Foto löschen?",
+    "photoDeleted": "Foto gelöscht",
+    "deleteSelectedPhotos": "{count} Foto löschen?",
+    "deleteSelectedPhotosPlural": "{count} Fotos löschen?",
+    "photosDeleted": "{count} Foto gelöscht",
+    "photosDeletedPlural": "{count} Fotos gelöscht",
+    "createPackagesPrompt": "Erstellen Sie Pakete, die Kunden buchen können",
+    "addPackage": "Paket hinzufügen",
+    "editPackage": "Paket bearbeiten",
+    "newPackage": "Neues Paket",
+    "packageName": "Paketname",
+    "packageNameHintEnglish": "auf Englisch",
+    "packageNamePlaceholder": "z. B. Goldene Stunde Session",
+    "description": "Beschreibung",
+    "descriptionHintEnglish": "auf Englisch",
+    "descriptionPlaceholder": "Beschreiben Sie auf Englisch, was enthalten ist...",
+    "durationMinutes": "Dauer (Minuten)",
+    "duration": "Dauer",
+    "selectDuration": "Dauer auswählen",
+    "numberOfPhotos": "Anzahl der Fotos",
+    "priceEur": "Preis (EUR)",
+    "pricePlaceholder": "z. B. 149",
+    "priceHint": "Volle Euro, beliebiger Betrag",
+    "deliveryTimeDays": "Lieferzeit (Tage)",
+    "deliveryTimeHint": "Wie viele Tage bis zur Lieferung der bearbeiteten Fotos",
+    "markAsMostPopular": "Als am beliebtesten markieren",
+    "updatePackage": "Paket aktualisieren",
+    "createPackage": "Paket erstellen",
+    "packageUpdated": "Paket aktualisiert!",
+    "packageCreated": "Paket erstellt!",
+    "errorSavingPackage": "Fehler beim Speichern des Pakets",
+    "deleteThisPackage": "Dieses Paket löschen?",
+    "packageDeleted": "Paket gelöscht",
+    "dragToReorderPackages": "Ziehen zum Neuanordnen – das oberste Paket wird zuerst auf Ihrem Profil angezeigt",
+    "popular": "Beliebt",
+    "minDot": "Min.",
+    "photosDot": "Fotos",
+    "dayDelivery": "{days}-Tage-Lieferung",
+    "noPackagesYet": "Noch keine Pakete. Erstellen Sie Ihr erstes Paket, um Buchungen zu erhalten!",
+    "noBookingsYet": "Noch keine Buchungsanfragen. Teilen Sie Ihr Profil, um Buchungen zu erhalten!",
+    "confirm": "Bestätigen",
+    "decline": "Ablehnen",
+    "markAsCompleted": "Als abgeschlossen markieren",
+    "message": "Nachricht",
+    "statusPending": "Ausstehend",
+    "statusConfirmed": "Bestätigt",
+    "statusCompleted": "Abgeschlossen",
+    "statusDelivered": "Übermittelt",
+    "statusCancelled": "Storniert",
+    "paid": "Bezahlt",
+    "unpaid": "Unbezahlt",
+    "accepted": "Akzeptiert",
+    "timeSunrise": "Sonnenaufgang (6-8 Uhr)",
+    "timeMorning": "Vormittag (8-11 Uhr)",
+    "timeMidday": "Mittag (11-14 Uhr)",
+    "timeAfternoon": "Nachmittag (14-17 Uhr)",
+    "timeGoldenHour": "Goldene Stunde (17-19 Uhr)",
+    "timeSunset": "Sonnenuntergang (19-21 Uhr)",
+    "adjustYourPhoto": "Foto anpassen",
+    "adjustPhotoHint": "Zoomen und ziehen Sie, um Ihr Profilfoto zu positionieren",
+    "savePhoto": "Foto speichern",
+    "fileTooLarge": "Datei zu groß (max. {size} MB)",
+    "onlyImagesAllowed": "Nur Bilder erlaubt",
+    "uploadingPhoto": "Foto wird hochgeladen...",
+    "photoUpdated": "Foto aktualisiert!",
+    "uploadFailed": "Hochladen fehlgeschlagen",
+    "uploadFailedConnection": "Hochladen fehlgeschlagen – überprüfen Sie Ihre Verbindung",
+    "uploadingCover": "Titelbild wird hochgeladen...",
+    "coverUploaded": "Titelbild hochgeladen! Ziehen Sie das Bild nach oben oder unten, um den sichtbaren Bereich anzupassen.",
+    "coverPositionSaved": "Titelbild-Position gespeichert!",
+    "failedToSavePosition": "Position konnte nicht gespeichert werden",
+    "highlightedOnProfile": "Auf Ihrem Profil hervorgehoben",
+    "showOnProfile": "Auf Profil anzeigen",
+    "visibleToEveryone": "Für alle sichtbar",
+    "privateOnlyViaLink": "Privat – nur über Link oder Nachrichten",
+    "privateBadge": "Privat",
+    "editTooltip": "Bearbeiten",
+    "deleteTooltip": "Löschen",
+    "profilePhotoPreview": "Profilfoto-Vorschau",
+    "coverAlt": "Titelbild"
+  },
+  "subscriptions": {
+    "title": "Abonnements",
+    "subtitle": "Verwalten Sie Ihren Tarif, Add-ons und Zahlungen",
+    "foundingPhotographer": "Gründungsfotograf",
+    "earlyAdopter": "Early Adopter",
+    "first50": "Erste 50",
+    "foundingPlanFree": "Ihr {plan}-Tarif ist als Gründungsfotograf für immer kostenlos.",
+    "earlyBirdPlanFree": "Ihr {plan}-Tarif ist bis zum {date} kostenlos. Danach können Sie einen beliebigen Tarif wählen.",
+    "perMonth": "/Monat",
+    "activeEarlyBird": "Aktiv (Early Bird)",
+    "currentPlan": "Aktueller Tarif",
+    "manageBilling": "Abrechnung verwalten",
+    "loading": "Wird geladen...",
+    "redirecting": "Weiterleitung...",
+    "upgradeTo": "Upgrade auf {plan}",
+    "downgrade": "Downgrade",
+    "switchTo": "Wechseln zu {plan}",
+    "includedInPlan": "In Ihrem Tarif enthalten",
+    "paymentSetup": "Zahlungseinrichtung",
+    "paymentSetupDesc": "Verbinden Sie Ihr Stripe-Konto, um Zahlungen von Kunden zu erhalten.",
+    "stripeConnected": "Stripe verbunden",
+    "stripeConnectedDesc": "Sie können Zahlungen von Kunden erhalten",
+    "stripeOnboardingIncomplete": "Ihr Stripe-Konto ist verbunden, aber die Einrichtung ist nicht abgeschlossen. Bitte beenden Sie die Einrichtung Ihres Kontos.",
+    "completeSetup": "Einrichtung abschließen",
+    "stripeNotConnected": "Um Zahlungen zu erhalten, müssen Sie ein Stripe-Konto verbinden. Dies ist eine einmalige Einrichtung, die etwa 5 Minuten dauert.",
+    "connectWithStripe": "Mit Stripe verbinden",
+    "settingUp": "Wird eingerichtet...",
+    "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+    "failedStripeOnboarding": "Stripe-Einrichtung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
+    "howPaymentsWork": "So funktionieren Zahlungen",
+    "paymentStep1": "Der Kunde zahlt bei der Buchungsbestätigung den Paketpreis + {fee}% Servicegebühr",
+    "paymentStep2": "Die Zahlung wird sicher hinterlegt, bis die Session als geliefert markiert wird",
+    "paymentStep3": "Die Plattformprovision hängt von Ihrem Tarif ab (Free: {free}%, Pro: {pro}%, Premium: {premium}%)",
+    "paymentStep4": "Auszahlungen werden automatisch auf Ihr verbundenes Bankkonto verarbeitet",
+    "addOns": "Add-ons",
+    "addOnsSubtitle": "Steigern Sie Ihre Sichtbarkeit und schaffen Sie Vertrauen bei Kunden",
+    "verifiedBadge": "Verifiziert-Abzeichen",
+    "verifiedBadgePrice": "19 €/Jahr – Telefonverifizierung",
+    "verified": "Verifiziert",
+    "phoneLabel": "Telefon: {phone}",
+    "renewsYearly": "Verlängert sich jährlich. Jederzeit über das Abrechnungsportal kündbar.",
+    "cancelVerified": "Verifiziert-Abonnement kündigen",
+    "verifyPhoneDesc": "Verifizieren Sie Ihre Telefonnummer, um Ihre Identität zu bestätigen. Schließen Sie dann die Zahlung für das Abzeichen ab.",
+    "stepPhone": "Telefon",
+    "stepPayment": "Zahlung",
+    "phoneVerified": "Telefon verifiziert",
+    "phonePlaceholder": "912 345 678",
+    "phoneAutoPrefix": "Portugiesische Nummern werden automatisch mit +351 versehen",
+    "sendSmsCode": "SMS-Code senden",
+    "sending": "Wird gesendet...",
+    "codeSentTo": "Code gesendet an {phone}",
+    "enterCode": "4-stelligen Code eingeben",
+    "verifyCode": "Code verifizieren",
+    "verifying": "Wird verifiziert...",
+    "changeOrResend": "Nummer ändern oder erneut senden",
+    "phoneVerifiedLabel": "Telefon verifiziert: {phone}",
+    "completePaymentDesc": "Schließen Sie die Zahlung ab, um Ihr Verifiziert-Abzeichen zu aktivieren.",
+    "getVerified": "Verifizierung erhalten – 19 €/Jahr",
+    "enterValidPhone": "Geben Sie eine gültige Telefonnummer mit Ländervorwahl ein (z. B. +351...)",
+    "enterVerificationCode": "Geben Sie den Verifizierungscode ein",
+    "failedSendCode": "Code konnte nicht gesendet werden",
+    "invalidCode": "Ungültiger Code",
+    "verificationFailed": "Verifizierung fehlgeschlagen",
+    "featuredPlacement": "Hervorgehobene Platzierung",
+    "featuredPlacementPrice": "19 €/Monat – Vorrangige Sichtbarkeit",
+    "activeFeatured": "Aktiv – Hervorgehobene Platzierung",
+    "renewsMonthly": "Verlängert sich monatlich. Jederzeit über das Abrechnungsportal kündbar.",
+    "cancelFeatured": "Hervorgehoben-Abonnement kündigen",
+    "featuredDesc": "Hervorgehoben auf der Startseite, zuerst auf der Fotografenseite angezeigt und mit einem „Hervorgehoben\"-Abzeichen auf Ihrem Profil und Ihren Karten.",
+    "getFeatured": "Hervorgehoben werden – 19 €/Monat",
+    "verifiedBenefit1": "Verifiziert-Häkchen-Abzeichen auf Ihrem Profil und Ihren Karten",
+    "verifiedBenefit2": "Schafft Vertrauen – Kunden bevorzugen verifizierte Fotografen",
+    "verifiedBenefit3": "Heben Sie sich von nicht verifizierten Fotografen ab",
+    "featuredBenefit1": "Wird zuerst auf der Startseite und in den Suchergebnissen angezeigt",
+    "featuredBenefit2": "Goldenes „Hervorgehoben\"-Abzeichen auf Ihrem Profil und Ihren Karten",
+    "featuredBenefit3": "Bis zu 3x mehr Profilaufrufe und Buchungsanfragen",
+    "verifiedPreviewLabel": "So wird Ihre Karte aussehen",
+    "featuredPreviewLabel": "So wird Ihre Karte aussehen",
+    "boostVisibility": "Steigern Sie Ihre Sichtbarkeit",
+    "boostVisibilityDesc": "Mit Add-ons mehr Kunden gewinnen",
+    "mostPopular": "Am beliebtesten",
+    "planFree": "Free",
+    "planPro": "Pro",
+    "planPremium": "Premium",
+    "feat10Photos": "Bis zu 100 Portfolio-Fotos",
+    "feat30Photos": "Bis zu 100 Portfolio-Fotos",
+    "feat100Photos": "Bis zu 100 Portfolio-Fotos",
+    "featUnlimitedPhotos": "Bis zu 100 Portfolio-Fotos",
+    "feat1Location": "1 Standort",
+    "feat5Locations": "5 Standorte",
+    "featAllLocations": "Alle Standorte",
+    "featBasicVisibility": "Basis-Sichtbarkeit",
+    "featPriorityRanking": "Vorrangiges Ranking",
+    "featTopRanking": "Top-Ranking",
+    "featAnalytics": "Profil-Analytik",
+    "featFullAnalytics": "Vollständige Analytik",
+    "featCustomUrl": "Individuelle Profil-URL",
+    "featPrioritySupport": "Vorrangiger Support",
+    "featCommission": "{rate}% Provision"
+  },
+  "payouts": {
+    "title": "Auszahlungen",
+    "subtitle": "Verwalten Sie Ihre Zahlungseinrichtung und sehen Sie Einnahmen ein"
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Haben Sie eine Frage oder ein Problem? Senden Sie uns eine Nachricht und wir melden uns bei Ihnen.",
+    "successMessage": "Ihre Nachricht wurde gesendet! Wir melden uns so schnell wie möglich bei Ihnen.",
+    "errorMessage": "Etwas ist schiefgegangen. Bitte versuchen Sie es erneut oder schreiben Sie uns an info@photoportugal.com.",
+    "subject": "Betreff",
+    "subjectPlaceholder": "Wobei können wir Ihnen helfen?",
+    "message": "Nachricht",
+    "messagePlaceholder": "Beschreiben Sie Ihre Frage oder Ihr Problem im Detail...",
+    "sending": "Wird gesendet...",
+    "sendMessage": "Nachricht senden",
+    "signInPrompt": "Anmelden"
+  },
+  "supportPage": {
+    "metaTitle": "Hilfe-Center — Photo Portugal",
+    "metaDescription": "Finden Sie Antworten auf häufige Fragen zur Buchung von Fotografen, Zahlungen, Stornierungen und mehr auf Photo Portugal.",
+    "title": "Hilfe-Center",
+    "subtitle": "Alles, was Sie über Buchungen, Zahlungen und das Beste aus Photo Portugal wissen müssen",
+    "breadcrumb": "Hilfe-Center",
+    "searchPlaceholder": "Antworten suchen...",
+    "searchNoResults": "Keine Artikel entsprechen Ihrer Suche. Versuchen Sie andere Suchbegriffe oder kontaktieren Sie uns direkt.",
+    "onThisPage": "Auf dieser Seite",
+    "categories": {
+      "clients": {
+        "title": "Für Kunden",
+        "description": "Buchung, Zahlungen, Stornierungen und Erhalt Ihrer Fotos"
+      },
+      "photographers": {
+        "title": "Für Fotografen",
+        "description": "Erste Schritte, Abonnements, Zahlungen und Fotoübermittlung"
+      },
+      "payments": {
+        "title": "Zahlungen & Schutz",
+        "description": "So funktioniert Treuhand, Gebühren, Erstattungen und Reklamationen"
+      },
+      "general": {
+        "title": "Allgemein",
+        "description": "Wetterregelungen, Notfälle und Kontakt zum Support"
+      }
+    },
+    "articles": {
+      "clients": {
+        "howToBook": {
+          "question": "Wie buche ich einen Fotografen?",
+          "answer": "Stöbern Sie in unseren Fotografen-Listen und filtern Sie nach Standort, Stil und Verfügbarkeit. Wählen Sie ein Paket, das zu Ihren Bedürfnissen passt, wählen Sie Ihr Wunschdatum und Ihre Wunschzeit und schließen Sie die Buchung ab. Ihre Zahlung wird sicher von Stripe verwahrt, bis Ihr Fotoshooting stattgefunden hat und die Fotos übermittelt wurden."
+        },
+        "paymentProtection": {
+          "question": "Wie funktioniert der Zahlungsschutz?",
+          "answer": "Ihre Zahlung wird sicher von Stripe treuhänderisch verwahrt – sie wird niemals direkt an den Fotografen gesendet. Das Geld wird erst freigegeben, nachdem Sie Ihre bearbeiteten Fotos erhalten und bestätigt haben, dass Sie zufrieden sind. Wenn etwas schiefgeht, können Sie eine Reklamation einreichen und eine teilweise oder vollständige Erstattung erhalten. Das bedeutet null Risiko für Sie."
+        },
+        "cancelReschedule": {
+          "question": "Kann ich meine Buchung stornieren oder verschieben?",
+          "answer": "Ja. Sie können über Ihr Dashboard stornieren oder verschieben.\n\n**Stornierungserstattungen:**\n• 7 oder mehr Tage vor dem Shooting – 100 % Erstattung\n• 3–7 Tage vorher – 50 % Erstattung\n• Weniger als 3 Tage – Keine Erstattung\n• Nichterscheinen – Keine Erstattung\n\n**Verschiebung:** Sie erhalten eine kostenlose Verschiebung, wenn diese 48 oder mehr Stunden vor der Session beantragt wird. Verschiebungen innerhalb von 48 Stunden liegen im Ermessen des Fotografen. Wetterbedingte Verschiebungen sind immer kostenlos.\n\n**Wenn der Fotograf storniert oder verschiebt:** Sie erhalten unabhängig vom Zeitpunkt stets eine vollständige 100%ige Erstattung. Erfolgt die Stornierung weniger als 48 Stunden vor dem Shooting, wird Photo Portugal versuchen, einen Ersatzfotografen für Sie zu finden."
+        },
+        "noShow": {
+          "question": "Was, wenn ich es nicht zum Fotoshooting schaffe?",
+          "answer": "Wenn Sie nicht zu Ihrer geplanten Session erscheinen, ohne vorher zu stornieren, gilt dies als Nichterscheinen und es wird keine Erstattung gewährt. Die volle Zahlung geht als Entschädigung für die reservierte Zeit an den Fotografen.\n\nWir empfehlen dringend, so früh wie möglich zu stornieren, falls sich Ihre Pläne ändern – eine Stornierung 7 oder mehr Tage im Voraus gibt Ihnen eine vollständige Erstattung."
+        },
+        "receivePhotos": {
+          "question": "Wie erhalte ich meine Fotos?",
+          "answer": "Nach Ihrem Fotoshooting bearbeitet der Fotograf Ihre Fotos und lädt sie in eine private, passwortgeschützte Galerie hoch. Sie erhalten eine E-Mail und eine Dashboard-Benachrichtigung mit dem Galerielink und dem Passwort. Sie können Fotos online ansehen, einzeln herunterladen oder das gesamte Set als ZIP-Datei herunterladen. Ihre Galerie bleibt 90 Tage lang zugänglich."
+        },
+        "notHappy": {
+          "question": "Was, wenn ich mit meinen Fotos nicht zufrieden bin?",
+          "answer": "Sie haben 7 Tage nach der Übermittlung Zeit, Ihre Fotos zu prüfen. Wenn es ein berechtigtes Problem gibt, können Sie über Ihr Dashboard eine Reklamation einreichen.\n\n**Berechtigte Gründe für Reklamationen:**\n• Deutlich weniger Fotos als versprochen\n• Falscher Ort oder falsche Personen\n• Schwerwiegende technische Probleme (Unschärfe, Belichtungsprobleme)\n• Fotograf nicht erschienen oder unvollständige Session\n\n**Mögliche Lösungen:**\n• Neuaufnahme ohne Aufpreis\n• Teilerstattung (20–50 %)\n• Vollständige Erstattung\n\nBitte beachten Sie, dass subjektive Vorlieben wie der Bearbeitungsstil kein Grund für eine Erstattung sind."
+        },
+        "paymentReleased": {
+          "question": "Wann wird meine Zahlung an den Fotografen freigegeben?",
+          "answer": "Ihre Zahlung wird erst an den Fotografen freigegeben, nachdem Sie die Fotoübermittlung in Ihrem Dashboard akzeptiert haben. Sie haben 7 Tage Zeit, um zu prüfen und entweder zu akzeptieren oder eine Reklamation einzureichen.\n\nWenn Sie nicht innerhalb von 14 Tagen nach der Übermittlung reagieren, wird die Zahlung automatisch an den Fotografen freigegeben. So wird sichergestellt, dass Fotografen fair vergütet werden, auch wenn Kunden vergessen, auf „Akzeptieren\" zu klicken."
+        },
+        "dateNegotiation": {
+          "question": "Kann ich das Datum nach der Buchung ändern?",
+          "answer": "Ja. Sowohl Sie als auch der Fotograf können jederzeit ein neues Datum vorschlagen, solange die Buchung ausstehend ist. Wenn ein neues Datum vorgeschlagen wird, erhält die andere Partei eine E-Mail- und SMS-Benachrichtigung. Sie kann das vorgeschlagene Datum akzeptieren oder ein anderes vorschlagen. Die Buchung bleibt im Status „Ausstehend\", bis sich beide Seiten auf ein Datum einigen."
+        },
+        "messagingPhotos": {
+          "question": "Kann ich Fotos in Nachrichten senden?",
+          "answer": "Ja. Sie können Fotos an Nachrichten anhängen, indem Sie auf das Bildsymbol neben dem Texteingabefeld klicken. Wählen Sie ein Foto aus, fügen Sie optional eine Bildunterschrift hinzu und senden Sie es ab. Das Foto erscheint im Chat sowohl bei Ihnen als auch beim Fotografen."
+        },
+        "promoCodes": {
+          "question": "Wie verwende ich einen Aktionscode?",
+          "answer": "Wenn Sie einen Aktionscode haben, können Sie ihn beim Bezahlvorgang einlösen. Der Rabatt wird vor der Zahlung auf Ihre Buchungssumme angewendet. Aktionscodes können einen prozentualen Rabatt oder einen festen Betrag bieten."
+        },
+        "smsNotifications": {
+          "question": "Erhalte ich SMS-Benachrichtigungen?",
+          "answer": "Ja, wenn Sie Ihre Telefonnummer in den Einstellungen hinzufügen. Sie erhalten SMS für: Buchungsbestätigungen, Shooting-Erinnerungen (24 Stunden vorher), Foto-Übermittlungsbenachrichtigungen und Datumsänderungsvorschläge. Sie können Ihre SMS-Einstellungen in Ihren Benachrichtigungseinstellungen verwalten."
+        }
+      },
+      "photographers": {
+        "getStarted": {
+          "question": "Wie fange ich als Fotograf an?",
+          "answer": "Der Einstieg ist einfach:\n\n1. **Konto erstellen** – Registrieren Sie sich und wählen Sie „Ich mache Fotos\"\n2. **Profil vervollständigen** – Fügen Sie ein Foto, ein Titelbild, eine Bio und einen Slogan hinzu\n3. **Portfolio hochladen** – Zeigen Sie mindestens 5–10 Ihrer besten Aufnahmen\n4. **Pakete erstellen** – Richten Sie 2–3 Pakete zu unterschiedlichen Preisen ein\n5. **Standorte auswählen** – Markieren Sie, wo Sie für Shootings verfügbar sind\n6. **Stripe verbinden** – Erforderlich, um Zahlungen zu erhalten\n\nSobald Ihr Profil vollständig und von unserem Team freigegeben ist, erscheinen Sie in den Suchergebnissen und können Buchungen erhalten."
+        },
+        "subscriptionPlans": {
+          "question": "Welche Abo-Tarife gibt es?",
+          "answer": "Wir bieten drei Tarife an:\n\n**Free** – Keine monatliche Gebühr, 20 % Provision pro Buchung. Basis-Eintrag mit 1 Standort.\n\n**Pro** – 15 % Provision. 5 Standorte, 10 Pakete, Analyse-Dashboard und vorrangiger Support.\n\n**Premium** – 10 % Provision. Alle Standorte, unbegrenzte Pakete, individuelle Profil-URL, vollständige Analytik und Optionen für hervorgehobene Platzierungen.\n\nAlle Tarife enthalten bis zu 100 Portfolio-Fotos, Stripe-Zahlungsabwicklung, Kunden-Messaging und Zugriff auf das Buchungssystem. Aktuelle Preise finden Sie auf unserer Preisseite."
+        },
+        "getPaid": {
+          "question": "Wie und wann werde ich bezahlt?",
+          "answer": "Zahlungen werden über Stripe Connect abgewickelt. Nachdem ein Kunde seine Foto-Übermittlung akzeptiert hat, werden Ihre Einnahmen (Paketpreis abzüglich Plattformprovision) auf Ihr verbundenes Stripe-Konto überwiesen. Stripe verarbeitet Auszahlungen in der Regel innerhalb von 2–7 Werktagen, abhängig von Ihrem Land und Ihrer Bank.\n\nSie können alle Ihre Einnahmen und ausstehenden Auszahlungen in Ihrem Dashboard verfolgen."
+        },
+        "clientCancels": {
+          "question": "Was passiert, wenn ein Kunde storniert?",
+          "answer": "Die Vergütung, die Sie erhalten, hängt davon ab, wann der Kunde storniert:\n\n• 7 oder mehr Tage vorher – Kunde erhält volle Erstattung, Sie erhalten nichts\n• 3–7 Tage vorher – Kunde erhält 50 % Erstattung, Sie erhalten 50 % (abzüglich Provision)\n• Weniger als 3 Tage – Keine Erstattung an den Kunden, Sie erhalten den vollen Betrag (abzüglich Provision)\n• Kunde nicht erschienen – Sie erhalten den vollen Betrag (abzüglich Provision)\n\nDie Plattformprovision gilt nur für den Betrag, den Sie tatsächlich erhalten."
+        },
+        "deliverPhotos": {
+          "question": "Wie übermittle ich Fotos an Kunden?",
+          "answer": "Gehen Sie nach dem Fotoshooting zur Buchung in Ihrem Dashboard und klicken Sie auf „Fotos übermitteln\". Laden Sie die bearbeiteten Fotos hoch, legen Sie ein Galerie-Passwort fest und senden Sie ab. Der Kunde erhält eine E-Mail-Benachrichtigung mit dem Galerielink.\n\nBitte übermitteln Sie innerhalb des in Ihrem Paket angegebenen Zeitraums. Verspätete Lieferung (3 oder mehr Tage) kann dazu führen, dass der Kunde eine Teilerstattung verlangt. Eine Lieferung mit mehr als 14 Tagen Verspätung kann zu einer vollständigen Erstattung und möglichen Konto-Sanktionen führen."
+        },
+        "photographerCancels": {
+          "question": "Was, wenn ich eine Session stornieren muss?",
+          "answer": "Wenn Sie stornieren müssen, tun Sie dies so früh wie möglich über Ihr Dashboard. Der Kunde erhält unabhängig vom Zeitpunkt stets eine 100%ige Erstattung.\n\nWenn Sie weniger als 48 Stunden vor dem Shooting stornieren, kann Photo Portugal versuchen, einen Ersatzfotografen für den Kunden zu finden.\n\n**Wichtig:** Wiederholte Stornierungen (3 oder mehr in 3 Monaten) können zum Verlust des Hervorgehoben-Status, zu reduzierter Sichtbarkeit in der Suche oder zur Sperrung des Kontos führen."
+        },
+        "externalLinks": {
+          "question": "Kann ich mein Instagram oder meine Website zu meinem Profil hinzufügen?",
+          "answer": "Nein. Fotografen ist es nicht gestattet, URLs persönlicher Websites, Social-Media-Links (Instagram, Facebook, TikTok usw.), E-Mail-Adressen oder Telefonnummern an irgendeiner Stelle ihres Profils anzugeben – einschließlich Bio, Slogan, Paketbeschreibungen und Portfolio-Bildunterschriften.\n\nDie gesamte Kommunikation mit Kunden muss über das integrierte Nachrichtensystem von Photo Portugal erfolgen. Dies schützt beide Parteien, indem Gespräche dokumentiert, Zahlungen sicher und Streitfälle lösbar bleiben.\n\nProfile, in denen externe Links oder Kontaktdaten gefunden werden, werden zur Entfernung aufgefordert. Wiederholte Verstöße können zur Kontosperrung führen."
+        },
+        "phoneRequired": {
+          "question": "Warum muss ich eine Telefonnummer hinzufügen?",
+          "answer": "Eine verifizierte Telefonnummer ist erforderlich, um Ihr Profil zu vervollständigen und freigeben zu lassen. Sie wird für wichtige SMS-Benachrichtigungen zu Buchungen, Zahlungen und Shooting-Erinnerungen verwendet. Fügen Sie Ihre Telefonnummer mit Ländervorwahl auf Ihrer Profilseite hinzu."
+        },
+        "dateNegotiationPhotographer": {
+          "question": "Wie schlage ich einem Kunden ein anderes Datum vor?",
+          "answer": "Suchen Sie auf Ihrer Buchungsseite die ausstehende Buchung und klicken Sie auf „Anderes Datum vorschlagen\". Wählen Sie Ihr Wunschdatum aus, fügen Sie optional eine Notiz mit der Begründung hinzu und senden Sie ab. Der Kunde erhält eine E-Mail- und SMS-Benachrichtigung und kann das Datum akzeptieren oder ein anderes vorschlagen."
+        },
+        "videoReviews": {
+          "question": "Was sind Video-Bewertungen?",
+          "answer": "Kunden können zusätzlich zu Text-Bewertungen Video-Bewertungen hinterlassen. Video-Bewertungen müssen mindestens 10 Sekunden lang sein, den Kunden vor der Kamera zeigen und seine echte Erfahrung wiedergeben. Video-Bewertungen werden vor der Veröffentlichung von unserem Team geprüft. Kunden, die genehmigte Video-Bewertungen hinterlassen, können einen Rabattcode für zukünftige Buchungen erhalten."
+        },
+        "realTimeChat": {
+          "question": "Wie funktioniert das Messaging?",
+          "answer": "Nachrichten werden in Echtzeit übermittelt – neue Nachrichten erscheinen sofort, ohne dass die Seite aktualisiert werden muss. Ein grüner Punkt zeigt eine aktive Verbindung an. Sie können Textnachrichten und Fotos senden. Sie erhalten zusätzlich E-Mail- und SMS-Benachrichtigungen für neue Nachrichten (sofern in den Einstellungen aktiviert)."
+        }
+      },
+      "payments": {
+        "escrowSystem": {
+          "question": "Wie funktioniert das Treuhandsystem?",
+          "answer": "Unser Treuhandsystem schützt sowohl Kunden als auch Fotografen:\n\n1. **Kunde bucht** – Zahlung wird eingezogen und sicher von Stripe verwahrt\n2. **Fotoshooting findet statt** – Geld bleibt in der Treuhand\n3. **Fotograf liefert** – Bearbeitete Fotos werden in private Galerie hochgeladen\n4. **Kunde prüft** – 7 Tage Zeit zum Akzeptieren oder Einreichen einer Reklamation\n5. **Zahlung freigegeben** – Nach Akzeptanz erhält der Fotograf seinen Anteil\n\nWenn innerhalb von 14 Tagen nach der Übermittlung keine Aktion erfolgt, wird die Zahlung automatisch an den Fotografen freigegeben. Dieses System sorgt dafür, dass Fotografen für ihre Arbeit bezahlt werden und Kunden die erwarteten Fotos erhalten."
+        },
+        "serviceFees": {
+          "question": "Welche Servicegebühren fallen an?",
+          "answer": "**Für Kunden:** Eine Servicegebühr von 10 % wird zusätzlich zum Paketpreis berechnet. Beispielsweise kostet ein Paket von 300 € insgesamt 330 €. Diese Gebühr deckt Zahlungsabwicklung, Plattformwartung und Kunden-Support ab.\n\n**Für Fotografen:** Von jeder Buchung wird abhängig von Ihrem Tarif eine Provision abgezogen:\n• Free-Tarif – 20 % Provision\n• Pro-Tarif – 15 % Provision\n• Premium-Tarif – 10 % Provision\n\nEs gibt keine versteckten Gebühren. Alle Gebühren werden vor jeder Transaktion transparent angezeigt."
+        },
+        "refundPolicy": {
+          "question": "Wie lautet die Erstattungsrichtlinie?",
+          "answer": "**Erstattungen bei Kundenstornierung:**\n• 7 oder mehr Tage vorher – 100 % Erstattung\n• 3–7 Tage vorher – 50 % Erstattung\n• Weniger als 3 Tage – Keine Erstattung\n• Nichterscheinen – Keine Erstattung\n\n**Stornierung durch den Fotografen:** Immer 100 % Erstattung an den Kunden.\n\n**Nach der Übermittlung:** Wenn ein berechtigtes Problem festgestellt wird, kann die Streitbeilegung zu einer Teilerstattung (20–50 %) oder einer vollständigen Erstattung führen.\n\n**Verspätete Lieferung:** 3 oder mehr Tage Verspätung – bis zu 20 % Erstattung. 14 oder mehr Tage Verspätung – vollständige Erstattung.\n\n**Höhere Gewalt:** Vollständige Erstattung oder kostenlose Verschiebung bei Ereignissen, die außerhalb der Kontrolle liegen."
+        },
+        "disputes": {
+          "question": "Wie funktionieren Reklamationen?",
+          "answer": "Wenn etwas mit Ihrer Buchung oder Ihren Fotos schiefläuft, können Sie innerhalb von 7 Tagen nach der Übermittlung über Ihr Dashboard eine Reklamation einreichen.\n\n**Der Ablauf:**\n1. Reklamation mit Grund und Beschreibung einreichen\n2. Unser Team prüft den Fall innerhalb von 5 Werktagen\n3. Wir können beide Parteien für zusätzliche Informationen kontaktieren\n4. Eine Lösung wird angeboten: Neuaufnahme, Teilerstattung oder vollständige Erstattung\n\n**Berechtigte Reklamationsgründe:** Weniger Fotos als versprochen, falscher Ort/falsche Personen, technische Probleme, Fotograf nicht erschienen.\n\n**Nicht berechtigt:** Subjektive Bearbeitungsvorlieben, geringfügige Stilunterschiede."
+        }
+      },
+      "general": {
+        "rainPolicy": {
+          "question": "Was, wenn es am Tag meines Fotoshootings regnet?",
+          "answer": "Wetterbedingte Verschiebungen sind sowohl für Kunden als auch für Fotografen immer kostenlos und ohne Strafgebühren. Wenn schlechtes Wetter erwartet wird, kann jede der Parteien eine Verschiebung beantragen.\n\nViele Fotografen haben Erfahrung mit Indoor-Alternativen oder überdachten Locations – besprechen Sie bei der Buchung Ausweichmöglichkeiten mit Ihrem Fotografen."
+        },
+        "forcesMajeure": {
+          "question": "Was ist mit Notfällen oder Naturkatastrophen?",
+          "answer": "Im Falle höherer Gewalt – Naturkatastrophen, schwere Wetterwarnungen, Pandemien oder andere Umstände, die außerhalb der Kontrolle liegen – haben beide Parteien Anspruch auf eine vollständige Erstattung oder eine kostenlose Verschiebung ohne Strafen.\n\nPhoto Portugal arbeitet mit beiden Parteien zusammen, um die beste Lösung zu finden."
+        },
+        "contactSupport": {
+          "question": "Wie kontaktiere ich den Support?",
+          "answer": "Sie erreichen unser Support-Team über:\n\n• **E-Mail:** info@photoportugal.com\n• **Dashboard:** Fotografen können Support-Tickets direkt aus ihrem Dashboard einreichen\n• **Kontaktseite:** Besuchen Sie unsere Kontaktseite, um uns eine Nachricht zu senden\n\nWir bemühen uns, alle Anfragen innerhalb von 24 Stunden an Werktagen zu beantworten."
+        }
+      }
+    },
+    "cta": {
+      "title": "Haben Sie noch Fragen?",
+      "description": "Sie finden nicht, was Sie suchen? Unser Team hilft Ihnen gerne weiter.",
+      "contactButton": "Kontaktieren Sie uns",
+      "faqButton": "FAQ ansehen"
+    }
+  },
+  "delivery": {
+    "backToBookings": "Zurück zu den Buchungen",
+    "deliverPhotos": "Fotos übermitteln",
+    "client": "Kunde:",
+    "package": "Paket:",
+    "dropPhotos": "Fotos hier ablegen oder klicken zum Durchsuchen",
+    "photoFormats": "JPEG, PNG, WebP – bis zu 25 MB pro Foto",
+    "uploading": "Wird hochgeladen...",
+    "photoCount": "{count} Foto",
+    "photoCountPlural": "{count} Fotos",
+    "selected": "{count} ausgewählt",
+    "selectAll": "Alle auswählen",
+    "deleteCount": "Löschen ({count})",
+    "cancel": "Abbrechen",
+    "select": "Auswählen",
+    "addMore": "+ Mehr hinzufügen",
+    "removePhoto": "Dieses Foto entfernen?",
+    "deletePhotos": "{count} Foto(s) löschen?",
+    "photosDelivered": "Fotos übermittelt!",
+    "canStillEditUntilAccepted": "Sie können Fotos hinzufügen, entfernen oder ersetzen, bis der Kunde die Übermittlung akzeptiert.",
+    "clientNotified": "Ihr Kunde wurde per E-Mail benachrichtigt.",
+    "deliveryLink": "Übermittlungslink (mit Kunde teilen)",
+    "copied": "Kopiert!",
+    "copy": "Kopieren",
+    "galleryPassword": "Galerie-Passwort",
+    "galleryPasswordDesc": "Legen Sie ein Passwort fest, um die Galerie zu schützen. Es wird dem Kunden im Chat gesendet.",
+    "galleryPasswordPlaceholder": "z. B. lissabon2026",
+    "sharing": "Wird geteilt...",
+    "sharePhotos": "{count} Foto(s) mit Kunden teilen",
+    "uploadFirst": "Bitte laden Sie mindestens ein Foto hoch, bevor Sie teilen.",
+    "setPassword": "Bitte legen Sie ein Galerie-Passwort fest (mindestens 4 Zeichen).",
+    "confirmShare": "{count} Fotos mit dem Kunden teilen? Das Passwort und der Galerielink werden dem Kunden automatisch im Chat gesendet.",
+    "incorrectPassword": "Falsches Passwort. Bitte überprüfen Sie Ihre Nachrichten auf das richtige Passwort.",
+    "galleryExpired": "Diese Galerie ist abgelaufen.",
+    "somethingWentWrong": "Etwas ist schiefgegangen. Bitte versuchen Sie es erneut.",
+    "connectionError": "Verbindungsfehler. Bitte versuchen Sie es erneut.",
+    "confirmAcceptDelivery": "Diese Foto-Übermittlung akzeptieren? Damit wird die Zahlung an den Fotografen freigegeben.",
+    "failedAcceptDelivery": "Übermittlung konnte nicht akzeptiert werden. Bitte versuchen Sie es erneut.",
+    "sharedPhotosWithYou": "hat Fotos mit Ihnen geteilt",
+    "enterGalleryPassword": "Galerie-Passwort eingeben",
+    "checkMessagesForPassword": "Schauen Sie in Ihre Nachrichten vom Fotografen, um das Passwort zu finden",
+    "galleryPasswordInputPlaceholder": "Galerie-Passwort",
+    "verifying": "Wird verifiziert...",
+    "viewPhotos": "Fotos ansehen",
+    "brandFooter": "Photo Portugal — photoportugal.com",
+    "photosReady": "Ihre Fotos sind bereit!",
+    "photoSingular": "Foto",
+    "photoPlural": "Fotos",
+    "availableUntil": "Verfügbar bis {date}",
+    "downloadAllZip": "Alle herunterladen (ZIP)",
+    "deliveryAccepted": "Übermittlung akzeptiert",
+    "deliveryAcceptedThankYou": "Vielen Dank! Ihre Fotos stehen 90 Tage lang zum Download zur Verfügung.",
+    "happyWithPhotos": "Sind Sie mit Ihren Fotos zufrieden?",
+    "acceptDeliveryPrompt": "Akzeptieren Sie die Übermittlung, um zu bestätigen, dass Sie Ihre Fotos erhalten haben.",
+    "acceptDeliveryPaymentNote": "Damit wird die Zahlung an Ihren Fotografen freigegeben.",
+    "accepting": "Wird akzeptiert...",
+    "acceptDelivery": "Übermittlung akzeptieren",
+    "deliveredVia": "Übermittelt über",
+    "download": "Herunterladen",
+    "photoViewer": "Fotoanzeige",
+    "close": "Schließen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "acceptToUnlockFullRes": "Übermittlung akzeptieren, um volle Auflösung & Downloads freizuschalten",
+    "acceptToDownload": "Akzeptieren zum Herunterladen",
+    "loginToAccept": "Melden Sie sich in Ihrem Konto an, um die Übermittlung zu akzeptieren und Downloads in voller Auflösung freizuschalten.",
+    "logIn": "Anmelden",
+    "deletingProgress": "Lösche {current}/{total}",
+    "retryUpload": "Erneut versuchen",
+    "galleryExpiredTitle": "Galerie abgelaufen",
+    "galleryExpiredMessage": "Diese Fotogalerie ist abgelaufen. Bitte kontaktieren Sie Ihren Fotografen, um einen neuen Link anzufordern."
+  },
+  "availability": {
+    "pageTitle": "Verfügbarkeit",
+    "description": "Markieren Sie Daten, an denen Sie nicht für Fotoshootings verfügbar sind. Kunden sehen, dass Sie in diesen Zeiträumen ausgebucht sind.",
+    "addUnavailableDates": "Nicht verfügbare Daten hinzufügen",
+    "from": "Von",
+    "until": "Bis",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "reasonOptional": "Grund (optional)",
+    "reasonPlaceholder": "z. B. Urlaub, Persönlich",
+    "saving": "Wird gespeichert...",
+    "addUnavailablePeriod": "Nicht verfügbaren Zeitraum hinzufügen",
+    "loading": "Wird geladen...",
+    "noUnavailableDates": "Keine nicht verfügbaren Daten festgelegt – Sie werden täglich als verfügbar angezeigt",
+    "now": "Jetzt",
+    "remove": "Entfernen",
+    "archive": "Archivieren",
+    "selectBothDates": "Bitte wählen Sie beide Daten aus",
+    "startBeforeEnd": "Das Startdatum muss vor dem Enddatum liegen",
+    "failedToSave": "Speichern fehlgeschlagen"
+  },
+  "dateNegotiation": {
+    "date": "Datum",
+    "selectDate": "Datum auswählen",
+    "timePT": "Uhrzeit (PT)",
+    "noteOptional": "Notiz (optional)",
+    "notePlaceholder": "z. B. Treffen am Haupteingang",
+    "proposeDate": "Datum vorschlagen",
+    "proposing": "Wird vorgeschlagen...",
+    "cancel": "Abbrechen",
+    "accept": "Akzeptieren",
+    "suggestDifferent": "Anderes vorschlagen",
+    "proposedNewDate": "{name} hat ein neues Datum vorgeschlagen",
+    "youProposed": "Sie haben vorgeschlagen",
+    "waitingFor": "wartet auf Antwort von {name}",
+    "currentDate": "Aktuelles Datum",
+    "hide": "Ausblenden",
+    "changeDateAndTime": "Datum und Uhrzeit ändern",
+    "proposeDateAndTime": "Datum und Uhrzeit vorschlagen",
+    "timeFlexible": "Zeit flexibel"
+  },
+  "bookingActions": {
+    "convertToBooking": "Anfrage annehmen",
+    "acceptInquiryHint": "Damit wird die Anfrage in eine Buchungsanfrage umgewandelt. Sie können weiterhin Details besprechen und später ablehnen.",
+    "decline": "Ablehnen",
+    "confirm": "Bestätigen",
+    "confirming": "Wird bestätigt...",
+    "markSessionDone": "Session als erledigt markieren",
+    "uploadDeliverPhotos": "Fotos hochladen & übermitteln",
+    "viewDelivery": "Übermittlung ansehen",
+    "cancelBooking": "Buchung stornieren",
+    "cancelAndRefund": "Stornieren & erstatten",
+    "cancelling": "Wird storniert...",
+    "cancelConfirm": "Diese Buchung stornieren?",
+    "cancelRefundConfirm": "Diese Buchung stornieren? Ihre Zahlung wird erstattet. Erstattungen dauern in der Regel 5-10 Werktage.",
+    "failedUpdate": "Buchung konnte nicht aktualisiert werden",
+    "markSessionDoneHint": "Bestätigen Sie, dass die Session erfolgreich stattgefunden hat. Wenn es ein Problem gab (Kunde nicht erschienen, Probleme), wenden Sie sich stattdessen an den Support.",
+    "markSessionDoneWait": "Verfügbar am {date}",
+    "uploadDeliverHint": "Laden Sie Ihre Fotos hoch und teilen Sie sie mit dem Kunden. Er erhält eine E-Mail mit einem Link zum Überprüfen und Akzeptieren."
+  },
+  "clientDashboard": {
+    "title": "Mein Dashboard"
+  },
+  "messages": {
+    "title": "Nachrichten",
+    "chatWithContacts": "Chatten Sie mit Ihren Kontakten",
+    "chatWithPhotographers": "Chatten Sie mit Ihren Fotografen",
+    "noConversations": "Noch keine Unterhaltungen",
+    "startConversation": "Eine Unterhaltung beginnen",
+    "selectConversation": "Eine Unterhaltung auswählen",
+    "loadingMessages": "Wird geladen...",
+    "noMessages": "Noch keine Nachrichten. Sagen Sie Hallo!",
+    "typePlaceholder": "Nachricht eingeben...",
+    "yesterday": "Gestern",
+    "signInPrompt": "Anmelden",
+    "viewGallery": "Galerie ansehen",
+    "photoPreviewsReady": "{count} Fotovorschauen zur Überprüfung bereit",
+    "deliveryReviewHint": "Sehen Sie sich die Fotos an und geben Sie die Übermittlung frei, wenn Sie zufrieden sind",
+    "packageLabel": "Paket",
+    "bookNow": "Jetzt buchen",
+    "tapToOpen": "Zum Öffnen tippen",
+    "failedToSend": "Senden fehlgeschlagen",
+    "retry": "Erneut versuchen",
+    "sendPhoto": "Foto senden",
+    "sharePackage": "Paket teilen",
+    "shareAPackage": "Ein Paket teilen",
+    "noPackagesYet": "Noch keine Pakete",
+    "online": "Online",
+    "sharedPhoto": "Geteiltes Foto",
+    "pdfLabel": "PDF",
+    "pendingPhotoAttachment": "Ausstehender Fotoanhang"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Verwalten Sie Ihr Konto und Ihre Einstellungen",
+    "account": "Konto",
+    "profilePhoto": "Profilfoto",
+    "uploadPhoto": "Foto hochladen",
+    "uploading": "Wird hochgeladen...",
+    "name": "Name",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "email": "E-Mail",
+    "emailCannotBeChanged": "Müssen Sie Ihre E-Mail-Adresse ändern?",
+    "phone": "Telefonnummer",
+    "phoneHint": "Wird für SMS-Buchungsbenachrichtigungen verwendet",
+    "saveChanges": "Änderungen speichern",
+    "savingChanges": "Wird gespeichert...",
+    "settingsSaved": "Einstellungen gespeichert!",
+    "failedToSave": "Speichern fehlgeschlagen",
+    "fileTooLarge": "Datei zu groß (max. 5 MB)",
+    "onlyImagesAllowed": "Nur Bilder erlaubt",
+    "uploadingPhoto": "Foto wird hochgeladen...",
+    "photoUpdated": "Foto aktualisiert!",
+    "uploadFailed": "Hochladen fehlgeschlagen",
+    "emailNotifications": "E-Mail-Benachrichtigungen",
+    "newBookings": "Neue Buchungen",
+    "newBookingsDesc": "Erhalten Sie eine Benachrichtigung, wenn jemand eine Session anfragt",
+    "newMessages": "Neue Nachrichten",
+    "newMessagesDesc": "Erhalten Sie eine Benachrichtigung, wenn Sie eine Nachricht erhalten",
+    "newReviews": "Neue Bewertungen",
+    "newReviewsDesc": "Erhalten Sie eine Benachrichtigung, wenn ein Kunde eine Bewertung hinterlässt",
+    "smsNotifications": "SMS-Benachrichtigungen",
+    "smsNewBookings": "Neue Buchungen",
+    "smsNewBookingsDesc": "Erhalten Sie eine SMS, wenn jemand eine Session anfragt",
+    "telegramNotifications": "Telegram-Benachrichtigungen",
+    "telegramDesc": "Erhalten Sie sofortige Benachrichtigungen in Ihrer Telegram-App",
+    "telegramNotConnected": "Verbinden Sie Ihr Telegram-Konto, um sofortige Benachrichtigungen über neue Buchungen, Nachrichten, Zahlungen und mehr zu erhalten.",
+    "connectTelegram": "Telegram verbinden",
+    "connecting": "Verbinde...",
+    "telegramConnectedSuccess": "Telegram erfolgreich verbunden!",
+    "telegramActive": "Telegram-Benachrichtigungen",
+    "telegramActiveDesc": "Erhalten Sie Buchungs- und Nachrichten-Benachrichtigungen über Telegram",
+    "disconnectTelegram": "Telegram trennen",
+    "telegramDisconnectConfirm": "Sind Sie sicher, dass Sie Telegram trennen möchten?",
+    "telegramDisconnected": "Telegram getrennt.",
+    "dangerZone": "Gefahrenzone",
+    "deleteAccount": "Konto löschen",
+    "deleteAccountDesc": "Löschen Sie Ihr Konto und alle Daten dauerhaft.",
+    "areYouSure": "Sind Sie sicher?",
+    "deleteConfirmationText": "Damit werden Ihr Konto, alle Buchungen, Nachrichten, Bewertungen und alle anderen Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "typeDeleteToConfirm": "Geben Sie",
+    "deleteKeyword": "DELETE",
+    "toConfirm": "zur Bestätigung ein",
+    "pleaseTypeDelete": "Bitte geben Sie zur Bestätigung DELETE ein.",
+    "permanentlyDeleteAccount": "Konto dauerhaft löschen",
+    "deleting": "Wird gelöscht...",
+    "deleteAccountFailed": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "cancel": "Abbrechen",
+    "signIn": "Anmelden",
+    "contactSupport": "Support kontaktieren",
+    "profilePhotoPreview": "Profilfoto-Vorschau"
+  },
+  "bookings": {
+    "bookingRequests": "Buchungsanfragen",
+    "myBookings": "Meine Buchungen",
+    "manageIncoming": "Eingehende Anfragen von Kunden verwalten",
+    "trackBookings": "Verfolgen Sie Ihre Fotoshooting-Buchungen",
+    "statusInquiry": "Anfrage",
+    "statusPending": "Ausstehend",
+    "statusConfirmed": "Bestätigt",
+    "statusCompleted": "Abgeschlossen",
+    "statusDelivered": "Übermittelt",
+    "statusCancelled": "Storniert",
+    "paid": "Bezahlt",
+    "refunded": "Erstattet",
+    "unpaid": "Unbezahlt",
+    "accepted": "Akzeptiert",
+    "message": "Nachricht",
+    "payNow": "Jetzt bezahlen",
+    "viewPhotos": "Fotos ansehen",
+    "reviewed": "Bewertet",
+    "people": "{count} Personen",
+    "flexibleRange": "Flexibel: {from} — {to}",
+    "requested": "Angefragt am {date}",
+    "noBookingsPhotographer": "Noch keine Buchungsanfragen",
+    "noBookingsPhotographerDesc": "Stellen Sie sicher, dass Ihr Profil und Ihre Pakete eingerichtet sind, um Anfragen zu erhalten.",
+    "noBookingsClient": "Noch keine Buchungen",
+    "noBookingsClientDesc": "Wenn Sie einen Fotografen buchen, werden Ihre Sessions hier angezeigt.",
+    "browsePhotographers": "Fotografen durchsuchen",
+    "timeSunrise": "Sonnenaufgang (6-8 Uhr)",
+    "timeMorning": "Vormittag (8-11 Uhr)",
+    "timeMidday": "Mittag (11-14 Uhr)",
+    "timeAfternoon": "Nachmittag (14-17 Uhr)",
+    "timeGoldenHour": "Goldene Stunde (17-19 Uhr)",
+    "timeSunset": "Sonnenuntergang (19-21 Uhr)",
+    "paymentDueLabel": "Zahlung fällig",
+    "paymentDueMessage": "innerhalb von {hours} Stunden. Ihre Buchung wird automatisch storniert, wenn nicht bezahlt wird.",
+    "paymentOverdueLabel": "Zahlung überfällig",
+    "paymentOverdueMessage": "Ihre Buchung kann jederzeit storniert werden. Bitte zahlen Sie sofort, um eine Stornierung zu vermeiden.",
+    "shootDate": "Datum",
+    "price": "Preis",
+    "occasion": "Anlass",
+    "requestedLabel": "Angefragt",
+    "packageLabel": "Paket",
+    "locationLabel": "Standort",
+    "groupLabel": "Gruppe"
+  },
+  "bookingJourney": {
+    "cancelled": "Storniert",
+    "client": {
+      "booked": "Gebucht",
+      "confirmed": "Bestätigt",
+      "paid": "Bezahlt",
+      "session": "Session",
+      "photos": "Fotos",
+      "accepted": "Akzeptiert",
+      "hintBooked": "Ihre Buchungsanfrage wurde gesendet",
+      "hintConfirmed": "Wartet auf Bestätigung des Fotografen",
+      "hintPaid": "Schließen Sie Ihre Zahlung ab, um die Buchung zu sichern",
+      "hintSession": "Ihre Session steht bevor!",
+      "hintPhotos": "Der Fotograf bearbeitet Ihre Fotos",
+      "hintAccepted": "Sehen Sie sich Ihre Fotos an und akzeptieren Sie die Übermittlung"
+    },
+    "photographer": {
+      "request": "Anfrage",
+      "confirmed": "Bestätigt",
+      "paid": "Bezahlt",
+      "session": "Session",
+      "upload": "Hochladen",
+      "accepted": "Akzeptiert",
+      "hintRequest": "Neue Buchungsanfrage erhalten",
+      "hintConfirmed": "Bestätigen oder lehnen Sie diese Buchungsanfrage ab",
+      "hintPaid": "Wartet auf Zahlung des Kunden",
+      "hintSession": "Der Session-Tag steht bevor!",
+      "hintUpload": "Laden Sie Fotos hoch und teilen Sie sie mit Ihrem Kunden",
+      "hintAccepted": "Wartet auf die Überprüfung der Fotos durch den Kunden"
+    }
+  },
+  "askQuestion": {
+    "message": "Nachricht",
+    "dialogTitle": "Nachricht an {name}",
+    "dialogSubtitle": "Fragen Sie nach Verfügbarkeit, Preisen oder allem anderen",
+    "placeholder": "Hallo! Ich plane eine Reise nach Portugal und würde gerne über ein Fotoshooting sprechen...",
+    "sending": "Wird gesendet...",
+    "sendMessage": "Nachricht senden",
+    "cancel": "Abbrechen",
+    "failedToSend": "Senden fehlgeschlagen"
+  },
+  "dispute": {
+    "reportIssue": "Problem melden",
+    "dialogTitle": "Ein Problem melden",
+    "dialogSubtitle": "Sagen Sie uns, was schiefgelaufen ist. Unser Team prüft die Sache und antwortet innerhalb von 48 Stunden.",
+    "whatHappened": "Was ist passiert?",
+    "reasons": {
+      "fewer_photos": "Weniger Fotos als versprochen",
+      "wrong_location": "Falscher Ort oder falsche Personen",
+      "technical_issues": "Schwerwiegende technische Probleme (Unschärfe, Überbelichtung)",
+      "no_show": "Fotograf nicht erschienen oder unvollständige Session",
+      "other": "Anderes Problem"
+    },
+    "describeIssue": "Beschreiben Sie das Problem",
+    "descriptionPlaceholder": "Bitte geben Sie Details an, was schiefgelaufen ist...",
+    "submitting": "Wird übermittelt...",
+    "submitDispute": "Reklamation einreichen",
+    "cancel": "Abbrechen",
+    "failedToSubmit": "Reklamation konnte nicht eingereicht werden",
+    "submitted": "Reklamation eingereicht",
+    "submittedDesc": "Unser Team prüft Ihren Fall und meldet sich innerhalb von 5 Werktagen bei Ihnen."
+  },
+  "reviewForm": {
+    "leaveReview": "Bewertung abgeben",
+    "dialogTitle": "Bewerten Sie Ihre Session mit {name}",
+    "rating": "Bewertung",
+    "titleLabel": "Titel (optional)",
+    "titlePlaceholder": "Fassen Sie Ihre Erfahrung zusammen",
+    "reviewLabel": "Ihre Bewertung",
+    "reviewPlaceholder": "Erzählen Sie anderen von Ihrer Erfahrung...",
+    "submitting": "Wird übermittelt...",
+    "submitReview": "Bewertung abschicken",
+    "cancel": "Abbrechen",
+    "failedToSubmit": "Bewertung konnte nicht übermittelt werden",
+    "submitted": "Bewertung übermittelt!",
+    "addPhotos": "Fotos hinzufügen (optional)",
+    "addPhotosHint": "Teilen Sie bis zu 5 Fotos aus Ihrer Session – max. 10 MB pro Foto",
+    "selectPhotos": "Fotos hinzufügen",
+    "somePhotosFailed": "{count} Foto(s) konnten nicht hochgeladen werden",
+    "alsoReviewOnGoogle": "Auch auf Google bewerten?",
+    "videoReview": "Video-Bewertung",
+    "video": {
+      "title": "Video-Bewertung",
+      "introTitle": "Nehmen Sie eine Video-Bewertung für {name} auf",
+      "introDescription": "Teilen Sie Ihre Erfahrung in einem kurzen Video (bis zu 60 Sekunden). Video-Bewertungen helfen anderen Reisenden, bessere Entscheidungen zu treffen!",
+      "discountOffer": "Nehmen Sie eine Video-Bewertung auf und erhalten Sie 10 % Rabatt auf Ihre nächste Session!",
+      "requirements": "Um den Rabatt zu erhalten:",
+      "reqMinDuration": "Das Video muss mindestens 10 Sekunden lang sein",
+      "reqOnCamera": "Sie müssen vor der Kamera sichtbar sein",
+      "reqSpeakNaturally": "Erzählen Sie Ihre Erfahrung in Ihren eigenen Worten",
+      "reqModerated": "Alle Video-Bewertungen werden vor der Veröffentlichung von unserem Team geprüft",
+      "tooShort": "Das Video muss mindestens {seconds} Sekunden lang sein. Bitte erneut aufnehmen.",
+      "selectCamera": "Kamera",
+      "selectMicrophone": "Mikrofon",
+      "startRecording": "Aufnahme starten",
+      "recording": "REC",
+      "stopRecording": "Aufnahme stoppen",
+      "useThisVideo": "Dieses Video verwenden",
+      "retake": "Erneut aufnehmen",
+      "rateExperience": "Bewerten Sie Ihre Erfahrung",
+      "submitVideoReview": "Video-Bewertung abschicken",
+      "uploading": "Ihr Video wird hochgeladen...",
+      "uploadFailed": "Hochladen fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "thankYou": "Vielen Dank!",
+      "videoSubmitted": "Ihre Video-Bewertung wurde übermittelt und erscheint nach der Genehmigung auf dem Profil des Fotografen.",
+      "yourDiscount": "Ihre Belohnung:",
+      "discountDetails": "10 % Rabatt auf Ihre nächste Buchung – ohne Verfallsdatum",
+      "discountAfterApproval": "Ihr Rabattcode wird Ihnen per E-Mail zugesandt, sobald unser Team die Video-Bewertung genehmigt hat.",
+      "done": "Fertig",
+      "cameraError": "Auf die Kamera konnte nicht zugegriffen werden. Bitte erlauben Sie Kamera- und Mikrofon-Berechtigungen."
+    },
+    "reviewPhotoPreview": "Vorschau des Bewertungsfotos"
+  },
+  "payButton": {
+    "pay": "{total} € zahlen",
+    "redirecting": "Weiterleitung...",
+    "serviceFee": "(inkl. {fee} € Servicegebühr)",
+    "paymentFailed": "Zahlung fehlgeschlagen",
+    "paymentFailedRetry": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "securePayment": "Sichere Zahlung"
+  },
+  "onboarding": {
+    "completeYourProfile": "Vervollständigen Sie Ihr Profil",
+    "stepsProgress": "{completed} von {total} Schritten erledigt",
+    "completeAllForApproval": "Schließen Sie alle Schritte ab, um Ihr Profil zur Freigabe einzureichen",
+    "deadlineToday": "Letzter Tag, um Ihr Profil zu vervollständigen. Ihr Konto kann deaktiviert werden, wenn es heute nicht abgeschlossen wird.",
+    "deadlineTomorrow": "Noch 1 Tag, um Ihr Profil zu vervollständigen, bevor Ihr Konto deaktiviert wird.",
+    "deadlineDays": "Noch {days} Tage, um Ihr Profil zu vervollständigen, bevor Ihr Konto deaktiviert wird.",
+    "deadlineExpired": "Die Frist für Ihr Profil ist abgelaufen. Vervollständigen Sie es jetzt, um eine Deaktivierung zu vermeiden.",
+    "dismissChecklist": "Checkliste ausblenden",
+    "allSet": "Alles bereit!",
+    "allSetDescriptionPhotographer": "Ihr Profil ist vollständig. Sie sind bereit, Buchungen zu erhalten!",
+    "allSetDescriptionClient": "Ihr Profil ist vollständig. Sie sind bereit, Ihren perfekten Fotografen zu finden!",
+    "photographer": {
+      "addProfilePhoto": "Profilfoto hinzufügen",
+      "addProfilePhotoTip": "Ein freundliches Porträtfoto schafft Vertrauen bei Kunden",
+      "uploadCoverImage": "Titelbild hochladen",
+      "uploadCoverImageTip": "Verwenden Sie Ihr bestes Querformat-Foto",
+      "writeBioTagline": "Schreiben Sie Ihre Bio & Ihren Slogan",
+      "writeBioTaglineTip": "Erwähnen Sie Ihre Erfahrung, Ihren Stil und das, was Sie einzigartig macht",
+      "uploadPortfolioPhotos": "Mindestens 5 Portfolio-Fotos hochladen",
+      "uploadPortfolioPhotosTip": "Laden Sie mindestens 10 vielfältige Fotos hoch, die Ihre Bandbreite zeigen",
+      "createFirstPackage": "Erstellen Sie Ihr erstes Paket",
+      "createFirstPackageTip": "Beginnen Sie mit 2-3 Paketen zu unterschiedlichen Preisen",
+      "selectLocations": "Wählen Sie Ihre Standorte",
+      "selectLocationsTip": "Fügen Sie alle Gebiete hinzu, in denen Sie für Shootings verfügbar sind",
+      "connectStripe": "Stripe für Zahlungen verbinden",
+      "connectStripeTip": "Erforderlich, um Zahlungen aus Buchungen zu erhalten",
+      "addPhoneNumber": "Telefonnummer hinzufügen",
+      "addPhoneNumberTip": "Erforderlich für SMS-Buchungsbenachrichtigungen"
+    },
+    "client": {
+      "addProfilePhoto": "Profilfoto hinzufügen",
+      "addPhoneNumber": "Telefonnummer hinzufügen",
+      "addPhoneNumberTip": "Damit Ihr Fotograf Sie zum Shooting erreichen kann",
+      "findPhotographer": "Finden Sie Ihren Fotografen"
+    }
+  },
+  "activity": {
+    "now": "Jetzt online",
+    "today": "Heute aktiv",
+    "thisWeek": "Diese Woche aktiv",
+    "thisMonth": "Diesen Monat aktiv",
+    "responseTime": "Antwortet in der Regel innerhalb weniger Stunden",
+    "respondsMinutes": "Antwortet innerhalb von Minuten",
+    "respondsUnderHour": "Antwortet innerhalb einer Stunde",
+    "respondsFewHours": "Antwortet innerhalb weniger Stunden",
+    "respondsSameDay": "Antwortet am selben Tag"
+  },
+  "concierge": {
+    "metaTitle": "Finden Sie Ihren Fotografen in Portugal in 30 Sekunden | Photo Portugal",
+    "metaDescription": "Sagen Sie uns, wo Sie sein werden und den Anlass — unser KI-Concierge findet sofort die 2–3 besten Fotografen aus unserem Marketplace.",
+    "title1": "Finden Sie Ihren Fotografen in Portugal",
+    "title2": "in 30 Sekunden",
+    "subtitle": "Sagen Sie uns, wo Sie sein werden und den Anlass — wir finden für Sie die 2–3 besten Fotografen, handverlesen für Ihren Stil, Ort und Ihre Reise.",
+    "trustVerified": "30+ verifizierte Fotografen",
+    "trustSecure": "Sichere Zahlung",
+    "trustRefund": "Geld-zurück-Garantie",
+    "openingMessage": "Hallo! Ich bin Ihr Smart Concierge von Photo Portugal. Sagen Sie mir, wo Sie sein werden und den Anlass — ich finde Ihnen in 30 Sekunden die 2–3 besten Fotografen. ✨",
+    "conciergeBadge": "Photo Portugal Concierge",
+    "inputPlaceholder": "Erzählen Sie mir von Ihrer Reise...",
+    "send": "Senden",
+    "errorRetry": "Etwas ist schiefgelaufen — bitte versuchen Sie es erneut.",
+    "saveEmailPrompt": "💌 Möchten Sie diese Vorschläge speichern? Wir senden Ihnen die Profile per E-Mail, damit Sie später entscheiden können.",
+    "emailPlaceholder": "Ihre E-Mail",
+    "saveBtn": "Speichern",
+    "savingBtn": "Senden…",
+    "savedToast": "✅ Gespeichert! Schauen Sie gleich in Ihr Postfach.",
+    "viewProfile": "Profil ansehen",
+    "talkTo": "Mit {name} schreiben",
+    "emailMeThese": "📧 Diese auch an meine E-Mail senden",
+    "emailSending": "Senden…",
+    "emailSent": "✅ An Ihr Postfach gesendet",
+    "handoffPrompt": "Lassen Sie mich das an einen menschlichen Kollegen weitergeben — Sie erhalten 2-3 persönlich ausgewählte Optionen innerhalb von 4 Stunden per E-Mail.",
+    "handoffSubmitted": "✅ Verstanden! Wir senden Ihnen innerhalb von 4 Stunden 2-3 handverlesene Optionen.",
+    "handoffNamePlaceholder": "Ihr Name",
+    "handoffEmailPlaceholder": "Ihre E-Mail",
+    "handoffSubmitBtn": "Hilfe anfordern",
+    "handoffSendingBtn": "Senden…",
+    "prefillIntro": "Hallo! Ich habe Sie über den KI-Concierge gefunden. Hier ist, was ich suche:",
+    "startOver": "Neu starten",
+    "newBadge": "Neu",
+    "presenceOnline": "Online",
+    "presenceActiveToday": "Heute aktiv",
+    "presenceActiveWeek": "Diese Woche aktiv",
+    "whatsappGreeting": "Hallo! Ich habe mit dem KI-Concierge von Photo Portugal gesprochen und würde gerne mit Ihnen weitermachen.",
+    "whatsappIntentLabel": "Was ich suche:",
+    "whatsappContinue": "Im WhatsApp fortsetzen",
+    "whatsappTalkHuman": "Mit Mensch sprechen",
+    "suggestion1": "Paarshooting in Lissabon nächsten Monat",
+    "suggestion2": "Heiratsantrag in Sintra bei Sonnenuntergang",
+    "suggestion3": "Familien-Fotoshooting in Cascais",
+    "suggestion4": "Hochzeit im Dourotal",
+    "stats": {
+      "photographers": "Verifizierte Fotografen",
+      "locations": "Orte in Portugal",
+      "rating": "Durchschnittliche Bewertung ({count})",
+      "from": "Ab"
+    },
+    "howItWorks": {
+      "title": "So funktioniert es",
+      "step1Title": "Erzählen Sie von Ihrer Reise",
+      "step1Desc": "Wo, wann, Anlass — nur ein, zwei Sätze.",
+      "step2Title": "3 passende Vorschläge",
+      "step2Desc": "Personalisierte Empfehlungen in Sekunden, mit Begründung.",
+      "step3Title": "Sicher buchen",
+      "step3Desc": "Treuhand-Zahlung, Geld-zurück-Garantie."
+    },
+    "reviews": {
+      "title": "Was Reisende sagen",
+      "subtitle": "Verifizierte Bewertungen von echten Buchungen"
+    },
+    "why": {
+      "title": "Warum Photo Portugal",
+      "secure": "Sichere Zahlung",
+      "secureDesc": "Stripe + Treuhand bis zur Lieferung",
+      "refund": "Geld-zurück-Garantie",
+      "refundDesc": "Nicht zufrieden? Volle Erstattung",
+      "handPicked": "Handverlesene Profis",
+      "handPickedDesc": "Jeder Fotograf wird geprüft",
+      "response": "24h Antwortzeit",
+      "responseDesc": "Antwort innerhalb eines Werktags",
+      "browsePrefix": "Lieber selbst stöbern?",
+      "browseLink": "Alle Fotografen ansehen"
+    }
+  },
+  "lp": {
+    "metaTitleTyped": "{shootType}-Fotografen in {city} — Sofort buchen | Photo Portugal",
+    "metaTitleGeneric": "Fotografen in {city} — Sofort buchen | Photo Portugal",
+    "metaDescriptionCityTyped": "Professionelle {shootTypeLower}-Fotografen in {city}. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
+    "metaDescriptionCityGeneric": "Professionelle Fotografen für Fotoshootings in {city}. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
+    "metaDescriptionPortugalTyped": "Professionelle {shootTypeLower}-Fotografen in ganz Portugal — Lissabon, Porto, Algarve, Sintra und mehr. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
+    "metaDescriptionPortugalGeneric": "Professionelle Fotografen für Fotoshootings in ganz Portugal — Lissabon, Porto, Algarve, Sintra und mehr. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
+    "heroTitleTyped": "{shootType}-Fotografen in {city}",
+    "heroTitleGeneric": "Professionelle Fotografen in {city}",
+    "heroSubtitleCityWithPrice": "Handverlesene, verifizierte Fotografen — ab {price}. Sofort buchen, sicher bezahlen.",
+    "heroSubtitleCityNoPrice": "Handverlesene, verifizierte Fotografen — sofort buchen, sicher bezahlen.",
+    "heroSubtitlePortugalWithPrice": "Handverlesene, verifizierte Fotografen in ganz Portugal — ab {price}. Sofort buchen, sicher bezahlen.",
+    "heroSubtitlePortugalNoPrice": "Handverlesene, verifizierte Fotografen in ganz Portugal — sofort buchen, sicher bezahlen.",
+    "mobileFromPrice": "Ab {price}",
+    "mobileVerified": "Verifizierte Fotografen",
+    "mobileSupplyOne": " · 1 verifizierter Fotograf",
+    "mobileSupplyMany": " · {count} verifizierte Fotografen",
+    "trust": {
+      "securePayment": "Sichere Zahlung",
+      "moneyBackGuarantee": "Geld-zurück-Garantie",
+      "instantConfirmation": "Sofortige Bestätigung",
+      "secureShort": "Sicher",
+      "moneyBackShort": "Geld zurück",
+      "instantShort": "Sofort"
+    },
+    "noResultsCityTyped": "Noch keine {shootTypeLower}-Fotografen in {city}.",
+    "noResultsCityGeneric": "Noch keine Fotografen in {city}.",
+    "noResultsPortugalTyped": "Noch keine {shootTypeLower}-Fotografen.",
+    "noResultsPortugalGeneric": "Noch keine Fotografen.",
+    "matchCta": "Lassen Sie uns den passenden Fotografen für Sie finden",
+    "founding": "Gründungsmitglied",
+    "viewAllPackages": "Alle {count} Pakete ansehen →",
+    "viewProfile": "Profil ansehen →",
+    "viewAllInCityTyped": "Alle {count} {shootTypeLower}-Fotografen in {city} ansehen",
+    "viewAllInCityGeneric": "Alle {count} Fotografen in {city} ansehen",
+    "viewAllPortugalTyped": "Alle {count} {shootTypeLower}-Fotografen in ganz Portugal ansehen",
+    "viewAllPortugalGeneric": "Alle {count} Fotografen in ganz Portugal ansehen",
+    "needHelp": "Brauchen Sie Hilfe bei der Auswahl?",
+    "needHelpDesc": "Sagen Sie uns, was Sie suchen, und wir senden Ihnen 2-3 handverlesene Vorschläge.",
+    "freeConcierge": "Kostenloser Concierge-Service",
+    "reviewsTitleTyped": "Echte Bewertungen zu {shootTypeLower}-Fotoshootings",
+    "reviewsTitlePortugal": "Was Reisende über Photo Portugal sagen",
+    "reviewsTitleCity": "Was Reisende über Fotoshootings in {city} sagen",
+    "reviewsSubtitle": "Verifizierte Bewertungen von echten Buchungen",
+    "reviewsSubtitleCity": "Echte Bewertungen von verifizierten Photo-Portugal-Buchungen",
+    "photosUnit": "{count} Fotos",
+    "howItWorks": {
+      "step1Title": "Paket auswählen",
+      "step1DescCity": "Sehen Sie echte Fotografen in {city} mit echten Preisen.",
+      "step1DescPortugal": "Sehen Sie echte Fotografen in ganz Portugal mit echten Preisen.",
+      "step2Title": "Sofort buchen",
+      "step2Desc": "Sichere Zahlung — bis zur Lieferung treuhänderisch verwahrt.",
+      "step3Title": "Erhalten Sie Ihre Fotos",
+      "step3Desc": "Bearbeitete hochauflösende Fotos, privat geliefert."
+    }
+  },
+  "scarcity": {
+    "shootTypeFew": "Nur {count, plural, =1 {1 Fotograf} other {# Fotografen}} mit Spezialisierung auf {location} sind gerade verfügbar",
+    "shootTypeMany": "Hohe Nachfrage nach Fotografen in {location}",
+    "locationFew": "Nur {count, plural, =1 {1 Fotograf ist} other {# Fotografen sind}} gerade in {location} verfügbar",
+    "locationMany": "Hohe Nachfrage in {location}",
+    "body": "Diese Fotografen sind meist ausgebucht — besonders an Wochenenden und in der Hochsaison. Buchen Sie jetzt, um Ihren Wunschtermin zu sichern."
+  }
+}

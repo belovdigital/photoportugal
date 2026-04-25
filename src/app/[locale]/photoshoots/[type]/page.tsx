@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { shootTypes, getShootTypeBySlug } from "@/lib/shoot-types-data";
+import { shootTypes, getShootTypeBySlug, shootTypeLocalized } from "@/lib/shoot-types-data";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForShootType } from "@/lib/reviews-data";
 import { locations } from "@/lib/locations-data";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 import { localeAlternates } from "@/lib/seo";
 import { query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
@@ -27,14 +28,15 @@ export async function generateMetadata({
   const { locale, type } = await params;
   const shootType = getShootTypeBySlug(type);
   if (!shootType) return {};
+  const loc = shootTypeLocalized(shootType, locale);
 
   return {
-    title: shootType.title,
-    description: shootType.metaDescription,
+    title: loc.title,
+    description: loc.metaDescription,
     alternates: localeAlternates(`/photoshoots/${type}`, locale),
     openGraph: {
-      title: shootType.title,
-      description: shootType.metaDescription,
+      title: loc.title,
+      description: loc.metaDescription,
       type: "website",
       url: `https://photoportugal.com/photoshoots/${type}`,
     },
@@ -57,6 +59,8 @@ export default async function ShootTypePage({
   if (!shootType) {
     notFound();
   }
+
+  const stl = shootTypeLocalized(shootType, locale);
 
   // Fetch related blog posts mentioning this shoot type
   const relatedPosts = await query<{
@@ -96,10 +100,37 @@ export default async function ShootTypePage({
     6
   );
 
+  // Real packages from photographers offering this shoot type
+  const packages = await query<{
+    id: string;
+    name: string;
+    price: number;
+    duration_minutes: number;
+    num_photos: number;
+    photographer_slug: string;
+    photographer_name: string;
+    photographer_avatar: string | null;
+    rating: number;
+    review_count: number;
+  }>(
+    `SELECT pk.id, pk.name, pk.price, pk.duration_minutes, pk.num_photos,
+            pp.slug as photographer_slug, u.name as photographer_name, u.avatar_url as photographer_avatar,
+            pp.rating, pp.review_count
+     FROM packages pk
+     JOIN photographer_profiles pp ON pp.id = pk.photographer_id
+     JOIN users pu ON pu.id = pp.user_id
+     JOIN users u ON u.id = pp.user_id
+     WHERE pp.is_approved = TRUE AND pk.is_public = TRUE
+       AND pp.shoot_types && $1::text[]
+     ORDER BY pp.review_count DESC NULLS LAST, pk.price ASC
+     LIMIT 6`,
+    [shootType.photographerShootTypeNames || [shootType.name]]
+  ).catch(() => []);
+
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: shootType.faqs.map((faq) => ({
+    mainEntity: stl.faqs.map((faq) => ({
       "@type": "Question",
       name: faq.question,
       acceptedAnswer: {
@@ -120,7 +151,7 @@ export default async function ShootTypePage({
         items={[
           { name: tc("home"), href: "/" },
           { name: tc("photoshoots"), href: "/photoshoots" },
-          { name: shootType.name, href: `/photoshoots/${type}` },
+          { name: stl.name, href: `/photoshoots/${type}` },
         ]}
       />
 
@@ -128,17 +159,17 @@ export default async function ShootTypePage({
       <section className="bg-warm-50">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <h1 className="font-display text-4xl font-bold text-gray-900 sm:text-5xl">
-            {shootType.h1}
+            {stl.h1}
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-gray-600">
-            {shootType.heroText}
+            {stl.heroText}
           </p>
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
             <Link
               href={`/photographers?shootType=${shootType.slug}`}
               className="inline-flex items-center justify-center rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
             >
-              {t("findPhotographers", { name: shootType.name })}
+              {t("findPhotographers", { name: stl.name })}
             </Link>
             <Link
               href="/how-it-works"
@@ -147,16 +178,23 @@ export default async function ShootTypePage({
               {t("howItWorks")}
             </Link>
           </div>
+          <div className="mt-8">
+            <MatchQuickForm
+              presetShootType={shootType.slug}
+              source={`photoshoot_${shootType.slug}`}
+              size="md"
+            />
+          </div>
         </div>
       </section>
 
       {/* Best Locations */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <h2 className="font-display text-3xl font-bold text-gray-900">
-          {t("bestLocationsTitle", { name: shootType.name })}
+          {t("bestLocationsTitle", { name: stl.name })}
         </h2>
         <p className="mt-4 max-w-3xl text-gray-500">
-          {t("bestLocationsSubtitle", { name: shootType.name.toLowerCase() })}
+          {t("bestLocationsSubtitle", { name: stl.name.toLowerCase() })}
         </p>
         <div className={`mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
           shootType.bestLocations.length <= 2 ? "lg:grid-cols-2" :
@@ -177,15 +215,13 @@ export default async function ShootTypePage({
         <section className="border-t border-warm-200 bg-warm-50">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <h2 className="font-display text-3xl font-bold text-gray-900">
-              {locale === "pt"
-                ? `Melhores Fotógrafos para ${shootType.name}`
-                : `Best Photographers for ${shootType.name} Photoshoots`}
+              {t("bestPhotographers", { name: stl.name })}
             </h2>
             <p className="mt-2 text-gray-500">
-              {t("photographersSubtitle", { name: shootType.name.toLowerCase() })}
+              {t("photographersSubtitle", { name: stl.name.toLowerCase() })}
             </p>
             <div className="mt-6">
-              <ScarcityBanner count={photographers.length} locationName={shootType.name} locale={locale} context="shootType" />
+              <ScarcityBanner count={photographers.length} locationName={stl.name} locale={locale} context="shootType" />
             </div>
             <div className={`mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
               photographers.length <= 2 ? "lg:grid-cols-2" :
@@ -229,7 +265,7 @@ export default async function ShootTypePage({
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                         </span>
-                        <span className="font-medium text-gray-900">{sp.rating.toFixed(1)}</span>
+                        <span className="font-medium text-gray-900">{Number(sp.rating).toFixed(1)}</span>
                         <span className="text-gray-400">({sp.review_count})</span>
                       </div>
                     )}
@@ -249,7 +285,7 @@ export default async function ShootTypePage({
                 href={`/photographers?shootType=${shootType.slug}`}
                 className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-primary-700"
               >
-                {t("viewAllPhotographers", { name: shootType.name })}
+                {t("viewAllPhotographers", { name: stl.name })}
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
@@ -265,13 +301,13 @@ export default async function ShootTypePage({
         <div className="absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-accent-100/30 blur-3xl" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <h2 className="text-center font-display text-3xl font-bold text-gray-900 sm:text-4xl">
-            {t("howToBookTitle", { name: shootType.name })}
+            {t("howToBookTitle", { name: stl.name })}
           </h2>
           <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-0">
             {[
               {
                 title: t("stepBrowse"),
-                desc: t("stepBrowseDesc", { name: shootType.name.toLowerCase() }),
+                desc: t("stepBrowseDesc", { name: stl.name.toLowerCase() }),
                 iconBg: "bg-primary-500",
                 numberBg: "bg-primary-100 text-primary-700",
                 icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />,
@@ -321,10 +357,10 @@ export default async function ShootTypePage({
       {/* FAQ */}
       <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <h2 className="font-display text-3xl font-bold text-gray-900">
-          {t("faqTitle", { name: shootType.name })}
+          {t("faqTitle", { name: stl.name })}
         </h2>
         <div className="mt-8 space-y-4">
-          {shootType.faqs.map((faq, i) => (
+          {stl.faqs.map((faq, i) => (
             <details
               key={i}
               className="group rounded-xl border border-warm-200 bg-white"
@@ -348,14 +384,62 @@ export default async function ShootTypePage({
         </div>
       </section>
 
+      {/* Real packages for this shoot type */}
+      {packages.length > 0 && (
+        <section className="border-t border-warm-200">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-gray-900">
+              {t("popularPackages", { name: shootType.name })}
+            </h2>
+            <p className="mt-3 text-gray-500">
+              {t("popularPackagesSub", { nameLower: shootType.name.toLowerCase() })}
+            </p>
+            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {packages.map((pkg) => (
+                <Link
+                  key={pkg.id}
+                  href={`/book/${pkg.photographer_slug}?package=${pkg.id}`}
+                  className="group flex flex-col rounded-xl border border-warm-200 bg-white p-5 transition hover:border-primary-300 hover:shadow-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-100">
+                      {pkg.photographer_avatar && (
+                        <OptimizedImage src={pkg.photographer_avatar} alt={normalizeName(pkg.photographer_name)} width={80} className="h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-gray-900">{normalizeName(pkg.photographer_name)}</p>
+                      {pkg.review_count > 0 && (
+                        <p className="text-xs text-gray-500">★ {Number(pkg.rating).toFixed(1)} · {pkg.review_count} {pkg.review_count === 1 ? "review" : "reviews"}</p>
+                      )}
+                    </div>
+                  </div>
+                  <h3 className="mt-4 font-display text-lg font-bold text-gray-900 group-hover:text-primary-600">{pkg.name}</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {pkg.duration_minutes} {t("minutesAbbr")}
+                    {pkg.num_photos > 0 && ` · ${pkg.num_photos} ${t("photosLabel")}`}
+                  </p>
+                  <div className="mt-auto pt-4 flex items-baseline justify-between">
+                    <span className="text-2xl font-bold text-gray-900">€{Math.round(Number(pkg.price))}</span>
+                    <span className="text-sm font-medium text-primary-600 group-hover:underline">
+                      {t("bookCta")}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Reviews for this shoot type */}
       {shootTypeReviews.length > 0 && (
         <section className="border-t border-warm-200 bg-warm-50">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
             <ReviewsStrip
               reviews={shootTypeReviews}
-              title={`Real ${shootType.name.toLowerCase()} photoshoot reviews`}
-              subtitle="From clients who booked through Photo Portugal"
+              title={t("reviewsTitle", { nameLower: stl.name.toLowerCase() })}
+              subtitle={t("reviewsSubtitleClients")}
               compact
             />
           </div>
@@ -366,9 +450,11 @@ export default async function ShootTypePage({
       {relatedPosts.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <h2 className="font-display text-3xl font-bold text-gray-900">
-            {shootType.name} Photography Guides
+            {t("guidesTitle", { name: stl.name })}
           </h2>
-          <p className="mt-3 text-gray-500">Tips and inspiration for your {shootType.name.toLowerCase()} photoshoot in Portugal</p>
+          <p className="mt-3 text-gray-500">
+            {t("guidesSubtitle", { nameLower: stl.name.toLowerCase() })}
+          </p>
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {relatedPosts.map((post) => (
               <Link
@@ -403,16 +489,16 @@ export default async function ShootTypePage({
       <section className="bg-gray-900">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8">
           <h2 className="font-display text-3xl font-bold text-white">
-            {t("ctaReadyTitle", { name: shootType.name })}
+            {t("ctaReadyTitle", { name: stl.name })}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-gray-300">
-            {t("ctaReadySubtitle", { name: shootType.name.toLowerCase() })}
+            {t("ctaReadySubtitle", { name: stl.name.toLowerCase() })}
           </p>
           <Link
             href={`/photographers?shootType=${shootType.slug}`}
             className="mt-8 inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
           >
-            {t("findPhotographers", { name: shootType.name })}
+            {t("findPhotographers", { name: stl.name })}
           </Link>
         </div>
       </section>

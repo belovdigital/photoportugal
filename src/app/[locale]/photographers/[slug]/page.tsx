@@ -20,8 +20,15 @@ import { StickyBookBar } from "@/components/ui/StickyBookBar";
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
 
-async function getPhotographer(slug: string, canViewUnapproved = false, viewerUserId?: string) {
+async function getPhotographer(slug: string, canViewUnapproved = false, viewerUserId?: string, locale: string = "en") {
   const isAdmin = canViewUnapproved;
+  // Locale-aware column resolution: COALESCE(p.bio_<loc>, p.bio) for non-EN locales
+  const SUPPORTED = new Set(["pt", "de", "es", "fr"]);
+  const useLoc = SUPPORTED.has(locale) ? locale : null;
+  const tagCol = useLoc ? `COALESCE(p.tagline_${useLoc}, p.tagline)` : "p.tagline";
+  const bioCol = useLoc ? `COALESCE(p.bio_${useLoc}, p.bio)` : "p.bio";
+  const pkgNameCol = useLoc ? `COALESCE(name_${useLoc}, name)` : "name";
+  const pkgDescCol = useLoc ? `COALESCE(description_${useLoc}, description)` : "description";
   try {
     const profile = await queryOne<{
       id: string;
@@ -46,8 +53,9 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
       last_seen_at: string | null;
       avg_response_minutes: number | null;
     }>(
-      `SELECT p.id, p.slug, u.name, p.tagline, p.bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
-              p.experience_years, p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding, p.is_approved, p.plan,
+      `SELECT p.id, p.slug, u.name, ${tagCol} as tagline, ${bioCol} as bio, u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
+              COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
+              p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding, p.is_approved, p.plan,
               p.rating, p.review_count, p.session_count, u.last_seen_at, p.avg_response_minutes
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
@@ -80,7 +88,7 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
       delivery_days: number;
       features: string[];
     }>(
-      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price",
+      `SELECT id, ${pkgNameCol} as name, ${pkgDescCol} as description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price`,
       [profile.id]
     );
 
@@ -112,7 +120,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const result = await getPhotographer(slug);
+  const result = await getPhotographer(slug, false, undefined, locale);
   if (!result) return {};
 
   const t = await getTranslations({ locale, namespace: "photographers.profile" });
@@ -195,10 +203,14 @@ export default async function PhotographerProfilePage({
   const t = await getTranslations("photographers.profile");
   const tc = await getTranslations("common");
 
+  // Locale-aware column names for reviews query below
+  const REVIEW_LOCALES = new Set(["pt", "de", "es", "fr"]);
+  const useLoc = REVIEW_LOCALES.has(locale) ? locale : null;
+
   const isPreview = !!process.env.ADMIN_PREVIEW_SECRET && sp.preview === process.env.ADMIN_PREVIEW_SECRET;
   const session = await auth();
   const viewerUserId = (session?.user as { id?: string } | undefined)?.id;
-  const result = await getPhotographer(slug, isPreview, viewerUserId);
+  const result = await getPhotographer(slug, isPreview, viewerUserId, locale);
 
   if (!result) {
     // Check slug_redirects for old slugs
@@ -226,6 +238,9 @@ export default async function PhotographerProfilePage({
         rating: number;
         title: string | null;
         text: string | null;
+        title_original: string | null;
+        text_original: string | null;
+        source_locale: string | null;
         is_verified: boolean;
         created_at: string;
         client_name: string | null;
@@ -236,7 +251,11 @@ export default async function PhotographerProfilePage({
         package_name: string | null;
         client_country: string | null;
       }>(
-        `SELECT r.id, r.rating, r.title, r.text, r.is_verified, r.created_at, r.video_url,
+        `SELECT r.id, r.rating,
+                ${useLoc ? `COALESCE(r.title_${useLoc}, r.title)` : "r.title"} as title,
+                ${useLoc ? `COALESCE(r.text_${useLoc}, r.text)` : "r.text"} as text,
+                r.title as title_original, r.text as text_original, r.source_locale,
+                r.is_verified, r.created_at, r.video_url,
                 COALESCE(r.client_name_override, u.name) as client_name,
                 u.avatar_url as client_avatar,
                 b.package_id,
@@ -610,7 +629,7 @@ export default async function PhotographerProfilePage({
               <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
-              Summer season is filling up — book early to secure your preferred date
+              {tc("summerSeasonNotice")}
             </p>
           ) : null;
         })()}

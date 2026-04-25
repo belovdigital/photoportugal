@@ -2,11 +2,24 @@ import { NextResponse } from "next/server";
 import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
 
+const LOCALES = new Set(["en", "pt", "de", "es", "fr"]);
+
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
+  const url = new URL(req.url);
+  const rawLocale = (url.searchParams.get("locale") || "en").toLowerCase();
+  const loc = LOCALES.has(rawLocale) ? rawLocale : "en";
+  // Build column expression: for non-EN locales, COALESCE(p.bio_<loc>, p.bio).
+  // For EN, use p.bio directly (no fallback needed).
+  const tagCol = loc === "en" ? "p.tagline" : `COALESCE(p.tagline_${loc}, p.tagline)`;
+  const bioCol = loc === "en" ? "p.bio" : `COALESCE(p.bio_${loc}, p.bio)`;
+  const pkgNameCol = loc === "en" ? "name" : `COALESCE(name_${loc}, name)`;
+  const pkgDescCol = loc === "en" ? "description" : `COALESCE(description_${loc}, description)`;
+  const revTitleCol = loc === "en" ? "r.title" : `COALESCE(r.title_${loc}, r.title)`;
+  const revTextCol = loc === "en" ? "r.text" : `COALESCE(r.text_${loc}, r.text)`;
 
   try {
     const profile = await queryOne<{
@@ -28,9 +41,10 @@ export async function GET(
       review_count: number;
       session_count: number;
     }>(
-      `SELECT p.id, p.slug, u.name, p.tagline, p.bio,
+      `SELECT p.id, p.slug, u.name, ${tagCol} as tagline, ${bioCol} as bio,
               u.avatar_url, p.cover_url, p.cover_position_y,
-              p.languages, p.shoot_types, p.experience_years,
+              p.languages, p.shoot_types,
+              COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
               p.rating, p.review_count, p.session_count
        FROM photographer_profiles p
@@ -58,13 +72,13 @@ export async function GET(
       [profile.id]
     );
 
-    // Packages
+    // Packages (locale-aware name + description with fallback to original)
     const packages = await query<{
       id: string; name: string; description: string | null;
       duration_minutes: number; num_photos: number; price: number;
       is_popular: boolean; delivery_days: number;
     }>(
-      "SELECT id, name, description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price",
+      `SELECT id, ${pkgNameCol} as name, ${pkgDescCol} as description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price`,
       [profile.id]
     );
 
@@ -77,12 +91,16 @@ export async function GET(
       [profile.id]
     );
 
-    // Reviews
+    // Reviews — return both original and translated so UI can offer "show original" toggle
     const reviews = await query<{
       id: string; rating: number; title: string | null; text: string | null;
+      title_original: string | null; text_original: string | null; source_locale: string | null;
       client_name: string | null; created_at: string;
     }>(
-      `SELECT r.id, r.rating, r.title, r.text,
+      `SELECT r.id, r.rating,
+              ${revTitleCol} as title,
+              ${revTextCol} as text,
+              r.title as title_original, r.text as text_original, r.source_locale,
               COALESCE(r.client_name_override, u.name) as client_name,
               r.created_at
        FROM reviews r

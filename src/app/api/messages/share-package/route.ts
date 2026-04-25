@@ -80,7 +80,18 @@ export async function POST(req: NextRequest) {
     ]);
   } catch {}
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    message: {
+      id: message!.id,
+      text: `BOOKING_CARD:${cardData}`,
+      media_url: null,
+      sender_id: user.id,
+      created_at: message!.created_at,
+      read_at: null,
+      is_system: true,
+    },
+  });
 }
 
 // GET: return photographer's packages for the share picker

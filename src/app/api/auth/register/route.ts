@@ -12,7 +12,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { first_name, last_name, name: legacyName, email, password, role, utm_source, utm_medium, utm_campaign, utm_term } = await req.json();
+    const { first_name, last_name, name: legacyName, email, password, role, utm_source, utm_medium, utm_campaign, utm_term, locale: bodyLocale } = await req.json();
+    // Capture locale: body > Accept-Language > 'en'
+    const accept = req.headers.get("accept-language") || "";
+    const acceptLocale = accept.match(/^([a-z]{2})/)?.[1];
+    const SUPPORTED_LOCALES = ["en", "pt", "de", "es", "fr"];
+    const locale = SUPPORTED_LOCALES.includes(bodyLocale) ? bodyLocale : SUPPORTED_LOCALES.includes(acceptLocale || "") ? acceptLocale : "en";
     const firstName = (first_name || legacyName?.split(" ")[0] || "").trim();
     const lastName = (last_name || legacyName?.split(" ").slice(1).join(" ") || "").trim();
     const name = lastName ? `${firstName} ${lastName}` : firstName;
@@ -48,10 +53,10 @@ export async function POST(req: NextRequest) {
     const passwordHash = await hash(password, 12);
 
     const user = await queryOne<{ id: string; email: string; name: string; role: string }>(
-      `INSERT INTO users (email, name, first_name, last_name, password_hash, role, utm_source, utm_medium, utm_campaign, utm_term)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO users (email, name, first_name, last_name, password_hash, role, utm_source, utm_medium, utm_campaign, utm_term, locale)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING id, email, name, role`,
-      [email, name, firstName, lastName, passwordHash, validRole, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null]
+      [email, name, firstName, lastName, passwordHash, validRole, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, locale]
     );
 
     // If photographer, create profile with early bird logic

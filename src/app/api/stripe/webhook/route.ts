@@ -74,13 +74,17 @@ export async function POST(req: NextRequest) {
 
           // Upload "Payment Completed" offline conversion to Google Ads
           try {
-            const gclidBooking = await queryOne<{ gclid: string | null; total_price: number }>(
-              "SELECT gclid, total_price FROM bookings WHERE id = $1",
+            const gclidBooking = await queryOne<{ gclid: string | null; total_price: number; client_email: string | null; client_phone: string | null }>(
+              `SELECT b.gclid, b.total_price, u.email as client_email, u.phone as client_phone
+               FROM bookings b JOIN users u ON u.id = b.client_id WHERE b.id = $1`,
               [bookingId]
             );
             if (gclidBooking?.gclid) {
               import("@/lib/google-ads-conversions").then(({ uploadPaymentCompletedConversion }) => {
-                uploadPaymentCompletedConversion(gclidBooking.gclid!, Number(gclidBooking.total_price || 0));
+                uploadPaymentCompletedConversion(gclidBooking.gclid!, Number(gclidBooking.total_price || 0), {
+                  email: gclidBooking.client_email,
+                  phone: gclidBooking.client_phone,
+                });
               }).catch((err) => console.error("[webhook] gads conversion upload error:", err));
             }
           } catch (gadsErr) {

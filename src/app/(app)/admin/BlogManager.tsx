@@ -457,7 +457,7 @@ export function BlogManager() {
                       )}
                       <div>
                         <p className="font-medium text-gray-900">{post.title}</p>
-                        <p className="text-xs text-gray-400">{post.locale === "pt" ? "/pt" : ""}/blog/{post.slug}</p>
+                        <p className="text-xs text-gray-400">{post.locale && post.locale !== "en" ? `/${post.locale}` : ""}/blog/{post.slug}</p>
                       </div>
                     </div>
                   </td>
@@ -484,7 +484,7 @@ export function BlogManager() {
                       </button>
                       {post.is_published && (
                         <a
-                          href={`${post.locale === "pt" ? "/pt" : ""}/blog/${post.slug}`}
+                          href={`${post.locale && post.locale !== "en" ? `/${post.locale}` : ""}/blog/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"

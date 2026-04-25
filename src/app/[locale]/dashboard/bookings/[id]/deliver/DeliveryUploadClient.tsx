@@ -15,13 +15,18 @@ export function DeliveryUploadClient({
   bookingId,
   initialPhotos,
   isDelivered: initialDelivered,
+  clientAccepted,
   deliveryToken: initialToken,
 }: {
   bookingId: string;
   initialPhotos: Photo[];
   isDelivered: boolean;
+  clientAccepted: boolean;
   deliveryToken: string | null;
 }) {
+  // canEdit: photographer can still add/remove/replace photos until the client has accepted.
+  // This lets the photographer fix mistakes after sharing (e.g. swap a bad photo) without breaking the share link.
+  const canEdit = !clientAccepted;
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, failed: 0 });
@@ -189,8 +194,8 @@ export function DeliveryUploadClient({
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
-      {/* Upload area */}
-      {!delivered && (
+      {/* Upload area — shown until the client has accepted (pre-share + post-share edit window). */}
+      {canEdit && (
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
@@ -268,7 +273,7 @@ export function DeliveryUploadClient({
               : `${(totalSize / 1024).toFixed(0)} KB`}
             {selectMode && selectedIds.size > 0 && ` \u00B7 ${t("selected", { count: selectedIds.size })}`}
           </p>
-          {!delivered && photos.length > 0 && (
+          {canEdit && photos.length > 0 && (
             <div className="flex items-center gap-2">
               {selectMode ? (
                 <>
@@ -300,6 +305,9 @@ export function DeliveryUploadClient({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-accent-700 text-sm">{t("photosDelivered")}</p>
+                  {canEdit && (
+                    <p className="mt-0.5 text-xs text-accent-700/80">{t("canStillEditUntilAccepted")}</p>
+                  )}
                 </div>
                 {deliveryUrl && (
                   <button onClick={copyLink} className="shrink-0 rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700">
@@ -357,7 +365,7 @@ export function DeliveryUploadClient({
                     </svg>
                   )}
                 </div>
-              ) : !delivered ? (
+              ) : canEdit ? (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleDelete(photo.id); }}
                   className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-500"

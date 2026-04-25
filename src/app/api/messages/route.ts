@@ -270,11 +270,16 @@ export async function POST(req: NextRequest) {
             const tenMinAgo = Date.now() - 10 * 60 * 1000;
             if (lastSms < tenMinAgo) {
               const { sendSMS } = await import("@/lib/sms");
+              const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
               const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "Someone";
-              sendSMS(
-                recipientInfo.phone,
-                `Photo Portugal: New message from ${senderName}. Open your dashboard to reply: https://photoportugal.com/dashboard/messages`
-              );
+              const rLocale = await getUserLocaleById(recipientId);
+              const smsBody = pickT({
+                en: `Photo Portugal: New message from ${senderName}. Open your dashboard to reply: https://photoportugal.com/dashboard/messages`,
+                pt: `Photo Portugal: Nova mensagem de ${senderName}. Abra o seu painel para responder: https://photoportugal.com/dashboard/messages`,
+                de: `Photo Portugal: Neue Nachricht von ${senderName}. Öffnen Sie Ihr Dashboard, um zu antworten: https://photoportugal.com/dashboard/messages`,
+                fr: `Photo Portugal : Nouveau message de ${senderName}. Ouvrez votre tableau de bord pour répondre : https://photoportugal.com/dashboard/messages`,
+              }, rLocale);
+              sendSMS(recipientInfo.phone, smsBody);
               await queryOne("UPDATE users SET last_message_sms_at = NOW() WHERE id = $1", [recipientId]);
             }
           }

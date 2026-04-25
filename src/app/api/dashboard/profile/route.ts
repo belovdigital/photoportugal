@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const profile = await queryOne<Record<string, unknown>>(
       `SELECT pp.id, pp.slug, u.name, pp.tagline, pp.bio,
               u.avatar_url, pp.cover_url, pp.languages, pp.shoot_types,
-              pp.experience_years,
+              pp.experience_years, pp.career_start_year,
               pp.is_verified, pp.is_approved, pp.rating, pp.review_count,
               pp.session_count, pp.plan, u.phone,
               (pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as stripe_ready,
@@ -60,13 +60,13 @@ export async function PUT(req: NextRequest) {
       languages,
       shoot_types,
       experience_years,
+      career_start_year,
       locations: locationSlugs,
       custom_slug,
     } = body;
 
-    if (!Array.isArray(languages) || languages.length === 0) {
-      return NextResponse.json({ error: "At least one language is required" }, { status: 400 });
-    }
+    // Allow partial saves — languages can be empty at this stage. Onboarding checklist
+    // enforces completeness before the profile is approved for public listing.
 
     // Validate and normalize phone number (E.164 format)
     let phone: string | null = null;
@@ -113,21 +113,53 @@ export async function PUT(req: NextRequest) {
       await queryOne("UPDATE users SET phone = $1 WHERE id = $2", [phone || null, userId]);
     }
 
+    // Normalize career_start_year input and derive experience_years from it (rounded up: currentYear - start + 1).
+    // We keep experience_years in sync as a cached display value; real source of truth is career_start_year.
+    const currentYear = new Date().getFullYear();
+    const startYearNum = Number(career_start_year);
+    const hasValidStartYear =
+      Number.isInteger(startYearNum) && startYearNum >= 1960 && startYearNum <= currentYear;
+    const resolvedCareerStartYear = hasValidStartYear ? startYearNum : null;
+    const resolvedExperienceYears = hasValidStartYear
+      ? currentYear - startYearNum + 1
+      : Number(experience_years) || 0;
+
+    // Read previous tagline/bio + approval status so we can detect actual changes
+    // (avoid retranslating unchanged text) and skip translating unapproved profiles
+    // (translation triggers only after admin approval).
+    const prev = await queryOne<{ id: string; tagline: string | null; bio: string | null; is_approved: boolean }>(
+      "SELECT id, tagline, bio, is_approved FROM photographer_profiles WHERE user_id = $1",
+      [userId]
+    );
+
     const profile = await queryOne<{ id: string; plan: string; slug: string }>(
       `UPDATE photographer_profiles
        SET tagline = $1, bio = $2, languages = $3,
-           shoot_types = $4, experience_years = $5, updated_at = NOW()
-       WHERE user_id = $6
+           shoot_types = $4, experience_years = $5, career_start_year = $6,
+           translations_dirty = CASE WHEN tagline IS DISTINCT FROM $1 OR bio IS DISTINCT FROM $2 THEN TRUE ELSE translations_dirty END,
+           updated_at = NOW()
+       WHERE user_id = $7
        RETURNING id, plan, slug`,
       [
         tagline || null,
         bio || null,
         languages || [],
         shoot_types || [],
-        experience_years || 0,
+        resolvedExperienceYears,
+        resolvedCareerStartYear,
         userId,
       ]
     );
+
+    // Fire-and-forget translation if tagline or bio actually changed AND the profile is approved.
+    // For unapproved profiles, translations_dirty stays TRUE; translation runs once admin approves.
+    const taglineChanged = (prev?.tagline || null) !== (tagline || null);
+    const bioChanged = (prev?.bio || null) !== (bio || null);
+    if (profile && (taglineChanged || bioChanged) && prev?.is_approved) {
+      import("@/lib/translate-content").then(({ translatePhotographerProfile }) =>
+        translatePhotographerProfile(profile.id, tagline || null, bio || null),
+      ).catch((e) => console.error("[profile] translate error:", e));
+    }
 
     // Custom slug for Premium photographers
     if (profile && custom_slug && profile.plan === "premium") {

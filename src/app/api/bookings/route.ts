@@ -69,8 +69,15 @@ export async function POST(req: NextRequest) {
 
     // Upload "Booking Created" offline conversion to Google Ads if gclid present
     if (gclid && booking?.id) {
+      const clientUser = await queryOne<{ email: string; phone: string | null }>(
+        "SELECT email, phone FROM users WHERE id = $1",
+        [userId]
+      ).catch(() => null);
       import("@/lib/google-ads-conversions").then(({ uploadBookingCreatedConversion }) => {
-        uploadBookingCreatedConversion(gclid, totalPrice ? Number(totalPrice) : 0);
+        uploadBookingCreatedConversion(gclid, totalPrice ? Number(totalPrice) : 0, {
+          email: clientUser?.email,
+          phone: clientUser?.phone,
+        });
       }).catch((err) => console.error("[bookings] gads conversion upload error:", err));
     }
 

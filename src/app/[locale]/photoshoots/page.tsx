@@ -83,6 +83,14 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
     })),
   };
 
+  // Page-local translations for inline strings (avoids polluting messages JSON)
+  const T = {
+    en: { verifiedPhotographers: "verified photographers", shootTypes: "photoshoot types", locations: "locations across Portugal", photographer: "photographer", photographers: "photographers", from: "From", comingSoon: "Coming soon", view: "View", choose: "Choose", chooseDesc: "Pick shoot type + location", book: "Book", bookDesc: "Secure payment held until delivery", receive: "Receive", receiveDesc: "Edited high-res photos, delivered", helpMeChoose: "Help me choose" },
+    pt: { verifiedPhotographers: "fotógrafos verificados", shootTypes: "tipos de sessão", locations: "locais em Portugal", photographer: "fotógrafo", photographers: "fotógrafos", from: "A partir de", comingSoon: "Em breve", view: "Ver", choose: "Escolha", chooseDesc: "Tipo de sessão + local", book: "Reserve", bookDesc: "Pagamento seguro — retido até à entrega", receive: "Receba", receiveDesc: "Fotos editadas em alta resolução", helpMeChoose: "Ajuda-me a escolher" },
+    de: { verifiedPhotographers: "verifizierte Fotografen", shootTypes: "Shooting-Arten", locations: "Orte in Portugal", photographer: "Fotograf", photographers: "Fotografen", from: "Ab", comingSoon: "Bald verfügbar", view: "Ansehen", choose: "Wählen", chooseDesc: "Shooting-Art + Ort wählen", book: "Buchen", bookDesc: "Sichere Zahlung — bis zur Lieferung treuhänderisch verwahrt", receive: "Erhalten", receiveDesc: "Bearbeitete hochauflösende Fotos geliefert", helpMeChoose: "Helfen Sie mir bei der Wahl" },
+  } as const;
+  const tt = T[(locale as keyof typeof T)] ?? T.en;
+
   return (
     <>
       <script
@@ -112,17 +120,17 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
               <div className="flex items-center gap-1.5">
                 <span className="flex h-2 w-2 rounded-full bg-accent-500" />
                 <span className="font-semibold text-gray-900">{totalPhotogs}+</span>
-                <span className="text-gray-500">{locale === "pt" ? "fotógrafos verificados" : "verified photographers"}</span>
+                <span className="text-gray-500">{tt.verifiedPhotographers}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="flex h-2 w-2 rounded-full bg-amber-400" />
                 <span className="font-semibold text-gray-900">{shootTypes.length}</span>
-                <span className="text-gray-500">{locale === "pt" ? "tipos de sessão" : "photoshoot types"}</span>
+                <span className="text-gray-500">{tt.shootTypes}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="flex h-2 w-2 rounded-full bg-primary-500" />
                 <span className="font-semibold text-gray-900">32</span>
-                <span className="text-gray-500">{locale === "pt" ? "locais" : "locations across Portugal"}</span>
+                <span className="text-gray-500">{tt.locations}</span>
               </div>
             </div>
           </div>
@@ -149,7 +157,7 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
                   </div>
                   {s.count > 0 && (
                     <span className="rounded-full bg-accent-50 px-2.5 py-1 text-[11px] font-semibold text-accent-700">
-                      {s.count} {locale === "pt" ? (s.count === 1 ? "fotógrafo" : "fotógrafos") : (s.count === 1 ? "photographer" : "photographers")}
+                      {s.count} {s.count === 1 ? tt.photographer : tt.photographers}
                     </span>
                   )}
                 </div>
@@ -169,15 +177,15 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
                   <div>
                     {s.minPrice !== null ? (
                       <>
-                        <p className="text-[11px] uppercase tracking-wider text-gray-400">{locale === "pt" ? "A partir de" : "From"}</p>
+                        <p className="text-[11px] uppercase tracking-wider text-gray-400">{tt.from}</p>
                         <p className="font-bold text-gray-900">€{Math.round(s.minPrice)}</p>
                       </>
                     ) : (
-                      <p className="text-[11px] uppercase tracking-wider text-gray-400">{locale === "pt" ? "Em breve" : "Coming soon"}</p>
+                      <p className="text-[11px] uppercase tracking-wider text-gray-400">{tt.comingSoon}</p>
                     )}
                   </div>
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 transition group-hover:bg-primary-100">
-                    {locale === "pt" ? "Ver" : "View"}
+                    {tt.view}
                     <svg className="h-3 w-3 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -194,9 +202,9 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {[
-              { step: "01", title: locale === "pt" ? "Escolha" : "Choose", desc: locale === "pt" ? "Tipo de sessão + local" : "Pick shoot type + location" },
-              { step: "02", title: locale === "pt" ? "Reserve" : "Book", desc: locale === "pt" ? "Pagamento seguro — retido até à entrega" : "Secure payment held until delivery" },
-              { step: "03", title: locale === "pt" ? "Receba" : "Receive", desc: locale === "pt" ? "Fotos editadas em alta resolução" : "Edited high-res photos, delivered" },
+              { step: "01", title: tt.choose, desc: tt.chooseDesc },
+              { step: "02", title: tt.book, desc: tt.bookDesc },
+              { step: "03", title: tt.receive, desc: tt.receiveDesc },
             ].map((s) => (
               <div key={s.step} className="flex gap-3">
                 <span className="font-display text-2xl font-bold text-primary-300">{s.step}</span>
@@ -230,7 +238,7 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
               href="/find-photographer"
               className="inline-flex rounded-xl border border-gray-700 bg-gray-800 px-8 py-4 text-base font-semibold text-white transition hover:bg-gray-700"
             >
-              {locale === "pt" ? "Ajuda-me a escolher" : "Help me choose"}
+              {tt.helpMeChoose}
             </Link>
           </div>
         </div>

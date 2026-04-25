@@ -3,10 +3,14 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
+// Routes where Intercom should never load (chat-style pages where it competes)
+const SUPPRESS_INTERCOM_ROUTES = ["/concierge"];
+
 export function IntercomWidget() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (SUPPRESS_INTERCOM_ROUTES.some(r => pathname.includes(r))) return;
     if ((window as any).__intercomLoaded) return;
 
     // Delay Intercom load to avoid impacting initial page performance

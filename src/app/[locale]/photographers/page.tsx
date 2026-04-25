@@ -42,11 +42,14 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
       session_count: number;
       last_seen_at: string | null;
       avg_response_minutes: number | null;
+      created_at: string;
     }>(
       `SELECT p.id, p.slug, u.name, p.tagline, p.bio,
               u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
-              p.experience_years, p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
-              p.plan, p.rating, p.review_count, p.session_count, u.last_seen_at::text, p.avg_response_minutes
+              COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
+              p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
+              p.plan, p.rating, p.review_count, p.session_count, u.last_seen_at::text, p.avg_response_minutes,
+              COALESCE(p.created_at, u.created_at)::text as created_at
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.is_approved = TRUE
@@ -117,7 +120,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
         rating: Number(p.rating),
         review_count: p.review_count,
         session_count: p.session_count,
-        created_at: "",
+        created_at: p.created_at,
         last_seen_at: p.last_seen_at,
         avg_response_minutes: p.avg_response_minutes,
       } as PhotographerProfile;

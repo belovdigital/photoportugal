@@ -94,9 +94,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           [recipientUserId]
         );
         if (smsPrefs?.sms_bookings !== false) {
+          const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+          const rLocale = await getUserLocaleById(recipientUserId);
+          const smsBody = pickT({
+            en: `Photo Portugal: ${senderName} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`,
+            pt: `Photo Portugal: ${senderName} propôs uma nova data (${formattedDate}${timeDisplay}) para a sua sessão fotográfica. Inicie sessão para responder.`,
+            de: `Photo Portugal: ${senderName} hat ein neues Datum (${formattedDate}${timeDisplay}) für Ihr Fotoshooting vorgeschlagen. Melden Sie sich an, um zu antworten.`,
+            fr: `Photo Portugal : ${senderName} a proposé une nouvelle date (${formattedDate}${timeDisplay}) pour votre séance photo. Connectez-vous pour répondre.`,
+          }, rLocale);
           sendSMS(
             recipientPhone.phone,
-            `Photo Portugal: ${senderName} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`
+            smsBody
           ).catch(err => console.error("[sms] error:", err));
         }
       }
@@ -167,9 +175,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         "SELECT phone FROM users WHERE id = $1", [recipientUserId]
       );
       if (recipientPhone?.phone) {
+        const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+        const rLocale = await getUserLocaleById(recipientUserId);
+        const smsBody = pickT({
+          en: `Photo Portugal: Date confirmed! ${accepterName} accepted ${formattedDate}${acceptedTimeDisplay} for your photoshoot.`,
+          pt: `Photo Portugal: Data confirmada! ${accepterName} aceitou ${formattedDate}${acceptedTimeDisplay} para a sua sessão fotográfica.`,
+          de: `Photo Portugal: Termin bestätigt! ${accepterName} hat ${formattedDate}${acceptedTimeDisplay} für Ihr Fotoshooting akzeptiert.`,
+          fr: `Photo Portugal : Date confirmée ! ${accepterName} a accepté ${formattedDate}${acceptedTimeDisplay} pour votre séance photo.`,
+        }, rLocale);
         sendSMS(
           recipientPhone.phone,
-          `Photo Portugal: Date confirmed! ${accepterName} accepted ${formattedDate}${acceptedTimeDisplay} for your photoshoot.`
+          smsBody
         ).catch((err) => console.error("[propose-date] sms date confirmed error:", err));
       }
     } catch {}

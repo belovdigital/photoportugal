@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, phone, location_slug, shoot_date, shoot_time, date_flexible, flexible_date_from, flexible_date_to, shoot_type, group_size, budget_range, message, user_id: bodyUserId } = body;
+    const { name, email, phone, location_slug, shoot_date, shoot_time, date_flexible, flexible_date_from, flexible_date_to, shoot_type, group_size, budget_range, message, sms_consent, user_id: bodyUserId } = body;
     // Get user_id from session if not provided in body
     let user_id = bodyUserId;
     if (!user_id) {
@@ -48,14 +48,15 @@ export async function POST(req: NextRequest) {
 
     // Insert into DB
     const result = await queryOne<{ id: string }>(
-      `INSERT INTO match_requests (name, email, phone, location_slug, shoot_date, shoot_time, date_flexible, flexible_date_from, flexible_date_to, shoot_type, group_size, budget_range, message, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      `INSERT INTO match_requests (name, email, phone, location_slug, shoot_date, shoot_time, date_flexible, flexible_date_from, flexible_date_to, shoot_type, group_size, budget_range, message, sms_consent, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING id`,
       [
         name.trim(), email.trim(), phone?.trim() || null,
         location_slug, shoot_date || null, shoot_time || "flexible", date_flexible || false,
         flexible_date_from || null, flexible_date_to || null,
-        shoot_type, group_size || 2, budget_range, message?.trim() || null, user_id || null,
+        shoot_type, group_size || 2, budget_range, message?.trim() || null,
+        sms_consent !== false, user_id || null,
       ]
     );
 

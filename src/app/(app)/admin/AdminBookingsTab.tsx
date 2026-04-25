@@ -8,9 +8,11 @@ function codeToFlag(code: string): string {
 
 export interface AdminInquiry {
   id: string;
+  client_id: string;
   client_name: string;
   client_email: string;
   photographer_name: string;
+  photographer_slug: string;
   created_at: string;
   first_message: string | null;
   message_count: number;
@@ -132,9 +134,23 @@ export function AdminInquiriesList({ inquiries: initialInquiries }: { inquiries:
                 {/* Row 2: names */}
                 <div className="flex items-center">
                   {inq.client_country && <span className="mr-1" title={inq.client_country}>{codeToFlag(inq.client_country)}</span>}
-                  <span className="text-sm font-semibold text-gray-900">{inq.client_name}</span>
+                  <a
+                    href={`/admin#client-${inq.client_id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-sm font-semibold text-gray-900 hover:text-primary-600 hover:underline"
+                  >
+                    {inq.client_name}
+                  </a>
                   <span className="mx-1.5 text-gray-300">&rarr;</span>
-                  <span className="text-sm text-gray-600">{inq.photographer_name}</span>
+                  <a
+                    href={`/photographers/${inq.photographer_slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-sm text-gray-600 hover:text-primary-600 hover:underline"
+                  >
+                    {inq.photographer_name}
+                  </a>
                 </div>
 
                 {/* Message preview (collapsed) */}

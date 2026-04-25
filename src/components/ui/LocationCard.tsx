@@ -1,13 +1,15 @@
 import { Link } from "@/i18n/navigation";
 import { Location } from "@/types";
 import { locationImage } from "@/lib/unsplash-images";
+import { locField } from "@/lib/locations-data";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useTranslations } from "next-intl";
 
 export function LocationCard({ location, locale }: { location: Location; locale?: string }) {
   const tc = useTranslations("common");
   const imageUrl = locationImage(location.slug, "card");
-  const description = locale === "pt" && location.description_pt ? location.description_pt : location.description;
+  const description = locField(location, "description", locale || "en") || location.description;
+  const name = locField(location, "name", locale || "en") || location.name;
 
   return (
     <Link
@@ -34,7 +36,7 @@ export function LocationCard({ location, locale }: { location: Location; locale?
           </span>
         </div>
         <h3 className="mt-2 font-display text-2xl font-bold text-white">
-          {location.name}
+          {name}
         </h3>
         <p className="mt-1 text-sm text-gray-200 line-clamp-2">
           {description}

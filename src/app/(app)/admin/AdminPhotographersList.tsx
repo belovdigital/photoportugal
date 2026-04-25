@@ -193,6 +193,46 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
           counts={badgeCounts}
           onChange={(v) => { setBadgeFilter(v); setPage(0); }}
         />
+        {statusCounts.ready_review > 0 && (() => {
+          const active = statusFilter === "ready_review";
+          return (
+            <button
+              onClick={() => { setStatusFilter(active ? "active" : "ready_review"); setPage(0); }}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                active
+                  ? "border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-600"
+                  : "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              }`}
+              title="Toggle photographers ready for review"
+            >
+              <span className={`flex h-2 w-2 rounded-full ${active ? "bg-white" : "bg-emerald-500"}`} />
+              Ready for Review
+              <span className={`ml-0.5 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${active ? "bg-white/25 text-white" : "bg-emerald-500 text-white"}`}>
+                {statusCounts.ready_review}
+              </span>
+            </button>
+          );
+        })()}
+        {statusCounts.not_ready > 0 && (() => {
+          const active = statusFilter === "not_ready";
+          return (
+            <button
+              onClick={() => { setStatusFilter(active ? "active" : "not_ready"); setPage(0); }}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                active
+                  ? "border-orange-500 bg-orange-500 text-white hover:bg-orange-600"
+                  : "border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100"
+              }`}
+              title="Toggle photographers with an incomplete profile"
+            >
+              <span className={`flex h-2 w-2 rounded-full ${active ? "bg-white" : "bg-orange-500"}`} />
+              Not Ready
+              <span className={`ml-0.5 inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${active ? "bg-white/25 text-white" : "bg-orange-500 text-white"}`}>
+                {statusCounts.not_ready}
+              </span>
+            </button>
+          );
+        })()}
         {hasNonDefault && (
           <button
             onClick={() => { setStatusFilter("active"); setPlanFilter("all"); setBadgeFilter("all"); setPage(0); }}

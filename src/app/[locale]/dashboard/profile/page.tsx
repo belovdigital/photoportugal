@@ -18,11 +18,12 @@ export default async function ProfilePage() {
     id: string; slug: string; name: string; first_name: string; last_name: string; tagline: string | null;
     bio: string | null; avatar_url: string | null; cover_url: string | null; cover_position_y: number;
     languages: string[]; shoot_types: string[]; hourly_rate: number | null;
-    experience_years: number; plan: string; rating: number; review_count: number; session_count: number; is_approved: boolean;
+    experience_years: number; career_start_year: number | null;
+    plan: string; rating: number; review_count: number; session_count: number; is_approved: boolean;
   }>(
     `SELECT pp.id, pp.slug, u.name, COALESCE(u.first_name, '') as first_name, COALESCE(u.last_name, '') as last_name,
             pp.tagline, pp.bio, u.avatar_url, pp.cover_url, pp.cover_position_y,
-            pp.languages, pp.shoot_types, pp.hourly_rate, pp.experience_years, pp.plan,
+            pp.languages, pp.shoot_types, pp.hourly_rate, pp.experience_years, pp.career_start_year, pp.plan,
             pp.rating, pp.review_count, pp.session_count, pp.is_approved
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.user_id = $1`,
     [userId]
@@ -54,7 +55,7 @@ export default async function ProfilePage() {
             b.status, b.shoot_date, b.shoot_time, b.total_price, b.message, b.created_at,
             b.payment_status, COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
      FROM bookings b JOIN users u ON u.id = b.client_id LEFT JOIN packages p ON p.id = b.package_id
-     WHERE b.photographer_id = $1 ORDER BY b.created_at DESC`,
+     WHERE b.photographer_id = $1 AND b.status != 'inquiry' ORDER BY b.created_at DESC`,
     [profile.id]
   );
 

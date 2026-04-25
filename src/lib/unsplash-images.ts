@@ -39,6 +39,20 @@ const baseUrls: Record<string, string> = {
   azores: "photo-1542575749037-7ef4545e897d", // Sete Cidades
 };
 
+// Fallback aliases — slugs that borrow images from a nearby region until dedicated
+// photos are added. Keeps /locations grid visually complete.
+const aliasMap: Record<string, string> = {
+  portimao: "algarve",
+  albufeira: "algarve",
+  faro: "algarve",
+  vilamoura: "algarve",
+  arrabida: "setubal",
+  sesimbra: "setubal",
+  ericeira: "nazare",
+  funchal: "madeira",
+  "ponta-delgada": "azores",
+};
+
 const HERO_ID = "photo-1765854638659-aa17a6b00543"; // Couple on beach
 
 /**
@@ -64,7 +78,7 @@ export const IMAGE_SIZES = {
 } as const;
 
 export function locationImage(slug: string, size: keyof typeof IMAGE_SIZES = "card"): string {
-  const id = baseUrls[slug];
+  const id = baseUrls[slug] || baseUrls[aliasMap[slug] || ""];
   if (!id) return "";
   return unsplashUrl(id, IMAGE_SIZES[size]);
 }

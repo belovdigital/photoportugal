@@ -35,6 +35,12 @@ const nextConfig: NextConfig = {
             key: "X-XSS-Protection",
             value: "1; mode=block",
           },
+          {
+            // Allow camera + microphone for video reviews, payment for Stripe,
+            // fullscreen for lightboxes; block everything else.
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(self), payment=*, fullscreen=(self), autoplay=(self), encrypted-media=(self), picture-in-picture=(self), geolocation=(), usb=(), serial=(), bluetooth=(), midi=(), accelerometer=(), gyroscope=(), magnetometer=(), display-capture=(), ambient-light-sensor=()",
+          },
         ],
       },
       {

@@ -47,13 +47,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Already reviewed" }, { status: 400 });
     }
 
-    // Create review (pending approval)
-    const review = await queryOne<{ id: string }>(
-      `INSERT INTO reviews (booking_id, client_id, photographer_id, rating, title, text, is_approved)
-       VALUES ($1, $2, $3, $4, $5, $6, false)
-       RETURNING id`,
-      [booking_id, userId, booking.photographer_id, rating, title || null, text || null]
+    // Create review (pending approval). Capture client locale as source_locale so we can
+    // offer "show original" toggle in UI later.
+    const clientLocale = await queryOne<{ locale: string | null }>(
+      "SELECT locale FROM users WHERE id = $1",
+      [userId]
     );
+    const sourceLocale = clientLocale?.locale || "en";
+    const review = await queryOne<{ id: string }>(
+      `INSERT INTO reviews (booking_id, client_id, photographer_id, rating, title, text, is_approved, source_locale)
+       VALUES ($1, $2, $3, $4, $5, $6, false, $7)
+       RETURNING id`,
+      [booking_id, userId, booking.photographer_id, rating, title || null, text || null, sourceLocale]
+    );
+
+    // Fire-and-forget translation if review has any text content
+    if (review && (title || text)) {
+      import("@/lib/translate-content").then(({ translateReview }) =>
+        translateReview(review.id, title || null, text || null, sourceLocale),
+      ).catch((e) => console.error("[reviews] translate error:", e));
+    }
 
     // Don't update photographer rating yet — admin must approve first
 

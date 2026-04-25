@@ -1,7 +1,9 @@
 {
   "common": {
+    "summerSeasonNotice": "Summer season is filling up — book early to secure your preferred date",
     "privateClient": "Private Client",
     "reviewAbout": "about {name}",
+    "featuredQuoteAbout": "about",
     "siteName": "Photo Portugal",
     "bookAPhotoshoot": "Book a Photoshoot",
     "bookNow": "Book Now",
@@ -120,6 +122,7 @@
     "pricingPlans": "Pricing Plans",
     "learnMore": "Learn More",
     "bookPhotoshoot": "Book a Photoshoot",
+    "conciergeAriaLabel": "AI Concierge — find your photographer",
     "findMePhotographer": "Find Me a Photographer",
     "findPhotographers": "Find Photographers",
     "allDestinations": "All Destinations",
@@ -205,7 +208,7 @@
     "trustBadge": "Trusted by {count}+ happy travelers",
     "heroTitle": "Book a Vacation Photographer in",
     "heroTitleHighlight": "Portugal",
-    "heroDescription": "Choose from our hand-picked network of professional photographers who know Portugal's most breathtaking spots. Every photographer is personally vetted for quality, reliability, and style.",
+    "heroDescription": "The easiest way to book a travel photographer or vacation photoshoot in Portugal — hand-picked local pros, verified reviews, instant booking. Every photographer is personally vetted for quality, reliability, and style.",
     "heroBrowse": "Browse Photographers",
     "heroMatch": "Help Me Choose",
     "socialProof": {
@@ -230,7 +233,8 @@
       "trustedBy": "countries trust us",
       "photographers": "verified photographers",
       "locations": "stunning locations",
-      "securePayment": "Secure payment"
+      "securePayment": "Secure payment",
+      "islandsCovered": "Islands covered"
     },
     "featured": {
       "badge": "Featured",
@@ -330,6 +334,7 @@
     "title": "Loved by Travelers Worldwide",
     "subtitle": "Real stories from real travelers who captured unforgettable memories in Portugal",
     "averageRating": "average rating",
+    "reviewCount": "{count, plural, one {review} other {reviews}}",
     "allReviewsVerified": "All reviews verified from real bookings",
     "aboutPhotographer": "about {name}",
     "browseAll": "Browse all photographers",
@@ -995,6 +1000,9 @@
     "available": "{count} hand-picked photographer",
     "availablePlural": "{count} hand-picked photographers",
     "trustLine": "Every photographer is personally vetted and approved by our team",
+    "teamOnlineNow": "Team is online now",
+    "teamWillBeOnlineIn": "Team will be online in {hours}h",
+    "summerSeasonNotice": "Summer season is filling up — book early to secure your preferred date",
     "concierge": {
       "title": "Need help choosing? Let us match you!",
       "desc": "Tell us your preferences and our team will hand-pick 2-3 photographers perfect for you — free of charge."
@@ -1019,6 +1027,7 @@
       "allLocations": "All locations",
       "locations": "{count} locations",
       "searchLocations": "Search locations...",
+      "searchPlaceholder": "Search by name or location...",
       "anyLanguage": "Any language",
       "sortFeatured": "Recommended",
       "sortTopRated": "Top Rated",
@@ -1092,8 +1101,8 @@
     }
   },
   "locations": {
-    "title": "Best Photoshoot Locations in Portugal",
-    "subtitle": "From Lisbon's cobblestone streets to the Algarve's golden cliffs — explore {count}+ stunning destinations for your vacation photoshoot and find the perfect setting for your memories.",
+    "title": "Best Places to Photograph in Portugal",
+    "subtitle": "From Lisbon's cobblestone streets to the Algarve's golden cliffs — {count}+ of the best places to photograph in Portugal, hand-picked for vacation photoshoots, couples, families and solo travelers.",
     "detail": {
       "viewPhotographers": "View Photographers in {location}",
       "photographerAvailable": "{count} hand-picked photographer",
@@ -1177,6 +1186,13 @@
     "subtitle": "Fill in the details for your photoshoot request",
     "signInToBook": "Create an account to book",
     "needAccount": "Quick free signup to send your booking request.",
+    "trust": {
+      "heading": "This is a free request — no commitment yet",
+      "freeRequest": "No payment now — submit your request and the photographer will review it",
+      "payAfterConfirm": "You only pay once the photographer confirms your date",
+      "cancelAnytime": "Cancel anytime before confirmation, no questions asked",
+      "stripeSecure": "Payments protected by Stripe (world-leading payment provider)"
+    },
     "success": {
       "title": "Booking Request Sent!",
       "message": "{photographer} will review your request and get back to you soon.",
@@ -1264,6 +1280,29 @@
     "photographer": "I'm a Photographer",
     "photographerDesc": "I want to offer photoshoots and grow my business."
   },
+  "heroSingle": {
+    "coverAlt": "{name} — photographer in {location}",
+    "availableChip": "Available this week in {location}",
+    "headline": "Meet <name>{firstName}</name>,<br></br> your {location} photographer",
+    "viewProfile": "View profile",
+    "reviewsCount": "({count} reviews)",
+    "shootsCompleted": "<strong>{count}+</strong> shoots completed",
+    "matchPrompt": "Want {firstName} or someone else? We'll match you",
+    "browseAll": "Or <link>browse all 30+ photographers</link> across Portugal"
+  },
+  "quickMatch": {
+    "locationLabel": "Location",
+    "locationPlaceholder": "Location",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your@email.com",
+    "matchMe": "Match me",
+    "sending": "Sending…",
+    "successTitle": "Got it — we're on it!",
+    "successBody": "We'll email you 2-3 hand-picked photographer recommendations within a few hours.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "pleaseFillBoth": "Please fill in both fields.",
+    "footnote": "Free service · No spam · Reply within hours"
+  },
   "findPhotographer": {
     "metaTitle": "Find Me a Photographer in Portugal",
     "metaDescription": "Tell us about your photoshoot and we'll match you with 2-3 hand-picked photographers in Portugal. Free concierge matching service.",
@@ -1298,6 +1337,7 @@
     "messagePlaceholder": "Tell us about your vision, special moments you want captured, any preferences...",
     "submit": "Find My Photographer",
     "submitting": "Submitting...",
+    "smsConsent": "I agree to receive important SMS updates about my request (photographer matches, confirmations, reminders) — no marketing. See our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
     "error": "Something went wrong. Please try again.",
     "successTitle": "Request Received!",
     "successMessage": "Thank you! We'll get back to you within 2 hours with personalized photographer recommendations.",
@@ -1379,7 +1419,8 @@
       "lookingForPhotographerDesc": "Book a professional photoshoot in Portugal",
       "imAPhotographerDesc": "Join our network and get bookings",
       "roleClient": "I need photos",
-      "rolePhotographer": "I take photos"
+      "rolePhotographer": "I take photos",
+      "roleLabel": "I am here to..."
     },
     "forgotPassword": {
       "title": "Reset Password",
@@ -1461,7 +1502,17 @@
     "howItWorks": "How It Works",
     "photographersTitle": "{name} Photographers in Portugal",
     "photographersSubtitle": "Hand-picked professionals specializing in {name} photography",
-    "viewAllPhotographers": "View All {name} Photographers"
+    "viewAllPhotographers": "View All {name} Photographers",
+    "bestPhotographers": "Best Photographers for {name} Photoshoots",
+    "minutesAbbr": "min",
+    "photosLabel": "photos",
+    "bookCta": "Book →",
+    "reviewsTitle": "Real {nameLower} photoshoot reviews",
+    "reviewsSubtitleClients": "From clients who booked through Photo Portugal",
+    "guidesTitle": "{name} Photography Guides",
+    "guidesSubtitle": "Tips and inspiration for your {nameLower} photoshoot in Portugal",
+    "popularPackages": "Popular {name} Photography Packages",
+    "popularPackagesSub": "Real prices from verified photographers offering {nameLower} photography packages in Portugal."
   },
   "blogDetail": {
     "home": "Home",
@@ -1485,7 +1536,17 @@
     "description": "Tell us your dates and preferences — our team will hand-pick 2-3 photographers perfect for your trip. Takes 2 minutes.",
     "matchMe": "Get Matched with a Photographer",
     "browse": "Browse Photographers",
-    "free": "Free concierge service — no commitment"
+    "free": "Free concierge service — no commitment",
+    "saveTitle": "Save {name} for later",
+    "saveDesc": "Drop your email and we'll send you a direct link — come back any time to book.",
+    "saveEmailPlaceholder": "your@email.com",
+    "saveCta": "Email me the link",
+    "saveSending": "Sending...",
+    "saveError": "Something went wrong. Try again?",
+    "saveSentTitle": "Check your inbox",
+    "saveSentDesc": "We sent the link to {email}.",
+    "saveClose": "Keep browsing",
+    "saveFooter": "No spam. One email with the link, nothing else."
   },
   "photographersMeta": {
     "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve",
@@ -1827,7 +1888,7 @@
     "profilePendingDescription": "Your profile is being reviewed by our team. Once approved, it will be visible to clients. In the meantime, please complete your profile, upload portfolio photos, and create packages.",
     "profilePendingDescriptionComplete": "Your profile is complete and has been submitted for review. Our team will approve it shortly and it will become visible to clients.",
     "profileApproved": "Your profile is live!",
-    "profileApprovedDescription": "Clients can now find you and book photoshoots. Make sure your calendar is up to date.",
+    "profileApprovedDescription": "Clients can now find you and book photoshoots.",
     "actionNeeded": {
       "title": "Action needed",
       "respond": {
@@ -1971,6 +2032,9 @@
     "limitReached": " (limit reached)",
     "upgradeForMore": "Upgrade for more",
     "yearsOfExperience": "Years of Experience",
+    "careerStartYear": "Year You Started Photography",
+    "careerStartYearHint": "We'll compute your years of experience automatically.",
+    "careerStartYearComputed": "{years, plural, =1 {# year of experience} other {# years of experience}} — updates automatically each year.",
     "hourlyRate": "Hourly Rate (EUR)",
     "saveProfile": "Save Profile",
     "saving": "Saving...",
@@ -2377,6 +2441,7 @@
     "removePhoto": "Remove this photo?",
     "deletePhotos": "Delete {count} photo(s)?",
     "photosDelivered": "Photos delivered!",
+    "canStillEditUntilAccepted": "You can still add, remove or replace photos until the client accepts the delivery.",
     "clientNotified": "Your client has been notified by email.",
     "deliveryLink": "Delivery link (share with client)",
     "copied": "Copied!",
@@ -2795,5 +2860,145 @@
     "respondsUnderHour": "Responds within an hour",
     "respondsFewHours": "Responds within a few hours",
     "respondsSameDay": "Responds same day"
+  },
+  "concierge": {
+    "metaTitle": "Find your Portugal photographer in 30 seconds | Photo Portugal",
+    "metaDescription": "Tell us where you'll be and the occasion — our AI concierge instantly matches you with the 2–3 best photographers from our marketplace.",
+    "title1": "Find your Portugal photographer",
+    "title2": "in 30 seconds",
+    "subtitle": "Tell us where you'll be and the occasion — we'll match you with the 2–3 best photographers, hand-picked for your style, location, and trip.",
+    "trustVerified": "30+ verified photographers",
+    "trustSecure": "Secure payment",
+    "trustRefund": "Money-back guarantee",
+    "openingMessage": "Hi! I'm your Smart Concierge for Photo Portugal. Tell me where you'll be and the occasion — I'll match you with the 2–3 best photographers in 30 seconds. ✨",
+    "conciergeBadge": "Photo Portugal Concierge",
+    "inputPlaceholder": "Tell me about your trip...",
+    "send": "Send",
+    "errorRetry": "Something went wrong — please try again.",
+    "saveEmailPrompt": "💌 Want to save these matches? We'll email you their profiles so you can decide later.",
+    "emailPlaceholder": "your email",
+    "saveBtn": "Save",
+    "savingBtn": "Sending…",
+    "savedToast": "✅ Saved! Check your inbox shortly.",
+    "viewProfile": "View profile",
+    "talkTo": "Talk to {name}",
+    "emailMeThese": "📧 Email these to me too",
+    "emailSending": "Sending…",
+    "emailSent": "✅ Sent to your inbox",
+    "handoffPrompt": "Let me hand this to a human teammate — you'll get 2-3 personally selected options in your inbox within 4 hours.",
+    "handoffSubmitted": "✅ Got it! We'll personally send you 2-3 hand-picked options within 4 hours.",
+    "handoffNamePlaceholder": "Your name",
+    "handoffEmailPlaceholder": "Your email",
+    "handoffSubmitBtn": "Get help",
+    "handoffSendingBtn": "Sending…",
+    "prefillIntro": "Hi! I found you through the AI concierge. Here's what I'm looking for:",
+    "startOver": "Start over",
+    "newBadge": "New",
+    "presenceOnline": "Online",
+    "presenceActiveToday": "Active today",
+    "presenceActiveWeek": "Active this week",
+    "whatsappGreeting": "Hi! I just chatted with Photo Portugal's AI concierge and I'd like to continue with you.",
+    "whatsappIntentLabel": "What I'm looking for:",
+    "whatsappContinue": "Continue on WhatsApp",
+    "whatsappTalkHuman": "Talk to a human",
+    "suggestion1": "Couples shoot in Lisbon next month",
+    "suggestion2": "Proposal in Sintra at sunset",
+    "suggestion3": "Family photoshoot in Cascais",
+    "suggestion4": "Wedding in Douro Valley",
+    "stats": {
+      "photographers": "Verified photographers",
+      "locations": "Locations across Portugal",
+      "rating": "Average rating ({count})",
+      "from": "Starting price"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "step1Title": "Tell us about your trip",
+      "step1Desc": "Where, when, occasion — in just a sentence or two.",
+      "step2Title": "Get 3 matches",
+      "step2Desc": "Personalized recommendations in seconds, with reasoning.",
+      "step3Title": "Book with confidence",
+      "step3Desc": "Escrow payment, money-back guarantee."
+    },
+    "reviews": {
+      "title": "What travelers say",
+      "subtitle": "Verified reviews from real bookings"
+    },
+    "why": {
+      "title": "Why Photo Portugal",
+      "secure": "Secure payment",
+      "secureDesc": "Stripe + escrow until delivery",
+      "refund": "Money-back guarantee",
+      "refundDesc": "Not happy? Full refund",
+      "handPicked": "Hand-picked pros",
+      "handPickedDesc": "Every photographer is vetted",
+      "response": "24h response time",
+      "responseDesc": "Reply within one business day",
+      "browsePrefix": "Prefer to browse manually?",
+      "browseLink": "See all photographers"
+    }
+  },
+  "lp": {
+    "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Portugal",
+    "metaTitleGeneric": "Photographers in {city} — Book Instantly | Photo Portugal",
+    "metaDescriptionCityTyped": "Professional {shootTypeLower} photographers in {city}. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
+    "metaDescriptionCityGeneric": "Professional photoshoot photographers in {city}. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
+    "metaDescriptionPortugalTyped": "Professional {shootTypeLower} photographers across Portugal — Lisbon, Porto, Algarve, Sintra & more. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
+    "metaDescriptionPortugalGeneric": "Professional photoshoot photographers across Portugal — Lisbon, Porto, Algarve, Sintra & more. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
+    "heroTitleTyped": "{shootType} Photographers in {city}",
+    "heroTitleGeneric": "Professional Photographers in {city}",
+    "heroSubtitleCityWithPrice": "Hand-picked, verified photographers — from {price}. Book instantly, pay securely.",
+    "heroSubtitleCityNoPrice": "Hand-picked, verified photographers — book instantly, pay securely.",
+    "heroSubtitlePortugalWithPrice": "Hand-picked, verified photographers across Portugal — from {price}. Book instantly, pay securely.",
+    "heroSubtitlePortugalNoPrice": "Hand-picked, verified photographers across Portugal — book instantly, pay securely.",
+    "mobileFromPrice": "From {price}",
+    "mobileVerified": "Verified photographers",
+    "mobileSupplyOne": " · 1 verified photographer",
+    "mobileSupplyMany": " · {count} verified photographers",
+    "trust": {
+      "securePayment": "Secure payment",
+      "moneyBackGuarantee": "Money-back guarantee",
+      "instantConfirmation": "Instant confirmation",
+      "secureShort": "Secure",
+      "moneyBackShort": "Money-back",
+      "instantShort": "Instant"
+    },
+    "noResultsCityTyped": "No {shootTypeLower} photographers yet in {city}.",
+    "noResultsCityGeneric": "No photographers yet in {city}.",
+    "noResultsPortugalTyped": "No {shootTypeLower} photographers yet.",
+    "noResultsPortugalGeneric": "No photographers yet.",
+    "matchCta": "Let us match you with the right photographer",
+    "founding": "Founding",
+    "viewAllPackages": "View all {count} packages →",
+    "viewProfile": "View profile →",
+    "viewAllInCityTyped": "View all {count} {shootTypeLower} photographers in {city}",
+    "viewAllInCityGeneric": "View all {count} photographers in {city}",
+    "viewAllPortugalTyped": "View all {count} {shootTypeLower} photographers across Portugal",
+    "viewAllPortugalGeneric": "View all {count} photographers across Portugal",
+    "needHelp": "Need help choosing?",
+    "needHelpDesc": "Tell us what you need and we'll send 2-3 hand-picked matches.",
+    "freeConcierge": "Free concierge matching",
+    "reviewsTitleTyped": "Real {shootTypeLower} photoshoot reviews",
+    "reviewsTitlePortugal": "What travelers say about Photo Portugal",
+    "reviewsTitleCity": "What travelers say about {city} photoshoots",
+    "reviewsSubtitle": "Verified reviews from real bookings",
+    "reviewsSubtitleCity": "Real reviews from verified Photo Portugal bookings",
+    "photosUnit": "{count} photos",
+    "howItWorks": {
+      "step1Title": "Pick a package",
+      "step1DescCity": "See real photographers in {city} with real prices.",
+      "step1DescPortugal": "See real photographers across Portugal with real prices.",
+      "step2Title": "Book instantly",
+      "step2Desc": "Secure payment — held in escrow until delivery.",
+      "step3Title": "Get your photos",
+      "step3Desc": "Edited high-res photos delivered privately."
+    }
+  },
+  "scarcity": {
+    "shootTypeFew": "Only {count, plural, =1 {1 photographer} other {# photographers}} specializing in {location} available right now",
+    "shootTypeMany": "High demand for {location} photoshoots",
+    "locationFew": "Only {count, plural, =1 {1 photographer} other {# photographers}} available in {location} right now",
+    "locationMany": "High demand in {location}",
+    "body": "These photographers are usually fully booked — especially on weekends and during peak season. Book now to secure your preferred date."
   }
 }

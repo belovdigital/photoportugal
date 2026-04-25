@@ -25,9 +25,11 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
     shoot_date: string | null;
     status: string;
     delivery_token: string | null;
+    delivery_accepted: boolean;
   }>(
     `SELECT b.id, u.id as photographer_user_id, cu.name as client_name,
-            p.name as package_name, b.shoot_date, b.status, b.delivery_token
+            p.name as package_name, b.shoot_date, b.status, b.delivery_token,
+            COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -74,6 +76,7 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
         bookingId={id}
         initialPhotos={photos}
         isDelivered={booking.status === "delivered"}
+        clientAccepted={booking.delivery_accepted}
         deliveryToken={booking.delivery_token}
       />
     </div>

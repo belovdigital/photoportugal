@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 import { Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations, getLocationBySlug } from "@/lib/locations-data";
 import { shootTypes, getShootTypeBySlug } from "@/lib/shoot-types-data";
+import type { Location } from "@/types";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
+import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 import { ActiveBadge } from "@/components/ui/ActiveBadge";
 import { normalizeName } from "@/lib/format-name";
 import { locationImage } from "@/lib/unsplash-images";
@@ -17,19 +19,58 @@ import { locationImage } from "@/lib/unsplash-images";
 // Fully dynamic so each visit randomises the photographer lineup (only when >6 match)
 export const dynamic = "force-dynamic";
 
+// PT names for the few cities whose Portuguese spelling differs from the English slug name
+const LOCATION_NAME_PT: Record<string, string> = {
+  lisbon: "Lisboa",
+};
+
+// Localize a city name for the active locale (falls back to English `name`).
+function localizedLocationName(loc: Location | undefined, slug: string, locale: string): string {
+  if (!loc) return slug;
+  if (locale === "pt") return LOCATION_NAME_PT[loc.slug] || loc.name;
+  if (locale === "de") return loc.name_de || loc.name;
+  return loc.name;
+}
+
+// Localize a shoot type name for the active locale (falls back to English).
+function localizedShootTypeName(
+  st: ReturnType<typeof getShootTypeBySlug> | null,
+  locale: string
+): string {
+  if (!st) return "";
+  if (locale === "pt") return st.name_pt || st.name;
+  if (locale === "de") return st.name_de || st.name;
+  return st.name;
+}
+
+// Format a price for display per locale (PT: "150€", DE: "150 €", EN: "€150")
+function formatPrice(price: number, locale: string): string {
+  if (locale === "pt") return `${price}€`;
+  if (locale === "de") return `${price} €`;
+  return `€${price}`;
+}
+
 export async function generateMetadata({ params, searchParams }: {
   params: Promise<{ locale: string; city: string }>;
   searchParams: Promise<{ type?: string }>;
 }): Promise<Metadata> {
-  const { city } = await params;
+  const { locale, city } = await params;
   const { type } = await searchParams;
   const loc = getLocationBySlug(city);
   const st = type ? getShootTypeBySlug(type) : null;
-  const locName = loc?.name || city;
-  const label = st ? `${st.name} Photographers in ${locName}` : `Photographers in ${locName}`;
+  const t = await getTranslations({ locale, namespace: "lp" });
+  const locName = localizedLocationName(loc, city, locale);
+  const shootName = localizedShootTypeName(st, locale);
+  const shootLower = shootName.toLowerCase();
+  const title = st
+    ? t("metaTitleTyped", { shootType: shootName, city: locName })
+    : t("metaTitleGeneric", { city: locName });
+  const description = st
+    ? t("metaDescriptionCityTyped", { shootTypeLower: shootLower, city: locName })
+    : t("metaDescriptionCityGeneric", { city: locName });
   return {
-    title: `${label} — Book Instantly | Photo Portugal`,
-    description: `Professional ${st?.name.toLowerCase() || "photoshoot"} photographers in ${locName}. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.`,
+    title,
+    description,
     robots: { index: false, follow: false }, // paid-ad LP — don't index
   };
 }
@@ -59,6 +100,8 @@ export default async function LandingPage({ params, searchParams }: {
 
   const loc = getLocationBySlug(city);
   if (!loc) notFound();
+
+  const t = await getTranslations({ locale, namespace: "lp" });
 
   const st = sp.type ? getShootTypeBySlug(sp.type) : null;
   const shootTypeAliases = st?.photographerShootTypeNames || (st ? [st.name] : null);
@@ -143,11 +186,15 @@ export default async function LandingPage({ params, searchParams }: {
   }
   const utmQuery = bookParams.toString();
 
-  const shootLabel = st?.name || "Professional";
-  const heroTitle = `${shootLabel} Photographers in ${loc.name}`;
+  const locName = localizedLocationName(loc, city, locale);
+  const shootName = localizedShootTypeName(st, locale);
+  const shootLower = shootName.toLowerCase();
+  const heroTitle = st
+    ? t("heroTitleTyped", { shootType: shootName, city: locName })
+    : t("heroTitleGeneric", { city: locName });
   const heroSubtitle = minPrice
-    ? `Hand-picked, verified photographers — from €${minPrice}. Book instantly, pay securely.`
-    : "Hand-picked, verified photographers — book instantly, pay securely.";
+    ? t("heroSubtitleCityWithPrice", { price: formatPrice(minPrice, locale) })
+    : t("heroSubtitleCityNoPrice");
 
   return (
     <div className="bg-warm-50 min-h-screen">
@@ -165,8 +212,12 @@ export default async function LandingPage({ params, searchParams }: {
 
           {/* Mobile: compact price + supply line (replaces subtitle + trust strip) */}
           <p className="mt-1 text-sm text-gray-600 sm:hidden">
-            {minPrice ? `From €${minPrice}` : "Verified photographers"}
-            {totalMatching > 0 ? ` · ${totalMatching} verified photographer${totalMatching === 1 ? "" : "s"}` : ""}
+            {minPrice ? t("mobileFromPrice", { price: formatPrice(minPrice, locale) }) : t("mobileVerified")}
+            {totalMatching > 0
+              ? totalMatching === 1
+                ? t("mobileSupplyOne")
+                : t("mobileSupplyMany", { count: totalMatching })
+              : ""}
           </p>
 
           {/* Desktop subtitle + trust strip */}
@@ -176,16 +227,24 @@ export default async function LandingPage({ params, searchParams }: {
           <div className="mt-5 hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-600 sm:flex">
             <span className="flex items-center gap-1.5">
               <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-              Secure payment
+              {t("trust.securePayment")}
             </span>
             <span className="flex items-center gap-1.5">
               <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-              Money-back guarantee
+              {t("trust.moneyBackGuarantee")}
             </span>
             <span className="flex items-center gap-1.5">
               <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-              Instant confirmation
+              {t("trust.instantConfirmation")}
             </span>
+          </div>
+          <div className="mt-6">
+            <MatchQuickForm
+              presetLocation={city}
+              presetShootType={sp.type}
+              source={`lp_${city}${sp.type ? `_${sp.type}` : ""}`}
+              size="md"
+            />
           </div>
         </div>
       </section>
@@ -201,16 +260,17 @@ export default async function LandingPage({ params, searchParams }: {
         {photographers.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-warm-200 bg-white p-8 text-center">
             <p className="text-gray-600">
-              {st ? `No ${st.name.toLowerCase()} photographers yet in ${loc.name}.` : `No photographers yet in ${loc.name}.`}
+              {st
+                ? t("noResultsCityTyped", { shootTypeLower: shootLower, city: locName })
+                : t("noResultsCityGeneric", { city: locName })}
             </p>
             <Link href="/find-photographer" className="mt-4 inline-flex rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700">
-              Let us match you with the right photographer
+              {t("matchCta")}
             </Link>
           </div>
         ) : (
           <div className="mt-3 grid grid-cols-1 gap-5 sm:mt-6 sm:grid-cols-2 lg:grid-cols-3">
             {photographers.map((p, idx) => {
-              const firstPkg = p.packages[0];
               const href = `/photographers/${p.slug}${utmQuery ? `?${utmQuery}` : ""}`;
               return (
                 <Fragment key={p.id}>
@@ -218,15 +278,15 @@ export default async function LandingPage({ params, searchParams }: {
                   <div className="flex items-center justify-around gap-3 rounded-xl border border-warm-200 bg-white px-3 py-3 text-[11px] font-medium text-gray-600 sm:hidden">
                     <span className="flex items-center gap-1">
                       <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                      Secure
+                      {t("trust.secureShort")}
                     </span>
                     <span className="flex items-center gap-1">
                       <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                      Money-back
+                      {t("trust.moneyBackShort")}
                     </span>
                     <span className="flex items-center gap-1">
                       <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                      Instant
+                      {t("trust.instantShort")}
                     </span>
                   </div>
                 )}
@@ -240,7 +300,7 @@ export default async function LandingPage({ params, searchParams }: {
                     )}
                     {p.is_founding && (
                       <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow">
-                        Founding
+                        {t("founding")}
                       </span>
                     )}
                   </Link>
@@ -296,11 +356,11 @@ export default async function LandingPage({ params, searchParams }: {
                             <div className="min-w-0 flex-1">
                               <p className="truncate font-semibold text-gray-900 group-hover:text-primary-700">{pkg.name}</p>
                               <p className="truncate text-[11px] text-gray-500">
-                                {pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes}min`} · {pkg.num_photos} photos
+                                {pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes}min`} · {t("photosUnit", { count: pkg.num_photos })}
                               </p>
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
-                              <span className="font-bold text-gray-900">€{Math.round(Number(pkg.price))}</span>
+                              <span className="font-bold text-gray-900">{formatPrice(Math.round(Number(pkg.price)), locale)}</span>
                               <svg className="h-4 w-4 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
                             </div>
                           </Link>
@@ -310,7 +370,7 @@ export default async function LandingPage({ params, searchParams }: {
                             href={href}
                             className="mt-3 block rounded-xl border border-warm-200 bg-white px-4 py-3 text-center text-sm font-semibold text-primary-700 transition hover:border-primary-400 hover:bg-primary-50"
                           >
-                            View all {p.packages.length} packages →
+                            {t("viewAllPackages", { count: p.packages.length })}
                           </Link>
                         )}
                       </div>
@@ -319,7 +379,7 @@ export default async function LandingPage({ params, searchParams }: {
                         href={href}
                         className="mt-4 block rounded-xl border border-warm-200 bg-warm-50 px-4 py-2.5 text-center text-sm font-semibold text-primary-700 transition hover:border-primary-400 hover:bg-primary-50"
                       >
-                        View profile →
+                        {t("viewProfile")}
                       </Link>
                     )}
                   </div>
@@ -337,7 +397,9 @@ export default async function LandingPage({ params, searchParams }: {
               href={`/photographers?location=${city}${sp.type ? `&shoot=${sp.type}` : ""}${utmQuery ? `&${utmQuery}` : ""}`}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-700 hover:text-primary-800 hover:underline"
             >
-              View all {totalMatching} {st ? `${st.name.toLowerCase()} ` : ""}photographers in {loc.name}
+              {st
+                ? t("viewAllInCityTyped", { count: totalMatching, shootTypeLower: shootLower, city: locName })
+                : t("viewAllInCityGeneric", { count: totalMatching, city: locName })}
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
             </Link>
           </div>
@@ -347,11 +409,11 @@ export default async function LandingPage({ params, searchParams }: {
         {photographers.length > 0 && (
           <div className="mt-10 flex flex-col items-center gap-3 rounded-2xl border border-warm-200 bg-white p-6 text-center sm:flex-row sm:justify-between sm:text-left">
             <div>
-              <p className="font-semibold text-gray-900">Need help choosing?</p>
-              <p className="mt-0.5 text-sm text-gray-500">Tell us what you need and we&apos;ll send 2-3 hand-picked matches.</p>
+              <p className="font-semibold text-gray-900">{t("needHelp")}</p>
+              <p className="mt-0.5 text-sm text-gray-500">{t("needHelpDesc")}</p>
             </div>
             <Link href={`/find-photographer${utmQuery ? `?${utmQuery}` : ""}`} className="inline-flex shrink-0 rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800">
-              Free concierge matching
+              {t("freeConcierge")}
             </Link>
           </div>
         )}
@@ -361,8 +423,8 @@ export default async function LandingPage({ params, searchParams }: {
           <div className="mt-12">
             <ReviewsStrip
               reviews={locationReviews}
-              title={`What travelers say about ${loc.name} photoshoots`}
-              subtitle="Real reviews from verified Photo Portugal bookings"
+              title={t("reviewsTitleCity", { city: locName })}
+              subtitle={t("reviewsSubtitleCity")}
               compact
             />
           </div>
@@ -371,9 +433,9 @@ export default async function LandingPage({ params, searchParams }: {
         {/* How it works strip */}
         <div className="mt-10 grid grid-cols-1 gap-4 rounded-2xl bg-white p-6 sm:grid-cols-3 sm:gap-6">
           {[
-            { n: "1", title: "Pick a package", desc: "See real photographers in " + loc.name + " with real prices." },
-            { n: "2", title: "Book instantly", desc: "Secure payment — held in escrow until delivery." },
-            { n: "3", title: "Get your photos", desc: "Edited high-res photos delivered privately." },
+            { n: "1", title: t("howItWorks.step1Title"), desc: t("howItWorks.step1DescCity", { city: locName }) },
+            { n: "2", title: t("howItWorks.step2Title"), desc: t("howItWorks.step2Desc") },
+            { n: "3", title: t("howItWorks.step3Title"), desc: t("howItWorks.step3Desc") },
           ].map((s) => (
             <div key={s.n} className="flex gap-3">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-700">

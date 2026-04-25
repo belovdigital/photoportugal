@@ -10,6 +10,7 @@ import { locations } from "@/lib/locations-data";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
+import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
 import { Compass, Search, ShieldCheck, HelpCircle, Users, Mail, LifeBuoy, MapPin, Heart, UserRound, Baby, Gem, Sparkles, Sun, UserPlus, CreditCard, Camera, BookOpen, TreePine, PartyPopper, Cake } from "lucide-react";
 
 const TOP_DESTINATIONS = [
@@ -19,6 +20,9 @@ const TOP_DESTINATIONS = [
   { slug: "sintra", name: "Sintra", img: "photo-1697394494123-c6c1323a14f7" },
   { slug: "madeira", name: "Madeira", img: "photo-1721241843813-c54b77496005" },
   { slug: "azores", name: "Azores", img: "photo-1542575749037-7ef4545e897d" },
+  { slug: "cascais", name: "Cascais", img: "photo-1748792753424-38cbb745508a" },
+  { slug: "lagos", name: "Lagos", img: "photo-1593897810048-0195fd308ee6" },
+  { slug: "douro-valley", name: "Douro Valley", img: "photo-1693825208005-02563f6a95ce" },
 ];
 
 const SHOOT_TYPES_DATA = [
@@ -40,6 +44,7 @@ export function Header() {
   const profileRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const megaRef = useRef<HTMLDivElement>(null);
+  const langRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const locale = useLocale();
@@ -59,6 +64,7 @@ export function Header() {
     function handleClick(e: MouseEvent) {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
       if (menuRef.current && !menuRef.current.contains(e.target as Node) && (!megaRef.current || !megaRef.current.contains(e.target as Node))) setActiveMenu(null);
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -68,13 +74,32 @@ export function Header() {
     setActiveMenu(activeMenu === menu ? null : menu);
   }
 
-  function switchLocale() {
-    const newLocale = locale === "en" ? "pt" : "en";
+  function switchLocale(target?: string) {
+    // Default: toggle between EN/PT (legacy 2-button behavior)
+    const newLocale = target ?? (locale === "en" ? "pt" : "en");
     const currentPath = window.location.pathname;
-    const cleanPath = currentPath.replace(/^\/pt(\/|$)/, "/").replace(/\/+$/, "") || "/";
-    const newPath = newLocale === "pt" ? `/pt${cleanPath === "/" ? "" : cleanPath}` : cleanPath;
+    // Strip any locale prefix (en is implicit)
+    const cleanPath =
+      currentPath
+        .replace(/^\/(pt|de|es|fr)(\/|$)/, "/")
+        .replace(/\/+$/, "") || "/";
+    const newPath =
+      newLocale === "en"
+        ? cleanPath
+        : `/${newLocale}${cleanPath === "/" ? "" : cleanPath}`;
+    // Persist explicit choice so middleware doesn't auto-redirect on next visit
+    document.cookie = `locale_pref=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
     window.location.href = newPath;
   }
+
+  const availableLocales: Array<{ code: string; label: string; flag: string }> = [
+    { code: "en", label: "EN", flag: "🇬🇧" },
+    { code: "pt", label: "PT", flag: "🇵🇹" },
+    { code: "de", label: "DE", flag: "🇩🇪" },
+    { code: "es", label: "ES", flag: "🇪🇸" },
+    { code: "fr", label: "FR", flag: "🇫🇷" },
+  ];
+  const [langOpen, setLangOpen] = useState(false);
 
   return (
     <>
@@ -126,21 +151,70 @@ export function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            {/* Language switcher */}
-            <div className="flex items-center overflow-hidden rounded-lg border border-warm-200 text-xs font-bold">
-              <button
-                onClick={() => { if (locale !== "en") switchLocale(); }}
-                className={`px-2 py-1.5 transition ${locale === "en" ? "bg-primary-600 text-white" : "text-gray-400 hover:bg-warm-50 hover:text-gray-700"}`}
+            {/* Language switcher — 2-button on photographer profiles, dropdown elsewhere */}
+            {availableLocales.length === 2 ? (
+              <div className="flex items-center overflow-hidden rounded-lg border border-warm-200 text-xs font-bold">
+                {availableLocales.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => { if (locale !== lang.code) switchLocale(lang.code); }}
+                    className={`px-2 py-1.5 transition ${locale === lang.code ? "bg-primary-600 text-white" : "text-gray-400 hover:bg-warm-50 hover:text-gray-700"}`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="relative" ref={langRef}>
+                <button
+                  onClick={() => setLangOpen((o) => !o)}
+                  className="flex items-center gap-1.5 rounded-lg border border-warm-200 px-2 py-1.5 text-xs font-bold text-gray-700 transition hover:bg-warm-50"
+                  aria-label="Language"
+                >
+                  <span>{availableLocales.find((l) => l.code === locale)?.flag || "🌐"}</span>
+                  <span>{availableLocales.find((l) => l.code === locale)?.label || locale.toUpperCase()}</span>
+                  <svg className={`h-3 w-3 transition ${langOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {langOpen && (
+                  <div className="absolute right-0 top-full z-40 mt-1 min-w-[140px] overflow-hidden rounded-xl border border-warm-200 bg-white py-1 shadow-lg">
+                      {availableLocales.map((lang) => (
+                        <button
+                          key={lang.code}
+                          onClick={() => { setLangOpen(false); if (locale !== lang.code) switchLocale(lang.code); }}
+                          className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${locale === lang.code ? "bg-primary-50 font-semibold text-primary-700" : "text-gray-700"}`}
+                        >
+                          <span>{lang.flag}</span>
+                          <span>{lang.label}</span>
+                          {locale === lang.code && (
+                            <svg className="ml-auto h-4 w-4 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* AI Concierge — opens slide-out drawer on any page (not for photographers, not on /concierge itself) */}
+            {!isLoading && !isPhotographer && pathname !== "/concierge" && (
+              <ConciergeTrigger
+                aria-label={t("conciergeAriaLabel")}
+                title={t("conciergeAriaLabel")}
+                className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-accent-500 text-white shadow-sm transition hover:shadow-md hover:scale-105"
               >
-                EN
-              </button>
-              <button
-                onClick={() => { if (locale !== "pt") switchLocale(); }}
-                className={`px-2 py-1.5 transition ${locale === "pt" ? "bg-primary-600 text-white" : "text-gray-400 hover:bg-warm-50 hover:text-gray-700"}`}
-              >
-                PT
-              </button>
-            </div>
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.847.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                </svg>
+                <span className="absolute -right-0.5 -top-0.5 flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white" />
+                </span>
+              </ConciergeTrigger>
+            )}
 
             {/* Book CTA — hide while loading to prevent flash */}
             {!isLoading && !isPhotographer && (
@@ -228,7 +302,7 @@ export function Header() {
             ) : pathname.startsWith("/dashboard") ? (
               <div className="h-8 w-8 animate-pulse rounded-full bg-warm-200" />
             ) : (
-              <Link href="/auth/signup" className="flex h-8 w-8 items-center justify-center rounded-full bg-warm-100 text-gray-500 transition hover:bg-warm-200 hover:text-gray-700" aria-label={t("logIn")}>
+              <Link href="/auth/signin" className="flex h-8 w-8 items-center justify-center rounded-full bg-warm-100 text-gray-500 transition hover:bg-warm-200 hover:text-gray-700" aria-label={t("logIn")}>
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
@@ -334,11 +408,11 @@ export function Header() {
                         <p className="text-xs text-gray-400">{t("megaBrowseDesc")}</p>
                       </div>
                     </Link>
-                    <Link href="/find-photographer" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg bg-primary-50 px-3 py-2.5 transition hover:bg-primary-100">
-                      <Heart className="h-[18px] w-[18px] shrink-0 text-primary-500 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                    <Link href="/find-photographer" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Heart className="h-[18px] w-[18px] shrink-0 text-accent-600 transition group-hover:text-accent-700" strokeWidth={1.5} />
                       <div>
-                        <p className="text-sm font-semibold text-primary-700">{t("findMePhotographer")}</p>
-                        <p className="text-xs text-primary-500/70">{t("megaMatchDesc")}</p>
+                        <p className="text-sm font-semibold text-accent-700 group-hover:text-accent-800 transition">{t("findMePhotographer")}</p>
+                        <p className="text-xs text-gray-500">{t("megaMatchDesc")}</p>
                       </div>
                     </Link>
                     <Link href="/how-it-works" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
@@ -427,11 +501,11 @@ export function Header() {
                         <p className="text-xs text-gray-400">{t("megaBrowseDesc")}</p>
                       </div>
                     </Link>
-                    <Link href="/find-photographer" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg bg-primary-50 px-3 py-2.5 transition hover:bg-primary-100">
-                      <Heart className="h-[18px] w-[18px] shrink-0 text-primary-500 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                    <Link href="/find-photographer" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <Heart className="h-[18px] w-[18px] shrink-0 text-accent-600 transition group-hover:text-accent-700" strokeWidth={1.5} />
                       <div>
-                        <p className="text-sm font-semibold text-primary-700 transition">{t("findMePhotographer")}</p>
-                        <p className="text-xs text-primary-500/70">{t("megaMatchDesc")}</p>
+                        <p className="text-sm font-semibold text-accent-700 group-hover:text-accent-800 transition">{t("findMePhotographer")}</p>
+                        <p className="text-xs text-gray-500">{t("megaMatchDesc")}</p>
                       </div>
                     </Link>
                   </div>

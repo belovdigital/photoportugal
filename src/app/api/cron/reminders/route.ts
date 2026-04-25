@@ -93,9 +93,18 @@ export async function GET(req: NextRequest) {
             [booking.client_id]
           );
           if (smsPrefs?.sms_bookings !== false) {
+            const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+            const cLocale = await getUserLocaleById(booking.client_id);
+            const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
+            const smsBody = pickT({
+              en: `Photo Portugal: Reminder — your booking with ${booking.photographer_name}${priceStr} is awaiting payment. Pay now to secure your spot: https://photoportugal.com/dashboard/bookings`,
+              pt: `Photo Portugal: Lembrete — a sua reserva com ${booking.photographer_name}${priceStr} aguarda pagamento. Pague agora para garantir o seu lugar: https://photoportugal.com/dashboard/bookings`,
+              de: `Photo Portugal: Erinnerung — Ihre Buchung mit ${booking.photographer_name}${priceStr} wartet auf Zahlung. Jetzt bezahlen, um Ihren Termin zu sichern: https://photoportugal.com/dashboard/bookings`,
+              fr: `Photo Portugal : Rappel — votre réservation avec ${booking.photographer_name}${priceStr} attend le paiement. Payez maintenant pour sécuriser votre place : https://photoportugal.com/dashboard/bookings`,
+            }, cLocale);
             sendSMS(
               booking.client_phone,
-              `Photo Portugal: Reminder — your booking with ${booking.photographer_name}${booking.total_price ? ` (€${Math.round(booking.total_price)})` : ""} is awaiting payment. Pay now to secure your spot: https://photoportugal.com/dashboard/bookings`
+              smsBody
             ).catch(err => console.error("[cron] payment reminder sms error:", err));
           }
         }
@@ -161,9 +170,17 @@ export async function GET(req: NextRequest) {
             [booking.client_id]
           );
           if (smsPrefs?.sms_bookings !== false) {
+            const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+            const cLocale = await getUserLocaleById(booking.client_id);
+            const smsBody = pickT({
+              en: `Photo Portugal: Last chance! Your booking with ${booking.photographer_name} will be cancelled in 6 hours if not paid. Pay now: https://photoportugal.com/dashboard/bookings`,
+              pt: `Photo Portugal: Última oportunidade! A sua reserva com ${booking.photographer_name} será cancelada em 6 horas se não for paga. Pague agora: https://photoportugal.com/dashboard/bookings`,
+              de: `Photo Portugal: Letzte Chance! Ihre Buchung mit ${booking.photographer_name} wird in 6 Stunden storniert, wenn nicht bezahlt. Jetzt bezahlen: https://photoportugal.com/dashboard/bookings`,
+              fr: `Photo Portugal : Dernière chance ! Votre réservation avec ${booking.photographer_name} sera annulée dans 6 heures si non payée. Payez maintenant : https://photoportugal.com/dashboard/bookings`,
+            }, cLocale);
             sendSMS(
               booking.client_phone,
-              `Photo Portugal: Last chance! Your booking with ${booking.photographer_name} will be cancelled in 6 hours if not paid. Pay now: https://photoportugal.com/dashboard/bookings`
+              smsBody
             ).catch(err => console.error("[cron] final payment reminder sms error:", err));
           }
         }
@@ -371,10 +388,18 @@ export async function GET(req: NextRequest) {
                 [smsInfo.client_id]
               );
               if (cPrefs?.sms_bookings !== false) {
+                const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+                const cLocale = await getUserLocaleById(smsInfo.client_id);
+                const body = pickT({
+                  en: `Photo Portugal: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`,
+                  pt: `Photo Portugal: Lembrete — a sua sessão fotográfica com ${booking.photographer_name} é amanhã! Veja os detalhes no seu painel.`,
+                  de: `Photo Portugal: Erinnerung — Ihr Fotoshooting mit ${booking.photographer_name} ist morgen! Details im Dashboard.`,
+                  fr: `Photo Portugal : Rappel — votre séance photo avec ${booking.photographer_name} est demain ! Détails sur votre tableau de bord.`,
+                }, cLocale);
                 queueNotification({
                   channel: "sms",
                   recipient: smsInfo.client_phone,
-                  body: `Photo Portugal: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`,
+                  body,
                   dedupKey: `shoot_reminder_sms_client:${booking.id}`,
                 }).catch(err => console.error("[sms] error:", err));
               }
@@ -960,10 +985,10 @@ export async function GET(req: NextRequest) {
   let smsReviewReminders = 0;
   try {
     const needsSmsReview = await query<{
-      id: string; client_name: string; client_phone: string;
+      id: string; client_name: string; client_phone: string; client_locale: string | null;
       photographer_name: string;
     }>(
-      `SELECT b.id, cu.name as client_name, cu.phone as client_phone,
+      `SELECT b.id, cu.name as client_name, cu.phone as client_phone, cu.locale as client_locale,
               pu.name as photographer_name
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
@@ -977,13 +1002,23 @@ export async function GET(req: NextRequest) {
          AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = b.id)`
     );
 
+    const { normalizeLocale, pickT, localizedUrl } = await import("@/lib/email-locale");
+
     for (const booking of needsSmsReview) {
       try {
         const firstName = booking.client_name.split(" ")[0];
+        const cLocale = normalizeLocale(booking.client_locale);
+        const url = localizedUrl("/dashboard/bookings", cLocale);
+        const body = pickT({
+          en: `Hi ${firstName}! We'd love to hear about your photoshoot with ${booking.photographer_name}. A quick review helps other travelers: ${url}`,
+          pt: `Olá ${firstName}! Gostaríamos de saber como correu a sua sessão com ${booking.photographer_name}. Uma avaliação rápida ajuda outros viajantes: ${url}`,
+          de: `Hallo ${firstName}! Wir würden gerne hören, wie Ihr Fotoshooting mit ${booking.photographer_name} war. Eine kurze Bewertung hilft anderen Reisenden: ${url}`,
+          fr: `Bonjour ${firstName} ! Nous serions ravis de connaître votre avis sur la séance avec ${booking.photographer_name}. Un court avis aide d'autres voyageurs : ${url}`,
+        }, cLocale);
         await queueNotification({
           channel: "sms",
           recipient: booking.client_phone,
-          body: `Hi ${firstName}! We'd love to hear about your photoshoot with ${booking.photographer_name}. A quick review helps other travelers: https://photoportugal.com/dashboard/bookings`,
+          body,
           dedupKey: `review_sms:${booking.id}`,
         });
         await query("UPDATE bookings SET review_sms_sent = TRUE WHERE id = $1", [booking.id]);
@@ -1294,9 +1329,8 @@ export async function GET(req: NextRequest) {
     const abandonedClients = await query<{
       id: string; name: string; email: string;
     }>(
-      `SELECT DISTINCT u.id, u.name, u.email
+      `SELECT u.id, u.name, u.email
        FROM users u
-       JOIN visitor_sessions vs ON vs.user_id = u.id
        WHERE u.role = 'client'
          AND u.email_verified = TRUE
          AND u.created_at > NOW() - INTERVAL '48 hours'
@@ -1304,7 +1338,10 @@ export async function GET(req: NextRequest) {
          AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.client_id = u.id)
          AND NOT EXISTS (SELECT 1 FROM notification_logs nl WHERE nl.recipient = u.email AND nl.event LIKE '%Still thinking%')
          AND NOT EXISTS (SELECT 1 FROM notification_logs nl WHERE nl.recipient = u.email AND nl.event LIKE '%Still looking%')
-         AND vs.pageviews::text LIKE '%/book/%'
+         AND EXISTS (
+           SELECT 1 FROM visitor_sessions vs
+           WHERE vs.user_id = u.id AND vs.pageviews::text LIKE '%/book/%'
+         )
        ORDER BY u.created_at DESC
        LIMIT 10`
     );
@@ -1532,6 +1569,7 @@ export async function GET(req: NextRequest) {
       client_name: string;
       client_email: string;
       client_phone: string | null;
+      client_locale: string | null;
       photographer_name: string;
       photographer_slug: string;
       hours_since_reply: number;
@@ -1541,6 +1579,7 @@ export async function GET(req: NextRequest) {
         cu.name as client_name,
         cu.email as client_email,
         cu.phone as client_phone,
+        cu.locale as client_locale,
         pu.name as photographer_name,
         pp.slug as photographer_slug,
         EXTRACT(EPOCH FROM (NOW() - last_photographer_msg.created_at))/3600 as hours_since_reply
@@ -1587,10 +1626,19 @@ export async function GET(req: NextRequest) {
         }).catch(console.error);
         // SMS
         if (c.client_phone) {
+          const { normalizeLocale, pickT, localizedUrl } = await import("@/lib/email-locale");
+          const cLocale = normalizeLocale(c.client_locale);
+          const url = localizedUrl("/dashboard/messages", cLocale);
+          const smsBody = pickT({
+            en: `Hi ${firstName}! ${c.photographer_name} replied to your message on Photo Portugal and is waiting for you. Check it out: ${url}`,
+            pt: `Olá ${firstName}! ${c.photographer_name} respondeu à sua mensagem na Photo Portugal e está à sua espera. Veja: ${url}`,
+            de: `Hallo ${firstName}! ${c.photographer_name} hat Ihrer Nachricht auf Photo Portugal geantwortet und wartet auf Sie. Hier ansehen: ${url}`,
+            fr: `Bonjour ${firstName} ! ${c.photographer_name} a répondu à votre message sur Photo Portugal et vous attend. À voir : ${url}`,
+          }, cLocale);
           await queueNotification({
             channel: "sms",
             recipient: c.client_phone,
-            body: `Hi ${firstName}! ${c.photographer_name} replied to your message on Photo Portugal and is waiting for you. Check it out: ${BASE_URL}/dashboard/messages`,
+            body: smsBody,
             dedupKey: `client_followup_sms:${c.booking_id}`,
           }).catch(console.error);
         }
@@ -1602,6 +1650,133 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Client follow-ups: ${err}`);
+  }
+
+  // === SILENT CLIENT 7-DAY ESCALATION (gentler 2nd nudge if still no reply) ===
+  let clientFollowUps7d = 0;
+  try {
+    const silent7d = await query<{
+      booking_id: string;
+      client_name: string;
+      client_email: string;
+      client_phone: string | null;
+      photographer_name: string;
+      days_since_reply: number;
+    }>(`
+      SELECT
+        b.id as booking_id,
+        cu.name as client_name,
+        cu.email as client_email,
+        cu.phone as client_phone,
+        pu.name as photographer_name,
+        EXTRACT(EPOCH FROM (NOW() - last_photographer_msg.created_at))/86400 as days_since_reply
+      FROM bookings b
+      JOIN users cu ON cu.id = b.client_id
+      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+      JOIN users pu ON pu.id = pp.user_id
+      JOIN LATERAL (
+        SELECT m.created_at FROM messages m
+        WHERE m.booking_id = b.id AND m.sender_id = pp.user_id AND m.is_system = FALSE
+        ORDER BY m.created_at DESC LIMIT 1
+      ) last_photographer_msg ON TRUE
+      WHERE b.status = 'inquiry'
+        AND COALESCE(b.client_followup_sent, FALSE) = TRUE
+        AND COALESCE(b.client_followup_7d_sent, FALSE) = FALSE
+        AND EXTRACT(EPOCH FROM (NOW() - last_photographer_msg.created_at))/86400 >= 7
+        AND NOT EXISTS (
+          SELECT 1 FROM messages m2
+          WHERE m2.booking_id = b.id
+            AND m2.sender_id = b.client_id
+            AND m2.is_system = FALSE
+            AND m2.created_at > last_photographer_msg.created_at
+        )
+    `);
+
+    const BASE_URL2 = process.env.AUTH_URL || "https://photoportugal.com";
+
+    for (const c of silent7d) {
+      try {
+        const firstName = c.client_name.split(" ")[0];
+        await queueNotification({
+          channel: "email",
+          recipient: c.client_email,
+          subject: `Still thinking about your photoshoot in Portugal?`,
+          body: emailLayout(`
+            <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Still interested?</h2>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">It's been about a week since <strong>${c.photographer_name}</strong> replied to your message and we haven't heard back.</p>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">No pressure — if your plans have changed, just ignore this email. But if you're still considering a photoshoot in Portugal, ${c.photographer_name} is still available and would love to hear from you.</p>
+            ${emailButton(`${BASE_URL2}/dashboard/messages`, "Open chat")}
+            <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#9B8E82;">Need help choosing a different photographer or have questions? Just reply to this email.</p>
+          `),
+          dedupKey: `client_followup_7d_email:${c.booking_id}`,
+          recipientPhone: c.client_phone || undefined,
+        }).catch(console.error);
+        await query("UPDATE bookings SET client_followup_7d_sent = TRUE WHERE id = $1", [c.booking_id]);
+        clientFollowUps7d++;
+      } catch (err) {
+        results.errors.push(`Client 7d follow-up for booking ${c.booking_id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Client 7d follow-ups: ${err}`);
+  }
+
+  // === SILENT CLIENT 14-DAY ADMIN ALERT (client still silent — admin should reach out manually) ===
+  let clientFollowUps14dAlerted = 0;
+  try {
+    const silent14d = await query<{
+      booking_id: string;
+      client_name: string;
+      client_email: string;
+      photographer_name: string;
+      days_since_reply: number;
+    }>(`
+      SELECT
+        b.id as booking_id,
+        cu.name as client_name,
+        cu.email as client_email,
+        pu.name as photographer_name,
+        EXTRACT(EPOCH FROM (NOW() - last_photographer_msg.created_at))/86400 as days_since_reply
+      FROM bookings b
+      JOIN users cu ON cu.id = b.client_id
+      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+      JOIN users pu ON pu.id = pp.user_id
+      JOIN LATERAL (
+        SELECT m.created_at FROM messages m
+        WHERE m.booking_id = b.id AND m.sender_id = pp.user_id AND m.is_system = FALSE
+        ORDER BY m.created_at DESC LIMIT 1
+      ) last_photographer_msg ON TRUE
+      WHERE b.status = 'inquiry'
+        AND COALESCE(b.client_followup_14d_alerted, FALSE) = FALSE
+        AND EXTRACT(EPOCH FROM (NOW() - last_photographer_msg.created_at))/86400 >= 14
+        AND NOT EXISTS (
+          SELECT 1 FROM messages m2
+          WHERE m2.booking_id = b.id
+            AND m2.sender_id = b.client_id
+            AND m2.is_system = FALSE
+            AND m2.created_at > last_photographer_msg.created_at
+        )
+    `);
+
+    for (const c of silent14d) {
+      try {
+        const { sendTelegram } = await import("@/lib/telegram");
+        await sendTelegram(
+          `👻 <b>Client silent ${Math.round(c.days_since_reply)}d after photographer reply</b>\n\n` +
+          `Client: ${c.client_name} (${c.client_email})\n` +
+          `Photographer: ${c.photographer_name}\n` +
+          `Consider a personal reach-out.`,
+          "clients"
+        ).catch(console.error);
+        await query("UPDATE bookings SET client_followup_14d_alerted = TRUE WHERE id = $1", [c.booking_id]);
+        clientFollowUps14dAlerted++;
+      } catch (err) {
+        results.errors.push(`Client 14d admin alert for booking ${c.booking_id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Client 14d alerts: ${err}`);
   }
 
   // === MATCH REQUEST CHOICE REMINDER (24h after matches sent, client hasn't chosen) ===
@@ -1708,6 +1883,8 @@ export async function GET(req: NextRequest) {
     unansweredReminders12h,
     unansweredAdminAlerts,
     clientFollowUps,
+    clientFollowUps7d,
+    clientFollowUps14dAlerted,
     queueProcessed,
   });
 }

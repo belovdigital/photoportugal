@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useSwipeNavigation } from "@/lib/use-swipe";
 
 interface PortfolioItem {
   url: string;
@@ -137,6 +138,13 @@ export function PortfolioGallery({
       document.body.style.overflow = "";
     };
   }, [lightbox, navigate]);
+
+  useSwipeNavigation({
+    enabled: lightbox !== null,
+    onPrev: () => navigate(-1),
+    onNext: () => navigate(1),
+    onDismiss: () => setLightbox(null),
+  });
 
   // Preload adjacent full-res images when lightbox is open
   useEffect(() => {

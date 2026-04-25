@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, getLocale } from "next-intl/server";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { ConciergeDrawerProvider } from "@/components/concierge/ConciergeDrawer";
 
 export default async function NotFound() {
   const messages = await getMessages();
@@ -13,6 +14,7 @@ export default async function NotFound() {
   return (
     <NextIntlClientProvider messages={messages}>
       <SessionProvider>
+        <ConciergeDrawerProvider>
         <Header />
         <main className="flex-1">
           <div className="flex min-h-[70vh] items-center justify-center px-4">
@@ -51,6 +53,7 @@ export default async function NotFound() {
           </div>
         </main>
         <Footer />
+        </ConciergeDrawerProvider>
       </SessionProvider>
     </NextIntlClientProvider>
   );

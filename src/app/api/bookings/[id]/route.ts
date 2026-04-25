@@ -578,9 +578,17 @@ export async function PATCH(
                 [bookingDetails.client_id]
               );
               if (smsPrefs?.sms_bookings !== false) {
+                const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+                const cLocale = await getUserLocaleById(bookingDetails.client_id);
+                const smsBody = pickT({
+                  en: `Photo Portugal: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`,
+                  pt: `Photo Portugal: ${bookingDetails.photographer_name} confirmou a sua reserva! Veja o seu painel para os detalhes de pagamento.`,
+                  de: `Photo Portugal: ${bookingDetails.photographer_name} hat Ihre Buchung bestätigt! Zahlungsdetails finden Sie in Ihrem Dashboard.`,
+                  fr: `Photo Portugal : ${bookingDetails.photographer_name} a confirmé votre réservation ! Détails de paiement sur votre tableau de bord.`,
+                }, cLocale);
                 sendSMS(
                   clientPhone.phone,
-                  `Photo Portugal: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`
+                  smsBody
                 ).catch(err => console.error("[sms] error:", err));
               }
             }

@@ -13,6 +13,7 @@ import { ExitIntentPopup } from "@/components/ui/ExitIntentPopup";
 import { VisitorTracker } from "@/components/ui/VisitorTracker";
 import { LazyIntercom } from "@/components/ui/LazyIntercom";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import { ConciergeDrawerProvider } from "@/components/concierge/ConciergeDrawer";
 
 type Locale = "en" | "pt";
 
@@ -40,9 +41,11 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <SessionProvider>
         <NotificationProvider>
-          <Header />
-          <main className="flex-1 pb-16 sm:pb-24">{children}</main>
-          <Footer />
+          <ConciergeDrawerProvider>
+            <Header />
+            <main className="flex-1 pb-16 sm:pb-24">{children}</main>
+            <Footer />
+          </ConciergeDrawerProvider>
         </NotificationProvider>
         <ScrollToTop />
         <CookieConsent />

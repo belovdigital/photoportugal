@@ -193,9 +193,9 @@ function PhotographerSearchCard({
           {photographer.name}
         </p>
         <div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
-          {photographer.rating > 0 && (
+          {Number(photographer.rating) > 0 && (
             <span>
-              {"★"} {photographer.rating.toFixed(1)}
+              {"★"} {Number(photographer.rating).toFixed(1)}
             </span>
           )}
           {photographer.locations && (
@@ -639,8 +639,9 @@ export function AdminMatchRequestsTab({
       <div className="space-y-3">
         {sorted.map((req) => {
           const isOpen = expandedId === req.id;
-          const budgetLabel =
-            req.budget_range === "400+"
+          const budgetLabel = !req.budget_range
+            ? "—"
+            : req.budget_range === "400+"
               ? "€400+"
               : `€${req.budget_range.replace("-", "–")}`;
 
@@ -677,8 +678,9 @@ export function AdminMatchRequestsTab({
                     <span>{formatShootDate(req)}</span>
                     <span className="text-gray-300">|</span>
                     <span>
-                      {req.shoot_type.charAt(0).toUpperCase() +
-                        req.shoot_type.slice(1)}
+                      {req.shoot_type
+                        ? req.shoot_type.charAt(0).toUpperCase() + req.shoot_type.slice(1)
+                        : "Not specified"}
                     </span>
                     <span className="text-gray-300">|</span>
                     <span>{budgetLabel}</span>
@@ -722,8 +724,9 @@ export function AdminMatchRequestsTab({
                     <DetailItem
                       label="Shoot Type"
                       value={
-                        req.shoot_type.charAt(0).toUpperCase() +
-                        req.shoot_type.slice(1)
+                        req.shoot_type
+                          ? req.shoot_type.charAt(0).toUpperCase() + req.shoot_type.slice(1)
+                          : "—"
                       }
                     />
                     <DetailItem
@@ -751,7 +754,7 @@ export function AdminMatchRequestsTab({
                       <p className="text-[11px] font-medium uppercase tracking-wide text-blue-400 mb-1">
                         Admin Note
                       </p>
-                      <p className="text-sm text-blue-700">{req.admin_note}</p>
+                      <p className="text-sm text-blue-700 whitespace-pre-wrap">{req.admin_note}</p>
                     </div>
                   )}
 
@@ -783,8 +786,8 @@ export function AdminMatchRequestsTab({
                           Personal note for client (optional)
                         </p>
                         <textarea
-                          className="w-full rounded-lg border border-warm-200 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-200 resize-none"
-                          rows={2}
+                          className="w-full rounded-lg border border-warm-200 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-200 resize-y"
+                          rows={12}
                           placeholder="e.g. We think these photographers are perfect for your sunset session..."
                           value={adminComments[req.id] || ""}
                           onChange={(e) =>
@@ -854,8 +857,8 @@ export function AdminMatchRequestsTab({
                               Personal note for client (optional)
                             </p>
                             <textarea
-                              className="w-full rounded-lg border border-warm-200 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-200 resize-none"
-                              rows={2}
+                              className="w-full rounded-lg border border-warm-200 px-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-200 resize-y"
+                              rows={12}
                               placeholder="e.g. We think these photographers are perfect for your sunset session..."
                               value={adminComments[req.id] || ""}
                               onChange={(e) =>
@@ -947,8 +950,8 @@ export function AdminMatchRequestsTab({
                                     {p.name}
                                   </p>
                                   <p className="text-xs text-gray-500">
-                                    {p.rating > 0
-                                      ? `★ ${p.rating.toFixed(1)}/5`
+                                    {Number(p.rating) > 0
+                                      ? `★ ${Number(p.rating).toFixed(1)}/5`
                                       : "No rating"}
                                     {p.review_count > 0 && ` · ${p.review_count} reviews`}
                                     {p.price !== null

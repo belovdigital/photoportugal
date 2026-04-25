@@ -64,7 +64,39 @@ const L = {
     titleSuffix: "Reserve uma Sessão",
     hireDesc: "Contrate um fotógrafo profissional em",
   },
+  de: {
+    portugal: "Portugal",
+    photographerAt: "Fotograf bei",
+    about: "Über",
+    bestTime: "Beste Zeit zum Fotografieren:",
+    tips: "Tipps:",
+    shootersAt: "Fotografen, die hier arbeiten:",
+    handpickedIn: "Handverlesene Profis, die in",
+    viewAllIn: "Alle Fotografen ansehen in",
+    readyToBook: "Bereit zur Buchung?",
+    conciergeDesc: "Unser Concierge-Team wählt 2-3 Fotografen für Sie aus, die",
+    freeOfCharge: "— kostenfrei.",
+    getMatched: "Kostenlos vermitteln lassen",
+    browsePhotographers: "Fotografen ansehen",
+    otherSpots: "Weitere Orte in",
+    exploreMore: "Mehr entdecken",
+    travelGuide: "Reiseführer",
+    allLocations: "Alle {count} Orte in Portugal",
+    browseByType: "Nach Fotoshooting-Art stöbern",
+    reviewsTitle: "Echte Bewertungen von Fotoshootings in",
+    reviewsTitleSuffix: "",
+    realClient: "verifizierte Buchungen",
+    newLabel: "Neu",
+    titleSuffix: "Fotoshooting buchen",
+    hireDesc: "Buchen Sie einen professionellen Fotografen bei",
+  },
 };
+
+function pickL(locale: string): typeof L.en {
+  if (locale === "pt") return L.pt;
+  if (locale === "de") return L.de;
+  return L.en;
+}
 
 export const revalidate = 86400;
 
@@ -85,9 +117,11 @@ export async function generateMetadata({
   if (!location || !spotData) return {};
 
   const s = spotLocalized(spotData, locale);
-  const t = L[locale === "pt" ? "pt" : "en"];
+  const t = pickL(locale);
   const title = locale === "pt"
     ? `Fotógrafo em ${s.name}, ${location.name} — ${t.titleSuffix}`
+    : locale === "de"
+    ? `Fotograf bei ${s.name}, ${location.name} — ${t.titleSuffix}`
     : `${s.name} Photographer in ${location.name} — ${t.titleSuffix}`;
   const description = `${t.hireDesc} ${s.name}, ${location.name}, Portugal. ${s.description.slice(0, 140)}`;
   const alt = localeAlternates(`/spots/${city}/${spot}`, locale);
@@ -117,7 +151,7 @@ export default async function SpotPage({
   const spotData = getSpot(city, spot);
   if (!location || !spotData) notFound();
   const s = spotLocalized(spotData, locale);
-  const t = L[locale === "pt" ? "pt" : "en"];
+  const t = pickL(locale);
 
   // Photographers working in this city
   const photographers = await query<{

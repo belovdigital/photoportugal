@@ -8,9 +8,30 @@ import { Suspense } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar } from "@/components/ui/Avatar";
 import { trackSendMessage } from "@/lib/analytics";
+import { useSwipeNavigation } from "@/lib/use-swipe";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import imageCompression from "browser-image-compression";
 import { useWebSocket } from "@/hooks/useWebSocket";
+
+// Render structured message payloads (BOOKING_CARD:, DELIVERY:) as readable
+// previews in the sidebar instead of the raw JSON string.
+function formatLastMessagePreview(text: string | null): string | null {
+  if (!text) return null;
+  if (text.startsWith("BOOKING_CARD:")) {
+    try {
+      const card = JSON.parse(text.slice("BOOKING_CARD:".length));
+      return `📦 ${card.name} — €${Math.round(card.price)}`;
+    } catch {
+      return "📦 Package offer";
+    }
+  }
+  if (text.startsWith("DELIVERY:")) {
+    const parts = text.split(":");
+    const count = parts[1];
+    return `📸 Gallery delivered${count ? ` (${count} photos)` : ""}`;
+  }
+  return text;
+}
 
 interface Conversation {
   booking_id: string;
@@ -80,6 +101,20 @@ function MessagesContent() {
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [lightboxIndex, messages]);
+
+  useSwipeNavigation({
+    enabled: lightboxIndex !== null,
+    onPrev: () => {
+      const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-") && !m.media_url!.endsWith(".pdf"));
+      if (lightboxIndex !== null && lightboxIndex > 0) setLightboxIndex(lightboxIndex - 1);
+      void allMedia;
+    },
+    onNext: () => {
+      const allMedia = messages.filter((m) => m.media_url && !m.id.startsWith("temp-") && !m.media_url!.endsWith(".pdf"));
+      if (lightboxIndex !== null && lightboxIndex < allMedia.length - 1) setLightboxIndex(lightboxIndex + 1);
+    },
+    onDismiss: () => setLightboxIndex(null),
+  });
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sseStatus, setSSEStatus] = useState<SSEStatus>("disconnected");
@@ -484,11 +519,27 @@ function MessagesContent() {
     if (!activeChat) return;
     setShowPackagePicker(false);
     try {
-      await fetch("/api/messages/share-package", {
+      const res = await fetch("/api/messages/share-package", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ booking_id: activeChat, package_id: packageId }),
       });
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data?.message) {
+          setMessages((prev) => prev.some((m) => m.id === data.message.id) ? prev : [...prev, {
+            ...data.message,
+            sender_name: session?.user?.name || "",
+            sender_avatar: session?.user?.image || null,
+          }]);
+          setConversations((prev) => prev.map((c) =>
+            c.booking_id === activeChat
+              ? { ...c, last_message: data.message.text, last_message_at: data.message.created_at }
+              : c
+          ));
+          setTimeout(() => scrollToBottom(true), 10);
+        }
+      }
     } catch {}
   }
 
@@ -622,7 +673,7 @@ function MessagesContent() {
                       )}
                     </div>
                     <p className={`mt-0.5 text-xs leading-4 line-clamp-2 ${convo.unread_count > 0 ? "text-gray-600" : "text-gray-400"}`}>
-                      {convo.last_message || t("startConversation")}
+                      {formatLastMessagePreview(convo.last_message) || t("startConversation")}
                     </p>
                   </div>
                 </button>

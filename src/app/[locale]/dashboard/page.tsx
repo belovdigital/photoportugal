@@ -154,11 +154,13 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
 
   const [pendingBookings, totalBookings, portfolioCount, packageCount, locationCount] = await Promise.all([
     queryOne<{ count: string }>(
+      // Pending = awaiting photographer action. 'inquiry' is admin-only (pre-booking chat) and must not show up here.
       "SELECT COUNT(*) as count FROM bookings WHERE photographer_id = $1 AND status = 'pending'",
       [profile.id]
     ),
     queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM bookings WHERE photographer_id = $1",
+      // Total = confirmed bookings only (payment received, not cancelled, not the admin-only inquiry pseudo-status).
+      "SELECT COUNT(*) as count FROM bookings WHERE photographer_id = $1 AND payment_status = 'paid' AND status NOT IN ('inquiry', 'cancelled')",
       [profile.id]
     ),
     queryOne<{ count: string }>(

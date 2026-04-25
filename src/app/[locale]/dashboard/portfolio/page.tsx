@@ -16,10 +16,11 @@ export default async function PortfolioPage() {
   const profile = await queryOne<{
     id: string; slug: string; name: string; tagline: string | null; bio: string | null;
     avatar_url: string | null; cover_url: string | null; cover_position_y: number; languages: string[]; shoot_types: string[];
-    hourly_rate: number | null; experience_years: number; plan: string; rating: number;
+    hourly_rate: number | null; experience_years: number; career_start_year: number | null;
+    plan: string; rating: number;
     review_count: number; session_count: number; is_approved: boolean;
   }>(`SELECT pp.id, pp.slug, u.name, pp.tagline, pp.bio, u.avatar_url, pp.cover_url, pp.cover_position_y,
-      pp.languages, pp.shoot_types, pp.hourly_rate, pp.experience_years, pp.plan,
+      pp.languages, pp.shoot_types, pp.hourly_rate, pp.experience_years, pp.career_start_year, pp.plan,
       pp.rating, pp.review_count, pp.session_count, pp.is_approved
       FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.user_id = $1`, [userId]);
   if (!profile) redirect("/dashboard");

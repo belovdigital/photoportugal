@@ -7,6 +7,7 @@ import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { trackSearch } from "@/lib/analytics";
 
 function TeamOnlineIndicator() {
+  const t = useTranslations("photographers");
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60000);
@@ -24,13 +25,12 @@ function TeamOnlineIndicator() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
         </span>
-        Team is online now
+        {t("teamOnlineNow")}
       </span>
     );
   }
 
   // Calculate hours until 8:00 AM Portugal time
-  const ptNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Lisbon" }));
   let hoursUntil: number;
   if (ptHour >= 23) {
     hoursUntil = 24 - ptHour + 8;
@@ -41,7 +41,7 @@ function TeamOnlineIndicator() {
   return (
     <span className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
       <span className="inline-flex h-2 w-2 rounded-full bg-gray-300" />
-      Team will be online in {hoursUntil}h
+      {t("teamWillBeOnlineIn", { hours: hoursUntil })}
     </span>
   );
 }
@@ -76,6 +76,16 @@ export function PhotographerCatalog({
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showFiltersDropdown, setShowFiltersDropdown] = useState(false);
   const [mobileSheet, setMobileSheet] = useState<null | "location" | "filters">(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  // Accent-insensitive normalization: á/ã/ç/é/ü... → a/a/c/e/u (works for Portuguese, German, French, etc.)
+  const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
   function applyBucket(key: string) {
     if (activeBucket === key) {
@@ -151,6 +161,15 @@ export function PhotographerCatalog({
   const filtered = useMemo(() => {
     let result = photographers;
 
+    const trimmedSearch = searchQuery.trim();
+    if (trimmedSearch) {
+      const q = normalize(trimmedSearch);
+      result = result.filter((p) =>
+        normalize(p.name).includes(q) ||
+        p.locations.some((l) => normalize(l.name).includes(q))
+      );
+    }
+
     if (locationFilters.length > 0) {
       result = result.filter((p) =>
         p.locations.some((l) => locationFilters.includes(l.slug))
@@ -214,7 +233,7 @@ export function PhotographerCatalog({
     }
 
     return result;
-  }, [photographers, locationFilters, shootTypeFilters, languageFilter, bucketFlags, sortBy]);
+  }, [photographers, locationFilters, shootTypeFilters, languageFilter, bucketFlags, sortBy, searchQuery]);
 
   const secondaryCount = shootTypeFilters.length + (languageFilter ? 1 : 0);
   const activeFilterCount = locationFilters.length + secondaryCount;
@@ -251,6 +270,35 @@ export function PhotographerCatalog({
 
       {/* Mobile sticky filter bar (< sm only) */}
       <div className="sticky top-16 z-20 -mx-4 mt-3 border-b border-warm-200 bg-warm-50/95 px-4 py-2 backdrop-blur sm:hidden">
+        {/* Mobile search input — full-width row above chips when active */}
+        {(searchOpen || searchQuery) && (
+          <div className="mb-2 flex items-center gap-2 rounded-full border border-primary-300 bg-white px-3.5 py-2">
+            <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              autoFocus
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
+              placeholder={t("filters.searchPlaceholder")}
+              className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(""); setSearchOpen(false); }}
+                className="shrink-0 rounded-full p-0.5 text-gray-400 hover:bg-warm-100 hover:text-gray-700"
+                aria-label="Clear search"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
         <div className="flex gap-2 overflow-x-auto">
           <button
             onClick={() => setMobileSheet("location")}
@@ -283,6 +331,18 @@ export function PhotographerCatalog({
                 {shootTypeFilters.length + (languageFilter ? 1 : 0)}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setSearchOpen((o) => !o)}
+            aria-label={t("filters.searchPlaceholder")}
+            className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-sm font-medium transition ${
+              searchQuery ? "border-primary-500 bg-primary-50 text-primary-700" : "border-gray-300 bg-white text-gray-700"
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            {searchQuery && <span className="max-w-[80px] truncate text-xs">{searchQuery}</span>}
           </button>
           <select
             value={sortBy}
@@ -347,7 +407,7 @@ export function PhotographerCatalog({
             <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
-            Summer season is filling up — book early to secure your preferred date
+            {t("summerSeasonNotice")}
           </p>
         ) : null;
       })()}
@@ -560,6 +620,58 @@ export function PhotographerCatalog({
               {t("filters.clearAll", { count: activeFilterCount })}
             </button>
           )}
+
+          {/* Search — icon chip pinned to the right edge of the row. Width never changes, so nothing shifts when typing. */}
+          <div className="relative ml-auto">
+            <button
+              type="button"
+              onClick={() => setSearchOpen((o) => !o)}
+              aria-label={t("filters.searchPlaceholder")}
+              className={`flex items-center rounded-full border px-3 py-1 text-xs font-medium transition ${
+                searchQuery
+                  ? "border-primary-300 bg-primary-50 text-primary-700"
+                  : "border-warm-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-700"
+              }`}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+
+            {searchOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setSearchOpen(false)} />
+                <div className="absolute right-0 top-full z-20 mt-1 w-80 rounded-xl border border-warm-200 bg-white p-4 shadow-lg">
+                  <div className="flex items-center gap-2.5 rounded-lg border border-gray-200 px-3.5 py-2.5 focus-within:border-primary-400">
+                    <svg className="h-5 w-5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Escape") setSearchOpen(false); if (e.key === "Enter") setSearchOpen(false); }}
+                      placeholder={t("filters.searchPlaceholder")}
+                      className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => { setSearchQuery(""); searchInputRef.current?.focus(); }}
+                        className="shrink-0 rounded-full p-1 text-gray-400 hover:bg-warm-100 hover:text-gray-700"
+                        aria-label="Clear search"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

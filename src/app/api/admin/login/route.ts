@@ -24,7 +24,7 @@ export function verifyToken(token: string): { email: string; timestamp: number }
 
     const [email, ts] = payload.split(":");
     const timestamp = parseInt(ts);
-    if (Date.now() - timestamp > 24 * 60 * 60 * 1000) return null;
+    if (Date.now() - timestamp > 30 * 24 * 60 * 60 * 1000) return null;
     return { email, timestamp };
   } catch {
     return null;
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
     });
 
     return response;

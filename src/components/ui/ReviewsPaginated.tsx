@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { formatPublicName } from "@/lib/format-name";
+import { useSwipeNavigation } from "@/lib/use-swipe";
 
 interface Review {
   id: string;
@@ -83,6 +84,13 @@ export function ReviewsPaginated({
     };
   }, [lightbox, navigate]);
 
+  useSwipeNavigation({
+    enabled: lightbox !== null,
+    onPrev: () => navigate(-1),
+    onNext: () => navigate(1),
+    onDismiss: () => setLightbox(null),
+  });
+
   // Preload adjacent photos
   useEffect(() => {
     if (lightbox === null) return;
@@ -113,6 +121,29 @@ export function ReviewsPaginated({
           </div>
         )}
       </div>
+
+      {allPhotos.length > 0 && (
+        <div className="mt-5 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:thin]">
+          <div className="flex gap-2">
+            {allPhotos.map((p, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setLightbox(i)}
+                className="relative shrink-0 overflow-hidden rounded-lg border border-warm-200 transition hover:opacity-90 hover:shadow-md"
+                aria-label={`Open review photo ${i + 1} of ${allPhotos.length}`}
+              >
+                <img
+                  src={p.url}
+                  alt={p.reviewerName ? `Photo from ${p.reviewerName}'s review` : "Client review photo"}
+                  loading="lazy"
+                  className="h-24 w-24 object-cover sm:h-28 sm:w-28"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 space-y-6">
         {shown.map((review) => {

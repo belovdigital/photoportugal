@@ -14,7 +14,7 @@ function isBot(ua: string): boolean {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { visitor_id, session_id, referrer, utm_source, utm_medium, utm_campaign, utm_term, gclid, landing_page, screen_width, language } = body;
+    const { visitor_id, session_id, referrer, utm_source, utm_medium, utm_campaign, utm_term, gclid, landing_page, screen_width, language, ab_hero } = body;
 
     if (!visitor_id || !session_id) return NextResponse.json({ ok: true });
 
@@ -34,11 +34,12 @@ export async function POST(req: NextRequest) {
 
     const initialPageview = JSON.stringify([{ path: landing_page || "/", ts: new Date().toISOString() }]);
 
+    const abHero = ab_hero === "A" || ab_hero === "B" ? ab_hero : null;
     await queryOne(
-      `INSERT INTO visitor_sessions (id, visitor_id, referrer, utm_source, utm_medium, utm_campaign, utm_term, gclid, landing_page, user_agent, device_type, country, language, screen_width, pageviews, pageview_count)
-       VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, 1)
+      `INSERT INTO visitor_sessions (id, visitor_id, referrer, utm_source, utm_medium, utm_campaign, utm_term, gclid, landing_page, user_agent, device_type, country, language, screen_width, pageviews, pageview_count, ab_hero)
+       VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, 1, $16)
        ON CONFLICT (id) DO NOTHING`,
-      [session_id, visitor_id, referrer || null, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null, landing_page || null, ua.slice(0, 500), deviceType, country, acceptLang, screen_width || null, initialPageview]
+      [session_id, visitor_id, referrer || null, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null, landing_page || null, ua.slice(0, 500), deviceType, country, acceptLang, screen_width || null, initialPageview, abHero]
     );
 
     return NextResponse.json({ ok: true });

@@ -83,6 +83,11 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             return;
           } else {
             setPhotographer(data);
+            // Pre-fill message if user came from AI Concierge with prefill_message param
+            const prefill = searchParams.get("prefill_message");
+            if (prefill) {
+              setMessage(decodeURIComponent(prefill).slice(0, 1000));
+            }
             if (data.packages?.length > 0) {
               const pkgParam = searchParams.get("package");
               const fromUrl = pkgParam ? data.packages.find((p: Package) => p.id === pkgParam) : null;
@@ -265,6 +270,26 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         {t("title", { photographer: photographer.name })}
       </h1>
       <p className="mt-2 text-gray-500">{t("subtitle")}</p>
+
+      <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+        <p className="text-sm font-semibold text-emerald-900">
+          {t("trust.heading")}
+        </p>
+        <ul className="mt-2 space-y-1 text-[13px] text-emerald-800">
+          <li className="flex items-start gap-1.5">
+            <span className="mt-0.5">✓</span><span>{t("trust.freeRequest")}</span>
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="mt-0.5">✓</span><span>{t("trust.payAfterConfirm")}</span>
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="mt-0.5">✓</span><span>{t("trust.cancelAnytime")}</span>
+          </li>
+          <li className="flex items-start gap-1.5">
+            <span className="mt-0.5">✓</span><span>{t("trust.stripeSecure")}</span>
+          </li>
+        </ul>
+      </div>
 
       {error && (
         <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>

@@ -77,6 +77,9 @@ export function VisitorTracker() {
       }
       if (gclid) persist("gclid", gclid);
 
+      // Read A/B hero variant cookie (set by inline head script on homepage)
+      const abHero = document.cookie.match(/(?:^|; )ab_hero=(A|B)/)?.[1] || null;
+
       // Start new session
       fetch("/api/track-session", {
         method: "POST",
@@ -93,6 +96,7 @@ export function VisitorTracker() {
           landing_page: window.location.pathname,
           screen_width: window.innerWidth,
           language: navigator.language,
+          ab_hero: abHero,
         }),
       }).catch(() => {});
     } else {

@@ -80,6 +80,33 @@ export async function PATCH(req: NextRequest) {
       values
     );
 
+    // First-time approval: backfill translations for any dirty content (bio, tagline, packages)
+    if (updates.is_approved === true && !wasAlreadyApproved) {
+      try {
+        const profileRow = await queryOne<{ id: string; tagline: string | null; bio: string | null }>(
+          "SELECT id, tagline, bio FROM photographer_profiles WHERE id = $1 AND COALESCE(translations_dirty, TRUE) = TRUE",
+          [id]
+        );
+        if (profileRow && (profileRow.tagline || profileRow.bio)) {
+          import("@/lib/translate-content").then(({ translatePhotographerProfile }) =>
+            translatePhotographerProfile(profileRow.id, profileRow.tagline, profileRow.bio),
+          ).catch((e) => console.error("[admin] approval translate profile error:", e));
+        }
+        // Also translate any dirty packages for this photographer
+        const dirtyPkgs = await query<{ id: string; name: string; description: string | null }>(
+          "SELECT id, name, description FROM packages WHERE photographer_id = $1 AND COALESCE(translations_dirty, TRUE) = TRUE",
+          [id]
+        );
+        for (const pkg of dirtyPkgs) {
+          import("@/lib/translate-content").then(({ translatePackage }) =>
+            translatePackage(pkg.id, pkg.name, pkg.description),
+          ).catch((e) => console.error("[admin] approval translate package error:", e));
+        }
+      } catch (translateErr) {
+        console.error("[admin] approval backfill translate error:", translateErr);
+      }
+    }
+
     // Send approval email only when photographer is newly approved (was not approved before)
     if (updates.is_approved === true && !wasAlreadyApproved) {
       try {

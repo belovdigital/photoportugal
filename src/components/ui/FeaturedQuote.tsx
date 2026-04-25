@@ -27,7 +27,7 @@ export async function FeaturedQuote({ review, invert = false }: { review: Public
       </blockquote>
       <figcaption className={`mt-4 text-sm ${aboutCls}`}>
         <span className={`font-semibold not-italic ${nameCls}`}>{displayName}</span>
-        <span> — about </span>
+        <span> — {tc("featuredQuoteAbout")} </span>
         <Link href={`/photographers/${review.photographer_slug}`} className={linkCls}>
           {review.photographer_name}
         </Link>

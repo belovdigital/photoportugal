@@ -5,8 +5,8 @@ import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { getPricingForDuration, DURATION_OPTIONS } from "@/lib/package-pricing";
 
 async function getProfile(userId: string) {
-  return queryOne<{ id: string; plan: string }>(
-    "SELECT id, plan FROM photographer_profiles WHERE user_id = $1",
+  return queryOne<{ id: string; plan: string; is_approved: boolean }>(
+    "SELECT id, plan, is_approved FROM photographer_profiles WHERE user_id = $1",
     [userId]
   );
 }
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const pkg = await queryOne(
+    const pkg = await queryOne<{ id: string }>(
       `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, is_popular, delivery_days, is_public, features)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
@@ -88,7 +88,13 @@ export async function POST(req: NextRequest) {
     );
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
-    return NextResponse.json({ success: true, id: (pkg as { id: string }).id });
+    // Only translate for approved profiles — admin approval triggers backfill for unapproved.
+    if (pkg && name && profile.is_approved) {
+      import("@/lib/translate-content").then(({ translatePackage }) =>
+        translatePackage(pkg.id, name, description || null),
+      ).catch((e) => console.error("[packages] translate error:", e));
+    }
+    return NextResponse.json({ success: true, id: pkg!.id });
   } catch (error) {
     console.error("Package create error:", error);
     return NextResponse.json({ error: "Failed to create package" }, { status: 500 });
@@ -130,8 +136,15 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const pkg = await queryOne(
-      `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7, is_public = $8, features = $9
+    // Read previous name/description so we only retranslate when text actually changed
+    const prev = await queryOne<{ name: string; description: string | null }>(
+      "SELECT name, description FROM packages WHERE id = $1 AND photographer_id = $2",
+      [id, profile.id]
+    );
+
+    const pkg = await queryOne<{ id: string }>(
+      `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7, is_public = $8, features = $9,
+              translations_dirty = CASE WHEN name IS DISTINCT FROM $1 OR description IS DISTINCT FROM $2 THEN TRUE ELSE translations_dirty END
        WHERE id = $10 AND photographer_id = $11
        RETURNING id`,
       [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, cleanFeatures, id, profile.id]
@@ -142,6 +155,13 @@ export async function PUT(req: NextRequest) {
     }
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
+    const nameChanged = (prev?.name || "") !== (name || "");
+    const descChanged = (prev?.description || null) !== (description || null);
+    if ((nameChanged || descChanged) && profile.is_approved) {
+      import("@/lib/translate-content").then(({ translatePackage }) =>
+        translatePackage(pkg.id, name, description || null),
+      ).catch((e) => console.error("[packages] translate error:", e));
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Package update error:", error);

@@ -1,4 +1,5 @@
 import { query } from "@/lib/db";
+import { unstable_cache } from "next/cache";
 
 export interface PublicReview {
   id: string;
@@ -70,13 +71,37 @@ const WHERE_APPROVED = `
 `;
 
 /**
- * Curated homepage / section-level reviews: prefer reviews with photos,
- * max 2 per photographer for variety.
+ * Aggregate rating + count across all approved reviews (approved photographers only).
+ * Cached for 1 week — review totals change slowly, no need to hit the DB every request.
+ */
+export const getSiteReviewStats = unstable_cache(
+  async (): Promise<{ count: number; avgRating: number }> => {
+    try {
+      const rows = await query<{ count: string; avg_rating: string | null }>(
+        `SELECT COUNT(*)::text as count, ROUND(AVG(r.rating)::numeric, 1)::text as avg_rating
+         FROM reviews r
+         JOIN photographer_profiles pp ON pp.id = r.photographer_id
+         WHERE r.is_approved = TRUE AND pp.is_approved = TRUE`
+      );
+      const r = rows[0];
+      return {
+        count: Number(r?.count ?? 0),
+        avgRating: r?.avg_rating ? Number(r.avg_rating) : 5.0,
+      };
+    } catch {
+      return { count: 0, avgRating: 5.0 };
+    }
+  },
+  ["site-review-stats"],
+  { revalidate: 3600, tags: ["site-review-stats"] }
+);
+
+/**
+ * Homepage reviews — fully random, at most 2 per photographer for variety.
+ * No prioritisation of reviews with photos — each review competes equally.
  */
 export async function getHomepageReviews(limit = 9): Promise<PublicReview[]> {
   try {
-    // Randomised across photographers: at most 2 per photographer, photos-first,
-    // then RANDOM() so each cache cycle surfaces a different cross-section.
     const rows = await query<DbRow>(
       `WITH ranked AS (
          SELECT ${BASE_SELECT},
@@ -89,7 +114,7 @@ export async function getHomepageReviews(limit = 9): Promise<PublicReview[]> {
               photo_url, client_country
        FROM ranked
        WHERE rn_per_photographer <= 2
-       ORDER BY photo_url IS NULL, RANDOM()
+       ORDER BY RANDOM()
        LIMIT $1`,
       [limit]
     );
