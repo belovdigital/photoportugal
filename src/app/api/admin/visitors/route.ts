@@ -94,6 +94,16 @@ export async function GET(req: Request) {
 
   // Recent sessions
   // Filter out bots: Googlebot, headless crawlers, and high-frequency scrapers
+  // Also hide test accounts (Kate Belova's user_id and any visitor that ever linked to her).
+  const HIDDEN_USER_IDS = ["1fe40315-bd00-4530-a6be-39fa970617bd"]; // Kate Belova — testing
+  const hiddenUserSql = HIDDEN_USER_IDS.length > 0
+    ? `AND (vs.user_id IS NULL OR vs.user_id NOT IN (${HIDDEN_USER_IDS.map(id => `'${id}'`).join(",")}))
+       AND vs.visitor_id NOT IN (
+         SELECT vs2.visitor_id FROM visitor_sessions vs2
+         WHERE vs2.user_id IN (${HIDDEN_USER_IDS.map(id => `'${id}'`).join(",")})
+       )`
+    : "";
+
   const botFilter = `AND vs.user_agent NOT ILIKE '%googlebot%'
     AND vs.user_agent NOT ILIKE '%AdsBot%'
     AND vs.user_agent NOT ILIKE '%Mediapartners%'
@@ -101,6 +111,7 @@ export async function GET(req: Request) {
     AND vs.user_agent NOT ILIKE '%AhrefsBot%'
     AND vs.user_agent NOT ILIKE '%SemrushBot%'
     AND vs.user_agent NOT ILIKE '%HeadlessChrome%'
+    ${hiddenUserSql}
     AND vs.visitor_id NOT IN (
       SELECT visitor_id FROM visitor_sessions
       WHERE started_at >= NOW() - INTERVAL '1 hour'

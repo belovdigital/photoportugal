@@ -35,6 +35,10 @@ export function useWebSocket({
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttempt = useRef(0);
+  // intentionalCloseRef = true means "we closed this on purpose, don't reconnect".
+  // Set whenever we tear down (cleanup or chat switch) so the dying socket's
+  // onclose handler doesn't fight the fresh connection just being opened.
+  const intentionalCloseRef = useRef(false);
   const [status, setStatus] = useState<"connected" | "disconnected" | "reconnecting">("disconnected");
 
   // Use refs for callbacks to avoid reconnecting on every render
@@ -52,16 +56,29 @@ export function useWebSocket({
   const connect = useCallback(() => {
     if (!bookingId || !token) return;
 
+    // Cancel any pending reconnect from a previous WS instance.
+    if (reconnectTimer.current) {
+      clearTimeout(reconnectTimer.current);
+      reconnectTimer.current = null;
+    }
+
     if (wsRef.current) {
+      // Mark stale socket as intentional so its onclose doesn't trigger reconnect.
+      intentionalCloseRef.current = true;
+      wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
       wsRef.current.close();
       wsRef.current = null;
     }
+    intentionalCloseRef.current = false;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const ws = new WebSocket(`${protocol}//${window.location.host}/ws?token=${token}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
+      // Only react if this is still the active socket.
+      if (wsRef.current !== ws) return;
       reconnectAttempt.current = 0;
       setStatus("connected");
       onStatusChangeRef.current?.("connected");
@@ -69,6 +86,7 @@ export function useWebSocket({
     };
 
     ws.onmessage = (event) => {
+      if (wsRef.current !== ws) return;
       try {
         const data = JSON.parse(event.data);
         switch (data.type) {
@@ -89,6 +107,9 @@ export function useWebSocket({
     };
 
     ws.onclose = () => {
+      // Suppress reconnect & status churn when WE closed this socket on purpose
+      // (cleanup or chat switch). Otherwise the dying handler races the fresh one.
+      if (intentionalCloseRef.current || wsRef.current !== ws) return;
       setStatus("reconnecting");
       onStatusChangeRef.current?.("reconnecting");
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempt.current), 30000);
@@ -97,6 +118,7 @@ export function useWebSocket({
     };
 
     ws.onerror = () => {
+      if (intentionalCloseRef.current || wsRef.current !== ws) return;
       ws.close();
     };
   }, [bookingId, token]); // Only reconnect when bookingId or token changes
@@ -104,8 +126,15 @@ export function useWebSocket({
   useEffect(() => {
     connect();
     return () => {
-      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      // Mark close as intentional BEFORE actually closing so onclose doesn't reconnect.
+      intentionalCloseRef.current = true;
+      if (reconnectTimer.current) {
+        clearTimeout(reconnectTimer.current);
+        reconnectTimer.current = null;
+      }
       if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
         wsRef.current.close();
         wsRef.current = null;
       }
