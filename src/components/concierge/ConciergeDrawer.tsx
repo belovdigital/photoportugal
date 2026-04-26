@@ -26,6 +26,7 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("concierge");
+  const tc = useTranslations("common");
 
   // Don't show drawer when already on /concierge page (would be redundant)
   const onConciergePage = pathname.endsWith("/concierge");
@@ -132,13 +133,13 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
                     </span>
-                    Online
+                    {t("online")}
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                aria-label="Close"
+                aria-label={tc("close")}
                 className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition hover:bg-warm-100 hover:text-gray-700"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

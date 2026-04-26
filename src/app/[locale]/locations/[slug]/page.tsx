@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { locations, getLocationBySlug, getNearbyLocations, locationFaqs, locField } from "@/lib/locations-data";
+import { locations, getLocationBySlug, getNearbyLocations, locationFaqs, locField, faqField } from "@/lib/locations-data";
+import { localizeShootType } from "@/lib/shoot-type-labels";
 import { photoSpots } from "@/lib/photo-spots-data";
-import { getLocationServices } from "@/lib/location-services-data";
+import { getLocationServices, serviceDescription } from "@/lib/location-services-data";
 import { locationImage, unsplashUrl } from "@/lib/unsplash-images";
 
 const SHOOT_TYPE_IMAGES: Record<string, string> = {
@@ -272,10 +273,14 @@ export default async function LocationPage({
   }
 
   const faqs = locationFaqs[slug] || [];
-  const jsonLdFaq = faqs.length > 0 ? {
+  const localizedFaqs = faqs.map((faq) => ({
+    question: faqField(faq, "question", locale),
+    answer: faqField(faq, "answer", locale),
+  }));
+  const jsonLdFaq = localizedFaqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
+    mainEntity: localizedFaqs.map((faq) => ({
       "@type": "Question",
       name: faq.question,
       acceptedAnswer: {
@@ -287,15 +292,15 @@ export default async function LocationPage({
 
   const locationReviews = await getReviewsForLocation(slug, 6, locale);
 
-  // Shoot types available for internal linking
+  // Shoot types available for internal linking — localized via shoot-type-labels
   const shootTypeLinks = [
-    { slug: "couples", label: "Couples Photoshoots" },
-    { slug: "family", label: "Family Photoshoots" },
-    { slug: "proposal", label: "Proposal Photoshoots" },
-    { slug: "solo", label: "Solo Portrait Photoshoots" },
-    { slug: "engagement", label: "Engagement Photoshoots" },
-    { slug: "honeymoon", label: "Honeymoon Photoshoots" },
-  ];
+    { slug: "couples", canonical: "Couples" },
+    { slug: "family", canonical: "Family" },
+    { slug: "proposal", canonical: "Proposal" },
+    { slug: "solo", canonical: "Solo Portrait" },
+    { slug: "engagement", canonical: "Engagement" },
+    { slug: "honeymoon", canonical: "Honeymoon" },
+  ].map((s) => ({ slug: s.slug, label: t("shootTypeCardLabel", { type: localizeShootType(s.canonical, locale) }) }));
 
   return (
     <>
@@ -539,8 +544,8 @@ export default async function LocationPage({
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
             <ReviewsStrip
               reviews={locationReviews}
-              title={`What travelers say about photoshoots in ${location.name}`}
-              subtitle="Real reviews from verified bookings"
+              title={t("whatTravelersSay", { location: localizedName })}
+              subtitle={t("realReviewsSubtitle")}
               compact
             />
           </div>
@@ -577,7 +582,7 @@ export default async function LocationPage({
                       {imgId ? (
                         <OptimizedImage
                           src={unsplashUrl(imgId, 400)}
-                          alt={`${service.label} photoshoot in ${location.name}`}
+                          alt={t("altShootInLocation", { type: localizeShootType(service.label, locale), location: localizedName })}
                           width={400}
                           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
                         />
@@ -588,10 +593,10 @@ export default async function LocationPage({
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <h3 className="font-display text-xl font-bold text-white">
-                        {service.label} {t("photoshootIn")} {location.name}
+                        {localizeShootType(service.label, locale)} {t("photoshootIn")} {localizedName}
                       </h3>
                       <p className="mt-1 text-sm text-gray-200 line-clamp-2">
-                        {service.description}
+                        {serviceDescription(service, locale)}
                       </p>
                     </div>
                   </Link>
@@ -606,7 +611,7 @@ export default async function LocationPage({
       <section className="border-t border-warm-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">Explore:</span>
+            <span className="text-sm font-semibold text-gray-700">{t("explore")}</span>
             {shootTypeLinks.map((st) => (
               <Link
                 key={st.slug}
@@ -681,14 +686,14 @@ export default async function LocationPage({
       )}
 
       {/* FAQ Section — only for top locations with FAQ data */}
-      {faqs.length > 0 && (
+      {localizedFaqs.length > 0 && (
         <section className="border-t border-warm-200 bg-white">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
             <h2 className="font-display text-3xl font-bold text-gray-900">
-              Frequently Asked Questions About Photography in {location.name}
+              {t("faqHeading", { location: localizedName })}
             </h2>
             <div className="mt-8 space-y-4">
-              {faqs.map((faq, i) => (
+              {localizedFaqs.map((faq, i) => (
                 <details
                   key={i}
                   className="group rounded-xl border border-warm-200 bg-warm-50"
@@ -789,7 +794,7 @@ export default async function LocationPage({
         <div className="absolute inset-0">
           <OptimizedImage
             src={locationImage(location.slug, "card")}
-            alt={`Professional vacation photoshoot in ${location.name}, Portugal`}
+            alt={t("altProfessionalShoot", { location: localizedName })}
             width={600}
             className="h-full w-full"
           />

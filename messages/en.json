@@ -96,7 +96,17 @@
     "saveToWishlist": "Save to wishlist",
     "selectDate": "Select date",
     "unavailable": "Unavailable",
-    "today": "Today"
+    "today": "Today",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close",
+    "dismiss": "Dismiss",
+    "previous": "Previous",
+    "next": "Next",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "browseAllPhotographers": "Browse all photographers",
+    "photoViewer": "Photo viewer"
   },
   "nav": {
     "announcement": "Professional vacation photography",
@@ -134,7 +144,7 @@
     "learnMore": "Learn More",
     "bookPhotoshoot": "Book a Photoshoot",
     "conciergeAriaLabel": "AI Concierge — find your photographer",
-    "findMePhotographer": "Find Me a Photographer",
+    "findMePhotographer": "Help Me Choose",
     "findPhotographers": "Find Photographers",
     "allDestinations": "All Destinations",
     "dashboard": "Dashboard",
@@ -166,7 +176,6 @@
     "megaTrustQuality": "Trust & Quality",
     "megaCompany": "Company",
     "megaBrowseDesc": "Browse photographers by location, style & availability",
-    "findMePhotographer": "Help Me Choose",
     "megaMatchDesc": "We'll hand-pick the perfect photographer for you",
     "megaAboutDesc": "Our story and the team behind Photo Portugal",
     "megaContactDesc": "Get in touch with our team",
@@ -228,12 +237,36 @@
       "securePayments": "Secure Stripe payments"
     },
     "floatingReviews": [
-      { "text": "Aleksandra made us feel so comfortable. The photos are incredible!", "author": "Sarah T.", "location": "Lisbon" },
-      { "text": "Cindy captured our proposal perfectly. We couldn't stop crying looking at the photos!", "author": "James R.", "location": "Algarve" },
-      { "text": "Monica knew the most beautiful hidden spots in Sintra. Absolutely magical session!", "author": "Emma L.", "location": "Sintra" },
-      { "text": "Kate was so fun to work with! Our family photos turned out beyond amazing.", "author": "Rachel M.", "location": "Lisbon" },
-      { "text": "Jonathan made our sunset shoot in Lagos an unforgettable experience. Truly talented!", "author": "David K.", "location": "Lagos" },
-      { "text": "Elena took the most stunning solo portraits of me in Porto. Best souvenir ever!", "author": "Sophie W.", "location": "Porto" }
+      {
+        "text": "Aleksandra made us feel so comfortable. The photos are incredible!",
+        "author": "Sarah T.",
+        "location": "Lisbon"
+      },
+      {
+        "text": "Cindy captured our proposal perfectly. We couldn't stop crying looking at the photos!",
+        "author": "James R.",
+        "location": "Algarve"
+      },
+      {
+        "text": "Monica knew the most beautiful hidden spots in Sintra. Absolutely magical session!",
+        "author": "Emma L.",
+        "location": "Sintra"
+      },
+      {
+        "text": "Kate was so fun to work with! Our family photos turned out beyond amazing.",
+        "author": "Rachel M.",
+        "location": "Lisbon"
+      },
+      {
+        "text": "Jonathan made our sunset shoot in Lagos an unforgettable experience. Truly talented!",
+        "author": "David K.",
+        "location": "Lagos"
+      },
+      {
+        "text": "Elena took the most stunning solo portraits of me in Porto. Best souvenir ever!",
+        "author": "Sophie W.",
+        "location": "Porto"
+      }
     ],
     "stats": {
       "stunningLocations": "Stunning Locations",
@@ -989,13 +1022,64 @@
     "faq": {
       "title": "Frequently Asked Questions",
       "items": [
-        { "q": "Do I need to be a professional photographer?", "a": "Yes. We hand-vet every photographer. You should have a strong portfolio, professional equipment, and experience shooting paid sessions. Hobbyists are not accepted." },
-        { "q": "Do I need to live in Portugal?", "a": "You must be based in Portugal or legally able to work here. Most of our photographers live in or near the cities they serve (Lisbon, Porto, Algarve, etc.)." },
-        { "q": "How much do you take from each booking?", "a": "We charge a 15% platform fee on each booking (reduced to 10% for Premium plan). You keep the rest. No upfront costs and no subscription required to get started." },
-        { "q": "How and when do I get paid?", "a": "Clients pay through Stripe when they book. Funds are released to you 24 hours after the client accepts the delivered photos. Payouts go directly to your bank account." },
-        { "q": "How do I get clients?", "a": "Two ways: (1) Clients browse our catalog and book you directly, and (2) Our concierge team hand-picks photographers for client requests — you just confirm the booking." },
-        { "q": "How long does approval take?", "a": "Usually 1–3 business days. We review your portfolio, check your identity, and make sure your profile meets our quality standards." }
+        {
+          "q": "Do I need to be a professional photographer?",
+          "a": "Yes. We hand-vet every photographer. You should have a strong portfolio, professional equipment, and experience shooting paid sessions. Hobbyists are not accepted."
+        },
+        {
+          "q": "Do I need to live in Portugal?",
+          "a": "You must be based in Portugal or legally able to work here. Most of our photographers live in or near the cities they serve (Lisbon, Porto, Algarve, etc.)."
+        },
+        {
+          "q": "How much do you take from each booking?",
+          "a": "We charge a 15% platform fee on each booking (reduced to 10% for Premium plan). You keep the rest. No upfront costs and no subscription required to get started."
+        },
+        {
+          "q": "How and when do I get paid?",
+          "a": "Clients pay through Stripe when they book. Funds are released to you 24 hours after the client accepts the delivered photos. Payouts go directly to your bank account."
+        },
+        {
+          "q": "How do I get clients?",
+          "a": "Two ways: (1) Clients browse our catalog and book you directly, and (2) Our concierge team hand-picks photographers for client requests — you just confirm the booking."
+        },
+        {
+          "q": "How long does approval take?",
+          "a": "Usually 1–3 business days. We review your portfolio, check your identity, and make sure your profile meets our quality standards."
+        }
       ]
+    },
+    "howWeSelect": {
+      "metaTitle": "How We Select Our Photographers",
+      "metaDescription": "Every photographer on Photo Portugal is personally vetted by our founding team. Learn about our rigorous selection process.",
+      "title": "How We Select Our Photographers",
+      "subtitle": "Not every photographer makes the cut. We personally vet every single photographer on our platform to ensure you get an exceptional experience.",
+      "stepLabel": "Step {n}.",
+      "steps": {
+        "portfolio": {
+          "title": "Portfolio Review",
+          "desc": "We start by reviewing each photographer's complete body of work — not just the highlights. We look for consistency in quality, natural lighting skills, genuine emotion in portraits, and the ability to capture Portugal's unique character."
+        },
+        "social": {
+          "title": "Social Media & Reputation Check",
+          "desc": "We examine each photographer's presence across platforms — Instagram, Google reviews, wedding directories, and local photography communities. We look for authentic engagement, real client interactions, and a professional online presence."
+        },
+        "conversation": {
+          "title": "Personal Conversation",
+          "desc": "Every photographer goes through a personal conversation with our team. We discuss their experience, their approach to making clients comfortable, how they handle challenging conditions, and their commitment to delivering exceptional results."
+        },
+        "onboarding": {
+          "title": "Test Session & Onboarding",
+          "desc": "Approved photographers complete a thorough onboarding process including profile setup, portfolio curation, and package creation. We guide them through our quality standards and client communication best practices."
+        },
+        "monitoring": {
+          "title": "Ongoing Quality Monitoring",
+          "desc": "Selection doesn't end at approval. We continuously monitor client reviews, delivery quality, response times, and overall satisfaction. Photographers who consistently exceed expectations earn Verified and Featured badges."
+        }
+      },
+      "founderHeading": "Founded by a photographer, for photographers",
+      "founderBody": "Photo Portugal was founded by Kate Belova, a professional photographer with over 10 years of experience. Kate knows firsthand what makes a great photoshoot — the technical skill, the ability to connect with people, and the instinct for finding the perfect light. That's why she personally oversees the photographer selection process.",
+      "browseCta": "Browse Photographers",
+      "aboutCta": "About Photo Portugal"
     }
   },
   "cookie": {
@@ -1161,7 +1245,14 @@
         "honeymoon": "Honeymoon",
         "friendsTrip": "Friends Trip",
         "anniversary": "Anniversary"
-      }
+      },
+      "explore": "Explore:",
+      "faqHeading": "Frequently Asked Questions About Photography in {location}",
+      "whatTravelersSay": "What travelers say about photoshoots in {location}",
+      "realReviewsSubtitle": "Real reviews from verified bookings",
+      "altShootInLocation": "{type} photoshoot in {location}",
+      "altProfessionalShoot": "Professional vacation photoshoot in {location}, Portugal",
+      "shootTypeCardLabel": "{type} Photoshoots"
     }
   },
   "blog": {
@@ -2167,7 +2258,8 @@
     "editTooltip": "Edit",
     "deleteTooltip": "Delete",
     "profilePhotoPreview": "Profile photo preview",
-    "coverAlt": "Cover"
+    "coverAlt": "Cover",
+    "packageFeaturePlaceholder": "e.g. 30 professionally edited photos"
   },
   "subscriptions": {
     "title": "Subscriptions",
@@ -2960,7 +3052,8 @@
       "responseDesc": "Reply within one business day",
       "browsePrefix": "Prefer to browse manually?",
       "browseLink": "See all photographers"
-    }
+    },
+    "online": "Online"
   },
   "lp": {
     "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Portugal",

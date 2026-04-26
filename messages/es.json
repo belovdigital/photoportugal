@@ -96,7 +96,17 @@
     "saveToWishlist": "Añadir a favoritos",
     "selectDate": "Seleccionar fecha",
     "unavailable": "No disponible",
-    "today": "Hoy"
+    "today": "Hoy",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "dismiss": "Descartar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "previousPhoto": "Foto anterior",
+    "nextPhoto": "Foto siguiente",
+    "browseAllPhotographers": "Ver todos los fotógrafos",
+    "photoViewer": "Visor de fotos"
   },
   "nav": {
     "announcement": "Fotografía profesional de vacaciones",
@@ -227,12 +237,36 @@
       "securePayments": "Pagos seguros con Stripe"
     },
     "floatingReviews": [
-      { "text": "Aleksandra nos hizo sentir muy cómodos. ¡Las fotos son increíbles!", "author": "Sarah T.", "location": "Lisboa" },
-      { "text": "Cindy capturó nuestra pedida de mano a la perfección. ¡No podemos parar de llorar mirando las fotos!", "author": "James R.", "location": "Algarve" },
-      { "text": "Monica conocía los rincones más bonitos y escondidos de Sintra. ¡Una sesión absolutamente mágica!", "author": "Emma L.", "location": "Sintra" },
-      { "text": "¡Trabajar con Kate fue muy divertido! Nuestras fotos familiares quedaron mejor de lo que imaginábamos.", "author": "Rachel M.", "location": "Lisboa" },
-      { "text": "Jonathan hizo de nuestra sesión al atardecer en Lagos una experiencia inolvidable. ¡Verdaderamente talentoso!", "author": "David K.", "location": "Lagos" },
-      { "text": "Elena hizo los retratos individuales más espectaculares en Oporto. ¡El mejor recuerdo posible!", "author": "Sophie W.", "location": "Oporto" }
+      {
+        "text": "Aleksandra nos hizo sentir muy cómodos. ¡Las fotos son increíbles!",
+        "author": "Sarah T.",
+        "location": "Lisboa"
+      },
+      {
+        "text": "Cindy capturó nuestra pedida de mano a la perfección. ¡No podemos parar de llorar mirando las fotos!",
+        "author": "James R.",
+        "location": "Algarve"
+      },
+      {
+        "text": "Monica conocía los rincones más bonitos y escondidos de Sintra. ¡Una sesión absolutamente mágica!",
+        "author": "Emma L.",
+        "location": "Sintra"
+      },
+      {
+        "text": "¡Trabajar con Kate fue muy divertido! Nuestras fotos familiares quedaron mejor de lo que imaginábamos.",
+        "author": "Rachel M.",
+        "location": "Lisboa"
+      },
+      {
+        "text": "Jonathan hizo de nuestra sesión al atardecer en Lagos una experiencia inolvidable. ¡Verdaderamente talentoso!",
+        "author": "David K.",
+        "location": "Lagos"
+      },
+      {
+        "text": "Elena hizo los retratos individuales más espectaculares en Oporto. ¡El mejor recuerdo posible!",
+        "author": "Sophie W.",
+        "location": "Oporto"
+      }
     ],
     "stats": {
       "stunningLocations": "Lugares espectaculares",
@@ -554,7 +588,8 @@
       "responseDesc": "Respuesta en un día laborable",
       "browsePrefix": "¿Prefiere explorar manualmente?",
       "browseLink": "Ver todos los fotógrafos"
-    }
+    },
+    "online": "En línea"
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Portugal",
@@ -1039,7 +1074,14 @@
         "honeymoon": "Luna de miel",
         "friendsTrip": "Viaje con amigos",
         "anniversary": "Aniversario"
-      }
+      },
+      "explore": "Explorar:",
+      "faqHeading": "Preguntas frecuentes sobre fotografía en {location}",
+      "whatTravelersSay": "Lo que dicen los viajeros sobre las sesiones en {location}",
+      "realReviewsSubtitle": "Reseñas reales de reservas verificadas",
+      "altShootInLocation": "Sesión {type} en {location}",
+      "altProfessionalShoot": "Sesión fotográfica de vacaciones profesional en {location}, Portugal",
+      "shootTypeCardLabel": "Sesiones {type}"
     }
   },
   "blog": {
@@ -1704,13 +1746,64 @@
     "faq": {
       "title": "Preguntas frecuentes",
       "items": [
-        { "q": "¿Necesito ser fotógrafo profesional?", "a": "Sí. Verificamos a cada fotógrafo a mano. Debe tener un portafolio sólido, equipo profesional y experiencia en sesiones pagadas. No aceptamos aficionados." },
-        { "q": "¿Necesito vivir en Portugal?", "a": "Debe estar basado en Portugal o legalmente autorizado a trabajar aquí. La mayoría de nuestros fotógrafos viven en o cerca de las ciudades que cubren (Lisboa, Oporto, Algarve, etc.)." },
-        { "q": "¿Cuánto se llevan de cada reserva?", "a": "Cobramos una tarifa de plataforma del 15% sobre cada reserva (reducida al 10% para el plan Premium). Usted se queda con el resto. Sin costes iniciales y sin suscripción requerida para empezar." },
-        { "q": "¿Cómo y cuándo cobro?", "a": "Los clientes pagan vía Stripe al reservar. Los fondos se le liberan 24 horas después de que el cliente acepte las fotos entregadas. Las transferencias van directamente a su cuenta bancaria." },
-        { "q": "¿Cómo consigo clientes?", "a": "Dos formas: (1) Los clientes exploran nuestro catálogo y le reservan directamente, y (2) Nuestro equipo concierge selecciona fotógrafos para las solicitudes de los clientes — usted solo confirma la reserva." },
-        { "q": "¿Cuánto tarda la aprobación?", "a": "Normalmente 1-3 días laborables. Revisamos su portafolio, verificamos su identidad y nos aseguramos de que su perfil cumple nuestros estándares de calidad." }
+        {
+          "q": "¿Necesito ser fotógrafo profesional?",
+          "a": "Sí. Verificamos a cada fotógrafo a mano. Debe tener un portafolio sólido, equipo profesional y experiencia en sesiones pagadas. No aceptamos aficionados."
+        },
+        {
+          "q": "¿Necesito vivir en Portugal?",
+          "a": "Debe estar basado en Portugal o legalmente autorizado a trabajar aquí. La mayoría de nuestros fotógrafos viven en o cerca de las ciudades que cubren (Lisboa, Oporto, Algarve, etc.)."
+        },
+        {
+          "q": "¿Cuánto se llevan de cada reserva?",
+          "a": "Cobramos una tarifa de plataforma del 15% sobre cada reserva (reducida al 10% para el plan Premium). Usted se queda con el resto. Sin costes iniciales y sin suscripción requerida para empezar."
+        },
+        {
+          "q": "¿Cómo y cuándo cobro?",
+          "a": "Los clientes pagan vía Stripe al reservar. Los fondos se le liberan 24 horas después de que el cliente acepte las fotos entregadas. Las transferencias van directamente a su cuenta bancaria."
+        },
+        {
+          "q": "¿Cómo consigo clientes?",
+          "a": "Dos formas: (1) Los clientes exploran nuestro catálogo y le reservan directamente, y (2) Nuestro equipo concierge selecciona fotógrafos para las solicitudes de los clientes — usted solo confirma la reserva."
+        },
+        {
+          "q": "¿Cuánto tarda la aprobación?",
+          "a": "Normalmente 1-3 días laborables. Revisamos su portafolio, verificamos su identidad y nos aseguramos de que su perfil cumple nuestros estándares de calidad."
+        }
       ]
+    },
+    "howWeSelect": {
+      "metaTitle": "Cómo seleccionamos a nuestros fotógrafos",
+      "metaDescription": "Cada fotógrafo en Photo Portugal es evaluado personalmente por nuestro equipo fundador. Conozca nuestro riguroso proceso de selección.",
+      "title": "Cómo seleccionamos a nuestros fotógrafos",
+      "subtitle": "No todos los fotógrafos llegan a la plataforma. Evaluamos personalmente a cada fotógrafo para garantizarle una experiencia excepcional.",
+      "stepLabel": "Paso {n}.",
+      "steps": {
+        "portfolio": {
+          "title": "Revisión de Portafolio",
+          "desc": "Comenzamos revisando todo el trabajo de cada fotógrafo, no solo lo más destacado. Buscamos consistencia en la calidad, dominio de la luz natural, emoción genuina en los retratos y la capacidad de capturar el carácter único de Portugal."
+        },
+        "social": {
+          "title": "Verificación de Redes Sociales y Reputación",
+          "desc": "Examinamos la presencia de cada fotógrafo en distintas plataformas: Instagram, reseñas de Google, directorios de bodas y comunidades locales de fotografía. Buscamos interacción auténtica, relación real con clientes y una presencia profesional en línea."
+        },
+        "conversation": {
+          "title": "Conversación Personal",
+          "desc": "Cada fotógrafo pasa por una conversación personal con nuestro equipo. Hablamos sobre su experiencia, cómo hace que los clientes se sientan cómodos, cómo gestiona las condiciones difíciles y su compromiso con ofrecer resultados excepcionales."
+        },
+        "onboarding": {
+          "title": "Sesión de Prueba y Onboarding",
+          "desc": "Los fotógrafos aprobados pasan por un proceso de incorporación completo, que incluye la configuración del perfil, la curaduría del portafolio y la creación de paquetes. Los guiamos a través de nuestros estándares de calidad y mejores prácticas de comunicación con el cliente."
+        },
+        "monitoring": {
+          "title": "Monitorización Continua de Calidad",
+          "desc": "La selección no termina con la aprobación. Monitorizamos continuamente las reseñas de los clientes, la calidad de entrega, los tiempos de respuesta y la satisfacción general. Los fotógrafos que superan las expectativas obtienen las insignias Verificado y Destacado."
+        }
+      },
+      "founderHeading": "Fundada por una fotógrafa, para fotógrafos",
+      "founderBody": "Photo Portugal fue fundada por Kate Belova, fotógrafa profesional con más de 10 años de experiencia. Kate sabe de primera mano lo que hace una gran sesión fotográfica: la habilidad técnica, la capacidad de conectar con las personas y el instinto para encontrar la luz perfecta. Por eso supervisa personalmente el proceso de selección de fotógrafos.",
+      "browseCta": "Ver Fotógrafos",
+      "aboutCta": "Sobre Photo Portugal"
     }
   },
   "cookie": {
@@ -2310,7 +2403,8 @@
     "editTooltip": "Editar",
     "deleteTooltip": "Eliminar",
     "profilePhotoPreview": "Vista previa de foto de perfil",
-    "coverAlt": "Portada"
+    "coverAlt": "Portada",
+    "packageFeaturePlaceholder": "p. ej. 30 fotos editadas profesionalmente"
   },
   "subscriptions": {
     "title": "Suscripciones",

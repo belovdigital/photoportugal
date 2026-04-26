@@ -1190,7 +1190,7 @@ function formatTime(
   locale: string,
   yesterdayLabel: string
 ): string {
-  const dateLocale = locale === "pt" ? "pt-PT" : "en-US";
+  const dateLocale = ({pt:"pt-PT",de:"de-DE",es:"es-ES",fr:"fr-FR",en:"en-US"} as Record<string,string>)[locale] || "en-US";
   const date = new Date(dateStr);
   const now = new Date();
   const diff = now.getTime() - date.getTime();

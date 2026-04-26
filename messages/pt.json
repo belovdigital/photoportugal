@@ -96,7 +96,17 @@
     "saveToWishlist": "Guardar",
     "selectDate": "Selecionar data",
     "unavailable": "Indisponível",
-    "today": "Hoje"
+    "today": "Hoje",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "dismiss": "Dispensar",
+    "previous": "Anterior",
+    "next": "Seguinte",
+    "previousPhoto": "Foto anterior",
+    "nextPhoto": "Foto seguinte",
+    "browseAllPhotographers": "Ver todos os fotógrafos",
+    "photoViewer": "Visualizador de fotos"
   },
   "nav": {
     "announcement": "Fotografia profissional de férias",
@@ -134,7 +144,7 @@
     "learnMore": "Saber Mais",
     "bookPhotoshoot": "Reservar Sessão Fotográfica",
     "conciergeAriaLabel": "Concierge IA — encontre o seu fotógrafo",
-    "findMePhotographer": "Encontre um Fotógrafo",
+    "findMePhotographer": "Ajudem-me a Escolher",
     "findPhotographers": "Encontrar Fotógrafos",
     "allDestinations": "Todos os Destinos",
     "dashboard": "Painel",
@@ -162,14 +172,10 @@
       "wedding": "Casamento",
       "birthday": "Aniversário"
     },
-    "about": "Sobre Nós",
-    "contact": "Contacto",
-    "helpCenter": "Centro de Ajuda",
     "megaGettingStarted": "Como Começar",
     "megaTrustQuality": "Confiança e Qualidade",
     "megaCompany": "Empresa",
     "megaBrowseDesc": "Pesquisar fotógrafos por localização, estilo e disponibilidade",
-    "findMePhotographer": "Ajudem-me a Escolher",
     "megaMatchDesc": "Selecionamos o fotógrafo perfeito para si",
     "megaAboutDesc": "A nossa história e a equipa por detrás do Photo Portugal",
     "megaContactDesc": "Entre em contacto com a nossa equipa",
@@ -231,12 +237,36 @@
       "securePayments": "Pagamentos seguros via Stripe"
     },
     "floatingReviews": [
-      { "text": "A Aleksandra fez-nos sentir tão à vontade. As fotos estão incríveis!", "author": "Sarah T.", "location": "Lisboa" },
-      { "text": "A Cindy captou o nosso pedido de casamento na perfeição. Não conseguimos parar de chorar ao ver as fotos!", "author": "James R.", "location": "Algarve" },
-      { "text": "A Monica conhecia os locais escondidos mais bonitos de Sintra. Sessão absolutamente mágica!", "author": "Emma L.", "location": "Sintra" },
-      { "text": "A Kate foi tão divertida! As nossas fotos de família ficaram além do incrível.", "author": "Rachel M.", "location": "Lisboa" },
-      { "text": "O Jonathan fez da nossa sessão ao pôr-do-sol em Lagos uma experiência inesquecível. Verdadeiro talento!", "author": "David K.", "location": "Lagos" },
-      { "text": "A Elena tirou os retratos solo mais deslumbrantes de mim no Porto. A melhor recordação de sempre!", "author": "Sophie W.", "location": "Porto" }
+      {
+        "text": "A Aleksandra fez-nos sentir tão à vontade. As fotos estão incríveis!",
+        "author": "Sarah T.",
+        "location": "Lisboa"
+      },
+      {
+        "text": "A Cindy captou o nosso pedido de casamento na perfeição. Não conseguimos parar de chorar ao ver as fotos!",
+        "author": "James R.",
+        "location": "Algarve"
+      },
+      {
+        "text": "A Monica conhecia os locais escondidos mais bonitos de Sintra. Sessão absolutamente mágica!",
+        "author": "Emma L.",
+        "location": "Sintra"
+      },
+      {
+        "text": "A Kate foi tão divertida! As nossas fotos de família ficaram além do incrível.",
+        "author": "Rachel M.",
+        "location": "Lisboa"
+      },
+      {
+        "text": "O Jonathan fez da nossa sessão ao pôr-do-sol em Lagos uma experiência inesquecível. Verdadeiro talento!",
+        "author": "David K.",
+        "location": "Lagos"
+      },
+      {
+        "text": "A Elena tirou os retratos solo mais deslumbrantes de mim no Porto. A melhor recordação de sempre!",
+        "author": "Sophie W.",
+        "location": "Porto"
+      }
     ],
     "stats": {
       "stunningLocations": "Localizações Deslumbrantes",
@@ -992,13 +1022,64 @@
     "faq": {
       "title": "Perguntas Frequentes",
       "items": [
-        { "q": "Preciso de ser fotógrafo profissional?", "a": "Sim. Verificamos cada fotógrafo manualmente. Deve ter um portfólio sólido, equipamento profissional e experiência em sessões pagas. Amadores não são aceites." },
-        { "q": "Preciso de viver em Portugal?", "a": "Tem de estar baseado em Portugal ou ter autorização legal para trabalhar cá. A maioria dos nossos fotógrafos vive nas cidades que cobrem (Lisboa, Porto, Algarve, etc.)." },
-        { "q": "Qual é a vossa comissão?", "a": "Cobramos uma taxa de plataforma de 15% por reserva (reduzida para 10% no plano Premium). Fica com o resto. Sem custos iniciais nem subscrição obrigatória." },
-        { "q": "Como e quando recebo o pagamento?", "a": "Os clientes pagam via Stripe no momento da reserva. Os fundos são transferidos 24 horas após o cliente aceitar a entrega das fotos. Os pagamentos vão diretamente para a sua conta bancária." },
-        { "q": "Como consigo clientes?", "a": "De duas formas: (1) Os clientes navegam pelo nosso catálogo e reservam-no diretamente; (2) A nossa equipa de concierge seleciona manualmente fotógrafos para cada pedido — você apenas confirma a reserva." },
-        { "q": "Quanto tempo demora a aprovação?", "a": "Normalmente 1 a 3 dias úteis. Avaliamos o seu portfólio, verificamos a identidade e garantimos que o perfil cumpre os nossos padrões de qualidade." }
+        {
+          "q": "Preciso de ser fotógrafo profissional?",
+          "a": "Sim. Verificamos cada fotógrafo manualmente. Deve ter um portfólio sólido, equipamento profissional e experiência em sessões pagas. Amadores não são aceites."
+        },
+        {
+          "q": "Preciso de viver em Portugal?",
+          "a": "Tem de estar baseado em Portugal ou ter autorização legal para trabalhar cá. A maioria dos nossos fotógrafos vive nas cidades que cobrem (Lisboa, Porto, Algarve, etc.)."
+        },
+        {
+          "q": "Qual é a vossa comissão?",
+          "a": "Cobramos uma taxa de plataforma de 15% por reserva (reduzida para 10% no plano Premium). Fica com o resto. Sem custos iniciais nem subscrição obrigatória."
+        },
+        {
+          "q": "Como e quando recebo o pagamento?",
+          "a": "Os clientes pagam via Stripe no momento da reserva. Os fundos são transferidos 24 horas após o cliente aceitar a entrega das fotos. Os pagamentos vão diretamente para a sua conta bancária."
+        },
+        {
+          "q": "Como consigo clientes?",
+          "a": "De duas formas: (1) Os clientes navegam pelo nosso catálogo e reservam-no diretamente; (2) A nossa equipa de concierge seleciona manualmente fotógrafos para cada pedido — você apenas confirma a reserva."
+        },
+        {
+          "q": "Quanto tempo demora a aprovação?",
+          "a": "Normalmente 1 a 3 dias úteis. Avaliamos o seu portfólio, verificamos a identidade e garantimos que o perfil cumpre os nossos padrões de qualidade."
+        }
       ]
+    },
+    "howWeSelect": {
+      "metaTitle": "Como Selecionamos os Nossos Fotógrafos",
+      "metaDescription": "Cada fotógrafo na Photo Portugal é pessoalmente avaliado pela nossa equipa fundadora. Conheça o nosso processo de seleção rigoroso.",
+      "title": "Como Selecionamos os Nossos Fotógrafos",
+      "subtitle": "Nem todos os fotógrafos passam. Avaliamos pessoalmente cada fotógrafo na nossa plataforma para garantir uma experiência excecional.",
+      "stepLabel": "Passo {n}.",
+      "steps": {
+        "portfolio": {
+          "title": "Avaliação do Portefólio",
+          "desc": "Começamos por avaliar todo o trabalho de cada fotógrafo — não apenas os destaques. Procuramos consistência na qualidade, domínio da luz natural, emoção genuína nos retratos e a capacidade de capturar o carácter único de Portugal."
+        },
+        "social": {
+          "title": "Verificação de Redes Sociais e Reputação",
+          "desc": "Analisamos a presença de cada fotógrafo nas plataformas — Instagram, avaliações do Google, diretórios de casamentos e comunidades locais de fotografia. Procuramos interação autêntica, relação real com clientes e uma presença online profissional."
+        },
+        "conversation": {
+          "title": "Conversa Pessoal",
+          "desc": "Cada fotógrafo passa por uma conversa pessoal com a nossa equipa. Falamos sobre a sua experiência, a forma como põe os clientes à vontade, como lida com condições difíceis e o seu compromisso com resultados excecionais."
+        },
+        "onboarding": {
+          "title": "Sessão de Teste e Integração",
+          "desc": "Os fotógrafos aprovados passam por um processo de integração completo, incluindo configuração de perfil, curadoria de portefólio e criação de pacotes. Orientamo-los nos nossos padrões de qualidade e nas melhores práticas de comunicação."
+        },
+        "monitoring": {
+          "title": "Monitorização Contínua de Qualidade",
+          "desc": "A seleção não termina na aprovação. Monitorizamos continuamente as avaliações dos clientes, a qualidade de entrega, os tempos de resposta e a satisfação global. Os fotógrafos que excedem expectativas obtêm os crachás Verificado e Destaque."
+        }
+      },
+      "founderHeading": "Fundada por uma fotógrafa, para fotógrafos",
+      "founderBody": "A Photo Portugal foi fundada por Kate Belova, uma fotógrafa profissional com mais de 10 anos de experiência. A Kate sabe em primeira mão o que faz uma grande sessão fotográfica — a competência técnica, a capacidade de se conectar com as pessoas e o instinto para encontrar a luz perfeita. Por isso, supervisiona pessoalmente o processo de seleção de fotógrafos.",
+      "browseCta": "Ver Fotógrafos",
+      "aboutCta": "Sobre a Photo Portugal"
     }
   },
   "cookie": {
@@ -1164,7 +1245,14 @@
         "honeymoon": "Lua de Mel",
         "friendsTrip": "Viagem de Amigos",
         "anniversary": "Aniversário"
-      }
+      },
+      "explore": "Explorar:",
+      "faqHeading": "Perguntas Frequentes sobre Fotografia em {location}",
+      "whatTravelersSay": "O que os viajantes dizem sobre sessões em {location}",
+      "realReviewsSubtitle": "Avaliações reais de reservas verificadas",
+      "altShootInLocation": "Sessão {type} em {location}",
+      "altProfessionalShoot": "Sessão fotográfica de férias profissional em {location}, Portugal",
+      "shootTypeCardLabel": "Sessões {type}"
     }
   },
   "blog": {
@@ -2170,7 +2258,8 @@
     "editTooltip": "Editar",
     "deleteTooltip": "Eliminar",
     "profilePhotoPreview": "Pré-visualização da foto de perfil",
-    "coverAlt": "Capa"
+    "coverAlt": "Capa",
+    "packageFeaturePlaceholder": "ex.: 30 fotos profissionalmente editadas"
   },
   "subscriptions": {
     "title": "Subscrições",
@@ -2963,7 +3052,8 @@
       "responseDesc": "Resposta dentro de 1 dia útil",
       "browsePrefix": "Prefere navegar manualmente?",
       "browseLink": "Ver todos os fotógrafos"
-    }
+    },
+    "online": "Online"
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos de {shootType} em {city} — Reserve já | Photo Portugal",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 interface ConfirmModalProps {
   open: boolean;
@@ -13,7 +14,10 @@ interface ConfirmModalProps {
   onCancel: () => void;
 }
 
-export function ConfirmModal({ open, title, message, confirmLabel = "Confirm", cancelLabel = "Cancel", danger = false, onConfirm, onCancel }: ConfirmModalProps) {
+export function ConfirmModal({ open, title, message, confirmLabel, cancelLabel, danger = false, onConfirm, onCancel }: ConfirmModalProps) {
+  const t = useTranslations("common");
+  const confirmText = confirmLabel ?? t("confirm");
+  const cancelText = cancelLabel ?? t("cancel");
   const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -38,7 +42,7 @@ export function ConfirmModal({ open, title, message, confirmLabel = "Confirm", c
         <p className="mt-2 text-sm text-gray-600 leading-relaxed">{message}</p>
         <div className="mt-5 flex justify-end gap-2">
           <button onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100">
-            {cancelLabel}
+            {cancelText}
           </button>
           <button
             ref={confirmRef}
@@ -47,7 +51,7 @@ export function ConfirmModal({ open, title, message, confirmLabel = "Confirm", c
               danger ? "bg-red-600 hover:bg-red-700" : "bg-primary-600 hover:bg-primary-700"
             }`}
           >
-            {confirmLabel}
+            {confirmText}
           </button>
         </div>
       </div>
@@ -67,12 +71,12 @@ export function useConfirmModal(): {
   confirm: (title: string, message: string, opts?: { confirmLabel?: string; danger?: boolean }) => Promise<boolean>;
 } {
   const resolveRef = useRef<((v: boolean) => void) | null>(null);
-  const [state, setState] = useState({ open: false, title: "", message: "", confirmLabel: "Confirm", danger: false });
+  const [state, setState] = useState<{ open: boolean; title: string; message: string; confirmLabel?: string; danger: boolean }>({ open: false, title: "", message: "", confirmLabel: undefined, danger: false });
 
   const confirm = useCallback((title: string, message: string, opts?: { confirmLabel?: string; danger?: boolean }) => {
     return new Promise<boolean>((resolve) => {
       resolveRef.current = resolve;
-      setState({ open: true, title, message, confirmLabel: opts?.confirmLabel || "Confirm", danger: opts?.danger || false });
+      setState({ open: true, title, message, confirmLabel: opts?.confirmLabel, danger: opts?.danger || false });
     });
   }, []);
 

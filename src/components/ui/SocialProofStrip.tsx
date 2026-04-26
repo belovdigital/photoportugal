@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { locations as ALL_LOCATIONS } from "@/lib/locations-data";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Link } from "@/i18n/navigation";
@@ -46,6 +46,7 @@ export function SocialProofStrip({
   };
 }) {
   const locale = useLocale();
+  const tc = useTranslations("common");
   const localePrefix = locale === "en" ? "" : `/${locale}`;
   const [hoveredPin, setHoveredPin] = useState<{ slug: string; name: string; x: number; y: number } | null>(null);
   const codes = countryCodes.length > 0 ? countryCodes : FALLBACK_COUNTRIES;
@@ -110,7 +111,7 @@ export function SocialProofStrip({
                 <Link
                   href="/photographers"
                   className="flex h-12 w-12 lg:h-[52px] lg:w-[52px] items-center justify-center rounded-full border-2 border-white bg-primary-600 text-xs font-bold text-white shadow-sm transition hover:scale-110 hover:bg-primary-700"
-                  aria-label="Browse all photographers"
+                  aria-label={tc("browseAllPhotographers")}
                 >
                   +{avatarRemaining}
                 </Link>

@@ -13,7 +13,7 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
 
   const t = await getTranslations("delivery");
   const locale = await getLocale();
-  const dateLocale = locale === "pt" ? "pt-PT" : "en-US";
+  const dateLocale = ({pt:"pt-PT",de:"de-DE",es:"es-ES",fr:"fr-FR",en:"en-US"} as Record<string,string>)[locale] || "en-US";
   const { id } = await params;
   const userId = (session.user as { id?: string }).id;
 

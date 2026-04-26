@@ -1294,7 +1294,7 @@ function PackageFormInline({
                     updated[i] = e.target.value;
                     setPkgFeatures(updated);
                   }}
-                  placeholder="e.g. 30 professionally edited photos"
+                  placeholder={t("packageFeaturePlaceholder")}
                   className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-200"
                 />
                 <button type="button" onClick={() => setPkgFeatures(pkgFeatures.filter((_, j) => j !== i))}
@@ -1588,7 +1588,7 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
 function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => void }) {
   const t = useTranslations("photographerDashboard");
   const locale = useLocale();
-  const dateLocale = locale === "pt" ? "pt-PT" : "en-US";
+  const dateLocale = ({pt:"pt-PT",de:"de-DE",es:"es-ES",fr:"fr-FR",en:"en-US"} as Record<string,string>)[locale] || "en-US";
   const [updating, setUpdating] = useState(false);
 
   async function updateStatus(status: string) {

@@ -13,7 +13,7 @@ interface UnavailabilityRange {
 }
 
 function formatRange(from: string, to: string, locale: string) {
-  const loc = locale === "pt" ? "pt-PT" : "en-GB";
+  const loc = ({pt:"pt-PT",de:"de-DE",es:"es-ES",fr:"fr-FR",en:"en-GB"} as Record<string,string>)[locale] || "en-GB";
   const f = new Date(from + "T12:00:00");
   const t = new Date(to + "T12:00:00");
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };

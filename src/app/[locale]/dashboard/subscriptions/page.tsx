@@ -14,7 +14,7 @@ export default async function SubscriptionPage() {
 
   const t = await getTranslations("subscriptions");
   const locale = await getLocale();
-  const dateLocale = locale === "pt" ? "pt-PT" : "en-US";
+  const dateLocale = ({pt:"pt-PT",de:"de-DE",es:"es-ES",fr:"fr-FR",en:"en-US"} as Record<string,string>)[locale] || "en-US";
   const userId = (session.user as { id?: string }).id;
   const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
   if (!userRow || userRow.role !== "photographer") redirect("/dashboard");

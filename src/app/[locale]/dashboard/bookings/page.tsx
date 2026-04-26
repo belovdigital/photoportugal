@@ -45,7 +45,7 @@ export default async function BookingsPage() {
   const session = await auth();
   const t = await getTranslations("bookings");
   const locale = await getLocale();
-  const dateLocale = locale === "pt" ? "pt-PT" : "en-US";
+  const dateLocale = ({pt:"pt-PT",de:"de-DE",es:"es-ES",fr:"fr-FR",en:"en-US"} as Record<string,string>)[locale] || "en-US";
   if (!session?.user) return null;
 
   const userId = (session.user as { id?: string }).id;

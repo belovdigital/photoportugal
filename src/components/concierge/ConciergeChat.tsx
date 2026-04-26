@@ -424,6 +424,7 @@ function presenceBadge(lastSeen: string | null | undefined, t: (key: string) => 
 
 function WhatsAppResumeBar({ userMessages }: { locale: string; userMessages: string[] }) {
   const t = useTranslations("concierge");
+  const tc = useTranslations("common");
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
   // Build a clean single-paragraph summary from the most informative user messages.
@@ -450,7 +451,7 @@ function WhatsAppResumeBar({ userMessages }: { locale: string; userMessages: str
             <span className="text-[10px] font-normal text-emerald-700">{sub}</span>
           </span>
         </a>
-        <button onClick={() => setDismissed(true)} className="rounded-full p-1 text-emerald-600 hover:bg-emerald-100" aria-label="Dismiss">
+        <button onClick={() => setDismissed(true)} className="rounded-full p-1 text-emerald-600 hover:bg-emerald-100" aria-label={tc("dismiss")}>
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>

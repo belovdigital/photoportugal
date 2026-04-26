@@ -56,6 +56,7 @@ export function DashboardMobileNav({ initialRole }: { initialRole?: string }) {
   const role = sessionRole || (status === "loading" ? initialRole : undefined) || initialRole || "client";
   const notifications = useNotifications();
   const t = useTranslations("dashboard");
+  const tc = useTranslations("common");
   const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
@@ -142,7 +143,7 @@ export function DashboardMobileNav({ initialRole }: { initialRole?: string }) {
               <button
                 onClick={() => setMoreOpen(false)}
                 className="rounded-full p-1 text-gray-400 hover:bg-warm-50 hover:text-gray-700"
-                aria-label="Close"
+                aria-label={tc("close")}
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

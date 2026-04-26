@@ -268,12 +268,12 @@ export function ReviewsPaginated({
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
           role="dialog"
-          aria-label="Review photo viewer"
+          aria-label={tc("photoViewer")}
           onClick={() => setLightbox(null)}
         >
           <button
             onClick={() => setLightbox(null)}
-            aria-label="Close"
+            aria-label={tc("close")}
             className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,7 +284,7 @@ export function ReviewsPaginated({
           {lightbox > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-              aria-label="Previous photo"
+              aria-label={tc("previousPhoto")}
               className="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -306,7 +306,7 @@ export function ReviewsPaginated({
           {lightbox < allPhotos.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(1); }}
-              aria-label="Next photo"
+              aria-label={tc("nextPhoto")}
               className="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
