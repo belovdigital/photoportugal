@@ -1054,6 +1054,8 @@
       "clearAll": "Limpar tudo ({count})",
       "clearAllShort": "Limpar tudo",
       "clearAllFilters": "Limpar todos os filtros",
+      "clearSearch": "Limpar pesquisa",
+      "close": "Fechar",
       "mobileFilters": "Filtros",
       "occasion": "Ocasião",
       "language": "Idioma",

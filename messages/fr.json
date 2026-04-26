@@ -1334,6 +1334,8 @@
       "clearAll": "Tout effacer ({count})",
       "clearAllShort": "Tout effacer",
       "clearAllFilters": "Effacer tous les filtres",
+      "clearSearch": "Effacer la recherche",
+      "close": "Fermer",
       "mobileFilters": "Filtres",
       "occasion": "Occasion",
       "language": "Langue",

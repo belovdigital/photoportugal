@@ -6,6 +6,8 @@ import { queryOne, query } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
+import { localizeShootType } from "@/lib/shoot-type-labels";
+import { localizeLanguageNames } from "@/lib/languages-i18n";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
@@ -586,7 +588,7 @@ export default async function PhotographerProfilePage({
                   <><span>{tc("yrsExperience", { years: photographer.experience_years })}</span><span className="text-gray-300">·</span></>
                 )}
                 {photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "" && (
-                  <span>{photographer.languages.join(", ")}</span>
+                  <span>{localizeLanguageNames(photographer.languages, locale).join(", ")}</span>
                 )}
               </p>
               <div className="mt-1.5 hidden sm:block">
@@ -598,7 +600,7 @@ export default async function PhotographerProfilePage({
                 <div className="mt-3 border-t border-warm-200 pt-3 flex flex-wrap gap-1.5">
                   {photographer.shoot_types.map((type: string) => (
                     <span key={type} className="rounded-full border border-primary-200 px-2.5 py-1.5 text-xs font-medium text-primary-600">
-                      {type}
+                      {localizeShootType(type, locale)}
                     </span>
                   ))}
                 </div>

@@ -30,6 +30,28 @@ const TIME_OPTIONS = [
 export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defaultPhone = "", userId }: { defaultName?: string; defaultEmail?: string; defaultPhone?: string; userId?: string }) {
   const { data: session, status } = useSession();
   const t = useTranslations("findPhotographer");
+  const tShoot = useTranslations("nav.shootTypes");
+  const SHOOT_TYPE_KEY: Record<string, string> = {
+    couples: "couples",
+    family: "family",
+    proposal: "proposal",
+    wedding: "wedding",
+    honeymoon: "honeymoon",
+    elopement: "elopement",
+    solo: "soloPortrait",
+    engagement: "engagement",
+    birthday: "birthday",
+    friends: "couples",
+  };
+  function shootLabel(slug: string): string {
+    const key = SHOOT_TYPE_KEY[slug];
+    if (!key) return slug.charAt(0).toUpperCase() + slug.slice(1);
+    try {
+      return tShoot(key);
+    } catch {
+      return slug.charAt(0).toUpperCase() + slug.slice(1);
+    }
+  }
   const tb = useTranslations("book");
   const searchParams = useSearchParams();
 
@@ -202,7 +224,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
             <select value={shootType} onChange={(e) => setShootType(e.target.value)} required className={inputCls}>
               <option value="">{t("shootTypePlaceholder")}</option>
               {SHOOT_TYPES.map((type) => (
-                <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                <option key={type} value={type}>{shootLabel(type)}</option>
               ))}
             </select>
           </div>

@@ -1092,6 +1092,8 @@
       "clearAll": "Alle löschen ({count})",
       "clearAllShort": "Alle löschen",
       "clearAllFilters": "Alle Filter zurücksetzen",
+      "clearSearch": "Suche löschen",
+      "close": "Schließen",
       "mobileFilters": "Filter",
       "occasion": "Anlass",
       "language": "Sprache",

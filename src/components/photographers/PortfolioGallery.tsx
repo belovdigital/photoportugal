@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useSwipeNavigation } from "@/lib/use-swipe";
+import { localizeShootType } from "@/lib/shoot-type-labels";
 
 interface PortfolioItem {
   url: string;
@@ -88,6 +89,7 @@ export function PortfolioGallery({
   photographerName?: string;
 }) {
   const t = useTranslations("photographers.portfolioGallery");
+  const locale = useLocale();
   const [filter, setFilter] = useState({ location: "", shootType: "" });
   const [lightbox, setLightbox] = useState<number | null>(null);
 
@@ -193,7 +195,7 @@ export function PortfolioGallery({
                   ? "bg-accent-600 text-white" : "bg-warm-100 text-gray-600 hover:bg-warm-200"
               }`}
             >
-              {type}
+              {localizeShootType(type, locale)}
             </button>
           ))}
         </div>

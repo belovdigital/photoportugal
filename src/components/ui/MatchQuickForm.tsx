@@ -227,7 +227,7 @@ export function MatchQuickForm({
                     );
                   })}
                   {filteredLocations.length === 0 && (
-                    <p className="px-3 py-2 text-xs text-gray-400">No matches</p>
+                    <p className="px-3 py-2 text-xs text-gray-400">{tc("noMatch")}</p>
                   )}
                 </div>
               </div>,

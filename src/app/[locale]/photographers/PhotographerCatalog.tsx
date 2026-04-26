@@ -1,7 +1,8 @@
 "use client";
 
 import { Fragment, useState, useMemo, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { localizeShootType } from "@/lib/shoot-type-labels";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { trackSearch } from "@/lib/analytics";
@@ -64,6 +65,7 @@ export function PhotographerCatalog({
   initialShootType,
 }: Props) {
   const t = useTranslations("photographers");
+  const locale = useLocale();
   const [locationFilters, setLocationFilters] = useState<string[]>(initialLocation ? [initialLocation] : []);
   const [locationSearch, setLocationSearch] = useState("");
   const [shootTypeFilters, setShootTypeFilters] = useState<string[]>(initialShootType ? [initialShootType] : []);
@@ -290,7 +292,7 @@ export function PhotographerCatalog({
                 type="button"
                 onClick={() => { setSearchQuery(""); setSearchOpen(false); }}
                 className="shrink-0 rounded-full p-0.5 text-gray-400 hover:bg-warm-100 hover:text-gray-700"
-                aria-label="Clear search"
+                aria-label={t("filters.clearSearch")}
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -565,7 +567,7 @@ export function PhotographerCatalog({
                               : "bg-warm-100 text-gray-600 hover:bg-warm-200"
                           }`}
                         >
-                          {type}
+                          {localizeShootType(type, locale)}
                         </button>
                       ))}
                     </div>
@@ -660,7 +662,7 @@ export function PhotographerCatalog({
                         type="button"
                         onClick={() => { setSearchQuery(""); searchInputRef.current?.focus(); }}
                         className="shrink-0 rounded-full p-1 text-gray-400 hover:bg-warm-100 hover:text-gray-700"
-                        aria-label="Clear search"
+                        aria-label={t("filters.clearSearch")}
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -739,7 +741,7 @@ export function PhotographerCatalog({
               <button
                 onClick={() => setMobileSheet(null)}
                 className="rounded-full p-1 text-gray-400 hover:bg-warm-50 hover:text-gray-700"
-                aria-label="Close"
+                aria-label={t("filters.close")}
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -800,7 +802,7 @@ export function PhotographerCatalog({
                               : "bg-warm-100 text-gray-600"
                           }`}
                         >
-                          {type}
+                          {localizeShootType(type, locale)}
                         </button>
                       ))}
                     </div>

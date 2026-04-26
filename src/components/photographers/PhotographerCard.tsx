@@ -1,6 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { localizeLanguageNames } from "@/lib/languages-i18n";
 import { Link } from "@/i18n/navigation";
 import { PhotographerProfile } from "@/types";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
@@ -21,6 +22,7 @@ export function PhotographerCard({
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const t = useTranslations("photographers.card");
   const tc = useTranslations("common");
+  const locale = useLocale();
   const minPrice = photographer.packages?.length > 0
     ? Math.min(...photographer.packages.map(p => p.price))
     : null;
@@ -132,7 +134,7 @@ export function PhotographerCard({
         {/* Languages */}
         {photographer.languages.length > 0 && (
           <p className="mt-2 text-xs text-gray-400">
-            {t("speaks", { languages: photographer.languages.join(", ") })}
+            {t("speaks", { languages: localizeLanguageNames(photographer.languages, locale).join(", ") })}
           </p>
         )}
       </div>

@@ -147,6 +147,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf an der Costa da Caparica, Portugal | Sonnenuntergangs-Fotoshootings am Strand",
     seo_description_de:
       "Buchen Sie einen Fotografen an der Costa da Caparica, Portugal. Goldene Strände, Surf- und Sonnenuntergangs-Fotoshootings nur wenige Minuten von Lissabon entfernt.",
+    description_es:
+      "Playas doradas interminables, ambiente surfero y atardeceres espectaculares justo al cruzar el puente desde Lisboa.",
+    description_fr:
+      "Des plages dorées à perte de vue, ambiance surf et couchers de soleil spectaculaires juste de l'autre côté du pont de Lisbonne.",
   },
   {
     id: "setubal",
@@ -180,6 +184,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Setúbal, Portugal | Fotoshootings an der Arrábida-Küste",
     seo_description_de:
       "Buchen Sie einen Fotografen in Setúbal und Arrábida, Portugal. Atemberaubende Steilküsten, versteckte Strände und unberührte Natur in der Nähe von Lissabon.",
+    description_es:
+      "La costa salvaje de Arrábida, delfines en el estuario del Sado y belleza natural intacta al sur de Lisboa.",
+    description_fr:
+      "La côte sauvage de l'Arrábida, des dauphins dans l'estuaire du Sado et une nature préservée au sud de Lisbonne.",
   },
 
   {
@@ -214,6 +222,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Comporta, Portugal | Luxuriöse Strand-Fotoshootings",
     seo_description_de:
       "Buchen Sie einen Fotografen in Comporta, Portugal. Atemberaubende Strand-, Reisfeld- und Bohemian-Luxus-Fotoshootings an der Tróia-Küste.",
+    description_es:
+      "El paraíso de playa secreto de Portugal: arrozales, bosques de pinos y arena blanca virgen.",
+    description_fr:
+      "Le paradis balnéaire secret du Portugal — rizières, forêts de pins et sable blanc immaculé.",
   },
 
   // Northern Portugal
@@ -249,6 +261,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Guimarães, Portugal | Fotoshootings an der mittelalterlichen Burg",
     seo_description_de:
       "Buchen Sie einen Fotografen in Guimarães, der Wiege Portugals. Fotoshootings an der historischen Burg, in mittelalterlichen Gassen und im UNESCO-Welterbe.",
+    description_es:
+      "La cuna de Portugal: castillo medieval, centro histórico y un profundo orgullo nacional.",
+    description_fr:
+      "Le berceau du Portugal — château médiéval, centre historique et profond patrimoine national.",
   },
   {
     id: "porto",
@@ -319,6 +335,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Braga, Portugal | Fotoshootings an historischen und religiösen Stätten",
     seo_description_de:
       "Buchen Sie einen Fotografen in Braga, Portugal. Wunderschöne Fotoshootings an Bom Jesus do Monte, barocken Kirchen und im Nationalpark Peneda-Gerês.",
+    description_es:
+      "El corazón religioso de Portugal: iglesias barrocas, la icónica escalinata del Bom Jesus y siglos de historia.",
+    description_fr:
+      "Le cœur religieux du Portugal — églises baroques, le célèbre escalier du Bom Jesus et des siècles d'histoire.",
   },
   {
     id: "douro-valley",
@@ -352,6 +372,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf im Dourotal, Portugal | Fotoshootings in der Weinregion",
     seo_description_de:
       "Buchen Sie einen Fotografen im Dourotal, Portugal. Atemberaubende Weinberg-, Fluss- und Weingut-Fotoshootings im UNESCO-Welterbe der Weinregion.",
+    description_es:
+      "Viñedos en terrazas Patrimonio de la UNESCO, vistas sinuosas del río y el alma de la región vinícola portuguesa.",
+    description_fr:
+      "Vignobles en terrasses classés UNESCO, vues sinueuses sur la rivière et l'âme du pays viticole portugais.",
   },
   {
     id: "aveiro",
@@ -385,6 +409,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Aveiro, Portugal | Kanal- und Jugendstil-Fotoshootings",
     seo_description_de:
       "Buchen Sie einen Fotografen in Aveiro, Portugal. Bunte Kanalboote, Jugendstil-Architektur und Fotoshootings am Strand von Costa Nova.",
+    description_es:
+      "La 'Venecia de Portugal': barcos coloridos en los canales, fachadas modernistas y encanto a la orilla del agua.",
+    description_fr:
+      "La « Venise du Portugal » — barques colorées sur les canaux, façades Art nouveau et charme au fil de l'eau.",
   },
 
   {
@@ -419,6 +447,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Peneda-Gerês, Portugal | Fotoshootings im Nationalpark",
     seo_description_de:
       "Buchen Sie einen Fotografen im Nationalpark Peneda-Gerês, Portugal. Wasserfälle, Bergseen und Fotoshootings in wilder Natur.",
+    description_es:
+      "El único parque nacional de Portugal: montañas salvajes, cascadas y antiguos pueblos de granito.",
+    description_fr:
+      "L'unique parc national du Portugal — montagnes sauvages, cascades et villages anciens de granit.",
   },
 
   // Central Portugal
@@ -454,6 +486,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Tomar, Portugal | Fotoshootings im Tempelritter-Kloster",
     seo_description_de:
       "Buchen Sie einen Fotografen in Tomar, Portugal. Atemberaubende Fotoshootings im Christuskloster, der Templerburg und der historischen Altstadt am Fluss.",
+    description_es:
+      "La ciudad de los Templarios: un impresionante convento fortificado y siglos de misterio.",
+    description_fr:
+      "La cité des Templiers — un couvent fortifié saisissant et des siècles de mystère.",
   },
   {
     id: "peniche",
@@ -487,6 +523,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Peniche, Portugal | Surf- und Küsten-Fotoshootings",
     seo_description_de:
       "Buchen Sie einen Fotografen in Peniche, Portugal. Dramatische Surf-, Klippen- und Berlengas-Insel-Fotoshootings an der Atlantikküste.",
+    description_es:
+      "Surf de nivel mundial, las místicas islas Berlengas y una costa atlántica abrupta.",
+    description_fr:
+      "Surf de classe mondiale, les mystiques îles Berlengas et une côte atlantique sauvage.",
   },
   {
     id: "coimbra",
@@ -520,6 +560,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Coimbra, Portugal | Fotoshootings in der Universitätsstadt",
     seo_description_de:
       "Buchen Sie einen Fotografen in Coimbra, Portugal. Wunderschöne Fotoshootings an der historischen Universität, der Joanina-Bibliothek und am Mondego.",
+    description_es:
+      "Una de las ciudades universitarias más antiguas de Europa: la deslumbrante Biblioteca Joanina, vistas panorámicas y tradiciones académicas.",
+    description_fr:
+      "L'une des plus anciennes villes universitaires d'Europe — la magnifique Bibliothèque Joanina, vues panoramiques et traditions académiques.",
   },
   {
     id: "obidos",
@@ -553,6 +597,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Óbidos, Portugal | Fotoshootings in der mittelalterlichen Stadt",
     seo_description_de:
       "Buchen Sie einen Fotografen in Óbidos, Portugal. Romantische Fotoshootings in einer mittelalterlichen Festungsstadt mit Burgblicken und Kopfsteinpflastergassen.",
+    description_es:
+      "Un pueblo medieval amurallado perfectamente conservado: casas encaladas, callejones empedrados y vistas al castillo.",
+    description_fr:
+      "Un village médiéval fortifié parfaitement préservé — maisons blanchies à la chaux, ruelles pavées et vue sur le château.",
   },
   {
     id: "nazare",
@@ -586,6 +634,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Nazaré, Portugal | Ozean- und Klippen-Fotoshootings",
     seo_description_de:
       "Buchen Sie einen Fotografen in Nazaré, Portugal. Dramatische Ozean-, Klippen- und Fischerdorf-Fotoshootings in einer der ikonischsten Küstenstädte Portugals.",
+    description_es:
+      "Hogar de las olas más grandes del mundo, acantilados espectaculares y un auténtico pueblo pesquero portugués.",
+    description_fr:
+      "Berceau des plus grandes vagues du monde, falaises spectaculaires et authentique village de pêcheurs portugais.",
   },
 
   // Alentejo
@@ -621,6 +673,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Évora, Portugal | Historische und Landschafts-Fotoshootings",
     seo_description_de:
       "Buchen Sie einen Fotografen in Évora, Portugal. Wunderschöne Fotoshootings an römischen Ruinen, in mittelalterlichen Gassen und in der goldenen Alentejo-Landschaft.",
+    description_es:
+      "El museo histórico al aire libre del Alentejo: ruinas romanas, calles medievales y paisajes dorados de viñedos.",
+    description_fr:
+      "Le musée historique à ciel ouvert de l'Alentejo — ruines romaines, ruelles médiévales et paysages dorés de vignobles.",
   },
 
   // Southern Portugal
@@ -693,6 +749,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Lagos, Portugal | Ponta-da-Piedade- und Strand-Fotoshootings",
     seo_description_de:
       "Buchen Sie einen Fotografen in Lagos, Portugal. Atemberaubende Fotoshootings an der Ponta da Piedade, an Klippen und Stränden der westlichen Algarve.",
+    description_es:
+      "El alma del Algarve: la espectacular Ponta da Piedade, calas escondidas y un casco antiguo lleno de carácter.",
+    description_fr:
+      "L'âme de l'Algarve — la spectaculaire Ponta da Piedade, criques cachées et vieille ville pleine de caractère.",
   },
   {
     id: "tavira",
@@ -726,6 +786,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Tavira, Portugal | Elegante Algarve-Fotoshootings",
     seo_description_de:
       "Buchen Sie einen Fotografen in Tavira, Portugal. Wunderschöne Fotoshootings in der elegantesten Stadt der Algarve und im Naturpark Ria Formosa.",
+    description_es:
+      "La ciudad más elegante del Algarve: arquitectura morisca, puentes románticos sobre el río Gilão y los inmaculados islotes de la Ria Formosa.",
+    description_fr:
+      "La ville la plus élégante de l'Algarve — architecture mauresque, ponts romantiques sur le Gilão et îlots préservés de la Ria Formosa.",
   },
   {
     id: "portimao",
@@ -750,6 +814,10 @@ export const locations: Location[] = [
     long_description_de: "Portimão ist eine der dynamischsten Küstenstädte der Algarve. Der atemberaubende Praia da Rocha mit seinen goldenen Klippen und Felsformationen bietet eine eindrucksvolle Kulisse für Fotoshootings. Die Promenade von Alvor, die historische Altstadt und der malerische Yachthafen liefern abwechslungsreiche Hintergründe. Beim Sonnenuntergang erstrahlen die Klippen in warmen Orangetönen — perfekt für Paar- und Familien-Fotoshootings.",
     seo_title_de: "Fotograf in Portimão — Klippen-Fotoshootings an der Algarve",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Portimão, Portugal. Atemberaubende Klippen-, Praia-da-Rocha- und Marina-Fotoshootings. Ab 150 €.",
+    description_es:
+      "Playas dramáticas de acantilado, la famosa Praia da Rocha y energía vibrante junto al mar en la costa del Algarve.",
+    description_fr:
+      "Plages encaissées, la célèbre Praia da Rocha et une énergie vivante en bord de mer sur la côte de l'Algarve.",
   },
   {
     id: "albufeira",
@@ -774,6 +842,10 @@ export const locations: Location[] = [
     long_description_de: "Albufeira ist das pulsierende Herz des Algarve-Tourismus. Die weiß getünchten Häuser und engen Kopfsteinpflastergassen der Altstadt führen hinunter zum Fischerstrand, während die dramatische Benagil-Höhle in der Nähe zu den meistfotografierten Naturwundern Portugals zählt. Die Strände São Rafael und Olhos de Água beeindrucken mit imposanten Felsformationen, ideal für Sessions zur goldenen Stunde.",
     seo_title_de: "Fotograf in Albufeira — Strand- und Altstadt-Fotoshootings",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Albufeira, Algarve. Strand-, Altstadt- und Meeresgrotten-Fotoshootings. Verifizierte Bewertungen. Ab 150 €.",
+    description_es:
+      "El destino turístico más popular del Algarve: playas doradas, encantadoras calles del casco antiguo y espectaculares grutas marinas.",
+    description_fr:
+      "La station la plus populaire de l'Algarve — plages dorées, charmantes ruelles de la vieille ville et grottes marines spectaculaires.",
   },
   {
     id: "faro",
@@ -798,6 +870,10 @@ export const locations: Location[] = [
     long_description_de: "Faro ist das Tor zur Algarve und zugleich ein verstecktes Juwel. Die ummauerte Altstadt (Cidade Velha) mit ihren Kopfsteinpflastergassen, der Kathedrale und Orangenbäumen verströmt charmantes europäisches Flair. Der Naturpark Ria Formosa erstreckt sich entlang der Küste mit unberührten Stränden auf vorgelagerten Inseln, die per Boot erreichbar sind — die Ilha Deserta und die Ilha de Faro sind perfekt für intime, abgeschiedene Fotoshootings.",
     seo_title_de: "Fotograf in Faro — Altstadt- und Ria-Formosa-Fotoshootings",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Faro, Algarve. Historische Altstadt-, Ria-Formosa- und Inselstrand-Fotoshootings. Ab 150 €.",
+    description_es:
+      "La elegante capital del Algarve: casco histórico amurallado, laguna de la Ria Formosa y tranquilas playas de las islas barrera.",
+    description_fr:
+      "L'élégante capitale de l'Algarve — vieille ville fortifiée, lagune de la Ria Formosa et plages paisibles sur les îles-barrières.",
   },
   {
     id: "vilamoura",
@@ -822,6 +898,10 @@ export const locations: Location[] = [
     long_description_de: "Vilamoura ist die prestigeträchtigste Urlaubsdestination der Algarve. Die ikonische Marina, gesäumt von Luxusyachten, Restaurants und Boutiquen, bildet die Kulisse für anspruchsvolle Fotoshootings. Der Praia da Falésia — ein 6 km langer Streifen goldener Sand vor beeindruckenden orange-roten Klippen — gehört zu den fotogensten Stränden Portugals. Ideal für Paare, die eine elegante, polierte Ästhetik suchen.",
     seo_title_de: "Fotograf in Vilamoura — Luxus-Marina- und Strand-Fotoshootings",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Vilamoura, Algarve. Luxuriöse Marina-, Praia-da-Falésia- und Resort-Fotoshootings. Ab 150 €.",
+    description_es:
+      "Vida de marina de lujo, playas doradas y glamour algarveño de alto nivel, perfecto para sesiones fotográficas con estilo.",
+    description_fr:
+      "L'art de vivre marina de luxe, plages dorées et glamour algarvien — idéal pour des séances photo élégantes.",
   },
   // Greater Lisbon — additional
   {
@@ -847,6 +927,10 @@ export const locations: Location[] = [
     long_description_de: "Sesimbra ist ein wunderschönes Fischerdorf, nur 40 Minuten südlich von Lissabon. Die maurische Burg auf dem Hügel bietet Panoramablicke auf den Atlantik, während der geschützte Strand und die bunten Fischerboote eine quintessentiell portugiesische Szene ergeben. Die nahe Serra da Arrábida mit ihren türkisfarbenen Buchten zählt zu den schönsten Naturgebieten in der Umgebung Lissabons — ideal für abenteuerlustige Paare und naturliebende Familien.",
     seo_title_de: "Fotograf in Sesimbra — Burg- und Strand-Fotoshootings nahe Lissabon",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Sesimbra, Portugal. Burgblicke, kristallklare Strände und Arrábida-Küste-Fotoshootings. Ab 150 €.",
+    description_es:
+      "Un encantador pueblo pesquero con aguas cristalinas, castillo en lo alto de la colina y la espectacular costa de Arrábida cerca.",
+    description_fr:
+      "Un charmant village de pêcheurs aux eaux cristallines, château perché et côte d'Arrábida spectaculaire à proximité.",
   },
   {
     id: "ericeira",
@@ -871,6 +955,10 @@ export const locations: Location[] = [
     long_description_de: "Ericeira ist eine World Surfing Reserve und eine der coolsten Küstenstädte Portugals, nur 35 Minuten von Lissabon entfernt. Die dramatischen Atlantikklippen, die lebendige Street-Art, die weiß getünchten Gebäude mit blauen Akzenten und die bunten Fischerboote machen den Ort unglaublich fotogen. Die entspannte Surf-Kultur sorgt für eine lockere, natürliche Energie — perfekt für authentische, ungestellte Fotoshootings.",
     seo_title_de: "Fotograf in Ericeira — Surfstadt- und Klippen-Fotoshootings",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Ericeira, Portugal. Surfstadt-, Atlantikklippen- und Bohemian-Vibe-Fotoshootings nahe Lissabon. Ab 150 €.",
+    description_es:
+      "Pueblo surfista de nivel mundial con acantilados atlánticos abruptos, calles encaladas y un ambiente bohemio relajado.",
+    description_fr:
+      "Un haut lieu du surf mondial avec falaises atlantiques abruptes, rues blanchies à la chaux et ambiance bohème décontractée.",
   },
   {
     id: "arrabida",
@@ -895,6 +983,10 @@ export const locations: Location[] = [
     long_description_de: "Die Serra da Arrábida ist ein Naturpark mit einigen der eindrucksvollsten Landschaften in der Nähe Lissabons. Das türkisfarbene Wasser des Praia de Galapinhos (gewählt zu einem der schönsten Strände Europas), die bewaldeten Bergpfade und die dramatischen Küstenklippen ergeben eine paradiesische Kulisse. Perfekt für abenteuerlustige Paare, die Aufnahmen wie aus den Tropen wünschen — und das nur 45 Minuten von Lissabon entfernt.",
     seo_title_de: "Fotograf in Arrábida — Türkisstrand-Fotoshootings nahe Lissabon",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Arrábida, Portugal. Türkisbuchten, Bergpfade und Fotoshootings an einsamen Stränden. Ab 150 €.",
+    description_es:
+      "Un paraíso escondido de calas turquesas, montañas cubiertas de bosque y playas aisladas justo al sur de Lisboa.",
+    description_fr:
+      "Un paradis caché de criques turquoise, de montagnes boisées et de plages isolées juste au sud de Lisbonne.",
   },
 
   // Islands — additional
@@ -921,6 +1013,10 @@ export const locations: Location[] = [
     long_description_de: "Funchal ist das Herz der Insel Madeira — eine Stadt, in der die Berge dramatisch in den Atlantik abfallen. Der Tropische Garten Monte Palace, der bunte Mercado dos Lavradores, die historische Altstadt mit ihren bemalten Türen und die panoramische Seilbahnfahrt bieten vielfältige und beeindruckende Kulissen. Das ganzjährig subtropische Klima sorgt zu jeder Jahreszeit für perfektes goldenes Licht für Fotoshootings.",
     seo_title_de: "Fotograf in Funchal, Madeira — Tropische-Gärten- und Ozean-Fotoshootings",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Funchal, Madeira. Botanische Gärten, Altstadt und Berg-Ozean-Fotoshootings. Ab 150 €.",
+    description_es:
+      "La vibrante capital de Madeira: jardines botánicos, mercados coloridos y un paisaje espectacular donde la montaña abraza el océano.",
+    description_fr:
+      "La capitale dynamique de Madère — jardins botaniques, marchés colorés et paysages saisissants où la montagne rencontre l'océan.",
   },
   {
     id: "ponta-delgada",
@@ -945,6 +1041,10 @@ export const locations: Location[] = [
     long_description_de: "Ponta Delgada ist die Hauptstadt von São Miguel, der größten Insel der Azoren. Die Stadttore Portas da Cidade, die schwarz-weißen Kopfsteinpflastergassen und die dramatische Vulkanlandschaft bieten einzigartige Fotoshooting-Kulissen, wie man sie nirgends sonst in Europa findet. Tagesausflüge zu den Zwillingsseen von Sete Cidades, den heißen Quellen von Furnas und den Teeplantagen liefern außergewöhnliche Hintergründe.",
     seo_title_de: "Fotograf in Ponta Delgada, Azoren — Vulkansee-Fotoshootings",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Ponta Delgada, Azoren. Vulkanseen, heiße Quellen und Atlantikinsel-Fotoshootings. Ab 150 €.",
+    description_es:
+      "Puerta de entrada a las Azores: lagos volcánicos, paisajes verdes exuberantes y una encantadora ciudad insular del Atlántico.",
+    description_fr:
+      "Porte d'entrée des Açores — lacs volcaniques, paysages verdoyants et charmante ville insulaire de l'Atlantique.",
   },
 
   // Islands
