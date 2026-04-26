@@ -3,9 +3,12 @@ import { routing } from "./routing";
 
 // Deep-merge fallback (en) with target locale so partial translations work:
 // any key missing in es/fr/de/pt falls back to the English string.
+// Arrays are NOT merged — replaced wholesale — otherwise the merge spreads
+// numeric indices into a plain object and `.map` fails at the call site.
 function deepMerge<T>(base: T, override: T): T {
   if (typeof base !== "object" || base === null) return override ?? base;
   if (typeof override !== "object" || override === null) return base;
+  if (Array.isArray(base) || Array.isArray(override)) return override ?? base;
   const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
   for (const k of Object.keys(override as Record<string, unknown>)) {
     const b = (base as Record<string, unknown>)[k];
