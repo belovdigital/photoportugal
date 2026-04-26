@@ -238,6 +238,15 @@ export async function sendBookingRequestToClient(
       next: `${photographerName} examinera votre demande et reviendra vers vous rapidement. Vous pouvez aussi lui envoyer un message directement pour discuter des détails.`,
       cta: "Voir votre réservation",
     },
+    es: {
+      subject: `Solicitud de reserva enviada a ${photographerName}`,
+      h2: "¡Solicitud de reserva enviada!",
+      greeting: `Hola ${firstName},`,
+      body: `Su solicitud de reserva ha sido enviada a <strong>${photographerName}</strong>${packageName ? ` para ${packageName}` : ""}${shootDate ? ` el ${shootDate}` : ""}.`,
+      nextLabel: "¿Qué pasa ahora?",
+      next: `${photographerName} revisará su solicitud y le responderá en breve. También puede enviarle un mensaje directo para acordar los detalles.`,
+      cta: "Ver su reserva",
+    },
   }, locale);
 
   await sendEmail(
@@ -400,6 +409,19 @@ export async function sendBookingConfirmationWithPayment(
       tip: "Nous recommandons aussi d'envoyer un message à votre photographe pour discuter du point de rencontre, des idées de tenue et de toute demande spéciale.",
       cta: "Ouvrir les messages",
     },
+    es: {
+      subject: `¡${photographerName} confirmó su reserva${totalPrice ? ` — pague ahora para asegurarla` : ""}!`,
+      h2: "¡Reserva confirmada!",
+      greeting: `Hola ${firstName},`,
+      confirmed: `<strong>${photographerName}</strong> ha confirmado su sesión fotográfica${shootDate ? ` el ${shootDate}` : ""}.`,
+      paymentLabel: "Pago requerido:",
+      paymentBody: (priceStr: string) => `Por favor pague ${priceStr} para asegurar su sesión. Su pago queda guardado de forma segura hasta que reciba y acepte sus fotos.`,
+      payNow: (priceStr: string) => `Pagar ahora — ${priceStr}`,
+      viewBooking: "Ver reserva",
+      tipLabel: "Consejo:",
+      tip: "Le recomendamos también enviar un mensaje a su fotógrafo para acordar el punto de encuentro, ideas de outfit y cualquier petición especial.",
+      cta: "Abrir mensajes",
+    },
   }, locale);
 
   const priceStr = price ? formatPrice(price, locale) : "";
@@ -500,6 +522,14 @@ export async function sendPaymentConfirmedToClient(
       body2: "Votre argent est conservé en toute sécurité. Après la séance, votre photographe vous livrera les photos éditées. Une fois la livraison acceptée, le paiement sera libéré au photographe.",
       cta: "Voir la réservation",
     },
+    es: {
+      subject: `Pago confirmado — ${priceStr} por su sesión con ${photographerName}`,
+      h2: "¡Pago confirmado!",
+      greeting: `Hola ${firstName},`,
+      body1: `Su pago de <strong>${priceStr}</strong> por la sesión fotográfica con <strong>${photographerName}</strong> ha sido confirmado.`,
+      body2: "Su dinero queda guardado de forma segura. Tras la sesión, su fotógrafo le entregará las fotos editadas. Cuando acepte la entrega, el pago se liberará al fotógrafo.",
+      cta: "Ver reserva",
+    },
   }, locale);
 
   await sendEmail(
@@ -590,6 +620,17 @@ export async function sendDeliveryAcceptedToClient(
       googleCta: "⭐ Évaluez-nous sur Google",
       ppCta: `Évaluer ${photographerName} sur Photo Portugal`,
     },
+    es: {
+      subject: `Entrega aceptada — ¡gracias!`,
+      h2: "¡Gracias!",
+      greeting: `Hola ${firstName},`,
+      body: `Ha aceptado la entrega de las fotos de <strong>${photographerName}</strong>. ¡Esperamos que le encanten sus fotos!`,
+      downloadNote: `Sus fotos estarán disponibles para descarga durante <strong>90 días</strong>. ¡Asegúrese de descargarlas antes!`,
+      reviewIntro: "Si disfrutó la experiencia, ¡nos encantaría conocer su opinión! Las reseñas ayudan a otros viajeros a descubrir Photo Portugal.",
+      reviewOnLabel: "Deje una reseña en:",
+      googleCta: "⭐ Reséñenos en Google",
+      ppCta: `Reseñar a ${photographerName} en Photo Portugal`,
+    },
   }, locale);
 
   await sendEmail(
@@ -659,6 +700,16 @@ export async function sendTrustpilotFollowUpToClient(
       googleCta: "Évaluez-nous sur Google",
       trustpilotCta: "Évaluez-nous sur Trustpilot",
       footer: "Même quelques mots font une énorme différence. Merci de soutenir la photographie indépendante au Portugal !",
+    },
+    es: {
+      subject: `Una última cosa, ${clientName} — significa mucho para nosotros`,
+      h2: "¡Gracias por su reseña!",
+      greeting: `Hola ${firstName},`,
+      body1: `Apreciamos enormemente que haya compartido su experiencia con <strong>${photographerName}</strong> en nuestra plataforma.`,
+      body2: "Tenemos un pequeño favor que pedirle — significaría muchísimo para nuestro pequeño negocio si pudiera dejar una breve reseña en Google o Trustpilot. Lleva menos de un minuto y ayuda a otros viajeros a descubrir Photo Portugal:",
+      googleCta: "Reséñenos en Google",
+      trustpilotCta: "Reséñenos en Trustpilot",
+      footer: "Incluso unas pocas palabras marcan una gran diferencia. ¡Gracias por apoyar la fotografía independiente en Portugal!",
     },
   }, locale);
 
@@ -734,6 +785,13 @@ export async function sendNewMessageNotification(
       greeting: `Bonjour ${firstName},`,
       body: `Vous avez de nouveaux messages de <strong>${senderName}</strong>.`,
       cta: "Lire les messages",
+    },
+    es: {
+      subject: `Tiene nuevos mensajes de ${senderName}`,
+      h2: "Nuevos mensajes",
+      greeting: `Hola ${firstName},`,
+      body: `Tiene nuevos mensajes de <strong>${senderName}</strong>.`,
+      cta: "Leer mensajes",
     },
   }, locale);
 
@@ -812,6 +870,14 @@ export async function sendPasswordResetEmail(
       cta: "Réinitialiser le mot de passe",
       footer: "Ce lien expire dans 30 minutes. Si vous n'avez pas demandé de réinitialisation, vous pouvez ignorer cet e-mail.",
     },
+    es: {
+      subject: "Restablezca su contraseña de Photo Portugal",
+      h2: "Restablezca su contraseña",
+      greeting: `Hola ${firstName},`,
+      body: "Hemos recibido una solicitud para restablecer su contraseña. Haga clic en el botón de abajo para crear una nueva:",
+      cta: "Restablecer contraseña",
+      footer: "Este enlace caduca en 30 minutos. Si no solicitó el restablecimiento, puede ignorar este correo.",
+    },
   }, locale);
 
   await sendEmail(
@@ -864,6 +930,14 @@ export async function sendVerificationEmail(to: string, name: string, token: str
       body: "Merci de votre inscription ! Veuillez vérifier votre adresse e-mail pour activer votre compte :",
       cta: "Vérifier l'adresse e-mail",
       footer: "Ce lien expire dans 24 heures. Si vous n'avez pas créé de compte, vous pouvez ignorer cet e-mail.",
+    },
+    es: {
+      subject: "Verifique su correo — Photo Portugal",
+      h2: "Verifique su correo",
+      greeting: `Hola ${firstName},`,
+      body: "¡Gracias por registrarse! Verifique su dirección de correo para activar su cuenta:",
+      cta: "Verificar dirección de correo",
+      footer: "Este enlace caduca en 24 horas. Si no creó una cuenta, puede ignorar este correo.",
     },
   }, locale);
 
@@ -989,6 +1063,20 @@ export async function sendWelcomeEmail(
         s3Body: "Votre paiement est conservé sous séquestre jusqu'à validation des photos",
         cta: "Parcourir les photographes",
         footerHtml: `Des questions ? <a href="${localizedUrl("/support", locale, BASE_URL)}" style="color:#C94536;">Visitez notre Centre d'aide</a> ou <a href="${localizedUrl("/contact", locale, BASE_URL)}" style="color:#C94536;">contactez-nous</a>.`,
+      },
+      es: {
+        subject: "¡Bienvenido a Photo Portugal!",
+        h2: "¡Bienvenido a Photo Portugal!",
+        greeting: `Hola ${firstName},`,
+        intro: "¡Todo listo! Así puede reservar su sesión fotográfica ideal en Portugal:",
+        s1Title: "Explorar fotógrafos",
+        s1Body: "Encuentre su estilo en Lisboa, Oporto, Algarve y 20+ ubicaciones más",
+        s2Title: "Elegir un paquete",
+        s2Body: "Seleccione la duración de la sesión y el número de fotos",
+        s3Title: "Reservar y pagar de forma segura",
+        s3Body: "Su pago queda en custodia hasta que apruebe las fotos",
+        cta: "Explorar fotógrafos",
+        footerHtml: `¿Preguntas? <a href="${localizedUrl("/support", locale, BASE_URL)}" style="color:#C94536;">Visite nuestro Centro de ayuda</a> o <a href="${localizedUrl("/contact", locale, BASE_URL)}" style="color:#C94536;">contáctenos</a>.`,
       },
     }, locale);
 
