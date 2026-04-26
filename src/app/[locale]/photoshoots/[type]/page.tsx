@@ -97,7 +97,8 @@ export default async function ShootTypePage({
 
   const shootTypeReviews = await getReviewsForShootType(
     shootType.photographerShootTypeNames || [shootType.name],
-    6
+    6,
+    locale,
   );
 
   // Real packages from photographers offering this shoot type
@@ -410,7 +411,7 @@ export default async function ShootTypePage({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-gray-900">{normalizeName(pkg.photographer_name)}</p>
                       {pkg.review_count > 0 && (
-                        <p className="text-xs text-gray-500">★ {Number(pkg.rating).toFixed(1)} · {pkg.review_count} {pkg.review_count === 1 ? "review" : "reviews"}</p>
+                        <p className="text-xs text-gray-500">★ {Number(pkg.rating).toFixed(1)} · {pkg.review_count} {pkg.review_count === 1 ? tc("review") : tc("reviews")}</p>
                       )}
                     </div>
                   </div>

@@ -163,7 +163,7 @@ export default async function PhotographersPage({
   const { location: initialLocation, shoot, shootType } = await searchParams;
   const initialShootType = shoot || shootType;
   const dbPhotographers = await getDbPhotographers();
-  const quotes = await getOneLinerQuotesForPhotographers(dbPhotographers.map((p) => p.id));
+  const quotes = await getOneLinerQuotesForPhotographers(dbPhotographers.map((p) => p.id), locale);
   const resolvedShootType = resolveShootType(initialShootType);
   const localePrefix = locale === "en" ? "" : `/${locale}`;
 

@@ -178,7 +178,7 @@ export default async function LandingPage({ params, searchParams }: {
   ).catch(() => null);
   const totalMatching = parseInt(totalRow?.count || "0");
 
-  const locationReviews = await getReviewsForLocation(city, 6);
+  const locationReviews = await getReviewsForLocation(city, 6, locale);
 
   // Pass-through UTM so Book CTA preserves attribution
   const bookParams = new URLSearchParams();

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatDuration } from "@/lib/package-pricing";
 
@@ -61,6 +61,7 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const t = useTranslations("photographers.package");
   const tc = useTranslations("common");
+  const locale = useLocale();
   const hasDescription = (pkg.description && pkg.description.trim().length > 0) || (pkg.features && pkg.features.length > 0);
 
   return (
@@ -87,7 +88,7 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
         <span className="flex items-center gap-1">
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          {formatDuration(pkg.duration_minutes)}
+          {formatDuration(pkg.duration_minutes, locale)}
         </span>
         <span className="text-warm-300">|</span>
         <span className="flex items-center gap-1">

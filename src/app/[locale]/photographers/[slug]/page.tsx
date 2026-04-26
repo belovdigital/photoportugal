@@ -640,7 +640,7 @@ export default async function PhotographerProfilePage({
             {/* About / Reviews tabs — above portfolio */}
             <ProfileTabs
               aboutLabel={t("about")}
-              reviewsLabel="Reviews"
+              reviewsLabel={tc("reviewsTitle")}
               reviewCount={photographer.review_count}
               about={
                 photographer.bio ? (

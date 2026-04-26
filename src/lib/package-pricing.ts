@@ -32,12 +32,29 @@ export function getPricingForDuration(minutes: number): { minPrice: number; reco
   return option ? { minPrice: option.minPrice, recommendedPrice: option.recommendedPrice } : null;
 }
 
-export function formatDuration(minutes: number): string {
-  const option = DURATION_OPTIONS.find((o) => o.minutes === minutes);
-  if (option) return option.label;
-  if (minutes < 60) return `${minutes} min`;
+// Per-locale words for duration labels. Falls back to English.
+const DURATION_WORDS: Record<string, { min: string; hour: string; hours: string; halfHour: string; fullDay: string }> = {
+  en: { min: "min", hour: "hour", hours: "hours", halfHour: "1.5 hours", fullDay: "Full Day (12h)" },
+  pt: { min: "min", hour: "hora", hours: "horas", halfHour: "1,5 horas", fullDay: "Dia inteiro (12h)" },
+  de: { min: "Min.", hour: "Stunde", hours: "Stunden", halfHour: "1,5 Stunden", fullDay: "Ganzer Tag (12h)" },
+  es: { min: "min", hour: "hora", hours: "horas", halfHour: "1,5 horas", fullDay: "Día completo (12h)" },
+  fr: { min: "min", hour: "heure", hours: "heures", halfHour: "1,5 heures", fullDay: "Journée entière (12h)" },
+};
+
+export function formatDuration(minutes: number, locale = "en"): string {
+  const w = DURATION_WORDS[locale] || DURATION_WORDS.en;
+  if (minutes < 60) return `${minutes} ${w.min}`;
+  if (minutes === 720) return w.fullDay;
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return `${hours} ${hours === 1 ? w.hour : w.hours}`;
+  }
+  // Half-hour increments (90, 150, 210...).
   const hours = minutes / 60;
-  return `${hours} h`;
+  if (hours === 1.5) return w.halfHour;
+  // Locale decimal separator: pt/de/es/fr use comma, en uses dot.
+  const sep = locale === "en" ? "." : ",";
+  return `${hours.toFixed(1).replace(".", sep)} ${w.hours}`;
 }
 
 export function isBelowMinimum(durationMinutes: number, price: number): boolean {

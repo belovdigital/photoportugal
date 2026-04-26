@@ -48,6 +48,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const { data: session, status } = useSession();
   const t = useTranslations("book");
   const tc = useTranslations("common");
+  const locale = useLocale();
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -341,7 +342,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                         {pkg.is_popular && <span className="ml-2 text-xs text-primary-600">{tc("mostPopular")}</span>}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {formatDuration(pkg.duration_minutes)} &middot; {pkg.num_photos} {tc("photos")}
+                        {formatDuration(pkg.duration_minutes, locale)} &middot; {pkg.num_photos} {tc("photos")}
                       </p>
                     </div>
                   </div>
@@ -548,10 +549,10 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 </div>
                 <span className="text-sm font-semibold text-gray-900">{Number(photographer.rating || 5).toFixed(1)}</span>
                 {photographer.review_count ? (
-                  <span className="text-xs text-gray-500">&middot; {photographer.review_count} reviews</span>
+                  <span className="text-xs text-gray-500">&middot; {photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")}</span>
                 ) : null}
               </div>
-              <p className="mt-3 text-sm font-semibold text-gray-900">What clients say about {photographer.name}</p>
+              <p className="mt-3 text-sm font-semibold text-gray-900">{tc("whatClientsSayAbout", { name: photographer.name })}</p>
               <div className="mt-4 space-y-4">
                 {sidebarReviews.map((r) => (
                   <div key={r.id} className="border-t border-warm-100 pt-4 first:border-t-0 first:pt-0">

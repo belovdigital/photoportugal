@@ -151,8 +151,8 @@ export default async function LandingPagePortugal({ params, searchParams }: {
   const totalMatching = parseInt(totalRow?.count || "0");
 
   const lpReviews = st
-    ? await getReviewsForShootType(st.photographerShootTypeNames || [st.name], 6)
-    : await getHomepageReviews(6);
+    ? await getReviewsForShootType(st.photographerShootTypeNames || [st.name], 6, locale)
+    : await getHomepageReviews(6, locale);
 
   const bookParams = new URLSearchParams();
   for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "gclid"] as const) {

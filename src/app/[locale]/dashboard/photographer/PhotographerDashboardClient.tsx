@@ -1402,6 +1402,7 @@ function SortablePackageCard({
   onDelete: (id: string) => void;
 }) {
   const t = useTranslations("photographerDashboard");
+  const locale = useLocale();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pkg.id });
   const pricing = getPricingForDuration(pkg.duration_minutes);
   const belowMin = pricing ? Number(pkg.price) < pricing.minPrice : false;
@@ -1443,7 +1444,7 @@ function SortablePackageCard({
             )}
           </div>
           <p className="mt-0.5 text-xs text-gray-400">
-            {formatDuration(pkg.duration_minutes)} &middot; {pkg.num_photos} {t("photosDot")} &middot; {t("dayDelivery", { days: pkg.delivery_days || 7 })}
+            {formatDuration(pkg.duration_minutes, locale)} &middot; {pkg.num_photos} {t("photosDot")} &middot; {t("dayDelivery", { days: pkg.delivery_days || 7 })}
           </p>
         </div>
 

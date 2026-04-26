@@ -3,9 +3,9 @@ import { Link } from "@/i18n/navigation";
 import { getHomepageReviews, getSiteReviewStats } from "@/lib/reviews-data";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 
-export async function TestimonialsSection() {
+export async function TestimonialsSection({ locale }: { locale?: string } = {}) {
   const t = await getTranslations("testimonials");
-  const [reviews, stats] = await Promise.all([getHomepageReviews(9), getSiteReviewStats()]);
+  const [reviews, stats] = await Promise.all([getHomepageReviews(9, locale), getSiteReviewStats()]);
 
   if (reviews.length === 0) return null;
 

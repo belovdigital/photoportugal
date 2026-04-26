@@ -30,6 +30,7 @@ import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
 import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 import { spotSlug, spotLocalized } from "@/lib/photo-spots-data";
+import { formatDuration } from "@/lib/package-pricing";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -128,13 +129,9 @@ export default async function LocationPage({
   } catch {}
 
   // Format duration range: "60 min", "1 hour", "1-2 hours", "90 min-2 hours" etc.
-  function formatDuration(min: number): string {
-    if (min < 60) return `${min} min`;
-    if (min % 60 === 0) return `${min / 60} ${min / 60 === 1 ? "hour" : "hours"}`;
-    return `${(min / 60).toFixed(1)} hours`;
-  }
+  const fmt = (min: number) => formatDuration(min, locale);
   const durationText = minDuration && maxDuration
-    ? (minDuration === maxDuration ? formatDuration(minDuration) : `${formatDuration(minDuration)} – ${formatDuration(maxDuration)}`)
+    ? (minDuration === maxDuration ? fmt(minDuration) : `${fmt(minDuration)} – ${fmt(maxDuration)}`)
     : null;
 
   // Fetch top photographers for this location (max 6)
@@ -283,7 +280,7 @@ export default async function LocationPage({
     })),
   } : null;
 
-  const locationReviews = await getReviewsForLocation(slug, 6);
+  const locationReviews = await getReviewsForLocation(slug, 6, locale);
 
   // Shoot types available for internal linking
   const shootTypeLinks = [

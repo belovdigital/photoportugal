@@ -216,7 +216,7 @@ export default async function SpotPage({
     [city]
   ).catch(() => []);
 
-  const reviews = await getReviewsForLocation(city, 3);
+  const reviews = await getReviewsForLocation(city, 3, locale);
 
   // Related spots in the same city
   const siblings = (photoSpots[city] || []).filter((s) => spotSlug(s.name) !== spot);

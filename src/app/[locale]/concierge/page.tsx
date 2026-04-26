@@ -24,7 +24,7 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
   const t = await getTranslations({ locale, namespace: "concierge" });
 
   const [reviews, stats] = await Promise.all([
-    getHomepageReviews(6).catch(() => []),
+    getHomepageReviews(6, locale).catch(() => []),
     queryOne<{ photographer_count: string; total_reviews: string; avg_rating: string; min_price: string | null }>(
       `SELECT
          (SELECT COUNT(*)::text FROM photographer_profiles WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE) AS photographer_count,

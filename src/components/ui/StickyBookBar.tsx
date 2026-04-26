@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 export function StickyBookBar({ minPrice, photographerName }: { minPrice: number | null; photographerName: string }) {
   const { data: session } = useSession();
+  const t = useTranslations("askQuestion");
+  const tc = useTranslations("common");
   const [visible, setVisible] = useState(false);
 
   const userRole = (session?.user as { role?: string } | undefined)?.role;
@@ -30,7 +33,7 @@ export function StickyBookBar({ minPrice, photographerName }: { minPrice: number
         <div className="flex-1 min-w-0">
           {minPrice ? (
             <p className="text-sm">
-              <span className="text-gray-400">From </span>
+              <span className="text-gray-400">{tc("from")} </span>
               <span className="text-lg font-bold text-gray-900">&euro;{Math.round(minPrice)}</span>
             </p>
           ) : (
@@ -41,13 +44,13 @@ export function StickyBookBar({ minPrice, photographerName }: { minPrice: number
           href="#message"
           className="shrink-0 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-primary-700"
         >
-          Message
+          {t("message")}
         </a>
         <a
           href="#packages"
           className="shrink-0 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-primary-300"
         >
-          Packages
+          {tc("packages")}
         </a>
       </div>
     </div>
