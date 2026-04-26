@@ -11,10 +11,25 @@ function isBot(ua: string): boolean {
   return /bot|crawler|spider|googlebot|bingbot|yandex|baidu|duckduck/i.test(ua);
 }
 
+// Google Ads sometimes sends UTM params with duplicate comma-joined values
+// (e.g. `?utm_source=google,google`) when both account-level and campaign-level
+// URL templates set the same param. Keep only the first unique value.
+function dedupeUtm(v: string | null | undefined): string | null {
+  if (!v) return null;
+  if (!v.includes(",")) return v;
+  const parts = v.split(",").map((p) => p.trim()).filter(Boolean);
+  const unique = [...new Set(parts)];
+  return unique.length === 1 ? unique[0] : v;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { visitor_id, session_id, referrer, utm_source, utm_medium, utm_campaign, utm_term, gclid, landing_page, screen_width, language, ab_hero } = body;
+    const { visitor_id, session_id, referrer, utm_source: rawSource, utm_medium: rawMedium, utm_campaign: rawCampaign, utm_term: rawTerm, gclid, landing_page, screen_width, language, ab_hero } = body;
+    const utm_source = dedupeUtm(rawSource);
+    const utm_medium = dedupeUtm(rawMedium);
+    const utm_campaign = dedupeUtm(rawCampaign);
+    const utm_term = dedupeUtm(rawTerm);
 
     if (!visitor_id || !session_id) return NextResponse.json({ ok: true });
 

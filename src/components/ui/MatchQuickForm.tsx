@@ -186,7 +186,8 @@ export function MatchQuickForm({
                 className="fixed z-[200] rounded-xl border border-warm-200 bg-white shadow-xl"
                 style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}
               >
-                <div className="p-2">
+                {/* Search hidden on mobile — sm-and-below input fields with text < 16px trigger iOS auto-zoom and break the layout. Mobile gets the full dropdown without filter. */}
+                <div className="hidden sm:block p-2">
                   <input
                     type="text"
                     value={locSearch}
@@ -196,7 +197,7 @@ export function MatchQuickForm({
                     autoFocus
                   />
                 </div>
-                <div className="max-h-60 overflow-y-auto px-1 pb-1">
+                <div className="max-h-72 sm:max-h-60 overflow-y-auto px-1 py-1 sm:pb-1">
                   {filteredLocations.map((loc, idx) => {
                     const isLisbon = loc.slug === "lisbon";
                     const isSelected = locationSlug === loc.slug;

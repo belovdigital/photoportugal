@@ -19,7 +19,7 @@ export async function GET() {
           (SELECT json_agg(json_build_object(
             'id', pp.id, 'name', u.name, 'slug', pp.slug,
             'avatar_url', u.avatar_url,
-            'rating', COALESCE(pp.avg_rating, 0),
+            'rating', COALESCE(pp.rating, 0),
             'review_count', COALESCE(pp.review_count, 0),
             'min_price', (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)
           ))
