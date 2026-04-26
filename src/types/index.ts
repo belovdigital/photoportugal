@@ -142,6 +142,18 @@ export interface Location {
   long_description_de?: string;
   seo_title_de?: string;
   seo_description_de?: string;
+  /** Spanish (es-ES) translations */
+  name_es?: string;
+  description_es?: string;
+  long_description_es?: string;
+  seo_title_es?: string;
+  seo_description_es?: string;
+  /** French (fr-FR) translations */
+  name_fr?: string;
+  description_fr?: string;
+  long_description_fr?: string;
+  seo_title_fr?: string;
+  seo_description_fr?: string;
 }
 
 export interface Booking {

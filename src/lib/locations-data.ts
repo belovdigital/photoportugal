@@ -34,6 +34,12 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Lissabon — Professionelle Urlaubs-Fotoshootings buchen",
     seo_description_de:
       "Buchen Sie einen professionellen Fotografen in Lissabon, Portugal. Paar-, Familien-, Heiratsantrag- und Solo-Fotoshootings in Alfama, Belém, Tram 28 und mehr. Verifizierte Bewertungen. Ab 150 €.",
+    name_es: "Lisboa",
+    description_es:
+      "Capture momentos inolvidables en la capital más soleada de Europa: calles empedradas, coloridos azulejos y vistas espectaculares sobre el río Tajo.",
+    name_fr: "Lisbonne",
+    description_fr:
+      "Capturez des moments inoubliables dans la capitale la plus ensoleillée d'Europe — ruelles pavées, azulejos colorés et vues spectaculaires sur le Tage.",
   },
   {
     id: "sintra",
@@ -67,6 +73,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Sintra — Märchenhafte Fotoshootings am Pena-Palast",
     seo_description_de:
       "Buchen Sie einen professionellen Fotografen in Sintra, Portugal. Paar-, Heiratsantrag- und Verlobungs-Fotoshootings am Pena-Palast, in der Regaleira und mehr. Ab 150 €.",
+    description_es:
+      "Un mundo de cuento de hadas con palacios encantados, bosques místicos y jardines románticos a pocos minutos de Lisboa.",
+    description_fr:
+      "Un univers de conte de fées : palais enchantés, forêts mystiques et jardins romantiques à quelques minutes de Lisbonne.",
   },
   {
     id: "cascais",
@@ -100,6 +110,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Cascais, Portugal | Küsten-Fotoshootings nahe Lissabon",
     seo_description_de:
       "Buchen Sie einen professionellen Fotografen in Cascais, Portugal. Atemberaubende Strand-, Klippen- und Stadt-Fotoshootings in der Nähe von Lissabon. Verifizierte lokale Fotografen.",
+    description_es:
+      "Un elegante pueblo costero con playas de arena, espectaculares acantilados atlánticos y refinada arquitectura del siglo XIX.",
+    description_fr:
+      "Un élégant village côtier avec plages de sable, falaises atlantiques spectaculaires et architecture raffinée du XIXᵉ siècle.",
   },
   {
     id: "caparica",
@@ -268,6 +282,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf in Porto — Professionelle Urlaubs-Fotoshootings buchen",
     seo_description_de:
       "Buchen Sie einen professionellen Fotografen in Porto, Portugal. Paar-, Familien- und Heiratsantrag-Fotoshootings an der Ribeira, Dom-Luís-Brücke und mehr. Verifizierte Bewertungen. Ab 90 €.",
+    description_es:
+      "La joya romántica del norte: arquitectura barroca, atardeceres sobre el Duero y la icónica ribera de la Ribeira.",
+    description_fr:
+      "Le joyau romantique du nord : architecture baroque, couchers de soleil sur le Douro et la mythique Ribeira au bord de l'eau.",
   },
   {
     id: "braga",
@@ -638,6 +656,10 @@ export const locations: Location[] = [
     seo_title_de: "Algarve Fotograf — Strand-, Klippen- und Höhlen-Fotoshootings",
     seo_description_de:
       "Buchen Sie einen professionellen Fotografen an der Algarve, Portugal. Verlobungs-Fotografie in Südportugal, Strand-, Klippen- und Höhlen-Fotoshootings in Benagil, Lagos und Praia da Marinha. Verifizierte Bewertungen. Ab 90 €.",
+    description_es:
+      "Espectaculares acantilados dorados, aguas turquesas y grutas marinas escondidas: el Algarve es el estudio fotográfico perfecto de la naturaleza.",
+    description_fr:
+      "Falaises dorées spectaculaires, eaux turquoise et grottes marines secrètes — l'Algarve est le studio photo parfait offert par la nature.",
   },
   {
     id: "lagos",
@@ -958,6 +980,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf auf Madeira, Portugal | Natur- und Abenteuer-Fotoshootings",
     seo_description_de:
       "Finden Sie professionelle Fotografen auf Madeira und in Funchal, Portugal. Halten Sie atemberaubende Natur-, Berg- und Küstenaufnahmen fest. Buchen Sie heute Ihr Madeira-Fotoshooting.",
+    description_es:
+      "El jardín flotante del Atlántico: picos volcánicos, senderos de levadas y paisajes tropicales exuberantes.",
+    description_fr:
+      "Le jardin flottant de l'Atlantique : sommets volcaniques, sentiers des levadas et paysages tropicaux luxuriants.",
   },
   {
     id: "azores",
@@ -991,6 +1017,10 @@ export const locations: Location[] = [
     seo_title_de: "Fotograf auf den Azoren, Portugal | Vulkaninsel-Fotoshootings",
     seo_description_de:
       "Finden Sie professionelle Fotografen auf den Azoren und auf São Miguel, Portugal. Buchen Sie einzigartige Fotoshootings an Sete Cidades, Vulkanseen und dramatischen Insellandschaften.",
+    description_es:
+      "Islas volcánicas remotas con lagos de cráter color esmeralda, fuentes termales y los paisajes más espectaculares de Europa.",
+    description_fr:
+      "Îles volcaniques isolées aux lacs de cratère émeraude, sources thermales et paysages parmi les plus spectaculaires d'Europe.",
   },
 ];
 
