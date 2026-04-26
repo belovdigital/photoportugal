@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
+import { verifyToken } from "@/app/api/admin/login/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+async function isAdmin(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
+  return token ? !!verifyToken(token) : false;
+}
+
 export async function GET(req: NextRequest) {
-  // Admin-only
-  const session = await auth();
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  if (role !== "admin") return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  // Admin-only — uses HMAC `admin_token` cookie (set by /api/admin/login),
+  // matching the convention used by every other /api/admin/* route.
+  if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const filter = req.nextUrl.searchParams.get("filter") || "all";
   const where: string[] = ["1=1"];
