@@ -2404,7 +2404,9 @@
     "deleteTooltip": "Supprimer",
     "profilePhotoPreview": "Aperçu de la photo de profil",
     "coverAlt": "Couverture",
-    "packageFeaturePlaceholder": "ex. 30 photos retouchées professionnellement"
+    "packageFeaturePlaceholder": "ex. 30 photos retouchées professionnellement",
+    "minimumPriceFor": "Le prix minimum pour {duration} est {price} €",
+    "whatsIncluded": "Ce qui est inclus"
   },
   "subscriptions": {
     "title": "Abonnements",

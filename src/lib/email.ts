@@ -305,6 +305,16 @@ export async function sendBookingConfirmation(
       nextStep: "Discutez du point de rencontre, des idées de tenue et de toute demande spéciale avec votre photographe via notre système de messagerie.",
       cta: "Ouvrir les messages",
     },
+    es: {
+      subject: `¡Reserva confirmada con ${photographerName}!`,
+      h2: "¡Reserva confirmada!",
+      greeting: `Hola ${clientName.split(" ")[0]},`,
+      confirmed: `<strong>${photographerName}</strong> ha confirmado su sesión fotográfica${shootDate ? ` el ${shootDate}` : ""}.`,
+      msgPrompt: "Puede enviar un mensaje a su fotógrafo para acordar los detalles.",
+      nextStepLabel: "Siguiente paso:",
+      nextStep: "Acuerde con su fotógrafo el punto de encuentro, ideas de outfit y cualquier petición especial a través de nuestro sistema de mensajería.",
+      cta: "Abrir mensajes",
+    },
   }, locale);
 
   await sendEmail(

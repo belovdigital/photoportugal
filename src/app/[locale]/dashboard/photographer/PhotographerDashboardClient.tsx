@@ -127,6 +127,7 @@ export function PhotographerDashboardClient({
   const router = useRouter();
   const t = useTranslations("photographerDashboard");
   const td = useTranslations("dashboard");
+  const locale = useLocale();
   const { modal, confirm } = useConfirmModal();
   const [activeTab, setActiveTabState] = useState<Tab>(() => {
     if (typeof window !== "undefined") {
@@ -493,7 +494,7 @@ export function PhotographerDashboardClient({
     const priceVal = parseFloat(pkgPrice);
     const pricing = getPricingForDuration(durationMin);
     if (pricing && priceVal < pricing.minPrice) {
-      showMessage(`Minimum price for ${DURATION_OPTIONS.find(o => o.minutes === durationMin)?.label} is €${pricing.minPrice}`);
+      showMessage(t("minimumPriceFor", { duration: formatDuration(durationMin, locale), price: pricing.minPrice }));
       return;
     }
 
@@ -1144,6 +1145,7 @@ export function PhotographerDashboardClient({
                 onSubmit={savePackage}
                 onCancel={() => setShowPackageForm(false)}
                 t={t}
+                locale={locale}
                 className="mt-6"
               />
             )}
@@ -1179,6 +1181,7 @@ export function PhotographerDashboardClient({
                         onSubmit={savePackage}
                         onCancel={() => setShowPackageForm(false)}
                         t={t}
+                        locale={locale}
                       />
                     ) : (
                       <SortablePackageCard
@@ -1236,7 +1239,7 @@ function PackageFormInline({
   pkgPhotos, setPkgPhotos, pkgPrice, setPkgPrice, pkgDeliveryDays, setPkgDeliveryDays,
   pkgPopular, setPkgPopular, pkgPublic, setPkgPublic,
   pkgFeatures, setPkgFeatures,
-  saving, isEdit, onSubmit, onCancel, t, className = "",
+  saving, isEdit, onSubmit, onCancel, t, locale, className = "",
 }: {
   title: string;
   pkgName: string; setPkgName: (v: string) => void;
@@ -1252,7 +1255,7 @@ function PackageFormInline({
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  t: any; className?: string;
+  t: any; locale: string; className?: string;
 }) {
   return (
     <form onSubmit={onSubmit} className={`rounded-xl border border-primary-200 bg-white p-6 space-y-4 ring-2 ring-primary-100 ${className}`}>
@@ -1279,7 +1282,7 @@ function PackageFormInline({
         </div>
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            What&apos;s included
+            {t("whatsIncluded")}
             <span className="ml-1.5 text-xs font-normal text-amber-600">{t("packageNameHintEnglish")}</span>
           </label>
           <div className="space-y-2">
@@ -1316,7 +1319,7 @@ function PackageFormInline({
             className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 bg-white">
             <option value="">{t("selectDuration")}</option>
             {DURATION_OPTIONS.map((opt) => (
-              <option key={opt.minutes} value={opt.minutes}>{opt.label}</option>
+              <option key={opt.minutes} value={opt.minutes}>{formatDuration(opt.minutes, locale)}</option>
             ))}
           </select>
         </div>

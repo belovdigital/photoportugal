@@ -2259,7 +2259,9 @@
     "deleteTooltip": "Löschen",
     "profilePhotoPreview": "Profilfoto-Vorschau",
     "coverAlt": "Titelbild",
-    "packageFeaturePlaceholder": "z. B. 30 professionell bearbeitete Fotos"
+    "packageFeaturePlaceholder": "z. B. 30 professionell bearbeitete Fotos",
+    "minimumPriceFor": "Mindestpreis für {duration} ist {price} €",
+    "whatsIncluded": "Was ist enthalten"
   },
   "subscriptions": {
     "title": "Abonnements",

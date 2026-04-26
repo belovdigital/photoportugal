@@ -2259,7 +2259,9 @@
     "deleteTooltip": "Delete",
     "profilePhotoPreview": "Profile photo preview",
     "coverAlt": "Cover",
-    "packageFeaturePlaceholder": "e.g. 30 professionally edited photos"
+    "packageFeaturePlaceholder": "e.g. 30 professionally edited photos",
+    "minimumPriceFor": "Minimum price for {duration} is €{price}",
+    "whatsIncluded": "What's included"
   },
   "subscriptions": {
     "title": "Subscriptions",
