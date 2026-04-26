@@ -572,7 +572,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 href={`/photographers/${photographer.slug}#reviews`}
                 className="mt-4 block text-center text-xs font-medium text-primary-600 hover:underline"
               >
-                See all reviews →
+                {tc("seeAllReviews")} →
               </Link>
             </div>
           </aside>

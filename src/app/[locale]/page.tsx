@@ -276,7 +276,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       rating: string; review_count: number; session_count: number;
       location_slug: string | null; hero_photo_url: string | null;
     }>(
-      `SELECT pp.slug, u.name, pp.tagline, pp.cover_url, u.avatar_url,
+      (() => {
+        const TR = new Set(["pt", "de", "es", "fr"]);
+        const useLoc = TR.has(locale) ? locale : null;
+        const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+        return `SELECT pp.slug, u.name, ${taglineSql} as tagline, pp.cover_url, u.avatar_url,
               COALESCE(pp.rating, 0)::text as rating,
               COALESCE(pp.review_count, 0) as review_count,
               COALESCE(pp.session_count, 0) as session_count,
@@ -288,7 +292,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
          AND EXISTS (SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo')
        ORDER BY pp.is_featured DESC, RANDOM()
-       LIMIT 1`
+       LIMIT 1`;
+      })()
     );
     if (rows.length > 0) {
       const r = rows[0];
@@ -536,7 +541,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {/* ===== FEATURED PHOTOGRAPHERS (self-fetching) ===== */}
       <Suspense fallback={null}>
-        <FeaturedPhotographers />
+        <FeaturedPhotographers locale={locale} />
       </Suspense>
 
       {/* ===== HOW IT WORKS ===== */}

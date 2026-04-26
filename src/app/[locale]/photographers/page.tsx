@@ -19,8 +19,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-async function getDbPhotographers(): Promise<PhotographerProfile[]> {
+// Locales that have translation columns on photographer_profiles + packages.
+const TRANSLATABLE_LOCALES = new Set(["pt", "de", "es", "fr"]);
+
+async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[]> {
   try {
+    const useLoc = locale && TRANSLATABLE_LOCALES.has(locale) ? locale : null;
+    const taglineSql = useLoc ? `COALESCE(p.tagline_${useLoc}, p.tagline)` : "p.tagline";
+    const bioSql = useLoc ? `COALESCE(p.bio_${useLoc}, p.bio)` : "p.bio";
     const profiles = await query<{
       id: string;
       slug: string;
@@ -44,7 +50,9 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
       avg_response_minutes: number | null;
       created_at: string;
     }>(
-      `SELECT p.id, p.slug, u.name, p.tagline, p.bio,
+      `SELECT p.id, p.slug, u.name,
+              ${taglineSql} as tagline,
+              ${bioSql} as bio,
               u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
@@ -64,6 +72,8 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
     );
 
     // Get packages for all photographers
+    const pkgNameSql = useLoc ? `COALESCE(name_${useLoc}, name)` : "name";
+    const pkgDescSql = useLoc ? `COALESCE(description_${useLoc}, description)` : "description";
     const allPkgs = await query<{
       id: string;
       photographer_id: string;
@@ -74,7 +84,9 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
       price: number;
       is_popular: boolean;
     }>(
-      "SELECT id, photographer_id, name, description, duration_minutes, num_photos, price, is_popular FROM packages ORDER BY sort_order, price"
+      `SELECT id, photographer_id, ${pkgNameSql} as name, ${pkgDescSql} as description,
+              duration_minutes, num_photos, price, is_popular
+       FROM packages ORDER BY sort_order, price`
     );
 
     return profiles.map((p) => {
@@ -162,7 +174,7 @@ export default async function PhotographersPage({
 
   const { location: initialLocation, shoot, shootType } = await searchParams;
   const initialShootType = shoot || shootType;
-  const dbPhotographers = await getDbPhotographers();
+  const dbPhotographers = await getDbPhotographers(locale);
   const quotes = await getOneLinerQuotesForPhotographers(dbPhotographers.map((p) => p.id), locale);
   const resolvedShootType = resolveShootType(initialShootType);
   const localePrefix = locale === "en" ? "" : `/${locale}`;

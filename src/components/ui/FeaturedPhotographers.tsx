@@ -21,12 +21,15 @@ interface FeaturedPhotographer {
   avg_response_minutes: number | null;
 }
 
-export async function FeaturedPhotographers() {
+export async function FeaturedPhotographers({ locale }: { locale?: string } = {}) {
   let photographers: FeaturedPhotographer[] = [];
 
   try {
+    const TR = new Set(["pt", "de", "es", "fr"]);
+    const useLoc = locale && TR.has(locale) ? locale : null;
+    const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
     photographers = await query<FeaturedPhotographer>(
-      `SELECT pp.slug, u.name, pp.tagline,
+      `SELECT pp.slug, u.name, ${taglineSql} as tagline,
               u.avatar_url, pp.cover_url, pp.cover_position_y, pp.is_verified,
               pp.rating, pp.review_count,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,

@@ -36,8 +36,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-async function getDbPhotographers(): Promise<PhotographerProfile[]> {
+async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[]> {
   try {
+    const TR = new Set(["pt", "de", "es", "fr"]);
+    const useLoc = locale && TR.has(locale) ? locale : null;
+    const taglineSql = useLoc ? `COALESCE(p.tagline_${useLoc}, p.tagline)` : "p.tagline";
+    const bioSql = useLoc ? `COALESCE(p.bio_${useLoc}, p.bio)` : "p.bio";
     const profiles = await query<{
       id: string; slug: string; name: string; tagline: string | null; bio: string | null;
       avatar_url: string | null; cover_url: string | null; cover_position_y: number;
@@ -45,7 +49,7 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
       is_verified: boolean; is_featured: boolean; is_founding: boolean; plan: string;
       rating: number; review_count: number; session_count: number;
     }>(
-      `SELECT p.id, p.slug, u.name, p.tagline, p.bio,
+      `SELECT p.id, p.slug, u.name, ${taglineSql} as tagline, ${bioSql} as bio,
               u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
@@ -61,11 +65,15 @@ async function getDbPhotographers(): Promise<PhotographerProfile[]> {
     const allLocRows = await query<{ photographer_id: string; location_slug: string }>(
       "SELECT photographer_id, location_slug FROM photographer_locations"
     );
+    const pkgNameSql = useLoc ? `COALESCE(name_${useLoc}, name)` : "name";
+    const pkgDescSql = useLoc ? `COALESCE(description_${useLoc}, description)` : "description";
     const allPkgs = await query<{
       id: string; photographer_id: string; name: string; description: string | null;
       duration_minutes: number; num_photos: number; price: number; is_popular: boolean;
     }>(
-      "SELECT id, photographer_id, name, description, duration_minutes, num_photos, price, is_popular FROM packages ORDER BY sort_order, price"
+      `SELECT id, photographer_id, ${pkgNameSql} as name, ${pkgDescSql} as description,
+              duration_minutes, num_photos, price, is_popular
+       FROM packages ORDER BY sort_order, price`
     );
 
     return profiles.map((p) => {
@@ -104,7 +112,7 @@ export default async function LocationPhotographersPage({
   const location = locations.find((l) => l.slug === slug);
   if (!location) notFound();
 
-  const dbPhotographers = await getDbPhotographers();
+  const dbPhotographers = await getDbPhotographers(locale);
 
   const base = "https://photoportugal.com";
   const itemListJsonLd = {

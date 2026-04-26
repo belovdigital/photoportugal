@@ -74,6 +74,9 @@ export default async function ShootTypePage({
   ).catch(() => []);
 
   // Fetch photographers who do this shoot type
+  const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+  const useLoc = TR_LOCALES.has(locale) ? locale : null;
+  const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
   const photographers = await query<{
     id: string; slug: string; name: string; avatar_url: string | null;
     cover_url: string | null; tagline: string | null;
@@ -82,7 +85,7 @@ export default async function ShootTypePage({
     last_active_at: string | null; avg_response_minutes: number | null;
   }>(
     `SELECT pp.id, pp.slug, u.name, u.avatar_url,
-            pp.cover_url, pp.tagline, pp.rating, pp.review_count, pp.languages,
+            pp.cover_url, ${taglineSql} as tagline, pp.rating, pp.review_count, pp.languages,
             u.last_seen_at as last_active_at, pp.avg_response_minutes,
             (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price,
             ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names

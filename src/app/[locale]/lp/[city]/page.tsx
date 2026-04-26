@@ -108,14 +108,21 @@ export default async function LandingPage({ params, searchParams }: {
   const st = sp.type ? getShootTypeBySlug(sp.type) : null;
   const shootTypeAliases = st?.photographerShootTypeNames || (st ? [st.name] : null);
 
+  // Locale-aware columns: COALESCE so missing translations fall back to source.
+  const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+  const useLoc = TR_LOCALES.has(locale) ? locale : null;
+  const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+  const pkgNameSql = useLoc ? `COALESCE(pk.name_${useLoc}, pk.name)` : "pk.name";
+
   // Fetch 6 photographers matching city + (optional) shoot type
   const rows = shootTypeAliases
     ? await query<LPPhotographer & { min_price: string | null }>(
-        `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.tagline,
+        `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url,
+                ${taglineSql} as tagline,
                 pp.rating, pp.review_count, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
                 u.last_seen_at,
                 COALESCE(
-                  (SELECT json_agg(json_build_object('id', pk.id, 'name', pk.name, 'price', pk.price,
+                  (SELECT json_agg(json_build_object('id', pk.id, 'name', ${pkgNameSql}, 'price', pk.price,
                                                      'duration_minutes', pk.duration_minutes, 'num_photos', pk.num_photos)
                                    ORDER BY pk.price ASC)
                    FROM packages pk WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE),
@@ -132,11 +139,12 @@ export default async function LandingPage({ params, searchParams }: {
         [city, shootTypeAliases]
       ).catch(() => [])
     : await query<LPPhotographer & { min_price: string | null }>(
-        `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.tagline,
+        `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url,
+                ${taglineSql} as tagline,
                 pp.rating, pp.review_count, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
                 u.last_seen_at,
                 COALESCE(
-                  (SELECT json_agg(json_build_object('id', pk.id, 'name', pk.name, 'price', pk.price,
+                  (SELECT json_agg(json_build_object('id', pk.id, 'name', ${pkgNameSql}, 'price', pk.price,
                                                      'duration_minutes', pk.duration_minutes, 'num_photos', pk.num_photos)
                                    ORDER BY pk.price ASC)
                    FROM packages pk WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE),

@@ -150,8 +150,12 @@ export default async function LocationPage({
       languages: string[]; location_names: string[];
       last_active_at: string | null; avg_response_minutes: number | null;
     }>(
-      `SELECT pp.id, pp.slug, u.name, u.avatar_url,
-              pp.cover_url, pp.tagline, pp.rating, pp.review_count, pp.languages,
+      (() => {
+        const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+        const useLoc = TR_LOCALES.has(locale) ? locale : null;
+        const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+        return `SELECT pp.id, pp.slug, u.name, u.avatar_url,
+              pp.cover_url, ${taglineSql} as tagline, pp.rating, pp.review_count, pp.languages,
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price,
               ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
@@ -160,7 +164,8 @@ export default async function LocationPage({
        JOIN users u ON u.id = pp.user_id
        WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
        ORDER BY pp.is_featured DESC, RANDOM()
-       LIMIT 6`,
+       LIMIT 6`;
+      })(),
       [slug]
     );
   } catch {}
