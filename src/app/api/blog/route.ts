@@ -50,6 +50,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(posts);
   } catch (error) {
     console.error("[blog] GET error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/blog", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 });
   }
 }

@@ -119,6 +119,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Account deletion failed:", err);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/dashboard/account", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
   }
 }

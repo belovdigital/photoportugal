@@ -50,6 +50,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin] user update error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/user", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
   }
 }

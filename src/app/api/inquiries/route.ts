@@ -127,6 +127,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, booking_id: bookingId });
   } catch (error) {
     console.error("[inquiries] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/inquiries", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to send" }, { status: 500 });
   }
 }

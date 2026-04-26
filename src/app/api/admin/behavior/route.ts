@@ -116,6 +116,7 @@ export async function GET(req: Request) {
     });
   } catch (err) {
     console.error("[admin/behavior] error:", err);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/admin/behavior", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Query failed", detail: (err as Error).message }, { status: 500 });
   }
 }

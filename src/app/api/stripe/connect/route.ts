@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[stripe/connect] error:", error);
     const message = error instanceof Error ? error.message : "Failed to create Stripe account";
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/stripe/connect", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -199,6 +199,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, booking_id: booking?.id });
   } catch (error) {
     console.error("[bookings] create error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/bookings", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
   }
 }
@@ -256,6 +257,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(bookings);
   } catch (error) {
     console.error("[bookings] get error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/bookings", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to get bookings" }, { status: 500 });
   }
 }

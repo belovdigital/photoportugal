@@ -288,6 +288,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ success: true, matched_count: photographers.length });
   } catch (error) {
     console.error("[admin/match-request/send-matches] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/match-request/:id/send-matches", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to send matches" }, { status: 500 });
   }
 }
@@ -487,6 +488,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true, updated_count: photographers.length });
   } catch (error) {
     console.error("[admin/match-request/send-matches] PATCH error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/match-request/:id/send-matches", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update matches" }, { status: 500 });
   }
 }

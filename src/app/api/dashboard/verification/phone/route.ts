@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[verification/phone] error:", error);
     const msg = error instanceof Error ? error.message : "Failed to send SMS";
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/verification/phone", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: msg.includes("Invalid") ? "Invalid phone number format. Use +351..." : "Failed to send code" }, { status: 500 });
   }
 }
@@ -106,6 +107,7 @@ export async function PUT(req: NextRequest) {
     }
   } catch (error) {
     console.error("[verification/phone] verify error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/verification/phone", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Verification failed. Code may be expired." }, { status: 500 });
   }
 }

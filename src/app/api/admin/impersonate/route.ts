@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("[impersonate] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/impersonate", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to impersonate" }, { status: 500 });
   }
 }

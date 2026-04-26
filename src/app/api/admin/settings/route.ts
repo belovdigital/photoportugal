@@ -62,6 +62,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Admin settings error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/settings", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to save setting" }, { status: 500 });
   }
 }

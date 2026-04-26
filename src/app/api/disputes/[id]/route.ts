@@ -131,6 +131,7 @@ export async function PATCH(
              WHERE id = $1`,
             [id]
           );
+          try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(stripeErr, { path: "/api/disputes/:id", method: req.method, statusCode: 500 }); } catch {}
           return NextResponse.json(
             { error: "Stripe refund failed. Dispute was not resolved. Please try again or process the refund manually." },
             { status: 500 }
@@ -238,6 +239,7 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating dispute:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/disputes/:id", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update dispute" }, { status: 500 });
   }
 }

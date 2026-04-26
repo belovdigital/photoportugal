@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(profile);
   } catch (error) {
     console.error("[dashboard/profile] GET error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/profile", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to load profile" }, { status: 500 });
   }
 }
@@ -218,6 +219,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Profile update error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/profile", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
   }
 }

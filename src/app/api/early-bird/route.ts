@@ -65,6 +65,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("[early-bird] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/early-bird", method: "GET", statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to fetch tier info" }, { status: 500 });
   }
 }

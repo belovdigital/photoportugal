@@ -32,6 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin/match-request/status] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/match-request/:id/status", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
   }
 }

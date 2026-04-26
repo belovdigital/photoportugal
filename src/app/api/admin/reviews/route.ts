@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: review?.id });
   } catch (error) {
     console.error("[admin/reviews] create error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/reviews", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to create review" }, { status: 500 });
   }
 }

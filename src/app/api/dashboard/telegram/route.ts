@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("[dashboard/telegram] POST error:", err);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/dashboard/telegram", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to generate link" }, { status: 500 });
   }
 }

@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
     console.error("[stripe/featured] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/stripe/featured", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

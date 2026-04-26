@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[save-for-later] error:", err);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/save-for-later", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
 }

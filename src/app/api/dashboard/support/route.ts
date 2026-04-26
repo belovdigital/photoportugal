@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Support request error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/support", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to send support request" }, { status: 500 });
   }
 }

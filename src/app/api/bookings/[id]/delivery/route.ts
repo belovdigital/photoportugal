@@ -378,6 +378,7 @@ export async function POST(
     });
   } catch (error) {
     console.error("[delivery] upload error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/bookings/:id/delivery", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

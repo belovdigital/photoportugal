@@ -30,6 +30,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, cover_position_y: y });
   } catch (error) {
     console.error("Cover position update error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/cover-position", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }

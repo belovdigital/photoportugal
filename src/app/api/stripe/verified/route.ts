@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
     console.error("[stripe/verified] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/stripe/verified", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
@@ -113,6 +114,7 @@ export async function DELETE() {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[stripe/verified] delete error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/stripe/verified", method: "DELETE", statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

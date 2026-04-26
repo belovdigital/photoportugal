@@ -120,6 +120,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[mobile/google] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/auth/mobile/google", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Google login failed" }, { status: 500 });
   }
 }

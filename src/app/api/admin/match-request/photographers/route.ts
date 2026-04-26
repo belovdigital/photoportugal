@@ -28,6 +28,7 @@ export async function GET() {
     return NextResponse.json(rows);
   } catch (error) {
     console.error("[admin/match-request/photographers] GET error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/match-request/photographers", method: "GET", statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to fetch photographers" }, { status: 500 });
   }
 }

@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
       })));
     } catch (err) {
       console.error("[notification-logs] Twilio error:", err);
+      try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/admin/notification-logs", method: req.method, statusCode: 500 }); } catch {}
       return NextResponse.json({ error: "Failed to fetch Twilio logs" }, { status: 500 });
     }
   }

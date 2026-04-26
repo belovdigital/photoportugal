@@ -178,6 +178,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: dispute.id });
   } catch (error) {
     console.error("Error creating dispute:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/disputes", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to create dispute" }, { status: 500 });
   }
 }
@@ -216,6 +217,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error cancelling dispute:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/disputes", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to cancel dispute" }, { status: 500 });
   }
 }
@@ -265,6 +267,7 @@ export async function GET() {
     return NextResponse.json(disputes);
   } catch (error) {
     console.error("Error listing disputes:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/disputes", method: "GET", statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to list disputes" }, { status: 500 });
   }
 }

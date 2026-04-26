@@ -29,6 +29,7 @@ export async function GET() {
     return NextResponse.json(locations);
   } catch (error) {
     console.error("[admin/locations] GET error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/locations", method: "GET", statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: location });
   } catch (error) {
     console.error("[admin/locations] POST error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/locations", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to create" }, { status: 500 });
   }
 }
@@ -135,6 +137,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin/locations] PUT error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/locations", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }
@@ -152,6 +155,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin/locations] DELETE error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/locations", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

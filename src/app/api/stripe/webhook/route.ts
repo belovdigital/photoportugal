@@ -346,6 +346,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error("[stripe/webhook] Error processing event:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/stripe/webhook", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 

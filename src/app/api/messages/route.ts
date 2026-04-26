@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(messages);
   } catch (error) {
     console.error("[messages] get error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/messages", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to get messages" }, { status: 500 });
   }
 }
@@ -292,6 +293,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, message, warning: contactWarning });
   } catch (error) {
     console.error("[messages] send error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/messages", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
   }
 }

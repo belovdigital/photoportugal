@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: revision?.id, round });
   } catch (error) {
     console.error("[admin/revisions] POST error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/revisions", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to create revision" }, { status: 500 });
   }
 }
@@ -160,6 +161,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin/revisions] PATCH error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/revisions", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update revision" }, { status: 500 });
   }
 }

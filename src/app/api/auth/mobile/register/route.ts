@@ -131,6 +131,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[mobile/register] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/auth/mobile/register", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Registration failed" }, { status: 500 });
   }
 }

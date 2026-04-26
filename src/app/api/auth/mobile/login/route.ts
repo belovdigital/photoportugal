@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[mobile/login] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/auth/mobile/login", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Login failed" }, { status: 500 });
   }
 }

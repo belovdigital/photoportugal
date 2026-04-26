@@ -69,6 +69,7 @@ export async function GET(req: Request) {
     });
   } catch (err) {
     console.error("[admin/clarity] error:", err);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/admin/clarity", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to fetch Clarity data", detail: (err as Error).message }, { status: 500 });
   }
 }

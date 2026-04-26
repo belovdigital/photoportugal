@@ -122,6 +122,7 @@ export async function GET(
     });
   } catch (error) {
     console.error("[api/photographers] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/photographers/:slug", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

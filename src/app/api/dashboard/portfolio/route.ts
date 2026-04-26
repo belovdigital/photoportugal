@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(items);
   } catch (error) {
     console.error("Portfolio list error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/portfolio", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to fetch portfolio" }, { status: 500 });
   }
 }
@@ -149,6 +150,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, item });
   } catch (error) {
     console.error("Upload error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/portfolio", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

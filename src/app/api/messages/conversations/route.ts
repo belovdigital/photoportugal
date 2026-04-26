@@ -96,6 +96,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(conversations);
   } catch (error) {
     console.error("[conversations] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/messages/conversations", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to load conversations" }, { status: 500 });
   }
 }

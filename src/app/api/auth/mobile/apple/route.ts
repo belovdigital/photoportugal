@@ -133,6 +133,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("[mobile/apple] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/auth/mobile/apple", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
   }
 }

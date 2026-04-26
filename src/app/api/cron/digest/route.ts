@@ -221,6 +221,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("[cron/digest] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/cron/digest", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Digest failed" }, { status: 500 });
   }
 }

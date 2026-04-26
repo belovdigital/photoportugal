@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("[admin/login] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/login", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

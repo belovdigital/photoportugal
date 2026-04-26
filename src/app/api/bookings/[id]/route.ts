@@ -41,6 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json(booking);
   } catch (error) {
     console.error("[bookings] get by id error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/bookings/:id", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to get booking" }, { status: 500 });
   }
 }
@@ -306,6 +307,7 @@ export async function PATCH(
         return NextResponse.json({ success: true, refunded: refundPercent > 0, refundPercent });
       } catch (refundErr) {
         console.error("[bookings] refund error:", refundErr);
+        try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(refundErr, { path: "/api/bookings/:id", method: req.method, statusCode: 500 }); } catch {}
         return NextResponse.json({ error: "Failed to process refund. Please contact support." }, { status: 500 });
       }
     }
@@ -626,6 +628,7 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[bookings] update error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/bookings/:id", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update booking" }, { status: 500 });
   }
 }

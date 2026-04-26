@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[push-token] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/auth/push-token", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to save token" }, { status: 500 });
   }
 }

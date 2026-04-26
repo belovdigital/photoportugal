@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: `/uploads/revisions/${filename}` });
   } catch (error) {
     console.error("[dashboard/revisions/upload] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/revisions/upload", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

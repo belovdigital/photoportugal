@@ -39,6 +39,7 @@ export async function PATCH(req: NextRequest) {
           await stripe.refunds.create({ payment_intent: booking.stripe_payment_intent_id });
         } catch (err) {
           console.error("[admin/bookings] Refund failed:", err);
+          try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/admin/bookings", method: req.method, statusCode: 500 }); } catch {}
           return NextResponse.json({ error: "Failed to process refund" }, { status: 500 });
         }
       }
@@ -65,6 +66,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin/bookings] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/bookings", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

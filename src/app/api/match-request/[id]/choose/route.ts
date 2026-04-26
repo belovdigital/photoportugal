@@ -170,6 +170,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ success: true, booking_id: booking.id });
   } catch (error) {
     console.error("[match-request/choose] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/match-request/:id/choose", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to process your selection" }, { status: 500 });
   }
 }

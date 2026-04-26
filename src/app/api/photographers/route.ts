@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(photographers);
   } catch (error) {
     console.error("[photographers] list error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/photographers", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to load photographers" }, { status: 500 });
   }
 }

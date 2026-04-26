@@ -93,6 +93,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(posts);
   } catch (error) {
     console.error("[admin/blog] GET error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/blog", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 });
   }
 }
@@ -168,6 +169,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: post?.id });
   } catch (error) {
     console.error("[admin/blog] POST error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/blog", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
   }
 }
@@ -259,6 +261,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin/blog] PUT error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/blog", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
   }
 }
@@ -286,6 +289,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin/blog] DELETE error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/blog", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
   }
 }

@@ -122,6 +122,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: result?.id });
   } catch (error) {
     console.error("[match-request] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/match-request", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

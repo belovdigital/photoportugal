@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(packages);
   } catch (error) {
     console.error("Package list error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/packages", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to fetch packages" }, { status: 500 });
   }
 }
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: pkg!.id });
   } catch (error) {
     console.error("Package create error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/packages", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to create package" }, { status: 500 });
   }
 }
@@ -165,6 +167,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Package update error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/packages", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update package" }, { status: 500 });
   }
 }

@@ -248,6 +248,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin] update error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/photographer", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }
@@ -279,6 +280,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin] delete error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/photographer", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

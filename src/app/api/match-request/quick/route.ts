@@ -113,6 +113,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: result?.id });
   } catch (err) {
     console.error("[quick-match] error:", err);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/match-request/quick", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to create quick match" }, { status: 500 });
   }
 }

@@ -52,6 +52,7 @@ export async function GET() {
     return NextResponse.json(data);
   } catch (error) {
     console.error("[admin/promo-codes] GET error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/promo-codes", method: "GET", statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to fetch promo codes" }, { status: 500 });
   }
 }
@@ -121,6 +122,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("[admin/promo-codes] POST error:", error);
     const message = error instanceof Error ? error.message : "Failed to create promo code";
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/promo-codes", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -145,6 +147,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[admin/promo-codes] DELETE error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/promo-codes", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to deactivate promo code" }, { status: 500 });
   }
 }

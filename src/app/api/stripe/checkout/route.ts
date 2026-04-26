@@ -144,6 +144,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: checkoutSession.url, payment });
   } catch (error) {
     console.error("[stripe/checkout] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/stripe/checkout", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Payment failed" }, { status: 500 });
   }
 }

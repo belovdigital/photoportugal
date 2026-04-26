@@ -116,6 +116,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url });
   } catch (error) {
     console.error("[messages/upload] error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/messages/upload", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

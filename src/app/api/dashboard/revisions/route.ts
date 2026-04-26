@@ -112,6 +112,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true, allResolved, items });
   } catch (error) {
     console.error("[dashboard/revisions] PATCH error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/revisions", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }

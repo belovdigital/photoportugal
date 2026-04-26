@@ -144,6 +144,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, user, autoLogin: validRole === "client" });
   } catch (error) {
     console.error("Registration error:", error);
+    try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/auth/register", method: req.method, statusCode: 500 }); } catch {}
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
