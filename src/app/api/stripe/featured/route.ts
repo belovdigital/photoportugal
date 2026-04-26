@@ -45,7 +45,7 @@ async function getFeaturedPriceId(): Promise<string> {
 export async function POST(req: NextRequest) {
   let locale = "en";
   try { const b = await req.clone().json(); locale = b.locale || "en"; } catch {}
-  const lp = locale === "pt" ? "/pt" : "";
+  const lp = locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : "";
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
       customer: customerId,
       mode: "subscription",
-      locale: locale === "pt" ? "pt-PT" : "en",
+      locale: ({pt:"pt-PT",de:"de",es:"es",fr:"fr"} as Record<string,string>)[locale] || "en",
       adaptive_pricing: { enabled: true },
       allow_promotion_codes: true,
       line_items: [{ price: priceId, quantity: 1 }],

@@ -102,18 +102,24 @@ export async function sendSaveForLaterEmail(
   photographer: { slug: string; name: string; tagline: string | null; cover_url: string | null; min_price: number | null },
   locale: string
 ): Promise<void> {
-  const profileUrl = `${BASE_URL}${locale === "pt" ? "/pt" : ""}/photographers/${photographer.slug}`;
-  const isPt = locale === "pt";
-  const subject = isPt
-    ? `A sua ligação para ${photographer.name}`
-    : `Your link to ${photographer.name}`;
+  const { pickT, localizedUrl, normalizeLocale } = await import("@/lib/email-locale");
+  const loc = normalizeLocale(locale);
+  const profileUrl = localizedUrl(`/photographers/${photographer.slug}`, loc, BASE_URL);
+
+  const T = pickT({
+    en: { subject: `Your link to ${photographer.name}`, h2: "Here's your link", body: "Thanks for saving this photographer. You can come back any time to view the portfolio and book.", from: "From", cta: "View Profile", footer: "Questions? Just reply to this email — our team is here to help." },
+    pt: { subject: `A sua ligação para ${photographer.name}`, h2: "Aqui está a sua ligação", body: "Obrigado por guardar este fotógrafo. Pode voltar a qualquer altura para ver o portefólio e reservar.", from: "A partir de", cta: "Ver Perfil", footer: "Se tiver dúvidas, responda a este email — a nossa equipa está aqui para ajudar." },
+    de: { subject: `Ihr Link zu ${photographer.name}`, h2: "Hier ist Ihr Link", body: "Danke, dass Sie diesen Fotografen gespeichert haben. Sie können jederzeit zurückkehren, um das Portfolio anzusehen und zu buchen.", from: "Ab", cta: "Profil ansehen", footer: "Fragen? Antworten Sie einfach auf diese E-Mail — unser Team ist für Sie da." },
+    es: { subject: `Su enlace a ${photographer.name}`, h2: "Aquí tiene su enlace", body: "Gracias por guardar a este fotógrafo. Puede volver cuando quiera para ver el portafolio y reservar.", from: "Desde", cta: "Ver perfil", footer: "¿Preguntas? Responda a este correo — nuestro equipo está aquí para ayudar." },
+    fr: { subject: `Votre lien vers ${photographer.name}`, h2: "Voici votre lien", body: "Merci d'avoir enregistré ce photographe. Vous pouvez revenir quand vous voulez pour voir le portfolio et réserver.", from: "À partir de", cta: "Voir le profil", footer: "Des questions ? Répondez simplement à cet e-mail — notre équipe est là pour vous aider." },
+  }, loc);
 
   const cover = photographer.cover_url
     ? `<img src="${photographer.cover_url}" alt="" width="520" style="display:block;width:100%;max-width:520px;height:auto;border-radius:12px;margin-bottom:16px;" />`
     : "";
 
   const priceLine = photographer.min_price
-    ? `<p style="margin:4px 0 0;font-size:14px;color:#4A4A4A;">${isPt ? "A partir de" : "From"} <strong>€${Math.round(photographer.min_price)}</strong></p>`
+    ? `<p style="margin:4px 0 0;font-size:14px;color:#4A4A4A;">${T.from} <strong>€${Math.round(photographer.min_price)}</strong></p>`
     : "";
 
   const tagline = photographer.tagline
@@ -121,17 +127,17 @@ export async function sendSaveForLaterEmail(
     : "";
 
   const body = `
-    <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${isPt ? "Aqui está a sua ligação" : "Here's your link"}</h2>
-    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;">${isPt ? "Obrigado por guardar este fotógrafo. Pode voltar a qualquer altura para ver o portefólio e reservar." : "Thanks for saving this photographer. You can come back any time to view the portfolio and book."}</p>
+    <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
     ${cover}
     <p style="margin:0 0 4px;font-size:18px;font-weight:700;color:#1F1F1F;">${photographer.name}</p>
     ${priceLine}
     ${tagline}
-    ${emailButton(profileUrl, isPt ? "Ver Perfil" : "View Profile")}
-    <p style="margin:16px 0 0;font-size:13px;color:#9B8E82;">${isPt ? "Se tiver dúvidas, responda a este email — a nossa equipa está aqui para ajudar." : "Questions? Just reply to this email — our team is here to help."}</p>
+    ${emailButton(profileUrl, T.cta)}
+    <p style="margin:16px 0 0;font-size:13px;color:#9B8E82;">${T.footer}</p>
   `;
 
-  await sendEmail(to, subject, emailLayout(body));
+  await sendEmail(to, T.subject, emailLayout(body, loc));
 }
 
 /**
@@ -178,16 +184,27 @@ export async function sendBookingNotification(
   packageName: string | null,
   shootDate: string | null
 ) {
+  const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
+  const locale = await getUserLocaleByEmail(photographerEmail);
   const clientFirstName = clientName.split(" ")[0];
+
+  const T = pickT({
+    en: { subject: `New booking request from ${clientFirstName}`, h2: "New Booking Request", greeting: `Hi ${photographerName},`, body: `<strong>${clientFirstName}</strong> has requested a photoshoot${packageName ? ` (${packageName})` : ""}${shootDate ? ` on ${shootDate}` : ""}.`, cta: "View Booking" },
+    pt: { subject: `Novo pedido de reserva de ${clientFirstName}`, h2: "Novo Pedido de Reserva", greeting: `Olá ${photographerName},`, body: `<strong>${clientFirstName}</strong> pediu uma sessão fotográfica${packageName ? ` (${packageName})` : ""}${shootDate ? ` a ${shootDate}` : ""}.`, cta: "Ver Reserva" },
+    de: { subject: `Neue Buchungsanfrage von ${clientFirstName}`, h2: "Neue Buchungsanfrage", greeting: `Hallo ${photographerName},`, body: `<strong>${clientFirstName}</strong> hat ein Fotoshooting angefragt${packageName ? ` (${packageName})` : ""}${shootDate ? ` am ${shootDate}` : ""}.`, cta: "Buchung ansehen" },
+    es: { subject: `Nueva solicitud de reserva de ${clientFirstName}`, h2: "Nueva solicitud de reserva", greeting: `Hola ${photographerName},`, body: `<strong>${clientFirstName}</strong> ha solicitado una sesión fotográfica${packageName ? ` (${packageName})` : ""}${shootDate ? ` el ${shootDate}` : ""}.`, cta: "Ver reserva" },
+    fr: { subject: `Nouvelle demande de réservation de ${clientFirstName}`, h2: "Nouvelle demande de réservation", greeting: `Bonjour ${photographerName},`, body: `<strong>${clientFirstName}</strong> a demandé une séance photo${packageName ? ` (${packageName})` : ""}${shootDate ? ` le ${shootDate}` : ""}.`, cta: "Voir la réservation" },
+  }, locale);
+
   await sendEmail(
     photographerEmail,
-    `New booking request from ${clientFirstName}`,
+    T.subject,
     emailLayout(`
-      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">New Booking Request</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${clientFirstName}</strong> has requested a photoshoot${packageName ? ` (${packageName})` : ""}${shootDate ? ` on ${shootDate}` : ""}.</p>
-      ${emailButton(`${BASE_URL}/dashboard/bookings`, "View Booking")}
-    `)
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
+      ${emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.cta)}
+    `, locale)
   );
 }
 
@@ -551,19 +568,31 @@ export async function sendDeliveryAcceptedToPhotographer(
   clientName: string,
   payoutAmount: number
 ) {
+  const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
+  const locale = await getUserLocaleByEmail(photographerEmail);
   const clientFirstName = clientName.split(" ")[0];
+  const amount = `&euro;${payoutAmount.toFixed(2)}`;
+
+  const T = pickT({
+    en: { subject: `${clientFirstName} accepted delivery — €${payoutAmount.toFixed(2)} transferred to you`, h2: "Payment Transferred!", greeting: `Hi ${photographerName},`, body1: `<strong>${clientFirstName}</strong> has accepted the photo delivery. A payment of <strong style="color:#16A34A;">${amount}</strong> has been transferred to your Stripe account.`, body2: "The funds should arrive in your bank account within 2-7 business days, depending on your Stripe payout schedule.", cta: "View Dashboard", reviewPrompt: "Enjoyed working with this client? Leave a quick review to help build your reputation on the platform:", reviewCta: "Leave a Review" },
+    pt: { subject: `${clientFirstName} aceitou a entrega — €${payoutAmount.toFixed(2)} transferidos para si`, h2: "Pagamento Transferido!", greeting: `Olá ${photographerName},`, body1: `<strong>${clientFirstName}</strong> aceitou a entrega das fotografias. Um pagamento de <strong style="color:#16A34A;">${amount}</strong> foi transferido para a sua conta Stripe.`, body2: "Os fundos chegam à sua conta bancária em 2-7 dias úteis, consoante o seu calendário de pagamentos Stripe.", cta: "Ver Dashboard", reviewPrompt: "Gostou de trabalhar com este cliente? Deixe uma avaliação para reforçar a sua reputação na plataforma:", reviewCta: "Deixar Avaliação" },
+    de: { subject: `${clientFirstName} hat die Lieferung angenommen — €${payoutAmount.toFixed(2)} an Sie überwiesen`, h2: "Zahlung überwiesen!", greeting: `Hallo ${photographerName},`, body1: `<strong>${clientFirstName}</strong> hat die Fotolieferung angenommen. Eine Zahlung von <strong style="color:#16A34A;">${amount}</strong> wurde auf Ihr Stripe-Konto überwiesen.`, body2: "Die Mittel sollten innerhalb von 2-7 Werktagen auf Ihrem Bankkonto eintreffen, je nach Ihrem Stripe-Auszahlungsplan.", cta: "Dashboard ansehen", reviewPrompt: "Hat Ihnen die Zusammenarbeit gefallen? Hinterlassen Sie eine kurze Bewertung, um Ihre Reputation auf der Plattform zu stärken:", reviewCta: "Bewertung abgeben" },
+    es: { subject: `${clientFirstName} aceptó la entrega — €${payoutAmount.toFixed(2)} transferidos a usted`, h2: "¡Pago transferido!", greeting: `Hola ${photographerName},`, body1: `<strong>${clientFirstName}</strong> ha aceptado la entrega de las fotos. Un pago de <strong style="color:#16A34A;">${amount}</strong> ha sido transferido a su cuenta de Stripe.`, body2: "Los fondos deberían llegar a su cuenta bancaria en 2-7 días hábiles, según el calendario de pagos de Stripe.", cta: "Ver dashboard", reviewPrompt: "¿Disfrutó trabajando con este cliente? Deje una breve reseña para reforzar su reputación en la plataforma:", reviewCta: "Dejar reseña" },
+    fr: { subject: `${clientFirstName} a accepté la livraison — €${payoutAmount.toFixed(2)} transférés vers vous`, h2: "Paiement transféré !", greeting: `Bonjour ${photographerName},`, body1: `<strong>${clientFirstName}</strong> a accepté la livraison des photos. Un paiement de <strong style="color:#16A34A;">${amount}</strong> a été transféré sur votre compte Stripe.`, body2: "Les fonds devraient arriver sur votre compte bancaire sous 2-7 jours ouvrés, selon votre calendrier de versement Stripe.", cta: "Voir le tableau de bord", reviewPrompt: "Vous avez apprécié travailler avec ce client ? Laissez un court avis pour renforcer votre réputation sur la plateforme :", reviewCta: "Laisser un avis" },
+  }, locale);
+
   await sendEmail(
     photographerEmail,
-    `${clientFirstName} accepted delivery — €${payoutAmount.toFixed(2)} transferred to you`,
+    T.subject,
     emailLayout(`
-      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Payment Transferred!</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${clientFirstName}</strong> has accepted the photo delivery. A payment of <strong style="color:#16A34A;">&euro;${payoutAmount.toFixed(2)}</strong> has been transferred to your Stripe account.</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">The funds should arrive in your bank account within 2-7 business days, depending on your Stripe payout schedule.</p>
-      ${emailButton(`${BASE_URL}/dashboard/bookings`, "View Dashboard")}
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Enjoyed working with this client? Leave a quick review to help build your reputation on the platform:</p>
-      ${emailButton(`${BASE_URL}/dashboard/bookings`, "Leave a Review", "#3B82F6")}
-    `)
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body1}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
+      ${emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.cta)}
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.reviewPrompt}</p>
+      ${emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.reviewCta, "#3B82F6")}
+    `, locale)
   );
 }
 
@@ -733,19 +762,30 @@ export async function sendTrustpilotFollowUpToPhotographer(
   photographerEmail: string,
   photographerName: string
 ) {
+  const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
+  const locale = await getUserLocaleByEmail(photographerEmail);
+
+  const T = pickT({
+    en: { subject: `Quick favour, ${photographerName}?`, h2: "Help Us Grow!", greeting: `Hi ${photographerName},`, body1: "Thank you for being part of Photo Portugal. Your work is what makes this platform great.", body2: "We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:", googleCta: "Review Us on Google", trustpilotCta: "Review Us on Trustpilot", footer: "It takes less than a minute. Thank you for your support!" },
+    pt: { subject: `Pequeno favor, ${photographerName}?`, h2: "Ajude-nos a Crescer!", greeting: `Olá ${photographerName},`, body1: "Obrigado por fazer parte da Photo Portugal. O seu trabalho é o que torna esta plataforma especial.", body2: "Adorávamos que partilhasse a sua experiência como fotógrafo no Google ou Trustpilot. Uma avaliação genuína de um profissional como o(a) ajuda a construir confiança e atrai mais clientes — o que significa mais reservas para todos:", googleCta: "Avalie-nos no Google", trustpilotCta: "Avalie-nos no Trustpilot", footer: "Demora menos de um minuto. Obrigado pelo seu apoio!" },
+    de: { subject: `Kleiner Gefallen, ${photographerName}?`, h2: "Helfen Sie uns zu wachsen!", greeting: `Hallo ${photographerName},`, body1: "Vielen Dank, dass Sie Teil von Photo Portugal sind. Ihre Arbeit macht diese Plattform großartig.", body2: "Wir würden uns sehr freuen, wenn Sie Ihre Erfahrung als Fotograf auf Google oder Trustpilot teilen. Eine ehrliche Bewertung von einem Profi wie Ihnen schafft Vertrauen und bringt mehr Kunden auf die Plattform — was mehr Buchungen für alle bedeutet:", googleCta: "Bewerten Sie uns auf Google", trustpilotCta: "Bewerten Sie uns auf Trustpilot", footer: "Es dauert weniger als eine Minute. Danke für Ihre Unterstützung!" },
+    es: { subject: `Un pequeño favor, ${photographerName}`, h2: "¡Ayúdenos a crecer!", greeting: `Hola ${photographerName},`, body1: "Gracias por formar parte de Photo Portugal. Su trabajo es lo que hace que esta plataforma sea genial.", body2: "Nos encantaría que compartiera su experiencia como fotógrafo en Google o Trustpilot. Una reseña genuina de un profesional como usted genera confianza y atrae más clientes a la plataforma — lo que significa más reservas para todos:", googleCta: "Reséñenos en Google", trustpilotCta: "Reséñenos en Trustpilot", footer: "Lleva menos de un minuto. ¡Gracias por su apoyo!" },
+    fr: { subject: `Un petit service, ${photographerName} ?`, h2: "Aidez-nous à grandir !", greeting: `Bonjour ${photographerName},`, body1: "Merci de faire partie de Photo Portugal. Votre travail est ce qui fait la grandeur de cette plateforme.", body2: "Nous adorerions que vous partagiez votre expérience en tant que photographe sur Google ou Trustpilot. Un avis authentique d'un professionnel comme vous renforce la confiance et attire plus de clients — ce qui signifie plus de réservations pour tout le monde :", googleCta: "Évaluez-nous sur Google", trustpilotCta: "Évaluez-nous sur Trustpilot", footer: "Cela prend moins d'une minute. Merci de votre soutien !" },
+  }, locale);
+
   await sendEmail(
     photographerEmail,
-    `Quick favour, ${photographerName}?`,
+    T.subject,
     emailLayout(`
-      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Help Us Grow!</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Thank you for being part of Photo Portugal. Your work is what makes this platform great.</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:</p>
-      ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", "Review Us on Google", "#4285F4")}
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body1}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
+      ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", T.googleCta, "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", "Review Us on Trustpilot", "#16A34A")}
-      <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">It takes less than a minute. Thank you for your support!</p>
-    `)
+      ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", T.trustpilotCta, "#16A34A")}
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">${T.footer}</p>
+    `, locale)
   );
 }
 

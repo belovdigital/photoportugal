@@ -193,7 +193,8 @@
     "megaResources": "Ressourcen",
     "megaFaqPhotographerDesc": "Häufige Fragen von Fotografen",
     "megaBlog": "Blog",
-    "megaBlogDesc": "Tipps, Anleitungen und Einblicke in die Fotografie"
+    "megaBlogDesc": "Tipps, Anleitungen und Einblicke in die Fotografie",
+    "language": "Sprache"
   },
   "footer": {
     "tagline": "Wir verbinden Reisende mit talentierten lokalen Fotografen in ganz Portugal. Halten Sie Ihre schönsten Momente fest.",
@@ -824,17 +825,17 @@
       "title": "Early-Bird-Stufen",
       "subtitle": "Je früher Sie beitreten, desto größer die Belohnung",
       "founding": {
-        "label": "Founding 10",
+        "label": "Gründungsmitglieder 10",
         "reward": "Premium für immer",
         "rewardDetail": "Premium-Plan für immer kostenlos + exklusives Founding-Photographer-Abzeichen auf Ihrem Profil"
       },
       "early50": {
-        "label": "Early 25",
+        "label": "Erste 25",
         "reward": "6 Monate Premium kostenlos",
         "rewardDetail": "Premium-Plan (Wert 59 €/Mon.) 6 Monate kostenlos. Danach freie Planwahl."
       },
       "first50": {
-        "label": "First 50",
+        "label": "Erste 50",
         "reward": "3 Monate Pro kostenlos",
         "rewardDetail": "Pro-Plan (Wert 29 €/Mon.) 3 Monate kostenlos. Danach freie Planwahl."
       }
@@ -1116,7 +1117,7 @@
       "verified": "Verifiziert",
       "activeWeek": "Diese Woche aktiv",
       "fastReply": "Antwortet in <1 Std.",
-      "founding": "Founding"
+      "founding": "Gründer"
     },
     "filters": {
       "allLocations": "Alle Orte",
@@ -1144,7 +1145,7 @@
       "showResultsPlural": "{count} Ergebnisse anzeigen"
     },
     "card": {
-      "founding": "Founding",
+      "founding": "Gründer",
       "featured": "Empfohlen",
       "verified": "Verifiziert",
       "speaks": "Spricht {languages}",
@@ -1219,7 +1220,7 @@
       "exploreMore": "Entdecken Sie weitere Fotoshooting-Reiseziele in der Nähe von {location}",
       "viewPhotographersLink": "Fotografen ansehen",
       "quickFacts": {
-        "title": "Quick Facts",
+        "title": "Kurzinfo",
         "region": "Region",
         "bestTimeForPhotos": "Beste Zeit für Fotos",
         "bestTimeValue": "Goldene Stunde (Sonnenauf- & untergang)",

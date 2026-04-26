@@ -55,7 +55,7 @@
     "privacy": "Privacidade",
     "and": "e",
     "allRightsReserved": "Todos os direitos reservados.",
-    "email": "Email",
+    "email": "E-mail",
     "password": "Palavra-passe",
     "clearAll": "Limpar tudo",
     "clearAllFilters": "Limpar todos os filtros",
@@ -193,7 +193,8 @@
     "megaResources": "Recursos",
     "megaFaqPhotographerDesc": "Perguntas frequentes de fotógrafos",
     "megaBlog": "Blog",
-    "megaBlogDesc": "Dicas, guias e inspiração fotográfica"
+    "megaBlogDesc": "Dicas, guias e inspiração fotográfica",
+    "language": "Idioma"
   },
   "footer": {
     "tagline": "A conectar viajantes com fotógrafos locais talentosos em todo o Portugal. Capture os seus momentos perfeitos.",
@@ -704,7 +705,7 @@
       },
       "nameLabel": "O Seu Nome",
       "namePlaceholder": "Nome completo",
-      "emailLabel": "Email",
+      "emailLabel": "E-mail",
       "emailPlaceholder": "voce@exemplo.com",
       "messageLabel": "Mensagem",
       "messagePlaceholder": "Diga-nos como podemos ajudar...",
@@ -1112,7 +1113,7 @@
       "fast": "Mais rápidos a responder"
     },
     "chips": {
-      "rating45": "4.5★+",
+      "rating45": "4,5★+",
       "verified": "Verificados",
       "activeWeek": "Ativos esta semana",
       "fastReply": "Respondem em <1h",
@@ -1403,7 +1404,7 @@
   "quickMatch": {
     "locationLabel": "Localização",
     "locationPlaceholder": "Localização",
-    "emailLabel": "Email",
+    "emailLabel": "E-mail",
     "emailPlaceholder": "seu@email.com",
     "matchMe": "Encontrar",
     "sending": "A enviar…",
@@ -1424,7 +1425,7 @@
     "firstNamePlaceholder": "Nome",
     "lastNameLabel": "Apelido",
     "lastNamePlaceholder": "Apelido",
-    "emailLabel": "Email",
+    "emailLabel": "E-mail",
     "emailPlaceholder": "seu@email.com",
     "phoneLabel": "Telefone",
     "phonePlaceholder": "+351 912 345 678",
@@ -1476,7 +1477,7 @@
       "subtitle": "Inicie sessão na sua conta Photo Portugal",
       "continueWithGoogle": "Continuar com Google",
       "orSignInWithEmail": "ou iniciar sessão com email",
-      "emailLabel": "Email",
+      "emailLabel": "E-mail",
       "emailPlaceholder": "voce@exemplo.com",
       "passwordLabel": "Palavra-passe",
       "passwordPlaceholder": "A sua palavra-passe",
@@ -1505,7 +1506,7 @@
       "firstNamePlaceholder": "Nome",
       "lastNameLabel": "Apelido",
       "lastNamePlaceholder": "Apelido",
-      "emailLabel": "Email",
+      "emailLabel": "E-mail",
       "emailPlaceholder": "voce@exemplo.com",
       "passwordLabel": "Palavra-passe",
       "passwordPlaceholder": "Mínimo 8 caracteres",
@@ -1535,7 +1536,7 @@
     "forgotPassword": {
       "title": "Repor Palavra-passe",
       "subtitle": "Introduza o seu email e enviaremos um link de reposição",
-      "emailLabel": "Email",
+      "emailLabel": "E-mail",
       "emailPlaceholder": "voce@exemplo.com",
       "sendResetLink": "Enviar Link de Reposição",
       "sending": "A enviar...",

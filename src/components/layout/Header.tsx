@@ -169,7 +169,7 @@ export function Header() {
                 <button
                   onClick={() => setLangOpen((o) => !o)}
                   className="flex items-center gap-1.5 rounded-lg border border-warm-200 px-2 py-1.5 text-xs font-bold text-gray-700 transition hover:bg-warm-50"
-                  aria-label="Language"
+                  aria-label={t("language")}
                 >
                   <span>{availableLocales.find((l) => l.code === locale)?.flag || "🌐"}</span>
                   <span>{availableLocales.find((l) => l.code === locale)?.label || locale.toUpperCase()}</span>

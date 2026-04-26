@@ -40,8 +40,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   );
 
   if (!post) {
-    // Try other locale for metadata
-    const otherLocale = locale === "pt" ? "en" : "pt";
+    // Try fallback locale (EN if not on EN, otherwise PT) for metadata
+    const otherLocale = locale === "en" ? "pt" : "en";
     const otherPost = await queryOne<BlogPost>(
       "SELECT id, slug, title, excerpt, meta_title, meta_description, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
       [slug, otherLocale]
@@ -399,14 +399,14 @@ export default async function BlogPostPage({ params }: PageProps) {
   );
 
   if (!post) {
-    // If not found in this locale, check if it exists in the other locale and redirect
-    const otherLocale = locale === "pt" ? "en" : "pt";
+    // If not found in this locale, check fallback locale and redirect there
+    const otherLocale = locale === "en" ? "pt" : "en";
     const otherPost = await queryOne<{ slug: string }>(
       "SELECT slug FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
       [slug, otherLocale]
     );
     if (otherPost) {
-      redirect(`/${otherLocale}/blog/${slug}`);
+      redirect(otherLocale === "en" ? `/blog/${slug}` : `/${otherLocale}/blog/${slug}`);
     }
     notFound();
   }

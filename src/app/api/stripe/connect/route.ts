@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
     // Create onboarding link
     const accountLink = await stripeClient.accountLinks.create({
       account: accountId,
-      refresh_url: `${process.env.AUTH_URL}${locale === "pt" ? "/pt" : ""}/dashboard/subscriptions?stripe=refresh`,
-      return_url: `${process.env.AUTH_URL}${locale === "pt" ? "/pt" : ""}/dashboard/subscriptions?stripe=success`,
+      refresh_url: `${process.env.AUTH_URL}${locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : ""}/dashboard/subscriptions?stripe=refresh`,
+      return_url: `${process.env.AUTH_URL}${locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : ""}/dashboard/subscriptions?stripe=success`,
       type: "account_onboarding",
     });
 

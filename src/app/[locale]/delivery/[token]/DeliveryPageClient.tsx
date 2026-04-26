@@ -247,7 +247,7 @@ export function DeliveryPageClient({
   const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
   const isOwner = !!sessionUserId && sessionUserId === gallery.client_id;
   const totalSize = gallery.photos.reduce((sum, p) => sum + (p.file_size || 0), 0);
-  const dateLocale = locale === "pt" ? "pt-PT" : "en-US";
+  const dateLocale = ({ pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR", en: "en-US" } as Record<string, string>)[locale] || "en-US";
   const expiresDate = new Date(gallery.expires_at).toLocaleDateString(dateLocale, {
     month: "long", day: "numeric", year: "numeric",
   });

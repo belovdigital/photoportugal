@@ -193,7 +193,8 @@
     "megaResources": "Recursos",
     "megaFaqPhotographerDesc": "Preguntas frecuentes de los fotógrafos",
     "megaBlog": "Blog",
-    "megaBlogDesc": "Consejos, guías e inspiración fotográfica"
+    "megaBlogDesc": "Consejos, guías e inspiración fotográfica",
+    "language": "Idioma"
   },
   "footer": {
     "tagline": "Conectamos a viajeros con fotógrafos locales talentosos en todo Portugal. Capture sus momentos perfectos.",
@@ -1548,17 +1549,17 @@
       "title": "Niveles Early Bird",
       "subtitle": "Cuanto antes se una, mayor la recompensa",
       "founding": {
-        "label": "Founding 10",
+        "label": "Fundadores 10",
         "reward": "Premium para siempre",
         "rewardDetail": "Plan Premium gratis para siempre + badge exclusivo Fotógrafo fundador en su perfil"
       },
       "early50": {
-        "label": "Early 25",
+        "label": "Primeros 25",
         "reward": "6 meses de Premium gratis",
         "rewardDetail": "Plan Premium (valor 59 €/mes) gratis durante 6 meses. Después, elija cualquier plan."
       },
       "first50": {
-        "label": "First 50",
+        "label": "Primeros 50",
         "reward": "3 meses de Pro gratis",
         "rewardDetail": "Plan Pro (valor 29 €/mes) gratis durante 3 meses. Después, elija cualquier plan."
       }
@@ -2413,7 +2414,7 @@
     "subtitle": "Gestione su plan, extras y pagos",
     "foundingPhotographer": "Fotógrafo fundador",
     "earlyAdopter": "Early Adopter",
-    "first50": "First 50",
+    "first50": "Primeros 50",
     "foundingPlanFree": "Su plan {plan} es gratis para siempre como fotógrafo fundador.",
     "earlyBirdPlanFree": "Su plan {plan} es gratis hasta {date}. Después, podrá elegir cualquier plan.",
     "perMonth": "/mes",

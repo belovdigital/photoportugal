@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { booking_id, locale } = await req.json();
-    const localePrefix = locale === "pt" ? "/pt" : "";
+    const localePrefix = locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : "";
 
     if (!booking_id) return NextResponse.json({ error: "Booking ID required" }, { status: 400 });
 
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     const stripeSessionParams: any = {
       customer: customerId,
       mode: "payment",
-      locale: locale === "pt" ? "pt" : "auto",
+      locale: ["pt","de","es","fr"].includes(locale) ? locale : "auto",
       adaptive_pricing: { enabled: true },
       allow_promotion_codes: true,
       line_items: [{

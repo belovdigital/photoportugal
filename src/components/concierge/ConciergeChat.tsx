@@ -28,6 +28,8 @@ interface LocationOption {
   name: string;
   name_pt?: string;
   name_de?: string;
+  name_es?: string;
+  name_fr?: string;
   region: string;
   cover_image?: string;
   reason: string;
@@ -389,7 +391,12 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
 }
 
 function LocationOptionCard({ loc, locale, disabled, onPick }: { loc: LocationOption; locale: string; disabled: boolean; onPick: (name: string) => void }) {
-  const displayName = locale === "pt" ? (loc.name_pt || loc.name) : locale === "de" ? (loc.name_de || loc.name) : loc.name;
+  const displayName =
+    (locale === "pt" && loc.name_pt) ||
+    (locale === "de" && loc.name_de) ||
+    (locale === "es" && loc.name_es) ||
+    (locale === "fr" && loc.name_fr) ||
+    loc.name;
   const cover = loc.cover_image;
   return (
     <button

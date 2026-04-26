@@ -193,7 +193,8 @@
     "megaResources": "Ressources",
     "megaFaqPhotographerDesc": "Questions courantes des photographes",
     "megaBlog": "Blog",
-    "megaBlogDesc": "Conseils, guides et inspirations photo"
+    "megaBlogDesc": "Conseils, guides et inspirations photo",
+    "language": "Langue"
   },
   "footer": {
     "tagline": "Connectons les voyageurs avec des photographes locaux talentueux à travers le Portugal. Capturez vos moments parfaits.",
@@ -1109,17 +1110,17 @@
       "title": "Niveaux Early Bird",
       "subtitle": "Plus tôt vous rejoignez, plus la récompense est grande",
       "founding": {
-        "label": "Founding 10",
+        "label": "Fondateurs 10",
         "reward": "Premium à vie",
         "rewardDetail": "Plan Premium gratuit à vie + badge exclusif Photographe fondateur sur votre profil"
       },
       "early50": {
-        "label": "Early 25",
+        "label": "Premiers 25",
         "reward": "6 mois de Premium gratuit",
         "rewardDetail": "Plan Premium (valeur 59 €/mois) gratuit pendant 6 mois. Ensuite, choisissez n'importe quel plan."
       },
       "first50": {
-        "label": "First 50",
+        "label": "Premiers 50",
         "reward": "3 mois de Pro gratuit",
         "rewardDetail": "Plan Pro (valeur 29 €/mois) gratuit pendant 3 mois. Ensuite, choisissez n'importe quel plan."
       }

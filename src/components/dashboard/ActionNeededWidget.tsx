@@ -14,7 +14,7 @@ function formatDeadline(deadlineISO: string, locale: string): string {
   const delta = d.getTime() - now;
   const dayMs = 24 * 60 * 60 * 1000;
   const hourMs = 60 * 60 * 1000;
-  const lang = locale === "pt" ? "pt-PT" : "en-GB";
+  const lang = ({ pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR", en: "en-GB" } as Record<string, string>)[locale] || "en-GB";
   const relative = new Intl.RelativeTimeFormat(lang, { numeric: "auto" });
 
   if (Math.abs(delta) < dayMs) {

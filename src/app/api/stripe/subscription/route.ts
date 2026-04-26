@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   const userId = (session.user as { id?: string }).id;
   const { plan, action, locale } = await req.json();
-  const lp = locale === "pt" ? "/pt" : "";
+  const lp = locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : "";
 
   try {
     const profile = await queryOne<{ id: string; stripe_account_id: string | null }>(
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
         customer: customerId,
         mode: "subscription",
-        locale: locale === "pt" ? "pt" : "auto",
+        locale: ["pt","de","es","fr"].includes(locale) ? locale : "auto",
         adaptive_pricing: { enabled: true },
         allow_promotion_codes: true,
         line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
