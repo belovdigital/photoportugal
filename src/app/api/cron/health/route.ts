@@ -16,16 +16,16 @@ export async function GET(req: NextRequest) {
     });
 
     if (res.status >= 500) {
-      // Site is down — send Telegram alert
+      // Site is down — alert into Alerts topic
       const { sendTelegram } = await import("@/lib/telegram");
-      await sendTelegram(`🔴 <b>SITE DOWN!</b>\n\n${url} returned HTTP ${res.status}\n\nCheck server immediately!`);
+      await sendTelegram(`🔴 <b>SITE DOWN!</b>\n\n${url} returned HTTP ${res.status}\n\nCheck server immediately!`, "alerts");
       return NextResponse.json({ status: "down", code: res.status });
     }
 
     return NextResponse.json({ status: "ok", code: res.status });
   } catch (err) {
     const { sendTelegram } = await import("@/lib/telegram");
-    await sendTelegram(`🔴 <b>SITE UNREACHABLE!</b>\n\n${url} - connection failed\n\nError: ${(err as Error).message}`);
+    await sendTelegram(`🔴 <b>SITE UNREACHABLE!</b>\n\n${url} - connection failed\n\nError: ${(err as Error).message}`, "alerts");
     return NextResponse.json({ status: "error", message: (err as Error).message });
   }
 }
