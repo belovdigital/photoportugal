@@ -255,6 +255,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Notify matched photographers that they were recommended
+    const { getUserLocaleByEmail: getPLocale, pickT: pPickT } = await import("@/lib/email-locale");
+    // Determine whether the request has a specific shoot type (vs the generic
+    // "Photoshoot" fallback). If specific, render "for a <type> photoshoot in X";
+    // otherwise just "for a photoshoot in X" — avoids the "photoshoot photoshoot" dupe.
+    const hasSpecificShootType = !!matchReq.shoot_type;
     for (const p of photographers) {
       try {
         const pUser = await queryOne<{ email: string; phone: string | null; user_id: string }>(
@@ -262,14 +267,65 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           [p.id]
         );
         if (pUser) {
+          const pLocale = await getPLocale(pUser.email);
+          const photogFirst = p.name.split(" ")[0];
+          const stLower = shootTypeLabel.toLowerCase();
+          const T = pPickT({
+            en: {
+              subject: `You've been recommended to ${firstName}!`,
+              h2: "You've Been Matched!",
+              greeting: `Hi ${photogFirst},`,
+              body: hasSpecificShootType
+                ? `Great news — we've recommended you to <strong>${matchReq.name}</strong> for a ${stLower} photoshoot in ${locationName}.`
+                : `Great news — we've recommended you to <strong>${matchReq.name}</strong> for a photoshoot in ${locationName}.`,
+              footer: "The client is reviewing your profile now. If they choose you, you'll receive a booking notification with all the details.",
+            },
+            pt: {
+              subject: `Foi recomendado(a) a ${firstName}!`,
+              h2: "Foi Selecionado(a)!",
+              greeting: `Olá ${photogFirst},`,
+              body: hasSpecificShootType
+                ? `Boas notícias — recomendámos-lhe a <strong>${matchReq.name}</strong> para uma sessão de ${stLower} em ${locationName}.`
+                : `Boas notícias — recomendámos-lhe a <strong>${matchReq.name}</strong> para uma sessão fotográfica em ${locationName}.`,
+              footer: "O(a) cliente está a rever o seu perfil. Se o(a) escolher, receberá uma notificação de reserva com todos os detalhes.",
+            },
+            de: {
+              subject: `Sie wurden ${firstName} empfohlen!`,
+              h2: "Sie wurden ausgewählt!",
+              greeting: `Hallo ${photogFirst},`,
+              body: hasSpecificShootType
+                ? `Gute Nachrichten — wir haben Sie <strong>${matchReq.name}</strong> für ein ${stLower}-Fotoshooting in ${locationName} empfohlen.`
+                : `Gute Nachrichten — wir haben Sie <strong>${matchReq.name}</strong> für ein Fotoshooting in ${locationName} empfohlen.`,
+              footer: "Der/die Kunde:in prüft jetzt Ihr Profil. Wenn er/sie Sie wählt, erhalten Sie eine Buchungsbenachrichtigung mit allen Details.",
+            },
+            es: {
+              subject: `¡Le hemos recomendado a ${firstName}!`,
+              h2: "¡Ha sido seleccionado(a)!",
+              greeting: `Hola ${photogFirst},`,
+              body: hasSpecificShootType
+                ? `Buenas noticias — le hemos recomendado a <strong>${matchReq.name}</strong> para una sesión de ${stLower} en ${locationName}.`
+                : `Buenas noticias — le hemos recomendado a <strong>${matchReq.name}</strong> para una sesión fotográfica en ${locationName}.`,
+              footer: "El/la cliente está revisando su perfil. Si le elige, recibirá una notificación de reserva con todos los detalles.",
+            },
+            fr: {
+              subject: `Vous avez été recommandé(e) à ${firstName} !`,
+              h2: "Vous avez été sélectionné(e) !",
+              greeting: `Bonjour ${photogFirst},`,
+              body: hasSpecificShootType
+                ? `Bonne nouvelle — nous vous avons recommandé(e) à <strong>${matchReq.name}</strong> pour une séance ${stLower} à ${locationName}.`
+                : `Bonne nouvelle — nous vous avons recommandé(e) à <strong>${matchReq.name}</strong> pour une séance photo à ${locationName}.`,
+              footer: "Le/la client(e) examine votre profil. S'il/elle vous choisit, vous recevrez une notification de réservation avec tous les détails.",
+            },
+          }, pLocale);
+
           sendEmail(
             pUser.email,
-            `You've been recommended to ${firstName}!`,
+            T.subject,
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-              <h2 style="color: #C94536;">You've Been Matched!</h2>
-              <p>Hi ${p.name.split(" ")[0]},</p>
-              <p>Great news — we've recommended you to <strong>${matchReq.name}</strong> for a ${shootTypeLabel.toLowerCase()} photoshoot in ${locationName}.</p>
-              <p>The client is reviewing your profile now. If they choose you, you'll receive a booking notification with all the details.</p>
+              <h2 style="color: #C94536;">${T.h2}</h2>
+              <p>${T.greeting}</p>
+              <p>${T.body}</p>
+              <p>${T.footer}</p>
               <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
             </div>`
           ).catch(() => {});
