@@ -3269,6 +3269,9 @@
     "stat_refund": "🛡️ Reembolso total hasta 7 días antes de la sesión",
     "stat_secure": "🔒 Pago seguro — solo se libera tras la sesión",
     "stat_fromPrice": "💶 Desde €90 por una hora, fotos editadas incluidas",
-    "stat_locations": "📍 Lisboa · Sintra · Oporto · Algarve · Madeira · Azores"
+    "stat_locations": "📍 Lisboa · Sintra · Oporto · Algarve · Madeira · Azores",
+    "statBigPhotographers": "Fotógrafos seleccionados",
+    "statBigRating": "Media de 500+ reseñas",
+    "statBigFromPrice": "Desde, fotos editadas incl."
   }
 }

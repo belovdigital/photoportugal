@@ -3269,6 +3269,9 @@
     "stat_refund": "🛡️ Full refund up to 7 days before your shoot",
     "stat_secure": "🔒 Secure payment — only paid out after the shoot",
     "stat_fromPrice": "💶 From €90 for an hour-long session, edited photos included",
-    "stat_locations": "📍 Lisbon · Sintra · Porto · Algarve · Madeira · Azores"
+    "stat_locations": "📍 Lisbon · Sintra · Porto · Algarve · Madeira · Azores",
+    "statBigPhotographers": "Hand-picked photographers",
+    "statBigRating": "Average from 500+ reviews",
+    "statBigFromPrice": "From, edited photos included"
   }
 }

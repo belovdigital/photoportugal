@@ -3269,6 +3269,9 @@
     "stat_refund": "🛡️ Reembolso total até 7 dias antes da sessão",
     "stat_secure": "🔒 Pagamento seguro — só é libertado depois da sessão",
     "stat_fromPrice": "💶 Desde €90 por uma hora, fotos editadas incluídas",
-    "stat_locations": "📍 Lisboa · Sintra · Porto · Algarve · Madeira · Açores"
+    "stat_locations": "📍 Lisboa · Sintra · Porto · Algarve · Madeira · Açores",
+    "statBigPhotographers": "Fotógrafos selecionados",
+    "statBigRating": "Média de 500+ avaliações",
+    "statBigFromPrice": "Desde, com fotos editadas"
   }
 }

@@ -3269,6 +3269,9 @@
     "stat_refund": "🛡️ Volle Erstattung bis 7 Tage vor dem Shooting",
     "stat_secure": "🔒 Sichere Zahlung — Auszahlung erst nach dem Shooting",
     "stat_fromPrice": "💶 Ab 90 € pro Stunde, bearbeitete Fotos inklusive",
-    "stat_locations": "📍 Lissabon · Sintra · Porto · Algarve · Madeira · Azoren"
+    "stat_locations": "📍 Lissabon · Sintra · Porto · Algarve · Madeira · Azoren",
+    "statBigPhotographers": "Handverlesene Fotografen",
+    "statBigRating": "Durchschnitt aus 500+ Bewertungen",
+    "statBigFromPrice": "Ab, bearbeitete Fotos inkl."
   }
 }

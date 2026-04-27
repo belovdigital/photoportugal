@@ -3269,6 +3269,9 @@
     "stat_refund": "🛡️ Remboursement intégral jusqu’à 7 jours avant la séance",
     "stat_secure": "🔒 Paiement sécurisé — versé uniquement après la séance",
     "stat_fromPrice": "💶 À partir de 90 € pour une heure, photos retouchées incluses",
-    "stat_locations": "📍 Lisbonne · Sintra · Porto · Algarve · Madère · Açores"
+    "stat_locations": "📍 Lisbonne · Sintra · Porto · Algarve · Madère · Açores",
+    "statBigPhotographers": "Photographes triés sur le volet",
+    "statBigRating": "Moyenne sur 500+ avis",
+    "statBigFromPrice": "À partir de, photos retouchées"
   }
 }
