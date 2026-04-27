@@ -37,7 +37,7 @@ type Step =
   | { kind: "idle" }
   | { kind: "ready" }                          // photo + scene picked, can generate
   | { kind: "generating" }
-  | { kind: "result"; imageUrl: string; conciergeLoc: string }
+  | { kind: "result"; imageUrl: string; conciergeLoc: string; sceneId: string }
   | { kind: "email_gate" }                     // need email to continue
   | { kind: "limit" }                          // hit hard cap
   | { kind: "error"; msg: string };
@@ -59,6 +59,8 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   const generatingTimerRef = useRef<number | null>(null);
   const [generatingSec, setGeneratingSec] = useState(0);
   const [photographers, setPhotographers] = useState<PhotographerCard[] | null>(null);
+  // Recently-shown scene IDs — Surprise me skips these for diversity.
+  const recentSceneIdsRef = useRef<string[]>([]);
 
   // Load usage on mount
   useEffect(() => {
@@ -128,8 +130,12 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   // until the result lands — that's the whole point of "surprise me".
   async function surpriseMe() {
     if (!photo || scenes.length === 0) return;
-    const others = sceneId ? scenes.filter((s) => s.id !== sceneId) : scenes;
-    const pick = others[Math.floor(Math.random() * others.length)];
+    // Avoid the last 3 picks for variety; if we'd run out, drop oldest.
+    const blocked = new Set([sceneId, ...recentSceneIdsRef.current].filter(Boolean) as string[]);
+    let candidates = scenes.filter((s) => !blocked.has(s.id));
+    if (candidates.length === 0) candidates = scenes;
+    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+    recentSceneIdsRef.current = [pick.id, ...recentSceneIdsRef.current].slice(0, 3);
     setSceneId(pick.id);
     setStep({ kind: "generating" });
     void loadPhotographersForLoc(pick.conciergeLoc);
@@ -155,7 +161,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
     const data = await r.json();
     setUsage((prev) => prev ? { ...prev, used: data.used, remaining: data.remaining } : prev);
     if (!data.id) { setStep({ kind: "error", msg: t("errorGeneric") }); return; }
-    await pollUntilDone(data.id, data.concierge_loc);
+    await pollUntilDone(data.id, data.concierge_loc, pick.id);
   }
 
   // Pre-fetch a few photographers to show during the generation wait. We grab them
@@ -170,7 +176,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
     } catch { /* non-fatal */ }
   }
 
-  async function pollUntilDone(genId: string, conciergeLoc: string): Promise<void> {
+  async function pollUntilDone(genId: string, conciergeLoc: string, sceneIdForResult: string): Promise<void> {
     // With quality="medium" gpt-image-2 typically lands in 30-90s; cap at 3 min
     // so we surface a "try again" failure instead of leaving the user staring
     // at a spinner forever (e.g. when a deploy killed the in-flight promise).
@@ -185,7 +191,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
       const d = await r.json().catch(() => null);
       if (!d) continue;
       if (d.status === "success" && d.image_url) {
-        setStep({ kind: "result", imageUrl: d.image_url, conciergeLoc });
+        setStep({ kind: "result", imageUrl: d.image_url, conciergeLoc, sceneId: sceneIdForResult });
         return;
       }
       if (d.status === "failed") {
@@ -233,7 +239,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
     } : prev);
 
     if (!data.id) { setStep({ kind: "error", msg: t("errorGeneric") }); return; }
-    await pollUntilDone(data.id, data.concierge_loc);
+    await pollUntilDone(data.id, data.concierge_loc, sceneId!);
   }
 
   function generate() {
@@ -291,6 +297,8 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
         {step.kind === "result" && (
           <ResultView
             imageUrl={step.imageUrl}
+            sceneName={t(`scenes.${step.sceneId}.name`)}
+            sceneSubtitle={t(`scenes.${step.sceneId}.subtitle`)}
             conciergeHref={conciergeHref(step.conciergeLoc)}
             onTryAnother={tryAnother}
             t={t}
@@ -566,9 +574,11 @@ function UploadDropzone({
 }
 
 function ResultView({
-  imageUrl, conciergeHref, onTryAnother, t,
+  imageUrl, sceneName, sceneSubtitle, conciergeHref, onTryAnother, t,
 }: {
   imageUrl: string;
+  sceneName: string;
+  sceneSubtitle: string;
   conciergeHref: string;
   onTryAnother: () => void;
   t: ReturnType<typeof useTranslations>;
@@ -578,7 +588,11 @@ function ResultView({
       <h2 className="text-center font-display text-2xl sm:text-3xl font-bold text-gray-900">{t("result")}</h2>
       <div className="mt-5 overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-lg">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt="AI generated portrait" className="w-full h-auto" />
+        <img src={imageUrl} alt={sceneName} className="w-full h-auto" />
+        <div className="px-4 py-3 border-t border-warm-200 bg-warm-50">
+          <p className="font-display text-base font-bold text-gray-900">📍 {sceneName}</p>
+          <p className="mt-0.5 text-xs text-gray-600">{sceneSubtitle}</p>
+        </div>
       </div>
       <p className="mt-3 text-center text-xs text-gray-500 italic">{t("resultDisclaimer")}</p>
 
