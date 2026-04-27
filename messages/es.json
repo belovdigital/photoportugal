@@ -590,7 +590,10 @@
       "browsePrefix": "¿Prefiere explorar manualmente?",
       "browseLink": "Ver todos los fotógrafos"
     },
-    "online": "En línea"
+    "online": "En línea",
+    "openingLoc": "¡Hola! ¿Busca un fotógrafo en {loc}? Cuénteme sobre su sesión — ocasión, número de personas, estilo — y le emparejo con los 2–3 mejores fotógrafos de allí. ✨",
+    "openingLocAndType": "¡Hola! Una sesión {type} en {loc} — buena elección. Cuénteme más (fecha, número de personas, estilo) y le emparejo con los 2–3 mejores fotógrafos de allí. ✨",
+    "openingTryYourself": "¿Le gustó la vista previa con IA en {loc}? Ahora busquemos un fotógrafo real. Cuénteme sobre la sesión — fecha, ocasión, número de personas — y le envío los 2–3 mejores. ✨"
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Portugal",

@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+
+function humanizeSlug(s: string): string {
+  return s
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 interface MatchPhotographer {
   id: string;
@@ -49,7 +56,27 @@ interface Msg {
 export function ConciergeChat({ locale, source, pageContext, embedded }: { locale: string; source?: "page" | "drawer"; pageContext?: string; embedded?: boolean }) {
   const t = useTranslations("concierge");
   const { data: session } = useSession();
-  const initialOpening: Msg = { role: "assistant", content: t("openingMessage") };
+  const search = useSearchParams();
+
+  // Tailor the opening message based on landing-page query params (set by ad campaigns
+  // and the /try-yourself handoff). Falls back to the generic greeting when no context.
+  const openingContent = useMemo(() => {
+    const src = search.get("src");
+    const loc = search.get("loc");
+    const type = search.get("type");
+    const locName = loc ? humanizeSlug(loc) : null;
+    if (src === "try-yourself" && locName) {
+      return t("openingTryYourself", { loc: locName });
+    }
+    if (locName && type) {
+      return t("openingLocAndType", { loc: locName, type: type.replace(/-/g, " ") });
+    }
+    if (locName) {
+      return t("openingLoc", { loc: locName });
+    }
+    return t("openingMessage");
+  }, [search, t]);
+  const initialOpening: Msg = { role: "assistant", content: openingContent };
   const [messages, setMessages] = useState<Msg[]>([initialOpening]);
   void locale;
   const [input, setInput] = useState("");

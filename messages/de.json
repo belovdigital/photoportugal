@@ -3056,7 +3056,10 @@
       "browsePrefix": "Lieber selbst stöbern?",
       "browseLink": "Alle Fotografen ansehen"
     },
-    "online": "Online"
+    "online": "Online",
+    "openingLoc": "Hallo! Suchen Sie einen Fotografen in {loc}? Erzählen Sie mir kurz von Ihrem Shooting — Anlass, Gruppengröße, Stil — und ich matche Sie mit den 2–3 besten Fotografen dort. ✨",
+    "openingLocAndType": "Hallo! Ein {type}-Shooting in {loc} — schöne Wahl. Erzählen Sie mir noch (Datum, Gruppengröße, Stimmung) und ich matche Sie mit den 2–3 besten Fotografen dort. ✨",
+    "openingTryYourself": "Hat Ihnen die KI-Vorschau in {loc} gefallen? Lassen Sie uns jetzt einen echten Fotografen dort finden. Erzählen Sie mir vom Shooting — Datum, Anlass, Gruppengröße — und ich schicke Ihnen die 2–3 besten Matches. ✨"
   },
   "lp": {
     "metaTitleTyped": "{shootType}-Fotografen in {city} — Sofort buchen | Photo Portugal",

@@ -3056,7 +3056,10 @@
       "browsePrefix": "Prefere navegar manualmente?",
       "browseLink": "Ver todos os fotógrafos"
     },
-    "online": "Online"
+    "online": "Online",
+    "openingLoc": "Olá! À procura de um fotógrafo em {loc}? Diga-me alguns pormenores sobre a sua sessão — ocasião, número de pessoas, estilo — e dou-lhe as 2–3 melhores opções. ✨",
+    "openingLocAndType": "Olá! Uma sessão {type} em {loc} — boa escolha. Conte-me mais (data, número de pessoas, estilo) e dou-lhe as 2–3 melhores opções aí. ✨",
+    "openingTryYourself": "Gostou da pré-visualização IA em {loc}? Vamos agora encontrar-lhe um fotógrafo real. Diga-me detalhes — data, ocasião, número de pessoas — e mando-lhe as 2–3 melhores opções. ✨"
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos de {shootType} em {city} — Reserve já | Photo Portugal",
