@@ -55,7 +55,11 @@ export async function GET(req: NextRequest) {
     "UPDATE ai_generations SET status='failed', error='timeout' WHERE status='pending' AND created_at < NOW() - INTERVAL '10 minutes'"
   ).catch(() => {});
 
-  if (!sessionId) {
+  // Look up by session_id OR ip (matches the POST route's quota check), so a
+  // user without a cookie yet still sees an accurate "0 remaining" if their IP
+  // already used today's quota. Without this, the page would advertise "1 free
+  // preview left" and only fail at click time with limit_reached.
+  if (!sessionId && !ip) {
     return NextResponse.json({
       used: 0,
       free_no_email: FREE_NO_EMAIL,
@@ -73,7 +77,7 @@ export async function GET(req: NextRequest) {
        COUNT(*) FILTER (WHERE email IS NOT NULL)::text AS has_email_count,
        MAX(email) AS email
      FROM ai_generations
-     WHERE (session_id = $1 OR (ip = $2 AND $2 IS NOT NULL))
+     WHERE ((session_id = $1 AND $1 IS NOT NULL) OR (ip = $2 AND $2 IS NOT NULL))
        AND status = 'success'
        AND created_at > NOW() - INTERVAL '24 hours'`,
     [sessionId, ip]

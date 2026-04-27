@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import OpenAI from "openai";
 import { auth } from "@/lib/auth";
-import { queryOne } from "@/lib/db";
+import { query, queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getScene } from "@/lib/ai-scenes";
@@ -94,7 +94,15 @@ export async function POST(req: NextRequest) {
 
   const email: string | null = emailRaw && isValidEmail(emailRaw) ? emailRaw : null;
 
-  // Quota check
+  // Mark any "pending" rows older than 10 min as failed before counting — covers
+  // the case where a deploy/restart killed an in-flight Promise; without this
+  // the row would count toward quota indefinitely.
+  await query(
+    "UPDATE ai_generations SET status='failed', error='timeout' WHERE status='pending' AND created_at < NOW() - INTERVAL '10 minutes'"
+  ).catch(() => {});
+
+  // Quota check (counts both successful and currently-in-flight pending rows so
+  // a user can't fire a second generation while the first is still rendering).
   const usageRow = await queryOne<{ total: string }>(
     `SELECT COUNT(*)::text AS total FROM ai_generations
      WHERE (session_id = $1 OR (ip = $2 AND $2 IS NOT NULL))
