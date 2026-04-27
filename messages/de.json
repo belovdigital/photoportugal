@@ -3145,7 +3145,7 @@
     "stepUploadHint": "JPG, PNG oder WebP — bis zu 8 MB. Frontale Porträts liefern das beste Ergebnis.",
     "stepScene": "Szene auswählen",
     "stepGenerate": "KI-Foto erzeugen",
-    "generating": "Ihr Foto wird erstellt… kann 1–5 Minuten dauern",
+    "generating": "Ihr Foto wird erstellt…",
     "result": "Ihre KI-Vorschau",
     "resultDisclaimer": "KI-generiert — kein echtes Foto. Echte Aufnahmen unserer Fotografen sehen noch besser aus. Buchen Sie unten.",
     "downloadHd": "HD herunterladen",
@@ -3192,6 +3192,12 @@
     "errorTooBig": "Foto zu groß — maximal 8 MB.",
     "errorBadType": "Foto muss JPEG, PNG oder WebP sein.",
     "privacyNote": "Ihr Foto wird sicher verarbeitet und nur so lange gespeichert, wie es zur Erstellung der Vorschau nötig ist.",
-    "photoTip": "Tipp — ein klares Selfie von vorne liefert das beste Ergebnis."
+    "photoTip": "Tipp — ein klares Selfie von vorne liefert das beste Ergebnis.",
+    "generatingMid": "Fast fertig…",
+    "generatingLate": "Details werden ausgearbeitet…",
+    "generatingLong": "Einen Moment, wir sind gleich so weit…",
+    "hintEarly": "Meist 30–90 Sekunden. Die KI komponiert die Szene um Ihr Gesicht.",
+    "hintMid": "Aufwändigere Szenen dauern etwas länger — Licht, Textur, Stimmung.",
+    "hintLong": "Noch einen Augenblick. Nach 3 Minuten zeigen wir eine Fehlermeldung."
   }
 }

@@ -119,10 +119,11 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   }
 
   async function pollUntilDone(genId: string, conciergeLoc: string): Promise<void> {
-    // gpt-image-2 in production has been observed taking up to ~5 min on cold paths.
-    // Poll for up to 6 min before giving up, with 3s intervals.
+    // With quality="medium" gpt-image-2 typically lands in 30-90s; cap at 3 min
+    // so we surface a "try again" failure instead of leaving the user staring
+    // at a spinner forever (e.g. when a deploy killed the in-flight promise).
     const startedAt = Date.now();
-    const TIMEOUT_MS = 6 * 60 * 1000;
+    const TIMEOUT_MS = 3 * 60 * 1000;
     while (Date.now() - startedAt < TIMEOUT_MS) {
       await new Promise((r) => setTimeout(r, 3000));
       let r: Response;
@@ -322,7 +323,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                 {step.kind === "generating" ? (
                   <>
                     <Spinner />
-                    {t("generating")} ({generatingSec}s)
+                    {generatingMessage(generatingSec, t)} ({generatingSec}s)
                   </>
                 ) : (
                   <>
@@ -331,6 +332,11 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                   </>
                 )}
               </button>
+              {step.kind === "generating" && (
+                <p className="text-xs text-gray-500 max-w-xs text-center">
+                  {generatingHint(generatingSec, t)}
+                </p>
+              )}
 
               {usage && step.kind !== "generating" && !usage.unlimited && (
                 <p className="text-xs text-gray-500">
@@ -556,6 +562,22 @@ function EmailGateModal({
       </div>
     </div>
   );
+}
+
+// Phase-shifting button label so the user sees something change every ~30s,
+// instead of the same "generating..." for two minutes.
+function generatingMessage(sec: number, t: ReturnType<typeof useTranslations>): string {
+  if (sec < 30) return t("generating");
+  if (sec < 60) return t("generatingMid");
+  if (sec < 120) return t("generatingLate");
+  return t("generatingLong");
+}
+
+// Friendly hint under the button — matches the phase, helps user understand the wait.
+function generatingHint(sec: number, t: ReturnType<typeof useTranslations>): string {
+  if (sec < 30) return t("hintEarly");
+  if (sec < 90) return t("hintMid");
+  return t("hintLong");
 }
 
 function Spinner() {

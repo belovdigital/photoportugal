@@ -3145,7 +3145,7 @@
     "stepUploadHint": "JPG, PNG ou WebP — jusqu'à 8 Mo. Les portraits de face donnent le meilleur résultat.",
     "stepScene": "Choisissez une scène",
     "stepGenerate": "Générer la photo IA",
-    "generating": "Génération de votre photo… cela peut prendre 1 à 5 minutes",
+    "generating": "Génération de votre photo…",
     "result": "Votre aperçu IA",
     "resultDisclaimer": "Image générée par IA — pas une vraie photo. Les vraies photos de nos photographes sont encore meilleures. Réservez ci-dessous.",
     "downloadHd": "Télécharger en HD",
@@ -3192,6 +3192,12 @@
     "errorTooBig": "Photo trop volumineuse — 8 Mo maximum.",
     "errorBadType": "La photo doit être JPEG, PNG ou WebP.",
     "privacyNote": "Votre photo est traitée en toute sécurité et conservée uniquement le temps de générer l'aperçu.",
-    "photoTip": "Astuce — un selfie net, de face, donne le meilleur résultat."
+    "photoTip": "Astuce — un selfie net, de face, donne le meilleur résultat.",
+    "generatingMid": "Presque terminé…",
+    "generatingLate": "Peaufinage des détails…",
+    "generatingLong": "Encore un instant, on finalise…",
+    "hintEarly": "En général 30 à 90 secondes. L’IA compose la scène autour de votre visage.",
+    "hintMid": "Les scènes détaillées prennent un peu plus de temps — lumière, texture, ambiance.",
+    "hintLong": "Encore un instant. Au-delà de 3 minutes, nous afficherons une erreur."
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { queryOne } from "@/lib/db";
+import { query, queryOne } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +47,13 @@ export async function GET(req: NextRequest) {
       unlimited: true,
     });
   }
+
+  // Auto-fail any "pending" rows older than 10 min — they can't be in flight any more
+  // (gpt-image-2 max ~3-4 min, plus a deploy or process restart kills the unawaited
+  // Promise mid-flight). Without this, those rows count toward quota forever.
+  await query(
+    "UPDATE ai_generations SET status='failed', error='timeout' WHERE status='pending' AND created_at < NOW() - INTERVAL '10 minutes'"
+  ).catch(() => {});
 
   if (!sessionId) {
     return NextResponse.json({

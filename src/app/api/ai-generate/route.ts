@@ -17,7 +17,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MODEL = "gpt-image-2";
-const COST_CENTS_PER_IMAGE = 5;
+// quality:"medium" — visibly better detail than "low", still ~30-90s wall time.
+// At ~1056 output tokens for 1024×1024 ≈ $0.042/image.
+const COST_CENTS_PER_IMAGE = 4;
 
 const FREE_NO_EMAIL = 1;
 const FREE_WITH_EMAIL = 3;
@@ -195,6 +197,7 @@ async function runGeneration({
       image: refFile,
       prompt: scenePrompt,
       size: "1024x1024",
+      quality: "medium", // ~30-90s wall time, visibly better detail than "low"
       n: 1,
     });
     resultB64 = res.data?.[0]?.b64_json || null;

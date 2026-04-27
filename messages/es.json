@@ -3145,7 +3145,7 @@
     "stepUploadHint": "JPG, PNG o WebP — hasta 8 MB. Los retratos frontales dan mejor resultado.",
     "stepScene": "Elija un escenario",
     "stepGenerate": "Generar foto con IA",
-    "generating": "Generando su foto… puede tardar 1–5 minutos",
+    "generating": "Generando su foto…",
     "result": "Su vista previa con IA",
     "resultDisclaimer": "Imagen generada por IA — no es una foto real. Las fotos verdaderas de nuestros fotógrafos quedan aún mejor. Reserve abajo.",
     "downloadHd": "Descargar HD",
@@ -3192,6 +3192,12 @@
     "errorTooBig": "La foto es demasiado grande — máximo 8 MB.",
     "errorBadType": "La foto debe ser JPEG, PNG o WebP.",
     "privacyNote": "Su foto se procesa de forma segura y solo se conserva el tiempo necesario para generar la vista previa.",
-    "photoTip": "Consejo — un selfie nítido y de frente da el mejor resultado."
+    "photoTip": "Consejo — un selfie nítido y de frente da el mejor resultado.",
+    "generatingMid": "Casi listo…",
+    "generatingLate": "Puliendo los detalles…",
+    "generatingLong": "Un momento, estamos terminando…",
+    "hintEarly": "Normalmente 30–90 segundos. La IA está componiendo la escena alrededor de su rostro.",
+    "hintMid": "Las escenas más detalladas tardan algo más — luz, textura, ambiente.",
+    "hintLong": "Un instante más. Si tarda más de 3 minutos mostraremos un error."
   }
 }

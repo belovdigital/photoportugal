@@ -3145,7 +3145,7 @@
     "stepUploadHint": "JPG, PNG or WebP — up to 8 MB. Front-facing portraits work best.",
     "stepScene": "Pick a scene",
     "stepGenerate": "Generate AI photo",
-    "generating": "Generating your photo… this can take 1–5 minutes",
+    "generating": "Generating your photo…",
     "result": "Your AI preview",
     "resultDisclaimer": "AI-generated — not a real photograph. Real photos by our photographers look even better. Book one below.",
     "downloadHd": "Download HD",
@@ -3192,6 +3192,12 @@
     "errorTooBig": "Photo is too large — max 8 MB.",
     "errorBadType": "Photo must be JPEG, PNG or WebP.",
     "privacyNote": "Your photo is processed securely and only kept long enough to generate the preview.",
-    "photoTip": "Tip — a clear, front-facing selfie gives the best result."
+    "photoTip": "Tip — a clear, front-facing selfie gives the best result.",
+    "generatingMid": "Almost there…",
+    "generatingLate": "Polishing the details…",
+    "generatingLong": "Hang tight, we’re wrapping up…",
+    "hintEarly": "Typically 30–90 seconds. AI is composing the scene around your face.",
+    "hintMid": "Bigger scenes take a bit longer — details, lighting, fabric texture.",
+    "hintLong": "Just a moment longer. If this takes more than 3 minutes we’ll show an error."
   }
 }
