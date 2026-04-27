@@ -19,8 +19,13 @@ export default async function TryYourselfPage({ params }: { params: Promise<{ lo
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // Pass scene IDs + covers from server (canonical list); names come from translations client-side.
-  const scenes = SCENES.map((s) => ({ id: s.id, cover: s.cover, conciergeLoc: s.conciergeLoc }));
+  // Pass scene IDs + visual metadata from server (canonical list); names come from translations client-side.
+  const scenes = SCENES.map((s) => ({
+    id: s.id,
+    emoji: s.emoji,
+    gradient: s.gradient,
+    conciergeLoc: s.conciergeLoc,
+  }));
 
   return <TryYourselfClient locale={locale} scenes={scenes} />;
 }

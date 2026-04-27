@@ -7,7 +7,8 @@ import imageCompression from "browser-image-compression";
 
 interface SceneMeta {
   id: string;
-  cover: string;
+  emoji: string;
+  gradient: string;
   conciergeLoc: string;
 }
 
@@ -276,23 +277,22 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                       onClick={() => pickScene(s.id)}
                       disabled={step.kind === "generating"}
                       className={`group relative aspect-[4/5] overflow-hidden rounded-xl border-2 text-left transition ${
-                        selected ? "border-primary-600 ring-2 ring-primary-300" : "border-warm-200 hover:border-primary-300"
+                        selected ? "border-primary-600 ring-2 ring-primary-300" : "border-warm-200 hover:border-primary-400"
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
-                      <img
-                        src={s.cover}
-                        alt={t(`scenes.${s.id}.name`)}
-                        className="h-full w-full object-cover transition group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient}`} />
+                      <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-90 transition group-hover:scale-110">
+                        {s.emoji}
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
                       <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                        <p className="font-semibold text-sm leading-tight">{t(`scenes.${s.id}.name`)}</p>
-                        <p className="mt-0.5 text-[11px] leading-snug opacity-90 line-clamp-2">
+                        <p className="font-semibold text-sm leading-tight drop-shadow">{t(`scenes.${s.id}.name`)}</p>
+                        <p className="mt-0.5 text-[11px] leading-snug opacity-95 line-clamp-2 drop-shadow">
                           {t(`scenes.${s.id}.subtitle`)}
                         </p>
                       </div>
                       {selected && (
-                        <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white">
+                        <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg">
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
