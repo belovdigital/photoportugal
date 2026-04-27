@@ -528,17 +528,19 @@ function UploadDropzone({
             const file = e.dataTransfer.files?.[0];
             if (file) onSelect(file);
           }}
-          className={`flex aspect-square w-full max-w-md mx-auto flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed bg-white p-6 text-center transition ${
-            dragOver ? "border-primary-500 bg-primary-50" : "border-warm-300 hover:border-primary-400"
+          className={`group flex w-full max-w-2xl mx-auto flex-row items-center justify-center gap-4 rounded-2xl border-2 border-dashed bg-white px-6 py-5 sm:py-7 text-left transition ${
+            dragOver ? "border-primary-500 bg-primary-50" : "border-warm-300 hover:border-primary-400 hover:shadow-sm"
           } disabled:opacity-50`}
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5V18a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18v-1.5M16.5 12L12 7.5m0 0L7.5 12M12 7.5v9" />
             </svg>
           </div>
-          <p className="font-semibold text-gray-900">{hint}</p>
-          <p className="text-xs text-gray-500">{tip}</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-gray-900 text-base">{hint}</p>
+            <p className="mt-0.5 text-xs text-gray-500">{tip}</p>
+          </div>
         </button>
       )}
       <input
@@ -552,9 +554,11 @@ function UploadDropzone({
           e.target.value = "";
         }}
       />
-      <p className="mt-3 text-center text-[11px] text-gray-400 max-w-md mx-auto">
-        🔒 {privacy}
-      </p>
+      {!photoPreview && (
+        <p className="mt-2 text-center text-[11px] text-gray-400 max-w-2xl mx-auto">
+          🔒 {privacy}
+        </p>
+      )}
     </div>
   );
 }
