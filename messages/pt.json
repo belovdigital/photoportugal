@@ -3183,6 +3183,30 @@
       "lagos-beach": {
         "name": "Praia dourada de Lagos",
         "subtitle": "Arcos de pedra, ondas suaves do Atlântico"
+      },
+      "aveiro-moliceiros": {
+        "name": "Canais de Aveiro",
+        "subtitle": "Moliceiros pintados à mão nos canais"
+      },
+      "costa-nova-stripes": {
+        "name": "Casas às riscas da Costa Nova",
+        "subtitle": "Palheiros aos riscos no Atlântico"
+      },
+      "douro-valley": {
+        "name": "Vinhas do Douro",
+        "subtitle": "Socalcos do vinho sobre o rio"
+      },
+      "azores-sete-cidades": {
+        "name": "Açores · Sete Cidades",
+        "subtitle": "Lagoas gémeas — azul e verde — numa cratera"
+      },
+      "belem-tower": {
+        "name": "Torre de Belém, Lisboa",
+        "subtitle": "Torre manuelina sobre o Tejo"
+      },
+      "evora-temple": {
+        "name": "Templo Romano de Évora",
+        "subtitle": "Colunas coríntias antigas, vila medieval"
       }
     },
     "errorGeneric": "Algo correu mal. Tente novamente.",
@@ -3198,6 +3222,14 @@
     "generatingLong": "Aguarde, estamos a terminar…",
     "hintEarly": "Normalmente 30–90 segundos. A IA está a compor a cena à volta do seu rosto.",
     "hintMid": "Cenas com mais detalhe demoram um pouco mais — luz, textura, ambiente.",
-    "hintLong": "Mais um instante. Se demorar mais de 3 minutos mostramos um erro."
+    "hintLong": "Mais um instante. Se demorar mais de 3 minutos mostramos um erro.",
+    "surpriseMe": "✨ Surpreenda-me",
+    "whileYouWait": "Enquanto espera, conheça alguns fotógrafos de Portugal",
+    "viewProfile": "Ver perfil →",
+    "fromPrice": "desde €{price}",
+    "reviews": "{count, plural, =1 {1 avaliação} other {# avaliações}}",
+    "trustSecure": "Pagamento seguro",
+    "trustRefund": "Reembolso total até 7 dias",
+    "trustVerified": "Fotógrafos selecionados"
   }
 }

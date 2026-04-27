@@ -3183,6 +3183,30 @@
       "lagos-beach": {
         "name": "Plage dorée de Lagos",
         "subtitle": "Arches de grès, doux ressac atlantique"
+      },
+      "aveiro-moliceiros": {
+        "name": "Canaux d'Aveiro",
+        "subtitle": "Moliceiros peints à la main sur les canaux"
+      },
+      "costa-nova-stripes": {
+        "name": "Maisons rayées de Costa Nova",
+        "subtitle": "Palheiros rayés bonbon sur l’Atlantique"
+      },
+      "douro-valley": {
+        "name": "Vallée du Douro",
+        "subtitle": "Vignobles en terrasses au-dessus du fleuve"
+      },
+      "azores-sete-cidades": {
+        "name": "Açores · Sete Cidades",
+        "subtitle": "Lacs jumeaux — bleu & vert — dans un cratère"
+      },
+      "belem-tower": {
+        "name": "Tour de Belém, Lisbonne",
+        "subtitle": "Tour manuéline sur le Tage"
+      },
+      "evora-temple": {
+        "name": "Temple romain d’Évora",
+        "subtitle": "Anciennes colonnes corinthiennes, ville médiévale"
       }
     },
     "errorGeneric": "Une erreur s'est produite. Réessayez.",
@@ -3198,6 +3222,14 @@
     "generatingLong": "Encore un instant, on finalise…",
     "hintEarly": "En général 30 à 90 secondes. L’IA compose la scène autour de votre visage.",
     "hintMid": "Les scènes détaillées prennent un peu plus de temps — lumière, texture, ambiance.",
-    "hintLong": "Encore un instant. Au-delà de 3 minutes, nous afficherons une erreur."
+    "hintLong": "Encore un instant. Au-delà de 3 minutes, nous afficherons une erreur.",
+    "surpriseMe": "✨ Surprenez-moi",
+    "whileYouWait": "En attendant, découvrez quelques photographes du Portugal",
+    "viewProfile": "Voir le profil →",
+    "fromPrice": "à partir de €{price}",
+    "reviews": "{count, plural, =1 {1 avis} other {# avis}}",
+    "trustSecure": "Paiement sécurisé",
+    "trustRefund": "Remboursement intégral jusqu’à 7 jours",
+    "trustVerified": "Photographes sélectionnés"
   }
 }

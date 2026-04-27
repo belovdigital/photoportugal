@@ -3183,6 +3183,30 @@
       "lagos-beach": {
         "name": "Goldener Strand von Lagos",
         "subtitle": "Sandsteinbögen, sanfter Atlantik"
+      },
+      "aveiro-moliceiros": {
+        "name": "Kanäle von Aveiro",
+        "subtitle": "Handbemalte Moliceiro-Boote auf den Kanälen"
+      },
+      "costa-nova-stripes": {
+        "name": "Streifenhäuser von Costa Nova",
+        "subtitle": "Bonbonbunte Palheiros am Atlantik"
+      },
+      "douro-valley": {
+        "name": "Douro-Tal · Weinberge",
+        "subtitle": "Terrassenweinberge über dem Fluss"
+      },
+      "azores-sete-cidades": {
+        "name": "Azoren · Sete Cidades",
+        "subtitle": "Zwillingsseen — blau & grün — im Vulkankrater"
+      },
+      "belem-tower": {
+        "name": "Torre de Belém, Lissabon",
+        "subtitle": "Manuelinischer Turm am Tejo"
+      },
+      "evora-temple": {
+        "name": "Römischer Tempel von Évora",
+        "subtitle": "Antike korinthische Säulen, mittelalterliche Stadt"
       }
     },
     "errorGeneric": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
@@ -3198,6 +3222,14 @@
     "generatingLong": "Einen Moment, wir sind gleich so weit…",
     "hintEarly": "Meist 30–90 Sekunden. Die KI komponiert die Szene um Ihr Gesicht.",
     "hintMid": "Aufwändigere Szenen dauern etwas länger — Licht, Textur, Stimmung.",
-    "hintLong": "Noch einen Augenblick. Nach 3 Minuten zeigen wir eine Fehlermeldung."
+    "hintLong": "Noch einen Augenblick. Nach 3 Minuten zeigen wir eine Fehlermeldung.",
+    "surpriseMe": "✨ Überrasch mich",
+    "whileYouWait": "Bis dahin — lernen Sie ein paar Portugal-Fotografen kennen",
+    "viewProfile": "Profil ansehen →",
+    "fromPrice": "ab €{price}",
+    "reviews": "{count, plural, =1 {1 Bewertung} other {# Bewertungen}}",
+    "trustSecure": "Sichere Zahlung",
+    "trustRefund": "Volle Rückerstattung bis zu 7 Tagen",
+    "trustVerified": "Handverlesene Fotografen"
   }
 }

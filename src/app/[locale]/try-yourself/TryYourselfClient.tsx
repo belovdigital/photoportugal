@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import imageCompression from "browser-image-compression";
 
@@ -10,6 +9,17 @@ interface SceneMeta {
   emoji: string;
   gradient: string;
   conciergeLoc: string;
+}
+
+interface PhotographerCard {
+  slug: string;
+  name: string;
+  coverUrl: string | null;
+  avatarUrl: string | null;
+  rating: number | null;
+  reviewCount: number;
+  minPrice: number | null;
+  tagline: string | null;
 }
 
 interface Usage {
@@ -48,6 +58,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const generatingTimerRef = useRef<number | null>(null);
   const [generatingSec, setGeneratingSec] = useState(0);
+  const [photographers, setPhotographers] = useState<PhotographerCard[] | null>(null);
 
   // Load usage on mount
   useEffect(() => {
@@ -79,13 +90,17 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
       setStep({ kind: "error", msg: t("errorBadType") });
       return;
     }
+    // Only compress when we have to. The reference image goes to gpt-image-2,
+    // which keys off facial detail — over-compressing hurts identity preservation.
+    // Hard limit is 8 MB (server-side), so anything bigger gets squeezed down
+    // to fit; everything under 8 MB is uploaded as-is.
     if (file.size > MAX_BYTES) {
-      // Try compressing
       try {
         const compressed = await imageCompression(file, {
-          maxSizeMB: 4,
-          maxWidthOrHeight: 1600,
-          useWebWorker: false, // CSP blocks the lib's CDN-hosted worker script
+          maxSizeMB: 7,                    // stay under the 8 MB hard cap
+          maxWidthOrHeight: 2400,          // plenty of detail for face refs
+          useWebWorker: false,             // CSP blocks the lib's CDN-hosted worker script
+          initialQuality: 0.92,            // light compression, keep faces crisp
         });
         if (compressed.size > MAX_BYTES) {
           setStep({ kind: "error", msg: t("errorTooBig") });
@@ -96,16 +111,6 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
         setStep({ kind: "error", msg: t("errorTooBig") });
         return;
       }
-    } else if (file.size > 1024 * 1024) {
-      // Soft-compress to keep upload snappy on mobile
-      try {
-        const compressed = await imageCompression(file, {
-          maxSizeMB: 1.5,
-          maxWidthOrHeight: 1600,
-          useWebWorker: false, // CSP blocks the lib's CDN-hosted worker script
-        });
-        file = new File([compressed], file.name, { type: compressed.type || file.type });
-      } catch { /* keep original */ }
     }
     setPhoto(file);
     setPhotoPreview(URL.createObjectURL(file));
@@ -116,6 +121,25 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   function pickScene(id: string) {
     setSceneId(id);
     if (photo) setStep({ kind: "ready" });
+  }
+
+  function surpriseMe() {
+    if (scenes.length === 0) return;
+    const others = sceneId ? scenes.filter((s) => s.id !== sceneId) : scenes;
+    const pick = others[Math.floor(Math.random() * others.length)];
+    pickScene(pick.id);
+  }
+
+  // Pre-fetch a few photographers to show during the generation wait. We grab them
+  // by the picked scene's location so they're contextually relevant; falls back to
+  // top photographers when there are fewer than 4 in that location.
+  async function loadPhotographersForLoc(loc: string) {
+    try {
+      const r = await fetch(`/api/ai-generate/photographers?loc=${encodeURIComponent(loc)}`);
+      if (!r.ok) return;
+      const d = await r.json();
+      setPhotographers(d.photographers || []);
+    } catch { /* non-fatal */ }
   }
 
   async function pollUntilDone(genId: string, conciergeLoc: string): Promise<void> {
@@ -147,6 +171,8 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   async function startGeneration(includeEmail: string | null): Promise<void> {
     if (!photo || !sceneId) return;
     setStep({ kind: "generating" });
+    const scene = scenes.find((s) => s.id === sceneId);
+    if (scene) void loadPhotographersForLoc(scene.conciergeLoc);
     const fd = new FormData();
     fd.append("photo", photo);
     fd.append("scene_id", sceneId);
@@ -325,24 +351,37 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={generate}
-                disabled={!photo || !sceneId || step.kind === "generating"}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.99] disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed"
-              >
-                {step.kind === "generating" ? (
-                  <>
-                    <Spinner />
-                    {generatingMessage(generatingSec, t)} ({generatingSec}s)
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.18-4.456A1 1 0 0112 2z" clipRule="evenodd" /></svg>
-                    {t("stepGenerate")}
-                  </>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={generate}
+                  disabled={!photo || !sceneId || step.kind === "generating"}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.99] disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed"
+                >
+                  {step.kind === "generating" ? (
+                    <>
+                      <Spinner />
+                      {generatingMessage(generatingSec, t)} ({generatingSec}s)
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.18-4.456A1 1 0 0112 2z" clipRule="evenodd" /></svg>
+                      {t("stepGenerate")}
+                    </>
+                  )}
+                </button>
+
+                {step.kind !== "generating" && (
+                  <button
+                    type="button"
+                    onClick={surpriseMe}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary-300 bg-white px-5 py-4 text-sm font-semibold text-primary-700 hover:border-primary-500 hover:bg-primary-50"
+                  >
+                    {t("surpriseMe")}
+                  </button>
                 )}
-              </button>
+              </div>
+
               {step.kind === "generating" && (
                 <p className="text-xs text-gray-500 max-w-xs text-center">
                   {generatingHint(generatingSec, t)}
@@ -358,6 +397,11 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                 <p className="text-xs text-primary-600 font-semibold">
                   ✨ Unlimited (staff)
                 </p>
+              )}
+
+              {/* While-you-wait: photographer carousel + trust strip */}
+              {step.kind === "generating" && photographers && photographers.length > 0 && (
+                <WaitingPanel locale={locale} photographers={photographers} t={t} />
               )}
             </div>
           </div>
@@ -503,12 +547,14 @@ function ResultView({
         </button>
       </div>
 
-      <Link
+      <a
         href={conciergeHref}
+        target="_blank"
+        rel="noopener noreferrer"
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-4 text-sm sm:text-base font-semibold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"
       >
         {t("ctaBookReal")}
-      </Link>
+      </a>
     </div>
   );
 }
@@ -521,12 +567,14 @@ function LimitReachedView({ conciergeHref, t }: { conciergeHref: string; t: Retu
       </div>
       <h2 className="font-display text-2xl font-bold text-gray-900">{t("limitReachedTitle")}</h2>
       <p className="mt-3 text-gray-600">{t("limitReachedBody")}</p>
-      <Link
+      <a
         href={conciergeHref}
+        target="_blank"
+        rel="noopener noreferrer"
         className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"
       >
         {t("limitReachedCta")}
-      </Link>
+      </a>
     </div>
   );
 }
@@ -589,6 +637,81 @@ function generatingHint(sec: number, t: ReturnType<typeof useTranslations>): str
   if (sec < 30) return t("hintEarly");
   if (sec < 90) return t("hintMid");
   return t("hintLong");
+}
+
+function WaitingPanel({
+  locale, photographers, t,
+}: {
+  locale: string;
+  photographers: PhotographerCard[];
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const photographerHref = (slug: string) =>
+    locale === "en" ? `/photographers/${slug}` : `/${locale}/photographers/${slug}`;
+
+  return (
+    <div className="w-full max-w-5xl mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <h3 className="text-center font-display text-base sm:text-lg font-semibold text-gray-900">
+        {t("whileYouWait")}
+      </h3>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {photographers.map((p) => (
+          <a
+            key={p.slug}
+            href={photographerHref(p.slug)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-warm-200 bg-warm-100 transition hover:border-primary-300 hover:shadow-lg"
+          >
+            {p.coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={p.coverUrl}
+                alt={p.name}
+                className="h-full w-full object-cover transition group-hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              <div className="h-full w-full bg-gradient-to-br from-primary-100 to-warm-200" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-2.5 text-white">
+              <p className="font-semibold text-xs leading-tight truncate">{p.name}</p>
+              <div className="mt-0.5 flex items-center justify-between gap-1 text-[10px] opacity-95">
+                {p.rating ? (
+                  <span className="flex items-center gap-0.5">
+                    <span className="text-yellow-300">★</span>
+                    {p.rating.toFixed(1)}
+                    {p.reviewCount > 0 && <span className="opacity-80">({p.reviewCount})</span>}
+                  </span>
+                ) : <span />}
+                {p.minPrice && (
+                  <span className="font-medium">{t("fromPrice", { price: p.minPrice })}</span>
+                )}
+              </div>
+              <p className="mt-1 text-[10px] font-semibold opacity-95">{t("viewProfile")}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11px] text-gray-600 pt-2">
+        <span className="flex items-center gap-1">
+          <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+          {t("trustSecure")}
+        </span>
+        <span className="flex items-center gap-1">
+          <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+          {t("trustRefund")}
+        </span>
+        <span className="flex items-center gap-1">
+          <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+          {t("trustVerified")}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function Spinner() {

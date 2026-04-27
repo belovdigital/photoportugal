@@ -3183,6 +3183,30 @@
       "lagos-beach": {
         "name": "Lagos golden beach",
         "subtitle": "Sandstone arches, soft Atlantic surf"
+      },
+      "aveiro-moliceiros": {
+        "name": "Aveiro canals",
+        "subtitle": "Hand-painted moliceiro boats on the canals"
+      },
+      "costa-nova-stripes": {
+        "name": "Costa Nova striped houses",
+        "subtitle": "Candy-stripe palheiros on the Atlantic"
+      },
+      "douro-valley": {
+        "name": "Douro Valley vineyards",
+        "subtitle": "Terraced wine country above the river"
+      },
+      "azores-sete-cidades": {
+        "name": "Azores · Sete Cidades",
+        "subtitle": "Twin lakes — blue & green — in a volcano crater"
+      },
+      "belem-tower": {
+        "name": "Belém Tower, Lisbon",
+        "subtitle": "Manueline tower on the Tagus"
+      },
+      "evora-temple": {
+        "name": "Évora Roman Temple",
+        "subtitle": "Ancient Corinthian columns, medieval town"
       }
     },
     "errorGeneric": "Something went wrong. Try again.",
@@ -3198,6 +3222,14 @@
     "generatingLong": "Hang tight, we’re wrapping up…",
     "hintEarly": "Typically 30–90 seconds. AI is composing the scene around your face.",
     "hintMid": "Bigger scenes take a bit longer — details, lighting, fabric texture.",
-    "hintLong": "Just a moment longer. If this takes more than 3 minutes we’ll show an error."
+    "hintLong": "Just a moment longer. If this takes more than 3 minutes we’ll show an error.",
+    "surpriseMe": "✨ Surprise me",
+    "whileYouWait": "While you wait, meet some Portugal photographers",
+    "viewProfile": "View profile →",
+    "fromPrice": "from €{price}",
+    "reviews": "{count, plural, =1 {1 review} other {# reviews}}",
+    "trustSecure": "Secure payment",
+    "trustRefund": "Full refund up to 7 days",
+    "trustVerified": "Hand-picked photographers"
   }
 }
