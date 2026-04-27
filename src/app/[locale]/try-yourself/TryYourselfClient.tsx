@@ -37,7 +37,7 @@ type Step =
   | { kind: "idle" }
   | { kind: "ready" }                          // photo + scene picked, can generate
   | { kind: "generating" }
-  | { kind: "result"; imageUrl: string; conciergeLoc: string; sceneId: string }
+  | { kind: "result"; imageUrl: string; conciergeLoc: string; sceneId: string; genId: string }
   | { kind: "email_gate" }                     // need email to continue
   | { kind: "limit" }                          // hit hard cap
   | { kind: "error"; msg: string };
@@ -191,7 +191,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
       const d = await r.json().catch(() => null);
       if (!d) continue;
       if (d.status === "success" && d.image_url) {
-        setStep({ kind: "result", imageUrl: d.image_url, conciergeLoc, sceneId: sceneIdForResult });
+        setStep({ kind: "result", imageUrl: d.image_url, conciergeLoc, sceneId: sceneIdForResult, genId });
         return;
       }
       if (d.status === "failed") {
@@ -297,6 +297,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
         {step.kind === "result" && (
           <ResultView
             imageUrl={step.imageUrl}
+            downloadUrl={`/api/ai-generate/${step.genId}/download`}
             sceneName={t(`scenes.${step.sceneId}.name`)}
             sceneSubtitle={t(`scenes.${step.sceneId}.subtitle`)}
             conciergeHref={conciergeHref(step.conciergeLoc)}
@@ -574,9 +575,10 @@ function UploadDropzone({
 }
 
 function ResultView({
-  imageUrl, sceneName, sceneSubtitle, conciergeHref, onTryAnother, t,
+  imageUrl, downloadUrl, sceneName, sceneSubtitle, conciergeHref, onTryAnother, t,
 }: {
   imageUrl: string;
+  downloadUrl: string;
   sceneName: string;
   sceneSubtitle: string;
   conciergeHref: string;
@@ -597,11 +599,11 @@ function ResultView({
       <p className="mt-3 text-center text-xs text-gray-500 italic">{t("resultDisclaimer")}</p>
 
       <div className="mt-6 flex flex-col sm:flex-row items-stretch gap-3">
+        {/* Same-origin proxy endpoint sets Content-Disposition: attachment so
+            this is a real download even on Safari/iOS, where <a download> is
+            otherwise ignored cross-origin. */}
         <a
-          href={imageUrl}
-          download="photoportugal-ai-preview.png"
-          target="_blank"
-          rel="noopener noreferrer"
+          href={downloadUrl}
           className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
