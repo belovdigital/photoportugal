@@ -10,6 +10,12 @@ import sharp from "sharp";
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per portfolio photo
 
+// Client uses temp ids like "temp-1777..." for items mid-upload; those never
+// reach the DB so DELETE/PATCH against them must short-circuit instead of
+// crashing pg with `invalid input syntax for type uuid` (22P02).
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (s: unknown): s is string => typeof s === "string" && UUID_RE.test(s);
+
 export async function GET(req: NextRequest) {
   const user = await authFromRequest(req);
   if (!user) {
@@ -169,6 +175,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Item ID required" }, { status: 400 });
   }
 
+  // Temp client-side id (e.g. "temp-1777..." for an in-flight upload) — nothing
+  // to delete server-side, just acknowledge.
+  if (!isUuid(itemId)) {
+    return NextResponse.json({ success: true, noop: true });
+  }
+
   const profile = await queryOne<{ id: string }>(
     "SELECT id FROM photographer_profiles WHERE user_id = $1",
     [userId]
@@ -214,9 +226,10 @@ export async function PATCH(req: NextRequest) {
   );
   if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
 
-  // Batch reorder
+  // Batch reorder. Skip any temp/non-UUID ids (in-flight uploads not yet saved).
   if (body.action === "reorder" && Array.isArray(body.items)) {
     for (const item of body.items) {
+      if (!isUuid(item.id)) continue;
       await queryOne(
         "UPDATE portfolio_items SET sort_order = $1 WHERE id = $2 AND photographer_id = $3",
         [item.sort_order, item.id, profile.id]
@@ -228,6 +241,7 @@ export async function PATCH(req: NextRequest) {
   // Update tags on single item
   const { id: itemId, location_slug, shoot_type } = body;
   if (!itemId) return NextResponse.json({ error: "Item ID required" }, { status: 400 });
+  if (!isUuid(itemId)) return NextResponse.json({ success: true, noop: true });
 
   await queryOne(
     "UPDATE portfolio_items SET location_slug = $1, shoot_type = $2 WHERE id = $3 AND photographer_id = $4 RETURNING id",
