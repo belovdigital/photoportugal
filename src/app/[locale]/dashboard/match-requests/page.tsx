@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { query } from "@/lib/db";
+import { query, queryOne } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { locations } from "@/lib/locations-data";
@@ -46,6 +46,11 @@ export default async function MatchRequestsPage() {
 
   const userId = (session.user as { id?: string }).id;
   if (!userId) return redirect("/auth/signin");
+
+  // Match Requests is a client-side feature (browse photographer suggestions for
+  // your own request). Photographers shouldn't see other clients' requests here.
+  const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
+  if (userRow?.role === "photographer") return redirect("/dashboard");
 
   const rows = await query<MatchRequestRow>(
     `SELECT mr.*,

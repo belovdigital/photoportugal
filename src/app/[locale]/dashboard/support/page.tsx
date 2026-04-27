@@ -1,103 +1,20 @@
-"use client";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { queryOne } from "@/lib/db";
+import SupportClient from "./SupportClient";
 
-import { useState } from "react";
-import { useSession } from "next-auth/react";
-import { Link } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+export const dynamic = "force-dynamic";
 
-export default function SupportPage() {
-  const { data: session, status: sessionStatus } = useSession();
-  const user = session?.user;
-  const t = useTranslations("support");
+export default async function SupportPage() {
+  const session = await auth();
+  if (!session?.user) redirect("/auth/signin");
 
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const userId = (session.user as { id?: string }).id;
+  const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
+  // Sidebar lists Support under photographer-only links; clients with support
+  // questions go through /contact (public form). Keep this page photographer-only
+  // so the messaging matches.
+  if (!userRow || userRow.role !== "photographer") redirect("/dashboard");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!subject.trim() || !message.trim()) return;
-
-    setSending(true);
-    setStatus("idle");
-
-    try {
-      const res = await fetch("/api/dashboard/support", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject: subject.trim(), message: message.trim() }),
-      });
-
-      if (res.ok) {
-        setStatus("success");
-        setSubject("");
-        setMessage("");
-      } else {
-        setStatus("error");
-      }
-    } catch {
-      setStatus("error");
-    }
-    setSending(false);
-  }
-
-  if (sessionStatus === "loading" || !user) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-warm-300 border-t-primary-600" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 sm:p-8">
-      <h1 className="font-display text-2xl font-bold text-gray-900">{t("title")}</h1>
-      <p className="mt-1 text-gray-500">{t("subtitle")}</p>
-
-      {status === "success" && (
-        <div className="mt-4 rounded-lg bg-green-50 p-4 text-sm text-green-700">
-          {t("successMessage")}
-        </div>
-      )}
-
-      {status === "error" && (
-        <div className="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-600">
-          {t("errorMessage")}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="mt-6 rounded-xl border border-warm-200 bg-white p-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">{t("subject")}</label>
-          <input
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder={t("subjectPlaceholder")}
-            required
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">{t("message")}</label>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={t("messagePlaceholder")}
-            required
-            rows={6}
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 resize-none"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={sending || !subject.trim() || !message.trim()}
-          className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
-        >
-          {sending ? t("sending") : t("sendMessage")}
-        </button>
-      </form>
-    </div>
-  );
+  return <SupportClient />;
 }
