@@ -116,74 +116,80 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
     if (photo) setStep({ kind: "ready" });
   }
 
-  async function generate() {
+  async function pollUntilDone(genId: string, conciergeLoc: string): Promise<void> {
+    // Poll for up to ~3 min (gpt-image-2 can take 30-150s).
+    const startedAt = Date.now();
+    const TIMEOUT_MS = 3 * 60 * 1000;
+    while (Date.now() - startedAt < TIMEOUT_MS) {
+      await new Promise((r) => setTimeout(r, 3000));
+      let r: Response;
+      try { r = await fetch(`/api/ai-generate/${genId}`); }
+      catch { continue; }
+      if (!r.ok) continue;
+      const d = await r.json().catch(() => null);
+      if (!d) continue;
+      if (d.status === "success" && d.image_url) {
+        setStep({ kind: "result", imageUrl: d.image_url, conciergeLoc });
+        return;
+      }
+      if (d.status === "failed") {
+        setStep({ kind: "error", msg: t("errorGeneric") });
+        return;
+      }
+    }
+    setStep({ kind: "error", msg: t("errorGeneric") });
+  }
+
+  async function startGeneration(includeEmail: string | null): Promise<void> {
     if (!photo || !sceneId) return;
     setStep({ kind: "generating" });
     const fd = new FormData();
     fd.append("photo", photo);
     fd.append("scene_id", sceneId);
-    if (usage?.email) fd.append("email", usage.email);
+    if (includeEmail) fd.append("email", includeEmail);
+    else if (usage?.email) fd.append("email", usage.email);
 
-    try {
-      const r = await fetch("/api/ai-generate", { method: "POST", body: fd });
-      if (r.status === 402) {
-        setStep({ kind: "email_gate" });
-        return;
-      }
-      if (r.status === 429) {
-        const data = await r.json().catch(() => null);
-        if (data?.reason === "limit_reached") { setStep({ kind: "limit" }); return; }
-        setStep({ kind: "error", msg: t("errorRateLimit") });
-        return;
-      }
-      if (!r.ok) {
-        const data = await r.json().catch(() => null);
-        setStep({ kind: "error", msg: data?.error || t("errorGeneric") });
-        return;
-      }
-      const data = await r.json();
-      setUsage((prev) => prev ? {
-        ...prev,
-        used: data.used,
-        remaining: data.remaining,
-        requires_email: data.requires_email_next,
-        email: data.has_email ? prev.email : prev.email,
-      } : prev);
-      setStep({ kind: "result", imageUrl: data.image_url, conciergeLoc: data.concierge_loc });
-    } catch {
-      setStep({ kind: "error", msg: t("errorGeneric") });
+    let r: Response;
+    try { r = await fetch("/api/ai-generate", { method: "POST", body: fd }); }
+    catch { setStep({ kind: "error", msg: t("errorGeneric") }); return; }
+
+    if (r.status === 402) { setStep({ kind: "email_gate" }); return; }
+    if (r.status === 429) {
+      const d = await r.json().catch(() => null);
+      if (d?.reason === "limit_reached") { setStep({ kind: "limit" }); return; }
+      setStep({ kind: "error", msg: t("errorRateLimit") });
+      return;
     }
+    if (!r.ok) {
+      const d = await r.json().catch(() => null);
+      setStep({ kind: "error", msg: d?.error || t("errorGeneric") });
+      return;
+    }
+    const data = await r.json();
+    setUsage((prev) => prev ? {
+      ...prev,
+      used: data.used,
+      remaining: data.remaining,
+      requires_email: data.requires_email_next,
+      email: includeEmail || prev.email,
+    } : prev);
+
+    if (!data.id) { setStep({ kind: "error", msg: t("errorGeneric") }); return; }
+    await pollUntilDone(data.id, data.concierge_loc);
   }
 
-  async function submitEmailAndGenerate() {
+  function generate() {
+    void startGeneration(null);
+  }
+
+  function submitEmailAndGenerate() {
     const email = emailInput.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError(t("errorBadEmail"));
       return;
     }
     setEmailError(null);
-    if (!photo || !sceneId) return;
-    setStep({ kind: "generating" });
-    const fd = new FormData();
-    fd.append("photo", photo);
-    fd.append("scene_id", sceneId);
-    fd.append("email", email);
-    try {
-      const r = await fetch("/api/ai-generate", { method: "POST", body: fd });
-      if (!r.ok) {
-        if (r.status === 429) {
-          const data = await r.json().catch(() => null);
-          if (data?.reason === "limit_reached") { setStep({ kind: "limit" }); return; }
-        }
-        setStep({ kind: "error", msg: t("errorGeneric") });
-        return;
-      }
-      const data = await r.json();
-      setUsage((prev) => prev ? { ...prev, used: data.used, remaining: data.remaining, email } : prev);
-      setStep({ kind: "result", imageUrl: data.image_url, conciergeLoc: data.concierge_loc });
-    } catch {
-      setStep({ kind: "error", msg: t("errorGeneric") });
-    }
+    void startGeneration(email);
   }
 
   function reset() {
