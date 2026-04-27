@@ -133,21 +133,31 @@ export async function PUT(req: NextRequest) {
       [userId]
     );
 
+    // Compute the dirty flag in JS so the SQL doesn't need to compare the same
+    // null parameter against a column twice (postgres 42P08: 'inconsistent
+    // types deduced for parameter $1' when both sides are null-typed).
+    const newTagline = tagline || null;
+    const newBio = bio || null;
+    const translationsDirty =
+      (prev?.tagline ?? null) !== newTagline ||
+      (prev?.bio ?? null) !== newBio;
+
     const profile = await queryOne<{ id: string; plan: string; slug: string }>(
       `UPDATE photographer_profiles
        SET tagline = $1, bio = $2, languages = $3,
            shoot_types = $4, experience_years = $5, career_start_year = $6,
-           translations_dirty = CASE WHEN tagline IS DISTINCT FROM $1 OR bio IS DISTINCT FROM $2 THEN TRUE ELSE translations_dirty END,
+           translations_dirty = translations_dirty OR $7,
            updated_at = NOW()
-       WHERE user_id = $7
+       WHERE user_id = $8
        RETURNING id, plan, slug`,
       [
-        tagline || null,
-        bio || null,
+        newTagline,
+        newBio,
         languages || [],
         shoot_types || [],
         resolvedExperienceYears,
         resolvedCareerStartYear,
+        translationsDirty,
         userId,
       ]
     );
