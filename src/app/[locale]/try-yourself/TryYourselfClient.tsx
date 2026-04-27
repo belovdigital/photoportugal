@@ -213,22 +213,22 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
 
   return (
     <div className="bg-warm-50 min-h-screen">
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-primary-50 via-warm-50 to-accent-50/40 py-10 sm:py-14">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-primary-700 shadow-sm ring-1 ring-primary-200">
+      {/* Hero — tightly compressed; badge inline on the same line as title on desktop */}
+      <section className="relative bg-gradient-to-br from-primary-50 via-warm-50 to-accent-50/40 py-3 sm:py-4">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold text-primary-700 shadow-sm ring-1 ring-primary-200">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary-500" />
               </span>
               {t("badge")}
             </span>
-            <h1 className="mt-4 font-display text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-gray-900">
+            <h1 className="font-display text-xl sm:text-2xl md:text-[28px] font-bold leading-tight text-gray-900">
               {t("title1")} <span className="text-primary-600">{t("title2")}</span>
             </h1>
-            <p className="mt-3 text-base sm:text-lg text-gray-600 leading-relaxed">{t("subtitle")}</p>
           </div>
+          <p className="mt-1 text-[13px] sm:text-sm text-gray-600 leading-snug max-w-2xl mx-auto">{t("subtitle")}</p>
         </div>
       </section>
 
@@ -283,18 +283,29 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient}`} />
-                      <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-90 transition group-hover:scale-110">
-                        {s.emoji}
+                      {/* Subtle dark overlays at top and bottom for text legibility, transparent middle keeps emoji vivid */}
+                      <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/55 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/65 to-transparent" />
+
+                      {/* 3-zone layout: title top, emoji centred, subtitle bottom */}
+                      <div className="relative flex h-full flex-col">
+                        <div className="px-3 pt-3">
+                          <p className="font-display font-bold text-white leading-tight text-[15px] sm:text-base drop-shadow-md">
+                            {t(`scenes.${s.id}.name`)}
+                          </p>
+                        </div>
+                        <div className="flex-1 flex items-center justify-center text-[64px] sm:text-7xl drop-shadow-lg transition group-hover:scale-110">
+                          {s.emoji}
+                        </div>
+                        <div className="px-3 pb-3">
+                          <p className="text-[11px] sm:text-xs text-white/95 leading-snug line-clamp-2 drop-shadow">
+                            {t(`scenes.${s.id}.subtitle`)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                        <p className="font-semibold text-sm leading-tight drop-shadow">{t(`scenes.${s.id}.name`)}</p>
-                        <p className="mt-0.5 text-[11px] leading-snug opacity-95 line-clamp-2 drop-shadow">
-                          {t(`scenes.${s.id}.subtitle`)}
-                        </p>
-                      </div>
+
                       {selected && (
-                        <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg">
+                        <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg ring-2 ring-white/80">
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
