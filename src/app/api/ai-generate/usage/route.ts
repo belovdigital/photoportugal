@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -6,6 +7,11 @@ export const dynamic = "force-dynamic";
 // Free quota WITHOUT email; quota WITH email; absolute hard cap per session+ip per day.
 const FREE_NO_EMAIL = 1;
 const FREE_WITH_EMAIL = 3;
+
+// Mirror of UNLIMITED_USER_IDS in the POST route — staff/test accounts.
+const UNLIMITED_USER_IDS = new Set([
+  "1fe40315-bd00-4530-a6be-39fa970617bd", // Kate Belova
+]);
 
 interface UsageRow {
   total_count: string;
@@ -21,6 +27,26 @@ interface UsageRow {
 export async function GET(req: NextRequest) {
   const sessionId = req.cookies.get("ai_session")?.value || null;
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+
+  let unlimited = false;
+  try {
+    const session = await auth();
+    const uid = (session?.user as { id?: string } | undefined)?.id;
+    if (uid && UNLIMITED_USER_IDS.has(uid)) unlimited = true;
+  } catch { /* anon */ }
+
+  if (unlimited) {
+    return NextResponse.json({
+      used: 0,
+      free_no_email: 999,
+      free_with_email: 999,
+      remaining: 999,
+      email: null,
+      requires_email: false,
+      blocked: false,
+      unlimited: true,
+    });
+  }
 
   if (!sessionId) {
     return NextResponse.json({

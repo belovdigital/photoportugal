@@ -20,6 +20,7 @@ interface Usage {
   email: string | null;
   requires_email: boolean;
   blocked: boolean;
+  unlimited?: boolean;
 }
 
 type Step =
@@ -331,9 +332,14 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                 )}
               </button>
 
-              {usage && step.kind !== "generating" && (
+              {usage && step.kind !== "generating" && !usage.unlimited && (
                 <p className="text-xs text-gray-500">
                   {t("remainingFree", { count: usage.remaining })}
+                </p>
+              )}
+              {usage?.unlimited && step.kind !== "generating" && (
+                <p className="text-xs text-primary-600 font-semibold">
+                  ✨ Unlimited (staff)
                 </p>
               )}
             </div>

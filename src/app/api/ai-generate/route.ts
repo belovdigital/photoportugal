@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import OpenAI from "openai";
+import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getScene } from "@/lib/ai-scenes";
+
+// User IDs allowed to generate unlimited AI previews (test/staff accounts).
+// Kate Belova — test account also hidden from Recent Visitors.
+const UNLIMITED_USER_IDS = new Set([
+  "1fe40315-bd00-4530-a6be-39fa970617bd",
+]);
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,11 +52,20 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
   const userAgent = req.headers.get("user-agent")?.slice(0, 500) || null;
 
-  // Coarse abuse guard
+  // Logged-in staff/test users get unlimited generations — bypass quota + abuse guards.
+  let unlimited = false;
+  let userId: string | null = null;
+  try {
+    const session = await auth();
+    userId = (session?.user as { id?: string } | undefined)?.id || null;
+    if (userId && UNLIMITED_USER_IDS.has(userId)) unlimited = true;
+  } catch { /* not logged in */ }
+
+  // Coarse abuse guard (still applies even to unlimited users — protects against runaway loops)
   if (!checkRateLimit(`ai-gen:s:${sessionId}`, 1, 60_000)) {
     return NextResponse.json({ error: "Too fast — wait a minute and try again." }, { status: 429 });
   }
-  if (ip && !checkRateLimit(`ai-gen:ip:${ip}`, 5, 60 * 60_000)) {
+  if (!unlimited && ip && !checkRateLimit(`ai-gen:ip:${ip}`, 5, 60 * 60_000)) {
     return NextResponse.json({ error: "Hourly limit reached on this network." }, { status: 429 });
   }
 
@@ -92,11 +108,13 @@ export async function POST(req: NextRequest) {
   );
   const effectiveEmail = email || priorEmail?.email || null;
 
-  if (used >= FREE_WITH_EMAIL) {
-    return NextResponse.json({ error: "limit_reached", reason: "limit_reached", used, cap: FREE_WITH_EMAIL }, { status: 429 });
-  }
-  if (used >= FREE_NO_EMAIL && !effectiveEmail) {
-    return NextResponse.json({ error: "email_required", reason: "email_required", used }, { status: 402 });
+  if (!unlimited) {
+    if (used >= FREE_WITH_EMAIL) {
+      return NextResponse.json({ error: "limit_reached", reason: "limit_reached", used, cap: FREE_WITH_EMAIL }, { status: 429 });
+    }
+    if (used >= FREE_NO_EMAIL && !effectiveEmail) {
+      return NextResponse.json({ error: "email_required", reason: "email_required", used }, { status: 402 });
+    }
   }
 
   // Persist reference image
