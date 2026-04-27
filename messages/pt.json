@@ -2604,7 +2604,14 @@
     "cancel": "Cancelar",
     "signIn": "Iniciar sessão",
     "contactSupport": "Contactar suporte",
-    "profilePhotoPreview": "Pré-visualização da foto de perfil"
+    "profilePhotoPreview": "Pré-visualização da foto de perfil",
+    "clientBookingsTitle": "Confirmações de reserva",
+    "clientBookingsDesc": "Receba email quando uma reserva for confirmada, alterada ou cancelada",
+    "clientMessagesDesc": "Receba notificações quando o seu fotógrafo lhe enviar uma mensagem",
+    "clientReviewsTitle": "Lembretes de avaliação",
+    "clientReviewsDesc": "Receba um email alguns dias após a sessão a convidar a deixar uma avaliação",
+    "clientSmsBookingsTitle": "Lembretes por SMS",
+    "clientSmsBookingsDesc": "Receba SMS para confirmações de reserva e lembrete 24 h antes da sessão"
   },
   "bookings": {
     "bookingRequests": "Pedidos de Reserva",

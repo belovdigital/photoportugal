@@ -2912,7 +2912,14 @@
     "cancel": "Annuler",
     "signIn": "Se connecter",
     "contactSupport": "Contacter le support",
-    "profilePhotoPreview": "Aperçu de la photo de profil"
+    "profilePhotoPreview": "Aperçu de la photo de profil",
+    "clientBookingsTitle": "Confirmations de réservation",
+    "clientBookingsDesc": "Recevez un email lorsqu’une réservation est confirmée, déplacée ou annulée",
+    "clientMessagesDesc": "Recevez une notification quand votre photographe vous envoie un message",
+    "clientReviewsTitle": "Rappels d’avis",
+    "clientReviewsDesc": "Recevez un email quelques jours après la séance pour vous inviter à laisser un avis",
+    "clientSmsBookingsTitle": "Rappels par SMS",
+    "clientSmsBookingsDesc": "Recevez un SMS pour les confirmations de réservation et un rappel 24 h avant la séance"
   },
   "bookings": {
     "bookingRequests": "Demandes de réservation",

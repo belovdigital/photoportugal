@@ -2764,7 +2764,14 @@
     "cancel": "Abbrechen",
     "signIn": "Anmelden",
     "contactSupport": "Support kontaktieren",
-    "profilePhotoPreview": "Profilfoto-Vorschau"
+    "profilePhotoPreview": "Profilfoto-Vorschau",
+    "clientBookingsTitle": "Buchungsbestätigungen",
+    "clientBookingsDesc": "E-Mail erhalten, wenn eine Buchung bestätigt, verschoben oder storniert wird",
+    "clientMessagesDesc": "Benachrichtigung, wenn Ihr Fotograf Ihnen eine Nachricht schickt",
+    "clientReviewsTitle": "Bewertungserinnerungen",
+    "clientReviewsDesc": "Einige Tage nach dem Shooting eine E-Mail mit der Einladung zur Bewertung",
+    "clientSmsBookingsTitle": "SMS-Erinnerungen",
+    "clientSmsBookingsDesc": "SMS für Buchungsbestätigungen und 24-Stunden-Erinnerung vor dem Shooting"
   },
   "bookings": {
     "bookingRequests": "Buchungsanfragen",

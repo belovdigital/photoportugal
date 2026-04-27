@@ -2764,7 +2764,14 @@
     "cancel": "Cancel",
     "signIn": "Sign in",
     "contactSupport": "Contact support",
-    "profilePhotoPreview": "Profile photo preview"
+    "profilePhotoPreview": "Profile photo preview",
+    "clientBookingsTitle": "Booking confirmations",
+    "clientBookingsDesc": "Get a confirmation email when a booking is confirmed, rescheduled or cancelled",
+    "clientMessagesDesc": "Get notified when your photographer sends you a message",
+    "clientReviewsTitle": "Review reminders",
+    "clientReviewsDesc": "Get an email a few days after your shoot inviting you to leave a review",
+    "clientSmsBookingsTitle": "SMS reminders",
+    "clientSmsBookingsDesc": "Get an SMS for booking confirmations and a 24h reminder before your shoot"
   },
   "bookings": {
     "bookingRequests": "Booking Requests",

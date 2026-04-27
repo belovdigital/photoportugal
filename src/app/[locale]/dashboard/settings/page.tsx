@@ -295,52 +295,51 @@ export default function SettingsPage() {
         </form>
       </section>
 
-      {/* Email + SMS notification preferences are photographer-side only.
-          Clients receive transactional emails (booking confirmations, messages
-          from their photographer) but don't have toggles for those. */}
-      {isPhotographer && (
-        <section className="mt-8">
-          <h2 className="text-lg font-bold text-gray-900">{t("emailNotifications")}</h2>
-          <div className="mt-4 rounded-xl border border-warm-200 bg-white divide-y divide-warm-100">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{t("newBookings")}</p>
-                <p className="text-xs text-gray-400">{t("newBookingsDesc")}</p>
-              </div>
-              {prefsLoaded && <Toggle enabled={emailBookings} onChange={(v) => { setEmailBookings(v); saveNotificationPref("email_bookings", v); }} />}
+      {/* Email Notifications — same DB columns, role-aware labels.
+          Photographers and clients both receive emails, just for different events:
+            email_bookings: photographer = inquiry alerts; client = booking confirmations & status
+            email_messages: same for both
+            email_reviews:  photographer = "client left a review"; client = review request after a shoot
+       */}
+      <section className="mt-8">
+        <h2 className="text-lg font-bold text-gray-900">{t("emailNotifications")}</h2>
+        <div className="mt-4 rounded-xl border border-warm-200 bg-white divide-y divide-warm-100">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">{isPhotographer ? t("newBookings") : t("clientBookingsTitle")}</p>
+              <p className="text-xs text-gray-400">{isPhotographer ? t("newBookingsDesc") : t("clientBookingsDesc")}</p>
             </div>
-            <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{t("newMessages")}</p>
-                <p className="text-xs text-gray-400">{t("newMessagesDesc")}</p>
-              </div>
-              {prefsLoaded && <Toggle enabled={emailMessages} onChange={(v) => { setEmailMessages(v); saveNotificationPref("email_messages", v); }} />}
-            </div>
-            <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{t("newReviews")}</p>
-                <p className="text-xs text-gray-400">{t("newReviewsDesc")}</p>
-              </div>
-              {prefsLoaded && <Toggle enabled={emailReviews} onChange={(v) => { setEmailReviews(v); saveNotificationPref("email_reviews", v); }} />}
-            </div>
+            {prefsLoaded && <Toggle enabled={emailBookings} onChange={(v) => { setEmailBookings(v); saveNotificationPref("email_bookings", v); }} />}
           </div>
-        </section>
-      )}
+          <div className="flex items-center justify-between px-6 py-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">{t("newMessages")}</p>
+              <p className="text-xs text-gray-400">{isPhotographer ? t("newMessagesDesc") : t("clientMessagesDesc")}</p>
+            </div>
+            {prefsLoaded && <Toggle enabled={emailMessages} onChange={(v) => { setEmailMessages(v); saveNotificationPref("email_messages", v); }} />}
+          </div>
+          <div className="flex items-center justify-between px-6 py-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">{isPhotographer ? t("newReviews") : t("clientReviewsTitle")}</p>
+              <p className="text-xs text-gray-400">{isPhotographer ? t("newReviewsDesc") : t("clientReviewsDesc")}</p>
+            </div>
+            {prefsLoaded && <Toggle enabled={emailReviews} onChange={(v) => { setEmailReviews(v); saveNotificationPref("email_reviews", v); }} />}
+          </div>
+        </div>
+      </section>
 
-      {isPhotographer && (
-        <section className="mt-8">
-          <h2 className="text-lg font-bold text-gray-900">{t("smsNotifications")}</h2>
-          <div className="mt-4 rounded-xl border border-warm-200 bg-white divide-y divide-warm-100">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{t("smsNewBookings")}</p>
-                <p className="text-xs text-gray-400">{t("smsNewBookingsDesc")}</p>
-              </div>
-              {prefsLoaded && <Toggle enabled={smsBookings} onChange={(v) => { setSmsBookings(v); saveNotificationPref("sms_bookings", v); }} />}
+      <section className="mt-8">
+        <h2 className="text-lg font-bold text-gray-900">{t("smsNotifications")}</h2>
+        <div className="mt-4 rounded-xl border border-warm-200 bg-white divide-y divide-warm-100">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">{isPhotographer ? t("smsNewBookings") : t("clientSmsBookingsTitle")}</p>
+              <p className="text-xs text-gray-400">{isPhotographer ? t("smsNewBookingsDesc") : t("clientSmsBookingsDesc")}</p>
             </div>
+            {prefsLoaded && <Toggle enabled={smsBookings} onChange={(v) => { setSmsBookings(v); saveNotificationPref("sms_bookings", v); }} />}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* Telegram Notifications */}
       {isPhotographer && (
