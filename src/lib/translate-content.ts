@@ -155,30 +155,85 @@ export async function translatePackage(packageId: string, name: string, descript
 /**
  * Translate review title + text and write to DB. Stores source_locale so UI can offer
  * "Show original" toggle.
+ *
+ * The reviews table has columns text/title (canonical English) plus text_pt/de/es/fr
+ * (locale variants). Source can be ANY of the 5 locales:
+ *   - source='en': translate to pt/de/es/fr → text_pt/de/es/fr, keep text as-is
+ *   - source='pt' (or de/es/fr): translate to the OTHER 4 → write English translation
+ *     to canonical text/title, copy the original to text_<source>/title_<source>,
+ *     write the rest to text_<loc>/title_<loc>
  */
 export async function translateReview(reviewId: string, title: string | null, text: string | null, sourceLocale: string = "en") {
   if (!title && !text) return;
   const { query } = await import("@/lib/db");
-  const input: Record<string, string> = {};
-  if (title) input.title = title;
-  if (text) input.text = text;
-  const translated = await translateBatch(input, "client review of a photographer for a tourism photography marketplace");
-  if (!translated) return;
+  const ALL = ["en", "pt", "de", "es", "fr"] as const;
+  type AnyLocale = (typeof ALL)[number];
+  const src = (ALL.includes(sourceLocale as AnyLocale) ? sourceLocale : "en") as AnyLocale;
+  const targets = ALL.filter((l) => l !== src);
+
+  const LOCALE_LABEL_FULL: Record<AnyLocale, string> = {
+    en: "English",
+    pt: "European Portuguese (Portugal — formal 'você' form)",
+    de: "German (formal 'Sie' form)",
+    es: "Spanish (peninsular Spain — formal 'usted')",
+    fr: "French (formal 'vous')",
+  };
+
+  const cleaned: Record<string, string> = {};
+  if (title) cleaned.title = title;
+  if (text) cleaned.text = text;
+
+  const systemPrompt = `You translate a client review of a photographer for a tourism photography marketplace.
+Tone: warm, friendly, authentic — preserve the reviewer's voice and any emojis, exclamation marks, line breaks.
+Source language: ${LOCALE_LABEL_FULL[src]}. Translate each input string into: ${targets.map((l) => `${l} (${LOCALE_LABEL_FULL[l]})`).join(", ")}.
+Brand names (Photo Portugal) and personal names (Isilda, Rui, etc.) stay as written.
+Return ONLY valid JSON: { ${targets.map((l) => `"${l}": {...same keys...}`).join(", ")} }.`;
+
+  if (!OPENAI_KEY) { console.warn("[translate] OPENAI_API_KEY missing — skipping review translation"); return; }
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_KEY}` },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Translate the following strings:\n${JSON.stringify(cleaned, null, 2)}` },
+      ],
+    }),
+  });
+  if (!res.ok) { console.error("[translate] OpenAI HTTP", res.status, await res.text().catch(() => "")); return; }
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) return;
+  let parsed: Record<string, Record<string, string>>;
+  try { parsed = JSON.parse(content); } catch (e) { console.error("[translate] parse error:", e); return; }
+
   const params: (string | null)[] = [];
   const cols: string[] = [];
-  for (const loc of TARGET_LOCALES) {
-    if (title && translated[loc].title) {
-      cols.push(`title_${loc} = $${params.length + 1}`);
-      params.push(translated[loc].title);
-    }
-    if (text && translated[loc].text) {
-      cols.push(`text_${loc} = $${params.length + 1}`);
-      params.push(translated[loc].text);
+
+  for (const loc of targets) {
+    const t = parsed[loc];
+    if (!t || typeof t !== "object") continue;
+    if (loc === "en") {
+      // English goes into the canonical text/title columns (overwrite the originally-inserted source text)
+      if (title && typeof t.title === "string") { cols.push(`title = $${params.length + 1}`); params.push(t.title); }
+      if (text && typeof t.text === "string") { cols.push(`text = $${params.length + 1}`); params.push(t.text); }
+    } else {
+      if (title && typeof t.title === "string") { cols.push(`title_${loc} = $${params.length + 1}`); params.push(t.title); }
+      if (text && typeof t.text === "string") { cols.push(`text_${loc} = $${params.length + 1}`); params.push(t.text); }
     }
   }
+
+  // Preserve the original source text in its locale column (if not English)
+  if (src !== "en") {
+    if (title) { cols.push(`title_${src} = $${params.length + 1}`); params.push(title); }
+    if (text) { cols.push(`text_${src} = $${params.length + 1}`); params.push(text); }
+  }
+
   if (cols.length === 0) return;
-  cols.push(`source_locale = $${params.length + 1}`);
-  params.push(sourceLocale);
+  cols.push(`source_locale = $${params.length + 1}`); params.push(src);
   cols.push(`translations_updated_at = NOW()`, `translations_dirty = FALSE`);
   params.push(reviewId);
   await query(

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # playwright/test screenshots
 /page-*.png
+
+# google ads URL snapshots (point-in-time backups for rollback)
+scripts/ads-snapshots/

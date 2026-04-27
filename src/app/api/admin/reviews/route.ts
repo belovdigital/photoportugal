@@ -14,19 +14,30 @@ export async function POST(req: NextRequest) {
   if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { photographer_id, client_name, rating, title, text } = await req.json();
+    const { photographer_id, client_name, rating, title, text, source_locale } = await req.json();
 
     if (!photographer_id || !rating || rating < 1 || rating > 5) {
       return NextResponse.json({ error: "photographer_id and rating (1-5) required" }, { status: 400 });
     }
 
+    const ALLOWED_LOCALES = ["en", "pt", "de", "es", "fr"];
+    const sourceLocale = ALLOWED_LOCALES.includes(source_locale) ? source_locale : "en";
+
     const clientName = (client_name || "").trim() || null;
     const review = await queryOne<{ id: string }>(
-      `INSERT INTO reviews (photographer_id, client_id, rating, title, text, is_approved, booking_id, client_name_override)
-       VALUES ($1, NULL, $2, $3, $4, true, NULL, $5)
+      `INSERT INTO reviews (photographer_id, client_id, rating, title, text, is_approved, booking_id, client_name_override, source_locale, translations_dirty)
+       VALUES ($1, NULL, $2, $3, $4, true, NULL, $5, $6, TRUE)
        RETURNING id`,
-      [photographer_id, rating, title || null, text || null, clientName]
+      [photographer_id, rating, title || null, text || null, clientName, sourceLocale]
     );
+
+    // Fire-and-forget translation. Translates source → other 4 locales. If source != en,
+    // English translation overwrites canonical text/title and the source is preserved in text_<source>.
+    if (review && (title || text)) {
+      import("@/lib/translate-content").then(({ translateReview }) =>
+        translateReview(review.id, title || null, text || null, sourceLocale),
+      ).catch((e) => console.error("[admin/reviews] translate error:", e));
+    }
 
     // Update photographer rating
     await query(

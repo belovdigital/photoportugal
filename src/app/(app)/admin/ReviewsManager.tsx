@@ -127,6 +127,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
   const [newRating, setNewRating] = useState(5);
   const [newTitle, setNewTitle] = useState("");
   const [newText, setNewText] = useState("");
+  const [newSourceLocale, setNewSourceLocale] = useState("en");
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPhotoPreviews, setNewPhotoPreviews] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
@@ -151,6 +152,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
         rating: newRating,
         title: newTitle.trim() || null,
         text: newText.trim() || null,
+        source_locale: newSourceLocale,
       }),
     });
     if (res.ok) {
@@ -183,6 +185,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
       setNewRating(5);
       setNewTitle("");
       setNewText("");
+      setNewSourceLocale("en");
       setNewPhotos([]);
       setNewPhotoPreviews([]);
     } else {
@@ -302,6 +305,16 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Review text (optional)</label>
               <textarea value={newText} onChange={e => setNewText(e.target.value)} placeholder="Write the review..." rows={3} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Source language (will auto-translate to the other 4)</label>
+              <select value={newSourceLocale} onChange={e => setNewSourceLocale(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none">
+                <option value="en">English</option>
+                <option value="pt">Portuguese</option>
+                <option value="de">German</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+              </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Photos (optional, max 5)</label>
