@@ -391,7 +391,10 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                   <div>
                     <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Approved</label>
                     <div className="mt-1">
-                      {p.checklist_complete || p.is_approved ? (
+                      {/* Toggle is always visible if the account is currently approved OR banned —
+                          admins must be able to reactivate without checklist nags. For never-approved
+                          accounts we still gate on checklist_complete to nudge a final review pass. */}
+                      {p.checklist_complete || p.is_approved || p.is_banned ? (
                         <AdminToggleClient id={p.id} field="is_approved" value={p.is_approved} name={normalizeName(p.display_name)} />
                       ) : (
                         <span className="text-xs text-red-400">Incomplete</span>

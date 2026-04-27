@@ -1250,6 +1250,12 @@ export async function GET(req: NextRequest) {
   }
 
   // === Auto-deactivate photographers who didn't complete checklist in 7 days ===
+  // IMPORTANT: For Stripe we only require `stripe_account_id IS NOT NULL` (i.e.
+  // they STARTED Stripe Connect onboarding). Stripe's KYC verification can take
+  // 1-3 business days to flip stripe_onboarding_complete=TRUE — that's on
+  // Stripe's side, not on the photographer. Counting that wait as "incomplete"
+  // would unfairly deactivate accounts that are genuinely just waiting for
+  // Stripe approval.
   let checklistDeactivated = 0;
   try {
     const expired = await query<{ id: string; email: string; name: string }>(
@@ -1263,7 +1269,7 @@ export async function GET(req: NextRequest) {
            AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
            AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
            AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
-           AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
+           AND pp.stripe_account_id IS NOT NULL
            AND u.phone IS NOT NULL)`
     );
     for (const p of expired) {
