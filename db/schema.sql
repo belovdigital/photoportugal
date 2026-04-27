@@ -465,3 +465,24 @@ CREATE TABLE IF NOT EXISTS concierge_chats (
 CREATE INDEX IF NOT EXISTS idx_concierge_visitor ON concierge_chats(visitor_id);
 CREATE INDEX IF NOT EXISTS idx_concierge_email ON concierge_chats(email) WHERE email IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_concierge_created ON concierge_chats(created_at DESC);
+
+-- ============================================================
+-- AI GENERATIONS (try-yourself feature: gpt-image-2 selfie → Portugal scene)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS ai_generations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  session_id VARCHAR(64) NOT NULL,
+  ip INET,
+  email VARCHAR(255),
+  scene_id VARCHAR(50) NOT NULL,
+  reference_image_key TEXT,
+  result_image_key TEXT,
+  cost_cents INTEGER,
+  user_agent TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  error TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ai_gens_session_recent ON ai_generations(session_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_gens_ip_recent ON ai_generations(ip, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_gens_email ON ai_generations(email) WHERE email IS NOT NULL;

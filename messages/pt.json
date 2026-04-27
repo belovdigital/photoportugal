@@ -3130,5 +3130,65 @@
     "locationFew": "Apenas {count, plural, =1 {1 fotógrafo disponível} other {# fotógrafos disponíveis}} em {location} agora",
     "locationMany": "Alta procura em {location}",
     "body": "Estes fotógrafos costumam estar totalmente reservados — sobretudo aos fins-de-semana e em época alta. Reserve agora para garantir a sua data."
+  },
+  "tryYourself": {
+    "metaTitle": "Veja-se em Portugal — Selfie de Viagem com IA",
+    "metaDescription": "Carregue uma selfie e veja-se em Sintra, Algarve, Porto e Lisboa. Depois reserve um fotógrafo real para a experiência verdadeira.",
+    "badge": "Pré-visualização IA · Grátis",
+    "title1": "Veja-se a si mesmo",
+    "title2": "em Portugal",
+    "subtitle": "Carregue uma selfie. Escolha um cenário. Geramos uma foto sua nesse local em 30 segundos. Depois reserve um fotógrafo real para a experiência verdadeira.",
+    "stepUpload": "Carregue a sua selfie",
+    "stepUploadHint": "JPG, PNG ou WebP — até 8 MB. Retratos frontais dão melhor resultado.",
+    "stepScene": "Escolha um cenário",
+    "stepGenerate": "Gerar foto com IA",
+    "generating": "A gerar a sua foto… 30–50 segundos",
+    "result": "A sua pré-visualização IA",
+    "resultDisclaimer": "Imagem gerada por IA — não é uma fotografia real. As fotos verdadeiras dos nossos fotógrafos ficam ainda melhores. Reserve em baixo.",
+    "downloadHd": "Descarregar HD",
+    "tryAnother": "Experimentar outro cenário",
+    "ctaBookReal": "Quer isto a sério? → Fale com o nosso concierge",
+    "remainingFree": "{count, plural, =0 {Sem pré-visualizações gratuitas hoje} =1 {Resta 1 pré-visualização gratuita} other {Restam # pré-visualizações gratuitas}}",
+    "emailGateTitle": "Mais uma por nossa conta",
+    "emailGateBody": "Deixe o seu email para desbloquear mais 2 pré-visualizações gratuitas. Enviamos-lhe uma sugestão de fotógrafo escolhida a dedo para a sua viagem.",
+    "emailGatePlaceholder": "voce@exemplo.com",
+    "emailGateSubmit": "Continuar",
+    "limitReachedTitle": "É tudo por hoje",
+    "limitReachedBody": "Já usou as suas pré-visualizações IA gratuitas. Quer a experiência real? Um fotógrafo de Portugal escolhido a dedo está a um clique.",
+    "limitReachedCta": "Reservar um fotógrafo real",
+    "scenes": {
+      "sintra-palace": {
+        "name": "Palácio da Pena ao pôr-do-sol",
+        "subtitle": "Palácio colorido de conto de fadas, luz dourada"
+      },
+      "algarve-benagil": {
+        "name": "Gruta de Benagil, Algarve",
+        "subtitle": "Cúpula icónica com mar turquesa"
+      },
+      "porto-ribeira": {
+        "name": "Ribeira do Porto",
+        "subtitle": "Casas pastel, rio Douro, ponte D. Luís I"
+      },
+      "lisbon-tram": {
+        "name": "Eléctrico 28 de Lisboa",
+        "subtitle": "Rua empedrada de Alfama, eléctrico amarelo clássico"
+      },
+      "cabo-da-roca": {
+        "name": "Falésias do Cabo da Roca",
+        "subtitle": "O ponto mais ocidental da Europa continental"
+      },
+      "lagos-beach": {
+        "name": "Praia dourada de Lagos",
+        "subtitle": "Arcos de pedra, ondas suaves do Atlântico"
+      }
+    },
+    "errorGeneric": "Algo correu mal. Tente novamente.",
+    "errorRateLimit": "Demasiado rápido — espere um minuto e tente outra vez.",
+    "errorNoPhoto": "Carregue uma selfie primeiro.",
+    "errorBadEmail": "Introduza um email válido.",
+    "errorTooBig": "A foto é demasiado grande — máximo 8 MB.",
+    "errorBadType": "A foto tem de ser JPEG, PNG ou WebP.",
+    "privacyNote": "A sua foto é processada de forma segura e só é guardada o tempo necessário para gerar a pré-visualização.",
+    "photoTip": "Dica — uma selfie nítida e de frente dá o melhor resultado."
   }
 }

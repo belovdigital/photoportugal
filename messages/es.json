@@ -3130,5 +3130,65 @@
     "locationFew": "Solo {count, plural, =1 {1 fotógrafo disponible} other {# fotógrafos disponibles}} en {location} ahora",
     "locationMany": "Alta demanda en {location}",
     "body": "Estos fotógrafos suelen estar totalmente reservados — sobre todo los fines de semana y en temporada alta. Reserve ahora para asegurar su fecha."
+  },
+  "tryYourself": {
+    "metaTitle": "Mírese en Portugal — Selfie de Viaje con IA",
+    "metaDescription": "Suba un selfie y mírese en Sintra, Algarve, Oporto y Lisboa. Después reserve un fotógrafo real para la experiencia auténtica.",
+    "badge": "Vista previa IA · Gratis",
+    "title1": "Mírese a sí mismo",
+    "title2": "en Portugal",
+    "subtitle": "Suba un selfie. Elija un escenario. Generamos una foto suya allí en 30 segundos. Después reserve un fotógrafo real para la experiencia auténtica.",
+    "stepUpload": "Suba su selfie",
+    "stepUploadHint": "JPG, PNG o WebP — hasta 8 MB. Los retratos frontales dan mejor resultado.",
+    "stepScene": "Elija un escenario",
+    "stepGenerate": "Generar foto con IA",
+    "generating": "Generando su foto… 30–50 segundos",
+    "result": "Su vista previa con IA",
+    "resultDisclaimer": "Imagen generada por IA — no es una foto real. Las fotos verdaderas de nuestros fotógrafos quedan aún mejor. Reserve abajo.",
+    "downloadHd": "Descargar HD",
+    "tryAnother": "Probar otro escenario",
+    "ctaBookReal": "¿La quiere de verdad? → Hable con nuestro concierge",
+    "remainingFree": "{count, plural, =0 {Sin vistas previas gratuitas hoy} =1 {Queda 1 vista previa gratuita} other {Quedan # vistas previas gratuitas}}",
+    "emailGateTitle": "Una más por cuenta de la casa",
+    "emailGateBody": "Deje su email para desbloquear 2 vistas previas gratuitas más. Le enviaremos una sugerencia de fotógrafo seleccionada a mano para su viaje.",
+    "emailGatePlaceholder": "tu@ejemplo.com",
+    "emailGateSubmit": "Continuar",
+    "limitReachedTitle": "Es todo por hoy",
+    "limitReachedBody": "Ha usado sus vistas previas gratuitas. ¿Quiere la experiencia real? Un fotógrafo de Portugal seleccionado a mano está a un clic.",
+    "limitReachedCta": "Reservar un fotógrafo real",
+    "scenes": {
+      "sintra-palace": {
+        "name": "Palacio de Pena al atardecer",
+        "subtitle": "Palacio de cuento de hadas, luz dorada"
+      },
+      "algarve-benagil": {
+        "name": "Cueva de Benagil, Algarve",
+        "subtitle": "Cúpula icónica con agua turquesa"
+      },
+      "porto-ribeira": {
+        "name": "Ribera de Oporto",
+        "subtitle": "Casas pastel, río Duero, puente Don Luís I"
+      },
+      "lisbon-tram": {
+        "name": "Tranvía amarillo 28 de Lisboa",
+        "subtitle": "Calle empedrada de Alfama, tranvía amarillo clásico"
+      },
+      "cabo-da-roca": {
+        "name": "Acantilados del Cabo da Roca",
+        "subtitle": "Punto más occidental de Europa continental"
+      },
+      "lagos-beach": {
+        "name": "Playa dorada de Lagos",
+        "subtitle": "Arcos de arenisca, suave oleaje atlántico"
+      }
+    },
+    "errorGeneric": "Algo salió mal. Inténtelo de nuevo.",
+    "errorRateLimit": "Demasiado rápido — espere un minuto e inténtelo otra vez.",
+    "errorNoPhoto": "Suba un selfie primero.",
+    "errorBadEmail": "Por favor introduzca un email válido.",
+    "errorTooBig": "La foto es demasiado grande — máximo 8 MB.",
+    "errorBadType": "La foto debe ser JPEG, PNG o WebP.",
+    "privacyNote": "Su foto se procesa de forma segura y solo se conserva el tiempo necesario para generar la vista previa.",
+    "photoTip": "Consejo — un selfie nítido y de frente da el mejor resultado."
   }
 }

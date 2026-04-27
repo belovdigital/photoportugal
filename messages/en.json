@@ -3130,5 +3130,65 @@
     "locationFew": "Only {count, plural, =1 {1 photographer} other {# photographers}} available in {location} right now",
     "locationMany": "High demand in {location}",
     "body": "These photographers are usually fully booked — especially on weekends and during peak season. Book now to secure your preferred date."
+  },
+  "tryYourself": {
+    "metaTitle": "Try Yourself in Portugal — AI Travel Selfie",
+    "metaDescription": "Upload a selfie and see yourself at Sintra, Algarve, Porto and Lisbon. Then book a real photographer for the real thing.",
+    "badge": "AI Preview · Free",
+    "title1": "See yourself",
+    "title2": "in Portugal",
+    "subtitle": "Upload a selfie. Pick a scene. We'll generate a photo of you there in 30 seconds. Then book a real photographer for the real thing.",
+    "stepUpload": "Upload your selfie",
+    "stepUploadHint": "JPG, PNG or WebP — up to 8 MB. Front-facing portraits work best.",
+    "stepScene": "Pick a scene",
+    "stepGenerate": "Generate AI photo",
+    "generating": "Generating your photo… 30–50 seconds",
+    "result": "Your AI preview",
+    "resultDisclaimer": "AI-generated — not a real photograph. Real photos by our photographers look even better. Book one below.",
+    "downloadHd": "Download HD",
+    "tryAnother": "Try another scene",
+    "ctaBookReal": "Want this for real? → Talk to our concierge",
+    "remainingFree": "{count, plural, =0 {No free previews left today} =1 {1 free preview left} other {# free previews left}}",
+    "emailGateTitle": "One more on the house",
+    "emailGateBody": "Drop your email to unlock 2 more free previews. We'll send you a curated photographer match for your trip.",
+    "emailGatePlaceholder": "you@example.com",
+    "emailGateSubmit": "Continue",
+    "limitReachedTitle": "That's all for today",
+    "limitReachedBody": "You've used your free AI previews. Want the real thing? A handpicked Portugal photographer is just a click away.",
+    "limitReachedCta": "Book a real photographer",
+    "scenes": {
+      "sintra-palace": {
+        "name": "Sintra Palace at sunset",
+        "subtitle": "Fairytale-coloured Pena Palace, golden-hour glow"
+      },
+      "algarve-benagil": {
+        "name": "Benagil Cave, Algarve",
+        "subtitle": "Iconic sea-cave dome with turquoise water"
+      },
+      "porto-ribeira": {
+        "name": "Porto Ribeira waterfront",
+        "subtitle": "Pastel houses, Douro river, Dom Luís I bridge"
+      },
+      "lisbon-tram": {
+        "name": "Lisbon yellow Tram 28",
+        "subtitle": "Cobbled Alfama street, classic yellow tram"
+      },
+      "cabo-da-roca": {
+        "name": "Cabo da Roca cliffs",
+        "subtitle": "Continental Europe's westernmost dramatic cliffs"
+      },
+      "lagos-beach": {
+        "name": "Lagos golden beach",
+        "subtitle": "Sandstone arches, soft Atlantic surf"
+      }
+    },
+    "errorGeneric": "Something went wrong. Try again.",
+    "errorRateLimit": "Too fast — wait a minute and try again.",
+    "errorNoPhoto": "Upload a selfie first.",
+    "errorBadEmail": "Please enter a valid email.",
+    "errorTooBig": "Photo is too large — max 8 MB.",
+    "errorBadType": "Photo must be JPEG, PNG or WebP.",
+    "privacyNote": "Your photo is processed securely and only kept long enough to generate the preview.",
+    "photoTip": "Tip — a clear, front-facing selfie gives the best result."
   }
 }

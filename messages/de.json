@@ -3130,5 +3130,65 @@
     "locationFew": "Nur {count, plural, =1 {1 Fotograf ist} other {# Fotografen sind}} gerade in {location} verfügbar",
     "locationMany": "Hohe Nachfrage in {location}",
     "body": "Diese Fotografen sind meist ausgebucht — besonders an Wochenenden und in der Hochsaison. Buchen Sie jetzt, um Ihren Wunschtermin zu sichern."
+  },
+  "tryYourself": {
+    "metaTitle": "Sehen Sie sich in Portugal — KI-Reise-Selfie",
+    "metaDescription": "Laden Sie ein Selfie hoch und sehen Sie sich in Sintra, Algarve, Porto und Lissabon. Buchen Sie dann einen echten Fotografen für das echte Erlebnis.",
+    "badge": "KI-Vorschau · Kostenlos",
+    "title1": "Sehen Sie sich",
+    "title2": "in Portugal",
+    "subtitle": "Laden Sie ein Selfie hoch. Wählen Sie eine Szene. Wir erstellen in 30 Sekunden ein Foto von Ihnen vor Ort. Anschließend buchen Sie einen echten Fotografen für das echte Erlebnis.",
+    "stepUpload": "Selfie hochladen",
+    "stepUploadHint": "JPG, PNG oder WebP — bis zu 8 MB. Frontale Porträts liefern das beste Ergebnis.",
+    "stepScene": "Szene auswählen",
+    "stepGenerate": "KI-Foto erzeugen",
+    "generating": "Ihr Foto wird erstellt… 30–50 Sekunden",
+    "result": "Ihre KI-Vorschau",
+    "resultDisclaimer": "KI-generiert — kein echtes Foto. Echte Aufnahmen unserer Fotografen sehen noch besser aus. Buchen Sie unten.",
+    "downloadHd": "HD herunterladen",
+    "tryAnother": "Andere Szene ausprobieren",
+    "ctaBookReal": "Wollen Sie das in echt? → Sprechen Sie mit unserem Concierge",
+    "remainingFree": "{count, plural, =0 {Heute keine kostenlosen Vorschauen mehr übrig} =1 {Noch 1 kostenlose Vorschau übrig} other {Noch # kostenlose Vorschauen übrig}}",
+    "emailGateTitle": "Noch eine geht aufs Haus",
+    "emailGateBody": "Hinterlassen Sie Ihre E-Mail und schalten Sie 2 weitere kostenlose Vorschauen frei. Wir schicken Ihnen einen handverlesenen Fotografenvorschlag für Ihre Reise.",
+    "emailGatePlaceholder": "sie@beispiel.com",
+    "emailGateSubmit": "Weiter",
+    "limitReachedTitle": "Das war's für heute",
+    "limitReachedBody": "Sie haben Ihre kostenlosen KI-Vorschauen aufgebraucht. Lust auf das echte Erlebnis? Ein handverlesener Portugal-Fotograf ist nur einen Klick entfernt.",
+    "limitReachedCta": "Echten Fotografen buchen",
+    "scenes": {
+      "sintra-palace": {
+        "name": "Pena-Palast im Sonnenuntergang",
+        "subtitle": "Märchenhaft bunter Palast, goldene Stunde"
+      },
+      "algarve-benagil": {
+        "name": "Benagil-Höhle, Algarve",
+        "subtitle": "Ikonischer Felsendom über türkisem Wasser"
+      },
+      "porto-ribeira": {
+        "name": "Ribeira-Uferpromenade Porto",
+        "subtitle": "Pastellhäuser, Douro, Brücke Dom Luís I"
+      },
+      "lisbon-tram": {
+        "name": "Lissaboner gelbe Tram 28",
+        "subtitle": "Kopfsteinpflaster in Alfama, klassische gelbe Tram"
+      },
+      "cabo-da-roca": {
+        "name": "Klippen am Cabo da Roca",
+        "subtitle": "Westlichster Punkt Kontinentaleuropas, dramatische Klippen"
+      },
+      "lagos-beach": {
+        "name": "Goldener Strand von Lagos",
+        "subtitle": "Sandsteinbögen, sanfter Atlantik"
+      }
+    },
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "errorRateLimit": "Zu schnell — warten Sie eine Minute und versuchen Sie es erneut.",
+    "errorNoPhoto": "Bitte zuerst ein Selfie hochladen.",
+    "errorBadEmail": "Bitte eine gültige E-Mail eingeben.",
+    "errorTooBig": "Foto zu groß — maximal 8 MB.",
+    "errorBadType": "Foto muss JPEG, PNG oder WebP sein.",
+    "privacyNote": "Ihr Foto wird sicher verarbeitet und nur so lange gespeichert, wie es zur Erstellung der Vorschau nötig ist.",
+    "photoTip": "Tipp — ein klares Selfie von vorne liefert das beste Ergebnis."
   }
 }
