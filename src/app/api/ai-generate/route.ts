@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { after } from "next/server";
 import { randomBytes } from "crypto";
 import OpenAI from "openai";
 import { queryOne } from "@/lib/db";
@@ -119,17 +118,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "DB insert failed" }, { status: 500 });
   }
 
-  // Run the slow part AFTER the response is sent. `after()` keeps the work alive
-  // on self-hosted Next.js (pm2 process) without holding the HTTP connection.
-  after(async () => {
-    await runGeneration({
-      genId,
-      sessionId: sessionId!,
-      refBuf,
-      refExt,
-      refContentType,
-      scenePrompt: scene.prompt,
-    });
+  // Fire-and-forget: don't await — return immediately so the client doesn't hold
+  // the connection through Cloudflare's ~100s edge timeout. Node + pm2 keep the
+  // unawaited Promise alive until it settles. Errors are written to the row.
+  runGeneration({
+    genId,
+    sessionId: sessionId!,
+    refBuf,
+    refExt,
+    refContentType,
+    scenePrompt: scene.prompt,
+  }).catch((err) => {
+    console.error(`[ai-generate ${genId}] background error:`, err);
   });
 
   const newUsed = used + 1;
