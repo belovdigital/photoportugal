@@ -42,7 +42,7 @@ type Step =
   | { kind: "limit" }                          // hit hard cap
   | { kind: "error"; msg: string };
 
-const MAX_BYTES = 8 * 1024 * 1024;
+const MAX_BYTES = 15 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: SceneMeta[] }) {
@@ -655,14 +655,14 @@ function WaitingPanel({
         {t("whileYouWait")}
       </h3>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
         {photographers.map((p) => (
           <a
             key={p.slug}
             href={photographerHref(p.slug)}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-warm-200 bg-warm-100 transition hover:border-primary-300 hover:shadow-lg"
+            className="group relative aspect-[16/10] sm:aspect-[5/3] overflow-hidden rounded-2xl border border-warm-200 bg-warm-100 transition hover:border-primary-400 hover:shadow-xl"
           >
             {p.coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -673,24 +673,29 @@ function WaitingPanel({
                 loading="lazy"
               />
             ) : (
-              <div className="h-full w-full bg-gradient-to-br from-primary-100 to-warm-200" />
+              <div className="h-full w-full bg-gradient-to-br from-primary-100 via-warm-100 to-accent-100" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-2.5 text-white">
-              <p className="font-semibold text-xs leading-tight truncate">{p.name}</p>
-              <div className="mt-0.5 flex items-center justify-between gap-1 text-[10px] opacity-95">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+              <p className="font-display font-bold text-lg leading-tight truncate drop-shadow">{p.name}</p>
+              {p.tagline && (
+                <p className="mt-0.5 text-sm leading-snug line-clamp-1 opacity-95 drop-shadow">{p.tagline}</p>
+              )}
+              <div className="mt-2 flex items-center justify-between gap-2 text-sm">
                 {p.rating ? (
-                  <span className="flex items-center gap-0.5">
+                  <span className="flex items-center gap-1 font-medium">
                     <span className="text-yellow-300">★</span>
                     {p.rating.toFixed(1)}
-                    {p.reviewCount > 0 && <span className="opacity-80">({p.reviewCount})</span>}
+                    {p.reviewCount > 0 && <span className="opacity-85">({p.reviewCount})</span>}
                   </span>
                 ) : <span />}
                 {p.minPrice && (
-                  <span className="font-medium">{t("fromPrice", { price: p.minPrice })}</span>
+                  <span className="font-semibold">{t("fromPrice", { price: p.minPrice })}</span>
                 )}
               </div>
-              <p className="mt-1 text-[10px] font-semibold opacity-95">{t("viewProfile")}</p>
+              <p className="mt-2 text-sm font-bold tracking-wide group-hover:translate-x-1 transition-transform">
+                {t("viewProfile")}
+              </p>
             </div>
           </a>
         ))}

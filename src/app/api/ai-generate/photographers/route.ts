@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
        JOIN photographer_locations pl ON pl.photographer_id = pp.id
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
          AND pl.location_slug = $1
+         AND pp.cover_url IS NOT NULL
        ORDER BY pp.review_count DESC NULLS LAST, pp.rating DESC NULLS LAST
        LIMIT 4`,
       [loc]
@@ -60,6 +61,7 @@ export async function GET(req: NextRequest) {
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND pp.cover_url IS NOT NULL
          AND pp.slug NOT IN (${rows.map((_, i) => `$${i + 1}`).join(",") || "''"})
        ORDER BY pp.review_count DESC NULLS LAST, pp.rating DESC NULLS LAST
        LIMIT $${rows.length + 1}`,

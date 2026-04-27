@@ -25,7 +25,7 @@ const FREE_NO_EMAIL = 1;
 const FREE_WITH_EMAIL = 3;
 
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_REFERENCE_BYTES = 8 * 1024 * 1024; // 8 MB
+const MAX_REFERENCE_BYTES = 15 * 1024 * 1024; // 15 MB — modern phone photos can hit ~10-12 MB
 
 function isValidEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 254;
@@ -204,7 +204,7 @@ async function runGeneration({
       model: MODEL,
       image: refFile,
       prompt: scenePrompt,
-      size: "1024x1024",
+      size: "1536x1024", // landscape — much more natural for travel scenery than square
       quality: "medium", // ~30-90s wall time, visibly better detail than "low"
       n: 1,
     });
