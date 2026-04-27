@@ -3142,7 +3142,7 @@
     "stepUploadHint": "JPG, PNG or WebP — up to 8 MB. Front-facing portraits work best.",
     "stepScene": "Pick a scene",
     "stepGenerate": "Generate AI photo",
-    "generating": "Generating your photo… 30–50 seconds",
+    "generating": "Generating your photo… this can take 1–5 minutes",
     "result": "Your AI preview",
     "resultDisclaimer": "AI-generated — not a real photograph. Real photos by our photographers look even better. Book one below.",
     "downloadHd": "Download HD",

@@ -117,9 +117,10 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   }
 
   async function pollUntilDone(genId: string, conciergeLoc: string): Promise<void> {
-    // Poll for up to ~3 min (gpt-image-2 can take 30-150s).
+    // gpt-image-2 in production has been observed taking up to ~5 min on cold paths.
+    // Poll for up to 6 min before giving up, with 3s intervals.
     const startedAt = Date.now();
-    const TIMEOUT_MS = 3 * 60 * 1000;
+    const TIMEOUT_MS = 6 * 60 * 1000;
     while (Date.now() - startedAt < TIMEOUT_MS) {
       await new Promise((r) => setTimeout(r, 3000));
       let r: Response;
