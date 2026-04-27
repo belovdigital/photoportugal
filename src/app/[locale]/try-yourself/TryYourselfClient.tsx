@@ -123,11 +123,39 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
     if (photo) setStep({ kind: "ready" });
   }
 
-  function surpriseMe() {
-    if (scenes.length === 0) return;
+  // One-tap random: pick a scene + immediately fire generation. We bypass the
+  // visible "selected" state so the user never sees which location was chosen
+  // until the result lands — that's the whole point of "surprise me".
+  async function surpriseMe() {
+    if (!photo || scenes.length === 0) return;
     const others = sceneId ? scenes.filter((s) => s.id !== sceneId) : scenes;
     const pick = others[Math.floor(Math.random() * others.length)];
-    pickScene(pick.id);
+    setSceneId(pick.id);
+    setStep({ kind: "generating" });
+    void loadPhotographersForLoc(pick.conciergeLoc);
+    const fd = new FormData();
+    fd.append("photo", photo);
+    fd.append("scene_id", pick.id);
+    if (usage?.email) fd.append("email", usage.email);
+    let r: Response;
+    try { r = await fetch("/api/ai-generate", { method: "POST", body: fd }); }
+    catch { setStep({ kind: "error", msg: t("errorGeneric") }); return; }
+    if (r.status === 402) { setStep({ kind: "email_gate" }); return; }
+    if (r.status === 429) {
+      const d = await r.json().catch(() => null);
+      if (d?.reason === "limit_reached") { setStep({ kind: "limit" }); return; }
+      setStep({ kind: "error", msg: t("errorRateLimit") });
+      return;
+    }
+    if (!r.ok) {
+      const d = await r.json().catch(() => null);
+      setStep({ kind: "error", msg: d?.error || t("errorGeneric") });
+      return;
+    }
+    const data = await r.json();
+    setUsage((prev) => prev ? { ...prev, used: data.used, remaining: data.remaining } : prev);
+    if (!data.id) { setStep({ kind: "error", msg: t("errorGeneric") }); return; }
+    await pollUntilDone(data.id, data.concierge_loc);
   }
 
   // Pre-fetch a few photographers to show during the generation wait. We grab them
@@ -274,28 +302,62 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
           <LimitReachedView conciergeHref={conciergeHref()} t={t} />
         )}
 
-        {/* Editor (idle / ready / generating) */}
+        {/* Editor (idle / ready / generating / error) — single vertical column,
+            full-width sections, sticky CTA bar at the bottom on mobile. */}
         {(step.kind === "idle" || step.kind === "ready" || step.kind === "generating" || step.kind === "error") && (
-          <div className="grid gap-8 lg:grid-cols-2">
-            {/* Step 1 — Upload */}
-            <section>
-              <SectionHeader n={1} title={t("stepUpload")} />
-              <UploadDropzone
-                photoPreview={photoPreview}
-                onSelect={handlePhotoSelect}
-                onClear={() => { setPhoto(null); setPhotoPreview(null); setStep({ kind: "idle" }); }}
-                disabled={step.kind === "generating"}
-                fileInputRef={fileInputRef}
-                hint={t("stepUploadHint")}
-                tip={t("photoTip")}
-                privacy={t("privacyNote")}
-              />
-            </section>
+          <div className="space-y-6 sm:space-y-8 pb-32 sm:pb-10">
+            {/* Photo step — full drop zone before upload, slim bar after */}
+            {!photoPreview ? (
+              <section>
+                <SectionHeader n={1} title={t("stepUpload")} />
+                <UploadDropzone
+                  photoPreview={null}
+                  onSelect={handlePhotoSelect}
+                  onClear={() => { setPhoto(null); setPhotoPreview(null); setStep({ kind: "idle" }); }}
+                  disabled={step.kind === "generating"}
+                  fileInputRef={fileInputRef}
+                  hint={t("stepUploadHint")}
+                  tip={t("photoTip")}
+                  privacy={t("privacyNote")}
+                />
+              </section>
+            ) : (
+              <section className="flex items-center gap-3 rounded-2xl border border-warm-200 bg-white p-3 shadow-sm">
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-xl border border-warm-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={photoPreview} alt="Selfie preview" className="h-full w-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-primary-700 uppercase tracking-wide">{t("badge")}</p>
+                  <p className="mt-0.5 text-sm font-medium text-gray-900">{t("stepUpload")} ✓</p>
+                  <p className="text-xs text-gray-500 truncate">{t("photoTip")}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={step.kind === "generating"}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  ✕
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handlePhotoSelect(file);
+                    e.target.value = "";
+                  }}
+                />
+              </section>
+            )}
 
-            {/* Step 2 — Pick scene */}
+            {/* Scene picker — full width, 4 cols on desktop, 3 on tablet, 2 on mobile */}
             <section>
               <SectionHeader n={2} title={t("stepScene")} />
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {scenes.map((s) => {
                   const selected = sceneId === s.id;
                   return (
@@ -305,22 +367,19 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                       onClick={() => pickScene(s.id)}
                       disabled={step.kind === "generating"}
                       className={`group relative aspect-[4/5] overflow-hidden rounded-xl border-2 text-left transition ${
-                        selected ? "border-primary-600 ring-2 ring-primary-300" : "border-warm-200 hover:border-primary-400"
+                        selected ? "border-primary-600 ring-2 ring-primary-300 shadow-lg" : "border-warm-200 hover:border-primary-400 hover:shadow-md"
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <div className={`absolute inset-0 bg-gradient-to-br ${s.gradient}`} />
-                      {/* Subtle dark overlays at top and bottom for text legibility, transparent middle keeps emoji vivid */}
                       <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/55 to-transparent" />
                       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/65 to-transparent" />
-
-                      {/* 3-zone layout: title top, emoji centred, subtitle bottom */}
                       <div className="relative flex h-full flex-col">
                         <div className="px-3 pt-3">
-                          <p className="font-display font-bold text-white leading-tight text-[15px] sm:text-base drop-shadow-md">
+                          <p className="font-display font-bold text-white leading-tight text-sm sm:text-[15px] drop-shadow-md">
                             {t(`scenes.${s.id}.name`)}
                           </p>
                         </div>
-                        <div className="flex-1 flex items-center justify-center text-[64px] sm:text-7xl drop-shadow-lg transition group-hover:scale-110">
+                        <div className="flex-1 flex items-center justify-center text-5xl sm:text-6xl drop-shadow-lg transition group-hover:scale-110">
                           {s.emoji}
                         </div>
                         <div className="px-3 pb-3">
@@ -329,7 +388,6 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                           </p>
                         </div>
                       </div>
-
                       {selected && (
                         <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg ring-2 ring-white/80">
                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -343,67 +401,60 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
               </div>
             </section>
 
-            {/* Generate button (full width below the grid) */}
-            <div className="lg:col-span-2 flex flex-col items-center gap-4">
-              {step.kind === "error" && (
-                <div className="w-full max-w-md rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                  {step.msg}
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={generate}
-                  disabled={!photo || !sceneId || step.kind === "generating"}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.99] disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed"
-                >
-                  {step.kind === "generating" ? (
-                    <>
-                      <Spinner />
-                      {generatingMessage(generatingSec, t)} ({generatingSec}s)
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.18-4.456A1 1 0 0112 2z" clipRule="evenodd" /></svg>
-                      {t("stepGenerate")}
-                    </>
-                  )}
-                </button>
-
-                {step.kind !== "generating" && (
-                  <button
-                    type="button"
-                    onClick={surpriseMe}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary-300 bg-white px-5 py-4 text-sm font-semibold text-primary-700 hover:border-primary-500 hover:bg-primary-50"
-                  >
-                    {t("surpriseMe")}
-                  </button>
-                )}
+            {step.kind === "error" && (
+              <div className="mx-auto w-full max-w-md rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {step.msg}
               </div>
+            )}
 
-              {step.kind === "generating" && (
+            {/* Generating: show progress hint + waiting panel inline; CTA bar hides */}
+            {step.kind === "generating" ? (
+              <div className="flex flex-col items-center gap-4">
+                <div className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30">
+                  <Spinner />
+                  {generatingMessage(generatingSec, t)} ({generatingSec}s)
+                </div>
                 <p className="text-xs text-gray-500 max-w-xs text-center">
                   {generatingHint(generatingSec, t)}
                 </p>
-              )}
-
-              {usage && step.kind !== "generating" && !usage.unlimited && (
-                <p className="text-xs text-gray-500">
-                  {t("remainingFree", { count: usage.remaining })}
-                </p>
-              )}
-              {usage?.unlimited && step.kind !== "generating" && (
-                <p className="text-xs text-primary-600 font-semibold">
-                  ✨ Unlimited (staff)
-                </p>
-              )}
-
-              {/* While-you-wait: photographer carousel + trust strip */}
-              {step.kind === "generating" && photographers && photographers.length > 0 && (
-                <WaitingPanel locale={locale} photographers={photographers} t={t} />
-              )}
-            </div>
+                {photographers && photographers.length > 0 && (
+                  <WaitingPanel locale={locale} photographers={photographers} t={t} />
+                )}
+              </div>
+            ) : (
+              /* Sticky CTA bar at bottom on mobile, inline on desktop */
+              <div className="fixed sm:static bottom-0 left-0 right-0 z-30 sm:z-auto bg-white sm:bg-transparent border-t sm:border-0 border-warm-200 px-4 py-3 sm:p-0 sm:flex sm:flex-col sm:items-center sm:gap-2">
+                <div className="flex items-stretch gap-2 sm:gap-3 max-w-3xl mx-auto">
+                  <button
+                    type="button"
+                    onClick={generate}
+                    disabled={!photo || !sceneId}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 sm:px-10 py-3.5 sm:py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.99] disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed"
+                  >
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.18-4.456A1 1 0 0112 2z" clipRule="evenodd" /></svg>
+                    {t("stepGenerate")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={surpriseMe}
+                    disabled={!photo}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl border-2 border-primary-300 bg-white px-3 sm:px-5 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-primary-700 hover:border-primary-500 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  >
+                    {t("surpriseMe")}
+                  </button>
+                </div>
+                {usage && !usage.unlimited && (
+                  <p className="text-[11px] text-gray-500 text-center mt-2">
+                    {t("remainingFree", { count: usage.remaining })}
+                  </p>
+                )}
+                {usage?.unlimited && (
+                  <p className="text-[11px] text-primary-600 font-semibold text-center mt-2">
+                    ✨ Unlimited (staff)
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
