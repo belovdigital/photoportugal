@@ -3,23 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import imageCompression from "browser-image-compression";
+import { WaitingExperience } from "./WaitingExperience";
 
 interface SceneMeta {
   id: string;
   emoji: string;
   gradient: string;
   conciergeLoc: string;
-}
-
-interface PhotographerCard {
-  slug: string;
-  name: string;
-  coverUrl: string | null;
-  avatarUrl: string | null;
-  rating: number | null;
-  reviewCount: number;
-  minPrice: number | null;
-  tagline: string | null;
 }
 
 interface Usage {
@@ -58,9 +48,10 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const generatingTimerRef = useRef<number | null>(null);
   const [generatingSec, setGeneratingSec] = useState(0);
-  const [photographers, setPhotographers] = useState<PhotographerCard[] | null>(null);
   // Recently-shown scene IDs — Surprise me skips these for diversity.
   const recentSceneIdsRef = useRef<string[]>([]);
+  const [expectedSec, setExpectedSec] = useState<number>(90);
+  const [waitingLoc, setWaitingLoc] = useState<string>("");
 
   // Load usage on mount
   useEffect(() => {
@@ -71,6 +62,11 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
         if (u.blocked) setStep({ kind: "limit" });
       })
       .catch(() => { /* ignore */ });
+    // Fetch expected duration so the progress bar can scale itself
+    fetch("/api/ai-generate/expected-time")
+      .then((r) => r.json())
+      .then((d) => { if (d?.expectedSec) setExpectedSec(d.expectedSec); })
+      .catch(() => { /* keep default 90s */ });
   }, []);
 
   // Tick generating seconds for nicer UX
@@ -164,16 +160,10 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
     await pollUntilDone(data.id, data.concierge_loc, pick.id);
   }
 
-  // Pre-fetch a few photographers to show during the generation wait. We grab them
-  // by the picked scene's location so they're contextually relevant; falls back to
-  // top photographers when there are fewer than 4 in that location.
-  async function loadPhotographersForLoc(loc: string) {
-    try {
-      const r = await fetch(`/api/ai-generate/photographers?loc=${encodeURIComponent(loc)}`);
-      if (!r.ok) return;
-      const d = await r.json();
-      setPhotographers(d.photographers || []);
-    } catch { /* non-fatal */ }
+  // Capture the chosen location so WaitingExperience can pull a contextual
+  // portfolio reel + concierge handoff while the generation runs.
+  function loadPhotographersForLoc(loc: string) {
+    setWaitingLoc(loc);
   }
 
   async function pollUntilDone(genId: string, conciergeLoc: string, sceneIdForResult: string): Promise<void> {
@@ -311,10 +301,19 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
           <LimitReachedView conciergeHref={conciergeHref()} t={t} />
         )}
 
-        {/* Editor (idle / ready / generating / error) — single vertical column,
+        {/* Generating: full-focus mode — hide upload+scenes, show WaitingExperience */}
+        {step.kind === "generating" && (
+          <WaitingExperience
+            locale={locale}
+            loc={waitingLoc}
+            progressPercent={Math.min(95, (generatingSec / expectedSec) * 95)}
+          />
+        )}
+
+        {/* Editor (idle / ready / error) — single vertical column,
             full-width sections, sticky CTA bar at the bottom on mobile. */}
-        {(step.kind === "idle" || step.kind === "ready" || step.kind === "generating" || step.kind === "error") && (
-          <div className="space-y-6 sm:space-y-8 pb-32 sm:pb-10">
+        {(step.kind === "idle" || step.kind === "ready" || step.kind === "error") && (
+          <div className="space-y-8 sm:space-y-10 pb-36 sm:pb-10">
             {/* Photo step — full drop zone before upload, slim bar after */}
             {!photoPreview ? (
               <section>
@@ -323,7 +322,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                   photoPreview={null}
                   onSelect={handlePhotoSelect}
                   onClear={() => { setPhoto(null); setPhotoPreview(null); setStep({ kind: "idle" }); }}
-                  disabled={step.kind === "generating"}
+                  disabled={false}
                   fileInputRef={fileInputRef}
                   hint={t("stepUploadHint")}
                   tip={t("photoTip")}
@@ -344,7 +343,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={step.kind === "generating"}
+                  disabled={false}
                   className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
                   ✕
@@ -374,7 +373,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                       key={s.id}
                       type="button"
                       onClick={() => pickScene(s.id)}
-                      disabled={step.kind === "generating"}
+                      disabled={false}
                       className={`group relative aspect-[4/5] overflow-hidden rounded-xl border-2 text-left transition ${
                         selected ? "border-primary-600 ring-2 ring-primary-300 shadow-lg" : "border-warm-200 hover:border-primary-400 hover:shadow-md"
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -411,61 +410,45 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
             </section>
 
             {step.kind === "error" && (
-              <div className="mx-auto w-full max-w-md rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              <div className="mx-auto w-full max-w-md rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 text-center">
                 {step.msg}
               </div>
             )}
 
-            {/* Generating: show progress hint + waiting panel inline; CTA bar hides */}
-            {step.kind === "generating" ? (
-              <div className="flex flex-col items-center gap-4">
-                <div className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30">
-                  <Spinner />
-                  {generatingMessage(generatingSec, t)} ({generatingSec}s)
-                </div>
-                <p className="text-xs text-gray-500 max-w-xs text-center">
-                  {generatingHint(generatingSec, t)}
+            {/* Sticky CTA bar at bottom on mobile, inline on desktop */}
+            <div className="fixed sm:static bottom-0 left-0 right-0 z-30 sm:z-auto bg-white sm:bg-transparent border-t sm:border-0 border-warm-200 px-4 py-3 sm:p-0 sm:pt-4 sm:flex sm:flex-col sm:items-center sm:gap-2">
+              <div className="flex items-stretch gap-2 sm:gap-3 max-w-3xl mx-auto">
+                <button
+                  type="button"
+                  onClick={generate}
+                  disabled={!photo || !sceneId}
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 sm:px-10 py-3.5 sm:py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.99] disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed"
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.18-4.456A1 1 0 0112 2z" clipRule="evenodd" /></svg>
+                  {t("stepGenerate")}
+                </button>
+                <button
+                  type="button"
+                  onClick={surpriseMe}
+                  disabled={!photo}
+                  className="inline-flex items-center justify-center gap-1 rounded-xl border-2 border-primary-300 bg-white px-3 sm:px-5 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-primary-700 hover:border-primary-500 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                >
+                  {t("surpriseMe")}
+                </button>
+              </div>
+              {usage && !usage.unlimited && (
+                <p className="text-sm text-gray-600 text-center mt-3">
+                  {t("remainingFree", { count: usage.remaining })}
                 </p>
-                {photographers && photographers.length > 0 && (
-                  <WaitingPanel locale={locale} photographers={photographers} t={t} />
-                )}
-              </div>
-            ) : (
-              /* Sticky CTA bar at bottom on mobile, inline on desktop */
-              <div className="fixed sm:static bottom-0 left-0 right-0 z-30 sm:z-auto bg-white sm:bg-transparent border-t sm:border-0 border-warm-200 px-4 py-3 sm:p-0 sm:flex sm:flex-col sm:items-center sm:gap-2">
-                <div className="flex items-stretch gap-2 sm:gap-3 max-w-3xl mx-auto">
-                  <button
-                    type="button"
-                    onClick={generate}
-                    disabled={!photo || !sceneId}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 sm:px-10 py-3.5 sm:py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition hover:bg-primary-700 active:scale-[0.99] disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed"
-                  >
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.18-4.456A1 1 0 0112 2z" clipRule="evenodd" /></svg>
-                    {t("stepGenerate")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={surpriseMe}
-                    disabled={!photo}
-                    className="inline-flex items-center justify-center gap-1 rounded-xl border-2 border-primary-300 bg-white px-3 sm:px-5 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-primary-700 hover:border-primary-500 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {t("surpriseMe")}
-                  </button>
+              )}
+              {usage?.unlimited && (
+                <div className="flex justify-center mt-3">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 text-primary-700 px-3 py-1 text-xs font-semibold ring-1 ring-primary-200">
+                    ✨ Unlimited (staff)
+                  </span>
                 </div>
-                {usage && !usage.unlimited && (
-                  <p className="text-sm text-gray-600 text-center mt-3">
-                    {t("remainingFree", { count: usage.remaining })}
-                  </p>
-                )}
-                {usage?.unlimited && (
-                  <div className="flex justify-center mt-3">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 text-primary-700 px-3 py-1 text-xs font-semibold ring-1 ring-primary-200">
-                      ✨ Unlimited (staff)
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -696,107 +679,3 @@ function EmailGateModal({
   );
 }
 
-// Phase-shifting button label so the user sees something change every ~30s,
-// instead of the same "generating..." for two minutes.
-function generatingMessage(sec: number, t: ReturnType<typeof useTranslations>): string {
-  if (sec < 30) return t("generating");
-  if (sec < 60) return t("generatingMid");
-  if (sec < 120) return t("generatingLate");
-  return t("generatingLong");
-}
-
-// Friendly hint under the button — matches the phase, helps user understand the wait.
-function generatingHint(sec: number, t: ReturnType<typeof useTranslations>): string {
-  if (sec < 30) return t("hintEarly");
-  if (sec < 90) return t("hintMid");
-  return t("hintLong");
-}
-
-function WaitingPanel({
-  locale, photographers, t,
-}: {
-  locale: string;
-  photographers: PhotographerCard[];
-  t: ReturnType<typeof useTranslations>;
-}) {
-  const photographerHref = (slug: string) =>
-    locale === "en" ? `/photographers/${slug}` : `/${locale}/photographers/${slug}`;
-
-  return (
-    <div className="w-full max-w-5xl mt-6 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <h3 className="text-center font-display text-base sm:text-lg font-semibold text-gray-900">
-        {t("whileYouWait")}
-      </h3>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-        {photographers.map((p) => (
-          <a
-            key={p.slug}
-            href={photographerHref(p.slug)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative aspect-[16/10] sm:aspect-[5/3] overflow-hidden rounded-2xl border border-warm-200 bg-warm-100 transition hover:border-primary-400 hover:shadow-xl"
-          >
-            {p.coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={p.coverUrl}
-                alt={p.name}
-                className="h-full w-full object-cover transition group-hover:scale-105"
-                loading="lazy"
-              />
-            ) : (
-              <div className="h-full w-full bg-gradient-to-br from-primary-100 via-warm-100 to-accent-100" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-              <p className="font-display font-bold text-lg leading-tight truncate drop-shadow">{p.name}</p>
-              {p.tagline && (
-                <p className="mt-0.5 text-sm leading-snug line-clamp-1 opacity-95 drop-shadow">{p.tagline}</p>
-              )}
-              <div className="mt-2 flex items-center justify-between gap-2 text-sm">
-                {p.rating ? (
-                  <span className="flex items-center gap-1 font-medium">
-                    <span className="text-yellow-300">★</span>
-                    {p.rating.toFixed(1)}
-                    {p.reviewCount > 0 && <span className="opacity-85">({p.reviewCount})</span>}
-                  </span>
-                ) : <span />}
-                {p.minPrice && (
-                  <span className="font-semibold">{t("fromPrice", { price: p.minPrice })}</span>
-                )}
-              </div>
-              <p className="mt-2 text-sm font-bold tracking-wide group-hover:translate-x-1 transition-transform">
-                {t("viewProfile")}
-              </p>
-            </div>
-          </a>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11px] text-gray-600 pt-2">
-        <span className="flex items-center gap-1">
-          <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-          {t("trustSecure")}
-        </span>
-        <span className="flex items-center gap-1">
-          <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-          {t("trustRefund")}
-        </span>
-        <span className="flex items-center gap-1">
-          <svg className="h-3.5 w-3.5 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-          {t("trustVerified")}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-    </svg>
-  );
-}
