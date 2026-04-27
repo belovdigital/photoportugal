@@ -9,6 +9,7 @@ interface Row {
   photographer_name: string;
   photographer_rating: string | null;
   location_slug: string | null;
+  shoot_type: string | null;
 }
 
 /**
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
               u.name AS photographer_name,
               pp.rating::text AS photographer_rating,
               pi.location_slug,
+              pi.shoot_type,
               pp.review_count,
               pp.rating
        FROM portfolio_items pi
@@ -66,7 +68,8 @@ export async function GET(req: NextRequest) {
               pp.slug AS photographer_slug,
               u.name AS photographer_name,
               pp.rating::text AS photographer_rating,
-              pi.location_slug
+              pi.location_slug,
+              pi.shoot_type
        FROM portfolio_items pi
        JOIN photographer_profiles pp ON pp.id = pi.photographer_id
        JOIN users u ON u.id = pp.user_id
@@ -94,6 +97,7 @@ export async function GET(req: NextRequest) {
       photographerName: r.photographer_name,
       photographerRating: r.photographer_rating ? Number(r.photographer_rating) : null,
       locationSlug: r.location_slug,
+      shootType: r.shoot_type,
     })),
   });
 }

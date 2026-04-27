@@ -3272,6 +3272,18 @@
     "stat_locations": "📍 Lisbonne · Sintra · Porto · Algarve · Madère · Açores",
     "statBigPhotographers": "Photographes triés sur le volet",
     "statBigRating": "Moyenne sur 500+ avis",
-    "statBigFromPrice": "À partir de, photos retouchées"
+    "statBigFromPrice": "À partir de, photos retouchées",
+    "swipeTitle": "Trouvez votre style",
+    "swipeProgress": "{current} sur {total}",
+    "swipeHint": "Tapez ❤ pour garder, ✕ pour passer — on vous propose un photographe qui correspond à votre vibe.",
+    "matchesTitle": "Vos meilleurs choix",
+    "matchesBody": "Sélectionnés selon votre style et votre lieu. Tapez pour ouvrir le profil.",
+    "matchesCta": "Parler au concierge →",
+    "chatTitle": "Concierge en direct",
+    "chatSubtitle": "Réponse en quelques secondes",
+    "chatPlaceholder": "Parlez-nous de votre séance…",
+    "chatOpening": "Bonjour ! Pendant la génération de votre photo IA, parlez-moi de votre vraie séance — occasion, nombre de personnes, ambiance — et je vous propose les 2–3 meilleurs photographes. ✨",
+    "chatOpeningWithLoc": "Bonjour ! Pendant la génération de votre photo IA, parlez-moi de votre vraie séance à {loc} — occasion, nombre de personnes, ambiance — et je vous propose les 2–3 meilleurs photographes. ✨",
+    "chatError": "Une erreur est survenue. Veuillez réessayer."
   }
 }

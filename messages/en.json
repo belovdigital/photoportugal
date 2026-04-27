@@ -3272,6 +3272,18 @@
     "stat_locations": "📍 Lisbon · Sintra · Porto · Algarve · Madeira · Azores",
     "statBigPhotographers": "Hand-picked photographers",
     "statBigRating": "Average from 500+ reviews",
-    "statBigFromPrice": "From, edited photos included"
+    "statBigFromPrice": "From, edited photos included",
+    "swipeTitle": "Find your style",
+    "swipeProgress": "{current} of {total}",
+    "swipeHint": "Tap ❤ to keep, ✕ to skip — we'll match you to a photographer that gets your vibe.",
+    "matchesTitle": "Your top photographer matches",
+    "matchesBody": "Picked from your style and the location. Tap any to open their profile.",
+    "matchesCta": "Talk to our concierge →",
+    "chatTitle": "Live concierge",
+    "chatSubtitle": "Reply in seconds",
+    "chatPlaceholder": "Tell us about your shoot…",
+    "chatOpening": "Hi! While your AI photo is generating, tell me about your real shoot — occasion, group size, vibe — and I'll match you with the 2–3 best photographers. ✨",
+    "chatOpeningWithLoc": "Hi! While your AI photo is generating, tell me about your real shoot in {loc} — occasion, group size, vibe — and I'll match you with the 2–3 best photographers there. ✨",
+    "chatError": "Something went wrong. Please try again."
   }
 }
