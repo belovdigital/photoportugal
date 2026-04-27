@@ -85,7 +85,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
         const compressed = await imageCompression(file, {
           maxSizeMB: 4,
           maxWidthOrHeight: 1600,
-          useWebWorker: true,
+          useWebWorker: false, // CSP blocks the lib's CDN-hosted worker script
         });
         if (compressed.size > MAX_BYTES) {
           setStep({ kind: "error", msg: t("errorTooBig") });
@@ -102,7 +102,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
         const compressed = await imageCompression(file, {
           maxSizeMB: 1.5,
           maxWidthOrHeight: 1600,
-          useWebWorker: true,
+          useWebWorker: false, // CSP blocks the lib's CDN-hosted worker script
         });
         file = new File([compressed], file.name, { type: compressed.type || file.type });
       } catch { /* keep original */ }
