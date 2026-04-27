@@ -528,7 +528,12 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                     </>
                   ) : p.is_approved ? (
                     <AdminDeactivatePhotographer id={p.id} name={normalizeName(p.display_name)} isActive={true} />
-                  ) : null}
+                  ) : (
+                    // Not-ready limbo (registered, profile incomplete, not approved, not banned).
+                    // Admins need an explicit Deactivate so they can clear out ghosts/no-shows
+                    // without waiting for the 7-day auto-deactivation cron.
+                    <AdminDeactivatePhotographer id={p.id} name={normalizeName(p.display_name)} isActive={true} />
+                  )}
                   <button
                     onClick={async () => {
                       const ok = await confirm(
