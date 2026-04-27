@@ -177,36 +177,56 @@ export default function middleware(request: NextRequest) {
     return null;
   }
 
-  // Auto locale-redirect on first visit (bots excluded; users with explicit cookie excluded).
-  // Two cases:
-  //   1. Bare root `/` → redirect to user's preferred locale homepage
-  //   2. Deep URL under wrong locale prefix (e.g. /pt/<x> when browser is EN) → strip / remap to user's locale
-  // Once we redirect, set `locale_pref` cookie so we don't re-redirect on subsequent navigation.
-  if (!isBot && !request.cookies.get("locale_pref")) {
-    const pref = preferredLocale();
+  // Auto locale-redirect: honour explicit user choice (`lang_choice` cookie set by the
+  // language switcher) above all else; otherwise fall back to Accept-Language. Bots
+  // never get redirected so the SEO canonicals stay stable.
+  //
+  // Cookie semantics:
+  //   - `lang_choice` = explicit manual switch via UI; if it disagrees with the URL we
+  //     redirect to honour the user's choice (this also blocks browser-based redirects).
+  //   - middleware never auto-sets a cookie — auto-detection runs on every request,
+  //     which means a user who clears their cookie or lands from a different device
+  //     gets the language their browser actually advertises.
+  //   - The legacy `locale_pref` cookie is preserved but ignored (it gets cleared on
+  //     the next manual switcher click); we leave it expiring naturally.
+  if (!isBot) {
+    const explicitChoice = request.cookies.get("lang_choice")?.value as
+      | "en" | "pt" | "de" | "es" | "fr" | undefined;
+    const browserPref = preferredLocale();
+    // Explicit choice wins; otherwise use Accept-Language.
+    const pref = explicitChoice || browserPref;
+
     const urlLocaleMatch = pathname.match(/^\/(pt|de|es|fr)(\/.*)?$/);
     const urlLocale = urlLocaleMatch?.[1] as "pt" | "de" | "es" | "fr" | undefined;
     const urlRest = urlLocaleMatch?.[2] || "";
+    const effectiveUrlLocale: "en" | "pt" | "de" | "es" | "fr" = urlLocale || "en";
 
     if (pathname === "/" && pref && pref !== "en") {
       // Bare root → preferred non-EN locale
-      const res = NextResponse.redirect(new URL(`/${pref}`, request.url), 302);
-      res.cookies.set("locale_pref", pref, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
-      return res;
+      return NextResponse.redirect(new URL(`/${pref}`, request.url), 302);
     }
 
     if (urlLocale && pref && pref !== urlLocale) {
-      // User landed on a locale-prefixed URL that doesn't match their browser preference.
-      // Most common: someone clicked a /pt/... result in Google but their device is English.
+      // User on a locale-prefixed URL that doesn't match their preference.
       const target = remapPath(urlLocale, urlRest, pref);
       if (target) {
         const url = new URL(target, request.url);
         url.search = request.nextUrl.search;
-        const res = NextResponse.redirect(url, 302);
-        res.cookies.set("locale_pref", pref, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
-        return res;
+        return NextResponse.redirect(url, 302);
       }
     }
+
+    // Edge case: explicit choice points away from a no-prefix EN URL — honour it.
+    if (!urlLocale && explicitChoice && explicitChoice !== "en" && pathname !== "/") {
+      const target = remapPath("en", pathname, explicitChoice);
+      if (target && target !== pathname) {
+        const url = new URL(target, request.url);
+        url.search = request.nextUrl.search;
+        return NextResponse.redirect(url, 302);
+      }
+    }
+    // Suppress unused-var warning in builds
+    void effectiveUrlLocale;
   }
 
   // 301 redirect: consolidate two cannibalized elopement posts into one

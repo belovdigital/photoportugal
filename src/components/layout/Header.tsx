@@ -87,8 +87,11 @@ export function Header() {
       newLocale === "en"
         ? cleanPath
         : `/${newLocale}${cleanPath === "/" ? "" : cleanPath}`;
-    // Persist explicit choice so middleware doesn't auto-redirect on next visit
-    document.cookie = `locale_pref=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
+    // Persist explicit choice — middleware honours `lang_choice` over Accept-Language.
+    // (The legacy `locale_pref` cookie is no longer used for redirect logic; clear it
+    // so users with stale auto-set values aren't stuck on the wrong locale.)
+    document.cookie = `lang_choice=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
+    document.cookie = `locale_pref=;path=/;max-age=0;SameSite=Lax`;
     window.location.href = newPath;
   }
 
