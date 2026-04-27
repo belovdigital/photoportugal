@@ -444,14 +444,16 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                   </button>
                 </div>
                 {usage && !usage.unlimited && (
-                  <p className="text-[11px] text-gray-500 text-center mt-2">
+                  <p className="text-sm text-gray-600 text-center mt-3">
                     {t("remainingFree", { count: usage.remaining })}
                   </p>
                 )}
                 {usage?.unlimited && (
-                  <p className="text-[11px] text-primary-600 font-semibold text-center mt-2">
-                    ✨ Unlimited (staff)
-                  </p>
+                  <div className="flex justify-center mt-3">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 text-primary-700 px-3 py-1 text-xs font-semibold ring-1 ring-primary-200">
+                      ✨ Unlimited (staff)
+                    </span>
+                  </div>
                 )}
               </div>
             )}
