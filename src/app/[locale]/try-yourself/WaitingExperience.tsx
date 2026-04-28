@@ -125,8 +125,8 @@ export function WaitingExperience({
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-5">
-      {/* Progress bar */}
+    <div className="w-full max-w-6xl mx-auto space-y-5">
+      {/* Progress bar — full width, top */}
       <div className="rounded-2xl bg-white border border-warm-200 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold text-gray-900">{t("waitingProgress")}</p>
@@ -141,42 +141,48 @@ export function WaitingExperience({
         <p className="mt-2 text-xs text-gray-500">{generatingHintByPercent(progressPercent, t)}</p>
       </div>
 
-      {/* Tinder swipe — until done. After: matched photographers card */}
-      {!swipeDone && photos.length > 0 ? (
-        <SwipeDeck
-          photos={photos}
-          idx={swipeIdx}
-          onLove={() => onSwipe(true)}
-          onSkip={() => onSwipe(false)}
-          photographerHref={photographerHref}
-          t={t}
-        />
-      ) : swipeDone ? (
-        <MatchesCard
-          matches={matches}
-          loc={loc}
-          conciergeHref={conciergeFullHref}
-          photographerHref={photographerHref}
-          t={t}
-        />
-      ) : null}
+      {/* Two-column layout on desktop: gallery left, chat right.
+          Stacks on mobile (gallery first, chat below). */}
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+        {/* LEFT: gallery — Tinder swipe until done, then matches */}
+        <div>
+          {!swipeDone && photos.length > 0 ? (
+            <SwipeDeck
+              photos={photos}
+              idx={swipeIdx}
+              onLove={() => onSwipe(true)}
+              onSkip={() => onSwipe(false)}
+              photographerHref={photographerHref}
+              t={t}
+            />
+          ) : swipeDone ? (
+            <MatchesCard
+              matches={matches}
+              loc={loc}
+              conciergeHref={conciergeFullHref}
+              photographerHref={photographerHref}
+              t={t}
+            />
+          ) : null}
+        </div>
 
-      {/* Trust stats — three big cards always visible */}
-      <div className="grid grid-cols-3 gap-3">
+        {/* RIGHT: live concierge chat */}
+        <ChatPanel
+          messages={chatMsgs}
+          input={chatInput}
+          sending={chatSending}
+          onChange={setChatInput}
+          onSend={sendChat}
+          t={t}
+        />
+      </div>
+
+      {/* Trust stats — full width below both columns */}
+      <div className="grid grid-cols-3 gap-3 max-w-3xl mx-auto w-full">
         <StatCard big="30+" label={t("statBigPhotographers")} icon="📸" />
         <StatCard big="4.9★" label={t("statBigRating")} icon="⭐" />
         <StatCard big="€90" label={t("statBigFromPrice")} icon="💶" />
       </div>
-
-      {/* Inline concierge chat — same backend as /concierge */}
-      <ChatPanel
-        messages={chatMsgs}
-        input={chatInput}
-        sending={chatSending}
-        onChange={setChatInput}
-        onSend={sendChat}
-        t={t}
-      />
     </div>
   );
 }

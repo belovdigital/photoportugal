@@ -149,12 +149,21 @@ export function getScene(id: string): Scene | undefined {
  * Each generation produces 4 photos at the SAME scene with different framings —
  * mimics a real photographer doing wide / portrait / candid / atmospheric shots
  * of the same location. Output: vertical 1024×1536 (Instagram Stories ratio).
+ *
+ * EVERY variant must produce a PROFESSIONAL THIRD-PERSON shot (taken by an
+ * unseen photographer 2-3m away), NEVER a selfie — the reference image is a
+ * selfie but the output must clearly NOT be: no arm reaching toward the camera,
+ * no phone or camera held by the subject, hands free or naturally at the side
+ * / in pockets / holding sunglasses, etc. This anti-selfie reinforcement is
+ * critical because gpt-image-2 tends to mirror the reference's framing.
  */
+const ANTI_SELFIE = "CRITICAL: this is a PROFESSIONAL PHOTOGRAPHER'S shot taken by someone else, NOT a selfie. The subject does NOT hold a phone or camera; their arm is NOT reaching toward the camera; both hands are free, naturally at their sides, in pockets, or holding non-camera props. Camera is held by an unseen photographer 2-3 metres away. The subject is fully framed in a polished editorial composition — never a selfie pose, never a forearm intruding into the frame, never the wide-angle distortion of a phone selfie.";
+
 export const VARIANT_FRAMINGS: readonly string[] = [
-  "Composition: WIDE environmental travel shot. People stand in the lower 55% of a vertical 1024×1536 frame; the landmark and sky fill the upper portion. Shot at 24mm wide-angle, deep depth of field. Photorealistic, 4K detail.",
-  "Composition: classic 3/4-length travel portrait. People framed from the waist up, centred vertically in 1024×1536, the landmark soft-focused behind them. Shot at 50mm with shallow depth of field, beautiful bokeh. Photorealistic, 4K detail.",
-  "Composition: candid mid-step or mid-laugh moment. People walking, laughing or looking sideways naturally — unposed, dynamic, a slice of life with the landmark behind. Shot at 35mm, slight motion feel, vertical 1024×1536. Photorealistic, 4K detail.",
-  "Composition: atmospheric low-angle shot. Camera positioned slightly below eye level so the landmark towers above the people; golden-hour rim-lighting outlines them; cinematic and moody. Shot at 28mm, vertical 1024×1536. Photorealistic, 4K detail.",
+  `Composition: WIDE environmental travel shot, taken by a professional photographer 2-3m away. People stand in the lower 55% of a vertical 1024×1536 frame; the landmark and sky fill the upper portion. Shot at 24mm wide-angle, deep depth of field. Photorealistic, 4K detail. ${ANTI_SELFIE}`,
+  `Composition: classic 3/4-length travel portrait by a professional photographer. People framed from the waist up, centred vertically in 1024×1536, the landmark soft-focused behind them. Shot at 50mm with shallow depth of field, beautiful bokeh. Photorealistic, 4K detail. ${ANTI_SELFIE}`,
+  `Composition: candid mid-step or mid-laugh moment captured by a professional photographer. People walking, laughing or looking sideways naturally — unposed, dynamic, a slice of life with the landmark behind. Shot at 35mm, slight motion feel, vertical 1024×1536. Photorealistic, 4K detail. ${ANTI_SELFIE}`,
+  `Composition: atmospheric low-angle shot by a professional photographer. Camera positioned slightly below eye level so the landmark towers above the people; golden-hour rim-lighting outlines them; cinematic and moody. Shot at 28mm, vertical 1024×1536. Photorealistic, 4K detail. ${ANTI_SELFIE}`,
 ];
 
 /**

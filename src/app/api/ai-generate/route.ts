@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { getScene, VARIANT_FRAMINGS, buildVariantPrompt } from "@/lib/ai-scenes";
+import { getScene, SCENES, VARIANT_FRAMINGS, buildVariantPrompt } from "@/lib/ai-scenes";
 
 // User IDs allowed to generate unlimited AI previews (test/staff accounts).
 // Kate Belova — test account also hidden from Recent Visitors.
@@ -197,34 +197,46 @@ async function runGeneration({
   refContentType: string;
   sceneId: string;
 }) {
-  const scene = getScene(sceneId);
-  if (!scene) {
+  const selectedScene = getScene(sceneId);
+  if (!selectedScene) {
     await queryOne("UPDATE ai_generations SET status='failed', error='unknown_scene' WHERE id=$1", [genId]).catch(() => {});
     return;
   }
 
+  // Build the photo plan: 1 photo at the SELECTED scene + 3 photos at random
+  // OTHER scenes — gives the user a "Portugal tour preview" feel rather than
+  // 4 identical-location shots. Each scene also gets a different framing
+  // (wide / 3/4 / candid / atmospheric) so compositions stay varied.
+  const others = SCENES.filter((s) => s.id !== selectedScene.id);
+  const shuffled = [...others].sort(() => Math.random() - 0.5);
+  const plan = [
+    { scene: selectedScene, framingIdx: 0 }, // selected → wide environmental
+    { scene: shuffled[0]!, framingIdx: 1 },  // random → 3/4 portrait
+    { scene: shuffled[1]!, framingIdx: 2 },  // random → candid
+    { scene: shuffled[2]!, framingIdx: 3 },  // random → atmospheric
+  ];
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 180_000 });
 
-  // Fire 4 parallel images.edit calls — one per framing variant. Each gets the
-  // same reference image but a different composition prompt (wide / portrait /
-  // candid / atmospheric). Output is vertical 1024×1536 (Instagram-friendly).
-  const variantTasks = VARIANT_FRAMINGS.map(async (_, i) => {
-    const prompt = buildVariantPrompt(scene, i);
+  // Fire 4 parallel images.edit calls — different scenes + different framings.
+  // Output is vertical 1024×1536 (Instagram Stories ratio).
+  const variantTasks = plan.map(async ({ scene, framingIdx }, i) => {
+    const prompt = buildVariantPrompt(scene, framingIdx);
     const refFile = new File([new Uint8Array(refBuf)], `selfie.${refExt}`, { type: refContentType });
     const res = await openai.images.edit({
       model: MODEL,
       image: refFile,
       prompt,
-      size: "1024x1536", // portrait — vertical, Instagram Stories ratio
+      size: "1024x1536",
       quality: "medium",
       n: 1,
     });
     const b64 = res.data?.[0]?.b64_json;
     if (!b64) throw new Error(`variant ${i} returned no image`);
-    return { idx: i, b64 };
+    return { idx: i, b64, sceneId: scene.id };
   });
 
-  let outputs: { idx: number; b64: string }[];
+  let outputs: { idx: number; b64: string; sceneId: string }[];
   try {
     outputs = await Promise.all(variantTasks);
   } catch (err) {
@@ -251,10 +263,13 @@ async function runGeneration({
     return;
   }
 
-  // Save the array of keys; result_image_key (legacy) gets the first one for
-  // back-compat with code paths that still expect a single key.
+  // Save keys + per-photo scene IDs; result_image_key (legacy) gets the first
+  // one for back-compat with code paths that still expect a single key.
+  const resultSceneIds = outputs
+    .sort((a, b) => a.idx - b.idx)
+    .map((o) => o.sceneId);
   await queryOne(
-    "UPDATE ai_generations SET status='success', result_image_keys=$1::text[], result_image_key=$2, cost_cents=$3 WHERE id=$4",
-    [resultKeys, resultKeys[0], COST_CENTS_PER_GENERATION, genId]
+    "UPDATE ai_generations SET status='success', result_image_keys=$1::text[], result_scene_ids=$2::text[], result_image_key=$3, cost_cents=$4 WHERE id=$5",
+    [resultKeys, resultSceneIds, resultKeys[0], COST_CENTS_PER_GENERATION, genId]
   ).catch(() => {});
 }

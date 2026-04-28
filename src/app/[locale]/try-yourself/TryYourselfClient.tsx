@@ -27,7 +27,7 @@ type Step =
   | { kind: "idle" }
   | { kind: "ready" }                          // photo + scene picked, can generate
   | { kind: "generating" }
-  | { kind: "result"; imageUrls: string[]; conciergeLoc: string; sceneId: string; genId: string }
+  | { kind: "result"; imageUrls: string[]; sceneIds: string[]; conciergeLoc: string; sceneId: string; genId: string }
   | { kind: "email_gate" }                     // need email to continue
   | { kind: "limit" }                          // hit hard cap
   | { kind: "error"; msg: string };
@@ -81,6 +81,17 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
     return () => {
       if (generatingTimerRef.current) { window.clearInterval(generatingTimerRef.current); generatingTimerRef.current = null; }
     };
+  }, [step.kind]);
+
+  // When the user taps Generate / Surprise me / completes a generation, the
+  // page swaps from the editor (where the CTA was at the bottom) to the
+  // waiting/result view. Without scrolling them up, mobile users sit on the
+  // old bottom of the page and don't see the new content. Auto-scroll fixes it.
+  useEffect(() => {
+    if (step.kind === "generating" || step.kind === "result" || step.kind === "limit") {
+      // Use rAF so the layout has rendered before we scroll.
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+    }
   }, [step.kind]);
 
   async function handlePhotoSelect(file: File) {
@@ -182,8 +193,9 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
       if (!d) continue;
       if (d.status === "success") {
         const urls: string[] = (d.image_urls && d.image_urls.length) ? d.image_urls : (d.image_url ? [d.image_url] : []);
+        const sceneIds: string[] = (d.scene_ids && d.scene_ids.length) ? d.scene_ids : urls.map(() => sceneIdForResult);
         if (urls.length > 0) {
-          setStep({ kind: "result", imageUrls: urls, conciergeLoc, sceneId: sceneIdForResult, genId });
+          setStep({ kind: "result", imageUrls: urls, sceneIds, conciergeLoc, sceneId: sceneIdForResult, genId });
           return;
         }
       }
@@ -290,9 +302,8 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
         {step.kind === "result" && (
           <ResultView
             imageUrls={step.imageUrls}
+            sceneIds={step.sceneIds}
             genId={step.genId}
-            sceneName={t(`scenes.${step.sceneId}.name`)}
-            sceneSubtitle={t(`scenes.${step.sceneId}.subtitle`)}
             conciergeHref={conciergeHref(step.conciergeLoc)}
             onTryAnother={tryAnother}
             t={t}
@@ -561,16 +572,19 @@ function UploadDropzone({
 }
 
 function ResultView({
-  imageUrls, genId, sceneName, sceneSubtitle, conciergeHref, onTryAnother, t,
+  imageUrls, sceneIds, genId, conciergeHref, onTryAnother, t,
 }: {
   imageUrls: string[];
+  sceneIds: string[];
   genId: string;
-  sceneName: string;
-  sceneSubtitle: string;
   conciergeHref: string;
   onTryAnother: () => void;
   t: ReturnType<typeof useTranslations>;
 }) {
+  const activeSceneId = sceneIds[0];
+  const activeSceneName = (id: string) => t(`scenes.${id}.name`);
+  const activeSceneSubtitle = (id: string) => t(`scenes.${id}.subtitle`);
+  void activeSceneId;
   const [activeIdx, setActiveIdx] = useState(0);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -614,7 +628,7 @@ function ResultView({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900 leading-tight">photoportugal</p>
-            <p className="text-[11px] text-gray-500 leading-tight truncate">📍 {sceneName}</p>
+            <p className="text-[11px] text-gray-500 leading-tight truncate">📍 {activeSceneName(sceneIds[activeIdx] || sceneIds[0])}</p>
           </div>
           <button type="button" className="text-gray-700">
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg>
@@ -631,7 +645,7 @@ function ResultView({
             {imageUrls.map((url, i) => (
               <div key={i} className="snap-start shrink-0 w-full h-full">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`${sceneName} ${i + 1}`} className="h-full w-full object-cover" loading={i === 0 ? "eager" : "lazy"} />
+                <img src={url} alt={activeSceneName(sceneIds[i] || sceneIds[0])} className="h-full w-full object-cover" loading={i === 0 ? "eager" : "lazy"} />
               </div>
             ))}
           </div>
@@ -686,11 +700,11 @@ function ResultView({
           )}
         </div>
 
-        {/* IG caption */}
+        {/* IG caption — switches per active swipe slide */}
         <div className="px-3 pt-2 pb-3">
           <p className="text-sm text-gray-900">
             <span className="font-semibold">photoportugal</span>{" "}
-            <span>{sceneSubtitle}</span>
+            <span>{activeSceneSubtitle(sceneIds[activeIdx] || sceneIds[0])}</span>
           </p>
           <p className="mt-1 text-[11px] text-gray-400 uppercase tracking-wide">{t("resultJustNow")}</p>
         </div>
