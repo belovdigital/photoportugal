@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { getScene } from "@/lib/ai-scenes";
+import { getScene, VARIANT_FRAMINGS, buildVariantPrompt } from "@/lib/ai-scenes";
 
 // User IDs allowed to generate unlimited AI previews (test/staff accounts).
 // Kate Belova — test account also hidden from Recent Visitors.
@@ -17,9 +17,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MODEL = "gpt-image-2";
-// quality:"medium" — visibly better detail than "low", still ~30-90s wall time.
-// At ~1056 output tokens for 1024×1024 ≈ $0.042/image.
-const COST_CENTS_PER_IMAGE = 4;
+// Each generation produces 4 images at vertical 1024×1536, ~$0.05/image
+// = ~$0.20/session. quality:"medium" → ~30-90s per call, parallel ≈ same wall time.
+const COST_CENTS_PER_GENERATION = 20;
+const IMAGES_PER_GENERATION = 4;
 
 const FREE_NO_EMAIL = 1;
 const FREE_WITH_EMAIL = 3;
@@ -155,7 +156,7 @@ export async function POST(req: NextRequest) {
     refBuf,
     refExt,
     refContentType,
-    scenePrompt: scene.prompt,
+    sceneId: scene.id,
   }).catch((err) => {
     console.error(`[ai-generate ${genId}] background error:`, err);
   });
@@ -187,54 +188,73 @@ export async function POST(req: NextRequest) {
 }
 
 async function runGeneration({
-  genId, sessionId, refBuf, refExt, refContentType, scenePrompt,
+  genId, sessionId, refBuf, refExt, refContentType, sceneId,
 }: {
   genId: string;
   sessionId: string;
   refBuf: Buffer;
   refExt: string;
   refContentType: string;
-  scenePrompt: string;
+  sceneId: string;
 }) {
+  const scene = getScene(sceneId);
+  if (!scene) {
+    await queryOne("UPDATE ai_generations SET status='failed', error='unknown_scene' WHERE id=$1", [genId]).catch(() => {});
+    return;
+  }
+
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 180_000 });
-  let resultB64: string | null = null;
-  try {
+
+  // Fire 4 parallel images.edit calls — one per framing variant. Each gets the
+  // same reference image but a different composition prompt (wide / portrait /
+  // candid / atmospheric). Output is vertical 1024×1536 (Instagram-friendly).
+  const variantTasks = VARIANT_FRAMINGS.map(async (_, i) => {
+    const prompt = buildVariantPrompt(scene, i);
     const refFile = new File([new Uint8Array(refBuf)], `selfie.${refExt}`, { type: refContentType });
     const res = await openai.images.edit({
       model: MODEL,
       image: refFile,
-      prompt: scenePrompt,
-      size: "1536x1024", // landscape — much more natural for travel scenery than square
-      quality: "medium", // ~30-90s wall time, visibly better detail than "low"
+      prompt,
+      size: "1024x1536", // portrait — vertical, Instagram Stories ratio
+      quality: "medium",
       n: 1,
     });
-    resultB64 = res.data?.[0]?.b64_json || null;
-    if (!resultB64) throw new Error("no image data in OpenAI response");
+    const b64 = res.data?.[0]?.b64_json;
+    if (!b64) throw new Error(`variant ${i} returned no image`);
+    return { idx: i, b64 };
+  });
+
+  let outputs: { idx: number; b64: string }[];
+  try {
+    outputs = await Promise.all(variantTasks);
   } catch (err) {
     const msg = (err as Error).message?.slice(0, 500) || "unknown";
     console.error(`[ai-generate ${genId}] OpenAI error:`, msg);
-    await queryOne(
-      "UPDATE ai_generations SET status='failed', error=$1 WHERE id=$2",
-      [msg, genId]
-    ).catch(() => {});
+    await queryOne("UPDATE ai_generations SET status='failed', error=$1 WHERE id=$2", [msg, genId]).catch(() => {});
     return;
   }
 
-  const resultBuf = Buffer.from(resultB64, "base64");
-  const resultKey = `ai-generations/out/${sessionId}/${genId}.png`;
+  // Upload all 4 to R2 in parallel
+  const uploads = outputs.map(async ({ idx, b64 }) => {
+    const buf = Buffer.from(b64, "base64");
+    const key = `ai-generations/out/${sessionId}/${genId}-${idx}.png`;
+    await uploadToS3(key, buf, "image/png");
+    return key;
+  });
+
+  let resultKeys: string[];
   try {
-    await uploadToS3(resultKey, resultBuf, "image/png");
+    resultKeys = await Promise.all(uploads);
   } catch (e) {
-    console.error(`[ai-generate ${genId}] R2 result upload failed:`, e);
-    await queryOne(
-      "UPDATE ai_generations SET status='failed', error='r2_upload_failed' WHERE id=$1",
-      [genId]
-    ).catch(() => {});
+    console.error(`[ai-generate ${genId}] R2 upload failed:`, e);
+    await queryOne("UPDATE ai_generations SET status='failed', error='r2_upload_failed' WHERE id=$1", [genId]).catch(() => {});
     return;
   }
 
+  // Save the array of keys; result_image_key (legacy) gets the first one for
+  // back-compat with code paths that still expect a single key.
   await queryOne(
-    "UPDATE ai_generations SET status='success', result_image_key=$1, cost_cents=$2 WHERE id=$3",
-    [resultKey, COST_CENTS_PER_IMAGE, genId]
+    "UPDATE ai_generations SET status='success', result_image_keys=$1::text[], result_image_key=$2, cost_cents=$3 WHERE id=$4",
+    [resultKeys, resultKeys[0], COST_CENTS_PER_GENERATION, genId]
   ).catch(() => {});
 }

@@ -3284,6 +3284,7 @@
     "chatPlaceholder": "Parlez-nous de votre séance…",
     "chatOpening": "Bonjour ! Pendant la génération de votre photo IA, parlez-moi de votre vraie séance — occasion, nombre de personnes, ambiance — et je vous propose les 2–3 meilleurs photographes. ✨",
     "chatOpeningWithLoc": "Bonjour ! Pendant la génération de votre photo IA, parlez-moi de votre vraie séance à {loc} — occasion, nombre de personnes, ambiance — et je vous propose les 2–3 meilleurs photographes. ✨",
-    "chatError": "Une erreur est survenue. Veuillez réessayer."
+    "chatError": "Une erreur est survenue. Veuillez réessayer.",
+    "resultJustNow": "À l’instant"
   }
 }

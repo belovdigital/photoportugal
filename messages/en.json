@@ -3284,6 +3284,7 @@
     "chatPlaceholder": "Tell us about your shoot…",
     "chatOpening": "Hi! While your AI photo is generating, tell me about your real shoot — occasion, group size, vibe — and I'll match you with the 2–3 best photographers. ✨",
     "chatOpeningWithLoc": "Hi! While your AI photo is generating, tell me about your real shoot in {loc} — occasion, group size, vibe — and I'll match you with the 2–3 best photographers there. ✨",
-    "chatError": "Something went wrong. Please try again."
+    "chatError": "Something went wrong. Please try again.",
+    "resultJustNow": "Just now"
   }
 }

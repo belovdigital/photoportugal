@@ -11,6 +11,7 @@ interface Row {
   scene_id: string;
   status: string;
   result_image_key: string | null;
+  result_image_keys: string[] | null;
 }
 
 /**
@@ -35,22 +36,31 @@ export async function GET(
   const sessionId = req.cookies.get("ai_session")?.value || null;
   if (!sessionId) return NextResponse.json({ error: "no session" }, { status: 403 });
 
+  // Optional ?n=0..3 selects which of the 4 variants. Defaults to 0.
+  const nRaw = parseInt(req.nextUrl.searchParams.get("n") || "0", 10);
+  const n = isNaN(nRaw) ? 0 : Math.max(0, Math.min(3, nRaw));
+
   const row = await queryOne<Row>(
-    "SELECT session_id, scene_id, status, result_image_key FROM ai_generations WHERE id = $1",
+    "SELECT session_id, scene_id, status, result_image_key, result_image_keys FROM ai_generations WHERE id = $1",
     [id]
   );
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (row.session_id !== sessionId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  if (row.status !== "success" || !row.result_image_key) {
+
+  const keys = row.result_image_keys && row.result_image_keys.length > 0
+    ? row.result_image_keys
+    : (row.result_image_key ? [row.result_image_key] : []);
+  const key = keys[n] || keys[0];
+  if (row.status !== "success" || !key) {
     return NextResponse.json({ error: "not ready" }, { status: 409 });
   }
 
-  const upstream = await fetch(`${PUBLIC_URL}/${row.result_image_key}`);
+  const upstream = await fetch(`${PUBLIC_URL}/${key}`);
   if (!upstream.ok || !upstream.body) {
     return NextResponse.json({ error: "fetch failed" }, { status: 502 });
   }
 
-  const filename = `photoportugal-${row.scene_id}.png`;
+  const filename = `photoportugal-${row.scene_id}-${n + 1}.png`;
   return new NextResponse(upstream.body, {
     headers: {
       "Content-Type": "image/png",

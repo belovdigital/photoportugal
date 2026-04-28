@@ -3284,6 +3284,7 @@
     "chatPlaceholder": "Erzählen Sie von Ihrem Shooting…",
     "chatOpening": "Hallo! Während Ihr KI-Foto entsteht, erzählen Sie mir von Ihrem echten Shooting — Anlass, Gruppengröße, Stil — und ich matche Sie mit den 2–3 besten Fotografen. ✨",
     "chatOpeningWithLoc": "Hallo! Während Ihr KI-Foto entsteht, erzählen Sie mir von Ihrem echten Shooting in {loc} — Anlass, Gruppengröße, Stil — und ich matche Sie mit den 2–3 besten Fotografen. ✨",
-    "chatError": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
+    "chatError": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "resultJustNow": "Gerade eben"
   }
 }

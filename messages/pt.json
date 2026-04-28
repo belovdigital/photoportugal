@@ -3284,6 +3284,7 @@
     "chatPlaceholder": "Conte-nos sobre a sua sessão…",
     "chatOpening": "Olá! Enquanto a sua foto IA é gerada, conte-me sobre a sessão real — ocasião, número de pessoas, estilo — e eu encontro os 2–3 melhores fotógrafos. ✨",
     "chatOpeningWithLoc": "Olá! Enquanto a sua foto IA é gerada, conte-me sobre a sessão real em {loc} — ocasião, número de pessoas, estilo — e eu encontro os 2–3 melhores fotógrafos. ✨",
-    "chatError": "Algo correu mal. Por favor, tente novamente."
+    "chatError": "Algo correu mal. Por favor, tente novamente.",
+    "resultJustNow": "Agora mesmo"
   }
 }

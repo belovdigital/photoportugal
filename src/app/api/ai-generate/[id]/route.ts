@@ -11,6 +11,7 @@ interface Row {
   scene_id: string;
   status: string;
   result_image_key: string | null;
+  result_image_keys: string[] | null;
   error: string | null;
 }
 
@@ -34,16 +35,22 @@ export async function GET(
   }
 
   const row = await queryOne<Row>(
-    "SELECT id, session_id, scene_id, status, result_image_key, error FROM ai_generations WHERE id = $1",
+    "SELECT id, session_id, scene_id, status, result_image_key, result_image_keys, error FROM ai_generations WHERE id = $1",
     [id]
   );
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (row.session_id !== sessionId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
+  // New rows have result_image_keys (4 variants); legacy rows just result_image_key.
+  const keys = row.result_image_keys && row.result_image_keys.length > 0
+    ? row.result_image_keys
+    : (row.result_image_key ? [row.result_image_key] : []);
+
   return NextResponse.json({
     id: row.id,
     status: row.status,
-    image_url: row.result_image_key ? `${PUBLIC_URL}/${row.result_image_key}` : null,
+    image_url: keys[0] ? `${PUBLIC_URL}/${keys[0]}` : null, // legacy field — first photo
+    image_urls: keys.map((k) => `${PUBLIC_URL}/${k}`),
     scene_id: row.scene_id,
     error: row.error,
   });

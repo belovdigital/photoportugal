@@ -27,7 +27,7 @@ type Step =
   | { kind: "idle" }
   | { kind: "ready" }                          // photo + scene picked, can generate
   | { kind: "generating" }
-  | { kind: "result"; imageUrl: string; conciergeLoc: string; sceneId: string; genId: string }
+  | { kind: "result"; imageUrls: string[]; conciergeLoc: string; sceneId: string; genId: string }
   | { kind: "email_gate" }                     // need email to continue
   | { kind: "limit" }                          // hit hard cap
   | { kind: "error"; msg: string };
@@ -180,9 +180,12 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
       if (!r.ok) continue;
       const d = await r.json().catch(() => null);
       if (!d) continue;
-      if (d.status === "success" && d.image_url) {
-        setStep({ kind: "result", imageUrl: d.image_url, conciergeLoc, sceneId: sceneIdForResult, genId });
-        return;
+      if (d.status === "success") {
+        const urls: string[] = (d.image_urls && d.image_urls.length) ? d.image_urls : (d.image_url ? [d.image_url] : []);
+        if (urls.length > 0) {
+          setStep({ kind: "result", imageUrls: urls, conciergeLoc, sceneId: sceneIdForResult, genId });
+          return;
+        }
       }
       if (d.status === "failed") {
         setStep({ kind: "error", msg: t("errorGeneric") });
@@ -286,8 +289,8 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
         {/* Result view */}
         {step.kind === "result" && (
           <ResultView
-            imageUrl={step.imageUrl}
-            downloadUrl={`/api/ai-generate/${step.genId}/download`}
+            imageUrls={step.imageUrls}
+            genId={step.genId}
             sceneName={t(`scenes.${step.sceneId}.name`)}
             sceneSubtitle={t(`scenes.${step.sceneId}.subtitle`)}
             conciergeHref={conciergeHref(step.conciergeLoc)}
@@ -558,35 +561,146 @@ function UploadDropzone({
 }
 
 function ResultView({
-  imageUrl, downloadUrl, sceneName, sceneSubtitle, conciergeHref, onTryAnother, t,
+  imageUrls, genId, sceneName, sceneSubtitle, conciergeHref, onTryAnother, t,
 }: {
-  imageUrl: string;
-  downloadUrl: string;
+  imageUrls: string[];
+  genId: string;
   sceneName: string;
   sceneSubtitle: string;
   conciergeHref: string;
   onTryAnother: () => void;
   t: ReturnType<typeof useTranslations>;
 }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+
+  // Keep activeIdx in sync with the scroll position (native swipe on mobile,
+  // arrow click / programmatic scroll on desktop).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const idx = Math.round(el.scrollLeft / el.clientWidth);
+        setActiveIdx(Math.max(0, Math.min(imageUrls.length - 1, idx)));
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => { el.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, [imageUrls.length]);
+
+  function go(delta: number) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const target = Math.max(0, Math.min(imageUrls.length - 1, activeIdx + delta));
+    el.scrollTo({ left: target * el.clientWidth, behavior: "smooth" });
+  }
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-md mx-auto">
       <h2 className="text-center font-display text-2xl sm:text-3xl font-bold text-gray-900">{t("result")}</h2>
-      <div className="mt-5 overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-lg">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt={sceneName} className="w-full h-auto" />
-        <div className="px-4 py-3 border-t border-warm-200 bg-warm-50">
-          <p className="font-display text-base font-bold text-gray-900">📍 {sceneName}</p>
-          <p className="mt-0.5 text-xs text-gray-600">{sceneSubtitle}</p>
+
+      {/* Instagram-style frame */}
+      <div className="mt-4 overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-xl">
+        {/* IG header */}
+        <div className="flex items-center gap-2 px-3 py-2.5">
+          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 p-[2px]">
+            <div className="h-full w-full rounded-full bg-white p-[2px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-icon.png" alt="" className="h-full w-full rounded-full object-cover" />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 leading-tight">photoportugal</p>
+            <p className="text-[11px] text-gray-500 leading-tight truncate">📍 {sceneName}</p>
+          </div>
+          <button type="button" className="text-gray-700">
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg>
+          </button>
+        </div>
+
+        {/* Carousel — native scroll-snap on touch, arrows on desktop */}
+        <div className="relative">
+          <div
+            ref={scrollerRef}
+            className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ aspectRatio: "1024 / 1536" }}
+          >
+            {imageUrls.map((url, i) => (
+              <div key={i} className="snap-start shrink-0 w-full h-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={`${sceneName} ${i + 1}`} className="h-full w-full object-cover" loading={i === 0 ? "eager" : "lazy"} />
+              </div>
+            ))}
+          </div>
+          {/* Counter pill */}
+          {imageUrls.length > 1 && (
+            <div className="absolute top-3 right-3 rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] font-semibold text-white tabular-nums backdrop-blur">
+              {activeIdx + 1} / {imageUrls.length}
+            </div>
+          )}
+          {/* Desktop arrows (hidden on mobile — native swipe is enough) */}
+          {imageUrls.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => go(-1)}
+                aria-label="Previous"
+                className={`hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow-md ring-1 ring-black/10 hover:bg-white transition ${activeIdx === 0 ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => go(1)}
+                aria-label="Next"
+                className={`hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-900 shadow-md ring-1 ring-black/10 hover:bg-white transition ${activeIdx === imageUrls.length - 1 ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* IG action bar */}
+        <div className="px-3 pt-2.5">
+          <div className="flex items-center gap-3 text-gray-900">
+            <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 21l1.8-5A8 8 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <div className="flex-1" />
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 5v14l7-4 7 4V5a2 2 0 00-2-2H7a2 2 0 00-2 2z"/></svg>
+          </div>
+          {/* dot indicator */}
+          {imageUrls.length > 1 && (
+            <div className="flex justify-center gap-1 mt-2">
+              {imageUrls.map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all ${i === activeIdx ? "w-4 bg-primary-600" : "w-1.5 bg-gray-300"}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* IG caption */}
+        <div className="px-3 pt-2 pb-3">
+          <p className="text-sm text-gray-900">
+            <span className="font-semibold">photoportugal</span>{" "}
+            <span>{sceneSubtitle}</span>
+          </p>
+          <p className="mt-1 text-[11px] text-gray-400 uppercase tracking-wide">{t("resultJustNow")}</p>
         </div>
       </div>
+
       <p className="mt-3 text-center text-xs text-gray-500 italic">{t("resultDisclaimer")}</p>
 
-      <div className="mt-6 flex flex-col sm:flex-row items-stretch gap-3">
-        {/* Same-origin proxy endpoint sets Content-Disposition: attachment so
-            this is a real download even on Safari/iOS, where <a download> is
-            otherwise ignored cross-origin. */}
+      <div className="mt-5 flex flex-col sm:flex-row items-stretch gap-3">
         <a
-          href={downloadUrl}
+          href={`/api/ai-generate/${genId}/download?n=${activeIdx}`}
           className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-50"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
