@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 interface PortfolioPhoto {
@@ -345,9 +345,18 @@ function ChatPanel({
   onSend: () => void;
   t: ReturnType<typeof useTranslations>;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // Auto-scroll to bottom whenever a new message arrives or while the typing
+  // indicator is animating. Without this, long replies disappear off-screen.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages, sending]);
+
   return (
-    <div className="rounded-2xl bg-white border border-warm-200 shadow-sm overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-warm-200 bg-warm-50/50 flex items-center gap-2">
+    <div className="rounded-2xl bg-white border border-warm-200 shadow-sm overflow-hidden flex flex-col h-[560px] sm:h-[640px] lg:h-[720px]">
+      <div className="px-4 py-3 border-b border-warm-200 bg-warm-50/50 flex items-center gap-2 shrink-0">
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
@@ -355,7 +364,7 @@ function ChatPanel({
         <p className="font-display text-base font-bold text-gray-900">{t("chatTitle")}</p>
         <p className="ml-auto text-xs text-gray-500">{t("chatSubtitle")}</p>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-72">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
