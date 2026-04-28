@@ -397,7 +397,7 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
                       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/65 to-transparent" />
                       <div className="relative flex h-full flex-col">
                         <div className="px-3 pt-3">
-                          <p className="font-display font-bold text-white leading-tight text-sm sm:text-[15px] drop-shadow-md">
+                          <p className="font-display font-bold text-white leading-tight text-base sm:text-lg drop-shadow-md">
                             {t(`scenes.${s.id}.name`)}
                           </p>
                         </div>
