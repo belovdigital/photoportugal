@@ -144,12 +144,21 @@ export async function PUT(req: NextRequest) {
       [id, profile.id]
     );
 
+    // Compute translations_dirty in JS so the SQL doesn't need to compare the
+    // same potentially-null parameter against a column twice (postgres 42P08:
+    // 'inconsistent types deduced for parameter $1' when both sides are null).
+    const newName = name || "";
+    const newDesc = description || null;
+    const translationsDirty =
+      (prev?.name ?? "") !== newName ||
+      (prev?.description ?? null) !== newDesc;
+
     const pkg = await queryOne<{ id: string }>(
       `UPDATE packages SET name = $1, description = $2, duration_minutes = $3, num_photos = $4, price = $5, is_popular = $6, delivery_days = $7, is_public = $8, features = $9,
-              translations_dirty = CASE WHEN name IS DISTINCT FROM $1 OR description IS DISTINCT FROM $2 THEN TRUE ELSE translations_dirty END
-       WHERE id = $10 AND photographer_id = $11
+              translations_dirty = translations_dirty OR $10
+       WHERE id = $11 AND photographer_id = $12
        RETURNING id`,
-      [name, description || null, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, cleanFeatures, id, profile.id]
+      [newName, newDesc, duration_minutes, num_photos, Math.round(price), is_popular || false, delivery_days || 7, is_public !== false, cleanFeatures, translationsDirty, id, profile.id]
     );
 
     if (!pkg) {
