@@ -639,7 +639,7 @@ function ResultView({
         <div className="relative">
           <div
             ref={scrollerRef}
-            className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{ aspectRatio: "1024 / 1536" }}
           >
             {imageUrls.map((url, i) => (
