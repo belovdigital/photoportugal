@@ -42,7 +42,11 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
 
   return (
     <div className="bg-warm-50 concierge-page">
-      {/* Top section — full-viewport-height (minus header) on every breakpoint */}
+      {/* On mobile this page is a full-screen messenger: the site Footer is
+          hidden and the main wrapper's bottom padding is zeroed out via
+          global CSS scoped to `(max-width: 639px) body:has(.concierge-page)`.
+          Desktop (sm+) keeps the regular site chrome plus the marketing
+          sections below the chat. */}
       <section className="relative h-[calc(100dvh-64px)] bg-gradient-to-br from-warm-50 via-white to-primary-50/40 lg:h-[calc(100vh-64px)]">
         <div className="mx-auto h-full max-w-7xl px-0 sm:px-6 lg:px-8 lg:py-8">
           <div className="grid h-full grid-cols-1 gap-0 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10">

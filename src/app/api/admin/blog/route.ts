@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 // Ping Google to re-crawl sitemap after blog changes
@@ -146,13 +145,10 @@ export async function POST(req: NextRequest) {
 
       const ext = coverFile.name.split(".").pop() || "jpg";
       const filename = `${crypto.randomUUID()}.${ext}`;
-      const blogDir = path.join(UPLOAD_DIR, "blog");
-      await mkdir(blogDir, { recursive: true });
-
+      const r2Key = `blog/${filename}`;
       const buffer = Buffer.from(await coverFile.arrayBuffer());
-      await writeFile(path.join(blogDir, filename), buffer);
-
-      coverImageUrl = `/uploads/blog/${filename}`;
+      await uploadToS3(r2Key, buffer, coverFile.type || "image/jpeg");
+      coverImageUrl = `${R2_PUBLIC_URL}/${r2Key}`;
     }
 
     const publishedAt = isPublished ? new Date().toISOString() : null;
@@ -229,13 +225,10 @@ export async function PUT(req: NextRequest) {
 
       const ext = coverFile.name.split(".").pop() || "jpg";
       const filename = `${crypto.randomUUID()}.${ext}`;
-      const blogDir = path.join(UPLOAD_DIR, "blog");
-      await mkdir(blogDir, { recursive: true });
-
+      const r2Key = `blog/${filename}`;
       const buffer = Buffer.from(await coverFile.arrayBuffer());
-      await writeFile(path.join(blogDir, filename), buffer);
-
-      coverImageUrl = `/uploads/blog/${filename}`;
+      await uploadToS3(r2Key, buffer, coverFile.type || "image/jpeg");
+      coverImageUrl = `${R2_PUBLIC_URL}/${r2Key}`;
     }
 
     // Set published_at if publishing for the first time

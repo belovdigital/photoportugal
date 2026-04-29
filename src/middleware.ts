@@ -125,6 +125,58 @@ export default function middleware(request: NextRequest) {
     return;
   }
 
+  // ===== Hero AB test: assign cookie BEFORE the page renders =====
+  // Without this, server reads cookie → undefined → defaults to A, then a
+  // client script writes the cookie for the *next* pageview. Result: 100% of
+  // first-time visitors see A; the cookie only takes effect on refresh.
+  // Computing here means the first SSR already reads a real coin flip.
+  // Bots never get a cookie — they always see variant A so SEO snapshots stay stable.
+  // We compute the variant up front, mutate the request cookie (so SSR sees it),
+  // and bind it to whatever final response we end up returning at the bottom.
+  const isHomepage =
+    pathname === "/" ||
+    pathname === "/pt" || pathname === "/de" || pathname === "/es" || pathname === "/fr" ||
+    pathname === "/pt/" || pathname === "/de/" || pathname === "/es/" || pathname === "/fr/";
+  let abAssignedVariant: "A" | "B" | null = null;
+  let stripAbQuery = false;
+  if (isHomepage) {
+    const ua = request.headers.get("user-agent") || "";
+    const isBotUA = /bot|crawl|spider|slurp|facebookexternalhit|telegrambot|whatsapp|twitterbot|linkedinbot|discordbot|preview|chatgpt|gptbot|claudebot|perplexitybot|google-pagerenderer|google-readaloud|adsbot/i.test(ua);
+    const existing = request.cookies.get("ab_hero")?.value;
+    const override = searchParams.get("ab");
+    if (override === "A" || override === "B") {
+      abAssignedVariant = override;
+      stripAbQuery = true;
+    } else if (override === "reset") {
+      abAssignedVariant = Math.random() < 0.5 ? "A" : "B";
+      stripAbQuery = true;
+    } else if (!isBotUA && existing !== "A" && existing !== "B") {
+      abAssignedVariant = Math.random() < 0.5 ? "A" : "B";
+    }
+    if (abAssignedVariant) {
+      request.cookies.set("ab_hero", abAssignedVariant);
+    }
+  }
+
+  function attachAbCookie(res: NextResponse): NextResponse {
+    if (abAssignedVariant) {
+      res.cookies.set("ab_hero", abAssignedVariant, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+      });
+    }
+    return res;
+  }
+
+  // If only an `?ab=` override needs to be cleaned from the URL, redirect once
+  // to the bare path. SSR already reads the cookie via request.cookies.
+  if (stripAbQuery && abAssignedVariant) {
+    const cleanUrl = request.nextUrl.clone();
+    cleanUrl.searchParams.delete("ab");
+    return attachAbCookie(NextResponse.redirect(cleanUrl));
+  }
+
   // 301 redirect: /blog?page=N → /blog/page/N
   const blogMatch = pathname.match(/^(\/pt)?\/blog\/?$/);
   if (blogMatch && searchParams.get("page")) {
@@ -203,7 +255,7 @@ export default function middleware(request: NextRequest) {
 
     if (pathname === "/" && pref && pref !== "en") {
       // Bare root → preferred non-EN locale
-      return NextResponse.redirect(new URL(`/${pref}`, request.url), 302);
+      return attachAbCookie(NextResponse.redirect(new URL(`/${pref}`, request.url), 302));
     }
 
     if (urlLocale && pref && pref !== urlLocale) {
@@ -212,7 +264,7 @@ export default function middleware(request: NextRequest) {
       if (target) {
         const url = new URL(target, request.url);
         url.search = request.nextUrl.search;
-        return NextResponse.redirect(url, 302);
+        return attachAbCookie(NextResponse.redirect(url, 302));
       }
     }
 
@@ -222,7 +274,7 @@ export default function middleware(request: NextRequest) {
       if (target && target !== pathname) {
         const url = new URL(target, request.url);
         url.search = request.nextUrl.search;
-        return NextResponse.redirect(url, 302);
+        return attachAbCookie(NextResponse.redirect(url, 302));
       }
     }
     // Suppress unused-var warning in builds
@@ -290,7 +342,8 @@ export default function middleware(request: NextRequest) {
     }
   }
 
-  return intlMiddleware(request);
+  const intlResponse = intlMiddleware(request);
+  return attachAbCookie(intlResponse);
 }
 
 export const config = {

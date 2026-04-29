@@ -80,7 +80,7 @@ export default async function SubscriptionPage() {
         <div className={`mt-6 rounded-xl border p-5 ${isFounding ? "border-amber-200 bg-amber-50" : "border-primary-200 bg-primary-50"}`}>
           <div className="flex items-center gap-3">
             <span className={`rounded-full px-3 py-1 text-xs font-bold text-white ${isFounding ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-primary-600"}`}>
-              {isFounding ? t("foundingPhotographer") : earlyBirdTier === "early50" ? t("earlyAdopter") : t("first50")}
+              {isFounding ? t("foundingPhotographer") : earlyBirdTier === "early50" ? t("earlyAdopter") : t("first100")}
             </span>
           </div>
           <p className={`mt-2 text-sm font-medium ${isFounding ? "text-amber-800" : "text-primary-800"}`}>

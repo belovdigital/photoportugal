@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB raw (will be compressed)
 
 export async function POST(req: NextRequest) {
@@ -31,9 +29,7 @@ export async function POST(req: NextRequest) {
     const isImage = file.type.startsWith("image/") || /\.(heic|heif|jpg|jpeg|png|webp)$/i.test(file.name);
     if (!isImage) return NextResponse.json({ error: "Only images allowed" }, { status: 400 });
 
-    const dir = path.join(UPLOAD_DIR, type === "cover" ? "covers" : "avatars");
-    await mkdir(dir, { recursive: true });
-
+    const subdir = type === "cover" ? "covers" : "avatars";
     const rawBuffer = Buffer.from(await file.arrayBuffer());
 
     // Try to convert to JPEG via sharp; fall back to saving raw if unsupported format
@@ -58,9 +54,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await writeFile(path.join(dir, filename), finalBuffer);
-
-    const url = `/uploads/${type === "cover" ? "covers" : "avatars"}/${filename}`;
+    const r2Key = `${subdir}/${filename}`;
+    await uploadToS3(r2Key, finalBuffer, "image/jpeg");
+    const url = `${R2_PUBLIC_URL}/${r2Key}`;
 
     if (type === "cover") {
       await queryOne(

@@ -75,15 +75,15 @@ export async function GET(request: NextRequest) {
               isFounding = true;
               plan = "premium";
             } else if (count < 35) {
-              // Early Bird 25: Premium for 6 months
+              // Early Bird (closed in practice): 3 years Premium
               earlyBirdTier = "early50";
               plan = "premium";
+              earlyBirdExpires = new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000).toISOString();
+            } else if (count < 100) {
+              // First 100: 6 months Premium free
+              earlyBirdTier = "first100";
+              plan = "premium";
               earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-            } else if (count < 85) {
-              // First 50: Pro for 3 months
-              earlyBirdTier = "first50";
-              plan = "pro";
-              earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
             }
 
             await client.query(

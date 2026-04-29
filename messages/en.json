@@ -31,6 +31,8 @@
     "logIn": "Log In",
     "from": "From",
     "packages": "Packages",
+    "photosUnit": "{count} photos",
+    "viewAllPackages": "View all {count} packages →",
     "whatClientsSayAbout": "What clients say about {name}",
     "seeAllReviews": "See all reviews",
     "contactForPricing": "Contact for pricing",
@@ -232,6 +234,8 @@
     "heroDescription": "The easiest way to book a travel photographer or vacation photoshoot in Portugal — hand-picked local pros, verified reviews, instant booking. Every photographer is personally vetted for quality, reliability, and style.",
     "heroBrowse": "Browse Photographers",
     "heroMatch": "Help Me Choose",
+    "valuePropBrowseAll": "Browse all photographers",
+    "valuePropHowItWorks": "How it works",
     "socialProof": {
       "handPicked": "Hand-picked photographers",
       "verifiedReviews": "Verified reviews",
@@ -814,10 +818,10 @@
     "helpCenterLinkText": "in our Help Center"
   },
   "join": {
-    "badge": "Early Bird Program",
+    "badge": "First 100 Program",
     "heroTitle": "Be a Founding Photographer",
     "heroTitleEarly": "Join as an Early Photographer",
-    "heroTitleFirst": "Join the First 50 Photographers",
+    "heroTitleFirst": "Join the First 100 Photographers",
     "heroSubtitle": "We're building Portugal's premier photography marketplace for tourists. Join now and lock in exclusive benefits before we launch publicly.",
     "claimYourSpot": "Claim Your Spot",
     "claimYourSpotNow": "Claim Your Spot Now",
@@ -830,14 +834,14 @@
         "rewardDetail": "Premium plan free forever + exclusive Founding Photographer badge on your profile"
       },
       "early50": {
-        "label": "Early 25",
+        "label": "Early Bird",
+        "reward": "3 years Premium free",
+        "rewardDetail": "Premium plan free for 3 years as a thank-you for trusting us first. Closed — all 35 spots claimed."
+      },
+      "first100": {
+        "label": "First 100",
         "reward": "6 months Premium free",
         "rewardDetail": "Premium plan (€59/mo value) free for 6 months. Then choose any plan."
-      },
-      "first50": {
-        "label": "First 50",
-        "reward": "3 months Pro free",
-        "rewardDetail": "Pro plan (€29/mo value) free for 3 months. Then choose any plan."
       }
     },
     "whatYouGet": {
@@ -1153,7 +1157,8 @@
       "contactForPricing": "Contact for pricing",
       "viewProfile": "View Profile",
       "coverAlt": "{name} — vacation photographer in Portugal",
-      "messagePhotographer": "Message {name}"
+      "messagePhotographer": "Message {name}",
+      "openLightbox": "View portfolio"
     },
     "profile": {
       "previewBannerTitle": "Preview mode",
@@ -1235,6 +1240,23 @@
         "browsePhotographers": "Browse {location} Photographers"
       },
       "topPhotographers": "Best Photographers Available in {location}",
+      "realPhotos": {
+        "title": "Real photos shot here",
+        "subtitle": "By the photographers on Photo Portugal — tap any photo to open their profile",
+        "viewProfile": "View profile →"
+      },
+      "stickyBar": {
+        "title": "{location} photographers, ready to book",
+        "from": "From €{price} · hand-picked",
+        "cta": "Browse"
+      },
+      "quickStart": {
+        "label": "Tell us about your {location} photoshoot — we'll match you in seconds",
+        "placeholder": "e.g. couples shoot in {location} next Friday at golden hour",
+        "cta": "Match me",
+        "inputLabel": "Describe your photoshoot",
+        "footnote": "Free service · Powered by AI Concierge · Reply in seconds"
+      },
       "relatedArticles": "Related Articles",
       "readMore": "Read more",
       "shootTypes": {
@@ -1397,9 +1419,17 @@
     "headline": "Meet <name>{firstName}</name>,<br></br> your {location} photographer",
     "viewProfile": "View profile",
     "reviewsCount": "({count} reviews)",
-    "shootsCompleted": "<strong>{count}+</strong> shoots completed",
+    "shootsCompleted": "<strong>{count}</strong> shoots completed",
     "matchPrompt": "Want {firstName} or someone else? We'll match you",
-    "browseAll": "Or <link>browse all 30+ photographers</link> across Portugal"
+    "browseAll": "Or <link>browse all {count} photographers</link> across Portugal",
+    "location": {
+      "availableChip": "{count} photographers available in {location}",
+      "headline": "Photographers<br></br> in <location>{locationName}</location>",
+      "fromPrice": "From €{price}",
+      "reviews": "{count} reviews",
+      "byPhotographer": "Featuring {name}",
+      "matchPrompt": "Tell us about your {location} photoshoot — we'll match you"
+    }
   },
   "quickMatch": {
     "locationLabel": "Location",
@@ -1646,8 +1676,14 @@
     "title": "Don't leave without your photos!",
     "description": "Tell us your dates and preferences — our team will hand-pick 2-3 photographers perfect for your trip. Takes 2 minutes.",
     "matchMe": "Get Matched with a Photographer",
-    "browse": "Browse Photographers",
+    "browse": "Or browse all photographers",
     "free": "Free concierge service — no commitment",
+    "conciergeTitle": "Wait — chat with our AI Concierge",
+    "conciergeDescription": "Tell us what you're looking for and we'll match you with 2-3 hand-picked photographers in 30 seconds.",
+    "conciergePlaceholder": "e.g. couples shoot in Lisbon next Saturday at sunset",
+    "conciergeInputLabel": "Describe your photoshoot",
+    "conciergeCta": "Find my photographer",
+    "conciergeFootnote": "Free · Instant reply · Powered by AI",
     "saveTitle": "Save {name} for later",
     "saveDesc": "Drop your email and we'll send you a direct link — come back any time to book.",
     "saveEmailPlaceholder": "your@email.com",
@@ -2116,7 +2152,7 @@
     "uploadPhoto": "Upload Photo",
     "uploading": "Uploading...",
     "coverImage": "Cover Image",
-    "coverHintLandscape": "This photo appears as your card background on the photographers page. Use a landscape photo, recommended size: 1200×600px (max 10MB).",
+    "coverHintLandscape": "Your card cover on the photographers grid. Use a landscape photo — recommended size 1500×1000 or larger, 3:2 ratio. Max 10 MB.",
     "coverHintDrag": "",
     "coverPreviewLabel": "Preview — drag the image up or down to adjust position",
     "uploadCover": "Upload Cover",
@@ -2268,10 +2304,10 @@
     "title": "Subscriptions",
     "subtitle": "Manage your plan, add-ons, and payments",
     "foundingPhotographer": "Founding Photographer",
-    "earlyAdopter": "Early Adopter",
-    "first50": "First 50",
+    "earlyAdopter": "Early Bird",
+    "first100": "First 100",
     "foundingPlanFree": "Your {plan} plan is free forever as a Founding Photographer.",
-    "earlyBirdPlanFree": "Your {plan} plan is free until {date}. After that, you can choose any plan.",
+    "earlyBirdPlanFree": "As an Early Bird, your {plan} plan is free for 3 years — until {date}. After that, you can choose any plan.",
     "perMonth": "/month",
     "activeEarlyBird": "Active (Early Bird)",
     "currentPlan": "Current Plan",

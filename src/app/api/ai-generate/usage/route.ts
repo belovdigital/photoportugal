@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
+import { getScene } from "@/lib/ai-scenes";
 
 export const dynamic = "force-dynamic";
+
+const PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 
 // Free quota WITHOUT email; quota WITH email; absolute hard cap per session+ip per day.
 const FREE_NO_EMAIL = 1;
@@ -17,6 +20,44 @@ interface UsageRow {
   total_count: string;
   has_email_count: string;
   email: string | null;
+}
+
+interface LatestRow {
+  id: string;
+  scene_id: string;
+  result_image_key: string | null;
+  result_image_keys: string[] | null;
+  result_scene_ids: string[] | null;
+}
+
+async function fetchLatestResult(sessionId: string | null, ip: string | null) {
+  if (!sessionId && !ip) return null;
+  const row = await queryOne<LatestRow>(
+    `SELECT id, scene_id, result_image_key, result_image_keys, result_scene_ids
+     FROM ai_generations
+     WHERE ((session_id = $1 AND $1 IS NOT NULL) OR (ip = $2 AND $2 IS NOT NULL))
+       AND status = 'success'
+       AND created_at > NOW() - INTERVAL '24 hours'
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [sessionId, ip]
+  );
+  if (!row) return null;
+  const keys = row.result_image_keys && row.result_image_keys.length > 0
+    ? row.result_image_keys
+    : (row.result_image_key ? [row.result_image_key] : []);
+  if (keys.length === 0) return null;
+  const sceneIds = row.result_scene_ids && row.result_scene_ids.length === keys.length
+    ? row.result_scene_ids
+    : keys.map(() => row.scene_id);
+  const scene = getScene(row.scene_id);
+  return {
+    gen_id: row.id,
+    scene_id: row.scene_id,
+    image_urls: keys.map((k) => `${PUBLIC_URL}/${k}`),
+    scene_ids: sceneIds,
+    concierge_loc: scene?.conciergeLoc || "",
+  };
 }
 
 /**
@@ -36,6 +77,7 @@ export async function GET(req: NextRequest) {
   } catch { /* anon */ }
 
   if (unlimited) {
+    const latest_result = await fetchLatestResult(sessionId, ip);
     return NextResponse.json({
       used: 0,
       free_no_email: 999,
@@ -45,6 +87,7 @@ export async function GET(req: NextRequest) {
       requires_email: false,
       blocked: false,
       unlimited: true,
+      latest_result,
     });
   }
 
@@ -68,6 +111,7 @@ export async function GET(req: NextRequest) {
       email: null,
       requires_email: false,
       blocked: false,
+      latest_result: null,
     });
   }
 
@@ -90,6 +134,8 @@ export async function GET(req: NextRequest) {
   const requires_email = used >= FREE_NO_EMAIL && !email;
   const blocked = used >= FREE_WITH_EMAIL;
 
+  const latest_result = await fetchLatestResult(sessionId, ip);
+
   return NextResponse.json({
     used,
     free_no_email: FREE_NO_EMAIL,
@@ -98,5 +144,6 @@ export async function GET(req: NextRequest) {
     email,
     requires_email,
     blocked,
+    latest_result,
   });
 }

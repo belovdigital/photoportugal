@@ -13,7 +13,8 @@ import { localeAlternates } from "@/lib/seo";
 import { query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { normalizeName } from "@/lib/format-name";
-import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
+import { PhotographerCard } from "@/components/photographers/PhotographerCard";
+import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 
 export function generateStaticParams() {
@@ -77,23 +78,32 @@ export default async function ShootTypePage({
   const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
   const useLoc = TR_LOCALES.has(locale) ? locale : null;
   const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+  // Pull the full PhotographerCardCompact field set so this page renders the
+  // gold-standard card. Replaces the older row that only had cover/avatar/name.
   const photographers = await query<{
     id: string; slug: string; name: string; avatar_url: string | null;
-    cover_url: string | null; tagline: string | null;
-    rating: number; review_count: number; starting_price: number | null;
-    languages: string[]; location_names: string[];
+    cover_url: string | null; cover_position_y: number | null;
+    portfolio_thumbs: string[] | null;
+    is_featured: boolean; is_verified: boolean; is_founding: boolean;
+    tagline: string | null;
+    rating: number; review_count: number; starting_price: string | null;
+    locations: string | null;
     last_active_at: string | null; avg_response_minutes: number | null;
   }>(
     `SELECT pp.id, pp.slug, u.name, u.avatar_url,
-            pp.cover_url, ${taglineSql} as tagline, pp.rating, pp.review_count, pp.languages,
+            pp.cover_url, pp.cover_position_y,
+            pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
+            ${taglineSql} as tagline, pp.rating, pp.review_count,
             u.last_seen_at as last_active_at, pp.avg_response_minutes,
-            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price,
-            ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
+            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
+            (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+             FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+            ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      WHERE pp.is_approved = TRUE
        AND pp.shoot_types && $1::text[]
-     ORDER BY pp.is_featured DESC, pp.review_count DESC, RANDOM()
+     ORDER BY pp.is_featured DESC, pp.is_verified DESC, pp.review_count DESC, RANDOM()
      LIMIT 6`,
     [shootType.photographerShootTypeNames || [shootType.name]]
   ).catch(() => []);
@@ -233,55 +243,28 @@ export default async function ShootTypePage({
               "lg:grid-cols-3"
             }`}>
               {photographers.map((sp) => (
-                <Link
+                <PhotographerCard
                   key={sp.id}
-                  href={`/photographers/${sp.slug}`}
-                  className="group overflow-hidden rounded-xl border border-warm-200 bg-white transition hover:border-primary-200 hover:shadow-md"
-                >
-                  <div className="relative h-36 bg-warm-100">
-                    {sp.cover_url ? (
-                      <OptimizedImage src={sp.cover_url} alt={sp.name} width={400} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-warm-100 to-warm-200" />
-                    )}
-                    <div className="absolute -bottom-5 left-4 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary-100 text-sm font-bold text-primary-600 overflow-hidden shadow-sm">
-                      {sp.avatar_url ? (
-                        <OptimizedImage src={sp.avatar_url} alt={sp.name} width={80} className="h-full w-full object-cover" />
-                      ) : (
-                        sp.name.charAt(0)
-                      )}
-                    </div>
-                  </div>
-                  <div className="px-4 pb-4 pt-7">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-                        {normalizeName(sp.name)}
-                      </h3>
-                      <ActiveBadge lastSeenAt={sp.last_active_at} />
-                    </div>
-                    {sp.tagline && (
-                      <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{sp.tagline}</p>
-                    )}
-                    {sp.review_count > 0 && (
-                      <div className="mt-2 flex items-center gap-1 text-sm">
-                        <span className="text-amber-500">
-                          <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </span>
-                        <span className="font-medium text-gray-900">{Number(sp.rating).toFixed(1)}</span>
-                        <span className="text-gray-400">({sp.review_count})</span>
-                      </div>
-                    )}
-                    <ResponseTimeBadge avgMinutes={sp.avg_response_minutes} compact />
-                    {sp.starting_price && (
-                      <p className="mt-2 text-sm">
-                        <span className="text-gray-400">{tc("from")}</span>{" "}
-                        <span className="font-bold text-gray-900">&euro;{Math.round(Number(sp.starting_price))}</span>
-                      </p>
-                    )}
-                  </div>
-                </Link>
+                  photographer={adaptToPhotographerProfile({
+                    id: sp.id,
+                    slug: sp.slug,
+                    name: sp.name,
+                    tagline: sp.tagline,
+                    avatar_url: sp.avatar_url,
+                    cover_url: sp.cover_url,
+                    cover_position_y: sp.cover_position_y,
+                    portfolio_thumbs: sp.portfolio_thumbs,
+                    is_featured: sp.is_featured,
+                    is_verified: sp.is_verified,
+                    is_founding: sp.is_founding,
+                    rating: sp.rating,
+                    review_count: sp.review_count,
+                    min_price: sp.starting_price,
+                    locations: sp.locations,
+                    last_active_at: sp.last_active_at,
+                    avg_response_minutes: sp.avg_response_minutes,
+                  })}
+                />
               ))}
             </div>
             <div className="mt-8 text-center">

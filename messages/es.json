@@ -31,6 +31,8 @@
     "logIn": "Iniciar sesión",
     "from": "Desde",
     "packages": "Paquetes",
+    "photosUnit": "{count} fotos",
+    "viewAllPackages": "Ver los {count} paquetes →",
     "whatClientsSayAbout": "Lo que dicen los clientes sobre {name}",
     "seeAllReviews": "Ver todas las reseñas",
     "contactForPricing": "Contactar para precios",
@@ -231,6 +233,8 @@
     "heroTitleHighlight": "Portugal",
     "heroDescription": "La forma más fácil de reservar un fotógrafo de viaje o una sesión de fotos de vacaciones en Portugal — profesionales locales seleccionados, reseñas verificadas, reserva instantánea. Cada fotógrafo es verificado personalmente por su calidad, fiabilidad y estilo.",
     "heroBrowse": "Explorar fotógrafos",
+    "valuePropBrowseAll": "Ver todos los fotógrafos",
+    "valuePropHowItWorks": "Cómo funciona",
     "heroMatch": "Ayúdenme a elegir",
     "socialProof": {
       "handPicked": "Fotógrafos seleccionados a mano",
@@ -985,7 +989,8 @@
       "contactForPricing": "Contactar para precios",
       "viewProfile": "Ver perfil",
       "coverAlt": "{name} — fotógrafo de vacaciones en Portugal",
-      "messagePhotographer": "Mensaje a {name}"
+      "messagePhotographer": "Mensaje a {name}",
+      "openLightbox": "Ver portfolio"
     },
     "profile": {
       "previewBannerTitle": "Modo vista previa",
@@ -1067,6 +1072,23 @@
         "browsePhotographers": "Explorar fotógrafos en {location}"
       },
       "topPhotographers": "Mejores fotógrafos disponibles en {location}",
+      "realPhotos": {
+        "title": "Fotografías reales tomadas aquí",
+        "subtitle": "Por los fotógrafos de Photo Portugal — toca una foto para abrir el perfil",
+        "viewProfile": "Ver perfil →"
+      },
+      "stickyBar": {
+        "title": "Fotógrafos en {location}, listos para reservar",
+        "from": "Desde €{price} · selección cuidada",
+        "cta": "Ver"
+      },
+      "quickStart": {
+        "label": "Cuéntenos sobre su sesión en {location} — le emparejamos en segundos",
+        "placeholder": "p. ej. sesión de pareja en {location} el viernes a la hora dorada",
+        "cta": "Emparejar",
+        "inputLabel": "Describa su sesión",
+        "footnote": "Gratis · IA Concierge · Respuesta en segundos"
+      },
       "relatedArticles": "Artículos relacionados",
       "readMore": "Leer más",
       "shootTypes": {
@@ -1138,9 +1160,17 @@
     "headline": "Conozca a <name>{firstName}</name>,<br></br> su fotógrafo en {location}",
     "viewProfile": "Ver perfil",
     "reviewsCount": "({count} reseñas)",
-    "shootsCompleted": "<strong>{count}+</strong> sesiones realizadas",
+    "shootsCompleted": "<strong>{count}</strong> sesiones realizadas",
     "matchPrompt": "¿Quiere a {firstName} u otra persona? Le ponemos en contacto",
-    "browseAll": "O <link>explore los más de 30 fotógrafos</link> en todo Portugal"
+    "browseAll": "O <link>explore los {count} fotógrafos</link> en todo Portugal",
+    "location": {
+      "availableChip": "{count} fotógrafos disponibles en {location}",
+      "headline": "Fotógrafos<br></br> en <location>{locationName}</location>",
+      "fromPrice": "Desde €{price}",
+      "reviews": "{count} reseñas",
+      "byPhotographer": "Con {name}",
+      "matchPrompt": "Cuéntenos sobre su sesión en {location} — le ponemos en contacto"
+    }
   },
   "auth": {
     "error": {
@@ -1322,6 +1352,13 @@
     }
   },
   "exitIntent": {
+    "conciergeTitle": "Espere — chatee con nuestro AI Concierge",
+    "conciergeDescription": "Cuéntenos qué busca y le emparejamos con 2-3 fotógrafos seleccionados en 30 segundos.",
+    "conciergePlaceholder": "ej. sesión de pareja en Lisboa el próximo sábado a la hora dorada",
+    "conciergeInputLabel": "Describa su sesión",
+    "conciergeCta": "Encontrar fotógrafo",
+    "conciergeFootnote": "Gratis · Respuesta inmediata · IA",
+    "browse": "O ver todos los fotógrafos",
     "title": "¡No se vaya sin sus fotos!",
     "description": "Indique sus fechas y preferencias — nuestro equipo seleccionará 2-3 fotógrafos perfectos para su viaje. Solo tarda 2 minutos.",
     "matchMe": "Encuéntreme un fotógrafo",

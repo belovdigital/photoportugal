@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 
 async function verifyAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
@@ -61,11 +60,10 @@ export async function POST(req: NextRequest) {
       const rawExt = (file.name.split(".").pop() || "jpg").toLowerCase();
       const ext = ALLOWED_EXT.includes(rawExt) ? rawExt : "jpg";
       const filename = `${crypto.randomUUID()}.${ext}`;
-      const dir = path.join(UPLOAD_DIR, "locations");
-      await mkdir(dir, { recursive: true });
+      const r2Key = `locations/${filename}`;
       const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(path.join(dir, filename), buffer);
-      coverUrl = `/uploads/locations/${filename}`;
+      await uploadToS3(r2Key, buffer, file.type || "image/jpeg");
+      coverUrl = `${R2_PUBLIC_URL}/${r2Key}`;
     }
 
     const location = await queryOne(
@@ -116,12 +114,11 @@ export async function PUT(req: NextRequest) {
       const rawExt = (file.name.split(".").pop() || "jpg").toLowerCase();
       const ext = ALLOWED_EXT.includes(rawExt) ? rawExt : "jpg";
       const filename = `${crypto.randomUUID()}.${ext}`;
-      const dir = path.join(UPLOAD_DIR, "locations");
-      await mkdir(dir, { recursive: true });
+      const r2Key = `locations/${filename}`;
       const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(path.join(dir, filename), buffer);
+      await uploadToS3(r2Key, buffer, file.type || "image/jpeg");
       coverUpdate = `, cover_image_url = $12`;
-      params.push(`/uploads/locations/${filename}`);
+      params.push(`${R2_PUBLIC_URL}/${r2Key}`);
     }
 
     params.push(id);

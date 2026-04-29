@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import path from "path";
+import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per portfolio photo
 
 // Client uses temp ids like "temp-1777..." for items mid-upload; those never
@@ -35,7 +34,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const items = await query(
-      "SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order, created_at",
+      "SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC",
       [profile.id]
     );
     return NextResponse.json(items);
@@ -99,8 +98,7 @@ export async function POST(req: NextRequest) {
     }
     const ext = ALLOWED_EXTENSIONS.includes(rawExt) ? rawExt : "jpg";
     const filename = `${crypto.randomUUID()}.${ext}`;
-    const portfolioDir = path.join(UPLOAD_DIR, "portfolio", profile.id);
-    await mkdir(portfolioDir, { recursive: true });
+    const r2Key = `portfolio/${profile.id}/${filename}`;
 
     const rawBuffer = Buffer.from(await file.arrayBuffer());
 
@@ -115,10 +113,14 @@ export async function POST(req: NextRequest) {
     } catch {
       buffer = rawBuffer;
     }
-    await writeFile(path.join(portfolioDir, filename), buffer);
+    await uploadToS3(r2Key, buffer, "image/jpeg");
 
-    // Generate thumbnail (400px wide, WebP, quality 75)
+    // Generate thumbnail (400px wide, WebP, quality 75). Upload alongside the
+    // main image — thumbnail loading is no longer needed once Cloudflare Image
+    // Transformations is in front, but we still write it for back-compat with
+    // any caller that reads thumbnail_url directly.
     const thumbFilename = `thumb_${crypto.randomUUID()}.webp`;
+    const thumbKey = `portfolio/${profile.id}/${thumbFilename}`;
     let thumbnailUrl: string | null = null;
     try {
       const thumbBuffer = await sharp(buffer)
@@ -126,13 +128,13 @@ export async function POST(req: NextRequest) {
         .resize(400, undefined, { fit: "inside", withoutEnlargement: true })
         .webp({ quality: 75 })
         .toBuffer();
-      await writeFile(path.join(portfolioDir, thumbFilename), thumbBuffer);
-      thumbnailUrl = `/uploads/portfolio/${profile.id}/${thumbFilename}`;
+      await uploadToS3(thumbKey, thumbBuffer, "image/webp");
+      thumbnailUrl = `${R2_PUBLIC_URL}/${thumbKey}`;
     } catch {
       // Thumbnail generation failed — not critical, will fallback to API optimization
     }
 
-    const url = `/uploads/portfolio/${profile.id}/${filename}`;
+    const url = `${R2_PUBLIC_URL}/${r2Key}`;
     const locationSlug = (formData.get("location_slug") as string) || null;
     const shootType = (formData.get("shoot_type") as string) || null;
 
@@ -145,11 +147,21 @@ export async function POST(req: NextRequest) {
       imgHeight = meta.height || null;
     } catch {}
 
+    // Newly uploaded photos go to the *top* of the portfolio (sort_order = 0).
+    // Photographers expect "I just uploaded this, where is it?" to mean the
+    // first slot, not the 80th. Shift every existing item by +1 in the same
+    // transaction-like sequence so ordering stays a contiguous 0..N-1 with
+    // no duplicates. (We already normalized away duplicate sort_orders in
+    // an earlier migration; this keeps the invariant.)
+    await query(
+      "UPDATE portfolio_items SET sort_order = sort_order + 1 WHERE photographer_id = $1",
+      [profile.id]
+    );
     const item = await queryOne<{ id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number; width: number | null; height: number | null }>(
       `INSERT INTO portfolio_items (photographer_id, type, url, thumbnail_url, location_slug, shoot_type, sort_order, width, height)
-       VALUES ($1, 'photo', $2, $3, $4, $5, $6, $7, $8)
+       VALUES ($1, 'photo', $2, $3, $4, $5, 0, $6, $7)
        RETURNING id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order, width, height`,
-      [profile.id, url, thumbnailUrl, locationSlug, shootType, count, imgWidth, imgHeight]
+      [profile.id, url, thumbnailUrl, locationSlug, shootType, imgWidth, imgHeight]
     );
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
@@ -199,18 +211,24 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
   }
 
-  // Delete original file from disk
-  try {
-    await unlink(path.join(UPLOAD_DIR, item.url.replace("/uploads/", "")));
-  } catch {}
-  // Delete thumbnail from disk
-  if (item.thumbnail_url) {
-    try {
-      await unlink(path.join(UPLOAD_DIR, item.thumbnail_url.replace("/uploads/", "")));
-    } catch {}
-  }
+  // Delete from R2 (or legacy local disk for old `/uploads/...` URLs).
+  // We strip both the absolute R2 prefix and the legacy `/uploads/` prefix
+  // so this keeps working through the migration window.
+  await deleteByUrl(item.url);
+  if (item.thumbnail_url) await deleteByUrl(item.thumbnail_url);
 
   return NextResponse.json({ success: true });
+}
+
+async function deleteByUrl(url: string): Promise<void> {
+  if (!url) return;
+  if (url.startsWith(R2_PUBLIC_URL)) {
+    const key = url.slice(R2_PUBLIC_URL.length + 1);
+    try { await deleteFromS3(key); } catch {}
+    return;
+  }
+  // Legacy /uploads/... — silently ignore. Old files will be cleaned up when
+  // we drop the local disk after the bulk migration.
 }
 
 // Update tags or reorder portfolio items

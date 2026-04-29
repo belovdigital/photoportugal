@@ -10,6 +10,7 @@ import { trackViewPhotographer } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
+import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
 
 export function PhotographerCard({
   photographer,
@@ -27,34 +28,44 @@ export function PhotographerCard({
     ? Math.min(...photographer.packages.map(p => p.price))
     : null;
 
+  // Build the carousel: cover first, then up to 4 portfolio photos. Dedupe so
+  // the same image isn't shown twice when the photographer's cover is already
+  // their first portfolio item.
+  const thumbs: string[] = [];
+  if (photographer.cover_url) thumbs.push(photographer.cover_url);
+  for (const u of photographer.portfolio_thumbs ?? []) {
+    if (u && !thumbs.includes(u)) thumbs.push(u);
+    if (thumbs.length >= 8) break;
+  }
+
   return (
     <div
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
       onClick={() => trackViewPhotographer(photographer.slug, normalizeName(photographer.name))}
     >
-      <Link
-        href={`/photographers/${photographer.slug}`}
-        className="flex flex-1 flex-col"
-      >
-      {/* Cover */}
-      <div className="relative h-48 bg-gradient-to-br from-primary-300 to-primary-600">
-        {photographer.cover_url && (
-          <OptimizedImage src={photographer.cover_url} alt={t("coverAlt", { name: normalizeName(photographer.name) })} width={800} quality={88} className="h-full w-full" style={{ objectPosition: `center ${photographer.cover_position_y ?? 50}%` }} />
-        )}
-        <div className="absolute left-3 top-3 z-10">
+      {/* Cover with carousel + lightbox launcher (own button areas) */}
+      <div className="relative">
+        <PhotographerCardCover
+          slug={photographer.slug}
+          name={photographer.name}
+          thumbnails={thumbs}
+          coverPositionY={photographer.cover_position_y}
+          height="h-56"
+          altPrefix={t("coverAlt", { name: "" }).replace(/\s*$/, "")}
+        />
+        <div className="absolute left-3 top-3 z-30">
           <WishlistButton photographerId={photographer.id} size="sm" />
         </div>
         {photographer.is_founding ? (
-          <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow">
+          <span className="pointer-events-none absolute right-3 top-3 z-30 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow">
             {t("founding")}
           </span>
         ) : photographer.is_featured ? (
-          <span className="absolute right-3 top-3 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900">
+          <span className="pointer-events-none absolute right-3 top-3 z-30 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900">
             {t("featured")}
           </span>
         ) : null}
-        {/* Avatar */}
-        <div className="absolute -bottom-6 left-6">
+        <div className="absolute -bottom-6 left-6 z-20">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-primary-100 text-xl font-bold text-primary-600 shadow-md overflow-hidden">
             {photographer.avatar_url ? (
               <OptimizedImage src={photographer.avatar_url} alt={normalizeName(photographer.name)} width={200} className="h-full w-full" />
@@ -65,6 +76,10 @@ export function PhotographerCard({
         </div>
       </div>
 
+      <Link
+        href={`/photographers/${photographer.slug}`}
+        className="flex flex-1 flex-col"
+      >
       <div className="relative flex-1 p-6 pt-10 pb-3">
         <div className="absolute right-4 top-2">
           <ActiveBadge lastSeenAt={photographer.last_seen_at} />

@@ -4,9 +4,21 @@ import { queryOne, query } from "@/lib/db";
 import { createReadStream } from "fs";
 import { stat } from "fs/promises";
 import path from "path";
-import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_PREFIX = R2_PUBLIC_URL + "/";
+
+/** Convert a stored URL into a fetchable HTTP(S) URL.
+ *  - https://files.photoportugal.com/... → return as-is
+ *  - s3://bucket/key → strip bucket, prepend public R2 URL
+ *  - /uploads/... → null (caller must read from local disk)
+ */
+function toFetchableUrl(stored: string): string | null {
+  if (stored.startsWith(R2_PUBLIC_PREFIX)) return stored;
+  if (stored.startsWith("s3://")) return `${R2_PUBLIC_URL}/${stored.replace(/^s3:\/\/[^/]+\//, "")}`;
+  return null;
+}
 
 // GET: Download all delivery photos as ZIP
 export async function GET(
@@ -66,18 +78,15 @@ export async function GET(
 
   const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
 
-  // Serve pre-built ZIP if available
+  // Serve pre-built ZIP if available. Three URL formats coexist:
+  //  - https://files.photoportugal.com/... → 302 redirect, browser downloads
+  //    straight from R2 (no Node bandwidth)
+  //  - s3://bucket/key → same, after rewriting to the public R2 URL
+  //  - /uploads/... → stream from local disk (legacy, going away)
   if (booking.zip_ready && booking.zip_path) {
-    // S3-stored ZIP: redirect to presigned URL
-    if (isS3Path(booking.zip_path)) {
-      try {
-        const presignedUrl = await getPresignedUrl(s3KeyFromPath(booking.zip_path), 3600);
-        return NextResponse.redirect(presignedUrl);
-      } catch {
-        // S3 error, fall through to build on-the-fly
-      }
-    } else {
-      // Local ZIP (backwards compatible for existing deliveries)
+    const fetchable = toFetchableUrl(booking.zip_path);
+    if (fetchable) return NextResponse.redirect(fetchable);
+    if (booking.zip_path.startsWith("/uploads/")) {
       const zipFullPath = path.join(UPLOAD_DIR, booking.zip_path.replace("/uploads/", ""));
       try {
         const stats = await stat(zipFullPath);
@@ -89,7 +98,6 @@ export async function GET(
             stream.on("error", (err) => controller.error(err));
           },
         });
-
         return new Response(readable, {
           headers: {
             "Content-Type": "application/zip",
@@ -98,7 +106,7 @@ export async function GET(
           },
         });
       } catch {
-        // ZIP file missing, fall through to build on-the-fly
+        // ZIP file missing on disk — fall through to build on-the-fly.
       }
     }
   }
@@ -132,15 +140,14 @@ export async function GET(
     }
     usedNames.add(name);
     try {
-      if (isS3Path(photo.url)) {
-        // Fetch from S3 via presigned URL and append buffer
-        const presigned = await getPresignedUrl(s3KeyFromPath(photo.url), 300);
-        const resp = await fetch(presigned);
+      const fetchUrl = toFetchableUrl(photo.url);
+      if (fetchUrl) {
+        const resp = await fetch(fetchUrl);
         if (resp.ok) {
           const buf = Buffer.from(await resp.arrayBuffer());
           archive.append(buf, { name });
         }
-      } else {
+      } else if (photo.url.startsWith("/uploads/")) {
         const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
         archive.append(createReadStream(filePath), { name });
       }

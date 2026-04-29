@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 
 export async function POST(req: NextRequest) {
@@ -42,15 +41,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Review not found" }, { status: 404 });
     }
 
-    const dir = path.join(UPLOAD_DIR, "reviews/videos");
-    await mkdir(dir, { recursive: true });
-
     const ext = file.type.includes("mp4") ? "mp4" : "webm";
     const filename = `${crypto.randomUUID()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
-
-    await writeFile(path.join(dir, filename), buffer);
-    const videoUrl = `/uploads/reviews/videos/${filename}`;
+    const r2Key = `reviews/videos/${filename}`;
+    await uploadToS3(r2Key, buffer, file.type || `video/${ext}`);
+    const videoUrl = `${R2_PUBLIC_URL}/${r2Key}`;
 
     // Store video URL in review
     await queryOne(

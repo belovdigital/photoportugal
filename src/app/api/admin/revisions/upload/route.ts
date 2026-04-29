@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 
 async function verifyAdmin(): Promise<{ email: string } | null> {
   const cookieStore = await cookies();
@@ -30,9 +29,6 @@ export async function POST(req: NextRequest) {
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
     if (file.size > 15 * 1024 * 1024) return NextResponse.json({ error: "File too large" }, { status: 400 });
 
-    const dir = path.join(UPLOAD_DIR, "revisions");
-    await mkdir(dir, { recursive: true });
-
     const rawBuffer = Buffer.from(await file.arrayBuffer());
     const finalBuffer = await sharp(rawBuffer)
       .rotate()
@@ -41,9 +37,10 @@ export async function POST(req: NextRequest) {
       .toBuffer();
 
     const filename = `${crypto.randomUUID()}.jpg`;
-    await writeFile(path.join(dir, filename), finalBuffer);
+    const r2Key = `revisions/${filename}`;
+    await uploadToS3(r2Key, finalBuffer, "image/jpeg");
 
-    return NextResponse.json({ url: `/uploads/revisions/${filename}` });
+    return NextResponse.json({ url: `${R2_PUBLIC_URL}/${r2Key}` });
   } catch (error) {
     console.error("[admin/revisions/upload] error:", error);
     try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/revisions/upload", method: req.method, statusCode: 500 }); } catch {}

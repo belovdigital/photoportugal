@@ -1,7 +1,8 @@
 import { Suspense } from "react";
-import { cookies } from "next/headers";
 import { Link } from "@/i18n/navigation";
 import { locations } from "@/lib/locations-data";
+import { resolveImageUrl } from "@/lib/image-url";
+import { PortfolioMosaic, type MosaicPhoto } from "@/components/ui/PortfolioMosaic";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
@@ -17,7 +18,11 @@ import { HeroSingleVariant } from "@/components/ui/HeroSingleVariant";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 
-export const revalidate = 60;
+// Force-dynamic so the random Hero photographer reshuffles on every request
+// rather than getting stuck on whichever person was picked when ISR last ran.
+// Cloudflare CDN caches the HTML response briefly (s-maxage in our nginx
+// config) which softens the cost.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -250,13 +255,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const t = await getTranslations("home");
 
-  // Read A/B variant from cookie SERVER-SIDE so the right hero is rendered
-  // on first paint (no flicker, no client-script race). The inline script below
-  // only runs to (a) write the cookie on first visit, (b) handle ?ab= overrides.
-  const cookieStore = await cookies();
-  const cookieVariant = cookieStore.get("ab_hero")?.value;
-  const initialVariant: "A" | "B" =
-    cookieVariant === "A" || cookieVariant === "B" ? cookieVariant : "A";
+  // Hero is now always Variant B (single-photographer hero won the AB test —
+  // bounce −14pp, engagement +74%). The collage that used to be Variant A has
+  // been reformatted into a value-prop section below the hero so we keep the
+  // generic SEO copy + 5-photo brand visual that lived there.
+  // The `ab_hero` cookie is still set in middleware for any back-compat
+  // analytics, but the page no longer branches on it.
 
   const heroCovers = heroImages.map((h) => ({
     cover_url: h.url,
@@ -265,16 +269,31 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     alt: h.alt,
   }));
 
-  // Rotating featured photographer for Hero variant B (single-photographer layout).
-  // Picked randomly each ISR refresh (every 60s) so different visitors see different people.
-  let featuredPhotographer: import("@/components/ui/HeroSingleVariant").HeroFeaturedPhotographer | null = null;
+  // Real total photographer count for the "browse all N" link in the hero.
+  // We render whatever's in the DB right now — no "+" suffix — so the
+  // number stays honest as the roster grows.
+  let totalPhotographers = 0;
+  try {
+    const { queryOne } = await import("@/lib/db");
+    const row = await queryOne<{ count: number }>(
+      `SELECT COUNT(*)::int as count FROM photographer_profiles
+       WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE`
+    );
+    totalPhotographers = row?.count ?? 0;
+  } catch {}
+
+  // Server picks ONE featured/verified/founding photographer per ISR cycle (60s).
+  // Going server-side rather than client-rolling avoids the flash-of-wrong-content
+  // we used to get on hydration (SSR rendered the first photographer, useEffect
+  // then swapped to a random one — visible swap on every page load).
+  let heroPhotographer: import("@/components/ui/HeroSingleVariant").HeroFeaturedPhotographer | null = null;
   try {
     const { query: q } = await import("@/lib/db");
     const rows = await q<{
       slug: string; name: string; tagline: string | null;
       cover_url: string | null; avatar_url: string | null;
       rating: string; review_count: number; session_count: number;
-      location_slug: string | null; hero_photo_url: string | null;
+      location_slug: string | null; portfolio_urls: string[] | null;
     }>(
       (() => {
         const TR = new Set(["pt", "de", "es", "fr"]);
@@ -285,41 +304,90 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               COALESCE(pp.review_count, 0) as review_count,
               COALESCE(pp.session_count, 0) as session_count,
               (SELECT loc_row.location_slug FROM photographer_locations loc_row WHERE loc_row.photographer_id = pp.id LIMIT 1) as location_slug,
-              -- Pick a RANDOM portfolio photo (full-res pro work). Cover_url often tiny (400-600px), unusable for hero.
-              (SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY RANDOM() LIMIT 1) as hero_photo_url
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 12) as portfolio_urls
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
          AND EXISTS (SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo')
-       ORDER BY pp.is_featured DESC, RANDOM()
+       -- Weighted random pick (Efraimidis-Spirakis sampling): higher tier =
+       -- higher probability of being chosen, but not a hard priority. Alexandru
+       -- (sole Featured) gets ~50% of impressions, Verified ~30%, Founding ~15%,
+       -- early-bird ~5%, the rest of approved photographers ~2%. Tweak the
+       -- weights to shift the distribution.
+       ORDER BY -LN(RANDOM()) / (CASE
+         WHEN pp.is_featured THEN 50
+         WHEN pp.is_verified THEN 30
+         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+         WHEN pp.early_bird_tier IS NOT NULL THEN 5
+         ELSE 2
+       END) ASC
        LIMIT 1`;
       })()
     );
     if (rows.length > 0) {
       const r = rows[0];
-      // Resolve location slug → human name via our locations-data
-      const locData = r.location_slug ? locations.find(l => l.slug === r.location_slug) : null;
-      featuredPhotographer = {
+      const locData = r.location_slug ? locations.find((l) => l.slug === r.location_slug) : null;
+      heroPhotographer = {
         slug: r.slug,
         name: r.name,
         tagline: r.tagline,
-        // Always use a random portfolio photo — covers are too small for full-screen hero
-        cover_url: r.hero_photo_url,
+        cover_url: r.cover_url,
         avatar_url: r.avatar_url,
         rating: Number(r.rating),
         review_count: r.review_count,
         session_count: r.session_count,
         location_name: locData?.name || "Portugal",
         location_slug: r.location_slug || "",
+        portfolio_urls: (r.portfolio_urls || []).filter(Boolean),
       };
     }
   } catch {}
 
-  // Build LCP image URLs for preload hint (desktop only via media query).
-  // Must match OptimizedImage's getOptimizedSrc output (width=1200, q=82, f=webp) + srcset widths.
-  const lcpPath = heroCovers[0].cover_url.replace("/uploads/", "");
-  const lcpSrc = `/api/img/${lcpPath}?w=1200&q=82&f=webp`;
-  const lcpSrcset = [400, 800, 1200].map((w) => `/api/img/${lcpPath}?w=${w}&q=82&f=webp ${w}w`).join(", ");
+  // Pool of portfolio photos for the auto-rotating mosaic in the value-prop
+  // section. ~24 photos pulled from the same weighted-tier pool the hero
+  // uses, so the section showcases real (and skewed-toward-paid) work.
+  // Each photo carries the photographer's slug so cells link back to /photographers/{slug}.
+  let mosaicPhotos: MosaicPhoto[] = [];
+  try {
+    const { query: q } = await import("@/lib/db");
+    const rows = await q<{
+      url: string; slug: string; name: string; location_slug: string | null;
+    }>(
+      `SELECT pi.url, pp.slug, u.name,
+              (SELECT pl.location_slug FROM photographer_locations pl WHERE pl.photographer_id = pp.id LIMIT 1) AS location_slug
+       FROM photographer_profiles pp
+       JOIN users u ON u.id = pp.user_id
+       JOIN portfolio_items pi ON pi.photographer_id = pp.id AND pi.type = 'photo'
+       WHERE pp.is_approved = TRUE
+         AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+       ORDER BY -LN(RANDOM()) / (CASE
+         WHEN pp.is_featured THEN 50
+         WHEN pp.is_verified THEN 30
+         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+         WHEN pp.early_bird_tier IS NOT NULL THEN 5
+         ELSE 2
+       END) ASC
+       LIMIT 48`
+    );
+    mosaicPhotos = rows.map((r) => {
+      const locData = r.location_slug ? locations.find((l) => l.slug === r.location_slug) : null;
+      return { url: r.url, slug: r.slug, name: r.name, location: locData?.name || null };
+    });
+  } catch {}
+
+  // LCP image preload hint (desktop only via media query). Must match the URL
+  // that the hero will actually render first — that's the live photographer's
+  // first portfolio photo, falling back to their cover, and only then to the
+  // static brand image. If we preload the static fallback while the hero
+  // renders a different live photo, the browser logs "preloaded but not used"
+  // and we waste bandwidth on an image nobody sees.
+  const heroFirstPhoto = heroPhotographer?.portfolio_urls?.[0]
+    || heroPhotographer?.cover_url
+    || heroCovers[0].cover_url;
+  const lcpSrc = resolveImageUrl(heroFirstPhoto);
+  const lcpSrcset: string | undefined = undefined;
 
   const socialProofTexts = {
     trustedBy: t("socialProofStrip.trustedBy"),
@@ -336,8 +404,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         rel="preload"
         as="image"
         href={lcpSrc}
-        imageSrcSet={lcpSrcset}
-        imageSizes="(min-width: 1280px) 800px, 60vw"
+        {...(lcpSrcset ? { imageSrcSet: lcpSrcset, imageSizes: "(min-width: 1280px) 800px, 60vw" } : {})}
         fetchPriority="high"
         media="(min-width: 1024px)"
       />
@@ -347,55 +414,38 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <SchemaLdScripts locale={locale} />
       </Suspense>
 
-      {/* ===== HERO A/B TEST =====
-          Server picks variant from cookie (initialVariant). Only one hero is
-          rendered → no flicker, no race with client script. The inline script
-          handles cookie write on first visit + ?ab= overrides; if it changes
-          variant after paint the page reloads with the right server-rendered hero. */}
-      <script dangerouslySetInnerHTML={{ __html: `
-        (function(){
-          try {
-            var qs = new URLSearchParams(location.search);
-            var override = qs.get('ab');
-            var current = ${JSON.stringify(initialVariant)};
-            // ?ab=reset clears the cookie and re-rolls
-            if (override === 'reset') {
-              document.cookie = 'ab_hero=;path=/;max-age=0;SameSite=Lax';
-              var nv = Math.random() < 0.5 ? 'A' : 'B';
-              document.cookie = 'ab_hero=' + nv + ';path=/;max-age=' + (60*60*24*30) + ';SameSite=Lax';
-              console.log('[ab_hero] reset → rolled', nv);
-              if (nv !== current) location.replace(location.pathname);
-              return;
-            }
-            if (override === 'A' || override === 'B') {
-              document.cookie = 'ab_hero=' + override + ';path=/;max-age=' + (60*60*24*30) + ';SameSite=Lax';
-              console.log('[ab_hero] sticky override →', override);
-              if (override !== current) location.replace(location.pathname);
-              return;
-            }
-            // First visit: no cookie yet → roll one for next pageview's SSR
-            var m = document.cookie.match(/(?:^|; )ab_hero=(A|B)/);
-            if (!m) {
-              var v = Math.random() < 0.5 ? 'A' : 'B';
-              document.cookie = 'ab_hero=' + v + ';path=/;max-age=' + (60*60*24*30) + ';SameSite=Lax';
-              console.log('[ab_hero] new visitor → rolled', v, '(showing A this pageview, cookie set for next)');
-            }
-          } catch(e) {}
-        })();
-      ` }} />
+      {/* ===== HERO ===== Single photographer, picked fresh per request. */}
+      {heroPhotographer && (
+        <HeroSingleVariant
+          photographer={heroPhotographer}
+          totalPhotographers={totalPhotographers}
+        />
+      )}
 
-      {initialVariant === "B" && featuredPhotographer ? (
-        <HeroSingleVariant photographer={featuredPhotographer} />
-      ) : (
-      <section className="relative bg-warm-50 overflow-hidden">
+      {/* ===== Value prop + photo collage =====
+          Reformatted version of the old Variant A. H1 lives in the hero now,
+          so this section uses H2 and is positioned for SEO copy + the
+          5-photo brand visual that fronted the site for the first months.
+          NB: no `overflow-hidden` on this section — it would confine the
+          left column's `position: sticky` to the section's own bounds and
+          kill the sticky effect. */}
+      <section className="relative bg-warm-50">
         {/* Subtle background texture */}
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 items-center gap-8 py-12 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:py-24">
+          {/* Left text column is `lg:sticky` and pinned near the top of the
+              viewport while the right mosaic scrolls. `items-start` is required
+              for sticky to work (the default `items-stretch` makes the left
+              column as tall as the right one, which would defeat sticky). The
+              right mosaic is intentionally taller than a viewport so the
+              sticky effect is noticeable; once its bottom passes the sticky
+              top, the left column unsticks and scroll continues normally. */}
+          <div className="grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-2 lg:gap-12 lg:py-20">
 
-            {/* Left — Content */}
-            <div className="max-w-xl">
+            {/* Left — text/CTAs, sticks to the top while user scrolls past
+                the right mosaic. */}
+            <div className="max-w-xl lg:sticky lg:top-24">
               {/* Trust badge — scrolls to reviews section */}
               <a
                 href="#reviews"
@@ -414,7 +464,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </svg>
               </a>
 
-              {/* Headline */}
+              {/* Page H1 lives here (NOT in the hero) — the hero shows a
+                  random photographer with a name-specific subhead, which
+                  rotates per request and would dilute SEO if it were the
+                  page's primary heading. The stable copy below ("Book a
+                  Vacation Photographer in Portugal") is the canonical h1. */}
               <h1 className="mt-6 font-display text-4xl font-bold leading-[1.1] text-gray-900 sm:text-5xl lg:text-[3.5rem]">
                 {t("heroTitle")}{" "}
                 <span className="relative inline-block text-primary-600">
@@ -429,9 +483,22 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {t("heroDescription")}
               </p>
 
-              {/* Inline match CTA — replaces old two-button hero */}
-              <div className="mt-8">
-                <MatchQuickForm source="homepage_hero_a" size="lg" />
+              {/* CTAs: send to catalog or how-it-works. Match form lives in
+                  the hero above — duplicating it here would just confuse. */}
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/photographers"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700"
+                >
+                  {t("valuePropBrowseAll")}
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-warm-300 bg-white px-6 py-3.5 text-base font-semibold text-gray-800 transition hover:border-primary-300 hover:bg-warm-50"
+                >
+                  {t("valuePropHowItWorks")}
+                </Link>
               </div>
 
               {/* Social proof row */}
@@ -451,97 +518,29 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </div>
             </div>
 
-            {/* Right — Photo grid built from real photographer portfolio photos.
-                `hidden lg:block` hides on mobile (display:none) so lazy-loaded images aren't fetched.
-                The first image's fetch is driven by the <link rel="preload"> at the top (media-gated to desktop).
-                Grid math at max-w-7xl: main ~800px, side tall ~400px, side square ~400px. */}
-            <div className="relative hidden lg:block">
-              <div className="grid grid-cols-6 grid-rows-6 gap-3" style={{ height: "520px" }}>
-                <Link
-                  href={`/photographers/${heroCovers[0].slug}`}
-                  className="col-span-4 row-span-4 overflow-hidden rounded-2xl shadow-xl group"
-                >
-                  <OptimizedImage
-                    src={heroCovers[0].cover_url}
-                    alt={heroCovers[0].alt}
-                    width={1200}
-                    quality={82}
-                    sizes="(min-width: 1280px) 800px, 60vw"
-                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
-                  />
-                </Link>
-                <Link
-                  href={`/photographers/${heroCovers[1].slug}`}
-                  className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg group"
-                >
-                  <OptimizedImage
-                    src={heroCovers[1].cover_url}
-                    alt={heroCovers[1].alt}
-                    width={800}
-                    quality={82}
-                    sizes="(min-width: 1280px) 400px, 30vw"
-                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
-                  />
-                </Link>
-                <Link
-                  href={`/photographers/${heroCovers[2].slug}`}
-                  className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg group"
-                >
-                  <OptimizedImage
-                    src={heroCovers[2].cover_url}
-                    alt={heroCovers[2].alt}
-                    width={800}
-                    quality={82}
-                    sizes="(min-width: 1280px) 400px, 30vw"
-                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
-                  />
-                </Link>
-                <Link
-                  href={`/photographers/${heroCovers[3].slug}`}
-                  className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-lg group"
-                >
-                  <OptimizedImage
-                    src={heroCovers[3].cover_url}
-                    alt={heroCovers[3].alt}
-                    width={800}
-                    quality={82}
-                    sizes="(min-width: 1280px) 400px, 30vw"
-                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
-                  />
-                </Link>
-                <Link
-                  href={`/photographers/${heroCovers[4].slug}`}
-                  className="col-span-2 row-span-3 overflow-hidden rounded-2xl shadow-lg group"
-                >
-                  <OptimizedImage
-                    src={heroCovers[4].cover_url}
-                    alt={heroCovers[4].alt}
-                    width={800}
-                    quality={82}
-                    sizes="(min-width: 1280px) 400px, 30vw"
-                    className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
-                  />
-                </Link>
-              </div>
+            {/* Right — auto-rotating portfolio mosaic. Fixed height taller
+                than a typical viewport (140vh) so the left column has room
+                to stick while the user scrolls past it. */}
+            <div className="hidden lg:block lg:h-[140vh]">
+              <PortfolioMosaic photos={mosaicPhotos.slice(0, 24)} />
             </div>
           </div>
         </div>
       </section>
-      )}
 
       {/* ===== SOCIAL PROOF ===== (streamed) */}
       <Suspense fallback={<SocialProofSkeleton />}>
         <SocialProofSection texts={socialProofTexts} />
       </Suspense>
 
-      {/* ===== REAL REVIEWS (self-fetching) ===== */}
-      <Suspense fallback={null}>
-        <TestimonialsSection locale={locale} />
-      </Suspense>
-
       {/* ===== FEATURED PHOTOGRAPHERS (self-fetching) ===== */}
       <Suspense fallback={null}>
         <FeaturedPhotographers locale={locale} />
+      </Suspense>
+
+      {/* ===== REAL REVIEWS (self-fetching) ===== */}
+      <Suspense fallback={null}>
+        <TestimonialsSection locale={locale} />
       </Suspense>
 
       {/* ===== HOW IT WORKS ===== */}

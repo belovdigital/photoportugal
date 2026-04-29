@@ -45,6 +45,13 @@ export default async function LocaleLayout({
             <Header />
             <main className="flex-1 pb-16 sm:pb-24">{children}</main>
             <Footer />
+            {/* ExitIntentPopup MUST sit inside ConciergeDrawerProvider —
+                its submit handler calls `useConciergeDrawer().openWith()`
+                to open the AI drawer with the visitor's typed message.
+                Outside the provider the hook returns a no-op fallback,
+                so submit silently closes the popup without opening the
+                drawer. */}
+            <ExitIntentPopup />
           </ConciergeDrawerProvider>
         </NotificationProvider>
         <ScrollToTop />
@@ -52,7 +59,6 @@ export default async function LocaleLayout({
         <VisitorTracker />
         <GoogleAnalytics />
         <ClarityWidget />
-        <ExitIntentPopup />
         <LazyIntercom />
       </SessionProvider>
     </NextIntlClientProvider>

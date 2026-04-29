@@ -203,6 +203,106 @@ export const locations: Location[] = [
       "Réservez un photographe à Costa da Caparica, Portugal. Séances plage dorée, surf et coucher de soleil à quelques minutes de Lisbonne.",
   },
   {
+    id: "ericeira",
+    slug: "ericeira",
+    name: "Ericeira",
+    region: "Greater Lisbon",
+    description:
+      "World-class surf, whitewashed cliffs, and a charming fishing village 40 minutes from Lisbon.",
+    long_description:
+      "Ericeira is one of Europe's only World Surfing Reserves, with seven legendary breaks within 4 km of coastline — Ribeira d'Ilhas, Coxos, São Lourenço — drawing pros and salt-air seekers from around the world. Beyond the surf, the old town is a cinematic mix of blue-trimmed white houses, tile-clad churches, and clifftop miradouros. Praia do Sul and Praia da Foz do Lizandro offer wide, photogenic sand stretches with dramatic Atlantic light. The scale stays human, the sunsets are unbelievable, and every corner feels framed for a photo — from the harbor at Praia dos Pescadores to the cobbled lanes around Largo da Misericórdia.",
+    cover_image: "/images/locations/ericeira-cover.jpg",
+    gallery_images: [],
+    lat: 38.9636,
+    lng: -9.4185,
+    photographer_count: 0,
+    seo_title: "Photographer in Ericeira, Portugal | Surf & Cliffside Photoshoots",
+    seo_description:
+      "Book a professional photographer in Ericeira, Portugal. Surf, beach, and old-town photoshoots in Europe's premier surfing reserve, 40 min from Lisbon.",
+    description_pt:
+      "Surf de classe mundial, falésias caiadas de branco e uma vila piscatória encantadora a 40 minutos de Lisboa.",
+    long_description_pt:
+      "A Ericeira é uma das únicas Reservas Mundiais de Surf da Europa, com sete picos lendários em apenas 4 km de costa — Ribeira d'Ilhas, Coxos, São Lourenço — que atraem profissionais e amantes do mar de todo o mundo. Para além do surf, o centro histórico é uma mistura cinematográfica de casas brancas com cantarias azuis, igrejas revestidas a azulejo e miradouros sobre as falésias. A Praia do Sul e a Praia da Foz do Lizandro oferecem extensos areais fotogénicos com a luz dramática do Atlântico. A escala mantém-se humana, os pores do sol são inacreditáveis e cada esquina parece composta para uma fotografia — do cais da Praia dos Pescadores às ruelas em volta do Largo da Misericórdia.",
+    seo_title_pt: "Fotógrafo na Ericeira | Sessões de Surf e Falésias",
+    seo_description_pt:
+      "Reserve um fotógrafo profissional na Ericeira, Portugal. Sessões de surf, praia e centro histórico na Reserva Mundial de Surf, a 40 min de Lisboa.",
+    name_de: "Ericeira",
+    name_pt: "Ericeira",
+    name_es: "Ericeira",
+    name_fr: "Ericeira",
+    description_de:
+      "Weltklasse-Surf, weiß gekalkte Klippen und ein charmantes Fischerdorf 40 Minuten von Lissabon entfernt.",
+    long_description_de:
+      "Ericeira ist eines der wenigen Weltsurfreservate Europas — sieben legendäre Breaks auf nur 4 km Küste, Ribeira d'Ilhas, Coxos und São Lourenço, ziehen Profis und Salzluft-Liebhaber aus aller Welt an. Jenseits des Surfens ist die Altstadt eine filmreife Mischung aus weißen Häusern mit blauen Verzierungen, mit Azulejos verkleideten Kirchen und Klippen-Miradouros. Praia do Sul und Praia da Foz do Lizandro bieten weite, fotogene Sandstrände mit dem dramatischen Licht des Atlantiks. Der Maßstab bleibt menschlich, die Sonnenuntergänge sind unglaublich, und jede Ecke wirkt wie für ein Foto komponiert — vom Hafen an der Praia dos Pescadores bis zu den gepflasterten Gassen um den Largo da Misericórdia.",
+    seo_title_de: "Fotograf in Ericeira, Portugal | Surf- & Klippen-Fotoshootings",
+    seo_description_de:
+      "Buchen Sie einen Fotografen in Ericeira, Portugal. Surf-, Strand- und Altstadt-Fotoshootings im Welt-Surfreservat, 40 Min. von Lissabon.",
+    description_es:
+      "Surf de clase mundial, acantilados blancos y un encantador pueblo pesquero a 40 minutos de Lisboa.",
+    description_fr:
+      "Surf de classe mondiale, falaises blanchies à la chaux et un charmant village de pêcheurs à 40 minutes de Lisbonne.",
+    long_description_es:
+      "Ericeira es una de las únicas Reservas Mundiales de Surf de Europa, con siete picos legendarios en apenas 4 km de costa — Ribeira d'Ilhas, Coxos, São Lourenço — que atraen a profesionales y amantes del mar de todo el mundo. Más allá del surf, el casco antiguo es una mezcla cinematográfica de casas blancas con cantos azules, iglesias revestidas de azulejos y miradores sobre los acantilados. Praia do Sul y Praia da Foz do Lizandro ofrecen amplios arenales fotogénicos con la luz dramática del Atlántico. La escala sigue siendo humana, los atardeceres son increíbles y cada esquina parece compuesta para una fotografía — desde el muelle de la Praia dos Pescadores hasta las callejuelas alrededor del Largo da Misericórdia.",
+    long_description_fr:
+      "Ericeira est l'une des seules Réserves Mondiales de Surf d'Europe, avec sept spots légendaires sur 4 km de côte — Ribeira d'Ilhas, Coxos, São Lourenço — qui attirent professionnels et amateurs d'air marin du monde entier. Au-delà du surf, la vieille ville est un mélange cinématographique de maisons blanches aux liserés bleus, d'églises revêtues d'azulejos et de miradouros au sommet des falaises. La Praia do Sul et la Praia da Foz do Lizandro offrent de longues plages photogéniques baignées par la lumière atlantique. L'échelle reste humaine, les couchers de soleil sont incroyables, et chaque coin semble composé pour une photo — du port de la Praia dos Pescadores aux ruelles autour du Largo da Misericórdia.",
+    seo_title_es: "Fotógrafo en Ericeira, Portugal | Sesiones de surf y acantilados",
+    seo_description_es:
+      "Reserve un fotógrafo profesional en Ericeira, Portugal. Sesiones de surf, playa y casco antiguo en la Reserva Mundial de Surf, a 40 min de Lisboa.",
+    seo_title_fr: "Photographe à Ericeira, Portugal | Séances surf & falaises",
+    seo_description_fr:
+      "Réservez un photographe professionnel à Ericeira, Portugal. Séances surf, plage et vieille ville dans la Réserve Mondiale de Surf, à 40 min de Lisbonne.",
+  },
+  {
+    id: "almada",
+    slug: "almada",
+    name: "Almada",
+    region: "Greater Lisbon",
+    description:
+      "The other side of the Tagus — the Cristo Rei statue, panoramic Lisbon skylines, and quiet riverside corners.",
+    long_description:
+      "Almada sits across the Tagus from Lisbon, and the perspective changes everything: from the foot of the towering Cristo Rei statue, the entire 25 de Abril bridge and the city skyline open up like a postcard. The Cacilhas waterfront, reached by a 10-minute ferry, offers grittier maritime charm — old shipyards, seafood taverns, and one of the best sunset miradouros in Greater Lisbon. Praia da Costa da Trafaria and the cliffs north of the urban core add wild Atlantic textures within a 20-minute drive. Almada is where photographers go when they want Lisbon in the frame instead of around them.",
+    cover_image: "/images/locations/almada-cover.jpg",
+    gallery_images: [],
+    lat: 38.6786,
+    lng: -9.1568,
+    photographer_count: 0,
+    seo_title: "Photographer in Almada, Portugal | Cristo Rei & Lisbon Skyline Shoots",
+    seo_description:
+      "Book a photographer in Almada, Portugal. Cristo Rei statue, panoramic Lisbon skyline & Cacilhas riverside photoshoots — across the bridge from Lisbon.",
+    description_pt:
+      "O outro lado do Tejo — Cristo Rei, panorâmicas sobre Lisboa e recantos ribeirinhos tranquilos.",
+    long_description_pt:
+      "Almada fica do outro lado do Tejo em relação a Lisboa, e a perspetiva muda tudo: dos pés da imponente estátua do Cristo Rei, toda a Ponte 25 de Abril e o skyline da cidade abrem-se como um postal. A frente ribeirinha de Cacilhas, alcançada por uma travessia de barco de 10 minutos, oferece um charme marítimo mais autêntico — antigos estaleiros, tasquinhas de marisco e um dos melhores miradouros para o pôr do sol da Grande Lisboa. A Praia da Costa da Trafaria e as falésias a norte do centro urbano acrescentam texturas atlânticas selvagens a 20 minutos de carro. Almada é onde os fotógrafos vão quando querem Lisboa dentro do enquadramento, em vez de à volta deles.",
+    seo_title_pt: "Fotógrafo em Almada | Cristo Rei e Vistas sobre Lisboa",
+    seo_description_pt:
+      "Reserve um fotógrafo em Almada, Portugal. Cristo Rei, vistas panorâmicas sobre Lisboa e Cacilhas ribeirinha — do outro lado da ponte.",
+    name_de: "Almada",
+    name_pt: "Almada",
+    name_es: "Almada",
+    name_fr: "Almada",
+    description_de:
+      "Die andere Seite des Tejo — die Cristo-Rei-Statue, Panorama-Skylines von Lissabon und ruhige Flussufer.",
+    long_description_de:
+      "Almada liegt gegenüber von Lissabon am Tejo, und die Perspektive verändert alles: zu Füßen der hoch aufragenden Cristo-Rei-Statue öffnen sich die Brücke 25 de Abril und die gesamte Skyline der Stadt wie eine Postkarte. Die Uferpromenade von Cacilhas, in zehn Fährminuten erreicht, hat einen raueren maritimen Charme — alte Werften, Fischtavernen und einer der schönsten Sonnenuntergangs-Miradouros der Region. Praia da Costa da Trafaria und die Klippen nördlich des Zentrums fügen wilde Atlantik-Texturen in 20 Autominuten hinzu. Almada ist der Ort für Fotografen, die Lissabon im Bild haben wollen, nicht um sich herum.",
+    seo_title_de: "Fotograf in Almada, Portugal | Cristo Rei & Lissabon-Skyline",
+    seo_description_de:
+      "Buchen Sie einen Fotografen in Almada, Portugal. Cristo-Rei-Statue, Panorama-Skyline und Cacilhas-Uferpromenade — gegenüber von Lissabon.",
+    description_es:
+      "El otro lado del Tajo — la estatua del Cristo Rei, vistas panorámicas de Lisboa y rincones tranquilos junto al río.",
+    description_fr:
+      "L'autre rive du Tage — la statue du Cristo Rei, panoramas sur Lisbonne et coins paisibles au bord de l'eau.",
+    long_description_es:
+      "Almada se encuentra al otro lado del Tajo respecto a Lisboa, y la perspectiva lo cambia todo: a los pies de la imponente estatua del Cristo Rei, todo el puente 25 de Abril y el skyline de la ciudad se abren como una postal. El paseo ribereño de Cacilhas, a diez minutos en ferry, ofrece un encanto marítimo más auténtico — antiguos astilleros, tabernas de marisco y uno de los mejores miradores al atardecer del Gran Lisboa. La Praia da Costa da Trafaria y los acantilados al norte del núcleo urbano añaden texturas atlánticas salvajes a 20 minutos en coche. Almada es donde van los fotógrafos cuando quieren Lisboa en el encuadre, no alrededor de ellos.",
+    long_description_fr:
+      "Almada se trouve de l'autre côté du Tage par rapport à Lisbonne, et la perspective change tout : au pied de l'imposante statue du Cristo Rei, le pont du 25 Avril et toute la skyline s'ouvrent comme une carte postale. Le quai de Cacilhas, accessible en dix minutes de ferry, offre un charme maritime plus brut — anciens chantiers navals, tascas de fruits de mer et l'un des plus beaux miradouros pour le coucher de soleil du Grand Lisbonne. La Praia da Costa da Trafaria et les falaises au nord du centre urbain ajoutent des textures atlantiques sauvages à 20 minutes en voiture. Almada est l'endroit où les photographes vont quand ils veulent Lisbonne dans le cadre, pas autour d'eux.",
+    seo_title_es: "Fotógrafo en Almada, Portugal | Cristo Rei y skyline de Lisboa",
+    seo_description_es:
+      "Reserve un fotógrafo en Almada, Portugal. Cristo Rei, skyline panorámico de Lisboa y Cacilhas — al otro lado del puente.",
+    seo_title_fr: "Photographe à Almada, Portugal | Cristo Rei & skyline de Lisbonne",
+    seo_description_fr:
+      "Réservez un photographe à Almada, Portugal. Cristo Rei, skyline panoramique de Lisbonne et Cacilhas — de l'autre côté du pont.",
+  },
+  {
     id: "setubal",
     slug: "setubal",
     name: "Setubal",

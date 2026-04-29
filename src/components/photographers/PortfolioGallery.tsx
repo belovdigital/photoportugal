@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useSwipeNavigation } from "@/lib/use-swipe";
 import { localizeShootType } from "@/lib/shoot-type-labels";
 
 interface PortfolioItem {
@@ -13,6 +12,52 @@ interface PortfolioItem {
   shoot_type: string | null;
   width?: number | null;
   height?: number | null;
+}
+
+/**
+ * Row-major masonry: items[0..N-1] live in a single visual row even though the
+ * heights stagger (true masonry feel). Achieved by hand-distributing items into
+ * N column flex-containers — column k receives indexes [k, N+k, 2N+k, ...].
+ *
+ * Two layouts rendered side-by-side (mobile 2-col, desktop 3-col) with Tailwind
+ * `sm:hidden` / `hidden sm:grid` toggles. No resize listener and no hydration
+ * mismatch — the SSR HTML matches the client first paint exactly.
+ *
+ * Why not CSS `columns`? It flows column-major: with 12 photos in 3 columns
+ * the user reads [0,1,2,3 → 4,5,6,7 → 8,9,10,11] going *down* each column,
+ * which doesn't match the order the photographer drag-and-dropped in their
+ * dashboard. Row-major distribution fixes that.
+ */
+function RowMasonry<T>({ items, renderItem }: {
+  items: T[];
+  renderItem: (item: T, idx: number) => React.ReactNode;
+}) {
+  function distribute(cols: number) {
+    const out: { item: T; idx: number }[][] = Array.from({ length: cols }, () => []);
+    items.forEach((it, i) => out[i % cols].push({ item: it, idx: i }));
+    return out;
+  }
+  const cols2 = distribute(2);
+  const cols3 = distribute(3);
+
+  return (
+    <>
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:hidden">
+        {cols2.map((col, c) => (
+          <div key={c} className="flex flex-col gap-3">
+            {col.map(({ item, idx }) => renderItem(item, idx))}
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 hidden grid-cols-3 gap-3 sm:grid">
+        {cols3.map((col, c) => (
+          <div key={c} className="flex flex-col gap-3">
+            {col.map(({ item, idx }) => renderItem(item, idx))}
+          </div>
+        ))}
+      </div>
+    </>
+  );
 }
 
 interface LocationOption {
@@ -92,6 +137,11 @@ export function PortfolioGallery({
   const locale = useLocale();
   const [filter, setFilter] = useState({ location: "", shootType: "" });
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const lightboxScrollerRef = useRef<HTMLDivElement>(null);
+  // Tracks whether we've already done the no-animation jump to the index
+  // the user clicked on. Prevents the scroller from yanking back when the
+  // user has already started swiping.
+  const lightboxInitialJumpRef = useRef<number | null>(null);
 
   const usedLocations = [...new Set(items.map((p) => p.location_slug).filter(Boolean))] as string[];
   const usedShootTypes = [...new Set(items.map((p) => p.shoot_type).filter(Boolean))] as string[];
@@ -116,15 +166,17 @@ export function PortfolioGallery({
     return true;
   });
 
-  // Keyboard navigation for lightbox
+  // Arrow / keyboard navigation drive the scroll-snap scroller; the
+  // lightbox idx then syncs back from scroll position. Mobile users get
+  // native swipe with momentum + iOS back-gesture blocked by
+  // `overscroll-x-contain` on the scroller.
   const navigate = useCallback((dir: number) => {
-    setLightbox((prev) => {
-      if (prev === null) return null;
-      const next = prev + dir;
-      if (next < 0 || next >= filtered.length) return prev;
-      return next;
-    });
-  }, [filtered.length]);
+    const el = lightboxScrollerRef.current;
+    if (!el || lightbox === null) return;
+    const next = lightbox + dir;
+    if (next < 0 || next >= filtered.length) return;
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+  }, [lightbox, filtered.length]);
 
   useEffect(() => {
     if (lightbox === null) return;
@@ -141,22 +193,40 @@ export function PortfolioGallery({
     };
   }, [lightbox, navigate]);
 
-  useSwipeNavigation({
-    enabled: lightbox !== null,
-    onPrev: () => navigate(-1),
-    onNext: () => navigate(1),
-    onDismiss: () => setLightbox(null),
-  });
-
-  // Preload adjacent full-res images when lightbox is open
+  // Sync lightbox idx with scroll position (rAF-throttled).
   useEffect(() => {
     if (lightbox === null) return;
-    const toPreload = [lightbox - 1, lightbox + 1].filter(i => i >= 0 && i < filtered.length);
-    toPreload.forEach(i => {
-      const img = new Image();
-      img.src = getFullSrc(filtered[i]);
-    });
-  }, [lightbox, filtered]);
+    const el = lightboxScrollerRef.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const w = el.clientWidth || 1;
+        const next = Math.max(0, Math.min(filtered.length - 1, Math.round(el.scrollLeft / w)));
+        setLightbox((prev) => (prev === next ? prev : next));
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [lightbox, filtered.length]);
+
+  // Jump the scroller to the photo the user clicked on, exactly once per
+  // open. Subsequent navigation goes through `navigate` (smooth scroll).
+  useEffect(() => {
+    if (lightbox === null) {
+      lightboxInitialJumpRef.current = null;
+      return;
+    }
+    if (lightboxInitialJumpRef.current === lightbox) return;
+    const el = lightboxScrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: lightbox * el.clientWidth, behavior: "auto" });
+    lightboxInitialJumpRef.current = lightbox;
+  }, [lightbox]);
 
   return (
     <section>
@@ -201,26 +271,34 @@ export function PortfolioGallery({
         </div>
       )}
 
-      {/* Masonry grid */}
-      <div className="mt-4 columns-2 gap-3 sm:columns-3">
-        {filtered.map((item, i) => (
+      {/* Masonry with reading order: row-major. CSS `columns` flows vertically
+          (col-major: items 0,1,2,3 stack in column 0), which makes the order
+          confusing — readers expect items 1→2→3 left-to-right across the row.
+          We hand-distribute items into N columns by index % N so column 0
+          holds items [0,N,2N,...], column 1 [1,N+1,...], etc. Each column is
+          a flex-vertical container, so items keep their natural height and we
+          retain the staggered masonry look. */}
+      <RowMasonry
+        items={filtered}
+        renderItem={(item, i) => (
           <PortfolioImage
             key={i}
             item={item}
             alt={describePhoto(item)}
             onClick={() => setLightbox(i)}
           />
-        ))}
-      </div>
-
+        )}
+      />
       {filtered.length === 0 && items.length > 0 && (
         <p className="mt-4 text-sm text-gray-400">{t("noPhotosMatch")}</p>
       )}
 
-      {/* Lightbox / Slider */}
+      {/* Lightbox / Slider — native horizontal scroll-snap carousel.
+          Mobile gets real Instagram-style swipes (with iOS back-nav blocked
+          by `overscroll-x-contain`); desktop gets arrows + keyboard. */}
       {lightbox !== null && filtered[lightbox] && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+          className="fixed inset-0 z-50 bg-black/95"
           role="dialog"
           aria-label={t("photoViewer")}
           onClick={() => setLightbox(null)}
@@ -236,12 +314,12 @@ export function PortfolioGallery({
             </svg>
           </button>
 
-          {/* Previous */}
+          {/* Previous — desktop only; mobile uses native swipe. */}
           {lightbox > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(-1); }}
               aria-label={t("previousPhoto")}
-              className="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -249,19 +327,40 @@ export function PortfolioGallery({
             </button>
           )}
 
-          {/* Image — progressive: show thumb instantly, swap to full when loaded */}
-          <LightboxImage
-            key={lightbox}
-            item={filtered[lightbox]}
-            alt={describePhoto(filtered[lightbox])}
-          />
+          {/* Scroll-snap track holding all filtered photos. Each slot is
+              full-viewport-wide so swipes feel like Instagram / Airbnb. */}
+          <div
+            ref={lightboxScrollerRef}
+            className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {filtered.map((it, i) => (
+              <div
+                key={it.url}
+                className="snap-center shrink-0 w-full h-full flex items-center justify-center px-2 sm:px-12"
+                onClick={() => setLightbox(null)}
+              >
+                {/* Only mount the image for the active slide and immediate
+                    neighbours — keeps a 40-photo gallery from fetching all
+                    full-res images on open. */}
+                {Math.abs(i - lightbox) <= 1 ? (
+                  <LightboxImage
+                    item={it}
+                    alt={describePhoto(it)}
+                  />
+                ) : (
+                  <div className="h-full w-full" />
+                )}
+              </div>
+            ))}
+          </div>
 
-          {/* Next */}
+          {/* Next — desktop only; mobile uses native swipe. */}
           {lightbox < filtered.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(1); }}
               aria-label={t("nextPhoto")}
-              className="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -270,13 +369,13 @@ export function PortfolioGallery({
           )}
 
           {/* Counter + caption */}
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1">
+          <div className="pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 z-10">
             {filtered[lightbox].caption && (
               <p className="text-sm text-white/80">{filtered[lightbox].caption}</p>
             )}
             <div className="flex items-center gap-3 text-sm text-white/50">
               <span>{lightbox + 1} / {filtered.length}</span>
-              <span className="text-white/30">{t("arrowKeysHint")}</span>
+              <span className="text-white/30 hidden sm:inline">{t("arrowKeysHint")}</span>
             </div>
           </div>
         </div>

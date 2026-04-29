@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "pdf"];
 const ALLOWED_MIME_TYPES = [
@@ -75,10 +74,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
 
-    // Create upload directory
-    const messageDir = path.join(UPLOAD_DIR, "messages", bookingId);
-    await mkdir(messageDir, { recursive: true });
-
     const rawBuffer = Buffer.from(await file.arrayBuffer());
     const isPdf = rawExt === "pdf" || file.type === "application/pdf";
     const isGif = rawExt === "gif" || file.type === "image/gif";
@@ -109,9 +104,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await writeFile(path.join(messageDir, filename), buffer);
-
-    const url = `/uploads/messages/${bookingId}/${filename}`;
+    const r2Key = `messages/${bookingId}/${filename}`;
+    const contentType = isPdf ? "application/pdf" : isGif ? "image/gif" : "image/jpeg";
+    await uploadToS3(r2Key, buffer, contentType);
+    const url = `${R2_PUBLIC_URL}/${r2Key}`;
 
     return NextResponse.json({ url });
   } catch (error) {

@@ -6,6 +6,7 @@ import { PhotographerCatalog } from "./PhotographerCatalog";
 import { getOneLinerQuotesForPhotographers } from "@/lib/reviews-data";
 import { query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
+import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -49,6 +50,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
       last_seen_at: string | null;
       avg_response_minutes: number | null;
       created_at: string;
+      portfolio_thumbs: string[] | null;
     }>(
       `SELECT p.id, p.slug, u.name,
               ${taglineSql} as tagline,
@@ -57,11 +59,12 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
               COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
               p.plan, p.rating, p.review_count, p.session_count, u.last_seen_at::text, p.avg_response_minutes,
-              COALESCE(p.created_at, u.created_at)::text as created_at
+              COALESCE(p.created_at, u.created_at)::text as created_at,
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = p.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.is_approved = TRUE
-       ORDER BY p.is_featured DESC, RANDOM()`
+       ORDER BY p.is_featured DESC, p.is_verified DESC, RANDOM()`
     );
 
     if (profiles.length === 0) return [];
@@ -135,6 +138,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
         created_at: p.created_at,
         last_seen_at: p.last_seen_at,
         avg_response_minutes: p.avg_response_minutes,
+        portfolio_thumbs: p.portfolio_thumbs,
       } as PhotographerProfile;
     });
   } catch (error) {
@@ -187,7 +191,7 @@ export default async function PhotographersPage({
     numberOfItems: dbPhotographers.length,
     itemListElement: dbPhotographers.slice(0, 20).map((p, i) => {
       const imgSrc = p.cover_url || p.avatar_url;
-      const image = imgSrc ? `${base}/api/img/${imgSrc.replace("/uploads/", "")}?w=800&h=600&f=jpeg&q=80` : undefined;
+      const image = resolveAbsoluteImageUrl(imgSrc, base);
       return {
         "@type": "ListItem",
         position: i + 1,

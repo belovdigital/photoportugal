@@ -419,25 +419,34 @@ export async function DELETE(
   );
 
   if (photo) {
-    // Delete original file (S3 or local)
-    try {
-      if (isS3Path(photo.url)) {
-        await deleteFromS3(s3KeyFromPath(photo.url));
-      } else {
-        await unlink(path.join(UPLOAD_DIR, photo.url.replace("/uploads/", "")));
-      }
-    } catch {}
-    // Delete preview/watermark file (S3 or local)
-    if (photo.preview_url) {
-      try {
-        if (isS3Path(photo.preview_url)) {
-          await deleteFromS3(s3KeyFromPath(photo.preview_url));
-        } else {
-          await unlink(path.join(UPLOAD_DIR, photo.preview_url.replace("/uploads/", "")));
-        }
-      } catch {}
-    }
+    await deleteDeliveryFile(photo.url);
+    if (photo.preview_url) await deleteDeliveryFile(photo.preview_url);
   }
 
   return NextResponse.json({ success: true });
+}
+
+const R2_PUBLIC_PREFIX = "https://files.photoportugal.com/";
+
+/**
+ * Delete a delivery photo from whichever backend it lives on. Three forms
+ * coexist during the migration window:
+ *   - `s3://bucket/key` — early R2 uploads tagged with the s3 scheme
+ *   - `https://files.photoportugal.com/key` — current R2 uploads + everything
+ *     migrated from /uploads in stage 2
+ *   - `/uploads/...` — leftover legacy rows on local disk
+ * Best-effort: if any of these throw we swallow it so DB row deletion still
+ * succeeds (orphan blob is a disk-space issue, not a correctness one).
+ */
+async function deleteDeliveryFile(url: string): Promise<void> {
+  if (!url) return;
+  try {
+    if (isS3Path(url)) {
+      await deleteFromS3(s3KeyFromPath(url));
+    } else if (url.startsWith(R2_PUBLIC_PREFIX)) {
+      await deleteFromS3(url.slice(R2_PUBLIC_PREFIX.length));
+    } else if (url.startsWith("/uploads/")) {
+      await unlink(path.join(UPLOAD_DIR, url.replace("/uploads/", "")));
+    }
+  } catch { /* swallow — orphan blob is acceptable */ }
 }

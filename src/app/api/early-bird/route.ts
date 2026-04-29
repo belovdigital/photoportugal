@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 
-// Tier thresholds
+// Tier thresholds. Founding = first 10 (Premium forever + badge).
+// Early bird = spots 11–35, originally 6mo Premium — now bumped to 3 years
+// Premium as a thank-you after we closed the early-bird group.
+// First 100 = spots 36–100, 6 months Premium free.
 const TIERS = [
   { key: "founding", label: "Founding Photographer", limit: 10, planReward: "premium", duration: null, badge: "Founding Photographer" },
-  { key: "early50", label: "Early Adopter", limit: 35, planReward: "premium", duration: 180, badge: null }, // 6 months — spots 11-35
-  { key: "first50", label: "First 50", limit: 85, planReward: "pro", duration: 90, badge: null }, // 3 months — spots 36-85
+  { key: "early50", label: "Early Bird", limit: 35, planReward: "premium", duration: 365 * 3, badge: null }, // 3 years — spots 11–35
+  { key: "first100", label: "First 100", limit: 100, planReward: "premium", duration: 180, badge: null }, // 6 months Premium — spots 36–100
 ] as const;
 
 export async function GET() {

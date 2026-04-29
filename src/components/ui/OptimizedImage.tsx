@@ -45,13 +45,11 @@ export function OptimizedImage({
 
   const optimizedSrc = getOptimizedSrc(src, width, quality);
 
-  // Generate srcset for responsive images (local uploads only)
-  const srcSet = isLocalUpload(src)
-    ? [400, 800, 1200]
-        .filter((w) => w <= width * 2)
-        .map((w) => `${getOptimizedSrc(src, w, quality)} ${w}w`)
-        .join(", ")
-    : undefined;
+  // No srcset — we serve the R2 original (already capped at 2000px wide,
+  // q=85 JPEG) and let Cloudflare's edge cache do the heavy lifting. The
+  // Image Transformations layer added latency on cold cache without a clear
+  // win for our use case, and made debugging harder.
+  const srcSet: string | undefined = undefined;
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -92,19 +90,33 @@ export function OptimizedImage({
   );
 }
 
-/** Check if URL is a local upload */
+/** R2 public hostname — where all user-uploaded media lives after migration. */
+const R2_HOST = "files.photoportugal.com";
+
+/** Legacy local-upload prefix. Still recognised so any straggler `/uploads/...`
+ *  rows that slipped past the migration keep working via the old image proxy. */
 function isLocalUpload(src: string): boolean {
   return src.startsWith("/uploads/");
 }
 
-/** Get optimized URL for any image source */
+/**
+ * Resolve the image source to whatever URL the browser should actually fetch.
+ *
+ * Strategy: pass R2 URLs through unchanged. They're already capped at 2000px
+ * wide JPEG q=85 at upload time, and Cloudflare's normal CDN caches them
+ * globally for free. We tried Cloudflare Image Transformations (`/cdn-cgi/image/`)
+ * for on-the-fly AVIF + resize; the win on bytes was real but cold-cache MISS
+ * latency made first-time-viewer experience worse, so we rolled it back.
+ *
+ * Legacy `/uploads/...` rows (rare after the R2 migration) still route through
+ * the local `/api/img/` Sharp proxy — disk-cached on the server.
+ */
 function getOptimizedSrc(src: string, width: number, quality: number): string {
+  if (src.startsWith(`https://${R2_HOST}/`)) return src;
   if (isLocalUpload(src)) {
-    // Route through optimization API
     const path = src.replace("/uploads/", "");
     return `/api/img/${path}?w=${width}&q=${quality}&f=webp`;
   }
-  // External URLs (Unsplash, etc.) — return as-is
   return src;
 }
 
@@ -128,17 +140,11 @@ export function LightboxImage({
 
   // Thumbnail: slightly larger than grid thumbnail for instant sharp preview
   const thumbUrl = thumbnailSrc
-    ? isLocalUpload(thumbnailSrc)
-      ? `/api/img/${thumbnailSrc.replace("/uploads/", "")}?w=800&q=80&f=webp`
-      : thumbnailSrc
-    : isLocalUpload(src)
-      ? `/api/img/${src.replace("/uploads/", "")}?w=800&q=80&f=webp`
-      : src;
+    ? getOptimizedSrc(thumbnailSrc, 800, 80)
+    : getOptimizedSrc(src, 800, 80);
 
   // High-res: max viewport size, good quality but not oversized
-  const hiResSrc = isLocalUpload(src)
-    ? `/api/img/${src.replace("/uploads/", "")}?w=1400&q=85&f=webp`
-    : src;
+  const hiResSrc = getOptimizedSrc(src, 1400, 85);
 
   return (
     <div className="relative flex items-center justify-center" onClick={onClick}>

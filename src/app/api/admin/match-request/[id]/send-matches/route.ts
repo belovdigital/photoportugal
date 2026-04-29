@@ -4,6 +4,7 @@ import { query, queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
 import { locations } from "@/lib/locations-data";
+import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 
 async function isAdmin() {
   const cookieStore = await cookies();
@@ -129,9 +130,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Build photographer cards (table-based for email compatibility)
     const photographerCards = photographerDetails.map((p) => {
-      const avatarUrl = p.avatar_url
-        ? (p.avatar_url.startsWith("http") ? p.avatar_url : `${BASE_URL}/api/img/${p.avatar_url.replace("/uploads/", "")}?w=128&q=80&f=webp`)
-        : `${BASE_URL}/favicon.svg`;
+      const avatarUrl = resolveAbsoluteImageUrl(p.avatar_url, BASE_URL) || `${BASE_URL}/favicon.svg`;
       const assignedPrice = priceMap.get(p.id);
       const priceText = assignedPrice ? `€${assignedPrice} for your session` : "";
       const reviewCount = Number(p.review_count);

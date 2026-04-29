@@ -31,6 +31,8 @@
     "logIn": "Entrar",
     "from": "Desde",
     "packages": "Pacotes",
+    "photosUnit": "{count} fotos",
+    "viewAllPackages": "Ver todos os {count} pacotes →",
     "whatClientsSayAbout": "O que os clientes dizem sobre {name}",
     "seeAllReviews": "Ver todas as avaliações",
     "contactForPricing": "Contactar para preços",
@@ -231,6 +233,8 @@
     "heroTitleHighlight": "Portugal",
     "heroDescription": "Escolha da nossa rede selecionada de fotógrafos profissionais que conhecem os locais mais deslumbrantes de Portugal. Cada fotógrafo é pessoalmente verificado quanto à qualidade, fiabilidade e estilo.",
     "heroBrowse": "Ver Fotógrafos",
+    "valuePropBrowseAll": "Ver todos os fotógrafos",
+    "valuePropHowItWorks": "Como funciona",
     "heroMatch": "Ajudem-me a Escolher",
     "socialProof": {
       "handPicked": "Fotógrafos selecionados a dedo",
@@ -1153,7 +1157,8 @@
       "contactForPricing": "Contactar para preços",
       "viewProfile": "Ver Perfil",
       "coverAlt": "{name} — fotógrafo de férias em Portugal",
-      "messagePhotographer": "Enviar mensagem a {name}"
+      "messagePhotographer": "Enviar mensagem a {name}",
+      "openLightbox": "Ver portfólio"
     },
     "profile": {
       "previewBannerTitle": "Modo pré-visualização",
@@ -1235,6 +1240,23 @@
         "browsePhotographers": "Explorar Fotógrafos em {location}"
       },
       "topPhotographers": "Melhores Fotógrafos Disponíveis em {location}",
+      "realPhotos": {
+        "title": "Fotografias reais feitas aqui",
+        "subtitle": "Pelos fotógrafos da Photo Portugal — toque numa foto para abrir o perfil",
+        "viewProfile": "Ver perfil →"
+      },
+      "stickyBar": {
+        "title": "Fotógrafos em {location}, prontos para reservar",
+        "from": "Desde €{price} · seleção curada",
+        "cta": "Ver fotógrafos"
+      },
+      "quickStart": {
+        "label": "Conte-nos sobre a sua sessão em {location} — encontramos em segundos",
+        "placeholder": "ex.: sessão de casal em {location} sexta à hora dourada",
+        "cta": "Encontrar",
+        "inputLabel": "Descreva a sua sessão",
+        "footnote": "Grátis · IA Concierge · Resposta em segundos"
+      },
       "relatedArticles": "Artigos Relacionados",
       "readMore": "Ler mais",
       "shootTypes": {
@@ -1397,9 +1419,17 @@
     "headline": "Conheça <name>{firstName}</name>,<br></br> o seu fotógrafo em {location}",
     "viewProfile": "Ver perfil",
     "reviewsCount": "({count} avaliações)",
-    "shootsCompleted": "<strong>{count}+</strong> sessões realizadas",
+    "shootsCompleted": "<strong>{count}</strong> sessões realizadas",
     "matchPrompt": "Quer o {firstName} ou outro? Encontramos para si",
-    "browseAll": "Ou <link>explorar os 30+ fotógrafos</link> em Portugal"
+    "browseAll": "Ou <link>explorar os {count} fotógrafos</link> em Portugal",
+    "location": {
+      "availableChip": "{count} fotógrafos disponíveis em {location}",
+      "headline": "Fotógrafos<br></br> em <location>{locationName}</location>",
+      "fromPrice": "Desde €{price}",
+      "reviews": "{count} avaliações",
+      "byPhotographer": "Em destaque: {name}",
+      "matchPrompt": "Conte-nos sobre a sua sessão em {location} — encontramos o fotógrafo certo"
+    }
   },
   "quickMatch": {
     "locationLabel": "Localização",
@@ -1643,6 +1673,13 @@
     }
   },
   "exitIntent": {
+    "conciergeTitle": "Espere — fale com o nosso AI Concierge",
+    "conciergeDescription": "Diga-nos o que procura e encontramos 2-3 fotógrafos selecionados em 30 segundos.",
+    "conciergePlaceholder": "ex.: sessão de casal em Lisboa no próximo sábado ao pôr do sol",
+    "conciergeInputLabel": "Descreva a sua sessão",
+    "conciergeCta": "Encontrar fotógrafo",
+    "conciergeFootnote": "Grátis · Resposta imediata · IA",
+    "browse": "Ou ver todos os fotógrafos",
     "saveTitle": "Guardar {name} para mais tarde",
     "saveDesc": "Deixe o seu email e enviamos-lhe uma ligação direta — volte a qualquer altura para reservar.",
     "saveEmailPlaceholder": "o.seu@email.com",

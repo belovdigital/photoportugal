@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
       paramIdx++;
     }
 
-    sql += ` ORDER BY p.is_featured DESC, RANDOM()`;
+    sql += ` ORDER BY p.is_featured DESC, p.is_verified DESC, RANDOM()`;
 
     const photographers = await query(sql, params);
 

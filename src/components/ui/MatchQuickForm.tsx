@@ -127,8 +127,13 @@ export function MatchQuickForm({
   const inputSize = size === "lg" ? "h-14 px-4 text-base" : "h-12 px-3.5 text-sm";
   const btnSize = size === "lg" ? "h-14 px-6 text-base" : "h-12 px-5 text-sm";
 
-  const inputCls = `rounded-xl border bg-white/95 ${inputSize} text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 ${
-    darkMode ? "border-white/30" : "border-warm-300"
+  // Inputs need to invert their entire skin when the form sits inside a
+  // dark glass panel — bg + text + placeholder. Without this the dark
+  // hero showed white text on white/95 fields, which was invisible.
+  const inputCls = `rounded-xl border ${inputSize} outline-none focus:ring-2 ${
+    darkMode
+      ? "bg-white/15 border-white/30 text-white placeholder:text-white/60 focus:border-white/50 focus:ring-white/20"
+      : "bg-white/95 border-warm-300 text-gray-800 placeholder:text-gray-400 focus:border-primary-500 focus:ring-primary-100"
   }`;
 
   if (status === "sent") {
@@ -168,7 +173,9 @@ export function MatchQuickForm({
               aria-label={t("locationLabel")}
               aria-expanded={locOpen}
               className={`${inputCls} flex w-full items-center justify-between gap-2 text-left ${
-                locationSlug ? "text-gray-900" : (darkMode ? "text-white/60" : "text-gray-400")
+                locationSlug
+                  ? (darkMode ? "text-white" : "text-gray-900")
+                  : (darkMode ? "text-white/60" : "text-gray-400")
               }`}
             >
               <span className="flex items-center gap-1.5 min-w-0">
@@ -241,7 +248,11 @@ export function MatchQuickForm({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("emailPlaceholder")}
-          className={`${inputCls} w-full md:flex-1 md:min-w-[200px]`}
+          // Cap the email field at ~280px on desktop. Real email
+          // addresses comfortably fit in 30 chars; without a cap the
+          // input stretched the full row, looking absurdly wide on
+          // location-page heros where the location dropdown is preset.
+          className={`${inputCls} w-full md:flex-1 md:min-w-[180px] md:max-w-[280px]`}
           required
           aria-label={t("emailLabel")}
         />

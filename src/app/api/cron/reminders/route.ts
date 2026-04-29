@@ -1157,13 +1157,42 @@ export async function GET(req: NextRequest) {
 
     for (const booking of expiredDeliveries) {
       try {
+        // Snapshot all blob URLs (originals + previews + zip) BEFORE the DELETE
+        // so we can clean storage even after the rows are gone.
+        const blobs = await query<{ url: string; preview_url: string | null }>(
+          "SELECT url, preview_url FROM delivery_photos WHERE booking_id = $1",
+          [booking.id]
+        );
+        const zipRow = await queryOne<{ zip_path: string | null }>(
+          "SELECT zip_path FROM bookings WHERE id = $1", [booking.id]
+        );
+
         // Delete delivery_photos records from DB
         const deleted = await queryOne<{ count: string }>(
           "WITH d AS (DELETE FROM delivery_photos WHERE booking_id = $1 RETURNING id) SELECT COUNT(*) as count FROM d",
           [booking.id]
         );
 
-        // Delete physical files from disk
+        // Delete blobs from R2 (current) and local disk (legacy fallback).
+        const { deleteFromS3 } = await import("@/lib/s3");
+        const R2_PUBLIC_PREFIX = (process.env.R2_PUBLIC_URL || "https://files.photoportugal.com") + "/";
+        const allUrls = [
+          ...blobs.flatMap((b) => [b.url, b.preview_url].filter((u): u is string => !!u)),
+          zipRow?.zip_path || null,
+        ].filter((u): u is string => !!u);
+
+        for (const url of allUrls) {
+          try {
+            if (url.startsWith(R2_PUBLIC_PREFIX)) {
+              await deleteFromS3(url.slice(R2_PUBLIC_PREFIX.length));
+            } else if (url.startsWith("s3://")) {
+              await deleteFromS3(url.replace(/^s3:\/\/[^/]+\//, ""));
+            }
+            // /uploads/... paths are cleaned via the rm below
+          } catch { /* best-effort */ }
+        }
+
+        // Legacy local-disk cleanup — harmless if dir doesn't exist.
         const deliveryDir = path.join(UPLOAD_DIR, "delivery", booking.id);
         try {
           await rm(deliveryDir, { recursive: true, force: true });

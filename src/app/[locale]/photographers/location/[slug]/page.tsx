@@ -57,7 +57,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.is_approved = TRUE
-       ORDER BY p.is_featured DESC, RANDOM()`
+       ORDER BY p.is_featured DESC, p.is_verified DESC, RANDOM()`
     );
 
     if (profiles.length === 0) return [];

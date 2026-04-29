@@ -6,9 +6,9 @@ import { getLocationBySlug, getNearbyLocations, locations } from "@/lib/location
 import { shootTypes } from "@/lib/shoot-types-data";
 import { localeAlternates } from "@/lib/seo";
 import { query, queryOne } from "@/lib/db";
-import { Avatar } from "@/components/ui/Avatar";
+import { PhotographerCard } from "@/components/photographers/PhotographerCard";
+import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { normalizeName } from "@/lib/format-name";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 
 export const revalidate = 86400;
@@ -290,18 +290,43 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
   const occ = OCCASIONS[occasion];
   if (!location || !occ) notFound();
 
-  // Get photographers at this location that offer this shoot type
-  let photographers: { slug: string; name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }[] = [];
+  // Get photographers at this location that offer this shoot type.
+  // Pull the full set of fields PhotographerCardCompact needs (cover, badges,
+  // response time, locations array) so the card matches the gold-standard
+  // homepage card instead of the old stripped avatar+name list.
+  type OccasionPhotographerRow = {
+    slug: string; name: string; tagline: string | null;
+    avatar_url: string | null; cover_url: string | null; cover_position_y: number | null;
+    portfolio_thumbs: string[] | null;
+    is_featured: boolean; is_verified: boolean; is_founding: boolean;
+    rating: number; review_count: number;
+    starting_price: string | null;
+    locations: string | null;
+    last_active_at: string | null;
+    avg_response_minutes: number | null;
+  };
+  let photographers: OccasionPhotographerRow[] = [];
   try {
-    photographers = await query<{ slug: string; name: string; avatar_url: string | null; rating: number; review_count: number; starting_price: number | null }>(
-      `SELECT pp.slug, u.name, u.avatar_url, pp.rating, pp.review_count,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price
+    const TR = new Set(["pt", "de", "es", "fr"]);
+    const useLoc = locale && TR.has(locale) ? locale : null;
+    const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+    photographers = await query<OccasionPhotographerRow>(
+      `SELECT pp.slug, u.name, ${taglineSql} as tagline,
+              u.avatar_url, pp.cover_url, pp.cover_position_y,
+              pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
+              pp.rating, pp.review_count,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
+              u.last_seen_at as last_active_at, pp.avg_response_minutes,
+              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = TRUE AND pp.id IN (
          SELECT photographer_id FROM photographer_locations WHERE location_slug = $1
        )
-       ORDER BY RANDOM() LIMIT 8`,
+       ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
+       LIMIT 8`,
       [slug]
     );
   } catch {}
@@ -419,27 +444,29 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
           <div className="mt-4">
             <ScarcityBanner count={photographers.length} locationName={locName} locale={locale} />
           </div>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {photographers.map((p) => (
-              <Link
+              <PhotographerCard
                 key={p.slug}
-                href={`/photographers/${p.slug}`}
-                className="flex items-center gap-4 rounded-xl border border-warm-200 bg-white p-4 transition hover:shadow-md"
-              >
-                <Avatar src={p.avatar_url} fallback={normalizeName(p.name)} size="lg" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900 truncate">{normalizeName(p.name)}</p>
-                  <div className="mt-0.5 flex items-center gap-2 text-sm text-gray-500">
-                    {Number(p.rating) > 0 && <span className="text-amber-500">★ {Number(p.rating).toFixed(1)}</span>}
-                    {p.review_count > 0 && <span>({p.review_count} {t.reviews})</span>}
-                  </div>
-                  {p.starting_price && (
-                    <p className="mt-0.5 text-sm font-medium text-gray-700">
-                      {t.from} &euro;{Math.round(Number(p.starting_price))}
-                    </p>
-                  )}
-                </div>
-              </Link>
+                photographer={adaptToPhotographerProfile({
+                  slug: p.slug,
+                  name: p.name,
+                  tagline: p.tagline,
+                  avatar_url: p.avatar_url,
+                  cover_url: p.cover_url,
+                  cover_position_y: p.cover_position_y,
+                  portfolio_thumbs: p.portfolio_thumbs,
+                  is_featured: p.is_featured,
+                  is_verified: p.is_verified,
+                  is_founding: p.is_founding,
+                  rating: p.rating,
+                  review_count: p.review_count,
+                  min_price: p.starting_price,
+                  locations: p.locations,
+                  last_active_at: p.last_active_at,
+                  avg_response_minutes: p.avg_response_minutes,
+                })}
+              />
             ))}
           </div>
         </section>

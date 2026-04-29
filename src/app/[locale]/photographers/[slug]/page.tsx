@@ -4,6 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { queryOne, query } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { resolveAbsoluteImageUrl } from "@/lib/image-url";
+import { PhotographerCard } from "@/components/photographers/PhotographerCard";
+import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
 import { localizeShootType } from "@/lib/shoot-type-labels";
@@ -18,6 +21,7 @@ import { localeAlternates } from "@/lib/seo";
 import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { StickyBookBar } from "@/components/ui/StickyBookBar";
+import { MobilePhotographerHero } from "@/components/photographers/MobilePhotographerHero";
 
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
@@ -138,7 +142,7 @@ export async function generateMetadata({
   const ratingText = p.review_count > 0 ? ` ★ ${Number(p.rating).toFixed(1)} (${p.review_count} ${p.review_count === 1 ? "review" : "reviews"}).` : "";
   const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })}${shootTypeText}${ratingText} ${p.tagline || ""}`.trim();
   const rawImage = p.cover_url || p.avatar_url;
-  const ogImage = rawImage ? `https://photoportugal.com/api/img/${rawImage.replace("/uploads/", "")}?w=1200&h=630&f=jpeg&q=80` : "https://photoportugal.com/og-image.png";
+  const ogImage = resolveAbsoluteImageUrl(rawImage) || "https://photoportugal.com/og-image.png";
   const profileUrl = `https://photoportugal.com/photographers/${slug}`;
 
   // Pull a handful of public review photos to enrich social previews.
@@ -153,10 +157,7 @@ export async function generateMetadata({
         [p.id]
       );
       reviewPhotoUrls = rps.map((x) => {
-        const u = x.url;
-        if (u.startsWith("http")) return u;
-        if (u.startsWith("/uploads/")) return `https://photoportugal.com/api/img/${u.replace("/uploads/", "")}?w=1200&h=630&f=jpeg&q=80`;
-        return `https://photoportugal.com${u}`;
+        return resolveAbsoluteImageUrl(x.url) || `https://photoportugal.com${x.url}`;
       });
     } catch {}
   }
@@ -301,26 +302,32 @@ export default async function PhotographerProfilePage({
     } catch {}
   }
 
-  // Fetch similar photographers who serve the same locations
-  let similarPhotographers: {
+  // Fetch similar photographers who serve the same locations. Pull the full
+  // PhotographerCard field set so this section uses the same rich card as
+  // /photographers — no more bespoke mini-card here.
+  type SimilarRow = {
     id: string; slug: string; name: string; avatar_url: string | null;
-    cover_url: string | null; tagline: string | null; rating: number; review_count: number;
-    starting_price: number | null; languages: string[];
-    location_names: string[];
-  }[] = [];
+    cover_url: string | null; cover_position_y: number | null;
+    portfolio_thumbs: string[] | null;
+    is_featured: boolean; is_verified: boolean; is_founding: boolean;
+    tagline: string | null; rating: number; review_count: number;
+    starting_price: string | null;
+    locations: string | null;
+    last_active_at: string | null; avg_response_minutes: number | null;
+  };
+  let similarPhotographers: SimilarRow[] = [];
   const primaryLocation = photographer.locations?.[0];
   if (result.type === "db") {
     try {
-      similarPhotographers = await query<{
-        id: string; slug: string; name: string; avatar_url: string | null;
-        cover_url: string | null; tagline: string | null; rating: number; review_count: number;
-        starting_price: number | null; languages: string[];
-        location_names: string[];
-      }>(
-        `SELECT DISTINCT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url,
-                pp.tagline, pp.rating, pp.review_count, pp.languages,
-                (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price,
-                ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
+      similarPhotographers = await query<SimilarRow>(
+        `SELECT DISTINCT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.cover_position_y,
+                pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
+                pp.tagline, pp.rating, pp.review_count,
+                u.last_seen_at as last_active_at, pp.avg_response_minutes,
+                (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
+                (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+                 FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+                ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
          WHERE pp.is_approved = TRUE
@@ -329,7 +336,7 @@ export default async function PhotographerProfilePage({
            SELECT photographer_id FROM photographer_locations
            WHERE location_slug IN (SELECT location_slug FROM photographer_locations WHERE photographer_id = $1)
          )
-         ORDER BY pp.rating DESC, pp.review_count DESC
+         ORDER BY pp.is_featured DESC, pp.is_verified DESC, pp.rating DESC, pp.review_count DESC
          LIMIT 3`,
         [photographer.id]
       );
@@ -513,8 +520,40 @@ export default async function PhotographerProfilePage({
         />
       ))}
 
-      {/* Hero — no banner */}
-      <div className="bg-warm-50 pt-8 pb-6">
+      {/* Mobile-only conversion-first hero: full-width swipeable cover
+          carousel with name + rating overlay. Replaces the wall-of-text
+          mobile hero (avatar/tags/notices) so above-the-fold is dominated
+          by the photographer's actual work. Built for paid-ad LP traffic
+          where price+visual discovery beat verbose intros. */}
+      {(() => {
+        const thumbs: string[] = [];
+        if (photographer.cover_url) thumbs.push(photographer.cover_url);
+        for (const item of portfolioItems) {
+          if (item.url && !thumbs.includes(item.url)) thumbs.push(item.url);
+          if (thumbs.length >= 8) break;
+        }
+        const primaryLocationName = photographer.locations?.[0]?.name ?? null;
+        return (
+          <MobilePhotographerHero
+            slug={slug}
+            name={photographer.name}
+            isVerified={!!photographer.is_verified}
+            isFeatured={!!photographer.is_featured}
+            isFounding={!!photographer.is_founding}
+            rating={photographer.rating}
+            reviewCount={photographer.review_count}
+            lastSeenAt={photographer.last_seen_at ?? null}
+            responseLabel={null}
+            primaryLocationName={primaryLocationName}
+            thumbnails={thumbs}
+            coverPositionY={photographer.cover_position_y ?? null}
+          />
+        );
+      })()}
+
+      {/* Desktop hero — original avatar+text layout. Hidden on mobile via
+          `hidden lg:block` since MobilePhotographerHero owns that surface. */}
+      <div className="hidden lg:block bg-warm-50 pt-8 pb-6">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
             {/* Avatar */}
@@ -623,11 +662,13 @@ export default async function PhotographerProfilePage({
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Seasonal urgency — April to September */}
+        {/* Seasonal urgency — April to September. Hidden on mobile because
+            it competes with the visual hero for attention; desktop still
+            shows it inline above the main grid. */}
         {(() => {
           const month = new Date().getMonth();
           return month >= 3 && month <= 8 ? (
-            <p className="mt-4 flex items-center gap-1.5 text-xs font-medium text-amber-600">
+            <p className="mt-4 hidden lg:flex items-center gap-1.5 text-xs font-medium text-amber-600">
               <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
@@ -672,21 +713,30 @@ export default async function PhotographerProfilePage({
             )}
           </div>
 
-          {/* Sidebar — packages */}
+          {/* Packages — sidebar on desktop (sticky vertical stack), but on
+              mobile they jump to the top of the page (`order-first`) and
+              render as a horizontal snap-carousel right below the hero so
+              price discovery happens before the visitor scrolls anywhere.
+              Each package card snaps to centre with a peek of the next. */}
           <div id="packages" className="lg:col-span-1 order-first lg:order-none">
-            <div className="sticky top-24 space-y-4 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
+            <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:space-y-4" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
               {photographer.packages && photographer.packages.length > 0 && (
                 <>
-                  <h2 className="text-xl font-bold text-gray-900">{t("packages")}</h2>
-                  {photographer.packages.map((pkg: { id: string; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean; delivery_days?: number }) => (
-                    <PackageCard key={pkg.id} pkg={pkg} photographerSlug={photographer.slug} />
-                  ))}
+                  <h2 className="px-4 pt-6 text-xl font-bold text-gray-900 lg:px-0 lg:pt-0">{t("packages")}</h2>
+                  {/* Mobile: horizontal scroll-snap. Desktop: vertical stack. */}
+                  <div className="-mx-4 sm:-mx-6 lg:-mx-0 flex gap-3 overflow-x-auto snap-x snap-mandatory overscroll-x-contain px-4 sm:px-6 pt-3 pb-2 lg:flex-col lg:gap-4 lg:overflow-x-visible lg:px-0 lg:py-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {photographer.packages.map((pkg: { id: string; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean; delivery_days?: number }) => (
+                      <div key={pkg.id} className="snap-center shrink-0 w-[78vw] max-w-[340px] lg:w-auto lg:max-w-none">
+                        <PackageCard pkg={pkg} photographerSlug={photographer.slug} />
+                      </div>
+                    ))}
+                  </div>
                 </>
               )}
 
               {/* Contact card for profiles without packages */}
               {(!photographer.packages || photographer.packages.length === 0) && (
-                <div className="rounded-xl border border-warm-200 bg-white p-6">
+                <div className="mx-4 mt-6 rounded-xl border border-warm-200 bg-white p-6 sm:mx-6 lg:mx-0 lg:mt-0">
                   <h2 className="text-lg font-bold text-gray-900">{t("interested")}</h2>
                   <p className="mt-2 text-sm text-gray-500">
                     {t("sendMessagePricing")}
@@ -711,64 +761,28 @@ export default async function PhotographerProfilePage({
             </h2>
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {similarPhotographers.map((sp) => (
-                <Link
+                <PhotographerCard
                   key={sp.id}
-                  href={`/photographers/${sp.slug}`}
-                  className="group flex flex-col overflow-hidden rounded-xl border border-warm-200 bg-white transition hover:border-primary-200 hover:shadow-md"
-                >
-                  {/* Cover */}
-                  <div className="relative h-36 bg-warm-100">
-                    {sp.cover_url ? (
-                      <OptimizedImage src={sp.cover_url} alt={normalizeName(sp.name)} width={400} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-warm-100 to-warm-200" />
-                    )}
-                    {/* Avatar overlay */}
-                    <div className="absolute -bottom-5 left-4 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary-100 text-sm font-bold text-primary-600 overflow-hidden shadow-sm">
-                      {sp.avatar_url ? (
-                        <OptimizedImage src={sp.avatar_url} alt={normalizeName(sp.name)} width={80} className="h-full w-full object-cover" />
-                      ) : (
-                        normalizeName(sp.name).charAt(0)
-                      )}
-                    </div>
-                  </div>
-                  {/* Info */}
-                  <div className="flex flex-1 flex-col px-4 pb-4 pt-7">
-                    <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-                      {normalizeName(sp.name)}
-                    </h3>
-                    {sp.tagline && (
-                      <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{sp.tagline}</p>
-                    )}
-                    {/* Rating — only if has reviews */}
-                    {sp.review_count > 0 && (
-                    <div className="mt-2 flex items-center gap-1 text-sm">
-                      <span className="text-amber-500">
-                        <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      </span>
-                      <span className="font-semibold text-gray-900">{Number(sp.rating).toFixed(1)}</span>
-                      <span className="text-gray-400">({sp.review_count})</span>
-                    </div>
-                    )}
-                    {/* Locations */}
-                    {sp.location_names.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {sp.location_names.map((loc) => (
-                          <span key={loc} className="rounded-full bg-warm-100 px-2 py-0.5 text-[10px] text-gray-500 capitalize">{loc.replace(/-/g, " ")}</span>
-                        ))}
-                      </div>
-                    )}
-                    {/* Price — pinned to bottom */}
-                    {sp.starting_price && (
-                      <p className="mt-auto pt-3 text-sm">
-                        <span className="text-gray-400">{t("from")}</span>{" "}
-                        <span className="font-bold text-gray-900">&euro;{Math.round(Number(sp.starting_price))}</span>
-                      </p>
-                    )}
-                  </div>
-                </Link>
+                  photographer={adaptToPhotographerProfile({
+                    id: sp.id,
+                    slug: sp.slug,
+                    name: sp.name,
+                    tagline: sp.tagline,
+                    avatar_url: sp.avatar_url,
+                    cover_url: sp.cover_url,
+                    cover_position_y: sp.cover_position_y,
+                    portfolio_thumbs: sp.portfolio_thumbs,
+                    is_featured: sp.is_featured,
+                    is_verified: sp.is_verified,
+                    is_founding: sp.is_founding,
+                    rating: sp.rating,
+                    review_count: sp.review_count,
+                    min_price: sp.starting_price,
+                    locations: sp.locations,
+                    last_active_at: sp.last_active_at,
+                    avg_response_minutes: sp.avg_response_minutes,
+                  })}
+                />
               ))}
             </div>
           </div>

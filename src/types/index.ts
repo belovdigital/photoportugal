@@ -91,6 +91,8 @@ export interface PhotographerProfile {
   created_at: string;
   last_seen_at?: string | null;
   avg_response_minutes?: number | null;
+  /** Up to 4 extra portfolio thumbnails for the on-card carousel + lightbox launcher. Cover is shown first. */
+  portfolio_thumbs?: string[] | null;
 }
 
 export interface Package {

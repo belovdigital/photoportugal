@@ -5,6 +5,31 @@ import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient } from "@/lib/email";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
+import { sendTelegram } from "@/lib/telegram";
+
+async function notifyAdminSubscriptionEvent(
+  photographerId: string,
+  emoji: string,
+  title: string,
+  detail: string,
+) {
+  try {
+    const info = await queryOne<{ name: string; email: string; slug: string }>(
+      `SELECT u.name, u.email, pp.slug FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`,
+      [photographerId]
+    );
+    if (!info) return;
+    const safeName = String(info.name || "").replace(/[<>]/g, "");
+    const safeEmail = String(info.email || "").replace(/[<>]/g, "");
+    const safeDetail = detail.replace(/[<>]/g, "");
+    await sendTelegram(
+      `${emoji} <b>${title}</b>\n\nName: ${safeName}\nEmail: ${safeEmail}\n${safeDetail}\n\n👉 <a href="https://photoportugal.com/admin#${info.slug}">View in Admin</a>`,
+      "photographers"
+    );
+  } catch (e) {
+    console.error("[webhook] telegram subscription notify failed:", e);
+  }
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -249,6 +274,7 @@ export async function POST(req: NextRequest) {
         const subscription = event.data.object;
         const photographerId = subscription.metadata?.photographer_id;
         const subType = subscription.metadata?.type;
+        const isCreated = event.type === "customer.subscription.created";
 
         if (photographerId && subType === "featured") {
           // Featured add-on subscription
@@ -258,6 +284,33 @@ export async function POST(req: NextRequest) {
             [isFeatured, photographerId]
           );
           console.log(`[webhook] Featured subscription ${subscription.status} for photographer ${photographerId} → is_featured=${isFeatured}`);
+          if (isCreated && isFeatured) {
+            await notifyAdminSubscriptionEvent(
+              photographerId,
+              "⭐",
+              "Featured purchased",
+              `Plan: Featured (€19/mo recurring)\nStatus: ${subscription.status}`,
+            );
+          }
+        } else if (photographerId && subType === "verified") {
+          // Verified badge subscription — was previously only handled via
+          // checkout.session.completed, but that branch reads metadata.type
+          // off the *checkout session* (which is empty), not subscription_data.
+          // So Verified purchases silently failed to flip is_verified.
+          const isVerified = subscription.status === "active";
+          await queryOne(
+            "UPDATE photographer_profiles SET is_verified = $1 WHERE id = $2 RETURNING id",
+            [isVerified, photographerId]
+          );
+          console.log(`[webhook] Verified subscription ${subscription.status} for photographer ${photographerId} → is_verified=${isVerified}`);
+          if (isCreated && isVerified) {
+            await notifyAdminSubscriptionEvent(
+              photographerId,
+              "✅",
+              "Verified purchased",
+              `Plan: Verified (€19/yr recurring)\nStatus: ${subscription.status}`,
+            );
+          }
         } else if (photographerId && subscription.metadata?.plan) {
           // Plan subscription
           const plan = subscription.metadata.plan;
@@ -290,6 +343,14 @@ export async function POST(req: NextRequest) {
             );
             if (info) sendSubscriptionEmail(info.email, info.name, newPlan, newPlan === "free" ? "downgraded" : "upgraded");
           } catch {}
+          if (isCreated && subscription.status === "active") {
+            await notifyAdminSubscriptionEvent(
+              photographerId,
+              "💎",
+              `Plan purchased: ${plan}`,
+              `Plan: ${plan}\nStatus: ${subscription.status}`,
+            );
+          }
         }
         break;
       }
@@ -303,10 +364,22 @@ export async function POST(req: NextRequest) {
           // Featured add-on cancelled
           await queryOne("UPDATE photographer_profiles SET is_featured = FALSE WHERE id = $1 RETURNING id", [photographerId]);
           console.log(`[webhook] Featured subscription cancelled for photographer ${photographerId}`);
+          await notifyAdminSubscriptionEvent(
+            photographerId,
+            "🚫",
+            "Featured cancelled",
+            `Plan: Featured`,
+          );
         } else if (photographerId && subType === "verified") {
           // Verified badge subscription cancelled
           await queryOne("UPDATE photographer_profiles SET is_verified = FALSE WHERE id = $1 RETURNING id", [photographerId]);
           console.log(`[webhook] Verified subscription cancelled for photographer ${photographerId}`);
+          await notifyAdminSubscriptionEvent(
+            photographerId,
+            "🚫",
+            "Verified cancelled",
+            `Plan: Verified`,
+          );
         } else if (photographerId) {
           // Plan subscription cancelled — revert custom slug
           const cancelledProfile = await queryOne<{ slug: string; user_id: string }>(
@@ -328,6 +401,81 @@ export async function POST(req: NextRequest) {
             );
             if (info) sendSubscriptionEmail(info.email, info.name, "Free", "cancelled");
           } catch {}
+          await notifyAdminSubscriptionEvent(
+            photographerId,
+            "🚫",
+            "Plan cancelled",
+            `Reverted to: free`,
+          );
+        }
+        break;
+      }
+
+      case "invoice.paid": {
+        // Recurring subscription renewal — Stripe sends this on first charge
+        // (billing_reason='subscription_create') and on every cycle renewal
+        // (billing_reason='subscription_cycle'). We notify only on cycles —
+        // first-charge already gets a "purchased" alert via customer.subscription.created.
+        const invoice = event.data.object as unknown as {
+          billing_reason?: string;
+          subscription?: string;
+          amount_paid?: number;
+          currency?: string;
+        };
+        if (invoice.billing_reason === "subscription_cycle" && invoice.subscription) {
+          try {
+            const sub = await stripeClient.subscriptions.retrieve(invoice.subscription);
+            const photographerId = sub.metadata?.photographer_id;
+            const subType = sub.metadata?.type;
+            const plan = sub.metadata?.plan;
+            if (photographerId) {
+              const amount = ((invoice.amount_paid || 0) / 100).toFixed(2);
+              const currency = (invoice.currency || "eur").toUpperCase();
+              const label = subType === "featured" ? "Featured" : subType === "verified" ? "Verified" : plan ? `Plan: ${plan}` : "Subscription";
+              await notifyAdminSubscriptionEvent(
+                photographerId,
+                "🔄",
+                `Renewal charged: ${label}`,
+                `Amount: ${amount} ${currency}`,
+              );
+            }
+          } catch (err) {
+            console.error("[webhook] invoice.paid notify failed:", err);
+          }
+        }
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        // Renewal payment failed — admin should know so they can chase the
+        // photographer before the subscription auto-cancels (Stripe retries 3-4 times).
+        const invoice = event.data.object as unknown as {
+          billing_reason?: string;
+          subscription?: string;
+          attempt_count?: number;
+          amount_due?: number;
+          currency?: string;
+        };
+        if (invoice.subscription) {
+          try {
+            const sub = await stripeClient.subscriptions.retrieve(invoice.subscription);
+            const photographerId = sub.metadata?.photographer_id;
+            const subType = sub.metadata?.type;
+            const plan = sub.metadata?.plan;
+            if (photographerId) {
+              const amount = ((invoice.amount_due || 0) / 100).toFixed(2);
+              const currency = (invoice.currency || "eur").toUpperCase();
+              const label = subType === "featured" ? "Featured" : subType === "verified" ? "Verified" : plan ? `Plan: ${plan}` : "Subscription";
+              await notifyAdminSubscriptionEvent(
+                photographerId,
+                "⚠️",
+                `Renewal FAILED: ${label}`,
+                `Amount due: ${amount} ${currency}\nAttempt: ${invoice.attempt_count || 1}\nReason: ${invoice.billing_reason || "renewal"}`,
+              );
+            }
+          } catch (err) {
+            console.error("[webhook] invoice.payment_failed notify failed:", err);
+          }
         }
         break;
       }

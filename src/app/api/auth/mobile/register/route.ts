@@ -91,11 +91,11 @@ export async function POST(req: NextRequest) {
         } else if (count < 35) {
           earlyBirdTier = "early50";
           plan = "premium";
+          earlyBirdExpires = new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000).toISOString();
+        } else if (count < 100) {
+          earlyBirdTier = "first100";
+          plan = "premium";
           earlyBirdExpires = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-        } else if (count < 85) {
-          earlyBirdTier = "first50";
-          plan = "pro";
-          earlyBirdExpires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
         }
 
         await client.query(

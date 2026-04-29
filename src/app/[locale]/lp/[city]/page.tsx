@@ -8,6 +8,7 @@ import { shootTypes, getShootTypeBySlug } from "@/lib/shoot-types-data";
 import type { Location } from "@/types";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
@@ -83,9 +84,12 @@ interface LPPhotographer {
   name: string;
   avatar_url: string | null;
   cover_url: string | null;
+  cover_position_y: number | null;
+  portfolio_thumbs: string[] | null;
   tagline: string | null;
   rating: number;
   review_count: number;
+  is_featured: boolean;
   is_verified: boolean;
   is_founding: boolean;
   last_seen_at: string | null;
@@ -117,10 +121,12 @@ export default async function LandingPage({ params, searchParams }: {
   // Fetch 6 photographers matching city + (optional) shoot type
   const rows = shootTypeAliases
     ? await query<LPPhotographer & { min_price: string | null }>(
-        `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url,
+        `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.cover_position_y,
                 ${taglineSql} as tagline,
-                pp.rating, pp.review_count, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
+                pp.rating, pp.review_count,
+                pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
                 u.last_seen_at,
+                ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
                 COALESCE(
                   (SELECT json_agg(json_build_object('id', pk.id, 'name', ${pkgNameSql}, 'price', pk.price,
                                                      'duration_minutes', pk.duration_minutes, 'num_photos', pk.num_photos)
@@ -134,15 +140,17 @@ export default async function LandingPage({ params, searchParams }: {
          WHERE pp.is_approved = TRUE
            AND pl.location_slug = $1
            AND pp.shoot_types && $2::text[]
-         ORDER BY pp.is_featured DESC, RANDOM()
+         ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
          LIMIT 6`,
         [city, shootTypeAliases]
       ).catch(() => [])
     : await query<LPPhotographer & { min_price: string | null }>(
-        `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url,
+        `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.cover_position_y,
                 ${taglineSql} as tagline,
-                pp.rating, pp.review_count, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
+                pp.rating, pp.review_count,
+                pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
                 u.last_seen_at,
+                ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
                 COALESCE(
                   (SELECT json_agg(json_build_object('id', pk.id, 'name', ${pkgNameSql}, 'price', pk.price,
                                                      'duration_minutes', pk.duration_minutes, 'num_photos', pk.num_photos)
@@ -154,7 +162,7 @@ export default async function LandingPage({ params, searchParams }: {
          JOIN users u ON u.id = pp.user_id
          JOIN photographer_locations pl ON pl.photographer_id = pp.id
          WHERE pp.is_approved = TRUE AND pl.location_slug = $1
-         ORDER BY pp.is_featured DESC, RANDOM()
+         ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
          LIMIT 6`,
         [city]
       ).catch(() => []);
@@ -301,19 +309,30 @@ export default async function LandingPage({ params, searchParams }: {
                   </div>
                 )}
                 <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-                  {/* Cover */}
-                  <Link href={href} className="block h-44 overflow-hidden bg-warm-100">
-                    {p.cover_url ? (
-                      <OptimizedImage src={p.cover_url} alt={`${normalizeName(p.name)} portfolio`} priority={idx < 3} className="h-full w-full transition duration-300 group-hover:scale-[1.03]" />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-primary-100 to-warm-200" />
-                    )}
+                  {/* Cover with carousel + lightbox */}
+                  <div className="relative">
+                    <PhotographerCardCover
+                      slug={p.slug}
+                      name={p.name}
+                      thumbnails={(() => {
+                        const arr: string[] = [];
+                        if (p.cover_url) arr.push(p.cover_url);
+                        for (const u of p.portfolio_thumbs ?? []) {
+                          if (u && !arr.includes(u)) arr.push(u);
+                          if (arr.length >= 8) break;
+                        }
+                        return arr;
+                      })()}
+                      coverPositionY={p.cover_position_y}
+                      height="h-56"
+                      altPrefix={`${normalizeName(p.name)} portfolio`}
+                    />
                     {p.is_founding && (
-                      <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow">
+                      <span className="pointer-events-none absolute left-3 top-3 z-20 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow">
                         {t("founding")}
                       </span>
                     )}
-                  </Link>
+                  </div>
 
                   {/* Body */}
                   <div className="flex flex-1 flex-col p-5">

@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
-import { unsplashUrl } from "@/lib/unsplash-images";
+import { unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const SHOOT_TYPES = [
@@ -41,7 +41,7 @@ export async function ShootTypesSection() {
               className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-gray-900 sm:aspect-[4/5]"
             >
               <OptimizedImage
-                src={unsplashUrl(type.image, 400)}
+                src={unsplashUrl(type.image, IMAGE_SIZES.cardLarge)}
                 alt={t("altSuffix", { title: t(`types.${type.key}.title`) })}
                 className="h-full w-full transition-transform duration-500 group-hover:scale-105"
               />

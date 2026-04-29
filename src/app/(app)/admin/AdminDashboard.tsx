@@ -5,6 +5,7 @@ import { AdminToastProvider } from "./AdminToast";
 import { AuditLog as AuditLogTab } from "./AuditLog";
 import AdminCalendarTab from "./AdminCalendarTab";
 import { AdminConciergeTab } from "./AdminConciergeTab";
+import { AdminPopupStats } from "./AdminPopupStats";
 
 function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "telegram"; title: string }) {
   const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; error_message?: string | null; from?: string; created_at: string; price?: string | null; direction?: string }[]>([]);
@@ -260,6 +261,7 @@ const tabGroups = [
       { key: "inquiries", label: "Inquiries", icon: "message" },
       { key: "matchRequests", label: "Match Requests", icon: "search" },
       { key: "concierge", label: "Concierge AI", icon: "sparkles" },
+      { key: "popupStats", label: "Exit Popup", icon: "chart" },
       { key: "savedLeads", label: "Saved Leads", icon: "heart" },
       { key: "disputes", label: "Disputes", icon: "flag" },
       { key: "reviews", label: "Reviews", icon: "star" },
@@ -291,7 +293,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "savedLeads" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "logs" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "popupStats" | "savedLeads" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -930,6 +932,7 @@ export function AdminDashboard({
           {activeTab === "inquiries" && inquiriesSection}
           {activeTab === "matchRequests" && matchRequestsSection}
           {activeTab === "concierge" && <AdminConciergeTab />}
+          {activeTab === "popupStats" && <AdminPopupStats />}
           {activeTab === "savedLeads" && <SavedLeadsTab />}
           {activeTab === "visitors" && visitorsSection}
           {activeTab === "disputes" && disputesSection}

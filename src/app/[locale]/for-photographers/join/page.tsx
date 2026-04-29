@@ -25,12 +25,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-const TIER_KEYS = ["founding", "early50", "first50"] as const;
+const TIER_KEYS = ["founding", "early50", "first100"] as const;
 
 const TIER_CONFIG = [
   { key: "founding" as const, spots: 10, color: "from-amber-500 to-orange-500", textColor: "text-amber-700", bgColor: "bg-amber-50", borderColor: "border-amber-200" },
   { key: "early50" as const, spots: 25, color: "from-primary-500 to-primary-700", textColor: "text-primary-700", bgColor: "bg-primary-50", borderColor: "border-primary-200" },
-  { key: "first50" as const, spots: 50, color: "from-accent-500 to-accent-700", textColor: "text-accent-700", bgColor: "bg-accent-50", borderColor: "border-accent-200" },
+  { key: "first100" as const, spots: 100, color: "from-accent-500 to-accent-700", textColor: "text-accent-700", bgColor: "bg-accent-50", borderColor: "border-accent-200" },
 ];
 
 export default async function JoinPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -46,9 +46,12 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
     totalPhotographers = parseInt(row?.count || "0");
   } catch {}
 
-  // Determine which tier is active
+  // Determine which tier is active. Three tiers, three thresholds:
+  //  0..9  — founding (10 spots)
+  //  10..34 — early bird (kept as fallback; in practice already filled at 35)
+  //  35..99 — first 100 (65 spots remaining once early bird closed)
   let activeTierIndex = -1;
-  const thresholds = [10, 35, 60];
+  const thresholds = [10, 35, 100];
   for (let i = 0; i < thresholds.length; i++) {
     if (totalPhotographers < thresholds[i]) {
       activeTierIndex = i;
@@ -138,10 +141,16 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
           {TIER_CONFIG.map((tier, i) => {
             const isFilled = i < activeTierIndex || activeTierIndex === -1;
             const isActive = i === activeTierIndex;
-            const spotsUsed = i === 0 ? Math.min(totalPhotographers, 10) :
-              i === 1 ? Math.min(Math.max(totalPhotographers - 10, 0), 50) :
-              Math.min(Math.max(totalPhotographers - 60, 0), 100);
-            const spotsLeft = tier.spots - spotsUsed;
+            // First 100 is the OUTER cohort: founding 10 + early-bird 25 already
+            // count toward it, so the active First-100 card should read
+            // "35 joined / 65 left" not "0 joined / 65 left". Each upstream
+            // tier's card stays scoped to its own 10 / 25 spots.
+            const spotsUsed = tier.key === "founding"
+              ? Math.min(totalPhotographers, 10)
+              : tier.key === "early50"
+                ? Math.min(Math.max(totalPhotographers - 10, 0), 25)
+                : Math.min(totalPhotographers, 100); // first100 — show overall progress
+            const spotsLeft = Math.max(tier.spots - spotsUsed, 0);
 
             return (
               <div

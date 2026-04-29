@@ -5,7 +5,8 @@ import { setRequestLocale } from "next-intl/server";
 import { photoSpots, spotSlug, getSpot, spotLocalized } from "@/lib/photo-spots-data";
 import { getLocationBySlug, locations } from "@/lib/locations-data";
 import { query } from "@/lib/db";
-import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { PhotographerCard } from "@/components/photographers/PhotographerCard";
+import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
@@ -199,19 +200,36 @@ export default async function SpotPage({
   const s = spotLocalized(spotData, locale);
   const t = pickL(locale);
 
-  // Photographers working in this city
+  // Photographers working in this city — fetch the full set of fields the
+  // unified PhotographerCardCompact card needs (cover, badges, response time,
+  // locations) so this page matches the gold-standard rich card.
+  const TR = new Set(["pt", "de", "es", "fr"]);
+  const useLoc = locale && TR.has(locale) ? locale : null;
+  const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
   const photographers = await query<{
-    id: string; slug: string; name: string; avatar_url: string | null; cover_url: string | null;
+    id: string; slug: string; name: string; avatar_url: string | null;
+    cover_url: string | null; cover_position_y: number | null;
+    portfolio_thumbs: string[] | null;
+    is_featured: boolean; is_verified: boolean; is_founding: boolean;
     tagline: string | null; rating: number; review_count: number;
-    min_price: number | null;
+    min_price: string | null;
+    locations: string | null;
+    last_active_at: string | null;
+    avg_response_minutes: number | null;
   }>(
-    `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.tagline, pp.rating, pp.review_count,
-            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price
+    `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.cover_position_y,
+            pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
+            ${taglineSql} as tagline, pp.rating, pp.review_count,
+            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as min_price,
+            u.last_seen_at as last_active_at, pp.avg_response_minutes,
+            (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+             FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+            ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      JOIN photographer_locations pl ON pl.photographer_id = pp.id
      WHERE pp.is_approved = TRUE AND pl.location_slug = $1
-     ORDER BY pp.is_featured DESC, pp.rating DESC NULLS LAST, pp.review_count DESC NULLS LAST
+     ORDER BY pp.is_featured DESC, pp.is_verified DESC, pp.rating DESC NULLS LAST, pp.review_count DESC NULLS LAST
      LIMIT 6`,
     [city]
   ).catch(() => []);
@@ -280,40 +298,30 @@ export default async function SpotPage({
                 <p className="mt-1 text-sm text-gray-500">
                   {t.handpickedIn} {location.name}
                 </p>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {photographers.map((p) => (
-                    <Link
+                    <PhotographerCard
                       key={p.id}
-                      href={`/photographers/${p.slug}`}
-                      className="group overflow-hidden rounded-xl border border-warm-200 bg-white transition hover:shadow-md"
-                    >
-                      <div className="relative h-36 overflow-hidden bg-warm-100">
-                        {p.cover_url ? (
-                          <OptimizedImage src={p.cover_url} alt={`${p.name} photography in ${location.name}`} width={400} className="h-full w-full object-cover transition group-hover:scale-[1.03]" />
-                        ) : (
-                          <div className="h-full w-full bg-gradient-to-br from-warm-100 to-warm-200" />
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-primary-100">
-                            {p.avatar_url ? (
-                              <OptimizedImage src={p.avatar_url} alt={p.name} width={80} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-xs font-bold text-primary-700">{p.name.charAt(0)}</div>
-                            )}
-                          </div>
-                          <p className="text-sm font-semibold text-gray-900 group-hover:text-primary-600">{p.name}</p>
-                        </div>
-                        {p.tagline && <p className="mt-2 line-clamp-2 text-xs text-gray-500">{p.tagline}</p>}
-                        <div className="mt-2 flex items-center justify-between text-xs">
-                          {p.review_count > 0 ? (
-                            <span className="text-amber-600">★ {Number(p.rating).toFixed(1)} ({p.review_count})</span>
-                          ) : <span className="text-gray-400">{t.newLabel}</span>}
-                          {p.min_price && <span className="font-semibold text-gray-700">from €{Math.round(Number(p.min_price))}</span>}
-                        </div>
-                      </div>
-                    </Link>
+                      photographer={adaptToPhotographerProfile({
+                        id: p.id,
+                        slug: p.slug,
+                        name: p.name,
+                        tagline: p.tagline,
+                        avatar_url: p.avatar_url,
+                        cover_url: p.cover_url,
+                        cover_position_y: p.cover_position_y,
+                        portfolio_thumbs: p.portfolio_thumbs,
+                        is_featured: p.is_featured,
+                        is_verified: p.is_verified,
+                        is_founding: p.is_founding,
+                        rating: p.rating,
+                        review_count: p.review_count,
+                        min_price: p.min_price,
+                        locations: p.locations,
+                        last_active_at: p.last_active_at,
+                        avg_response_minutes: p.avg_response_minutes,
+                      })}
+                    />
                   ))}
                 </div>
                 <div className="mt-6 text-center">

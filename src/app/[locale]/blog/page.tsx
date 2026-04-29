@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { localeAlternates } from "@/lib/seo";
 
 const POSTS_PER_PAGE = 48;
@@ -108,17 +109,39 @@ export default async function BlogPage({
     })),
   };
 
-  // Fetch featured photographers for internal linking module
-  let featuredPhotographers: { slug: string; name: string; avatar_url: string | null; location_name: string | null }[] = [];
+  // Fetch featured photographers for the bottom internal-linking module.
+  // Pull the same field set the unified compact card needs so we can drop
+  // the old avatar-only mini-row in favour of a real card.
+  type BlogFeaturedRow = {
+    slug: string; name: string; tagline: string | null;
+    avatar_url: string | null; cover_url: string | null; cover_position_y: number | null;
+    portfolio_thumbs: string[] | null;
+    is_featured: boolean; is_verified: boolean; is_founding: boolean;
+    rating: number; review_count: number;
+    starting_price: string | null;
+    locations: string | null;
+    last_active_at: string | null; avg_response_minutes: number | null;
+  };
+  let featuredPhotographers: BlogFeaturedRow[] = [];
   try {
-    featuredPhotographers = await query<{ slug: string; name: string; avatar_url: string | null; location_name: string | null }>(
-      `SELECT p.slug, u.name, u.avatar_url,
-              (SELECT l.name FROM photographer_locations pl JOIN locations l ON l.slug = pl.location_slug WHERE pl.photographer_id = p.id LIMIT 1) as location_name
+    const TR = new Set(["pt", "de", "es", "fr"]);
+    const useLocB = TR.has(locale) ? locale : null;
+    const taglineSql = useLocB ? `COALESCE(p.tagline_${useLocB}, p.tagline)` : "p.tagline";
+    featuredPhotographers = await query<BlogFeaturedRow>(
+      `SELECT p.slug, u.name, ${taglineSql} as tagline,
+              u.avatar_url, p.cover_url, p.cover_position_y,
+              p.is_featured, p.is_verified, COALESCE(p.is_founding, FALSE) as is_founding,
+              p.rating, p.review_count,
+              u.last_seen_at as last_active_at, p.avg_response_minutes,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = p.id AND is_public = TRUE)::text as starting_price,
+              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+               FROM photographer_locations WHERE photographer_id = p.id LIMIT 3) as locations,
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = p.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.is_approved = TRUE
-       ORDER BY p.is_featured DESC, RANDOM()
-       LIMIT 6`
+       ORDER BY p.is_featured DESC, p.is_verified DESC, RANDOM()
+       LIMIT 8`
     );
   } catch (err) {
     console.error("[blog] featured photographers error:", err);
@@ -338,25 +361,29 @@ export default async function BlogPage({
             <p className="mt-2 text-sm text-gray-500">
               {t("featuredPhotographersDesc")}
             </p>
-            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {featuredPhotographers.map((p) => (
-                <Link
+                <PhotographerCardCompact
                   key={p.slug}
-                  href={`/photographers/${p.slug}`}
-                  className="group flex flex-col items-center text-center"
-                >
-                  <div className="h-20 w-20 overflow-hidden rounded-full bg-warm-200 ring-2 ring-white shadow-sm transition group-hover:ring-primary-200">
-                    {p.avatar_url ? (
-                      <img src={p.avatar_url} alt={p.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-lg font-bold text-gray-400">
-                        {p.name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-2 truncate text-sm font-semibold text-gray-800 group-hover:text-primary-600 w-full">{p.name}</p>
-                  {p.location_name && <p className="truncate text-xs text-gray-400">{p.location_name}</p>}
-                </Link>
+                  p={{
+                    slug: p.slug,
+                    name: p.name,
+                    tagline: p.tagline,
+                    avatar_url: p.avatar_url,
+                    cover_url: p.cover_url,
+                    cover_position_y: p.cover_position_y,
+                    portfolio_thumbs: p.portfolio_thumbs,
+                    is_featured: p.is_featured,
+                    is_verified: p.is_verified,
+                    is_founding: p.is_founding,
+                    rating: Number(p.rating) || 0,
+                    review_count: p.review_count,
+                    min_price: p.starting_price ? Number(p.starting_price) : null,
+                    locations: p.locations,
+                    last_active_at: p.last_active_at,
+                    avg_response_minutes: p.avg_response_minutes,
+                  }}
+                />
               ))}
             </div>
             <div className="mt-6 text-center">

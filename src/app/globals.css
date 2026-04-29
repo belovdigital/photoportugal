@@ -79,6 +79,40 @@ html {
   animation: marquee 35s linear infinite;
 }
 
+/* PortfolioMosaic — when a cell swaps to a new photo we keep the previous
+ * img in place underneath and fade the new one over it. 0.5s ease-in-out
+ * — short enough to feel snappy, long enough that it reads as a fade
+ * rather than a hard cut. NB: the JSX intentionally uses
+ * `animate-mosaic-fade-in` WITHOUT the `motion-safe:` prefix; this is a
+ * plain custom CSS class, not a Tailwind utility, so the prefix would
+ * generate `.motion-safe\:animate-mosaic-fade-in` which doesn't match
+ * anything and silently disables the animation. */
+@keyframes mosaicFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.animate-mosaic-fade-in {
+  animation: mosaicFadeIn 0.5s ease-in-out;
+}
+
+/* Concierge page — on mobile only, full-screen AI chat with nothing below.
+ * Hide site Footer + the pre-footer "Take Photo Portugal with you" app CTA
+ * (rendered as a sibling of <footer>, NOT inside it). Zero out <main>
+ * bottom padding. AND override body's `min-h-screen` (100vh) to `100dvh`
+ * so it matches the section's `h-[calc(100dvh-64px)]` — without this, on
+ * mobile browsers with a visible URL bar 100vh > 100dvh, leaving an empty
+ * strip between the chat section and body bottom. Desktop keeps the
+ * regular site chrome. */
+@media (max-width: 639px) {
+  body:has(.concierge-page) {
+    min-height: 100dvh !important;
+  }
+  body:has(.concierge-page) footer,
+  body:has(.concierge-page) .app-cta-banner { display: none; }
+  body:has(.concierge-page) main { padding-bottom: 0 !important; }
+}
+
 /* Blog HTML content styling — matches the markdown renderer output */
 .blog-html-content h2 {
   @apply mt-10 mb-4 font-display text-2xl font-bold text-gray-900 sm:text-3xl;

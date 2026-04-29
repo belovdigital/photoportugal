@@ -26,7 +26,7 @@ export default async function PortfolioPage() {
   if (!profile) redirect("/dashboard");
 
   const locRows = await query<{ location_slug: string }>("SELECT location_slug FROM photographer_locations WHERE photographer_id = $1", [profile.id]);
-  const items = await query("SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order", [profile.id]);
+  const items = await query("SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC", [profile.id]);
   const pkgs = await query("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, is_public, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price", [profile.id]);
 
   return (

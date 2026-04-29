@@ -486,3 +486,16 @@ CREATE TABLE IF NOT EXISTS ai_generations (
 CREATE INDEX IF NOT EXISTS idx_ai_gens_session_recent ON ai_generations(session_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_gens_ip_recent ON ai_generations(ip, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_gens_email ON ai_generations(email) WHERE email IS NOT NULL;
+
+-- ============================================================
+-- POPUP EVENTS (exit-intent / AI concierge popup analytics)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS popup_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  visitor_id VARCHAR(36),
+  event_type VARCHAR(20) NOT NULL,  -- shown / submitted / dismissed / browse_clicked
+  page_path TEXT,
+  occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_popup_events_occurred ON popup_events (occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_popup_events_type_occurred ON popup_events (event_type, occurred_at DESC);

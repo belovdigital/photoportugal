@@ -31,6 +31,8 @@
     "logIn": "Einloggen",
     "from": "Ab",
     "packages": "Pakete",
+    "photosUnit": "{count} Fotos",
+    "viewAllPackages": "Alle {count} Pakete ansehen →",
     "whatClientsSayAbout": "Was Kunden über {name} sagen",
     "seeAllReviews": "Alle Bewertungen ansehen",
     "contactForPricing": "Preis auf Anfrage",
@@ -231,6 +233,8 @@
     "heroTitleHighlight": "Portugal",
     "heroDescription": "Der einfachste Weg, einen Reisefotografen oder ein Urlaubs-Fotoshooting in Portugal zu buchen — handverlesene lokale Profis, verifizierte Bewertungen, sofortige Buchung. Jeder Fotograf wird persönlich auf Qualität, Zuverlässigkeit und Stil geprüft.",
     "heroBrowse": "Fotografen durchsuchen",
+    "valuePropBrowseAll": "Alle Fotografen ansehen",
+    "valuePropHowItWorks": "So funktioniert's",
     "heroMatch": "Hilf mir bei der Auswahl",
     "socialProof": {
       "handPicked": "Handverlesene Fotografen",
@@ -1153,7 +1157,8 @@
       "contactForPricing": "Preis auf Anfrage",
       "viewProfile": "Profil ansehen",
       "coverAlt": "{name} — Urlaubsfotograf in Portugal",
-      "messagePhotographer": "{name} eine Nachricht senden"
+      "messagePhotographer": "{name} eine Nachricht senden",
+      "openLightbox": "Portfolio ansehen"
     },
     "profile": {
       "previewBannerTitle": "Vorschau-Modus",
@@ -1235,6 +1240,23 @@
         "browsePhotographers": "{location}-Fotografen durchsuchen"
       },
       "topPhotographers": "Beste verfügbare Fotografen in {location}",
+      "realPhotos": {
+        "title": "Echte Fotos, hier aufgenommen",
+        "subtitle": "Von Fotografen auf Photo Portugal — Foto antippen für das Profil",
+        "viewProfile": "Profil ansehen →"
+      },
+      "stickyBar": {
+        "title": "Fotografen in {location}, sofort buchbar",
+        "from": "Ab €{price} · sorgfältig ausgewählt",
+        "cta": "Ansehen"
+      },
+      "quickStart": {
+        "label": "Erzählen Sie uns von Ihrem {location}-Shooting — wir finden in Sekunden den passenden Fotografen",
+        "placeholder": "z. B. Paar-Shooting in {location} am Freitag zur goldenen Stunde",
+        "cta": "Match",
+        "inputLabel": "Beschreiben Sie Ihr Shooting",
+        "footnote": "Kostenlos · KI-Concierge · Antwort in Sekunden"
+      },
       "relatedArticles": "Verwandte Artikel",
       "readMore": "Mehr lesen",
       "shootTypes": {
@@ -1397,9 +1419,17 @@
     "headline": "Lernen Sie <name>{firstName}</name> kennen,<br></br> Ihren {location}-Fotografen",
     "viewProfile": "Profil ansehen",
     "reviewsCount": "({count} Bewertungen)",
-    "shootsCompleted": "<strong>{count}+</strong> Shootings abgeschlossen",
+    "shootsCompleted": "<strong>{count}</strong> Shootings abgeschlossen",
     "matchPrompt": "Möchten Sie {firstName} oder jemand anderen? Wir matchen Sie",
-    "browseAll": "Oder <link>alle 30+ Fotografen durchsuchen</link> in ganz Portugal"
+    "browseAll": "Oder <link>alle {count} Fotografen durchsuchen</link> in ganz Portugal",
+    "location": {
+      "availableChip": "{count} Fotografen in {location} verfügbar",
+      "headline": "Fotografen<br></br> in <location>{locationName}</location>",
+      "fromPrice": "Ab €{price}",
+      "reviews": "{count} Bewertungen",
+      "byPhotographer": "Mit {name}",
+      "matchPrompt": "Erzählen Sie uns von Ihrem {location}-Shooting — wir finden den passenden Fotografen"
+    }
   },
   "quickMatch": {
     "locationLabel": "Ort",
@@ -1643,6 +1673,13 @@
     }
   },
   "exitIntent": {
+    "conciergeTitle": "Warten Sie — chatten Sie mit unserem AI Concierge",
+    "conciergeDescription": "Sagen Sie uns, was Sie suchen, und wir matchen Sie in 30 Sekunden mit 2-3 ausgewählten Fotografen.",
+    "conciergePlaceholder": "z. B. Paar-Shooting in Lissabon nächsten Samstag zur goldenen Stunde",
+    "conciergeInputLabel": "Beschreiben Sie Ihr Shooting",
+    "conciergeCta": "Fotograf finden",
+    "conciergeFootnote": "Kostenlos · Sofortantwort · KI-gestützt",
+    "browse": "Oder alle Fotografen ansehen",
     "title": "Gehen Sie nicht ohne Ihre Fotos!",
     "description": "Teilen Sie uns Ihre Daten und Vorlieben mit – unser Team wählt 2-3 Fotografen aus, die perfekt zu Ihrer Reise passen. Dauert 2 Minuten.",
     "matchMe": "Mit einem Fotografen vermitteln lassen",

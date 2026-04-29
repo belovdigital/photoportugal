@@ -5,6 +5,7 @@ import Cropper from "react-easy-crop";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
+import { resolveImageUrl } from "@/lib/image-url";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import {
   DndContext,
@@ -288,9 +289,13 @@ export function PhotographerDashboardClient({
           // Show local preview immediately
           const previewUrl = URL.createObjectURL(file);
           const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+          // Prepend (sort_order = 0) — matches the server INSERT, which now
+          // shifts existing items by +1 and inserts new at 0. Without this
+          // the optimistic preview would land at the bottom and then "jump"
+          // to the top after the upload settles.
           setLocalItems((prev) => [
+            { id: tempId, type: "photo", url: previewUrl, thumbnail_url: null, caption: null, location_slug: null, shoot_type: null, sort_order: 0, _uploading: true },
             ...prev,
-            { id: tempId, type: "photo", url: previewUrl, thumbnail_url: null, caption: null, location_slug: null, shoot_type: null, sort_order: prev.length, _uploading: true },
           ]);
 
           // Convert HEIC to JPEG on client (iOS)
@@ -1103,7 +1108,7 @@ export function PhotographerDashboardClient({
                   <div className="rounded-xl border-2 border-primary-400 bg-white shadow-2xl ring-4 ring-primary-200/50" style={{ width: 200 }}>
                     <div className="aspect-square overflow-hidden rounded-t-xl bg-warm-100">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={activeDragItem.thumbnail_url ? `/api/img/${activeDragItem.thumbnail_url.replace("/uploads/", "")}?w=200&q=60&f=webp` : `/api/img/${activeDragItem.url.replace("/uploads/", "")}?w=200&q=60&f=webp`} alt={activeDragItem.caption || "Portfolio photo being dragged"} className="h-full w-full object-cover" />
+                      <img src={resolveImageUrl(activeDragItem.thumbnail_url || activeDragItem.url)} alt={activeDragItem.caption || "Portfolio photo being dragged"} className="h-full w-full object-cover" />
                     </div>
                   </div>
                 )}
@@ -1502,7 +1507,7 @@ function SortablePhotoCard({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={item._preview || item._uploading ? (item._preview || item.url) : (item.thumbnail_url ? `/api/img/${item.thumbnail_url.replace("/uploads/", "")}?w=400&q=75&f=webp` : `/api/img/${item.url.replace("/uploads/", "")}?w=400&q=75&f=webp`)}
+          src={item._preview || item._uploading ? (item._preview || item.url) : resolveImageUrl(item.thumbnail_url || item.url)}
           alt={item.caption || ""}
           loading="lazy"
           className="h-full w-full object-cover pointer-events-none select-none"
@@ -1881,8 +1886,24 @@ function CoverUpload({ initialUrl, initialPositionY, onMessage }: { initialUrl: 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { onMessage(t("fileTooLarge", { size: 10 })); e.target.value = ""; return; }
-    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) { onMessage(t("onlyImagesAllowed")); e.target.value = ""; return; }
+    // Explicit, verbal errors. A photographer reported a silent failure on
+    // oversize uploads — alert() guarantees the message appears even if the
+    // toast component is offscreen or hidden.
+    if (file.size > 10 * 1024 * 1024) {
+      const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+      const msg = `${t("fileTooLarge", { size: 10 })} — your file is ${sizeMb} MB. Try a smaller export or compress it before uploading.`;
+      onMessage(msg);
+      alert(msg);
+      e.target.value = "";
+      return;
+    }
+    if (!file.type.startsWith("image/") && !file.name.match(/\.(heic|heif)$/i)) {
+      const msg = t("onlyImagesAllowed");
+      onMessage(msg);
+      alert(msg);
+      e.target.value = "";
+      return;
+    }
 
     let processed = file;
     try { processed = await convertHeicIfNeeded(file); } catch { /* use original */ }
@@ -1905,12 +1926,16 @@ function CoverUpload({ initialUrl, initialPositionY, onMessage }: { initialUrl: 
         const err = await res.json().catch(() => null);
         setPreviewUrl(initialUrl);
         setPositionY(initialPositionY);
-        onMessage(err?.error || t("uploadFailed"));
+        const msg = err?.error || t("uploadFailed");
+        onMessage(msg);
+        alert(msg);
       }
     } catch {
       setPreviewUrl(initialUrl);
       setPositionY(initialPositionY);
-      onMessage(t("uploadFailedConnection"));
+      const msg = t("uploadFailedConnection");
+      onMessage(msg);
+      alert(msg);
     }
     setUploading(false);
     e.target.value = "";
@@ -1919,17 +1944,17 @@ function CoverUpload({ initialUrl, initialPositionY, onMessage }: { initialUrl: 
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">{t("coverImage")}</label>
-      <p className="text-xs text-gray-400 mb-2">
+      <p className="text-xs text-gray-500 mb-3">
         {t("coverHintLandscape")}
       </p>
 
-      {/* Preview frame — same aspect ratio as photographer card (2:1) */}
+      {/* Preview frame — 3:2 ratio matches the actual card cover on the site */}
       <div className="mb-3">
         <p className="text-[10px] text-gray-400 mb-1">{t("coverPreviewLabel")}</p>
         <div
           ref={containerRef}
           className={`relative w-full max-w-md overflow-hidden rounded-xl bg-warm-100 touch-none ${previewUrl ? (isDragging ? "cursor-grabbing" : "cursor-grab") : ""}`}
-          style={{ aspectRatio: "2 / 1" }}
+          style={{ aspectRatio: "3 / 2" }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

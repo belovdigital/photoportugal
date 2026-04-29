@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { queryOne } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
 import { verifyToken } from "@/app/api/admin/login/route";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 async function isAdmin() {
@@ -61,9 +60,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Maximum 5 photos per review" }, { status: 400 });
     }
 
-    const dir = path.join(UPLOAD_DIR, "reviews", review.photographer_id);
-    await mkdir(dir, { recursive: true });
-
     const rawBuffer = Buffer.from(await file.arrayBuffer());
 
     let finalBuffer: Buffer;
@@ -79,8 +75,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Could not process image" }, { status: 400 });
     }
 
-    await writeFile(path.join(dir, filename), finalBuffer);
-    const url = `/uploads/reviews/${review.photographer_id}/${filename}`;
+    const r2Key = `reviews/${review.photographer_id}/${filename}`;
+    await uploadToS3(r2Key, finalBuffer, "image/jpeg");
+    const url = `${R2_PUBLIC_URL}/${r2Key}`;
 
     await queryOne(
       "INSERT INTO review_photos (review_id, url, is_public) VALUES ($1, $2, true) RETURNING id",

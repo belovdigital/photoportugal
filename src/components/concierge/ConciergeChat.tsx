@@ -5,11 +5,51 @@ import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
+import { useConciergeDrawer } from "@/components/concierge/ConciergeDrawer";
 
 function humanizeSlug(s: string): string {
   return s
     .replace(/-/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Render the very small markdown subset the GPT concierge actually emits:
+ *  `**bold**`, `*italic*`, line breaks. Everything else passes through as
+ *  plain text. Pulling in a full markdown library for this is overkill. */
+function renderInline(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  // Match **bold** first (greedy is fine — the regex is lazy via `?`),
+  // then *italic*. Order matters: ** must be tried before *.
+  const re = /(\*\*([^*]+?)\*\*|\*([^*\n]+?)\*)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    if (m[2] !== undefined) {
+      parts.push(<strong key={key++}>{m[2]}</strong>);
+    } else if (m[3] !== undefined) {
+      parts.push(<em key={key++}>{m[3]}</em>);
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
+function MarkdownText({ text }: { text: string }) {
+  const lines = text.split("\n");
+  return (
+    <>
+      {lines.map((line, i) => (
+        <span key={i}>
+          {renderInline(line)}
+          {i < lines.length - 1 && <br />}
+        </span>
+      ))}
+    </>
+  );
 }
 
 interface MatchPhotographer {
@@ -24,7 +64,9 @@ interface MatchPhotographer {
   min_price: number | null;
   avatar_url: string | null;
   cover_url: string | null;
+  cover_position_y?: number | null;
   sample_portfolio_url: string | null;
+  portfolio_thumbs?: string[];
   reasoning: string;
   last_seen_at?: string | null;
   sample_review?: { text: string; client_name: string | null } | null;
@@ -79,6 +121,14 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
   const initialOpening: Msg = { role: "assistant", content: openingContent };
   const [messages, setMessages] = useState<Msg[]>([initialOpening]);
   void locale;
+  // When the chat is opened via `openWith()` from the location-page hero
+  // form, the drawer context carries the visitor's typed question. We pull
+  // it once on mount and treat it like a normal user submission.
+  const drawer = useConciergeDrawer();
+  const initialUserMessageRef = useRef<string | null>(null);
+  if (initialUserMessageRef.current === null && drawer.initialMessage) {
+    initialUserMessageRef.current = drawer.initialMessage;
+  }
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -130,6 +180,20 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user]);
+
+  // After hydration, if the drawer was opened via openWith(message),
+  // auto-submit the visitor's question as their first user turn. We
+  // consume the message from context so reopening the drawer later
+  // doesn't replay the same prompt.
+  useEffect(() => {
+    if (!hydrated) return;
+    const pending = initialUserMessageRef.current;
+    if (!pending) return;
+    initialUserMessageRef.current = null;
+    drawer.consumeInitialMessage();
+    void send(pending);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   async function startOver() {
     // Archive ALL chats for this visitor (not just current) so reload truly clears.
@@ -282,7 +346,7 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
                       : "bg-warm-100 text-gray-900"
                   }`}
                 >
-                  {m.content}
+                  {m.role === "assistant" ? <MarkdownText text={m.content} /> : m.content}
                 </div>
 
                 {m.action?.type === "show_matches" && (
@@ -355,7 +419,7 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
               placeholder={t("emailPlaceholder")}
               value={emailValue}
               onChange={(e) => setEmailValue(e.target.value)}
-              className="flex-1 min-w-0 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+              className="flex-1 min-w-0 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-base sm:text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
             />
             <button
               type="submit"
@@ -397,7 +461,7 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
               }
             }}
             placeholder={t("inputPlaceholder")}
-            className="flex-1 resize-none rounded-xl border border-warm-200 bg-white px-3.5 py-2.5 text-[15px] focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+            className="flex-1 resize-none rounded-xl border border-warm-200 bg-white px-3.5 py-2.5 text-base sm:text-[15px] focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
             style={{ minHeight: "44px", maxHeight: "120px" }}
             disabled={sending}
           />
@@ -497,7 +561,6 @@ function WhatsAppResumeBar({ userMessages }: { locale: string; userMessages: str
 
 function PhotographerMatchCard({ p, locale, chatContext }: { p: MatchPhotographer; locale: string; chatContext: string }) {
   const t = useTranslations("concierge");
-  const cover = p.sample_portfolio_url || p.cover_url || p.avatar_url;
   const firstName = p.name.split(" ")[0];
   const presence = presenceBadge(p.last_seen_at, t);
   const prefill = chatContext
@@ -505,13 +568,35 @@ function PhotographerMatchCard({ p, locale, chatContext }: { p: MatchPhotographe
     : "";
   const bookHref = `/${locale}/book/${p.slug}?from=concierge${prefill ? `&prefill_message=${prefill}` : ""}`;
   const locationLabel = p.locations.slice(0, 2).map(l => l.charAt(0).toUpperCase() + l.slice(1).replace(/-/g, " ")).join(" · ");
+
+  // Build the slider thumbnails: cover first, then up to 7 portfolio photos.
+  // Visitors live in chat — letting them swipe through 8 shots without opening
+  // a profile is the whole point. Lightbox launches on tap (click on image).
+  const thumbs: string[] = [];
+  if (p.cover_url) thumbs.push(p.cover_url);
+  for (const u of p.portfolio_thumbs ?? []) {
+    if (u && !thumbs.includes(u)) thumbs.push(u);
+    if (thumbs.length >= 8) break;
+  }
+  if (thumbs.length === 0) {
+    const fallback = p.sample_portfolio_url || p.avatar_url;
+    if (fallback) thumbs.push(fallback);
+  }
+
   return (
     <div className="overflow-hidden rounded-xl border border-warm-200 bg-white">
-      {cover && (
-        <div className="relative aspect-[5/3] w-full overflow-hidden bg-warm-100">
-          <OptimizedImage src={cover} alt={p.name} width={600} className="h-full w-full" />
+      {thumbs.length > 0 && (
+        <div className="relative">
+          <PhotographerCardCover
+            slug={p.slug}
+            name={p.name}
+            thumbnails={thumbs}
+            coverPositionY={p.cover_position_y ?? null}
+            height="aspect-[5/3] h-auto"
+            altPrefix={`${p.name} portfolio`}
+          />
           {presence && (
-            <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-gray-700 shadow-sm backdrop-blur-sm">
+            <span className="pointer-events-none absolute left-2 top-2 z-20 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-gray-700 shadow-sm backdrop-blur-sm">
               <span className={`h-1.5 w-1.5 rounded-full ${presence.color}`} />
               {presence.label}
             </span>
@@ -632,7 +717,7 @@ function HumanHandoffBox({ chatId, summary }: { chatId: string | null; locale: s
           placeholder={t("handoffNamePlaceholder")}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+          className="flex-1 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-base sm:text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
         />
         <input
           type="email"
@@ -640,7 +725,7 @@ function HumanHandoffBox({ chatId, summary }: { chatId: string | null; locale: s
           placeholder={t("handoffEmailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+          className="flex-1 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-base sm:text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
         />
         <button
           type="submit"

@@ -45,6 +45,7 @@ const PAGE_SIZE = 50;
 type StatusKey = "all" | "active" | "ready_review" | "needs_revision" | "not_ready" | "deactivated";
 type PlanKey = "all" | "free" | "pro" | "premium";
 type BadgeKey = "all" | "founding" | "early50";
+type AddonKey = "all" | "featured" | "verified" | "any" | "none";
 
 const STATUS_OPTIONS: { key: StatusKey; label: string; dot: string }[] = [
   { key: "all", label: "All statuses", dot: "bg-gray-300" },
@@ -66,6 +67,14 @@ const BADGE_OPTIONS: { key: BadgeKey; label: string; dot: string }[] = [
   { key: "all", label: "All badges", dot: "bg-gray-300" },
   { key: "founding", label: "Founding", dot: "bg-purple-500" },
   { key: "early50", label: "Early 25", dot: "bg-amber-500" },
+];
+
+const ADDON_OPTIONS: { key: AddonKey; label: string; dot: string }[] = [
+  { key: "all", label: "All add-ons", dot: "bg-gray-300" },
+  { key: "any", label: "Any (Featured or Verified)", dot: "bg-fuchsia-500" },
+  { key: "featured", label: "Featured", dot: "bg-pink-500" },
+  { key: "verified", label: "Verified", dot: "bg-sky-500" },
+  { key: "none", label: "No add-ons", dot: "bg-gray-400" },
 ];
 
 function matchesStatus(p: AdminPhotographer, s: StatusKey): boolean {
@@ -91,6 +100,16 @@ function matchesBadge(p: AdminPhotographer, b: BadgeKey): boolean {
   return true;
 }
 
+function matchesAddon(p: AdminPhotographer, a: AddonKey): boolean {
+  switch (a) {
+    case "all": return true;
+    case "featured": return p.is_featured;
+    case "verified": return p.is_verified;
+    case "any": return p.is_featured || p.is_verified;
+    case "none": return !p.is_featured && !p.is_verified;
+  }
+}
+
 export interface BelowMinPackage {
   name: string;
   duration_minutes: number;
@@ -107,6 +126,7 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
   const [statusFilter, setStatusFilter] = useState<StatusKey>("active");
   const [planFilter, setPlanFilter] = useState<PlanKey>("all");
   const [badgeFilter, setBadgeFilter] = useState<BadgeKey>("all");
+  const [addonFilter, setAddonFilter] = useState<AddonKey>("all");
   const [page, setPage] = useState(0);
   const { modal, confirm } = useConfirmModal();
 
@@ -114,7 +134,8 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
     let list = photographers
       .filter(p => matchesStatus(p, statusFilter))
       .filter(p => matchesPlan(p, planFilter))
-      .filter(p => matchesBadge(p, badgeFilter));
+      .filter(p => matchesBadge(p, badgeFilter))
+      .filter(p => matchesAddon(p, addonFilter));
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
@@ -122,29 +143,39 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
       );
     }
     return list;
-  }, [photographers, search, statusFilter, planFilter, badgeFilter]);
+  }, [photographers, search, statusFilter, planFilter, badgeFilter, addonFilter]);
 
   // Counts per option respecting other active filters (except the one the option belongs to).
   const statusCounts = useMemo(() => {
     const base = photographers
       .filter(p => matchesPlan(p, planFilter))
-      .filter(p => matchesBadge(p, badgeFilter));
+      .filter(p => matchesBadge(p, badgeFilter))
+      .filter(p => matchesAddon(p, addonFilter));
     return Object.fromEntries(STATUS_OPTIONS.map(o => [o.key, base.filter(p => matchesStatus(p, o.key)).length])) as Record<StatusKey, number>;
-  }, [photographers, planFilter, badgeFilter]);
+  }, [photographers, planFilter, badgeFilter, addonFilter]);
   const planCounts = useMemo(() => {
     const base = photographers
       .filter(p => matchesStatus(p, statusFilter))
-      .filter(p => matchesBadge(p, badgeFilter));
+      .filter(p => matchesBadge(p, badgeFilter))
+      .filter(p => matchesAddon(p, addonFilter));
     return Object.fromEntries(PLAN_OPTIONS.map(o => [o.key, base.filter(p => matchesPlan(p, o.key)).length])) as Record<PlanKey, number>;
-  }, [photographers, statusFilter, badgeFilter]);
+  }, [photographers, statusFilter, badgeFilter, addonFilter]);
   const badgeCounts = useMemo(() => {
     const base = photographers
       .filter(p => matchesStatus(p, statusFilter))
-      .filter(p => matchesPlan(p, planFilter));
+      .filter(p => matchesPlan(p, planFilter))
+      .filter(p => matchesAddon(p, addonFilter));
     return Object.fromEntries(BADGE_OPTIONS.map(o => [o.key, base.filter(p => matchesBadge(p, o.key)).length])) as Record<BadgeKey, number>;
-  }, [photographers, statusFilter, planFilter]);
+  }, [photographers, statusFilter, planFilter, addonFilter]);
+  const addonCounts = useMemo(() => {
+    const base = photographers
+      .filter(p => matchesStatus(p, statusFilter))
+      .filter(p => matchesPlan(p, planFilter))
+      .filter(p => matchesBadge(p, badgeFilter));
+    return Object.fromEntries(ADDON_OPTIONS.map(o => [o.key, base.filter(p => matchesAddon(p, o.key)).length])) as Record<AddonKey, number>;
+  }, [photographers, statusFilter, planFilter, badgeFilter]);
 
-  const hasNonDefault = statusFilter !== "active" || planFilter !== "all" || badgeFilter !== "all";
+  const hasNonDefault = statusFilter !== "active" || planFilter !== "all" || badgeFilter !== "all" || addonFilter !== "all";
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -193,6 +224,13 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
           counts={badgeCounts}
           onChange={(v) => { setBadgeFilter(v); setPage(0); }}
         />
+        <FilterDropdown
+          label="Add-ons"
+          options={ADDON_OPTIONS}
+          value={addonFilter}
+          counts={addonCounts}
+          onChange={(v) => { setAddonFilter(v); setPage(0); }}
+        />
         {statusCounts.ready_review > 0 && (() => {
           const active = statusFilter === "ready_review";
           return (
@@ -235,7 +273,7 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
         })()}
         {hasNonDefault && (
           <button
-            onClick={() => { setStatusFilter("active"); setPlanFilter("all"); setBadgeFilter("all"); setPage(0); }}
+            onClick={() => { setStatusFilter("active"); setPlanFilter("all"); setBadgeFilter("all"); setAddonFilter("all"); setPage(0); }}
             className="ml-auto text-xs font-medium text-gray-500 hover:text-gray-700"
           >
             Reset filters
@@ -296,7 +334,7 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                     <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                       p.early_bird_tier === "early50" ? "bg-primary-100 text-primary-700" : "bg-accent-50 text-accent-700"
                     }`}>
-                      {p.early_bird_tier === "early50" ? "Early 25" : "First 50"}
+                      {p.early_bird_tier === "early50" ? "Early Bird" : "First 100"}
                     </span>
                   )}
                   {!p.is_approved && !p.is_banned && p.checklist_complete && !p.revision_status && (

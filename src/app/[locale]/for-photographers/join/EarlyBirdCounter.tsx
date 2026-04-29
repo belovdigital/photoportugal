@@ -15,13 +15,18 @@ export function EarlyBirdCounter({ totalPhotographers }: { totalPhotographers: n
     spotsLeft = 10 - totalPhotographers;
     totalSpots = 10;
   } else if (totalPhotographers < 35) {
+    // Early bird stretch — kept as fallback until the counter cleanly passes 35.
     tierKey = "early50";
     spotsLeft = 35 - totalPhotographers;
     totalSpots = 25;
-  } else if (totalPhotographers < 85) {
-    tierKey = "first50";
-    spotsLeft = 85 - totalPhotographers;
-    totalSpots = 50;
+  } else if (totalPhotographers < 100) {
+    // First 100 — the OUTER tier. We want the counter to read "X of 100 claimed"
+    // (where X already includes the founding 10 and early-bird 25), not "0 of
+    // 65" — because to a visitor the program is one cohort with 100 spots, of
+    // which 35 are already taken.
+    tierKey = "first100";
+    spotsLeft = 100 - totalPhotographers;
+    totalSpots = 100;
   }
 
   if (!tierKey) return null;

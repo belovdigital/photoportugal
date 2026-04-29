@@ -9,6 +9,16 @@ interface DrawerContextValue {
   open: boolean;
   setOpen: (v: boolean) => void;
   toggle: () => void;
+  /** Open the drawer AND seed the chat with a user message (auto-sent on
+   *  first mount of the chat). Used by location/landing pages so visitors
+   *  can type "couples shoot in Sintra next week" into a quick form and
+   *  drop straight into a conversation with the AI. */
+  openWith: (message: string) => void;
+  /** Pending message to inject as a user message when the chat mounts.
+   *  Cleared by `consumeInitialMessage` after the chat reads it so a
+   *  subsequent open doesn't replay the same message. */
+  initialMessage?: string;
+  consumeInitialMessage: () => void;
 }
 
 const DrawerContext = createContext<DrawerContextValue | null>(null);
@@ -17,12 +27,13 @@ const DrawerContext = createContext<DrawerContextValue | null>(null);
 // so the Header doesn't crash and trigger the error boundary.
 export function useConciergeDrawer(): DrawerContextValue {
   const ctx = useContext(DrawerContext);
-  if (!ctx) return { open: false, setOpen: () => {}, toggle: () => {} };
+  if (!ctx) return { open: false, setOpen: () => {}, toggle: () => {}, openWith: () => {}, consumeInitialMessage: () => {} };
   return ctx;
 }
 
 export function ConciergeDrawerProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("concierge");
@@ -73,6 +84,16 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
   }, [open]);
 
   const toggle = useCallback(() => setOpen((v) => !v), []);
+  // Open the drawer with a pending user message that the chat will auto-send
+  // on mount. Full integration with ConciergeChat is parked — for now this
+  // just opens the drawer and stores the message for a later wiring pass.
+  const openWith = useCallback((message: string) => {
+    setInitialMessage(message);
+    setOpen(true);
+  }, []);
+  const consumeInitialMessage = useCallback(() => {
+    setInitialMessage(undefined);
+  }, []);
 
   // Compute page context to inform AI: route + key path segments
   const pageContext = (() => {
@@ -101,7 +122,7 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
   })();
 
   return (
-    <DrawerContext.Provider value={{ open, setOpen, toggle }}>
+    <DrawerContext.Provider value={{ open, setOpen, toggle, openWith, initialMessage, consumeInitialMessage }}>
       {children}
       {/* Drawer mounts only when open + not already on /concierge page */}
       {open && !onConciergePage && (

@@ -205,28 +205,32 @@ export function PhotographerCatalog({
       result = result.filter((p) => p.is_founding);
     }
 
-    // Sort
-    const featuredFirst = (a: PhotographerProfile, b: PhotographerProfile) => {
-      if (a.is_featured && !b.is_featured) return -1;
-      if (!a.is_featured && b.is_featured) return 1;
-      return 0;
+    // Sort. Add-on tiers always lift to the top: Featured → Verified → rest.
+    // Applied as a leading tiebreaker on every sort mode (rating/reviews/...)
+    // so paid placements are visible regardless of which sort the user picks.
+    const tierFirst = (a: PhotographerProfile, b: PhotographerProfile) => {
+      const at = a.is_featured ? 2 : a.is_verified ? 1 : 0;
+      const bt = b.is_featured ? 2 : b.is_verified ? 1 : 0;
+      return bt - at;
     };
 
     switch (sortBy) {
       case "featured":
-        result = [...result].sort((a, b) => featuredFirst(a, b) || (Math.random() - 0.5));
+        result = [...result].sort((a, b) => tierFirst(a, b) || (Math.random() - 0.5));
         break;
       case "rating":
-        result = [...result].sort((a, b) => b.rating - a.rating || b.review_count - a.review_count);
+        result = [...result].sort((a, b) => tierFirst(a, b) || b.rating - a.rating || b.review_count - a.review_count);
         break;
       case "reviews":
-        result = [...result].sort((a, b) => b.review_count - a.review_count);
+        result = [...result].sort((a, b) => tierFirst(a, b) || b.review_count - a.review_count);
         break;
       case "newest":
-        result = [...result].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        result = [...result].sort((a, b) => tierFirst(a, b) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         break;
       case "fastest":
         result = [...result].sort((a, b) => {
+          const t = tierFirst(a, b);
+          if (t !== 0) return t;
           const am = a.avg_response_minutes ?? Number.MAX_SAFE_INTEGER;
           const bm = b.avg_response_minutes ?? Number.MAX_SAFE_INTEGER;
           return am - bm;

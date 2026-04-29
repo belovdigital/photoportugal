@@ -8,7 +8,10 @@ export function EarningsCalculator() {
   const t = useTranslations("join.calculator");
   const [sessionsPerMonth, setSessionsPerMonth] = useState(4);
   const [avgPrice, setAvgPrice] = useState(200);
-  const [plan, setPlan] = useState<"free" | "pro" | "premium">("free");
+  // Default to Premium — that's what First 100 photographers actually get
+  // (free for 6 months → 3 years for early birds), so the calculator should
+  // surface those net earnings first.
+  const [plan, setPlan] = useState<"free" | "pro" | "premium">("premium");
 
   const commission = COMMISSION_RATES[plan] / 100;
   const monthlyGross = sessionsPerMonth * avgPrice;

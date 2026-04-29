@@ -12,19 +12,17 @@ function escape(s: string): string {
 }
 
 // Resolve image URL for sitemap — strip s3:// prefix and use our /api/img for local uploads.
+import { resolveAbsoluteImageUrl } from "@/lib/image-url";
+
 function resolveImageUrl(raw: string): string {
   if (!raw) return "";
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
   if (raw.startsWith("s3://")) {
     // s3://bucket/key → our public R2 bucket URL
     const parts = raw.slice(5).split("/");
     parts.shift(); // drop bucket name
-    return `${BASE}/api/img/${parts.join("/")}?w=1600&q=85&f=webp`;
+    return `https://files.photoportugal.com/${parts.join("/")}`;
   }
-  if (raw.startsWith("/uploads/")) {
-    return `${BASE}/api/img/${raw.replace("/uploads/", "")}?w=1600&q=85&f=webp`;
-  }
-  return `${BASE}${raw}`;
+  return resolveAbsoluteImageUrl(raw, BASE) || "";
 }
 
 export async function GET() {

@@ -66,7 +66,11 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
 
   return (
     <div
-      className={`rounded-xl border p-5 transition-shadow hover:shadow-md ${
+      // `h-full flex flex-col` so each card stretches to the tallest
+      // sibling in horizontal scroll-snap rows (mobile profile page) and
+      // vertical stacks (desktop). `mt-auto` on the action button pushes
+      // it to the bottom so all CTAs line up across cards.
+      className={`flex flex-col h-full rounded-xl border p-5 transition-shadow hover:shadow-md ${
         pkg.is_popular
           ? "border-primary-300 bg-primary-50 ring-1 ring-primary-200"
           : "border-warm-200 bg-white"
@@ -144,16 +148,23 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
       )}
 
       {!isPhotographer && (
-        <Link
-          href={`/book/${photographerSlug}?package=${pkg.id}`}
-          className={`mt-4 block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition ${
-            pkg.is_popular
-              ? "bg-primary-600 text-white hover:bg-primary-700"
-              : "bg-gray-900 text-white hover:bg-gray-800"
-          }`}
-        >
-          {t("bookThisPackage")}
-        </Link>
+        // Wrapped in a div so we can use `mt-auto` to push the button to
+        // the bottom (equalising CTA position across cards) WITHOUT
+        // having to mess with the button's own vertical padding. The
+        // `pt-4` here keeps the visual gap above the button consistent
+        // with what `mt-4` used to provide.
+        <div className="mt-auto pt-4">
+          <Link
+            href={`/book/${photographerSlug}?package=${pkg.id}`}
+            className={`block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition ${
+              pkg.is_popular
+                ? "bg-primary-600 text-white hover:bg-primary-700"
+                : "bg-gray-900 text-white hover:bg-gray-800"
+            }`}
+          >
+            {t("bookThisPackage")}
+          </Link>
+        </div>
       )}
     </div>
   );

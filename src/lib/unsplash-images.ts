@@ -40,7 +40,7 @@ const baseUrls: Record<string, string> = {
 };
 
 // Fallback aliases — slugs that borrow images from a nearby region until dedicated
-// photos are added. Keeps /locations grid visually complete.
+// photos are added. Keeps /locations grid visually complete (no card-without-bg).
 const aliasMap: Record<string, string> = {
   portimao: "algarve",
   albufeira: "algarve",
@@ -48,7 +48,13 @@ const aliasMap: Record<string, string> = {
   vilamoura: "algarve",
   arrabida: "setubal",
   sesimbra: "setubal",
-  ericeira: "nazare",
+  // Ericeira aliases to Peniche (also a surf/coast town nearby) rather
+  // than Nazaré (whose giant-waves photo is far too dramatic for
+  // Ericeira's chill village vibe).
+  ericeira: "peniche",
+  // Almada sits across the Tagus from Lisbon — its iconic shot is the
+  // bridge + Lisbon skyline, so the Lisbon photo carries the right vibe.
+  almada: "lisbon",
   funchal: "madeira",
   "ponta-delgada": "azores",
 };
@@ -58,23 +64,28 @@ const HERO_ID = "photo-1765854638659-aa17a6b00543"; // Couple on beach
 /**
  * Generate optimized Unsplash URL
  * Unsplash CDN handles: WebP/AVIF auto-negotiation, resizing, quality
- * This avoids Next.js Image Optimization overhead on our small server
+ * This avoids Next.js Image Optimization overhead on our small server.
+ *
+ * Defaults bumped (q 80→85) since the site is on a fast pipeline now —
+ * absolute file size stays modest because Unsplash auto-negotiates AVIF/WebP
+ * and the dimensions below are still moderate for retina-quality cards.
  */
 export function unsplashUrl(
   id: string,
-  width: number = 400,
-  quality: number = 80
+  width: number = 600,
+  quality: number = 85
 ): string {
   return `https://images.unsplash.com/${id}?w=${width}&q=${quality}&auto=format&fit=crop`;
 }
 
-// Pre-built sizes — actual pixel sizes served (no dpr multiplier)
+// Pre-built sizes — actual pixel sizes served (no dpr multiplier).
+// Bumped for crisper images on retina displays now that delivery is fast.
 export const IMAGE_SIZES = {
-  card: 400, // Location/shoot type cards
-  cardLarge: 600, // Featured cards
-  hero: 1200, // Hero section
-  profile: 800, // Profile cover
-  thumbnail: 250, // Thumbnails
+  card: 600, // Location/shoot type cards (was 400 — fine for non-retina)
+  cardLarge: 900, // Featured cards (was 600)
+  hero: 1600, // Hero section (was 1200)
+  profile: 1200, // Profile cover (was 800)
+  thumbnail: 400, // Thumbnails (was 250)
 } as const;
 
 export function locationImage(slug: string, size: keyof typeof IMAGE_SIZES = "card"): string {

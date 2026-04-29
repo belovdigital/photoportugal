@@ -69,12 +69,20 @@ export function IntercomWidget() {
   // can't be positioned reliably above our bottom tab bar, so keep the
   // mobile dashboard clean and let photographers reach support via the
   // sidebar Support link instead.
+  //
+  // ALSO hide on mobile location detail pages: those have a sticky
+  // "Browse" CTA bar at the bottom and the Intercom launcher overlaps
+  // its action button (vertical_padding bumps proved unreliable across
+  // browsers). Visitors there have the AI Concierge quick-start form in
+  // the hero AND a /concierge link, so chat support is one tap away
+  // without the launcher.
   useEffect(() => {
     if (!(window as any).Intercom) return;
     const isMobile = window.innerWidth < 768;
     const isDashboard = pathname.includes("/dashboard");
     const isAdmin = pathname.includes("/admin");
-    const hide = isMobile && (isDashboard || isAdmin);
+    const isLocationDetail = /^\/(?:[a-z]{2}\/)?locations\/[^/]+/.test(pathname);
+    const hide = isMobile && (isDashboard || isAdmin || isLocationDetail);
     (window as any).Intercom("update", {
       hide_default_launcher: hide,
       vertical_padding: 20,

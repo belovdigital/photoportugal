@@ -1,12 +1,26 @@
 import { query, queryOne } from "@/lib/db";
 import archiver from "archiver";
-import { createReadStream, createWriteStream } from "fs";
-import { stat, mkdir } from "fs/promises";
+import { createReadStream } from "fs";
 import path from "path";
-import { uploadToS3, getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
+import { uploadToS3 } from "@/lib/s3";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_PREFIX = R2_PUBLIC_URL + "/";
 
+/**
+ * Build a delivery zip for a booking. Photos can live in three places during
+ * the migration window:
+ *   - `https://files.photoportugal.com/...` (R2 — current)
+ *   - `s3://bucket/key` (R2 — legacy s3-scheme rows)
+ *   - `/uploads/...` (local disk — pre-migration)
+ *
+ * We always build the zip in-memory and upload it to R2 so the download URL
+ * is stable regardless of where the originals lived. The local-disk branch is
+ * kept only as a fallback for any straggler row that wasn't part of the
+ * migration; once the local /uploads dir is removed it will simply 404 with a
+ * "skipped" warning, the rest of the zip still completes.
+ */
 export async function buildDeliveryZip(bookingId: string): Promise<{ path: string; size: number } | null> {
   try {
     const booking = await queryOne<{
@@ -33,162 +47,112 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
     const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
     const zipFilename = `PhotoPortugal_${sanitizedName}.zip`;
 
-    // Check if any photo uses S3 — if so, build ZIP in memory and upload to S3
-    const hasS3Photos = photos.some(p => isS3Path(p.url));
+    console.log(`[build-zip] Building zip for booking ${bookingId} with ${photos.length} photos`);
 
-    if (hasS3Photos) {
-      console.log(`[build-zip] Starting S3 ZIP build for booking ${bookingId} with ${photos.length} photos`);
-      // Build ZIP into a buffer, then upload to S3
-      const { PassThrough } = await import("stream");
-      const chunks: Buffer[] = [];
-      const passthrough = new PassThrough();
-      passthrough.on("data", (chunk: Buffer) => chunks.push(chunk));
+    const { PassThrough } = await import("stream");
+    const chunks: Buffer[] = [];
+    const passthrough = new PassThrough();
+    passthrough.on("data", (chunk: Buffer) => chunks.push(chunk));
 
-      const archive = archiver("zip", { zlib: { level: 5 } });
-      archive.pipe(passthrough);
+    const archive = archiver("zip", { zlib: { level: 5 } });
+    archive.pipe(passthrough);
 
-      // Listen for end/error BEFORE finalize to avoid race condition
-      const endPromise = new Promise<void>((resolve, reject) => {
-        passthrough.on("end", resolve);
-        passthrough.on("error", reject);
-        archive.on("error", reject);
-      });
+    const endPromise = new Promise<void>((resolve, reject) => {
+      passthrough.on("end", resolve);
+      passthrough.on("error", reject);
+      archive.on("error", reject);
+    });
 
-      const usedNames = new Set<string>();
-      let appendedCount = 0;
-      for (const photo of photos) {
-        let name = (photo.filename || path.basename(photo.url)).replace(/[^\w\s.-]/g, "_").replace(/\s+/g, "_");
-        if (usedNames.has(name)) {
-          const ext = path.extname(name);
-          const base = path.basename(name, ext);
-          let i = 2;
-          while (usedNames.has(`${base}_${i}${ext}`)) i++;
-          name = `${base}_${i}${ext}`;
-        }
-        usedNames.add(name);
+    const usedNames = new Set<string>();
+    let appendedCount = 0;
 
-        try {
-          if (isS3Path(photo.url)) {
-            const presigned = await getPresignedUrl(s3KeyFromPath(photo.url), 300);
-            // 30s timeout per file fetch — never hang forever
-            const ctrl = new AbortController();
-            const timeoutId = setTimeout(() => ctrl.abort(), 30000);
-            try {
-              const resp = await fetch(presigned, { signal: ctrl.signal });
-              if (resp.ok) {
-                const buf = Buffer.from(await resp.arrayBuffer());
-                archive.append(buf, { name });
-                appendedCount++;
-              } else {
-                console.warn(`[build-zip] R2 fetch ${resp.status} for ${name} (booking ${bookingId})`);
-              }
-            } finally {
-              clearTimeout(timeoutId);
+    for (const photo of photos) {
+      let name = (photo.filename || path.basename(photo.url)).replace(/[^\w\s.-]/g, "_").replace(/\s+/g, "_");
+      if (usedNames.has(name)) {
+        const ext = path.extname(name);
+        const base = path.basename(name, ext);
+        let i = 2;
+        while (usedNames.has(`${base}_${i}${ext}`)) i++;
+        name = `${base}_${i}${ext}`;
+      }
+      usedNames.add(name);
+
+      try {
+        if (photo.url.startsWith(R2_PUBLIC_PREFIX) || photo.url.startsWith("s3://")) {
+          // Pull bytes via the public R2 URL — same Cloudflare CDN path everyone
+          // else uses, so warmer caches and zero R2 egress cost vs the S3 API.
+          const fetchUrl = photo.url.startsWith("s3://")
+            ? `${R2_PUBLIC_URL}/${photo.url.replace(/^s3:\/\/[^/]+\//, "")}`
+            : photo.url;
+          const ctrl = new AbortController();
+          const timeoutId = setTimeout(() => ctrl.abort(), 30000);
+          try {
+            const resp = await fetch(fetchUrl, { signal: ctrl.signal });
+            if (resp.ok) {
+              const buf = Buffer.from(await resp.arrayBuffer());
+              archive.append(buf, { name });
+              appendedCount++;
+            } else {
+              console.warn(`[build-zip] R2 fetch ${resp.status} for ${name} (booking ${bookingId})`);
             }
-          } else {
-            const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
-            archive.append(createReadStream(filePath), { name });
-            appendedCount++;
+          } finally {
+            clearTimeout(timeoutId);
           }
-        } catch (fetchErr) {
-          console.warn(`[build-zip] Skipped ${name} (booking ${bookingId}):`, fetchErr instanceof Error ? fetchErr.message : fetchErr);
+        } else if (photo.url.startsWith("/uploads/")) {
+          // Legacy local-disk fallback — will 404 once /var/www/photoportugal/uploads
+          // is removed; that's acceptable since the migration converted these rows.
+          const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
+          archive.append(createReadStream(filePath), { name });
+          appendedCount++;
+        } else {
+          console.warn(`[build-zip] Unknown URL form, skipped: ${photo.url}`);
         }
+      } catch (fetchErr) {
+        console.warn(`[build-zip] Skipped ${name} (booking ${bookingId}):`, fetchErr instanceof Error ? fetchErr.message : fetchErr);
       }
-
-      console.log(`[build-zip] Finalizing ZIP for booking ${bookingId}: ${appendedCount}/${photos.length} files appended`);
-      await archive.finalize();
-      await endPromise;
-
-      const zipBuffer = Buffer.concat(chunks);
-      const s3Key = `delivery/${bookingId}/${zipFilename}`;
-      console.log(`[build-zip] Uploading ZIP for booking ${bookingId}: ${(zipBuffer.length / 1024 / 1024).toFixed(1)} MB`);
-      await uploadToS3(s3Key, zipBuffer, "application/zip");
-
-      const s3Path = `s3://${s3Key}`;
-      await queryOne(
-        "UPDATE bookings SET zip_path = $1, zip_size = $2, zip_ready = TRUE WHERE id = $3",
-        [s3Path, zipBuffer.length, bookingId]
-      );
-
-      console.log(`[build-zip] DONE for booking ${bookingId}: ${(zipBuffer.length / 1024 / 1024).toFixed(1)} MB`);
-
-      // Email client with direct download link
-      if (booking.delivery_token && booking.client_email) {
-        try {
-          const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
-          const galleryUrl = `https://photoportugal.com/delivery/${booking.delivery_token}`;
-          const sizeMB = (zipBuffer.length / 1024 / 1024).toFixed(0);
-          const firstName = booking.client_name?.split(" ")[0] || "there";
-          await sendEmail(
-            booking.client_email,
-            `Your photos are ready to download (${sizeMB} MB)`,
-            emailLayout(`
-              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
-              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Great news — your full-resolution photos from <strong>${booking.photographer_name}</strong> are ready to download as a ZIP file (${sizeMB} MB).</p>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4A;">Click the button below to open your gallery and download:</p>
-              ${emailButton(galleryUrl, "Open Gallery & Download")}
-              <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#999;">Tip: the gallery and download stay available for 90 days. If you need help, just reply to this email.</p>
-            `)
-          );
-          console.log(`[build-zip] Notified ${booking.client_email} that ZIP is ready`);
-        } catch (emailErr) {
-          console.error(`[build-zip] email notification error for ${bookingId}:`, emailErr);
-        }
-      }
-
-      return { path: s3Path, size: zipBuffer.length };
     }
 
-    // Local photos: build ZIP on disk (backwards compatible)
-    const zipDir = path.join(UPLOAD_DIR, "delivery", bookingId);
-    await mkdir(zipDir, { recursive: true });
-    const zipPath = path.join(zipDir, zipFilename);
+    console.log(`[build-zip] Finalizing for booking ${bookingId}: ${appendedCount}/${photos.length} files appended`);
+    await archive.finalize();
+    await endPromise;
 
-    return new Promise((resolve, reject) => {
-      const output = createWriteStream(zipPath);
-      const archive = archiver("zip", { zlib: { level: 5 } });
+    const zipBuffer = Buffer.concat(chunks);
+    const r2Key = `delivery/${bookingId}/${zipFilename}`;
+    console.log(`[build-zip] Uploading zip for booking ${bookingId}: ${(zipBuffer.length / 1024 / 1024).toFixed(1)} MB`);
+    await uploadToS3(r2Key, zipBuffer, "application/zip");
+    const zipUrl = `${R2_PUBLIC_URL}/${r2Key}`;
 
-      output.on("close", async () => {
-        try {
-          const stats = await stat(zipPath);
-          await queryOne(
-            "UPDATE bookings SET zip_path = $1, zip_size = $2, zip_ready = TRUE WHERE id = $3",
-            [`/uploads/delivery/${bookingId}/${zipFilename}`, stats.size, bookingId]
-          );
-          resolve({ path: zipPath, size: stats.size });
-        } catch (err) {
-          reject(err);
-        }
-      });
+    await queryOne(
+      "UPDATE bookings SET zip_path = $1, zip_size = $2, zip_ready = TRUE WHERE id = $3",
+      [zipUrl, zipBuffer.length, bookingId]
+    );
 
-      output.on("error", reject);
-      archive.on("error", reject);
+    console.log(`[build-zip] DONE for booking ${bookingId}: ${(zipBuffer.length / 1024 / 1024).toFixed(1)} MB`);
 
-      archive.pipe(output);
-
-      const usedNames = new Set<string>();
-      for (const photo of photos) {
-        const filePath = path.join(UPLOAD_DIR, photo.url.replace("/uploads/", ""));
-        let name = (photo.filename || path.basename(photo.url)).replace(/[^\w\s.-]/g, "_").replace(/\s+/g, "_");
-
-        if (usedNames.has(name)) {
-          const ext = path.extname(name);
-          const base = path.basename(name, ext);
-          let i = 2;
-          while (usedNames.has(`${base}_${i}${ext}`)) i++;
-          name = `${base}_${i}${ext}`;
-        }
-        usedNames.add(name);
-
-        try {
-          archive.append(createReadStream(filePath), { name });
-        } catch {
-          // Skip files that don't exist
-        }
+    if (booking.delivery_token && booking.client_email) {
+      try {
+        const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
+        const galleryUrl = `https://photoportugal.com/delivery/${booking.delivery_token}`;
+        const sizeMB = (zipBuffer.length / 1024 / 1024).toFixed(0);
+        const firstName = booking.client_name?.split(" ")[0] || "there";
+        await sendEmail(
+          booking.client_email,
+          `Your photos are ready to download (${sizeMB} MB)`,
+          emailLayout(`
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
+            <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Great news — your full-resolution photos from <strong>${booking.photographer_name}</strong> are ready to download as a ZIP file (${sizeMB} MB).</p>
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4A;">Click the button below to open your gallery and download:</p>
+            ${emailButton(galleryUrl, "Open Gallery & Download")}
+            <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#999;">Tip: the gallery and download stay available for 90 days. If you need help, just reply to this email.</p>
+          `)
+        );
+        console.log(`[build-zip] Notified ${booking.client_email} that ZIP is ready`);
+      } catch (emailErr) {
+        console.error(`[build-zip] email notification error for ${bookingId}:`, emailErr);
       }
+    }
 
-      archive.finalize();
-    });
+    return { path: zipUrl, size: zipBuffer.length };
   } catch (err) {
     console.error("[build-zip] error:", err);
     return null;

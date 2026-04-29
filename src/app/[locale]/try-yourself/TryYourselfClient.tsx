@@ -21,6 +21,13 @@ interface Usage {
   requires_email: boolean;
   blocked: boolean;
   unlimited?: boolean;
+  latest_result?: {
+    gen_id: string;
+    scene_id: string;
+    image_urls: string[];
+    scene_ids: string[];
+    concierge_loc: string;
+  } | null;
 }
 
 type Step =
@@ -53,12 +60,25 @@ export function TryYourselfClient({ locale, scenes }: { locale: string; scenes: 
   const [expectedSec, setExpectedSec] = useState<number>(90);
   const [waitingLoc, setWaitingLoc] = useState<string>("");
 
-  // Load usage on mount
+  // Load usage on mount. If the session already has a recent successful
+  // generation, restore it so leaving and coming back doesn't lose the slider.
   useEffect(() => {
     fetch("/api/ai-generate/usage")
       .then((r) => r.json())
       .then((u: Usage) => {
         setUsage(u);
+        const latest = u.latest_result;
+        if (latest && latest.image_urls.length > 0) {
+          setStep({
+            kind: "result",
+            imageUrls: latest.image_urls,
+            sceneIds: latest.scene_ids,
+            conciergeLoc: latest.concierge_loc,
+            sceneId: latest.scene_id,
+            genId: latest.gen_id,
+          });
+          return;
+        }
         if (u.blocked) setStep({ kind: "limit" });
       })
       .catch(() => { /* ignore */ });

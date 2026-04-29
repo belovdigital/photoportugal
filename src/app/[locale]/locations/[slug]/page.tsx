@@ -6,7 +6,7 @@ import { locations, getLocationBySlug, getNearbyLocations, locationFaqs, locFiel
 import { localizeShootType } from "@/lib/shoot-type-labels";
 import { photoSpots } from "@/lib/photo-spots-data";
 import { getLocationServices, serviceDescription } from "@/lib/location-services-data";
-import { locationImage, unsplashUrl } from "@/lib/unsplash-images";
+import { locationImage, unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 
 const SHOOT_TYPE_IMAGES: Record<string, string> = {
   couples: "photo-1529634597503-139d3726fed5",
@@ -25,6 +25,7 @@ import { queryOne, query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
+import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
@@ -32,10 +33,20 @@ import { getReviewsForLocation } from "@/lib/reviews-data";
 import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 import { spotSlug, spotLocalized } from "@/lib/photo-spots-data";
 import { formatDuration } from "@/lib/package-pricing";
+import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
+import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
+import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
+import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
 }
+
+// Force-dynamic so the random hero photographer reshuffles on every request
+// rather than staying frozen at whichever person was picked at build/ISR time.
+// These are paid-ad landing pages — SEO weight is lower, the freshness signal
+// (different photographer in hero each visit) is the conversion lever.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -135,43 +146,210 @@ export default async function LocationPage({
     ? (minDuration === maxDuration ? fmt(minDuration) : `${fmt(minDuration)} – ${fmt(maxDuration)}`)
     : null;
 
-  // Fetch top photographers for this location (max 6)
-  let topPhotographers: {
-    id: string; slug: string; name: string; avatar_url: string | null;
-    cover_url: string | null; tagline: string | null;
-    rating: number; review_count: number; starting_price: number | null;
-    languages: string[]; location_names: string[];
-    last_active_at: string | null; avg_response_minutes: number | null;
-  }[] = [];
+  // Hero photographer — weighted-random pick filtered to this location.
+  // Same Efraimidis-Spirakis pattern as the homepage hero so featured /
+  // verified / founding people get more carousel time, but the pool is
+  // restricted to people who actually cover this location.
+  let heroPhotographer: HeroFeaturedPhotographer | null = null;
   try {
-    topPhotographers = await query<{
-      id: string; slug: string; name: string; avatar_url: string | null;
-      cover_url: string | null; tagline: string | null;
-      rating: number; review_count: number; starting_price: number | null;
-      languages: string[]; location_names: string[];
-      last_active_at: string | null; avg_response_minutes: number | null;
+    const heroRows = await query<{
+      slug: string; name: string; tagline: string | null;
+      cover_url: string | null; avatar_url: string | null;
+      rating: string; review_count: number; session_count: number;
+      portfolio_urls: string[] | null;
     }>(
       (() => {
         const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
         const useLoc = TR_LOCALES.has(locale) ? locale : null;
         const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+        return `SELECT pp.slug, u.name, ${taglineSql} as tagline, pp.cover_url, u.avatar_url,
+              COALESCE(pp.rating, 0)::text as rating,
+              COALESCE(pp.review_count, 0) as review_count,
+              COALESCE(pp.session_count, 0) as session_count,
+              ARRAY(
+                SELECT pi.url FROM portfolio_items pi
+                WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                ORDER BY pi.sort_order NULLS LAST, pi.created_at
+                LIMIT 12
+              ) as portfolio_urls
+       FROM photographer_locations pl
+       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       WHERE pl.location_slug = $1
+         AND pp.is_approved = TRUE
+         AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+         AND EXISTS (
+           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+         )
+       ORDER BY -LN(RANDOM()) / (CASE
+         WHEN pp.is_featured THEN 50
+         WHEN pp.is_verified THEN 30
+         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+         WHEN pp.early_bird_tier IS NOT NULL THEN 5
+         ELSE 2
+       END) ASC
+       LIMIT 1`;
+      })(),
+      [slug]
+    );
+    if (heroRows.length > 0) {
+      const r = heroRows[0];
+      heroPhotographer = {
+        slug: r.slug,
+        name: r.name,
+        tagline: r.tagline,
+        cover_url: r.cover_url,
+        avatar_url: r.avatar_url,
+        rating: Number(r.rating),
+        review_count: r.review_count,
+        session_count: r.session_count,
+        location_name: localizedName,
+        location_slug: slug,
+        portfolio_urls: (r.portfolio_urls || []).filter(Boolean),
+      };
+    }
+  } catch {}
+
+  // Pool of portfolio photos from this location for the mosaic in section 2
+  // AND the masonry block 3. Single query, weighted tier sampling (same
+  // shape as the homepage). Filter at portfolio_items level by
+  // location_slug, falling back to "any photo by photographers covering
+  // this city" so locations without per-photo tags still get content.
+  type LocationPortfolioRow = {
+    url: string; width: number | null; height: number | null;
+    slug: string; name: string; avatar_url: string | null;
+  };
+  let locationMosaicPhotos: { url: string; slug: string; name: string; location: string | null }[] = [];
+  let locationMasonryPhotos: LocationMasonryPhoto[] = [];
+  try {
+    const portfolioRows = await query<LocationPortfolioRow>(
+      `SELECT pi.url, pi.width, pi.height,
+              pp.slug, u.name, u.avatar_url
+       FROM portfolio_items pi
+       JOIN photographer_profiles pp ON pp.id = pi.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       JOIN photographer_locations pl ON pl.photographer_id = pp.id
+       WHERE pl.location_slug = $1
+         AND pi.type = 'photo'
+         AND pp.is_approved = TRUE
+         AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+         AND (pi.location_slug IS NULL OR pi.location_slug = $1)
+       ORDER BY -LN(RANDOM()) / (CASE
+         WHEN pp.is_featured THEN 50
+         WHEN pp.is_verified THEN 30
+         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+         WHEN pp.early_bird_tier IS NOT NULL THEN 5
+         ELSE 2
+       END) ASC
+       LIMIT 60`,
+      [slug]
+    );
+    locationMosaicPhotos = portfolioRows.slice(0, 24).map((r) => ({
+      url: r.url, slug: r.slug, name: r.name, location: localizedName,
+    }));
+    // Block 3 masonry — capped at 30 so the mobile peek-carousel stays
+    // navigable but visitors still get plenty of variety. Includes
+    // width/height + avatar for the desktop hover attribution overlay.
+    locationMasonryPhotos = portfolioRows.slice(0, 30).map((r) => ({
+      url: r.url,
+      width: r.width,
+      height: r.height,
+      photographer: { slug: r.slug, name: r.name, avatar_url: r.avatar_url },
+    }));
+  } catch {}
+
+  // Total photographers across Portugal — for the "browse all N" link in
+  // the hero overlay (which links to the catalog, not just this location).
+  let totalPhotographers = 0;
+  try {
+    const totalRow = await queryOne<{ count: number }>(
+      `SELECT COUNT(*)::int as count FROM photographer_profiles
+       WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE`
+    );
+    totalPhotographers = totalRow?.count ?? 0;
+  } catch {}
+
+  const heroLocationContext: HeroLocationContext = {
+    slug,
+    name: localizedName,
+    region: location.region,
+    photographerCount,
+    minPrice,
+    durationText,
+    avgRating: avgRating || null,
+    totalReviews,
+  };
+
+  // Fetch top photographers for this location (max 6). Pull the full set of
+  // fields PhotographerCardCompact expects so this page renders the same rich
+  // card as the homepage Top Photographers section.
+  type LocationPhotographerRow = {
+    id: string; slug: string; name: string; avatar_url: string | null;
+    cover_url: string | null; cover_position_y: number | null;
+    portfolio_thumbs: string[] | null;
+    is_featured: boolean; is_verified: boolean; is_founding: boolean;
+    tagline: string | null;
+    rating: number; review_count: number; starting_price: string | null;
+    locations: string | null;
+    last_active_at: string | null; avg_response_minutes: number | null;
+    packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number }[] | null;
+    packages_count: number;
+  };
+  let topPhotographers: LocationPhotographerRow[] = [];
+  try {
+    topPhotographers = await query<LocationPhotographerRow>(
+      (() => {
+        const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+        const useLoc = TR_LOCALES.has(locale) ? locale : null;
+        const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
         return `SELECT pp.id, pp.slug, u.name, u.avatar_url,
-              pp.cover_url, ${taglineSql} as tagline, pp.rating, pp.review_count, pp.languages,
+              pp.cover_url, pp.cover_position_y,
+              pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
+              ${taglineSql} as tagline, pp.rating, pp.review_count,
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as starting_price,
-              ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id LIMIT 3) as location_names
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
+              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
+              -- ALL public packages (no LIMIT) so the card can render the
+              -- full stack inline — most photographers have 3–4 and a
+              -- "view all" link would just add a click without saving
+              -- vertical space. Card needs id/name/price/duration/num_photos
+              -- per row.
+              COALESCE((
+                SELECT json_agg(
+                  json_build_object(
+                    'id', pk.id,
+                    'name', pk.name,
+                    'price', pk.price,
+                    'duration_minutes', pk.duration_minutes,
+                    'num_photos', COALESCE(pk.num_photos, 0)
+                  ) ORDER BY pk.sort_order NULLS LAST, pk.price ASC
+                )
+                FROM packages pk
+                WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE
+              ), '[]'::json) as packages,
+              -- Kept for back-compat (not displayed) — could be removed.
+              (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::int as packages_count
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        JOIN users u ON u.id = pp.user_id
        WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
-       ORDER BY pp.is_featured DESC, RANDOM()
+       ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
        LIMIT 6`;
       })(),
       [slug]
     );
   } catch {}
 
-  // Fetch related blog posts that mention this location
+  // Fetch related blog posts that mention this location AND are in the
+  // visitor's current locale. Without the locale filter the Spanish or
+  // French page was rendering German posts (the only locale where the
+  // location was mentioned), which read as broken. If no posts exist in
+  // the current locale, the section silently hides — better than showing
+  // mismatched language.
   let relatedPosts: { id: string; slug: string; title: string; excerpt: string | null; cover_image_url: string | null; published_at: string }[] = [];
   try {
     relatedPosts = await query<{
@@ -185,10 +363,11 @@ export default async function LocationPage({
       `SELECT id, slug, title, excerpt, cover_image_url, published_at
        FROM blog_posts
        WHERE is_published = TRUE
+       AND COALESCE(locale, 'en') = $2
        AND (title ILIKE '%' || $1 || '%' OR content ILIKE '%' || $1 || '%' OR meta_description ILIKE '%' || $1 || '%')
        ORDER BY published_at DESC
        LIMIT 3`,
-      [location.name]
+      [location.name, locale]
     );
   } catch {}
 
@@ -331,120 +510,121 @@ export default async function LocationPage({
         ]}
       />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <OptimizedImage
-            src={locationImage(location.slug, "hero")}
-            alt={`Vacation photography session in ${location.name}, Portugal`}
-            priority
-            className="h-full w-full"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-950/85 via-primary-900/70 to-primary-800/50" />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold text-primary-300">
-              {location.region}
-            </p>
-            <h1 className="mt-2 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
-              {tc("photographersIn", { location: localizedName })}
-            </h1>
-            <p className="mt-6 text-lg text-primary-100/90">
-              {description}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link
-                href={`/photographers?location=${location.slug}`}
-                className="inline-flex rounded-xl bg-white px-8 py-4 text-base font-semibold text-primary-700 shadow-lg transition hover:bg-primary-50 hover:shadow-xl"
-              >
-                {t("viewPhotographers", { location: location.name })}
-              </Link>
-              {photographerCount >= 6 && (
-                <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
-                  {t("photographersAvailable", { count: photographerCount })}
-                </span>
-              )}
-            </div>
-            <div className="mt-6 max-w-xl">
-              <MatchQuickForm
-                presetLocation={location.slug}
-                source={`location_${location.slug}`}
-                variant="dark"
-                size="md"
-              />
-            </div>
+      {/* Mobile-only sticky bottom CTA bar. Renders independently of the
+          page flow (fixed position) and shows after the user has scrolled
+          past the hero so it doesn't compete with the hero's MatchQuickForm. */}
+      <LocationStickyBookBar
+        locationSlug={slug}
+        locationName={localizedName}
+        minPrice={minPrice}
+      />
+
+      {/* Hero — same single-photographer carousel pattern as the homepage,
+          but the photographer is filtered to people who cover THIS location.
+          The overlay text + chips switch to "Photographers in {location}"
+          framing via the locationContext prop. */}
+      {heroPhotographer ? (
+        <HeroSingleVariant
+          photographer={heroPhotographer}
+          locationContext={heroLocationContext}
+          totalPhotographers={totalPhotographers}
+        />
+      ) : (
+        // Fallback when no photographer covers this location yet — keep the
+        // old static-image hero so the page never renders empty.
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0">
+            <OptimizedImage
+              src={locationImage(location.slug, "hero")}
+              alt={`Vacation photography session in ${location.name}, Portugal`}
+              priority
+              className="h-full w-full"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary-950/85 via-primary-900/70 to-primary-800/50" />
           </div>
-        </div>
-      </section>
-
-      {/* About the location */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-        <div className="grid grid-cols-1 gap-16 lg:grid-cols-5">
-          <div className="lg:col-span-3">
-            <h2 className="font-display text-3xl font-bold text-gray-900">
-              {t("whyLocation", { location: location.name })}
-            </h2>
-            <div className="mt-6 text-gray-600 leading-relaxed space-y-4">
-              <p>{longDescription}</p>
-            </div>
-
-            <div className="mt-10">
-              <h3 className="text-lg font-bold text-gray-900">
-                {t("popularTypes", { location: location.name })}
-              </h3>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {(["couples", "family", "soloPortrait", "engagement", "proposal", "honeymoon", "friendsTrip", "anniversary"] as const).map((type) => (
-                  <span
-                    key={type}
-                    className="rounded-full bg-primary-50 px-4 py-2 text-sm font-medium text-primary-700"
-                  >
-                    {t(`shootTypes.${type}`)}
-                  </span>
-                ))}
+          <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold text-primary-300">{location.region}</p>
+              <h1 className="mt-2 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
+                {tc("photographersIn", { location: localizedName })}
+              </h1>
+              <p className="mt-6 text-lg text-primary-100/90">{description}</p>
+              <div className="mt-6 max-w-xl">
+                <MatchQuickForm
+                  presetLocation={location.slug}
+                  source={`location_${location.slug}`}
+                  variant="dark"
+                  size="md"
+                />
               </div>
             </div>
           </div>
+        </section>
+      )}
 
-          <div className="lg:col-span-2">
-            <div className="rounded-2xl border border-warm-200 bg-white p-8 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900">{t("quickFacts.title")}</h3>
-              <dl className="mt-4 space-y-4">
-                <div>
-                  <dt className="text-sm text-gray-500">{t("quickFacts.region")}</dt>
-                  <dd className="text-sm font-semibold text-gray-900">
-                    {location.region}
-                  </dd>
+      {/* About the location — sticky left text + scroll-snap mosaic on the
+          right (same pattern as the homepage section 2). Quick facts moved
+          into the hero as chips, so this section is purely "why X +
+          shoot-type tags + see what people shoot here". */}
+      <section className="relative bg-warm-50">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* `items-start` is required for sticky to work — default
+              `items-stretch` would equalise column heights and the sticky
+              effect would silently die. */}
+          <div className="grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-2 lg:gap-12 lg:py-20">
+            {/* Left — text/CTAs, sticks to top while user scrolls past the
+                mosaic. */}
+            <div className="max-w-xl lg:sticky lg:top-24">
+              <h2 className="font-display text-3xl font-bold text-gray-900 sm:text-4xl">
+                {t("whyLocation", { location: location.name })}
+              </h2>
+              <div className="mt-6 text-gray-600 leading-relaxed space-y-4">
+                <p>{longDescription}</p>
+              </div>
+
+              <div className="mt-8">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+                  {t("popularTypes", { location: location.name })}
+                </h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(["couples", "family", "soloPortrait", "engagement", "proposal", "honeymoon", "friendsTrip", "anniversary"] as const).map((type) => (
+                    <span
+                      key={type}
+                      className="rounded-full bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700"
+                    >
+                      {t(`shootTypes.${type}`)}
+                    </span>
+                  ))}
                 </div>
-                <div>
-                  <dt className="text-sm text-gray-500">{t("quickFacts.bestTimeForPhotos")}</dt>
-                  <dd className="text-sm font-semibold text-gray-900">
-                    {t("quickFacts.bestTimeValue")}
-                  </dd>
-                </div>
-                {durationText && (
-                  <div>
-                    <dt className="text-sm text-gray-500">{t("quickFacts.averageSession")}</dt>
-                    <dd className="text-sm font-semibold text-gray-900">{durationText}</dd>
-                  </div>
-                )}
-                {minPrice !== null && (
-                  <div>
-                    <dt className="text-sm text-gray-500">{t("quickFacts.startingFrom")}</dt>
-                    <dd className="text-sm font-semibold text-primary-600">€{Math.round(minPrice)} / session</dd>
-                  </div>
-                )}
-              </dl>
+              </div>
+
               <Link
                 href={`/photographers?location=${location.slug}`}
-                className="mt-6 block w-full rounded-xl bg-primary-600 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-primary-700"
+                className="mt-8 inline-flex rounded-xl bg-primary-600 px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700"
               >
                 {tc("findPhotographers")}
               </Link>
             </div>
+
+            {/* Right — auto-rotating mosaic of real portfolio photos from
+                this location. Tall (140vh) so the user has room to scroll
+                past it while the left column stays sticky. */}
+            <div className="hidden lg:block lg:h-[140vh]">
+              {locationMosaicPhotos.length > 0 && (
+                <PortfolioMosaic photos={locationMosaicPhotos.slice(0, 24)} />
+              )}
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Block 3 — Real photos shot in this location with photographer
+          attribution. Mobile is a peek-carousel (mixed orientations), desktop
+          is a 3-col masonry. Click on any photo opens the photographer's
+          profile in a new tab. */}
+      {locationMasonryPhotos.length > 0 && (
+        <LocationPhotosMasonry photos={locationMasonryPhotos} />
+      )}
 
       {/* Featured Photographers */}
       {topPhotographers.length > 0 && (
@@ -459,66 +639,37 @@ export default async function LocationPage({
             <div className="mt-6">
               <ScarcityBanner count={photographerCount} locationName={location.name} locale={locale} />
             </div>
+            {/* Switched from <PhotographerCard> to <PhotographerCardCompact>
+                so this page can render inline package CTAs (top 2 packages
+                + "View all N more" link) — same pattern as the LP cards.
+                On a paid-ad landing this shortens the funnel by a click:
+                visitor sees price + duration upfront, taps a package, lands
+                on /book/{slug}?package={id} directly. */}
             <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {topPhotographers.map((sp) => (
-                <Link
+                <PhotographerCardCompact
                   key={sp.id}
-                  href={`/photographers/${sp.slug}`}
-                  className="group overflow-hidden rounded-xl border border-warm-200 bg-white transition hover:border-primary-200 hover:shadow-md"
-                >
-                  {/* Cover */}
-                  <div className="relative h-36 bg-warm-100">
-                    {sp.cover_url ? (
-                      <OptimizedImage src={sp.cover_url} alt={sp.name} width={400} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-warm-100 to-warm-200" />
-                    )}
-                    <div className="absolute -bottom-5 left-4 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary-100 text-sm font-bold text-primary-600 overflow-hidden shadow-sm">
-                      {sp.avatar_url ? (
-                        <OptimizedImage src={sp.avatar_url} alt={sp.name} width={80} className="h-full w-full object-cover" />
-                      ) : (
-                        sp.name.charAt(0)
-                      )}
-                    </div>
-                  </div>
-                  {/* Info */}
-                  <div className="px-4 pb-4 pt-7">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-                        {sp.name}
-                      </h3>
-                      <ActiveBadge lastSeenAt={sp.last_active_at} />
-                    </div>
-                    {sp.tagline && (
-                      <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{sp.tagline}</p>
-                    )}
-                    {sp.review_count > 0 ? (
-                    <div className="mt-2 flex items-center gap-1 text-sm">
-                      <span className="text-amber-500">
-                        <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      </span>
-                      <span className="font-semibold text-gray-900">{Number(sp.rating).toFixed(1)}</span>
-                      <span className="text-gray-400">({sp.review_count})</span>
-                    </div>
-                    ) : null}
-                    <ResponseTimeBadge avgMinutes={sp.avg_response_minutes} compact />
-                    {sp.location_names.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {sp.location_names.map((loc) => (
-                          <span key={loc} className="rounded-full bg-warm-100 px-2 py-0.5 text-[10px] text-gray-500 capitalize">{loc.replace(/-/g, " ")}</span>
-                        ))}
-                      </div>
-                    )}
-                    {sp.starting_price && (
-                      <p className="mt-2 text-sm">
-                        <span className="text-gray-400">{tc("from")}</span>{" "}
-                        <span className="font-bold text-gray-900">&euro;{Math.round(Number(sp.starting_price))}</span>
-                      </p>
-                    )}
-                  </div>
-                </Link>
+                  p={{
+                    slug: sp.slug,
+                    name: sp.name,
+                    tagline: sp.tagline,
+                    avatar_url: sp.avatar_url,
+                    cover_url: sp.cover_url,
+                    cover_position_y: sp.cover_position_y,
+                    portfolio_thumbs: sp.portfolio_thumbs,
+                    is_featured: sp.is_featured,
+                    is_verified: sp.is_verified,
+                    is_founding: sp.is_founding,
+                    rating: Number(sp.rating),
+                    review_count: sp.review_count,
+                    min_price: sp.starting_price ? Number(sp.starting_price) : null,
+                    locations: sp.locations,
+                    last_active_at: sp.last_active_at,
+                    avg_response_minutes: sp.avg_response_minutes,
+                    packages: sp.packages ?? [],
+                    packages_total_count: sp.packages_count,
+                  }}
+                />
               ))}
             </div>
             {photographerCount > topPhotographers.length && (
@@ -581,9 +732,9 @@ export default async function LocationPage({
                     <div className="aspect-[4/3] w-full overflow-hidden">
                       {imgId ? (
                         <OptimizedImage
-                          src={unsplashUrl(imgId, 400)}
+                          src={unsplashUrl(imgId, IMAGE_SIZES.cardLarge)}
                           alt={t("altShootInLocation", { type: localizeShootType(service.label, locale), location: localizedName })}
-                          width={400}
+                          width={IMAGE_SIZES.cardLarge}
                           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
