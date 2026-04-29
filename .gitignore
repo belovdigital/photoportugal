@@ -46,3 +46,6 @@ next-env.d.ts
 
 # google ads URL snapshots (point-in-time backups for rollback)
 scripts/ads-snapshots/
+
+# Local-only ads rollback script (contains hardcoded OAuth secrets)
+scripts/ads-rollback.cjs
