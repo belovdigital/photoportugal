@@ -30,9 +30,11 @@ export default async function DeliveryPage({ params }: { params: Promise<{ token
     photographer_name: string;
     photographer_avatar: string | null;
     delivery_expires_at: string;
+    delivery_title: string | null;
+    delivery_message: string | null;
   }>(
     `SELECT u.name as photographer_name, u.avatar_url as photographer_avatar,
-            b.delivery_expires_at
+            b.delivery_expires_at, b.delivery_title, b.delivery_message
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -63,6 +65,8 @@ export default async function DeliveryPage({ params }: { params: Promise<{ token
       token={token}
       photographerName={booking.photographer_name}
       photographerAvatar={booking.photographer_avatar}
+      deliveryTitle={booking.delivery_title}
+      deliveryMessage={booking.delivery_message}
     />
   );
 }

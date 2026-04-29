@@ -206,6 +206,10 @@ CREATE TABLE bookings (
   client_followup_sent BOOLEAN DEFAULT FALSE,
   client_followup_7d_sent BOOLEAN DEFAULT FALSE,
   client_followup_14d_alerted BOOLEAN DEFAULT FALSE,
+  -- Photographer's free-form delivery message rendered above the gallery
+  -- on /delivery/[token]. Mirrors what Flytographer surfaces for clients.
+  delivery_title VARCHAR(200),
+  delivery_message TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -270,14 +274,23 @@ CREATE INDEX idx_messages_booking ON messages(booking_id);
 -- ============================================================
 -- DELIVERY PHOTOS (photos delivered to client per booking)
 -- ============================================================
+-- Per-item: media_type='image' (default) or 'video'.
+-- - preview_url: watermarked low-res JPEG for images only.
+-- - thumbnail_url: poster JPEG for videos (extracted via ffmpeg at upload).
+-- - duration_seconds / width / height: populated for video items via ffprobe.
 CREATE TABLE delivery_photos (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
   preview_url TEXT,
+  thumbnail_url TEXT,
   filename VARCHAR(255) NOT NULL,
   file_size INTEGER DEFAULT 0,
   sort_order INTEGER DEFAULT 0,
+  media_type VARCHAR(10) NOT NULL DEFAULT 'image',
+  duration_seconds INTEGER,
+  width INTEGER,
+  height INTEGER,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

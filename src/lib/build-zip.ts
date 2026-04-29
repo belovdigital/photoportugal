@@ -45,7 +45,8 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
     if (photos.length === 0) return null;
 
     const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
-    const zipFilename = `PhotoPortugal_${sanitizedName}.zip`;
+    const bookingShort = bookingId.replace(/-/g, "").slice(0, 8);
+    const zipFilename = `PhotoPortugal_${sanitizedName}_${bookingShort}.zip`;
 
     console.log(`[build-zip] Building zip for booking ${bookingId} with ${photos.length} photos`);
 
@@ -81,8 +82,11 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
         if (photo.url.startsWith(R2_PUBLIC_PREFIX) || photo.url.startsWith("s3://")) {
           // Pull bytes via the public R2 URL — same Cloudflare CDN path everyone
           // else uses, so warmer caches and zero R2 egress cost vs the S3 API.
+          // Stored `s3://` paths have no bucket segment (e.g. s3://delivery/<id>/file.jpg),
+          // so strip just the scheme — stripping the first path segment as a fake
+          // "bucket" used to chop off `delivery/`, every fetch 404'd, ZIP came out empty.
           const fetchUrl = photo.url.startsWith("s3://")
-            ? `${R2_PUBLIC_URL}/${photo.url.replace(/^s3:\/\/[^/]+\//, "")}`
+            ? `${R2_PUBLIC_URL}/${photo.url.replace(/^s3:\/\//, "")}`
             : photo.url;
           const ctrl = new AbortController();
           const timeoutId = setTimeout(() => ctrl.abort(), 30000);

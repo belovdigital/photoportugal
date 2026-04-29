@@ -1,14 +1,19 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface Photo {
   id: string;
   url: string;
+  thumbnail_url?: string | null;
   filename: string;
   file_size: number;
+  media_type?: "image" | "video";
+  duration_seconds?: number | null;
+  width?: number | null;
+  height?: number | null;
 }
 
 export function DeliveryUploadClient({
@@ -16,31 +21,50 @@ export function DeliveryUploadClient({
   initialPhotos,
   isDelivered: initialDelivered,
   clientAccepted,
+  hasOpenDispute,
   deliveryToken: initialToken,
+  initialTitle,
+  initialMessage,
 }: {
   bookingId: string;
   initialPhotos: Photo[];
   isDelivered: boolean;
   clientAccepted: boolean;
+  hasOpenDispute: boolean;
   deliveryToken: string | null;
+  initialTitle?: string | null;
+  initialMessage?: string | null;
 }) {
-  // canEdit: photographer can still add/remove/replace photos until the client has accepted.
-  // This lets the photographer fix mistakes after sharing (e.g. swap a bad photo) without breaking the share link.
-  const canEdit = !clientAccepted;
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, failed: 0 });
   const [failedFiles, setFailedFiles] = useState<File[]>([]);
   const [sharing, setSharing] = useState(false);
   const [delivered, setDelivered] = useState(initialDelivered);
+
+  // canEdit: photographer locks the deliverable the moment they hit
+  // Share. After that the link + password is out (email + chat message
+  // already sent), so silently changing what the client sees is bad
+  // form. Also frozen after Accept (payment settled) or while a dispute
+  // is open (admin owns the resolution).
+  const canEdit = !delivered && !clientAccepted && !hasOpenDispute;
   const [deliveryToken, setDeliveryToken] = useState(initialToken);
-  const [deliveryUrl, setDeliveryUrl] = useState(
-    initialToken ? `${window.location.origin}/delivery/${initialToken}` : ""
-  );
+  // `window` is undefined during SSR (Next.js still server-renders this
+  // "use client" component for the initial paint), so the URL is empty
+  // initially and gets populated in a `useEffect` once we're on the
+  // client. Without this guard the photographer's deliver page 500's
+  // whenever `initialToken` is set (i.e. anytime they revisit a shared
+  // delivery to edit it).
+  const [deliveryUrl, setDeliveryUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [galleryPassword, setGalleryPassword] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
+  const [deliveryTitle, setDeliveryTitle] = useState(initialTitle || "");
+  const [deliveryMessage, setDeliveryMessage] = useState(initialMessage || "");
+  const [savingMessage, setSavingMessage] = useState(false);
+  const [messageSaved, setMessageSaved] = useState(false);
+  const saveMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -48,6 +72,38 @@ export function DeliveryUploadClient({
   const [deleteProgress, setDeleteProgress] = useState({ current: 0, total: 0 });
   const t = useTranslations("delivery");
   const { modal, confirm } = useConfirmModal();
+
+  // Hydrate deliveryUrl on the client once `window` is available. Runs
+  // also when `deliveryToken` changes (e.g. after share) so the URL
+  // refreshes without a page reload.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setDeliveryUrl(deliveryToken ? `${window.location.origin}/delivery/${deliveryToken}` : "");
+  }, [deliveryToken]);
+
+  // Debounced auto-save of title + message — fires 800ms after the
+  // photographer stops typing so we don't hammer the API on every
+  // keystroke. The "Saved" indicator quietly confirms persistence.
+  function scheduleSaveMessage(nextTitle: string, nextMessage: string) {
+    if (saveMessageTimer.current) clearTimeout(saveMessageTimer.current);
+    saveMessageTimer.current = setTimeout(async () => {
+      setSavingMessage(true);
+      setMessageSaved(false);
+      try {
+        const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "save_message", title: nextTitle, message: nextMessage }),
+        });
+        if (res.ok) {
+          setMessageSaved(true);
+          setTimeout(() => setMessageSaved(false), 1500);
+        }
+      } catch {} finally {
+        setSavingMessage(false);
+      }
+    }, 800);
+  }
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -74,39 +130,98 @@ export function DeliveryUploadClient({
     setDeleting(false);
   }
 
-  async function uploadOneFile(file: File): Promise<boolean> {
-    const formData = new FormData();
-    formData.append("files", file);
-    try {
-      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) return false;
-      const data = await res.json();
-      if (data.uploaded) {
-        setPhotos(prev => [...prev, ...data.uploaded]);
-        return true;
+  // Byte-level progress: keep an uploaded-bytes-per-file map and sum it
+  // so the bar is smooth even with a single large file (50MB photo, 500MB
+  // video). Upload-stage finishes when the browser hands the bytes off; if
+  // the response then takes a while (e.g. server-side ffmpeg on a video),
+  // the bar parks at 100% and `phase` flips to "processing" so the UI
+  // doesn't look frozen.
+  const [bytesProgress, setBytesProgress] = useState({ uploaded: 0, total: 0 });
+  const [uploadPhase, setUploadPhase] = useState<"uploading" | "processing">("uploading");
+  const fileBytesRef = useRef<Map<string, number>>(new Map());
+
+  function recomputeBytes() {
+    let sum = 0;
+    fileBytesRef.current.forEach((v) => { sum += v; });
+    setBytesProgress((p) => {
+      const next = { ...p, uploaded: sum };
+      // Once all bytes are sent (sum >= total) we're waiting on the
+      // server (ffmpeg / preview generation). Flip phase so the label
+      // reads "Processing" instead of stuck at 100%.
+      if (next.total > 0 && sum >= next.total) {
+        setUploadPhase((cur) => (cur === "uploading" ? "processing" : cur));
       }
-      return false;
-    } catch {
-      return false;
-    }
+      return next;
+    });
+  }
+
+  async function uploadOneFile(file: File): Promise<boolean> {
+    const fileKey = `${file.name}:${file.size}:${file.lastModified}`;
+    fileBytesRef.current.set(fileKey, 0);
+    return new Promise<boolean>((resolve) => {
+      const formData = new FormData();
+      formData.append("files", file);
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `/api/bookings/${bookingId}/delivery`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          fileBytesRef.current.set(fileKey, e.loaded);
+          recomputeBytes();
+        }
+      };
+      xhr.upload.onload = () => {
+        // Bytes fully sent; mark this file at full size and switch phase
+        // to "processing" if no other file is still uploading bytes.
+        fileBytesRef.current.set(fileKey, file.size);
+        recomputeBytes();
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.uploaded) {
+              setPhotos((prev) => [...prev, ...data.uploaded]);
+              resolve(true);
+              return;
+            }
+          } catch {}
+        }
+        resolve(false);
+      };
+      xhr.onerror = () => resolve(false);
+      xhr.onabort = () => resolve(false);
+      xhr.send(formData);
+    });
   }
 
   async function handleUpload(files: FileList | File[]) {
-    const imageFiles = Array.from(files).filter(f => f.type.startsWith("image/"));
-    if (imageFiles.length === 0) return;
+    // Accept both photos and videos. The server validates by MIME prefix
+    // AND file extension, so we mirror that here — without the extension
+    // fallback browsers that don't know the video MIME (older Macs, some
+    // .mov export tools) would dump empty `file.type` and we'd silently
+    // drop the file before even attempting upload.
+    const VID_EXT = ["mp4", "mov", "webm", "m4v"];
+    const filtered = Array.from(files).filter((f) => {
+      const t = (f.type || "").toLowerCase();
+      if (t.startsWith("image/") || t.startsWith("video/")) return true;
+      const ext = (f.name.split(".").pop() || "").toLowerCase();
+      return VID_EXT.includes(ext);
+    });
+    if (filtered.length === 0) return;
 
     setUploading(true);
+    setUploadPhase("uploading");
     setFailedFiles([]);
-    setUploadProgress({ current: 0, total: imageFiles.length, failed: 0 });
+    setUploadProgress({ current: 0, total: filtered.length, failed: 0 });
+    fileBytesRef.current.clear();
+    const totalBytes = filtered.reduce((s, f) => s + f.size, 0);
+    setBytesProgress({ uploaded: 0, total: totalBytes });
     let completed = 0;
     const failedAfterRetry: File[] = [];
 
     // Upload in batches of 2 (reduced from 3 to avoid server overload with large files)
     const BATCH_SIZE = 2;
-    const toUpload = [...imageFiles];
+    const toUpload = [...filtered];
 
     for (let i = 0; i < toUpload.length; i += BATCH_SIZE) {
       const batch = toUpload.slice(i, i + BATCH_SIZE);
@@ -149,7 +264,14 @@ export function DeliveryUploadClient({
       alert(t("setPassword"));
       return;
     }
-    const okShare = await confirm("Share Delivery", t("confirmShare", { count: photos.length }), { confirmLabel: "Share" });
+    const photoCnt = photos.filter((p) => p.media_type !== "video").length;
+    const videoCnt = photos.filter((p) => p.media_type === "video").length;
+    const confirmText = videoCnt === 0
+      ? t("confirmShare", { count: photoCnt })
+      : photoCnt === 0
+        ? t("confirmShareVideos", { count: videoCnt })
+        : t("confirmSharePhotosAndVideos", { photos: photoCnt, videos: videoCnt });
+    const okShare = await confirm("Share Delivery", confirmText, { confirmLabel: "Share" });
     if (!okShare) return;
 
     setSharing(true);
@@ -157,7 +279,12 @@ export function DeliveryUploadClient({
       const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "share", password: galleryPassword.trim() }),
+        body: JSON.stringify({
+          action: "share",
+          password: galleryPassword.trim(),
+          title: deliveryTitle.trim(),
+          message: deliveryMessage.trim(),
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -194,6 +321,50 @@ export function DeliveryUploadClient({
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
+
+      {/* Title + warm message — always rendered so the photographer can
+          see what they wrote even after sharing, but inputs go read-only
+          (disabled, dimmer bg) once `canEdit` flips false. */}
+      {(canEdit || deliveryTitle || deliveryMessage) && (
+        <div className="mb-6 rounded-xl border border-warm-200 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-900">{t("messageHeading")}</h3>
+            <span className="text-xs text-gray-400">
+              {!canEdit
+                ? t("messageLocked")
+                : savingMessage ? t("messageSaving")
+                : messageSaved ? t("messageSaved")
+                : ""}
+            </span>
+          </div>
+          <input
+            type="text"
+            value={deliveryTitle}
+            onChange={(e) => {
+              setDeliveryTitle(e.target.value);
+              scheduleSaveMessage(e.target.value, deliveryMessage);
+            }}
+            placeholder={t("titlePlaceholder")}
+            maxLength={200}
+            disabled={!canEdit}
+            className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-base font-semibold text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 disabled:cursor-not-allowed disabled:opacity-70"
+          />
+          <textarea
+            value={deliveryMessage}
+            onChange={(e) => {
+              setDeliveryMessage(e.target.value);
+              scheduleSaveMessage(deliveryTitle, e.target.value);
+            }}
+            placeholder={t("messagePlaceholder")}
+            maxLength={1500}
+            rows={4}
+            disabled={!canEdit}
+            className="mt-2 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 disabled:cursor-not-allowed disabled:opacity-70"
+          />
+          {canEdit && <p className="mt-1 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>}
+        </div>
+      )}
+
       {/* Upload area — shown until the client has accepted (pre-share + post-share edit window). */}
       {canEdit && (
         <div
@@ -216,20 +387,43 @@ export function DeliveryUploadClient({
             ref={fileRef}
             type="file"
             multiple
-            accept="image/*"
+            accept="image/*,video/mp4,video/quicktime,video/webm,.mov,.mp4,.webm,.m4v"
             className="hidden"
             onChange={(e) => e.target.files && handleUpload(e.target.files)}
           />
         </div>
       )}
 
-      {/* Upload progress */}
+      {/* Upload progress — bar driven by bytes uploaded so even a single
+          large file shows smooth motion (file-count progress only ticks
+          when each file finishes). After all bytes are sent, the phase
+          flips to "processing" while the server runs ffmpeg / generates
+          previews — bar pegged at 100% but the label tells the user
+          we're still doing something. */}
       {uploading && (
         <div className="mt-4 flex items-center gap-3">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-warm-200">
-            <div className="h-full rounded-full bg-primary-500 transition-all duration-300" style={{ width: `${uploadProgress.total > 0 ? (uploadProgress.current / uploadProgress.total) * 100 : 0}%` }} />
+            <div
+              className="h-full rounded-full bg-primary-500 transition-all duration-300"
+              style={{
+                width: `${
+                  bytesProgress.total > 0
+                    ? Math.min(100, (bytesProgress.uploaded / bytesProgress.total) * 100)
+                    : 0
+                }%`,
+              }}
+            />
           </div>
-          <span className="text-sm font-medium text-gray-600 shrink-0">{uploadProgress.current}/{uploadProgress.total}</span>
+          <span className="text-sm font-medium text-gray-600 shrink-0 tabular-nums">
+            {(() => {
+              const pct = bytesProgress.total > 0
+                ? Math.min(100, Math.round((bytesProgress.uploaded / bytesProgress.total) * 100))
+                : 0;
+              const isProcessing = uploadPhase === "processing" || (pct >= 100 && uploadProgress.current < uploadProgress.total);
+              if (isProcessing) return `${t("processing")} · ${uploadProgress.current}/${uploadProgress.total}`;
+              return `${pct}% · ${uploadProgress.current}/${uploadProgress.total}`;
+            })()}
+          </span>
         </div>
       )}
 
@@ -336,7 +530,14 @@ export function DeliveryUploadClient({
                 disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4}
                 className="shrink-0 rounded-xl bg-accent-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50"
               >
-                {sharing ? t("sharing") : `Share ${photos.length} Photos`}
+                {(() => {
+                  if (sharing) return t("sharing");
+                  const photoCnt = photos.filter((p) => p.media_type !== "video").length;
+                  const videoCnt = photos.filter((p) => p.media_type === "video").length;
+                  if (videoCnt === 0) return t("sharePhotos", { count: photoCnt });
+                  if (photoCnt === 0) return t("shareVideos", { count: videoCnt });
+                  return t("sharePhotosAndVideos", { photos: photoCnt, videos: videoCnt });
+                })()}
               </button>
             </div>
           )}
@@ -346,17 +547,41 @@ export function DeliveryUploadClient({
       {/* Photo grid */}
       {photos.length > 0 && (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {photos.map((photo) => (
+          {photos.map((photo) => {
+            const isVideo = photo.media_type === "video";
+            // For videos use the ffmpeg-extracted poster; for photos the
+            // url IS already an image (presigned). Falling back to url for
+            // images preserves the existing behaviour.
+            const previewSrc = isVideo
+              ? (photo.thumbnail_url || photo.url)
+              : photo.url;
+            return (
             <div
               key={photo.id}
               className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""}`}
               onClick={selectMode ? () => toggleSelect(photo.id) : undefined}
             >
               <img
-                src={photo.url}
+                src={previewSrc}
                 alt={photo.filename}
                 className="h-full w-full object-cover"
               />
+              {isVideo && (
+                <>
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/15">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm">
+                      <svg className="h-5 w-5 text-white translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                  {photo.duration_seconds ? (
+                    <span className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white tabular-nums">
+                      {Math.floor((photo.duration_seconds || 0) / 60)}:{String((photo.duration_seconds || 0) % 60).padStart(2, "0")}
+                    </span>
+                  ) : null}
+                </>
+              )}
               {selectMode ? (
                 <div className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-md border-2 ${selectedIds.has(photo.id) ? "border-primary-500 bg-primary-500" : "border-white bg-white/70"}`}>
                   {selectedIds.has(photo.id) && (
@@ -379,7 +604,8 @@ export function DeliveryUploadClient({
                 <p className="truncate text-xs text-white">{photo.filename}</p>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

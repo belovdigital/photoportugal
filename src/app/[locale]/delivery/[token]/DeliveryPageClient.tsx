@@ -15,6 +15,12 @@ interface Photo {
   url: string;
   filename: string;
   file_size: number;
+  thumbnail_url?: string | null;
+  preview_url?: string | null;
+  media_type?: "image" | "video";
+  duration_seconds?: number | null;
+  width?: number | null;
+  height?: number | null;
 }
 
 interface GalleryData {
@@ -37,10 +43,14 @@ export function DeliveryPageClient({
   token,
   photographerName,
   photographerAvatar,
+  deliveryTitle,
+  deliveryMessage,
 }: {
   token: string;
   photographerName: string;
   photographerAvatar: string | null;
+  deliveryTitle?: string | null;
+  deliveryMessage?: string | null;
 }) {
   const t = useTranslations("delivery");
   const locale = useLocale();
@@ -141,7 +151,11 @@ export function DeliveryPageClient({
   }
 
   async function handleAcceptDelivery() {
-    const ok = await confirm(t("acceptDeliveryTitle") || "Accept Delivery", t("confirmAcceptDelivery"), { confirmLabel: t("acceptButton") || "Accept" });
+    // Use existing translation keys (acceptDelivery / accept). next-intl
+    // returns the key itself when missing, not a falsy value, so the old
+    // `t("foo") || "fallback"` pattern showed the literal "delivery.foo"
+    // when keys didn't exist.
+    const ok = await confirm(t("acceptDelivery"), t("confirmAcceptDelivery"), { confirmLabel: t("accept") });
     if (!ok) return;
 
     setAccepting(true);
@@ -263,8 +277,12 @@ export function DeliveryPageClient({
             <span className="text-2xl font-bold text-primary-600">{normalizeName(photographerName).charAt(0)}</span>
           )}
         </div>
+        {/* The photographer's optional custom title overrides the generic
+            "Your Photos Are Ready" headline; their long-form note appears
+            below as a quoted block. Falls back to the default copy when
+            title is empty. */}
         <h1 className="mt-4 font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-          {t("photosReady")}
+          {deliveryTitle?.trim() || t("photosReady")}
         </h1>
         <p className="mt-2 text-gray-500">
           {normalizeName(gallery.photographer_name)} &middot;{" "}
@@ -272,6 +290,14 @@ export function DeliveryPageClient({
             ? new Date(gallery.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })
             : "Photo Portugal"}
         </p>
+        {deliveryMessage?.trim() && (
+          <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-warm-200 bg-warm-50 px-5 py-4 text-left">
+            <p className="whitespace-pre-line text-sm text-gray-700 leading-relaxed sm:text-base">
+              {deliveryMessage.trim()}
+            </p>
+            <p className="mt-3 text-xs text-gray-400">— {normalizeName(gallery.photographer_name)}</p>
+          </div>
+        )}
       </div>
 
       {/* Stats & Download */}

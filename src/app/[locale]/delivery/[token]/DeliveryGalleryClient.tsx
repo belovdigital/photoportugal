@@ -1,14 +1,37 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useSwipeNavigation } from "@/lib/use-swipe";
+
+/** Distribute items into N flex columns row-major (col k gets indexes
+ *  [k, N+k, 2N+k, ...]). Used INSTEAD of CSS `columns-N` because Safari
+ *  occasionally re-flows multi-column layouts down to 1 column while
+ *  images lazy-load — flex columns are rock solid by comparison. */
+function distributeRowMajor<T>(items: T[], cols: number): T[][] {
+  const out: T[][] = Array.from({ length: cols }, () => []);
+  items.forEach((it, i) => out[i % cols].push(it));
+  return out;
+}
 
 interface Photo {
   id: string;
   url: string;
   filename: string;
   file_size: number;
+  thumbnail_url?: string | null;
+  preview_url?: string | null;
+  media_type?: "image" | "video";
+  duration_seconds?: number | null;
+  width?: number | null;
+  height?: number | null;
+}
+
+function formatDuration(s: number | null | undefined): string {
+  if (!s || s <= 0) return "";
+  const mins = Math.floor(s / 60);
+  const secs = s % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Photo[]; deliveryAccepted: boolean }) {
@@ -51,22 +74,81 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
     onDismiss: closeLightbox,
   });
 
+  // Each photo gets its ORIGINAL index baked in so renderCell can open
+  // the lightbox at the right slot regardless of which column it lives
+  // in. Distributed once per column-count.
+  const indexed = useMemo(() => photos.map((p, i) => ({ p, i })), [photos]);
+  const cols2 = useMemo(() => distributeRowMajor(indexed, 2), [indexed]);
+  const cols3 = useMemo(() => distributeRowMajor(indexed, 3), [indexed]);
+  const cols4 = useMemo(() => distributeRowMajor(indexed, 4), [indexed]);
+
+  function renderCell(photo: Photo, index: number) {
+    const isVideo = photo.media_type === "video";
+    const thumb = photo.thumbnail_url || photo.preview_url || photo.url;
+    return (
+      <div
+        key={photo.id}
+        className="cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90 relative"
+        onClick={() => openLightbox(index)}
+      >
+        <img
+          src={thumb}
+          alt={photo.filename}
+          loading="lazy"
+          className="w-full block"
+        />
+        {isVideo && (
+          <>
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm">
+                <svg className="h-6 w-6 text-white translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+            {photo.duration_seconds ? (
+              <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white tabular-nums">
+                {formatDuration(photo.duration_seconds)}
+              </span>
+            ) : null}
+          </>
+        )}
+        {isVideo && !deliveryAccepted && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="rotate-[-12deg] text-[18px] font-bold uppercase tracking-widest text-white/35 select-none whitespace-nowrap" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}>
+              Photo Portugal
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
-      {/* Masonry gallery */}
-      <div className="mt-6 columns-2 gap-3 sm:columns-3 md:columns-4">
-        {photos.map((photo, index) => (
-          <div
-            key={photo.id}
-            className="mb-3 break-inside-avoid cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90"
-            onClick={() => openLightbox(index)}
-          >
-            <img
-              src={photo.url}
-              alt={photo.filename}
-              loading="lazy"
-              className="w-full"
-            />
+      {/* Masonry gallery built from JS-distributed flex columns. We render
+          three responsive variants (2 / 3 / 4 cols) and toggle visibility
+          per breakpoint. CSS `columns-N` was broken on Safari — it
+          collapsed to 1 column whenever images lazy-loaded. Flex columns
+          are rock solid. */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:hidden">
+        {cols2.map((col, ci) => (
+          <div key={ci} className="flex flex-col gap-3">
+            {col.map(({ p, i }) => renderCell(p, i))}
+          </div>
+        ))}
+      </div>
+      <div className="mt-6 hidden grid-cols-3 gap-3 sm:grid md:hidden">
+        {cols3.map((col, ci) => (
+          <div key={ci} className="flex flex-col gap-3">
+            {col.map(({ p, i }) => renderCell(p, i))}
+          </div>
+        ))}
+      </div>
+      <div className="mt-6 hidden grid-cols-4 gap-3 md:grid">
+        {cols4.map((col, ci) => (
+          <div key={ci} className="flex flex-col gap-3">
+            {col.map(({ p, i }) => renderCell(p, i))}
           </div>
         ))}
       </div>
@@ -103,14 +185,39 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
             </button>
           )}
 
-          {/* Image — same preview URL, already cached by browser */}
-          <img
-            src={photos[lightboxIndex].url}
-            alt={photos[lightboxIndex].filename}
-            className="max-h-[90vh] max-w-[90vw] object-contain select-none"
-            draggable={false}
-            onClick={(e) => e.stopPropagation()}
-          />
+          {/* Lightbox content — render <video> for video items, <img> for
+              photos. Both stop propagation so clicking the media doesn't
+              close the lightbox (only the dark backdrop closes it).
+              Pre-acceptance: video gets an HTML watermark overlay (photos
+              are already watermarked server-side via the preview JPEG). */}
+          {photos[lightboxIndex].media_type === "video" ? (
+            <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+              <video
+                key={photos[lightboxIndex].id}
+                src={photos[lightboxIndex].url}
+                poster={photos[lightboxIndex].thumbnail_url ?? undefined}
+                controls
+                autoPlay
+                playsInline
+                className="block max-h-[90vh] max-w-[90vw] select-none"
+              />
+              {!deliveryAccepted && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <div className="rotate-[-15deg] text-3xl sm:text-5xl font-bold uppercase tracking-widest text-white/30 select-none whitespace-nowrap" style={{ textShadow: "0 2px 6px rgba(0,0,0,0.5)" }}>
+                    Photo Portugal
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <img
+              src={photos[lightboxIndex].url}
+              alt={photos[lightboxIndex].filename}
+              className="max-h-[90vh] max-w-[90vw] object-contain select-none"
+              draggable={false}
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
 
           {/* Next */}
           {lightboxIndex < photos.length - 1 && (

@@ -16,7 +16,8 @@ const R2_PUBLIC_PREFIX = R2_PUBLIC_URL + "/";
  */
 function toFetchableUrl(stored: string): string | null {
   if (stored.startsWith(R2_PUBLIC_PREFIX)) return stored;
-  if (stored.startsWith("s3://")) return `${R2_PUBLIC_URL}/${stored.replace(/^s3:\/\/[^/]+\//, "")}`;
+  // Stored `s3://` paths are bucket-less (s3://<key>), so strip just the scheme.
+  if (stored.startsWith("s3://")) return `${R2_PUBLIC_URL}/${stored.replace(/^s3:\/\//, "")}`;
   return null;
 }
 
@@ -77,6 +78,8 @@ export async function GET(
   }
 
   const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
+  const bookingShort = booking.id.replace(/-/g, "").slice(0, 8);
+  const zipDownloadName = `PhotoPortugal_${sanitizedName}_${bookingShort}.zip`;
 
   // Serve pre-built ZIP if available. Three URL formats coexist:
   //  - https://files.photoportugal.com/... → 302 redirect, browser downloads
@@ -102,7 +105,7 @@ export async function GET(
           headers: {
             "Content-Type": "application/zip",
             "Content-Length": String(stats.size),
-            "Content-Disposition": `attachment; filename="PhotoPortugal_${sanitizedName}.zip"`,
+            "Content-Disposition": `attachment; filename="${zipDownloadName}"`,
           },
         });
       } catch {
@@ -172,7 +175,7 @@ export async function GET(
   return new Response(readable, {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="PhotoPortugal_${sanitizedName}.zip"`,
+      "Content-Disposition": `attachment; filename="${zipDownloadName}"`,
     },
   });
 }

@@ -12,7 +12,9 @@ import { uploadToS3, deleteFromS3, getPresignedUrl, isS3Path, s3KeyFromPath } fr
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per delivery photo (high-res)
-const MAX_DELIVERY_PHOTOS = 200; // max photos per delivery
+const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB per delivery video (h264 at ~5-10MB/s)
+const MAX_DELIVERY_PHOTOS = 200; // max items per delivery (photos + videos combined)
+const MAX_DELIVERY_VIDEOS = 10; // hard cap on videos to keep total ZIP / storage in check
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
 
@@ -42,8 +44,14 @@ export async function GET(
 
 
 
-  const rawPhotos = await query<{ id: string; url: string; filename: string; file_size: number; sort_order: number; created_at: string }>(
-    "SELECT id, url, filename, file_size, sort_order, created_at FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at",
+  const rawPhotos = await query<{
+    id: string; url: string; thumbnail_url: string | null; preview_url: string | null;
+    filename: string; file_size: number; sort_order: number; created_at: string;
+    media_type: string; duration_seconds: number | null; width: number | null; height: number | null;
+  }>(
+    `SELECT id, url, thumbnail_url, preview_url, filename, file_size, sort_order, created_at,
+            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height
+     FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at`,
     [id]
   );
 
@@ -51,16 +59,25 @@ export async function GET(
   const { getPresignedUrl, isS3Path, s3KeyFromPath } = await import("@/lib/s3");
   const photos = await Promise.all(rawPhotos.map(async (photo) => {
     let url = photo.url;
-    if (isS3Path(url)) {
-      url = await getPresignedUrl(s3KeyFromPath(url), 3600);
-    }
-    return { ...photo, url };
+    let thumb = photo.thumbnail_url;
+    if (isS3Path(url)) url = await getPresignedUrl(s3KeyFromPath(url), 3600);
+    if (thumb && isS3Path(thumb)) thumb = await getPresignedUrl(s3KeyFromPath(thumb), 3600);
+    return { ...photo, url, thumbnail_url: thumb };
   }));
+
+  // Title and message are surfaced so the photographer's deliver UI can
+  // pre-fill them on edit (and the client gallery renders the headline).
+  const messageRow = await queryOne<{ delivery_title: string | null; delivery_message: string | null }>(
+    "SELECT delivery_title, delivery_message FROM bookings WHERE id = $1",
+    [id]
+  );
 
   return NextResponse.json({
     photos,
     delivery_token: booking.delivery_token,
     status: booking.status,
+    delivery_title: messageRow?.delivery_title ?? null,
+    delivery_message: messageRow?.delivery_message ?? null,
   });
 }
 
@@ -75,9 +92,14 @@ export async function POST(
   const { id } = await params;
   const userId = authUser.id;
 
-  const booking = await queryOne<{ photographer_id: string; photographer_user_id: string; client_id: string; status: string; delivery_accepted: boolean }>(
+  const booking = await queryOne<{
+    photographer_id: string; photographer_user_id: string; client_id: string;
+    status: string; delivery_accepted: boolean;
+    photographer_name: string; shoot_date: string | null;
+  }>(
     `SELECT b.photographer_id, u.id as photographer_user_id, b.client_id, b.status,
-            COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
+            COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
+            u.name as photographer_name, b.shoot_date::text as shoot_date
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -103,11 +125,26 @@ export async function POST(
   if (contentType.includes("application/json")) {
     const body = await req.json();
 
+    // Save-only action — photographer types title/message before sharing.
+    // Persists without flipping booking status or generating a token.
+    if (body.action === "save_message") {
+      const title = typeof body.title === "string" ? body.title.trim().slice(0, 200) : null;
+      const message = typeof body.message === "string" ? body.message.trim().slice(0, 1500) : null;
+      await queryOne(
+        "UPDATE bookings SET delivery_title = $1, delivery_message = $2 WHERE id = $3 RETURNING id",
+        [title, message, id]
+      );
+      return NextResponse.json({ success: true });
+    }
+
     if (body.action === "share") {
       const password = body.password?.trim();
       if (!password || password.length < 4) {
         return NextResponse.json({ error: "Password must be at least 4 characters" }, { status: 400 });
       }
+
+      const title = typeof body.title === "string" ? body.title.trim().slice(0, 200) : null;
+      const message = typeof body.message === "string" ? body.message.trim().slice(0, 1500) : null;
 
       // Generate delivery token and mark as delivered
       const token = crypto.randomBytes(32).toString("hex");
@@ -121,8 +158,12 @@ export async function POST(
       } catch {}
 
       await queryOne(
-        "UPDATE bookings SET status = 'delivered', delivery_token = $1, delivery_password = $2, delivery_expires_at = $3 WHERE id = $4 RETURNING id",
-        [token, hashedPassword, expiresAt.toISOString(), id]
+        `UPDATE bookings
+           SET status = 'delivered',
+               delivery_token = $1, delivery_password = $2, delivery_expires_at = $3,
+               delivery_title = $4, delivery_message = $5
+         WHERE id = $6 RETURNING id`,
+        [token, hashedPassword, expiresAt.toISOString(), title, message, id]
       );
 
       const deliveryUrl = `${BASE_URL}/delivery/${token}`;
@@ -264,22 +305,36 @@ export async function POST(
     }
 
     // Validate all files upfront before writing any to disk
-    const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp", "heic", "heif", "tiff"];
-    const ALLOWED_MIME_PREFIXES = ["image/"];
+    const ALLOWED_IMG_EXT = ["jpg", "jpeg", "png", "webp", "heic", "heif", "tiff"];
+    const ALLOWED_VID_EXT = ["mp4", "mov", "webm", "m4v"];
     const rejectedFiles: string[] = [];
 
+    function classify(file: File): "image" | "video" | null {
+      const t = file.type || "";
+      if (t.startsWith("image/")) return "image";
+      if (t.startsWith("video/")) return "video";
+      // Some browsers omit `type` for HEIC etc — fall back to extension.
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (ALLOWED_IMG_EXT.includes(ext)) return "image";
+      if (ALLOWED_VID_EXT.includes(ext)) return "video";
+      return null;
+    }
+
     for (const file of files) {
-      if (!file.type || !ALLOWED_MIME_PREFIXES.some(prefix => file.type.startsWith(prefix))) {
-        rejectedFiles.push(`"${file.name}" — not an image file (type: ${file.type || "unknown"})`);
+      const kind = classify(file);
+      if (!kind) {
+        rejectedFiles.push(`"${file.name}" — unsupported file type (type: ${file.type || "unknown"})`);
         continue;
       }
       const rawExt = (file.name.split(".").pop() || "").toLowerCase();
-      if (!rawExt || !ALLOWED_EXT.includes(rawExt)) {
-        rejectedFiles.push(`"${file.name}" — unsupported file type (.${rawExt || "unknown"}). Allowed: ${ALLOWED_EXT.join(", ")}`);
+      const allowedExt = kind === "video" ? ALLOWED_VID_EXT : ALLOWED_IMG_EXT;
+      if (!rawExt || !allowedExt.includes(rawExt)) {
+        rejectedFiles.push(`"${file.name}" — unsupported .${rawExt || "unknown"}. ${kind === "video" ? "Video formats" : "Photo formats"}: ${allowedExt.join(", ")}`);
         continue;
       }
-      if (file.size > MAX_FILE_SIZE) {
-        rejectedFiles.push(`"${file.name}" — file too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+      const sizeLimit = kind === "video" ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
+      if (file.size > sizeLimit) {
+        rejectedFiles.push(`"${file.name}" — file too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max ${kind === "video" ? "video" : "photo"}: ${sizeLimit / 1024 / 1024}MB`);
         continue;
       }
     }
@@ -291,45 +346,115 @@ export async function POST(
       }, { status: 400 });
     }
 
-    const currentCount = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1", [id]
+    const currentCounts = await queryOne<{ total: string; videos: string }>(
+      `SELECT COUNT(*) as total,
+              COUNT(*) FILTER (WHERE media_type = 'video') as videos
+       FROM delivery_photos WHERE booking_id = $1`,
+      [id]
     );
-    let sortOrder = parseInt(currentCount?.count || "0");
+    let sortOrder = parseInt(currentCounts?.total || "0");
+    let videoCount = parseInt(currentCounts?.videos || "0");
 
     if (sortOrder >= MAX_DELIVERY_PHOTOS) {
-      return NextResponse.json({ error: `Delivery limit reached (max ${MAX_DELIVERY_PHOTOS} photos)` }, { status: 403 });
+      return NextResponse.json({ error: `Delivery limit reached (max ${MAX_DELIVERY_PHOTOS} items)` }, { status: 403 });
+    }
+
+    // Pretty download filename builder. Strips spaces/diacritics from the
+    // photographer's name, attaches the booking's short id (first 8 hex
+    // chars of the UUID — uniquely identifies the session even if a
+    // photographer has many deliveries), and a zero-padded sequence so
+    // client downloads get
+    //   PhotoPortugal_KateBelova_8938ac94_001.jpg
+    // instead of the photographer's original `IMG_5821.HEIC`. Sequence
+    // tracks the position WITHIN this delivery (sortOrder + 1) — gaps
+    // can appear if the photographer deletes items, that's fine.
+    const sanitizedPhotographer = (booking.photographer_name || "Photographer")
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-zA-Z0-9]/g, "");
+    const bookingShort = id.replace(/-/g, "").slice(0, 8);
+    function prettyDownloadName(seq: number, ext: string): string {
+      const padded = String(seq).padStart(3, "0");
+      return `PhotoPortugal_${sanitizedPhotographer}_${bookingShort}_${padded}.${ext}`;
     }
 
     const uploaded = [];
     for (const file of files) {
-      // Skip files that fail validation
-      if (!file.type || !file.type.startsWith("image/")) continue;
+      const kind = classify(file);
+      if (!kind) continue;
       const rawExt = (file.name.split(".").pop() || "").toLowerCase();
-      if (!rawExt || !ALLOWED_EXT.includes(rawExt)) continue;
-      if (file.size > MAX_FILE_SIZE) continue;
+      const allowedExt = kind === "video" ? ALLOWED_VID_EXT : ALLOWED_IMG_EXT;
+      if (!rawExt || !allowedExt.includes(rawExt)) continue;
+      const sizeLimit = kind === "video" ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
+      if (file.size > sizeLimit) continue;
+      if (kind === "video" && videoCount >= MAX_DELIVERY_VIDEOS) {
+        rejectedFiles.push(`"${file.name}" — video limit reached (max ${MAX_DELIVERY_VIDEOS} per delivery)`);
+        continue;
+      }
 
       const ext = rawExt;
       const filename = `${crypto.randomUUID()}.${ext}`;
+      const downloadName = prettyDownloadName(sortOrder + 1, ext);
       const buffer = Buffer.from(await file.arrayBuffer());
 
-      // Upload original to S3
+      // Upload original to R2
       const s3Key = `delivery/${id}/${filename}`;
-      await uploadToS3(s3Key, buffer, file.type || `image/${ext}`);
+      const contentType = file.type || (kind === "video" ? `video/${ext}` : `image/${ext}`);
+      await uploadToS3(s3Key, buffer, contentType);
       const url = `s3://${s3Key}`;
 
-      // Generate watermarked preview and upload to S3
+      if (kind === "video") {
+        // Process video: extract metadata + a poster thumbnail via ffmpeg.
+        // The thumbnail acts as the gallery preview and the <video poster>;
+        // we don't generate a watermarked preview track — videos download
+        // as-is. (Watermarking via ffmpeg is doable but expensive at upload
+        // time; the gallery is password-protected anyway.)
+        let thumbnailUrl: string | null = null;
+        let videoWidth: number | null = null;
+        let videoHeight: number | null = null;
+        let durationSeconds: number | null = null;
+        try {
+          const { processVideoUpload } = await import("@/lib/video-processor");
+          const meta = await processVideoUpload(buffer, file.name);
+          videoWidth = meta.width || null;
+          videoHeight = meta.height || null;
+          durationSeconds = meta.duration || null;
+          const thumbS3Key = `delivery/${id}/thumb_${crypto.randomUUID()}.jpg`;
+          await uploadToS3(thumbS3Key, meta.thumbnailBuffer, "image/jpeg");
+          thumbnailUrl = `s3://${thumbS3Key}`;
+        } catch (vidErr) {
+          console.error("[delivery] video processing error:", vidErr);
+          // Continue without thumbnail — gallery will fall back to a generic video icon.
+        }
+
+        const item = await queryOne<{ id: string }>(
+          `INSERT INTO delivery_photos
+             (booking_id, url, thumbnail_url, filename, file_size, sort_order, media_type, duration_seconds, width, height)
+           VALUES ($1, $2, $3, $4, $5, $6, 'video', $7, $8, $9) RETURNING id`,
+          [id, url, thumbnailUrl, downloadName, file.size, sortOrder++, durationSeconds, videoWidth, videoHeight]
+        );
+        videoCount++;
+
+        const publicUrl = await getPresignedUrl(s3KeyFromPath(url), 3600);
+        const publicThumb = thumbnailUrl ? await getPresignedUrl(s3KeyFromPath(thumbnailUrl), 3600) : null;
+        uploaded.push({
+          id: item?.id, url: publicUrl, thumbnail_url: publicThumb, filename: downloadName, file_size: file.size,
+          media_type: "video", duration_seconds: durationSeconds, width: videoWidth, height: videoHeight,
+        });
+        continue;
+      }
+
+      // image branch — generate watermarked preview as before
       let previewUrl: string | null = null;
       try {
         const previewFilename = `preview_${crypto.randomUUID()}.jpg`;
         const watermarkPath = path.join(process.cwd(), "public", "icon-512.png");
 
-        // Resize original for preview
         const { data: previewBuffer, info: previewInfo } = await sharp(buffer)
           .resize({ width: 1200, withoutEnlargement: true })
           .jpeg({ quality: 60 })
           .toBuffer({ resolveWithObject: true });
 
-        // Prepare watermark: resize to fit and set opacity
         const previewWidth = previewInfo.width || 1200;
         const previewHeight = previewInfo.height || 800;
         const wmSize = Math.min(previewWidth, previewHeight, 256);
@@ -344,30 +469,26 @@ export async function POST(
           }])
           .toBuffer();
 
-        // Composite watermark onto preview at center
         const previewFinal = await sharp(previewBuffer)
           .composite([{ input: watermark, gravity: "centre" }])
           .jpeg({ quality: 60 })
           .toBuffer();
 
-        // Upload preview to S3
         const previewS3Key = `delivery/${id}/${previewFilename}`;
         await uploadToS3(previewS3Key, previewFinal, "image/jpeg");
         previewUrl = `s3://${previewS3Key}`;
       } catch (previewErr) {
         console.error("[delivery] preview generation error:", previewErr);
-        // Continue without preview — full-res will be used as fallback
       }
 
       const item = await queryOne<{ id: string }>(
-        `INSERT INTO delivery_photos (booking_id, url, preview_url, filename, file_size, sort_order)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-        [id, url, previewUrl, file.name, file.size, sortOrder++]
+        `INSERT INTO delivery_photos (booking_id, url, preview_url, filename, file_size, sort_order, media_type)
+         VALUES ($1, $2, $3, $4, $5, $6, 'image') RETURNING id`,
+        [id, url, previewUrl, downloadName, file.size, sortOrder++]
       );
 
-      // Return public URL, not s3:// internal path
       const publicUrl = isS3Path(url) ? await getPresignedUrl(s3KeyFromPath(url), 3600) : url;
-      uploaded.push({ id: item?.id, url: publicUrl, filename: file.name, file_size: file.size });
+      uploaded.push({ id: item?.id, url: publicUrl, filename: downloadName, file_size: file.size, media_type: "image" });
     }
 
     return NextResponse.json({

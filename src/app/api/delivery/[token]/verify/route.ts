@@ -71,24 +71,43 @@ export async function POST(
   // Password correct — return gallery data
   const isAccepted = booking.delivery_accepted === true;
 
-  const rawPhotos = await query<{ id: string; url: string; preview_url: string | null; filename: string; file_size: number }>(
-    "SELECT id, url, preview_url, filename, file_size FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at",
+  const rawPhotos = await query<{
+    id: string; url: string; preview_url: string | null; thumbnail_url: string | null;
+    filename: string; file_size: number;
+    media_type: string; duration_seconds: number | null; width: number | null; height: number | null;
+  }>(
+    `SELECT id, url, preview_url, thumbnail_url, filename, file_size,
+            COALESCE(media_type, 'image') as media_type, duration_seconds, width, height
+     FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at`,
     [booking.id]
   );
 
-  // If delivery not yet accepted, return preview URLs instead of full-res URLs
-  // For S3-stored photos, generate presigned URLs
+  // If delivery not yet accepted, photos are watermarked previews; videos
+  // pass through (no preview track — gallery is password-protected anyway).
+  // S3-stored URLs get presigned for time-bounded access.
   const photos = await Promise.all(rawPhotos.map(async (photo) => {
-    const rawUrl = isAccepted ? photo.url : (photo.preview_url || photo.url);
+    const isVideo = photo.media_type === "video";
+    const rawUrl = isVideo
+      ? photo.url
+      : (isAccepted ? photo.url : (photo.preview_url || photo.url));
     let resolvedUrl = rawUrl;
-    if (isS3Path(rawUrl)) {
-      resolvedUrl = await getPresignedUrl(s3KeyFromPath(rawUrl), 3600);
+    if (isS3Path(rawUrl)) resolvedUrl = await getPresignedUrl(s3KeyFromPath(rawUrl), 3600);
+    let resolvedThumb: string | null = null;
+    if (photo.thumbnail_url) {
+      resolvedThumb = isS3Path(photo.thumbnail_url)
+        ? await getPresignedUrl(s3KeyFromPath(photo.thumbnail_url), 3600)
+        : photo.thumbnail_url;
     }
     return {
       id: photo.id,
       url: resolvedUrl,
+      thumbnail_url: resolvedThumb,
       filename: photo.filename,
       file_size: photo.file_size,
+      media_type: photo.media_type,
+      duration_seconds: photo.duration_seconds,
+      width: photo.width,
+      height: photo.height,
     };
   }));
 

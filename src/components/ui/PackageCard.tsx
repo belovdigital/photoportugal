@@ -77,7 +77,10 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
       }`}
     >
       {pkg.is_popular && (
-        <span className="mb-2 inline-block rounded-full bg-primary-600 px-3 py-0.5 text-xs font-bold text-white">
+        // self-start prevents the badge from stretching to full card width
+        // — the parent is `flex flex-col` (for equal-height card layouts)
+        // which makes flex children stretch by default.
+        <span className="self-start mb-2 inline-block rounded-full bg-primary-600 px-3 py-0.5 text-xs font-bold text-white">
           {t("mostPopular")}
         </span>
       )}
