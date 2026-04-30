@@ -1232,11 +1232,21 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
                               {!isLast && <div className="w-0.5 flex-1 bg-gray-200 min-h-[24px]" />}
                             </div>
 
-                            {/* Page info */}
+                            {/* Page info — path links to the live URL in a new
+                                tab. stopPropagation so the link click doesn't
+                                also toggle the session card. */}
                             <div className={`flex-1 ${!isLast ? "pb-2" : ""}`}>
                               <div className="flex items-center gap-1.5">
                                 <span className="text-xs">{getIcon(pv.path)}</span>
-                                <span className="text-xs font-medium text-gray-900">{shortPath(pv.path)}</span>
+                                <a
+                                  href={pv.path}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs font-medium text-gray-900 hover:text-primary-600 hover:underline"
+                                >
+                                  {shortPath(pv.path)}
+                                </a>
                               </div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-[10px] text-gray-400">{timeStr}</span>
