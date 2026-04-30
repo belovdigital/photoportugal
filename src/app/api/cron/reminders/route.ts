@@ -1905,7 +1905,39 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Notification queue processing: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, clientFollowUps, queueProcessed });
+  // === Calendar sync — refresh busy slots for every active connection ===
+  // Cron fires every 15 min, which is also our calendar freshness target.
+  // Errors per connection are stored on the row (last_sync_error) so they
+  // surface in the dashboard; we just count outcomes here for the summary.
+  let calendarSynced = 0;
+  let calendarFailed = 0;
+  try {
+    const { syncConnection } = await import("@/lib/calendar-sync");
+    type Conn = Parameters<typeof syncConnection>[0];
+    const conns = await query<Conn>(
+      `SELECT id, photographer_id, type, display_name, google_email, google_refresh_token,
+              google_access_token, google_access_token_expires_at, selected_calendar_ids,
+              ical_url, is_active, last_synced_at, last_sync_error, last_sync_event_count
+         FROM calendar_connections WHERE is_active = TRUE`
+    );
+    for (const c of conns) {
+      try {
+        const r = await syncConnection(c);
+        if (r.ok) calendarSynced++;
+        else calendarFailed++;
+      } catch (err) {
+        calendarFailed++;
+        console.error("[cron/reminders] calendar sync error:", err);
+      }
+    }
+    // Cleanup: drop slots whose end is in the past — they can't conflict
+    // with any future booking and just bloat the table.
+    await query("DELETE FROM calendar_busy_slots WHERE ends_at < NOW() - INTERVAL '1 day'");
+  } catch (err) {
+    results.errors.push(`Calendar sync: ${err}`);
+  }
+
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed });
 
   return NextResponse.json({
     success: true,
