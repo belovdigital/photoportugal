@@ -343,11 +343,17 @@ export default async function OccasionPage({
   const tc = await getTranslations("common");
   const tL = pickL(locale);
 
-  // Resolve canonical-EN shoot type label for SQL filtering. The DB stores
+  // Resolve canonical-EN shoot type labels for SQL filtering. The DB stores
   // values like "Couples", "Family", "Solo Portrait" (Title Case strings,
-  // not slugs) inside a text[] array on photographer_profiles.shoot_types.
+  // not slugs) inside text[] columns. Some shoot types have MULTIPLE
+  // valid labels (slug "solo" → ["Solo Travel", "Solo Portrait"]) since
+  // photographers labelled their work either way over time. We use the
+  // full alias array everywhere so all of those rows surface, not just
+  // ones matching the first alias.
   const shootTypeData = shootTypes.find((st) => st.slug === occasion);
-  const shootTypeLabel = shootTypeData?.name || null;
+  const shootTypeLabels: string[] | null = shootTypeData
+    ? (shootTypeData.photographerShootTypeNames || [shootTypeData.name])
+    : null;
 
   const localizedName = locField(location, "name", locale) || location.name;
   const longDescription = locField(location, "long_description", locale) || location.long_description;
@@ -384,24 +390,24 @@ export default async function OccasionPage({
                JOIN photographer_locations pl2 ON pl2.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
                WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE AND pk.is_public = TRUE
-                 AND ($2::text IS NULL OR $2 = ANY(pp2.shoot_types))) as min_price,
+                 AND ($2::text[] IS NULL OR pp2.shoot_types && $2::text[])) as min_price,
               (SELECT MIN(pk.duration_minutes) FROM packages pk
                JOIN photographer_locations pl3 ON pl3.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp3 ON pp3.id = pk.photographer_id
                WHERE pl3.location_slug = $1 AND pp3.is_approved = TRUE AND pk.is_public = TRUE
                  AND pk.duration_minutes IS NOT NULL
-                 AND ($2::text IS NULL OR $2 = ANY(pp3.shoot_types))) as min_duration,
+                 AND ($2::text[] IS NULL OR pp3.shoot_types && $2::text[])) as min_duration,
               (SELECT MAX(pk.duration_minutes) FROM packages pk
                JOIN photographer_locations pl4 ON pl4.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp4 ON pp4.id = pk.photographer_id
                WHERE pl4.location_slug = $1 AND pp4.is_approved = TRUE AND pk.is_public = TRUE
                  AND pk.duration_minutes IS NOT NULL
-                 AND ($2::text IS NULL OR $2 = ANY(pp4.shoot_types))) as max_duration
+                 AND ($2::text[] IS NULL OR pp4.shoot_types && $2::text[])) as max_duration
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
-         AND ($2::text IS NULL OR $2 = ANY(pp.shoot_types))`,
-      [slug, shootTypeLabel]
+         AND ($2::text[] IS NULL OR pp.shoot_types && $2::text[])`,
+      [slug, shootTypeLabels]
     );
     photographerCount = parseInt(row?.count || "0");
     avgRating = row?.avg_rating ? parseFloat(parseFloat(row.avg_rating).toFixed(1)) : 0;
@@ -441,10 +447,10 @@ export default async function OccasionPage({
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
-                  AND ($2::text IS NULL OR pi.shoot_type = $2 OR pi.shoot_type IS NULL)
+                  AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
                   -- Tagged matches first, then untagged backfill.
-                  CASE WHEN pi.shoot_type = $2 THEN 0 ELSE 1 END,
+                  CASE WHEN pi.shoot_type = ANY($2::text[]) THEN 0 ELSE 1 END,
                   pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 12
               ) as portfolio_urls
@@ -455,7 +461,7 @@ export default async function OccasionPage({
          AND pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
-         AND ($2::text IS NULL OR $2 = ANY(pp.shoot_types))
+         AND ($2::text[] IS NULL OR pp.shoot_types && $2::text[])
          AND EXISTS (
            SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
          )
@@ -467,7 +473,7 @@ export default async function OccasionPage({
          ELSE 2
        END) ASC
        LIMIT 1`,
-      [slug, shootTypeLabel]
+      [slug, shootTypeLabels]
     );
     if (heroRows.length > 0) {
       const r = heroRows[0];
@@ -511,9 +517,9 @@ export default async function OccasionPage({
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND (pi.location_slug IS NULL OR pi.location_slug = $1)
-         AND ($2::text IS NULL OR pi.shoot_type = $2 OR pi.shoot_type IS NULL)
+         AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]) OR pi.shoot_type IS NULL)
        ORDER BY
-         CASE WHEN pi.shoot_type = $2 THEN 0 ELSE 1 END,
+         CASE WHEN pi.shoot_type = ANY($2::text[]) THEN 0 ELSE 1 END,
          -LN(RANDOM()) / (CASE
            WHEN pp.is_featured THEN 50
            WHEN pp.is_verified THEN 30
@@ -522,7 +528,7 @@ export default async function OccasionPage({
            ELSE 2
          END) ASC
        LIMIT 60`,
-      [slug, shootTypeLabel]
+      [slug, shootTypeLabels]
     );
     locationMosaicPhotos = portfolioRows.slice(0, 24).map((r) => ({
       url: r.url, slug: r.slug, name: r.name, location: localizedName,
@@ -587,9 +593,9 @@ export default async function OccasionPage({
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
-                  AND ($2::text IS NULL OR pi.shoot_type = $2 OR pi.shoot_type IS NULL)
+                  AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
-                  CASE WHEN pi.shoot_type = $2 THEN 0 ELSE 1 END,
+                  CASE WHEN pi.shoot_type = ANY($2::text[]) THEN 0 ELSE 1 END,
                   pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 7
               ) as portfolio_thumbs,
@@ -611,10 +617,10 @@ export default async function OccasionPage({
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        JOIN users u ON u.id = pp.user_id
        WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
-         AND ($2::text IS NULL OR $2 = ANY(pp.shoot_types))
+         AND ($2::text[] IS NULL OR pp.shoot_types && $2::text[])
        ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
        LIMIT 6`,
-      [slug, shootTypeLabel]
+      [slug, shootTypeLabels]
     );
   } catch {}
 

@@ -238,8 +238,13 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
             {shootTypes.map((type) => {
               const stl = shootTypeLocalized(type, locale);
               const s = stats[type.slug] || { count: 0, minPrice: null };
-              const dbLabel = (type.photographerShootTypeNames || [type.name])[0];
-              const photo = representative[dbLabel] || representative[type.name];
+              // Some shoot types have multiple DB labels (e.g. slug "solo"
+              // → ["Solo Travel", "Solo Portrait"]). Iterate all aliases so
+              // the tile finds whichever label was actually used at upload
+              // time. Without this, /photoshoots tile for "solo" rendered
+              // empty because the first alias didn't match DB rows.
+              const aliases = type.photographerShootTypeNames || [type.name];
+              const photo = aliases.map((a) => representative[a]).find(Boolean) || null;
               const cities = type.bestLocations.slice(0, 4);
               const comboOk = COMBO_OCCASIONS.has(type.slug);
 

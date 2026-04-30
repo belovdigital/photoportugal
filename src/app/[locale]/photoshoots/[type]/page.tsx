@@ -90,14 +90,11 @@ export default async function ShootTypePage({
 
   const stl = shootTypeLocalized(shootType, locale);
   // Names that the DB stores in photographer_profiles.shoot_types[] AND
-  // portfolio_items.shoot_type — usually [shootType.name], but a few types
-  // (e.g. "solo" → ["Solo Portrait"]) need the override list.
+  // portfolio_items.shoot_type — usually [shootType.name], but some types
+  // have multiple aliases (slug "solo" → ["Solo Travel", "Solo Portrait"])
+  // because photographers tagged their work either way. Use the full alias
+  // array everywhere so all rows surface, not just first-alias matches.
   const dbShootTypeNames = shootType.photographerShootTypeNames || [shootType.name];
-  // Single canonical label for filters that take a scalar (portfolio_items
-  // is one row per shoot_type, so we use the primary name to keep SQL
-  // simple). The text[]-ANY filter on photographer_profiles still uses
-  // the full alias list.
-  const primaryShootTypeLabel = dbShootTypeNames[0];
 
   const portugalLabel = PORTUGAL_LABEL[locale] || "Portugal";
   const inPrep = IN_PREP[locale] || "in";
@@ -171,9 +168,9 @@ export default async function ShootTypePage({
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
-                  AND (pi.shoot_type = $2 OR pi.shoot_type IS NULL)
+                  AND (pi.shoot_type = ANY($1::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
-                  CASE WHEN pi.shoot_type = $2 THEN 0 ELSE 1 END,
+                  CASE WHEN pi.shoot_type = ANY($1::text[]) THEN 0 ELSE 1 END,
                   pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 12
               ) as portfolio_urls
@@ -194,7 +191,7 @@ export default async function ShootTypePage({
          ELSE 2
        END) ASC
        LIMIT 1`,
-      [dbShootTypeNames, primaryShootTypeLabel]
+      [dbShootTypeNames]
     );
     if (heroRows.length > 0) {
       const r = heroRows[0];
@@ -232,9 +229,9 @@ export default async function ShootTypePage({
          AND pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
-         AND (pi.shoot_type = $1 OR pi.shoot_type IS NULL)
+         AND (pi.shoot_type = ANY($1::text[]) OR pi.shoot_type IS NULL)
        ORDER BY
-         CASE WHEN pi.shoot_type = $1 THEN 0 ELSE 1 END,
+         CASE WHEN pi.shoot_type = ANY($1::text[]) THEN 0 ELSE 1 END,
          -LN(RANDOM()) / (CASE
            WHEN pp.is_featured THEN 50
            WHEN pp.is_verified THEN 30
@@ -243,7 +240,7 @@ export default async function ShootTypePage({
            ELSE 2
          END) ASC
        LIMIT 60`,
-      [primaryShootTypeLabel]
+      [dbShootTypeNames]
     );
     mosaicPhotos = rows.slice(0, 24).map((r) => {
       const locName = r.location_slug
@@ -310,9 +307,9 @@ export default async function ShootTypePage({
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
-                  AND (pi.shoot_type = $2 OR pi.shoot_type IS NULL)
+                  AND (pi.shoot_type = ANY($1::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
-                  CASE WHEN pi.shoot_type = $2 THEN 0 ELSE 1 END,
+                  CASE WHEN pi.shoot_type = ANY($1::text[]) THEN 0 ELSE 1 END,
                   pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 7
               ) as portfolio_thumbs,
@@ -336,7 +333,7 @@ export default async function ShootTypePage({
          AND pp.shoot_types && $1::text[]
        ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
        LIMIT 6`,
-      [dbShootTypeNames, primaryShootTypeLabel]
+      [dbShootTypeNames]
     );
   } catch {}
 
