@@ -182,11 +182,14 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Photo count must be 1-9999." }, { status: 400 });
   }
 
-  // Insert the package as a private one-off targeted at this booking's client.
+  // Insert as a private one-off targeted at this booking's client.
+  // CRITICAL: is_public=FALSE explicitly. Production DB has the column
+  // default at TRUE (schema drift vs schema.sql which says FALSE) so
+  // omitting it here would leak the proposal to every visitor of /book.
   const pkg = await queryOne<{ id: string }>(
     `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price,
-                           is_popular, delivery_days, sort_order, custom_for_user_id)
-     VALUES ($1, $2, $3, $4, $5, $6, FALSE, 7, 0, $7)
+                           is_public, is_popular, delivery_days, sort_order, custom_for_user_id)
+     VALUES ($1, $2, $3, $4, $5, $6, FALSE, FALSE, 7, 0, $7)
      RETURNING id`,
     [booking.photographer_id, name, description, Math.round(durationMinutes), Math.round(numPhotos), Math.round(price), booking.client_id]
   );

@@ -3,6 +3,14 @@ import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
 import { auth } from "@/lib/auth";
 
+// CRITICAL: this route is per-user (custom-proposal packages are scoped
+// to viewer.user_id). Without force-dynamic Next/CDN can cache the first
+// authenticated response and serve it to anonymous users — leaking a
+// client's custom package to anyone who hits the URL with the right
+// ?package= id. Always re-evaluate on every request.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const LOCALES = new Set(["en", "pt", "de", "es", "fr"]);
 
 export async function GET(
@@ -129,6 +137,8 @@ export async function GET(
       [profile.id]
     );
 
+    // private + no-store so Cloudflare / any intermediary doesn't reuse
+    // a per-user response (custom packages are viewer-scoped).
     return NextResponse.json({
       ...profile,
       locations: locations.map(l => {
@@ -138,6 +148,8 @@ export async function GET(
       packages,
       portfolio,
       reviews,
+    }, {
+      headers: { "Cache-Control": "private, no-store, must-revalidate" },
     });
   } catch (error) {
     console.error("[api/photographers] error:", error);

@@ -1171,12 +1171,15 @@ function MessagesContent() {
                                 </div>
                                 <div>
                                   <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">{t("customProposalMin")}</label>
-                                  <input
-                                    type="number" min={5} max={1440} step={5}
-                                    value={customDuration}
-                                    onChange={(e) => setCustomDuration(e.target.value)}
-                                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-                                  />
+                                  <div className="relative mt-1">
+                                    <input
+                                      type="number" min={5} max={1440} step={5}
+                                      value={customDuration}
+                                      onChange={(e) => setCustomDuration(e.target.value)}
+                                      className="w-full rounded-lg border border-gray-300 bg-white pl-2 pr-9 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                                    />
+                                    <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-gray-400">{t("customProposalMinHint")}</span>
+                                  </div>
                                 </div>
                                 <div>
                                   <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">{t("customProposalPhotos")}</label>
