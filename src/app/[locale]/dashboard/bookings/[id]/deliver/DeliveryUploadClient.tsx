@@ -42,12 +42,12 @@ export function DeliveryUploadClient({
   const [sharing, setSharing] = useState(false);
   const [delivered, setDelivered] = useState(initialDelivered);
 
-  // canEdit: photographer locks the deliverable the moment they hit
-  // Share. After that the link + password is out (email + chat message
-  // already sent), so silently changing what the client sees is bad
-  // form. Also frozen after Accept (payment settled) or while a dispute
-  // is open (admin owns the resolution).
-  const canEdit = !delivered && !clientAccepted && !hasOpenDispute;
+  // canEdit: photographer can edit the deliverable up until the client
+  // formally accepts. Sharing the link doesn't lock anything — the client
+  // hasn't seen / accepted yet so swapping a photo is fine. A dispute /
+  // redo request also UNLOCKS edits even after acceptance, since fixing
+  // the gallery is the whole point of that flow.
+  const canEdit = !clientAccepted || hasOpenDispute;
   const [deliveryToken, setDeliveryToken] = useState(initialToken);
   // `window` is undefined during SSR (Next.js still server-renders this
   // "use client" component for the initial paint), so the URL is empty
@@ -139,6 +139,16 @@ export function DeliveryUploadClient({
   const [bytesProgress, setBytesProgress] = useState({ uploaded: 0, total: 0 });
   const [uploadPhase, setUploadPhase] = useState<"uploading" | "processing">("uploading");
   const fileBytesRef = useRef<Map<string, number>>(new Map());
+  // Shared session across overlapping handleUpload calls. If the photographer
+  // hits "Add more" while a previous batch is still running, the new files
+  // are merged into THIS session instead of clobbering the in-flight state
+  // (totals reset to zero, bar disappears, etc).
+  const uploadSessionRef = useRef<{
+    totalFiles: number;
+    totalBytes: number;
+    completedFiles: number;
+    failedFiles: File[];
+  } | null>(null);
 
   function recomputeBytes() {
     let sum = 0;
@@ -209,38 +219,67 @@ export function DeliveryUploadClient({
     });
     if (filtered.length === 0) return;
 
-    setUploading(true);
-    setUploadPhase("uploading");
-    setFailedFiles([]);
-    setUploadProgress({ current: 0, total: filtered.length, failed: 0 });
-    fileBytesRef.current.clear();
-    const totalBytes = filtered.reduce((s, f) => s + f.size, 0);
-    setBytesProgress({ uploaded: 0, total: totalBytes });
-    let completed = 0;
-    const failedAfterRetry: File[] = [];
+    const addedBytes = filtered.reduce((s, f) => s + f.size, 0);
+    const fresh = uploadSessionRef.current === null;
 
-    // Upload in batches of 2 (reduced from 3 to avoid server overload with large files)
+    if (fresh) {
+      uploadSessionRef.current = {
+        totalFiles: filtered.length,
+        totalBytes: addedBytes,
+        completedFiles: 0,
+        failedFiles: [],
+      };
+      fileBytesRef.current.clear();
+      setUploading(true);
+      setUploadPhase("uploading");
+      setFailedFiles([]);
+      setUploadProgress({ current: 0, total: filtered.length, failed: 0 });
+      setBytesProgress({ uploaded: 0, total: addedBytes });
+    } else {
+      // Merging into an in-flight session: extend totals so the same bar
+      // keeps tracking everything together. uploaded bytes stay where they
+      // are (real progress), so the bar dips back proportionally — that's
+      // honest, the photographer just queued more work.
+      const session = uploadSessionRef.current!;
+      session.totalFiles += filtered.length;
+      session.totalBytes += addedBytes;
+      setUploadProgress((p) => ({ ...p, total: session.totalFiles, failed: session.failedFiles.length }));
+      setBytesProgress((p) => ({ uploaded: p.uploaded, total: session.totalBytes }));
+      // Phase may have flipped to "processing" when the previous batch's
+      // bytes maxed out; the new files restart the byte stream so go back.
+      setUploadPhase("uploading");
+    }
+
     const BATCH_SIZE = 2;
-    const toUpload = [...filtered];
-
-    for (let i = 0; i < toUpload.length; i += BATCH_SIZE) {
-      const batch = toUpload.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < filtered.length; i += BATCH_SIZE) {
+      const batch = filtered.slice(i, i + BATCH_SIZE);
       const results = await Promise.all(batch.map(async (file) => ({ file, ok: await uploadOneFile(file) })));
 
-      // Auto-retry failed ones immediately (one at a time)
       for (const r of results) {
         if (!r.ok) {
           const retryOk = await uploadOneFile(r.file);
-          if (!retryOk) failedAfterRetry.push(r.file);
+          if (!retryOk) uploadSessionRef.current!.failedFiles.push(r.file);
         }
       }
 
-      completed += batch.length;
-      setUploadProgress({ current: Math.min(completed, toUpload.length), total: toUpload.length, failed: failedAfterRetry.length });
+      const session = uploadSessionRef.current!;
+      session.completedFiles += batch.length;
+      setUploadProgress({
+        current: session.completedFiles,
+        total: session.totalFiles,
+        failed: session.failedFiles.length,
+      });
     }
 
-    setUploading(false);
-    setFailedFiles(failedAfterRetry);
+    // Whichever overlapping call sees completedFiles catch up to totalFiles
+    // wraps up. Pure equality check on the shared ref — works regardless of
+    // which call started first or finishes first.
+    const session = uploadSessionRef.current!;
+    if (session.completedFiles >= session.totalFiles) {
+      setFailedFiles([...session.failedFiles]);
+      setUploading(false);
+      uploadSessionRef.current = null;
+    }
   }
 
   async function handleDelete(photoId: string) {

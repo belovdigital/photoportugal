@@ -23,6 +23,19 @@ export interface PhotoSpot {
   tipsDe?: string;
   tipsEs?: string;
   tipsFr?: string;
+  /** Optional shoot-type slugs this spot is especially good for.
+   *  On a /locations/{city}/{occasion} page, spots with a matching tag
+   *  bubble to the top of the list; untagged spots still render below. */
+  tags?: string[];
+}
+
+/** Stable rerank that pulls spots tagged with `occasion` to the front. */
+export function sortSpotsByOccasion(spots: PhotoSpot[], occasion?: string | null): PhotoSpot[] {
+  if (!occasion) return spots;
+  const matched: PhotoSpot[] = [];
+  const rest: PhotoSpot[] = [];
+  for (const s of spots) (s.tags?.includes(occasion) ? matched : rest).push(s);
+  return [...matched, ...rest];
 }
 
 export function spotSlug(name: string): string {

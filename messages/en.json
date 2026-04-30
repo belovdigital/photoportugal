@@ -2587,7 +2587,7 @@
     "messageHeading": "Your message to the client",
     "messageSaving": "Saving…",
     "messageSaved": "Saved ✓",
-    "messageLocked": "Locked — already shared",
+    "messageLocked": "Locked — client accepted",
     "titlePlaceholder": "Title — e.g. \"Your magical Lisbon evening\"",
     "messagePlaceholder": "Add a personal note — thanks, story, recommendations… (optional, shown above the gallery)",
     "processing": "Processing",

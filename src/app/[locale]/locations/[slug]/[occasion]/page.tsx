@@ -1,19 +1,48 @@
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
-import { getLocationBySlug, getNearbyLocations, locations } from "@/lib/locations-data";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import {
+  getLocationBySlug,
+  getNearbyLocations,
+  locationFaqs,
+  locField,
+  faqField,
+} from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
-import { localeAlternates } from "@/lib/seo";
-import { query, queryOne } from "@/lib/db";
-import { PhotographerCard } from "@/components/photographers/PhotographerCard";
-import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
+import { photoSpots, sortSpotsByOccasion, spotSlug, spotLocalized } from "@/lib/photo-spots-data";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { queryOne, query } from "@/lib/db";
+import { localeAlternates } from "@/lib/seo";
+import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
+import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
+import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
+import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
+import { getReviewsForLocation } from "@/lib/reviews-data";
+import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
+import { formatDuration } from "@/lib/package-pricing";
+import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
+import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
+import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
+import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
+import { locationImage } from "@/lib/unsplash-images";
+import { getComboIntro } from "@/lib/location-occasion-intros";
 
-export const revalidate = 86400;
+// Combo /locations/[slug]/[occasion] is the SEO + paid-ad sitelink target
+// for queries like "Couples photographer Algarve" or "Family photoshoot
+// Lisbon". Same visual template as the parent location page so the visitor
+// doesn't feel like they fell off a cliff — every section is filtered or
+// re-framed for the occasion.
+export const dynamic = "force-dynamic";
 
+// ─── Occasion catalogue (used for hero label, meta, "other occasions"
+//     pills, and the canonical-EN noun for SQL filtering). Kept inline so
+//     this page works standalone; matches the long-standing OCCASIONS map
+//     from the previous version of this file.
 type OccasionEntry = {
+  /** EN/PT/DE/ES/FR singular noun phrase, e.g. "Couples Photographer" */
   title: string;
   titlePt: string;
   titleDe: string;
@@ -142,7 +171,14 @@ function occDesc(o: OccasionEntry, locale: string) {
   return o.description;
 }
 
-// UI translations for this page (5 locales).
+// "in / em / à / en" preposition that connects "<Occasion> in <Location>"
+// in the hero h1. Per-locale, since the existing message catalog has no
+// stand-alone "in" key.
+const IN_PREP: Record<string, string> = {
+  en: "in", pt: "em", de: "in", es: "en", fr: "à",
+};
+
+// ─── Page-local UI strings ──────────────────────────────────────────────
 const L = {
   en: {
     metaTitle: (occ: string, loc: string) => `${occ} in ${loc} — Book a Photoshoot`,
@@ -150,11 +186,8 @@ const L = {
       `${desc} Book your ${occLower} in ${loc}. Verified portfolios, instant booking. From €150.`,
     home: "Home",
     locations: "Locations",
-    availablePhotographers: (loc: string) => `Available photographers in ${loc}`,
-    reviews: "reviews",
-    from: "From",
     aboutLocation: (loc: string) => `About ${loc}`,
-    otherOccasions: (loc: string) => `Other occasions in ${loc}`,
+    otherOccasions: (loc: string) => `Other photoshoots in ${loc}`,
     nearbyTitle: (occ: string) => `${occ} in nearby destinations`,
     nearbySub: (loc: string) => `Also consider these locations near ${loc}.`,
     inLocation: "in",
@@ -163,7 +196,10 @@ const L = {
     ctaTitle: (occLower: string, loc: string) => `Ready to book your ${occLower} in ${loc}?`,
     ctaSub: "Browse verified photographers and book in minutes — no commitment, money-back guarantee.",
     ctaBtn: "Browse Photographers",
-    ctaSecondary: "Or get matched for free with our concierge",
+    seePhotographersLink: "See all photographers in",
+    introHeading: (occ: string, loc: string) => `${occ} in ${loc}`,
+    photographersAvailable: (count: number, loc: string) =>
+      `${count} ${count === 1 ? "photographer" : "photographers"} ready to shoot in ${loc}`,
   },
   pt: {
     metaTitle: (occ: string, loc: string) => `${occ} em ${loc} — Reserve Sessão Fotográfica`,
@@ -171,11 +207,8 @@ const L = {
       `${desc} Reserve o seu ${occLower} em ${loc}. Portfólios verificados, reserva instantânea. Desde 150 €.`,
     home: "Início",
     locations: "Localizações",
-    availablePhotographers: (loc: string) => `Fotógrafos disponíveis em ${loc}`,
-    reviews: "avaliações",
-    from: "Desde",
     aboutLocation: (loc: string) => `Sobre ${loc}`,
-    otherOccasions: (loc: string) => `Outras ocasiões em ${loc}`,
+    otherOccasions: (loc: string) => `Outras sessões em ${loc}`,
     nearbyTitle: (occ: string) => `${occ} em destinos próximos`,
     nearbySub: (loc: string) => `Considere também estas localizações perto de ${loc}.`,
     inLocation: "em",
@@ -184,7 +217,10 @@ const L = {
     ctaTitle: (occLower: string, loc: string) => `Pronto para reservar o seu ${occLower} em ${loc}?`,
     ctaSub: "Veja fotógrafos verificados e reserve em minutos — sem compromisso, com garantia de reembolso.",
     ctaBtn: "Ver Fotógrafos",
-    ctaSecondary: "Ou seja emparelhado gratuitamente pelo nosso concierge",
+    seePhotographersLink: "Ver todos os fotógrafos em",
+    introHeading: (occ: string, loc: string) => `${occ} em ${loc}`,
+    photographersAvailable: (count: number, loc: string) =>
+      `${count} ${count === 1 ? "fotógrafo pronto" : "fotógrafos prontos"} para fotografar em ${loc}`,
   },
   de: {
     metaTitle: (occ: string, loc: string) => `${occ} in ${loc} — Fotoshooting buchen`,
@@ -192,11 +228,8 @@ const L = {
       `${desc} Buchen Sie Ihren ${occLower} in ${loc}. Verifizierte Portfolios, sofortige Buchung. Ab 150 €.`,
     home: "Startseite",
     locations: "Orte",
-    availablePhotographers: (loc: string) => `Verfügbare Fotografen in ${loc}`,
-    reviews: "Bewertungen",
-    from: "Ab",
     aboutLocation: (loc: string) => `Über ${loc}`,
-    otherOccasions: (loc: string) => `Weitere Anlässe in ${loc}`,
+    otherOccasions: (loc: string) => `Weitere Shootings in ${loc}`,
     nearbyTitle: (occ: string) => `${occ} an Orten in der Nähe`,
     nearbySub: (loc: string) => `Schauen Sie sich auch diese Orte in der Nähe von ${loc} an.`,
     inLocation: "in",
@@ -205,7 +238,10 @@ const L = {
     ctaTitle: (occLower: string, loc: string) => `Bereit, Ihren ${occLower} in ${loc} zu buchen?`,
     ctaSub: "Verifizierte Fotografen ansehen und in wenigen Minuten buchen — unverbindlich, mit Geld-zurück-Garantie.",
     ctaBtn: "Fotografen ansehen",
-    ctaSecondary: "Oder lassen Sie sich kostenlos vom Concierge-Team vermitteln",
+    seePhotographersLink: "Alle Fotografen anzeigen in",
+    introHeading: (occ: string, loc: string) => `${occ} in ${loc}`,
+    photographersAvailable: (count: number, loc: string) =>
+      `${count} ${count === 1 ? "Fotograf bereit" : "Fotografen bereit"} für Shootings in ${loc}`,
   },
   es: {
     metaTitle: (occ: string, loc: string) => `${occ} en ${loc} — Reserve su sesión fotográfica`,
@@ -213,11 +249,8 @@ const L = {
       `${desc} Reserve su ${occLower} en ${loc}. Portafolios verificados, reserva al instante. Desde 150 €.`,
     home: "Inicio",
     locations: "Ubicaciones",
-    availablePhotographers: (loc: string) => `Fotógrafos disponibles en ${loc}`,
-    reviews: "reseñas",
-    from: "Desde",
     aboutLocation: (loc: string) => `Sobre ${loc}`,
-    otherOccasions: (loc: string) => `Otras ocasiones en ${loc}`,
+    otherOccasions: (loc: string) => `Otras sesiones en ${loc}`,
     nearbyTitle: (occ: string) => `${occ} en destinos cercanos`,
     nearbySub: (loc: string) => `Considere también estos lugares cerca de ${loc}.`,
     inLocation: "en",
@@ -226,7 +259,10 @@ const L = {
     ctaTitle: (occLower: string, loc: string) => `¿Listo para reservar su ${occLower} en ${loc}?`,
     ctaSub: "Vea fotógrafos verificados y reserve en minutos — sin compromiso, con garantía de devolución.",
     ctaBtn: "Ver fotógrafos",
-    ctaSecondary: "O reciba recomendaciones gratis de nuestro concierge",
+    seePhotographersLink: "Ver todos los fotógrafos en",
+    introHeading: (occ: string, loc: string) => `${occ} en ${loc}`,
+    photographersAvailable: (count: number, loc: string) =>
+      `${count} ${count === 1 ? "fotógrafo listo" : "fotógrafos listos"} para sesiones en ${loc}`,
   },
   fr: {
     metaTitle: (occ: string, loc: string) => `${occ} à ${loc} — Réservez votre séance photo`,
@@ -234,11 +270,8 @@ const L = {
       `${desc} Réservez votre ${occLower} à ${loc}. Portfolios vérifiés, réservation immédiate. À partir de 150 €.`,
     home: "Accueil",
     locations: "Lieux",
-    availablePhotographers: (loc: string) => `Photographes disponibles à ${loc}`,
-    reviews: "avis",
-    from: "À partir de",
     aboutLocation: (loc: string) => `À propos de ${loc}`,
-    otherOccasions: (loc: string) => `Autres occasions à ${loc}`,
+    otherOccasions: (loc: string) => `Autres séances à ${loc}`,
     nearbyTitle: (occ: string) => `${occ} dans des destinations proches`,
     nearbySub: (loc: string) => `Pensez aussi à ces lieux près de ${loc}.`,
     inLocation: "à",
@@ -247,7 +280,10 @@ const L = {
     ctaTitle: (occLower: string, loc: string) => `Prêt à réserver votre ${occLower} à ${loc} ?`,
     ctaSub: "Parcourez les photographes vérifiés et réservez en quelques minutes — sans engagement, avec garantie de remboursement.",
     ctaBtn: "Voir les photographes",
-    ctaSecondary: "Ou laissez notre concierge vous proposer des photographes gratuitement",
+    seePhotographersLink: "Voir tous les photographes à",
+    introHeading: (occ: string, loc: string) => `${occ} à ${loc}`,
+    photographersAvailable: (count: number, loc: string) =>
+      `${count} ${count === 1 ? "photographe prêt" : "photographes prêts"} pour des séances à ${loc}`,
   },
 } as const;
 
@@ -255,13 +291,17 @@ function pickL(locale: string): typeof L.en {
   return (L as unknown as Record<string, typeof L.en>)[locale] || L.en;
 }
 
-export async function generateStaticParams() {
-  const slugs = locations.map((l) => l.slug);
-  const occasions = Object.keys(OCCASIONS);
-  return slugs.flatMap((slug) => occasions.map((occasion) => ({ slug, occasion })));
+export function generateStaticParams() {
+  // 34 locations × 7 occasions = 238 paths. Don't pre-generate — `dynamic
+  // = "force-dynamic"` above keeps these on-demand and fresh.
+  return [] as Array<{ slug: string; occasion: string }>;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string; occasion: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string; occasion: string }>;
+}): Promise<Metadata> {
   const { locale, slug, occasion } = await params;
   const location = getLocationBySlug(slug);
   const occ = OCCASIONS[occasion];
@@ -269,8 +309,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
   const t = pickL(locale);
   const occT = occTitle(occ, locale);
-  const occD = occDesc(occ, locale);
-  const locName = ((location as unknown as Record<string, string>)[`name_${locale}`]) || location.name;
+  const occD = getComboIntro(slug, occasion, locale) || occDesc(occ, locale);
+  const locName = locField(location, "name", locale) || location.name;
   const title = t.metaTitle(occT, locName);
   const description = t.metaDesc(occD, occT.toLowerCase(), locName);
 
@@ -278,11 +318,20 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title,
     description,
     alternates: localeAlternates(`/locations/${slug}/${occasion}`, locale),
-    openGraph: { title, description, url: `https://photoportugal.com/locations/${slug}/${occasion}` },
+    openGraph: {
+      title,
+      description,
+      url: `https://photoportugal.com/locations/${slug}/${occasion}`,
+      images: [{ url: location.cover_image || "/og-image.png", width: 1200, height: 630, alt: `${occT} in ${locName}, Portugal` }],
+    },
   };
 }
 
-export default async function OccasionPage({ params }: { params: Promise<{ locale: string; slug: string; occasion: string }> }) {
+export default async function OccasionPage({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string; occasion: string }>;
+}) {
   const { locale, slug, occasion } = await params;
   setRequestLocale(locale);
 
@@ -290,78 +339,297 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
   const occ = OCCASIONS[occasion];
   if (!location || !occ) notFound();
 
-  // Get photographers at this location that offer this shoot type.
-  // Pull the full set of fields PhotographerCardCompact needs (cover, badges,
-  // response time, locations array) so the card matches the gold-standard
-  // homepage card instead of the old stripped avatar+name list.
-  type OccasionPhotographerRow = {
-    slug: string; name: string; tagline: string | null;
-    avatar_url: string | null; cover_url: string | null; cover_position_y: number | null;
-    portfolio_thumbs: string[] | null;
-    is_featured: boolean; is_verified: boolean; is_founding: boolean;
-    rating: number; review_count: number;
-    starting_price: string | null;
-    locations: string | null;
-    last_active_at: string | null;
-    avg_response_minutes: number | null;
-  };
-  let photographers: OccasionPhotographerRow[] = [];
-  try {
-    const TR = new Set(["pt", "de", "es", "fr"]);
-    const useLoc = locale && TR.has(locale) ? locale : null;
-    const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
-    photographers = await query<OccasionPhotographerRow>(
-      `SELECT pp.slug, u.name, ${taglineSql} as tagline,
-              u.avatar_url, pp.cover_url, pp.cover_position_y,
-              pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
-              pp.rating, pp.review_count,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
-              u.last_seen_at as last_active_at, pp.avg_response_minutes,
-              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
-               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
-              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
-       FROM photographer_profiles pp
-       JOIN users u ON u.id = pp.user_id
-       WHERE pp.is_approved = TRUE AND pp.id IN (
-         SELECT photographer_id FROM photographer_locations WHERE location_slug = $1
-       )
-       ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
-       LIMIT 8`,
-      [slug]
-    );
-  } catch {}
+  const t = await getTranslations("locations.detail");
+  const tc = await getTranslations("common");
+  const tL = pickL(locale);
 
-  // Aggregate stats for schema
-  let avgRating = 0;
-  let totalReviews = 0;
-  try {
-    const stats = await queryOne<{ avg_rating: string | null; total_reviews: string }>(
-      `SELECT AVG(pp.rating) FILTER (WHERE pp.rating IS NOT NULL AND pp.review_count > 0) as avg_rating,
-              COALESCE(SUM(pp.review_count), 0) as total_reviews
-       FROM photographer_locations pl
-       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
-       WHERE pl.location_slug = $1 AND pp.is_approved = TRUE`,
-      [slug]
-    );
-    avgRating = stats?.avg_rating ? parseFloat(parseFloat(stats.avg_rating).toFixed(1)) : 0;
-    totalReviews = parseInt(stats?.total_reviews || "0");
-  } catch {}
-
-  const nearby = getNearbyLocations(slug);
+  // Resolve canonical-EN shoot type label for SQL filtering. The DB stores
+  // values like "Couples", "Family", "Solo Portrait" (Title Case strings,
+  // not slugs) inside a text[] array on photographer_profiles.shoot_types.
   const shootTypeData = shootTypes.find((st) => st.slug === occasion);
+  const shootTypeLabel = shootTypeData?.name || null;
 
-  const t = pickL(locale);
-  const locName = ((location as unknown as Record<string, string>)[`name_${locale}`]) || location.name;
+  const localizedName = locField(location, "name", locale) || location.name;
+  const longDescription = locField(location, "long_description", locale) || location.long_description;
   const occT = occTitle(occ, locale);
   const occD = occDesc(occ, locale);
-  const title = `${occT} ${t.inLocation} ${locName}`;
+  const introCopy = getComboIntro(slug, occasion, locale) || occD;
 
-  const jsonLd = {
+  // Photo spots reranked so anything tagged with this occasion bubbles up.
+  const spots = sortSpotsByOccasion(photoSpots[slug] || [], occasion);
+
+  // Aggregate stats — same shape as the polished location page, but the
+  // photographer set is filtered to people who DO this occasion. If the
+  // resulting count is 0 (no photographers yet offer this combo) we still
+  // render the page so the editorial / FAQ / spots SEO content is live.
+  let photographerCount = 0;
+  let avgRating = 0;
+  let totalReviews = 0;
+  let minPrice: number | null = null;
+  let minDuration: number | null = null;
+  let maxDuration: number | null = null;
+  try {
+    const row = await queryOne<{
+      count: string;
+      avg_rating: string | null;
+      total_reviews: string;
+      min_price: string | null;
+      min_duration: string | null;
+      max_duration: string | null;
+    }>(
+      `SELECT COUNT(DISTINCT pp.id) as count,
+              AVG(pp.rating) FILTER (WHERE pp.rating IS NOT NULL AND pp.review_count > 0) as avg_rating,
+              COALESCE(SUM(pp.review_count), 0) as total_reviews,
+              (SELECT MIN(pk.price) FROM packages pk
+               JOIN photographer_locations pl2 ON pl2.photographer_id = pk.photographer_id
+               JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
+               WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE AND pk.is_public = TRUE
+                 AND ($2::text IS NULL OR $2 = ANY(pp2.shoot_types))) as min_price,
+              (SELECT MIN(pk.duration_minutes) FROM packages pk
+               JOIN photographer_locations pl3 ON pl3.photographer_id = pk.photographer_id
+               JOIN photographer_profiles pp3 ON pp3.id = pk.photographer_id
+               WHERE pl3.location_slug = $1 AND pp3.is_approved = TRUE AND pk.is_public = TRUE
+                 AND pk.duration_minutes IS NOT NULL
+                 AND ($2::text IS NULL OR $2 = ANY(pp3.shoot_types))) as min_duration,
+              (SELECT MAX(pk.duration_minutes) FROM packages pk
+               JOIN photographer_locations pl4 ON pl4.photographer_id = pk.photographer_id
+               JOIN photographer_profiles pp4 ON pp4.id = pk.photographer_id
+               WHERE pl4.location_slug = $1 AND pp4.is_approved = TRUE AND pk.is_public = TRUE
+                 AND pk.duration_minutes IS NOT NULL
+                 AND ($2::text IS NULL OR $2 = ANY(pp4.shoot_types))) as max_duration
+       FROM photographer_locations pl
+       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+       WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
+         AND ($2::text IS NULL OR $2 = ANY(pp.shoot_types))`,
+      [slug, shootTypeLabel]
+    );
+    photographerCount = parseInt(row?.count || "0");
+    avgRating = row?.avg_rating ? parseFloat(parseFloat(row.avg_rating).toFixed(1)) : 0;
+    totalReviews = parseInt(row?.total_reviews || "0");
+    minPrice = row?.min_price ? parseFloat(row.min_price) : null;
+    minDuration = row?.min_duration ? parseInt(row.min_duration) : null;
+    maxDuration = row?.max_duration ? parseInt(row.max_duration) : null;
+  } catch {}
+
+  const fmt = (min: number) => formatDuration(min, locale);
+  const durationText = minDuration && maxDuration
+    ? (minDuration === maxDuration ? fmt(minDuration) : `${fmt(minDuration)} – ${fmt(maxDuration)}`)
+    : null;
+
+  // Hero photographer — weighted-random pick filtered to this location AND
+  // who offers this occasion. Falls back to anyone at the location if the
+  // narrower filter returns no rows so the hero never goes empty.
+  let heroPhotographer: HeroFeaturedPhotographer | null = null;
+  try {
+    const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+    const useLoc = TR_LOCALES.has(locale) ? locale : null;
+    const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+    const heroRows = await query<{
+      slug: string; name: string; tagline: string | null;
+      cover_url: string | null; avatar_url: string | null;
+      rating: string; review_count: number; session_count: number;
+      portfolio_urls: string[] | null;
+    }>(
+      `SELECT pp.slug, u.name, ${taglineSql} as tagline, pp.cover_url, u.avatar_url,
+              COALESCE(pp.rating, 0)::text as rating,
+              COALESCE(pp.review_count, 0) as review_count,
+              COALESCE(pp.session_count, 0) as session_count,
+              ARRAY(
+                SELECT pi.url FROM portfolio_items pi
+                WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                ORDER BY pi.sort_order NULLS LAST, pi.created_at
+                LIMIT 12
+              ) as portfolio_urls
+       FROM photographer_locations pl
+       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       WHERE pl.location_slug = $1
+         AND pp.is_approved = TRUE
+         AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+         AND ($2::text IS NULL OR $2 = ANY(pp.shoot_types))
+         AND EXISTS (
+           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+         )
+       ORDER BY -LN(RANDOM()) / (CASE
+         WHEN pp.is_featured THEN 50
+         WHEN pp.is_verified THEN 30
+         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+         WHEN pp.early_bird_tier IS NOT NULL THEN 5
+         ELSE 2
+       END) ASC
+       LIMIT 1`,
+      [slug, shootTypeLabel]
+    );
+    if (heroRows.length > 0) {
+      const r = heroRows[0];
+      heroPhotographer = {
+        slug: r.slug,
+        name: r.name,
+        tagline: r.tagline,
+        cover_url: r.cover_url,
+        avatar_url: r.avatar_url,
+        rating: Number(r.rating),
+        review_count: r.review_count,
+        session_count: r.session_count,
+        location_name: localizedName,
+        location_slug: slug,
+        portfolio_urls: (r.portfolio_urls || []).filter(Boolean),
+      };
+    }
+  } catch {}
+
+  // Portfolio pool — same query as polished page (occasion-filtered would
+  // shrink the pool too aggressively; visitors will see what photographers
+  // shoot in this CITY, then compare cards/packages for occasion fit).
+  type LocationPortfolioRow = {
+    url: string; width: number | null; height: number | null;
+    slug: string; name: string; avatar_url: string | null;
+  };
+  let locationMosaicPhotos: { url: string; slug: string; name: string; location: string | null }[] = [];
+  let locationMasonryPhotos: LocationMasonryPhoto[] = [];
+  try {
+    const portfolioRows = await query<LocationPortfolioRow>(
+      `SELECT pi.url, pi.width, pi.height, pp.slug, u.name, u.avatar_url
+       FROM portfolio_items pi
+       JOIN photographer_profiles pp ON pp.id = pi.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       JOIN photographer_locations pl ON pl.photographer_id = pp.id
+       WHERE pl.location_slug = $1
+         AND pi.type = 'photo'
+         AND pp.is_approved = TRUE
+         AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+         AND (pi.location_slug IS NULL OR pi.location_slug = $1)
+       ORDER BY -LN(RANDOM()) / (CASE
+         WHEN pp.is_featured THEN 50
+         WHEN pp.is_verified THEN 30
+         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+         WHEN pp.early_bird_tier IS NOT NULL THEN 5
+         ELSE 2
+       END) ASC
+       LIMIT 60`,
+      [slug]
+    );
+    locationMosaicPhotos = portfolioRows.slice(0, 24).map((r) => ({
+      url: r.url, slug: r.slug, name: r.name, location: localizedName,
+    }));
+    locationMasonryPhotos = portfolioRows.slice(0, 30).map((r) => ({
+      url: r.url, width: r.width, height: r.height,
+      photographer: { slug: r.slug, name: r.name, avatar_url: r.avatar_url },
+    }));
+  } catch {}
+
+  // Total photographer count for "browse all N" link
+  let totalPhotographers = 0;
+  try {
+    const totalRow = await queryOne<{ count: number }>(
+      `SELECT COUNT(*)::int as count FROM photographer_profiles
+       WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE`
+    );
+    totalPhotographers = totalRow?.count ?? 0;
+  } catch {}
+
+  const heroLocationContext: HeroLocationContext = {
+    slug,
+    name: localizedName,
+    region: location.region,
+    photographerCount,
+    minPrice,
+    durationText,
+    avgRating: avgRating || null,
+    totalReviews,
+    occasionLabel: occT,
+    occasionPreposition: IN_PREP[locale] || "in",
+  };
+
+  // Top photographers — full PhotographerCardCompact data + ALL public
+  // packages (matches the polished page card). Filtered by occasion.
+  type LocationPhotographerRow = {
+    id: string; slug: string; name: string; avatar_url: string | null;
+    cover_url: string | null; cover_position_y: number | null;
+    portfolio_thumbs: string[] | null;
+    is_featured: boolean; is_verified: boolean; is_founding: boolean;
+    tagline: string | null;
+    rating: number; review_count: number; starting_price: string | null;
+    locations: string | null;
+    last_active_at: string | null; avg_response_minutes: number | null;
+    packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number }[] | null;
+    packages_count: number;
+  };
+  let topPhotographers: LocationPhotographerRow[] = [];
+  try {
+    const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+    const useLoc = TR_LOCALES.has(locale) ? locale : null;
+    const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+    topPhotographers = await query<LocationPhotographerRow>(
+      `SELECT pp.id, pp.slug, u.name, u.avatar_url,
+              pp.cover_url, pp.cover_position_y,
+              pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
+              ${taglineSql} as tagline, pp.rating, pp.review_count,
+              u.last_seen_at as last_active_at, pp.avg_response_minutes,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
+              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
+              COALESCE((
+                SELECT json_agg(
+                  json_build_object(
+                    'id', pk.id,
+                    'name', pk.name,
+                    'price', pk.price,
+                    'duration_minutes', pk.duration_minutes,
+                    'num_photos', COALESCE(pk.num_photos, 0)
+                  ) ORDER BY pk.sort_order NULLS LAST, pk.price ASC
+                )
+                FROM packages pk
+                WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE
+              ), '[]'::json) as packages,
+              (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::int as packages_count
+       FROM photographer_locations pl
+       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
+         AND ($2::text IS NULL OR $2 = ANY(pp.shoot_types))
+       ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
+       LIMIT 6`,
+      [slug, shootTypeLabel]
+    );
+  } catch {}
+
+  // Reviews — location-level (occasion filter would shrink to ~0 reviews
+  // for many combos since reviews aren't tagged with shoot type).
+  const locationReviews = await getReviewsForLocation(slug, 6, locale);
+
+  const nearby = getNearbyLocations(slug);
+
+  // FAQ — combine location FAQs with shoot-type FAQs (location ones are
+  // higher value, shoot-type ones generic).
+  const locationFaqsList = (locationFaqs[slug] || []).map((faq) => ({
+    question: faqField(faq, "question", locale),
+    answer: faqField(faq, "answer", locale),
+  }));
+  const shootTypeFaqsRaw = shootTypeData?.faqs || [];
+  const shootTypeFaqsList = shootTypeFaqsRaw.slice(0, 3).map((f) => {
+    const fl = f as unknown as Record<string, string | undefined>;
+    return {
+      question: fl[`question_${locale}`] || f.question,
+      answer: fl[`answer_${locale}`] || f.answer,
+    };
+  });
+  const allFaqs = [...locationFaqsList, ...shootTypeFaqsList].slice(0, 6);
+
+  // Other occasions in this location — exclude the current one.
+  const otherOccasions = Object.entries(OCCASIONS).filter(([key]) => key !== occasion);
+
+  // ─── Schema.org JSON-LD ────────────────────────────────────────────────
+  const jsonLdService = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: `${occT} in ${locName}, Portugal`,
+    name: `${occT} in ${location.name}, Portugal`,
     description: occD,
     url: `https://photoportugal.com/locations/${slug}/${occasion}`,
+    serviceType: occ.title,
     provider: {
       "@type": "Organization",
       name: "Photo Portugal",
@@ -372,12 +640,13 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
       name: location.name,
       containedInPlace: { "@type": "Country", name: "Portugal" },
     },
-    ...(photographers.length > 0 && photographers[0].starting_price ? {
+    ...(minPrice ? {
       offers: {
         "@type": "Offer",
         priceCurrency: "EUR",
-        price: String(photographers[0].starting_price),
+        price: String(minPrice),
         availability: "https://schema.org/InStock",
+        url: `https://photoportugal.com/photographers?location=${slug}&shoot=${occasion}`,
       },
     } : {}),
     ...(totalReviews > 0 && avgRating > 0 ? {
@@ -391,211 +660,397 @@ export default async function OccasionPage({ params }: { params: Promise<{ local
     } : {}),
   };
 
-  // FAQ schema from shoot type data
-  const rawFaqs = shootTypeData?.faqs || [];
-  const faqs = rawFaqs.map((f) => {
-    const fl = f as unknown as Record<string, string | undefined>;
-    return {
-      question: fl[`question_${locale}`] || f.question,
-      answer: fl[`answer_${locale}`] || f.answer,
-    };
-  });
-  const jsonLdFaq = faqs.length > 0 ? {
+  const jsonLdFaq = allFaqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
+    mainEntity: allFaqs.map((faq) => ({
       "@type": "Question",
       name: faq.question,
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
     })),
   } : null;
 
-  const breadcrumbs = [
-    { name: t.home, href: "/" },
-    { name: t.locations, href: "/locations" },
-    { name: locName, href: `/locations/${slug}` },
-    { name: occT, href: `/locations/${slug}/${occasion}` },
-  ];
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: tL.home, item: "https://photoportugal.com/" },
+      { "@type": "ListItem", position: 2, name: tL.locations, item: "https://photoportugal.com/locations" },
+      { "@type": "ListItem", position: 3, name: localizedName, item: `https://photoportugal.com/locations/${slug}` },
+      { "@type": "ListItem", position: 4, name: occT, item: `https://photoportugal.com/locations/${slug}/${occasion}` },
+    ],
+  };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdService) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
       {jsonLdFaq && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
       )}
-      <Breadcrumbs items={breadcrumbs} />
 
-      <div className="mt-6">
-        <span className="text-4xl">{occ.emoji}</span>
-        <h1 className="mt-2 font-display text-3xl font-bold text-gray-900 sm:text-4xl">
-          {title}
-        </h1>
-        <p className="mt-3 text-lg text-gray-600 leading-relaxed max-w-2xl">
-          {occD}
-        </p>
-      </div>
+      <Breadcrumbs
+        items={[
+          { name: tL.home, href: "/" },
+          { name: tL.locations, href: "/locations" },
+          { name: localizedName, href: `/locations/${slug}` },
+          { name: occT, href: `/locations/${slug}/${occasion}` },
+        ]}
+      />
 
-      {/* Photographers */}
-      {photographers.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-xl font-bold text-gray-900">
-            {t.availablePhotographers(locName)}
-          </h2>
-          <div className="mt-4">
-            <ScarcityBanner count={photographers.length} locationName={locName} locale={locale} />
+      <LocationStickyBookBar
+        locationSlug={slug}
+        locationName={localizedName}
+        minPrice={minPrice}
+      />
+
+      {/* Hero — single-photographer carousel, with combo-aware h1
+          ("<Occasion> in <Location>") via occasionLabel/occasionPreposition. */}
+      {heroPhotographer ? (
+        <HeroSingleVariant
+          photographer={heroPhotographer}
+          locationContext={heroLocationContext}
+          totalPhotographers={totalPhotographers}
+        />
+      ) : (
+        // Fallback: location cover + match form. Same pattern as polished page.
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0">
+            <OptimizedImage
+              src={locationImage(location.slug, "hero")}
+              alt={`${occT} in ${location.name}, Portugal`}
+              priority
+              className="h-full w-full"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary-950/85 via-primary-900/70 to-primary-800/50" />
           </div>
-          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {photographers.map((p) => (
-              <PhotographerCard
-                key={p.slug}
-                photographer={adaptToPhotographerProfile({
-                  slug: p.slug,
-                  name: p.name,
-                  tagline: p.tagline,
-                  avatar_url: p.avatar_url,
-                  cover_url: p.cover_url,
-                  cover_position_y: p.cover_position_y,
-                  portfolio_thumbs: p.portfolio_thumbs,
-                  is_featured: p.is_featured,
-                  is_verified: p.is_verified,
-                  is_founding: p.is_founding,
-                  rating: p.rating,
-                  review_count: p.review_count,
-                  min_price: p.starting_price,
-                  locations: p.locations,
-                  last_active_at: p.last_active_at,
-                  avg_response_minutes: p.avg_response_minutes,
-                })}
-              />
-            ))}
+          <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold text-primary-300">{location.region}</p>
+              <h1 className="mt-2 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
+                <span className="text-primary-300">{occT}</span> {tL.inLocation} {localizedName}
+              </h1>
+              <p className="mt-6 text-lg text-primary-100/90">{introCopy}</p>
+              <div className="mt-6 max-w-xl">
+                <MatchQuickForm
+                  presetLocation={location.slug}
+                  source={`combo_${location.slug}_${occasion}`}
+                  variant="dark"
+                  size="md"
+                />
+              </div>
+            </div>
           </div>
         </section>
       )}
 
-      {/* About this location — SEO-rich content */}
-      {(((location as unknown as Record<string, string>)[`long_description_${locale}`]) || location.long_description) && (
-        <section className="mt-12">
-          <h2 className="text-xl font-bold text-gray-900">
-            {t.aboutLocation(locName)}
+      {/* Editorial intro — combo-specific copy from the curated map, or
+          fallback to the generic occasion description. Lives RIGHT under
+          the hero so the page reads as "this is for X in Y" instantly. */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-gray-900">
+            {tL.introHeading(occT, localizedName)}
           </h2>
-          <p className="mt-4 text-gray-600 leading-relaxed">
-            {((location as unknown as Record<string, string>)[`long_description_${locale}`]) || location.long_description}
-          </p>
-        </section>
-      )}
-
-      {/* Other occasions in this location */}
-      <section className="mt-12">
-        <h2 className="text-xl font-bold text-gray-900">
-          {t.otherOccasions(locName)}
-        </h2>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {Object.entries(OCCASIONS)
-            .filter(([key]) => key !== occasion)
-            .map(([key, occ]) => (
-              <Link
-                key={key}
-                href={`/locations/${slug}/${key}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-warm-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
-              >
-                <span>{occ.emoji}</span>
-                {occTitle(occ, locale)}
-              </Link>
-            ))}
+          <p className="mt-4 text-gray-600 leading-relaxed text-base sm:text-lg">{introCopy}</p>
+          {photographerCount > 0 && (
+            <p className="mt-3 text-sm text-gray-500">
+              {tL.photographersAvailable(photographerCount, localizedName)}
+            </p>
+          )}
         </div>
       </section>
 
+      {/* About location — sticky text + portfolio mosaic (same pattern as
+          polished page). The shoot-type pill row here points to other
+          occasion combos so users can explore neighbouring intent. */}
+      <section className="relative bg-warm-50">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-2 lg:gap-12 lg:py-20">
+            <div className="max-w-xl lg:sticky lg:top-24">
+              <h2 className="font-display text-3xl font-bold text-gray-900 sm:text-4xl">
+                {tL.aboutLocation(localizedName)}
+              </h2>
+              {longDescription && (
+                <div className="mt-6 text-gray-600 leading-relaxed space-y-4">
+                  <p>{longDescription}</p>
+                </div>
+              )}
+
+              <div className="mt-8">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+                  {tL.otherOccasions(localizedName)}
+                </h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {otherOccasions.slice(0, 6).map(([key, o]) => (
+                    <Link
+                      key={key}
+                      href={`/locations/${slug}/${key}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-warm-200 bg-white px-3.5 py-1.5 text-sm font-medium text-gray-700 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+                    >
+                      <span>{o.emoji}</span>
+                      {occTitle(o, locale)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <Link
+                href={`/photographers?location=${slug}&shoot=${occasion}`}
+                className="mt-8 inline-flex rounded-xl bg-primary-600 px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700"
+              >
+                {tc("findPhotographers")}
+              </Link>
+            </div>
+
+            <div className="hidden lg:block lg:h-[140vh]">
+              {locationMosaicPhotos.length > 0 && (
+                <PortfolioMosaic photos={locationMosaicPhotos.slice(0, 24)} />
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Real photos masonry */}
+      {locationMasonryPhotos.length > 0 && (
+        <LocationPhotosMasonry photos={locationMasonryPhotos} />
+      )}
+
+      {/* Photographer grid — filtered by occasion. Only renders if we have
+          matches, otherwise we keep the page free of an empty state and
+          users still get the rest of the SEO content + photo spots. */}
+      {topPhotographers.length > 0 && (
+        <section className="border-t border-warm-200 bg-warm-50">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-gray-900">
+              {occT} {tL.inLocation} {localizedName}
+            </h2>
+            <p className="mt-2 text-gray-500">
+              {tL.photographersAvailable(photographerCount, localizedName)}
+            </p>
+            <div className="mt-6">
+              <ScarcityBanner count={photographerCount} locationName={localizedName} locale={locale} />
+            </div>
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {topPhotographers.map((sp) => (
+                <PhotographerCardCompact
+                  key={sp.id}
+                  p={{
+                    slug: sp.slug,
+                    name: sp.name,
+                    tagline: sp.tagline,
+                    avatar_url: sp.avatar_url,
+                    cover_url: sp.cover_url,
+                    cover_position_y: sp.cover_position_y,
+                    portfolio_thumbs: sp.portfolio_thumbs,
+                    is_featured: sp.is_featured,
+                    is_verified: sp.is_verified,
+                    is_founding: sp.is_founding,
+                    rating: Number(sp.rating),
+                    review_count: sp.review_count,
+                    min_price: sp.starting_price ? Number(sp.starting_price) : null,
+                    locations: sp.locations,
+                    last_active_at: sp.last_active_at,
+                    avg_response_minutes: sp.avg_response_minutes,
+                    packages: sp.packages ?? [],
+                    packages_total_count: sp.packages_count,
+                  }}
+                />
+              ))}
+            </div>
+            {photographerCount > topPhotographers.length && (
+              <div className="mt-8 text-center">
+                <Link
+                  href={`/photographers?location=${slug}&shoot=${occasion}`}
+                  className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-white px-6 py-3 text-sm font-semibold text-primary-600 transition hover:bg-primary-50 hover:shadow-md"
+                >
+                  {tL.seePhotographersLink} {localizedName}
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Reviews */}
+      {locationReviews.length > 0 && (
+        <section className="border-t border-warm-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <ReviewsStrip
+              reviews={locationReviews}
+              title={t("whatTravelersSay", { location: localizedName })}
+              subtitle={t("realReviewsSubtitle")}
+              compact
+            />
+          </div>
+        </section>
+      )}
+
+      {/* How It Works */}
+      <HowItWorksSection />
+
+      {/* Top photo spots — reranked by occasion. Spots tagged for this
+          shoot type bubble to the top; untagged spots still render. */}
+      {spots.length > 0 && (
+        <section className="border-t border-warm-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-gray-900">
+              {t("topPhotoSpots", { location: localizedName })}
+            </h2>
+            <p className="mt-2 text-gray-500">
+              {t("mostPhotogenic", { location: localizedName })}
+            </p>
+            <div className={`mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 ${
+              spots.length <= 2 ? "lg:grid-cols-2" :
+              spots.length === 4 ? "lg:grid-cols-2" :
+              "lg:grid-cols-3"
+            }`}>
+              {spots.map((spot) => {
+                const sl = spotLocalized(spot, locale);
+                return (
+                  <Link
+                    key={spot.name}
+                    href={`/spots/${slug}/${spotSlug(spot.name)}`}
+                    className="group rounded-xl border border-warm-200 bg-warm-50 p-5 transition hover:border-primary-300 hover:bg-white hover:shadow-sm"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 group-hover:text-primary-700">{sl.name}</h3>
+                        <p className="mt-1 text-sm text-gray-500 leading-relaxed">{sl.description}</p>
+                        {sl.best_time && (
+                          <p className="mt-2 text-xs text-gray-400">{t("bestTime", { time: sl.best_time })}</p>
+                        )}
+                        {sl.tips && (
+                          <p className="mt-1 text-xs text-primary-600">{sl.tips}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FAQ — location FAQ + shoot-type FAQ combined */}
+      {allFaqs.length > 0 && (
+        <section className="border-t border-warm-200 bg-white">
+          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-gray-900">
+              {tL.faqTitle}
+            </h2>
+            <div className="mt-8 space-y-4">
+              {allFaqs.map((faq, i) => (
+                <details
+                  key={i}
+                  className="group rounded-xl border border-warm-200 bg-warm-50"
+                >
+                  <summary className="flex items-center justify-between px-6 py-5 font-semibold text-gray-900 cursor-pointer">
+                    {faq.question}
+                    <svg
+                      className="h-5 w-5 shrink-0 text-gray-400 transition group-open:rotate-180"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <div className="px-6 pb-5">
+                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Same occasion in nearby locations */}
       {nearby.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-xl font-bold text-gray-900">
-            {t.nearbyTitle(occT)}
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            {t.nearbySub(locName)}
-          </p>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {nearby.slice(0, 4).map((nb) => {
-              const nbR = nb as unknown as Record<string, string | undefined>;
-              const nbName = nbR[`name_${locale}`] || nb.name;
-              const nbDesc = nbR[`description_${locale}`] || nb.description;
-              return (
-                <Link
-                  key={nb.slug}
-                  href={`/locations/${nb.slug}/${occasion}`}
-                  className="group rounded-xl border border-warm-200 bg-white p-5 transition hover:border-primary-200 hover:shadow-md"
-                >
-                  <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition">
-                    {occT} {t.inLocation} {nbName}
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                    {nbDesc}
-                  </p>
-                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary-600">
-                    {t.viewPhotographers} &rarr;
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* FAQ from shoot type data */}
-      {faqs.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-xl font-bold text-gray-900">
-            {t.faqTitle}
-          </h2>
-          <div className="mt-4 space-y-3">
-            {faqs.slice(0, 4).map((faq, i) => (
-              <details
-                key={i}
-                className="group rounded-xl border border-warm-200 bg-warm-50"
-              >
-                <summary className="flex items-center justify-between px-5 py-4 font-semibold text-gray-900 cursor-pointer text-sm">
-                  {faq.question}
-                  <svg
-                    className="h-4 w-4 shrink-0 text-gray-400 transition group-open:rotate-180"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+        <section className="border-t border-warm-200 bg-warm-50">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-2xl font-bold text-gray-900">
+              {tL.nearbyTitle(occT)}
+            </h2>
+            <p className="mt-2 text-gray-500">
+              {tL.nearbySub(localizedName)}
+            </p>
+            <div className={`mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
+              nearby.length <= 2 ? "lg:grid-cols-2" :
+              nearby.length === 4 ? "lg:grid-cols-2" :
+              "lg:grid-cols-3"
+            }`}>
+              {nearby.slice(0, 6).map((nb) => {
+                const nbR = nb as unknown as Record<string, string | undefined>;
+                const nbName = nbR[`name_${locale}`] || nb.name;
+                const nbDesc = nbR[`description_${locale}`] || nb.description;
+                return (
+                  <Link
+                    key={nb.slug}
+                    href={`/locations/${nb.slug}/${occasion}`}
+                    className="group rounded-xl border border-warm-200 bg-white p-5 transition hover:border-primary-200 hover:shadow-md"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </summary>
-                <div className="px-5 pb-4">
-                  <p className="text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
-                </div>
-              </details>
-            ))}
+                    <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition">
+                      {occT} {tL.inLocation} {nbName}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500 line-clamp-2">{nbDesc}</p>
+                    <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary-600">
+                      {tL.viewPhotographers} →
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </section>
       )}
 
-      {/* CTA */}
-      <div className="mt-12 rounded-2xl bg-primary-50 p-8 text-center">
-        <h2 className="font-display text-2xl font-bold text-gray-900">
-          {t.ctaTitle(occT.toLowerCase(), locName)}
-        </h2>
-        <p className="mt-2 text-gray-600">
-          {t.ctaSub}
-        </p>
-        <div className="mt-6 flex justify-center gap-3">
-          <Link
-            href={`/photographers?location=${slug}`}
-            className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white hover:bg-primary-700"
-          >
-            {t.ctaBtn}
-          </Link>
-          <Link
-            href={`/locations/${slug}`}
-            className="rounded-xl border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-white"
-          >
-            {t.ctaSecondary}
-          </Link>
+      {/* Final CTA */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <OptimizedImage
+            src={locationImage(location.slug, "card")}
+            alt={`${occT} in ${location.name}`}
+            width={600}
+            className="h-full w-full"
+          />
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm" />
         </div>
-      </div>
-    </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
+          <h2 className="font-display text-3xl font-bold text-gray-900">
+            {tL.ctaTitle(occT.toLowerCase(), localizedName)}
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-gray-600">
+            {tL.ctaSub}
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link
+              href={`/photographers?location=${location.slug}&shoot=${occasion}`}
+              className="rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
+            >
+              {tL.ctaBtn}
+            </Link>
+            <Link
+              href={`/locations/${location.slug}`}
+              className="rounded-xl border border-gray-300 bg-white px-8 py-4 text-base font-semibold text-gray-700 hover:bg-warm-50"
+            >
+              {tL.aboutLocation(localizedName)}
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

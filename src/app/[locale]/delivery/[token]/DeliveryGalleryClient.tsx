@@ -90,12 +90,15 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
         key={photo.id}
         className="cursor-pointer overflow-hidden rounded-lg bg-warm-100 transition hover:opacity-90 relative"
         onClick={() => openLightbox(index)}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <img
           src={thumb}
           alt={photo.filename}
           loading="lazy"
-          className="w-full block"
+          className="w-full block select-none"
+          draggable={false}
+          onContextMenu={(e) => e.preventDefault()}
         />
         {isVideo && (
           <>
@@ -115,9 +118,13 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
         )}
         {isVideo && !deliveryAccepted && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="rotate-[-12deg] text-[18px] font-bold uppercase tracking-widest text-white/35 select-none whitespace-nowrap" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}>
-              Photo Portugal
-            </div>
+            <img
+              src="/icon-512.png"
+              alt=""
+              aria-hidden="true"
+              className="w-1/5 max-w-[64px] select-none opacity-30 mix-blend-screen"
+              draggable={false}
+            />
           </div>
         )}
       </div>
@@ -191,21 +198,28 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
               Pre-acceptance: video gets an HTML watermark overlay (photos
               are already watermarked server-side via the preview JPEG). */}
           {photos[lightboxIndex].media_type === "video" ? (
-            <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+            <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
               <video
                 key={photos[lightboxIndex].id}
                 src={photos[lightboxIndex].url}
                 poster={photos[lightboxIndex].thumbnail_url ?? undefined}
                 controls
+                controlsList="nodownload noremoteplayback"
+                disablePictureInPicture
                 autoPlay
                 playsInline
+                onContextMenu={(e) => e.preventDefault()}
                 className="block max-h-[90vh] max-w-[90vw] select-none"
               />
               {!deliveryAccepted && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="rotate-[-15deg] text-3xl sm:text-5xl font-bold uppercase tracking-widest text-white/30 select-none whitespace-nowrap" style={{ textShadow: "0 2px 6px rgba(0,0,0,0.5)" }}>
-                    Photo Portugal
-                  </div>
+                  <img
+                    src="/icon-512.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="w-1/3 max-w-[256px] select-none opacity-30 mix-blend-screen"
+                    draggable={false}
+                  />
                 </div>
               )}
             </div>
@@ -216,6 +230,7 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
               className="max-h-[90vh] max-w-[90vw] object-contain select-none"
               draggable={false}
               onClick={(e) => e.stopPropagation()}
+              onContextMenu={(e) => e.preventDefault()}
             />
           )}
 

@@ -2651,7 +2651,7 @@
     "messageHeading": "Ihre Nachricht an den Kunden",
     "messageSaving": "Speichert…",
     "messageSaved": "Gespeichert ✓",
-    "messageLocked": "Gesperrt — bereits geteilt",
+    "messageLocked": "Gesperrt — Kunde hat akzeptiert",
     "titlePlaceholder": "Titel — z. B. \"Ihr magischer Lissabon-Abend\"",
     "messagePlaceholder": "Persönliche Nachricht — Dank, Geschichte, Empfehlungen… (optional, oben in der Galerie sichtbar)",
     "processing": "Verarbeitet",

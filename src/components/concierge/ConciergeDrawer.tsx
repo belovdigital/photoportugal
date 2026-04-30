@@ -113,10 +113,6 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
       const slug = stripped.split("/")[2];
       return slug ? `User is on shoot type page: ${slug}` : undefined;
     }
-    if (stripped.startsWith("/lp/")) {
-      const slug = stripped.split("/")[2];
-      return slug ? `User came from paid-ad LP for: ${slug}` : undefined;
-    }
     if (stripped === "/") return "User is on homepage";
     return undefined;
   })();

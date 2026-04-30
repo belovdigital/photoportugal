@@ -37,6 +37,13 @@ export interface HeroLocationContext {
   durationText: string | null;
   avgRating: number | null;
   totalReviews: number;
+  /** When set (combo /locations/[slug]/[occasion] pages), the hero renders
+   *  "<occasionLabel> in <locationName>" as the h1 instead of the default
+   *  "Photographers in <locationName>". Pass an already-localized phrase
+   *  like "Couples Photographer" / "Fotógrafo de Casais". */
+  occasionLabel?: string;
+  /** Per-locale preposition for the combo headline ("in", "em", "à"…). */
+  occasionPreposition?: string;
 }
 
 const ROTATION_MS = 5000;
@@ -460,13 +467,25 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
               h1, so we render h2 there and let the value-prop section
               below own the page's h1 with the stable copy. */}
           {locationContext ? (
-            <h1 className="mt-5 font-display text-4xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-[3.5rem]">
-              {tLoc.rich("headline", {
-                location: (chunks) => <span className="text-primary-400">{chunks}</span>,
-                br: () => <br className="hidden sm:inline" />,
-                locationName: locationContext.name,
-              })}
-            </h1>
+            locationContext.occasionLabel ? (
+              // Combo headline: "<Occasion>" line break "in <Location>".
+              // We construct it inline (not via i18n) because the only
+              // moving piece is the preposition; the rest is data passed in.
+              <h1 className="mt-5 font-display text-4xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-[3.5rem]">
+                <span className="text-primary-400">{locationContext.occasionLabel}</span>
+                <br className="hidden sm:inline" />{" "}
+                {locationContext.occasionPreposition || "in"}{" "}
+                <span className="text-primary-400">{locationContext.name}</span>
+              </h1>
+            ) : (
+              <h1 className="mt-5 font-display text-4xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-[3.5rem]">
+                {tLoc.rich("headline", {
+                  location: (chunks) => <span className="text-primary-400">{chunks}</span>,
+                  br: () => <br className="hidden sm:inline" />,
+                  locationName: locationContext.name,
+                })}
+              </h1>
+            )
           ) : (
             <h2 className="mt-5 font-display text-4xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-[3.5rem]">
               {t.rich("headline", {

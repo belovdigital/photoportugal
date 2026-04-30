@@ -14,6 +14,24 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // 301s for the deleted /lp/* ad-LP templates. Google Ads + warmup links
+  // historically pointed here; we redirect to the canonical location page in
+  // each locale so any lingering inbound link / cached URL still lands somewhere
+  // useful instead of a 404.
+  async redirects() {
+    return [
+      { source: "/lp", destination: "/", permanent: true },
+      { source: "/lp/:city", destination: "/locations/:city", permanent: true },
+      { source: "/pt/lp", destination: "/pt", permanent: true },
+      { source: "/pt/lp/:city", destination: "/pt/locations/:city", permanent: true },
+      { source: "/de/lp", destination: "/de", permanent: true },
+      { source: "/de/lp/:city", destination: "/de/orte/:city", permanent: true },
+      { source: "/es/lp", destination: "/es", permanent: true },
+      { source: "/es/lp/:city", destination: "/es/lugares/:city", permanent: true },
+      { source: "/fr/lp", destination: "/fr", permanent: true },
+      { source: "/fr/lp/:city", destination: "/fr/lieux/:city", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

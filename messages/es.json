@@ -2799,7 +2799,7 @@
     "messageHeading": "Tu mensaje al cliente",
     "messageSaving": "Guardando…",
     "messageSaved": "Guardado ✓",
-    "messageLocked": "Bloqueado — ya compartido",
+    "messageLocked": "Bloqueado — cliente aceptó",
     "titlePlaceholder": "Título — p. ej. «Tu noche mágica en Lisboa»",
     "messagePlaceholder": "Añade una nota personal — agradecimientos, historia, recomendaciones… (opcional, sobre la galería)",
     "processing": "Procesando",

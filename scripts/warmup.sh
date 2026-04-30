@@ -15,8 +15,6 @@ URLS=(
   "/de/photographers"
   "/concierge"
   "/de/concierge"
-  "/lp/algarve?type=elopement"
-  "/lp/lisbon?type=family"
   "/photoshoots"
   "/locations/lisbon"
   "/locations/sintra"

@@ -2799,7 +2799,7 @@
     "messageHeading": "Votre message au client",
     "messageSaving": "Enregistrement…",
     "messageSaved": "Enregistré ✓",
-    "messageLocked": "Verrouillé — déjà partagé",
+    "messageLocked": "Verrouillé — client a accepté",
     "titlePlaceholder": "Titre — ex. « Votre soirée magique à Lisbonne »",
     "messagePlaceholder": "Ajoutez un mot personnel — remerciements, histoire, recommandations… (facultatif, affiché au-dessus de la galerie)",
     "processing": "Traitement",
