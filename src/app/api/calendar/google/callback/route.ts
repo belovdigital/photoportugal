@@ -91,6 +91,15 @@ export async function GET(req: NextRequest) {
     return redirectBack(req, { error: "no_refresh_token" });
   }
 
+  // Verify calendar.readonly was actually granted. On the consent screen
+  // users can untick optional scopes — if they did, we'd save a token
+  // that 403s every API call. Better to fail loud here so the photographer
+  // knows to reconnect with Calendar permission ticked.
+  const grantedScopes = (tokens.scope || "").split(" ");
+  if (!grantedScopes.includes("https://www.googleapis.com/auth/calendar.readonly")) {
+    return redirectBack(req, { error: "calendar_scope_not_granted" });
+  }
+
   // Fetch user email so we can label the connection (and dedup on it).
   let email: string;
   try {

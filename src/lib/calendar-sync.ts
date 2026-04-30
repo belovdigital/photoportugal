@@ -173,7 +173,17 @@ export async function listGoogleCalendars(connection: ConnectionRow): Promise<{ 
   const res = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=250", {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (!res.ok) throw new Error(`calendarList failed: ${res.status}`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    // 403 here almost always means the token was issued without
+    // calendar.readonly — the photographer skipped the Calendar checkbox
+    // on the OAuth consent screen. Tell them in plain English so they
+    // know to reconnect with Calendar permission ticked.
+    if (res.status === 403) {
+      throw new Error("Google didn't grant Calendar permission. Click Disconnect, then Connect Google Calendar again and make sure the \"See and download any calendar\" box stays ticked.");
+    }
+    throw new Error(`calendarList failed: ${res.status} ${body.slice(0, 200)}`);
+  }
   const data = await res.json() as { items: { id: string; summary: string; primary?: boolean }[] };
   const selectedSet = new Set(connection.selected_calendar_ids || []);
   return (data.items || []).map((c) => ({
@@ -245,6 +255,9 @@ async function fetchGoogleBusySlots(connection: ConnectionRow): Promise<BusySlot
     });
     if (!res.ok) {
       const txt = await res.text();
+      if (res.status === 403) {
+        throw new Error("Google didn't grant Calendar permission. Click Disconnect, then Connect Google Calendar again and make sure the \"See and download any calendar\" box stays ticked.");
+      }
       throw new Error(`freeBusy failed: ${res.status} ${txt.slice(0, 200)}`);
     }
     const data = await res.json() as {

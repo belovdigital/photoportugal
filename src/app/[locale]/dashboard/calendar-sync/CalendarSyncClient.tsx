@@ -59,7 +59,12 @@ export function CalendarSyncClient() {
     if (connected === "google") {
       setBanner({ kind: "ok", text: `Connected Google Calendar${email ? ` (${email})` : ""}.` });
     } else if (err) {
-      setBanner({ kind: "err", text: `Google connection failed: ${err}` });
+      const friendly: Record<string, string> = {
+        calendar_scope_not_granted: "You skipped the Calendar checkbox on Google's consent screen. Click \"Connect Google Calendar\" again and make sure \"See and download any calendar you can access\" stays ticked.",
+        no_refresh_token: "Google didn't issue a refresh token. Disconnect this Google account in your Google Account settings (Security → Third-party apps), then try connecting again.",
+        access_denied: "You declined the Google permission. No worries — click Connect again whenever you're ready.",
+      };
+      setBanner({ kind: "err", text: friendly[err] || `Google connection failed: ${err}` });
     }
     if (connected || err) {
       url.searchParams.delete("connected");
@@ -69,13 +74,30 @@ export function CalendarSyncClient() {
     }
   }, []);
 
+  // Defensive .json() — if a backend route crashes Next renders an HTML
+  // error page, which makes the raw `await res.json()` throw the cryptic
+  // "Unexpected token '<'" error in the UI. Fall back to text + status so
+  // the user sees something actionable.
+  async function safeJson(res: Response): Promise<{ ok: boolean; data: { error?: string; [k: string]: unknown } }> {
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("application/json")) {
+      const data = await res.json();
+      return { ok: res.ok, data };
+    }
+    const txt = await res.text();
+    return {
+      ok: res.ok,
+      data: { error: `${res.status} ${res.statusText}${txt ? ` — ${txt.slice(0, 200).replace(/<[^>]+>/g, "").trim()}` : ""}` },
+    };
+  }
+
   async function load() {
     setLoading(true);
     try {
       const res = await fetch("/api/dashboard/calendar");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load");
-      setConnections(data.connections || []);
+      const { ok, data } = await safeJson(res);
+      if (!ok) throw new Error((data.error as string) || "Failed to load");
+      setConnections((data.connections as Connection[]) || []);
       setError("");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load");
@@ -136,9 +158,9 @@ export function CalendarSyncClient() {
     setCalendarsLoading(true);
     try {
       const res = await fetch(`/api/dashboard/calendar/${id}/calendars`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to list calendars");
-      setCalendars(data.calendars || []);
+      const { ok, data } = await safeJson(res);
+      if (!ok) throw new Error((data.error as string) || "Failed to list calendars");
+      setCalendars((data.calendars as GoogleCal[]) || []);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to list calendars");
       setManagingId(null);
