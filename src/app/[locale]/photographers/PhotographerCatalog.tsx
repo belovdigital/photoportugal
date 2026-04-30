@@ -646,8 +646,12 @@ export function PhotographerCatalog({
 
             {searchOpen && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setSearchOpen(false)} />
-                <div className="absolute right-0 top-full z-20 mt-1 w-80 rounded-xl border border-warm-200 bg-white p-4 shadow-lg">
+                {/* z-40/50 so the dropdown lands above card badges below.
+                    Cards' Founding/Verified pills sit at z-20, so the
+                    previous z-10/20 for backdrop+panel let those badges
+                    bleed through the dropdown. */}
+                <div className="fixed inset-0 z-40" onClick={() => setSearchOpen(false)} />
+                <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-xl border border-warm-200 bg-white p-4 shadow-lg">
                   <div className="flex items-center gap-2.5 rounded-lg border border-gray-200 px-3.5 py-2.5 focus-within:border-primary-400">
                     <svg className="h-5 w-5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

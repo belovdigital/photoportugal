@@ -444,13 +444,21 @@ export default async function OccasionPage({
               -- untagged so legacy uploads still surface) — wrong-tagged
               -- shots like family-tagged photos on a couples page were
               -- the reason the user saw kids on /couples pages.
+              -- HERO carousel: include ALL of this photographer's photos
+              -- so the rotation always has 12 frames. Combos like
+              -- /cascais/family had hero stuck on 1 photo because filtered
+              -- pool was thin. Sort puts matching shoot_type first,
+              -- untagged second, other types third — viewer still sees
+              -- relevant work first, but the carousel never goes empty.
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
-                  AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
-                  -- Tagged matches first, then untagged backfill.
-                  CASE WHEN pi.shoot_type = ANY($2::text[]) THEN 0 ELSE 1 END,
+                  CASE
+                    WHEN pi.shoot_type = ANY($2::text[]) THEN 0
+                    WHEN pi.shoot_type IS NULL THEN 1
+                    ELSE 2
+                  END,
                   pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 12
               ) as portfolio_urls

@@ -165,12 +165,20 @@ export default async function ShootTypePage({
               COALESCE(pp.rating, 0)::text as rating,
               COALESCE(pp.review_count, 0) as review_count,
               COALESCE(pp.session_count, 0) as session_count,
+              -- HERO carousel: include ALL of this photographer's photos
+              -- so the 12-frame rotation never goes thin (e.g. honeymoon
+              -- has only 6 tagged photos site-wide). Match first, untagged
+              -- second, other shoot types last — relevant work surfaces
+              -- first but the rotation always fills.
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
-                  AND (pi.shoot_type = ANY($1::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
-                  CASE WHEN pi.shoot_type = ANY($1::text[]) THEN 0 ELSE 1 END,
+                  CASE
+                    WHEN pi.shoot_type = ANY($1::text[]) THEN 0
+                    WHEN pi.shoot_type IS NULL THEN 1
+                    ELSE 2
+                  END,
                   pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 12
               ) as portfolio_urls
