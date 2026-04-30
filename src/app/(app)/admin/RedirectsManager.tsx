@@ -169,18 +169,25 @@ export function RedirectsManager() {
       {showForm && (
         <form onSubmit={save} className="rounded-xl border border-warm-200 bg-warm-50 p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="block">
+            <div>
               <span className="text-xs font-semibold text-gray-700">Source host</span>
-              <input
-                type="text"
-                required
-                placeholder="lens.pt"
-                value={form.source_host}
-                onChange={(e) => setForm({ ...form, source_host: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm"
-              />
-              <span className="text-[11px] text-gray-400">Bare hostname, no scheme. Lowercased.</span>
-            </label>
+              <div className="mt-1 inline-flex rounded-lg border border-warm-200 bg-white p-0.5">
+                {(["lens.pt", "photoportugal.com"] as const).map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setForm({ ...form, source_host: h })}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                      form.source_host === h
+                        ? "bg-primary-600 text-white"
+                        : "text-gray-600 hover:bg-warm-50"
+                    }`}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+            </div>
             <label className="block">
               <span className="text-xs font-semibold text-gray-700">Source path</span>
               <input
@@ -281,10 +288,23 @@ export function RedirectsManager() {
                     </tr>
                   </thead>
                   <tbody>
-                    {byHost[host].map((r) => (
+                    {byHost[host].map((r) => {
+                      const sourceHref = `https://${r.source_host}${r.source_path}`;
+                      const targetHref = r.target_url.startsWith("/")
+                        ? `https://${r.source_host}${r.target_url}`
+                        : r.target_url;
+                      return (
                       <tr key={r.id} className="border-t border-warm-100">
-                        <td className="px-3 py-2 font-mono text-xs">{r.source_path}</td>
-                        <td className="px-3 py-2 font-mono text-xs text-gray-700 break-all">{r.target_url}</td>
+                        <td className="px-3 py-2 font-mono text-xs">
+                          <a href={sourceHref} target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:text-primary-600 hover:underline">
+                            {r.source_path}
+                          </a>
+                        </td>
+                        <td className="px-3 py-2 font-mono text-xs break-all">
+                          <a href={targetHref} target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-primary-600 hover:underline">
+                            {r.target_url}
+                          </a>
+                        </td>
                         <td className="px-3 py-2 text-xs">{r.status_code}</td>
                         <td className="px-3 py-2 text-xs text-gray-500 max-w-[200px] truncate" title={r.notes || ""}>{r.notes}</td>
                         <td className="px-3 py-2 text-right whitespace-nowrap">
@@ -302,7 +322,8 @@ export function RedirectsManager() {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
