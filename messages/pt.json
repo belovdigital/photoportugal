@@ -201,6 +201,10 @@
   "footer": {
     "tagline": "A conectar viajantes com fotógrafos locais talentosos em todo o Portugal. Capture os seus momentos perfeitos.",
     "topLocations": "Principais Localizações",
+    "shootTypes": "Tipos de Sessão",
+    "viewAllShootTypes": "Ver Todos os Tipos",
+    "popularSearches": "Pesquisas Populares",
+    "inWord": "em",
     "photographersIn": "Fotógrafos em {location}",
     "viewAllLocations": "Ver todas as {count} localizações",
     "forPhotographers": "Para Fotógrafos",

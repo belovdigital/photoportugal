@@ -10,6 +10,7 @@ import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
 import { localizeShootType } from "@/lib/shoot-type-labels";
+import { shootTypes as allShootTypes } from "@/lib/shoot-types-data";
 import { localizeLanguageNames } from "@/lib/languages-i18n";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 import { WishlistButton } from "@/components/ui/WishlistButton";
@@ -380,6 +381,12 @@ export default async function PhotographerProfilePage({
           bestRating: 5,
         }
       : undefined,
+    // Reviews nested directly inside the LocalBusiness they describe.
+    // We deliberately DON'T include `itemReviewed` on each Review here:
+    // Google flags it as a directional conflict because the parent
+    // already implies what's being reviewed. Adding it on a nested Review
+    // triggers "Invalid object type for field <parent_node>" in
+    // Search Console (saw this on photoportugal.com 2026-04-30).
     ...(reviews.length > 0
       ? {
           review: reviews.map((r) => {
@@ -396,11 +403,6 @@ export default async function PhotographerProfilePage({
                 image: photoUrls,
                 associatedMedia: photoUrls.map((url: string) => ({ "@type": "ImageObject", contentUrl: url, url })),
               } : {}),
-              itemReviewed: {
-                "@type": "LocalBusiness",
-                "@id": profileUrl,
-                name: normalizeName(photographer.name),
-              },
             };
           }),
         }
@@ -417,24 +419,13 @@ export default async function PhotographerProfilePage({
     })),
   };
 
-  const packageImage = schemaImages[0];
-  const productJsonLd = (photographer.packages || []).map(
-    (pkg: { name: string; description: string | null; price: number }) => ({
-      "@context": "https://schema.org",
-      "@type": "Product",
-      name: pkg.name,
-      description: pkg.description || t("packageDescription", { packageName: pkg.name, name: normalizeName(photographer.name) }),
-      ...(packageImage ? { image: packageImage } : {}),
-      brand: { "@type": "Brand", name: normalizeName(photographer.name) },
-      offers: {
-        "@type": "Offer",
-        price: String(pkg.price),
-        priceCurrency: "EUR",
-        availability: "https://schema.org/InStock",
-        url: profileUrl,
-      },
-    })
-  );
+  // We used to emit one Product schema per package here, but Search
+  // Console flagged each with "Missing field 'review' / 'aggregateRating'"
+  // — Google wants Products to carry per-product reviews, and ours live
+  // at the photographer (LocalBusiness) level, not per package. Pricing
+  // still surfaces via LocalBusiness.priceRange + nested Offers, and the
+  // Person schema below carries `makesOffer` for the catalog. Cleaner
+  // and Search Console–quiet.
 
   const avatarAbsoluteUrl = photographer.avatar_url
     ? (photographer.avatar_url.startsWith("http") ? photographer.avatar_url : `https://photoportugal.com${photographer.avatar_url}`)
@@ -512,13 +503,6 @@ export default async function PhotographerProfilePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
       />
-      {productJsonLd.map((product: Record<string, unknown>, idx: number) => (
-        <script
-          key={`product-${idx}`}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(product) }}
-        />
-      ))}
 
       {/* Mobile-only conversion-first hero: full-width swipeable cover
           carousel with name + rating overlay. Replaces the wall-of-text
@@ -634,14 +618,32 @@ export default async function PhotographerProfilePage({
                 <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
               </div>
 
-              {/* Specialties — separated */}
+              {/* Specialties — clickable pills routing to the polished
+                  /photoshoots/[type] index. Each pill resolves the DB
+                  label (e.g. "Solo Portrait") back to the canonical
+                  shoot-type slug ("solo") via the alias-aware lookup
+                  on shoot-types-data. Falls back to a plain span when
+                  the label has no /photoshoots/[type] page. */}
               {photographer.shoot_types && photographer.shoot_types.length > 0 && (
                 <div className="mt-3 border-t border-warm-200 pt-3 flex flex-wrap gap-1.5">
-                  {photographer.shoot_types.map((type: string) => (
-                    <span key={type} className="rounded-full border border-primary-200 px-2.5 py-1.5 text-xs font-medium text-primary-600">
-                      {localizeShootType(type, locale)}
-                    </span>
-                  ))}
+                  {photographer.shoot_types.map((type: string) => {
+                    const matched = allShootTypes.find((st) =>
+                      (st.photographerShootTypeNames || [st.name]).includes(type)
+                    );
+                    const className = "rounded-full border border-primary-200 px-2.5 py-1.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50";
+                    if (matched) {
+                      return (
+                        <Link key={type} href={`/photoshoots/${matched.slug}`} className={className}>
+                          {localizeShootType(type, locale)}
+                        </Link>
+                      );
+                    }
+                    return (
+                      <span key={type} className="rounded-full border border-primary-200 px-2.5 py-1.5 text-xs font-medium text-primary-600">
+                        {localizeShootType(type, locale)}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>

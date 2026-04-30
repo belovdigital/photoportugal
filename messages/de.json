@@ -201,6 +201,10 @@
   "footer": {
     "tagline": "Wir verbinden Reisende mit talentierten lokalen Fotografen in ganz Portugal. Halten Sie Ihre schönsten Momente fest.",
     "topLocations": "Top-Orte",
+    "shootTypes": "Shooting-Arten",
+    "viewAllShootTypes": "Alle Shooting-Arten",
+    "popularSearches": "Beliebte Suchen",
+    "inWord": "in",
     "photographersIn": "Fotografen in {location}",
     "viewAllLocations": "Alle {count} Orte ansehen",
     "forPhotographers": "Für Fotografen",

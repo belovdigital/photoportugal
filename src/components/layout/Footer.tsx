@@ -7,8 +7,41 @@ import { locations } from "@/lib/locations-data";
 
 const TOP_LOCATIONS = ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"];
 
+// Shoot types that have polished /photoshoots/[type] pages AND combo
+// /locations/[slug]/[occasion] sub-pages. Used in the footer column +
+// the bottom popular-combo strip to push internal link density up.
+const TOP_SHOOT_TYPES: { slug: string; key: string }[] = [
+  { slug: "couples", key: "couples" },
+  { slug: "family", key: "family" },
+  { slug: "proposal", key: "proposal" },
+  { slug: "engagement", key: "engagement" },
+  { slug: "honeymoon", key: "honeymoon" },
+  { slug: "solo", key: "soloPortrait" },
+  { slug: "elopement", key: "elopement" },
+];
+
+// 12 high-value (city × occasion) combos surfaced in a compact strip at
+// the foot of the footer. These are the paid-ad sitelink targets, so
+// having them on every page (= every footer render) gives Google strong
+// internal-link signals to the combo URLs.
+const FEATURED_COMBOS: { city: string; occ: string }[] = [
+  { city: "lisbon", occ: "couples" },
+  { city: "lisbon", occ: "proposal" },
+  { city: "lisbon", occ: "family" },
+  { city: "porto", occ: "couples" },
+  { city: "porto", occ: "engagement" },
+  { city: "sintra", occ: "proposal" },
+  { city: "sintra", occ: "engagement" },
+  { city: "algarve", occ: "couples" },
+  { city: "algarve", occ: "proposal" },
+  { city: "algarve", occ: "honeymoon" },
+  { city: "cascais", occ: "family" },
+  { city: "madeira", occ: "honeymoon" },
+];
+
 export function Footer() {
   const t = useTranslations("footer");
+  const tShoot = useTranslations("common.shootTypes");
   const topLocations = locations.filter((l) => TOP_LOCATIONS.includes(l.slug));
 
   return (
@@ -53,7 +86,7 @@ export function Footer() {
 
     <footer className="border-t border-warm-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center">
@@ -92,6 +125,36 @@ export function Footer() {
                   className="text-sm font-medium text-primary-600 transition hover:text-primary-700 py-2 inline-block"
                 >
                   {t("viewAllLocations", { count: locations.length })}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Shoot Types — every link is a polished /photoshoots/[type]
+              page, plus the "View all" tail to the index. Adds 7+1 fresh
+              internal links per page render, matching the Locations
+              column for SEO weight. */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">
+              {t("shootTypes")}
+            </h3>
+            <ul className="mt-3 space-y-2">
+              {TOP_SHOOT_TYPES.map((s) => (
+                <li key={s.slug}>
+                  <Link
+                    href={`/photoshoots/${s.slug}`}
+                    className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block"
+                  >
+                    {tShoot(s.key)}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href="/photoshoots"
+                  className="text-sm font-medium text-primary-600 transition hover:text-primary-700 py-2 inline-block"
+                >
+                  {t("viewAllShootTypes")}
                 </Link>
               </li>
             </ul>
@@ -173,7 +236,35 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Popular combo strip — 12 (city × occasion) chips that link
+            into /locations/[slug]/[occasion] combo pages. Renders on
+            every page so Google sees these URLs heavily internally
+            linked, which is what we want for the paid-ad sitelink
+            targets. Compact pill style so it doesn't visually crowd
+            the footer; readable label "Couples in Lisbon" / etc. */}
         <div className="mt-10 border-t border-warm-200 pt-6">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            {t("popularSearches")}
+          </h3>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {FEATURED_COMBOS.map(({ city, occ }) => {
+              const loc = locations.find((l) => l.slug === city);
+              if (!loc) return null;
+              const shootKey = TOP_SHOOT_TYPES.find((s) => s.slug === occ)?.key || occ;
+              return (
+                <Link
+                  key={`${city}-${occ}`}
+                  href={`/locations/${city}/${occ}`}
+                  className="inline-flex items-center rounded-full border border-warm-200 bg-warm-50 px-3 py-1 text-xs font-medium text-gray-600 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+                >
+                  {tShoot(shootKey)} {t("inWord")} {loc.name}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-8 border-t border-warm-200 pt-6">
           <div className="flex items-center justify-center gap-4">
             <a href="https://www.instagram.com/photoportugal_com" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-warm-100 text-gray-500 transition hover:bg-primary-100 hover:text-primary-600" aria-label="Instagram">
               <svg className="h-4.5 w-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
