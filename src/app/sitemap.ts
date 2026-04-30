@@ -56,11 +56,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localized(`/locations/${loc.slug}`, { lastModified: now, changeFrequency: "weekly", priority: 0.9 })
   );
 
-  // Occasion sub-pages for top locations
+  // Occasion sub-pages — 34 locations × 7 occasions = 238 unique combos.
+  // These are the primary paid-ad sitelink targets, so priority is high
+  // (matches /locations/[slug]) and changefreq is weekly to reflect the
+  // dynamic photographer/portfolio pulls that refresh on every render.
   const occasions = ["proposal", "honeymoon", "couples", "family", "solo", "engagement", "elopement"];
   const occasionPages = locations.flatMap((loc) =>
     occasions.flatMap((occ) =>
-      localized(`/locations/${loc.slug}/${occ}`, { lastModified: now, changeFrequency: "monthly", priority: 0.7 })
+      localized(`/locations/${loc.slug}/${occ}`, { lastModified: now, changeFrequency: "weekly", priority: 0.85 })
     )
   );
 

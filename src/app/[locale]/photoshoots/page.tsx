@@ -1,10 +1,30 @@
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { shootTypes } from "@/lib/shoot-types-data";
+import { shootTypes, shootTypeLocalized } from "@/lib/shoot-types-data";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
 import { query, queryOne } from "@/lib/db";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
+import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
+import { getHomepageReviews } from "@/lib/reviews-data";
+import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
+import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
+import { locations } from "@/lib/locations-data";
+
+// Force-dynamic so live counts + min prices + the random representative
+// photo per tile reshuffle on each request — same freshness pattern as
+// /locations/[slug] and /photoshoots/[type].
+export const dynamic = "force-dynamic";
+
+// Combo /locations/[slug]/[occasion] exists for these 7 — tiles route the
+// pill cross-links accordingly. Anything outside this set falls back to
+// the parent /locations/[slug] page.
+const COMBO_OCCASIONS = new Set([
+  "couples", "family", "proposal", "engagement",
+  "honeymoon", "solo", "elopement",
+]);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -17,20 +37,17 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-const shootTypeIcons: Record<string, string> = {
-  couples: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
-  family: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
-  proposal: "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z",
-  engagement: "M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z",
-  honeymoon: "M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z",
-  solo: "M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z",
-  elopement: "M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18",
-  friends: "M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z",
-};
+export default async function PhotoshootsHubPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
 
-async function getShootTypeStats(): Promise<Record<string, { count: number; minPrice: number | null }>> {
-  // For each shoot type slug we resolve aliases, then query counts + min price per alias set.
-  const result: Record<string, { count: number; minPrice: number | null }> = {};
+  const t = await getTranslations("shootTypesPage");
+  const tc = await getTranslations("common");
+
+  // ─── Per-shoot-type stats (count + min price) ───────────────────────
+  // One query per shoot type — small N (14) so the parallel Promise.all
+  // is fine, and keeps the SQL simple.
+  const stats: Record<string, { count: number; minPrice: number | null }> = {};
   await Promise.all(
     shootTypes.map(async (st) => {
       const aliases = st.photographerShootTypeNames || [st.name];
@@ -45,32 +62,81 @@ async function getShootTypeStats(): Promise<Record<string, { count: number; minP
            WHERE pp.is_approved = TRUE AND pp.shoot_types && $1::text[]`,
           [aliases]
         );
-        result[st.slug] = {
+        stats[st.slug] = {
           count: parseInt(row?.count || "0"),
           minPrice: row?.min_price ? parseFloat(row.min_price) : null,
         };
       } catch {
-        result[st.slug] = { count: 0, minPrice: null };
+        stats[st.slug] = { count: 0, minPrice: null };
       }
     })
   );
-  return result;
-}
 
-export default async function PhotoshootsHubPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+  // ─── Representative photo per shoot type ────────────────────────────
+  // One photo per shoot_type label — used as the tile background. Random
+  // pick within each type so the page feels alive between visits.
+  const representative: Record<string, string | null> = {};
+  try {
+    const rows = await query<{ shoot_type: string; url: string }>(
+      `SELECT DISTINCT ON (pi.shoot_type) pi.shoot_type, pi.url
+       FROM portfolio_items pi
+       JOIN photographer_profiles pp ON pp.id = pi.photographer_id
+       WHERE pi.shoot_type IS NOT NULL
+         AND pi.type = 'photo'
+         AND pp.is_approved = TRUE
+         AND COALESCE(pp.is_test, FALSE) = FALSE
+       ORDER BY pi.shoot_type, RANDOM()`
+    );
+    for (const r of rows) representative[r.shoot_type] = r.url;
+  } catch {}
 
-  const t = await getTranslations("shootTypesPage");
-  const tc = await getTranslations("common");
+  // ─── Top 24 photos for the hero mosaic (mixed shoot types) ──────────
+  let heroMosaic: { url: string; slug: string; name: string; location: string | null }[] = [];
+  try {
+    const rows = await query<{ url: string; slug: string; name: string; location_slug: string | null }>(
+      `SELECT pi.url, pp.slug, u.name, pi.location_slug
+       FROM portfolio_items pi
+       JOIN photographer_profiles pp ON pp.id = pi.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       WHERE pi.type = 'photo'
+         AND pp.is_approved = TRUE
+         AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+       ORDER BY -LN(RANDOM()) / (CASE
+         WHEN pp.is_featured THEN 50
+         WHEN pp.is_verified THEN 30
+         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+         WHEN pp.early_bird_tier IS NOT NULL THEN 5
+         ELSE 2
+       END) ASC
+       LIMIT 24`
+    );
+    heroMosaic = rows.map((r) => {
+      const locName = r.location_slug
+        ? (locations.find((l) => l.slug === r.location_slug)?.name || null)
+        : null;
+      return { url: r.url, slug: r.slug, name: r.name, location: locName };
+    });
+  } catch {}
 
-  const [stats, totalPhotogs] = await Promise.all([
-    getShootTypeStats(),
-    queryOne<{ count: string }>(
-      `SELECT COUNT(*)::text as count FROM photographer_profiles WHERE is_approved = TRUE`
-    ).then((r) => parseInt(r?.count || "0")).catch(() => 0),
-  ]);
+  // ─── Portugal-wide totals for the hero chip row ─────────────────────
+  let totalPhotographers = 0;
+  let avgRating = 0;
+  let totalReviews = 0;
+  try {
+    const row = await queryOne<{ total: string; avg_rating: string | null; total_reviews: string }>(
+      `SELECT (SELECT COUNT(*)::text FROM photographer_profiles WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE) as total,
+              (SELECT AVG(rating) FILTER (WHERE rating IS NOT NULL AND review_count > 0)::text FROM photographer_profiles WHERE is_approved = TRUE) as avg_rating,
+              (SELECT COALESCE(SUM(review_count), 0)::text FROM photographer_profiles WHERE is_approved = TRUE) as total_reviews`
+    );
+    totalPhotographers = parseInt(row?.total || "0");
+    avgRating = row?.avg_rating ? parseFloat(parseFloat(row.avg_rating).toFixed(1)) : 0;
+    totalReviews = parseInt(row?.total_reviews || "0");
+  } catch {}
 
+  const allReviews = await getHomepageReviews(6, locale);
+
+  // ─── JSON-LD ────────────────────────────────────────────────────────
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -83,22 +149,19 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
     })),
   };
 
-  // Page-local translations for inline strings (avoids polluting messages JSON)
+  // Page-local localized strings.
   const T = {
-    en: { verifiedPhotographers: "verified photographers", shootTypes: "photoshoot types", locations: "locations across Portugal", photographer: "photographer", photographers: "photographers", from: "From", comingSoon: "Coming soon", view: "View", choose: "Choose", chooseDesc: "Pick shoot type + location", book: "Book", bookDesc: "Secure payment held until delivery", receive: "Receive", receiveDesc: "Edited high-res photos, delivered", helpMeChoose: "Help me choose" },
-    pt: { verifiedPhotographers: "fotógrafos verificados", shootTypes: "tipos de sessão", locations: "locais em Portugal", photographer: "fotógrafo", photographers: "fotógrafos", from: "A partir de", comingSoon: "Em breve", view: "Ver", choose: "Escolha", chooseDesc: "Tipo de sessão + local", book: "Reserve", bookDesc: "Pagamento seguro — retido até à entrega", receive: "Receba", receiveDesc: "Fotos editadas em alta resolução", helpMeChoose: "Ajuda-me a escolher" },
-    de: { verifiedPhotographers: "verifizierte Fotografen", shootTypes: "Shooting-Arten", locations: "Orte in Portugal", photographer: "Fotograf", photographers: "Fotografen", from: "Ab", comingSoon: "Bald verfügbar", view: "Ansehen", choose: "Wählen", chooseDesc: "Shooting-Art + Ort wählen", book: "Buchen", bookDesc: "Sichere Zahlung — bis zur Lieferung treuhänderisch verwahrt", receive: "Erhalten", receiveDesc: "Bearbeitete hochauflösende Fotos geliefert", helpMeChoose: "Helfen Sie mir bei der Wahl" },
-    es: { verifiedPhotographers: "fotógrafos verificados", shootTypes: "tipos de sesión", locations: "ubicaciones en Portugal", photographer: "fotógrafo", photographers: "fotógrafos", from: "Desde", comingSoon: "Próximamente", view: "Ver", choose: "Elige", chooseDesc: "Tipo de sesión + ubicación", book: "Reserva", bookDesc: "Pago seguro retenido hasta la entrega", receive: "Recibe", receiveDesc: "Fotos editadas en alta resolución, entregadas", helpMeChoose: "Ayúdame a elegir" },
-    fr: { verifiedPhotographers: "photographes vérifiés", shootTypes: "types de séances", locations: "lieux à travers le Portugal", photographer: "photographe", photographers: "photographes", from: "À partir de", comingSoon: "Bientôt disponible", view: "Voir", choose: "Choisissez", chooseDesc: "Type de séance + lieu", book: "Réservez", bookDesc: "Paiement sécurisé conservé jusqu'à la livraison", receive: "Recevez", receiveDesc: "Photos éditées haute résolution, livrées", helpMeChoose: "Aidez-moi à choisir" },
+    en: { types: "shoot types", photographers: "verified photographers", from: "From €", reviews: "reviews", availableHeading: "Find the right session for any moment", availableSub: "Real photographers, real packages, real photos — choose the type of shoot and we'll show you the people who shoot it best.", in: "in", typesHeading: "All photoshoot types", typesSub: "Each tile shows live availability and the cities where this type happens most.", reviewsHeading: "What clients say across all sessions", reviewsSubHeading: "Verified reviews from real bookings, every shoot type included.", finalCta: "Help me pick the right session", finalCtaSub: "Tell our concierge what you have in mind and we'll match you with 2–3 photographers in hours.", findCta: "Get matched", browseCta: "Browse all photographers", citiesLabel: "Top cities" },
+    pt: { types: "tipos de sessão", photographers: "fotógrafos verificados", from: "Desde €", reviews: "avaliações", availableHeading: "Encontre a sessão certa para qualquer momento", availableSub: "Fotógrafos reais, pacotes reais, fotos reais — escolha o tipo de sessão e mostramos quem o fotografa melhor.", in: "em", typesHeading: "Todos os tipos de sessão", typesSub: "Cada cartão mostra disponibilidade ao vivo e as cidades onde este tipo acontece mais.", reviewsHeading: "O que dizem os clientes em todas as sessões", reviewsSubHeading: "Avaliações verificadas de reservas reais, todos os tipos incluídos.", finalCta: "Ajude-me a escolher a sessão", finalCtaSub: "Conte ao nosso concierge o que tem em mente e vamos emparelhá-lo com 2–3 fotógrafos em poucas horas.", findCta: "Receber recomendações", browseCta: "Ver todos os fotógrafos", citiesLabel: "Cidades principais" },
+    de: { types: "Shooting-Arten", photographers: "verifizierte Fotografen", from: "Ab €", reviews: "Bewertungen", availableHeading: "Finden Sie das richtige Shooting für jeden Anlass", availableSub: "Echte Fotografen, echte Pakete, echte Fotos — wählen Sie die Shooting-Art und wir zeigen, wer sie am besten umsetzt.", in: "in", typesHeading: "Alle Shooting-Arten", typesSub: "Jede Kachel zeigt Live-Verfügbarkeit und die Städte, in denen dieses Shooting am häufigsten passiert.", reviewsHeading: "Was Kunden über alle Shootings sagen", reviewsSubHeading: "Verifizierte Bewertungen aus echten Buchungen, alle Shooting-Arten enthalten.", finalCta: "Helfen Sie mir bei der Wahl", finalCtaSub: "Erzählen Sie unserem Concierge, was Sie sich vorstellen — wir vermitteln 2–3 Fotografen innerhalb weniger Stunden.", findCta: "Vermittlung anfragen", browseCta: "Alle Fotografen ansehen", citiesLabel: "Top-Städte" },
+    es: { types: "tipos de sesión", photographers: "fotógrafos verificados", from: "Desde €", reviews: "reseñas", availableHeading: "Encuentre la sesión adecuada para cualquier momento", availableSub: "Fotógrafos reales, paquetes reales, fotos reales — elija el tipo de sesión y le mostramos quién la fotografía mejor.", in: "en", typesHeading: "Todos los tipos de sesión", typesSub: "Cada baldosa muestra disponibilidad en vivo y las ciudades donde más ocurre este tipo.", reviewsHeading: "Lo que dicen los clientes en todas las sesiones", reviewsSubHeading: "Reseñas verificadas de reservas reales, todos los tipos incluidos.", finalCta: "Ayúdame a elegir la sesión", finalCtaSub: "Cuéntele a nuestro concierge lo que tiene en mente y le emparejaremos con 2–3 fotógrafos en pocas horas.", findCta: "Recibir recomendaciones", browseCta: "Ver todos los fotógrafos", citiesLabel: "Ciudades principales" },
+    fr: { types: "types de séances", photographers: "photographes vérifiés", from: "À partir de €", reviews: "avis", availableHeading: "Trouvez la séance qui convient à chaque moment", availableSub: "De vrais photographes, de vrais forfaits, de vraies photos — choisissez le type de séance et nous vous montrons qui la réalise le mieux.", in: "à", typesHeading: "Tous les types de séances", typesSub: "Chaque tuile montre la disponibilité en direct et les villes où ce type a lieu le plus souvent.", reviewsHeading: "Ce que disent les clients sur toutes les séances", reviewsSubHeading: "Avis vérifiés issus de vraies réservations, tous types confondus.", finalCta: "Aidez-moi à choisir la séance", finalCtaSub: "Dites à notre concierge ce que vous avez en tête et nous vous proposerons 2–3 photographes en quelques heures.", findCta: "Être mis en relation", browseCta: "Voir tous les photographes", citiesLabel: "Villes phares" },
   } as const;
   const tt = T[(locale as keyof typeof T)] ?? T.en;
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
       <Breadcrumbs
         items={[
           { name: tc("home"), href: "/" },
@@ -106,141 +169,197 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
         ]}
       />
 
-      {/* Hero */}
-      <section className="border-b border-warm-200 bg-gradient-to-b from-warm-50 to-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-          <div className="max-w-3xl">
-            <h1 className="font-display text-4xl font-bold text-gray-900 sm:text-5xl">
-              {t("title")}
-            </h1>
-            <p className="mt-4 text-lg text-gray-500">
-              {t("subtitle")}
-            </p>
+      {/* Hero — sticky text + portfolio mosaic on desktop, mosaic-only
+          on mobile so it doesn't push the form below the fold. The
+          mosaic auto-rotates between 24 real photos Portugal-wide. */}
+      <section className="relative bg-warm-50">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-2 lg:gap-12 lg:py-20">
+            <div className="max-w-xl lg:sticky lg:top-24">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+                {shootTypes.length} {tt.types}
+              </div>
 
-            {/* Stat row */}
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
-              <div className="flex items-center gap-1.5">
-                <span className="flex h-2 w-2 rounded-full bg-accent-500" />
-                <span className="font-semibold text-gray-900">{totalPhotogs}+</span>
-                <span className="text-gray-500">{tt.verifiedPhotographers}</span>
+              <h1 className="mt-5 font-display text-4xl font-bold leading-[1.1] text-gray-900 sm:text-5xl lg:text-[3.25rem]">
+                {t("title")}
+              </h1>
+              <p className="mt-4 text-lg text-gray-600">{t("subtitle")}</p>
+
+              {/* Stats chips */}
+              <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
+                {totalPhotographers > 0 && (
+                  <span className="rounded-full bg-warm-100 px-3 py-1 text-gray-700">
+                    {totalPhotographers}+ {tt.photographers}
+                  </span>
+                )}
+                {avgRating > 0 && totalReviews > 0 && (
+                  <span className="rounded-full bg-warm-100 px-3 py-1 text-gray-700">
+                    ⭐ {avgRating.toFixed(1)} · {totalReviews} {tt.reviews}
+                  </span>
+                )}
+                <span className="rounded-full bg-warm-100 px-3 py-1 text-gray-700">
+                  {locations.length} destinations
+                </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="flex h-2 w-2 rounded-full bg-amber-400" />
-                <span className="font-semibold text-gray-900">{shootTypes.length}</span>
-                <span className="text-gray-500">{tt.shootTypes}</span>
+
+              <div className="mt-7">
+                <MatchQuickForm
+                  source="photoshoots_index_hero"
+                  size="md"
+                />
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="flex h-2 w-2 rounded-full bg-primary-500" />
-                <span className="font-semibold text-gray-900">32</span>
-                <span className="text-gray-500">{tt.locations}</span>
-              </div>
+            </div>
+
+            <div className="hidden lg:block lg:h-[140vh]">
+              {heroMosaic.length > 0 && (
+                <PortfolioMosaic photos={heroMosaic} />
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Cards */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {shootTypes.map((type) => {
-            const s = stats[type.slug] || { count: 0, minPrice: null };
-            return (
-              <Link
-                key={type.slug}
-                href={`/photoshoots/${type.slug}`}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-lg"
-              >
-                {/* Icon + count */}
-                <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-50 to-amber-50 text-primary-600 ring-1 ring-primary-100">
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d={shootTypeIcons[type.slug] || shootTypeIcons.couples} />
-                    </svg>
-                  </div>
-                  {s.count > 0 && (
-                    <span className="rounded-full bg-accent-50 px-2.5 py-1 text-[11px] font-semibold text-accent-700">
-                      {s.count} {s.count === 1 ? tt.photographer : tt.photographers}
-                    </span>
+      {/* The grid — 14 magazine-style tiles, each one a real photo +
+          live stats + 4 city pill cross-links into the combo pages. */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <h2 className="font-display text-3xl font-bold text-gray-900 sm:text-4xl">
+              {tt.typesHeading}
+            </h2>
+            <p className="mt-3 text-gray-500">{tt.typesSub}</p>
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {shootTypes.map((type) => {
+              const stl = shootTypeLocalized(type, locale);
+              const s = stats[type.slug] || { count: 0, minPrice: null };
+              const dbLabel = (type.photographerShootTypeNames || [type.name])[0];
+              const photo = representative[dbLabel] || representative[type.name];
+              const cities = type.bestLocations.slice(0, 4);
+              const comboOk = COMBO_OCCASIONS.has(type.slug);
+
+              return (
+                <div
+                  key={type.slug}
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  {/* Photo + overlay header */}
+                  <Link
+                    href={`/photoshoots/${type.slug}`}
+                    className="relative block aspect-[4/3] overflow-hidden bg-gray-900"
+                  >
+                    {photo ? (
+                      <OptimizedImage
+                        src={photo}
+                        alt={`${stl.name} photoshoot in Portugal`}
+                        className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-gradient-to-br from-primary-400 to-primary-700" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/20 to-transparent" />
+
+                    {/* Top-right live count badge */}
+                    {s.count > 0 && (
+                      <span className="absolute right-3 top-3 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+                        {s.count} {tt.photographers.split(" ").pop()}
+                      </span>
+                    )}
+
+                    {/* Bottom title block */}
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      <h3 className="font-display text-2xl font-bold text-white">
+                        {stl.name}
+                      </h3>
+                      <div className="mt-1 flex items-center gap-3 text-sm">
+                        {s.minPrice !== null && (
+                          <span className="font-semibold text-white">
+                            {tt.from}{Math.round(s.minPrice)}
+                          </span>
+                        )}
+                        <span className="text-white/80">{tc("photoshoots")}</span>
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Cross-links to combo pages — main SEO win on this
+                      page (4 internal links per tile × 14 tiles = up to
+                      56 dense links to /locations/[slug]/[occasion]). */}
+                  {cities.length > 0 && (
+                    <div className="px-5 py-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                        {tt.citiesLabel}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {cities.map((city) => {
+                          const cityR = city as unknown as Record<string, string | undefined>;
+                          const cityName = cityR[`name_${locale}`] || city.name;
+                          const href = comboOk
+                            ? `/locations/${city.slug}/${type.slug}`
+                            : `/locations/${city.slug}`;
+                          return (
+                            <Link
+                              key={city.slug}
+                              href={href}
+                              className="inline-flex items-center gap-1 rounded-full border border-warm-200 bg-warm-50 px-2.5 py-1 text-xs font-medium text-gray-700 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+                            >
+                              {stl.name} {tt.in} {cityName}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
-
-                {/* Title */}
-                <h2 className="mt-4 font-display text-xl font-bold text-gray-900 transition group-hover:text-primary-600">
-                  {type.name}
-                </h2>
-
-                {/* Short description */}
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-gray-500 line-clamp-3">
-                  {type.heroText.slice(0, 150)}...
-                </p>
-
-                {/* Footer: price + CTA */}
-                <div className="mt-5 flex items-end justify-between border-t border-warm-100 pt-4">
-                  <div>
-                    {s.minPrice !== null ? (
-                      <>
-                        <p className="text-[11px] uppercase tracking-wider text-gray-400">{tt.from}</p>
-                        <p className="font-bold text-gray-900">€{Math.round(s.minPrice)}</p>
-                      </>
-                    ) : (
-                      <p className="text-[11px] uppercase tracking-wider text-gray-400">{tt.comingSoon}</p>
-                    )}
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 transition group-hover:bg-primary-100">
-                    {tt.view}
-                    <svg className="h-3 w-3 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* How it works strip */}
-      <section className="border-y border-warm-200 bg-warm-50">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {[
-              { step: "01", title: tt.choose, desc: tt.chooseDesc },
-              { step: "02", title: tt.book, desc: tt.bookDesc },
-              { step: "03", title: tt.receive, desc: tt.receiveDesc },
-            ].map((s) => (
-              <div key={s.step} className="flex gap-3">
-                <span className="font-display text-2xl font-bold text-primary-300">{s.step}</span>
-                <div>
-                  <p className="font-semibold text-gray-900">{s.title}</p>
-                  <p className="mt-0.5 text-sm text-gray-500">{s.desc}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="overflow-hidden rounded-2xl bg-gray-900 px-8 py-12 text-center sm:px-12">
-          <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">
-            {t("ctaTitle")}
+      {/* Reviews from across all shoot types */}
+      {allReviews.length > 0 && (
+        <section className="border-t border-warm-200 bg-warm-50">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <ReviewsStrip
+              reviews={allReviews}
+              title={tt.reviewsHeading}
+              subtitle={tt.reviewsSubHeading}
+              compact
+            />
+          </div>
+        </section>
+      )}
+
+      {/* How It Works (shared) */}
+      <HowItWorksSection />
+
+      {/* Final CTA */}
+      <section className="bg-gray-900">
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20 lg:px-8">
+          <h2 className="font-display text-3xl font-bold text-white">
+            {tt.finalCta}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-gray-300">
-            {t("ctaSubtitle")}
+            {tt.finalCtaSub}
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
-              href="/photographers"
+              href="/find-photographer"
               className="inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white transition hover:bg-primary-700"
             >
-              {t("browseAllPhotographers")}
+              {tt.findCta}
             </Link>
             <Link
-              href="/find-photographer"
+              href="/photographers"
               className="inline-flex rounded-xl border border-gray-700 bg-gray-800 px-8 py-4 text-base font-semibold text-white transition hover:bg-gray-700"
             >
-              {tt.helpMeChoose}
+              {tt.browseCta}
             </Link>
           </div>
         </div>
