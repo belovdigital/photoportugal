@@ -360,42 +360,54 @@ export default async function ShootTypePage({
 
   // Real packages from photographers offering this shoot type — featured
   // below the photographer grid as a "book directly" shortcut.
+  // One package per photographer + hash-shuffled photo order — same
+  // diversification logic as the location pages.
   const packages = await query<{
     id: string; name: string; price: number; duration_minutes: number; num_photos: number;
     photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
     rating: number; review_count: number; is_popular: boolean;
     portfolio_thumbs: string[];
   }>(
-    `SELECT pk.id, pk.name, pk.price, pk.duration_minutes, pk.num_photos,
-            pp.slug as photographer_slug, u.name as photographer_name, u.avatar_url as photographer_avatar,
-            pp.rating, pp.review_count, COALESCE(pk.is_popular, FALSE) as is_popular,
-            -- Pull up to 5 portfolio photos per package's photographer.
-            -- Prefer photos tagged with this shoot type; fall back to any
-            -- photographer photo so accounts with sparse tags still get a
-            -- carousel.
+    `WITH per_photographer AS (
+       SELECT pk.id, pk.name, pk.price, pk.duration_minutes, pk.num_photos,
+              pp.id as profile_id,
+              pp.slug as photographer_slug, u.name as photographer_name,
+              u.avatar_url as photographer_avatar,
+              pp.rating, pp.review_count, COALESCE(pk.is_popular, FALSE) as is_popular,
+              ROW_NUMBER() OVER (
+                PARTITION BY pp.id
+                ORDER BY COALESCE(pk.is_popular, FALSE) DESC,
+                         pk.price ASC
+              ) as rn_per_photographer
+         FROM packages pk
+         JOIN photographer_profiles pp ON pp.id = pk.photographer_id
+         JOIN users u ON u.id = pp.user_id
+        WHERE pp.is_approved = TRUE
+          AND COALESCE(pp.is_test, FALSE) = FALSE
+          AND pk.is_public = TRUE
+          AND pp.shoot_types && $1::text[]
+     )
+     SELECT id, name, price, duration_minutes, num_photos,
+            photographer_slug, photographer_name, photographer_avatar,
+            rating, review_count, is_popular,
             COALESCE((
-              SELECT array_agg(url ORDER BY rank, sort_order NULLS LAST, created_at)
+              SELECT array_agg(url ORDER BY rank, shuffle, sort_order NULLS LAST, created_at)
                 FROM (
                   SELECT pi.url,
-                         CASE
-                           WHEN pi.shoot_type = ANY($1::text[]) THEN 0
-                           ELSE 1
-                         END as rank,
+                         CASE WHEN pi.shoot_type = ANY($1::text[]) THEN 0 ELSE 1 END as rank,
+                         hashtext(pp.profile_id::text || pi.url) as shuffle,
                          pi.sort_order, pi.created_at
                     FROM portfolio_items pi
-                   WHERE pi.photographer_id = pp.id
+                   WHERE pi.photographer_id = pp.profile_id
                      AND pi.type = 'photo'
-                   ORDER BY rank, pi.sort_order NULLS LAST, pi.created_at
+                   ORDER BY rank, shuffle, pi.sort_order NULLS LAST, pi.created_at
                    LIMIT 5
                 ) ranked
             ), ARRAY[]::text[]) as portfolio_thumbs
-     FROM packages pk
-     JOIN photographer_profiles pp ON pp.id = pk.photographer_id
-     JOIN users u ON u.id = pp.user_id
-     WHERE pp.is_approved = TRUE AND pk.is_public = TRUE
-       AND pp.shoot_types && $1::text[]
-     ORDER BY pp.review_count DESC NULLS LAST, pk.price ASC
-     LIMIT 6`,
+       FROM per_photographer pp
+      WHERE rn_per_photographer = 1
+      ORDER BY pp.review_count DESC NULLS LAST, pp.price ASC
+      LIMIT 6`,
     [dbShootTypeNames]
   ).catch(() => []);
 

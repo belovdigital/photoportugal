@@ -26,6 +26,7 @@ import { localeAlternates } from "@/lib/seo";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
+import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
@@ -349,28 +350,64 @@ export default async function LocationPage({
   // promoted to first content under the hero so the page reads as
   // "buy a photoshoot" first, "pick a photographer" second. Each row is
   // pre-bookable via /book/[slug]?package=ID — no provider-pick step.
+  // One package per photographer (DISTINCT ON via window) so the grid
+  // doesn't fill up with 6 packages from the same person on locations
+  // where one photographer dominates. Photo carousel order is
+  // hash-shuffled per package_id so two cards from the same photographer
+  // don't start on the same cover photo.
   const featuredPackages = await query<{
     id: string; name: string; price: string; duration_minutes: number; num_photos: number;
     photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
     rating: number; review_count: number; is_popular: boolean;
+    portfolio_thumbs: string[];
   }>(
-    `SELECT pk.id, pk.name, pk.price::text, pk.duration_minutes, COALESCE(pk.num_photos, 0) as num_photos,
-            pp.slug as photographer_slug, u.name as photographer_name, u.avatar_url as photographer_avatar,
-            COALESCE(pp.rating, 0) as rating, COALESCE(pp.review_count, 0) as review_count,
-            COALESCE(pk.is_popular, FALSE) as is_popular
-     FROM packages pk
-     JOIN photographer_profiles pp ON pp.id = pk.photographer_id
-     JOIN users u ON u.id = pp.user_id
-     JOIN photographer_locations pl ON pl.photographer_id = pp.id
-     WHERE pl.location_slug = $1
-       AND pp.is_approved = TRUE
-       AND COALESCE(pp.is_test, FALSE) = FALSE
-       AND pk.is_public = TRUE
-     ORDER BY pp.is_featured DESC, pp.is_verified DESC,
-              pk.is_popular DESC NULLS LAST,
-              pp.rating DESC NULLS LAST,
-              pk.price ASC
-     LIMIT 6`,
+    `WITH per_photographer AS (
+       SELECT pk.id, pk.name, pk.price::text AS price, pk.duration_minutes,
+              COALESCE(pk.num_photos, 0) as num_photos,
+              pp.id as profile_id,
+              pp.slug as photographer_slug, u.name as photographer_name,
+              u.avatar_url as photographer_avatar,
+              COALESCE(pp.rating, 0) as rating, COALESCE(pp.review_count, 0) as review_count,
+              COALESCE(pk.is_popular, FALSE) as is_popular,
+              pp.is_featured, pp.is_verified,
+              ROW_NUMBER() OVER (
+                PARTITION BY pp.id
+                ORDER BY COALESCE(pk.is_popular, FALSE) DESC,
+                         pk.price ASC
+              ) as rn_per_photographer
+         FROM packages pk
+         JOIN photographer_profiles pp ON pp.id = pk.photographer_id
+         JOIN users u ON u.id = pp.user_id
+         JOIN photographer_locations pl ON pl.photographer_id = pp.id
+        WHERE pl.location_slug = $1
+          AND pp.is_approved = TRUE
+          AND COALESCE(pp.is_test, FALSE) = FALSE
+          AND pk.is_public = TRUE
+     )
+     SELECT id, name, price, duration_minutes, num_photos,
+            photographer_slug, photographer_name, photographer_avatar,
+            rating, review_count, is_popular,
+            COALESCE((
+              SELECT array_agg(url ORDER BY rank, shuffle, sort_order NULLS LAST, created_at)
+                FROM (
+                  SELECT pi.url,
+                         CASE WHEN pi.location_slug = $1 THEN 0 ELSE 1 END as rank,
+                         hashtext(pp.id::text || pi.url) as shuffle,
+                         pi.sort_order, pi.created_at
+                    FROM portfolio_items pi
+                   WHERE pi.photographer_id = pp.profile_id
+                     AND pi.type = 'photo'
+                   ORDER BY rank, shuffle, pi.sort_order NULLS LAST, pi.created_at
+                   LIMIT 5
+                ) ranked
+            ), ARRAY[]::text[]) as portfolio_thumbs
+       FROM per_photographer pp
+      WHERE rn_per_photographer = 1
+      ORDER BY pp.is_featured DESC, pp.is_verified DESC,
+               pp.is_popular DESC NULLS LAST,
+               pp.rating DESC NULLS LAST,
+               pp.price ASC
+      LIMIT 6`,
     [slug]
   ).catch(() => []);
 
@@ -609,41 +646,14 @@ export default async function LocationPage({
             </div>
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {featuredPackages.map((pkg) => (
-                <Link
+                <PackageCardWithCarousel
                   key={pkg.id}
-                  href={`/book/${pkg.photographer_slug}?package=${pkg.id}`}
-                  className="group flex flex-col rounded-2xl border border-warm-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-lg"
-                >
-                  {pkg.is_popular && (
-                    <span className="self-start rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
-                      {t("packagePopular")}
-                    </span>
-                  )}
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-100">
-                      {pkg.photographer_avatar && (
-                        <OptimizedImage src={pkg.photographer_avatar} alt={pkg.photographer_name} width={80} className="h-full w-full object-cover" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-gray-900">{pkg.photographer_name}</p>
-                      {pkg.review_count > 0 && (
-                        <p className="text-xs text-gray-500">★ {Number(pkg.rating).toFixed(1)} · {pkg.review_count} {pkg.review_count === 1 ? tc("review") : tc("reviews")}</p>
-                      )}
-                    </div>
-                  </div>
-                  <h3 className="mt-4 font-display text-lg font-bold text-gray-900 group-hover:text-primary-600">{pkg.name}</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {pkg.duration_minutes} {t("packageMinutesAbbr")}
-                    {pkg.num_photos > 0 && ` · ${pkg.num_photos} ${t("packagePhotos")}`}
-                  </p>
-                  <div className="mt-auto pt-4 flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">€{Math.round(Number(pkg.price))}</span>
-                    <span className="text-sm font-semibold text-primary-600 group-hover:underline">
-                      {t("packageBookCta")} →
-                    </span>
-                  </div>
-                </Link>
+                  pkg={pkg}
+                  popularLabel={t("packagePopular")}
+                  minutesAbbrLabel={t("packageMinutesAbbr")}
+                  photosLabel={t("packagePhotos")}
+                  bookCtaLabel={t("packageBookCta")}
+                />
               ))}
             </div>
           </div>

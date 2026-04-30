@@ -739,23 +739,46 @@ export default async function OccasionPage({
   // /book/[slug]?package=ID. SQL ranks by photographer quality + popular
   // package flag + price ascending so the cheapest popular pro packages
   // surface first.
+  // One package per photographer (DISTINCT via window) so the grid shows
+  // 6 different photographers' work rather than 6 packages from whoever
+  // happens to be cheapest. Photo carousel order is hash-shuffled per
+  // photographer so two cards from the same shoot don't open on the
+  // same first photo.
   const featuredPackages = await query<{
     id: string; name: string; price: string; duration_minutes: number; num_photos: number;
     photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
     rating: number; review_count: number; is_popular: boolean;
     portfolio_thumbs: string[];
   }>(
-    `SELECT pk.id, pk.name, pk.price::text, pk.duration_minutes, COALESCE(pk.num_photos, 0) as num_photos,
-            pp.slug as photographer_slug, u.name as photographer_name, u.avatar_url as photographer_avatar,
-            COALESCE(pp.rating, 0) as rating, COALESCE(pp.review_count, 0) as review_count,
-            COALESCE(pk.is_popular, FALSE) as is_popular,
-            -- Pull up to 5 portfolio photos per package's photographer.
-            -- Prefer photos tagged with this location AND a matching shoot
-            -- type when available, fall back to anything else by the same
-            -- photographer so newer accounts (sparse tags) still get a
-            -- carousel rather than an empty placeholder.
+    `WITH per_photographer AS (
+       SELECT pk.id, pk.name, pk.price::text AS price, pk.duration_minutes,
+              COALESCE(pk.num_photos, 0) as num_photos,
+              pp.id as profile_id,
+              pp.slug as photographer_slug, u.name as photographer_name,
+              u.avatar_url as photographer_avatar,
+              COALESCE(pp.rating, 0) as rating, COALESCE(pp.review_count, 0) as review_count,
+              COALESCE(pk.is_popular, FALSE) as is_popular,
+              pp.is_featured, pp.is_verified,
+              ROW_NUMBER() OVER (
+                PARTITION BY pp.id
+                ORDER BY COALESCE(pk.is_popular, FALSE) DESC,
+                         pk.price ASC
+              ) as rn_per_photographer
+         FROM packages pk
+         JOIN photographer_profiles pp ON pp.id = pk.photographer_id
+         JOIN users u ON u.id = pp.user_id
+         JOIN photographer_locations pl ON pl.photographer_id = pp.id
+        WHERE pl.location_slug = $1
+          AND pp.is_approved = TRUE
+          AND COALESCE(pp.is_test, FALSE) = FALSE
+          AND pk.is_public = TRUE
+          AND ($2::text[] IS NULL OR pp.shoot_types && $2::text[])
+     )
+     SELECT id, name, price, duration_minutes, num_photos,
+            photographer_slug, photographer_name, photographer_avatar,
+            rating, review_count, is_popular,
             COALESCE((
-              SELECT array_agg(url ORDER BY rank, sort_order NULLS LAST, created_at)
+              SELECT array_agg(url ORDER BY rank, shuffle, sort_order NULLS LAST, created_at)
                 FROM (
                   SELECT pi.url,
                          CASE
@@ -766,28 +789,22 @@ export default async function OccasionPage({
                            WHEN $2::text[] IS NOT NULL AND pi.shoot_type = ANY($2::text[]) THEN 2
                            ELSE 3
                          END as rank,
+                         hashtext(pp.profile_id::text || pi.url) as shuffle,
                          pi.sort_order, pi.created_at
                     FROM portfolio_items pi
-                   WHERE pi.photographer_id = pp.id
+                   WHERE pi.photographer_id = pp.profile_id
                      AND pi.type = 'photo'
-                   ORDER BY rank, pi.sort_order NULLS LAST, pi.created_at
+                   ORDER BY rank, shuffle, pi.sort_order NULLS LAST, pi.created_at
                    LIMIT 5
                 ) ranked
             ), ARRAY[]::text[]) as portfolio_thumbs
-     FROM packages pk
-     JOIN photographer_profiles pp ON pp.id = pk.photographer_id
-     JOIN users u ON u.id = pp.user_id
-     JOIN photographer_locations pl ON pl.photographer_id = pp.id
-     WHERE pl.location_slug = $1
-       AND pp.is_approved = TRUE
-       AND COALESCE(pp.is_test, FALSE) = FALSE
-       AND pk.is_public = TRUE
-       AND ($2::text[] IS NULL OR pp.shoot_types && $2::text[])
-     ORDER BY pp.is_featured DESC, pp.is_verified DESC,
-              pk.is_popular DESC NULLS LAST,
-              pp.rating DESC NULLS LAST,
-              pk.price ASC
-     LIMIT 6`,
+       FROM per_photographer pp
+      WHERE rn_per_photographer = 1
+      ORDER BY pp.is_featured DESC, pp.is_verified DESC,
+               pp.is_popular DESC NULLS LAST,
+               pp.rating DESC NULLS LAST,
+               pp.price ASC
+      LIMIT 6`,
     [slug, shootTypeLabels]
   ).catch(() => []);
 
