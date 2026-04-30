@@ -168,16 +168,18 @@ export function RedirectsManager() {
 
       {showForm && (
         <form onSubmit={save} className="rounded-xl border border-warm-200 bg-warm-50 p-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <span className="text-xs font-semibold text-gray-700">Source host</span>
-              <div className="mt-1 inline-flex rounded-lg border border-warm-200 bg-white p-0.5">
+          {/* Source: host + path read as a single URL, so render them as one
+              compound control. Looks like "lens.pt / /porto" — quick to scan. */}
+          <div>
+            <span className="text-xs font-semibold text-gray-700">Source</span>
+            <div className="mt-1 flex flex-wrap items-stretch gap-2">
+              <div className="inline-flex shrink-0 rounded-lg border border-warm-200 bg-white p-0.5">
                 {(["lens.pt", "photoportugal.com"] as const).map((h) => (
                   <button
                     key={h}
                     type="button"
                     onClick={() => setForm({ ...form, source_host: h })}
-                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                    className={`rounded-md px-3 text-sm font-medium transition ${
                       form.source_host === h
                         ? "bg-primary-600 text-white"
                         : "text-gray-600 hover:bg-warm-50"
@@ -187,19 +189,16 @@ export function RedirectsManager() {
                   </button>
                 ))}
               </div>
-            </div>
-            <label className="block">
-              <span className="text-xs font-semibold text-gray-700">Source path</span>
               <input
                 type="text"
                 required
                 placeholder="/porto"
                 value={form.source_path}
                 onChange={(e) => setForm({ ...form, source_path: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm font-mono"
+                className="min-w-0 flex-1 rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm font-mono"
               />
-              <span className="text-[11px] text-gray-400">Exact match. No wildcards in v1.</span>
-            </label>
+            </div>
+            <span className="mt-1 block text-[11px] text-gray-400">Exact match. No wildcards in v1.</span>
           </div>
           <label className="block">
             <span className="text-xs font-semibold text-gray-700">Target URL</span>
@@ -211,11 +210,11 @@ export function RedirectsManager() {
               onChange={(e) => setForm({ ...form, target_url: e.target.value })}
               className="mt-1 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm font-mono"
             />
-            <span className="text-[11px] text-gray-400">
+            <span className="mt-1 block text-[11px] text-gray-400">
               Absolute URL (https://…) or absolute path (/foo). Inbound query string is forwarded only when target has none of its own.
             </span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-3">
             <label className="block">
               <span className="text-xs font-semibold text-gray-700">Status code</span>
               <select

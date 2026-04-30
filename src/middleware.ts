@@ -374,9 +374,10 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Includes /api so middleware can 404 lens.pt's API surface; the existing
-  // EXCLUDED_PREFIXES short-circuit lets /api on photoportugal.com pass through
-  // untouched after the host/redirect check at the top of the function.
-  matcher: ["/((?!_next|uploads).*)"],
+  // Excludes /api — running middleware on /api requests breaks request-body
+  // streaming for multipart/form-data uploads (delivery, portfolio). lens.pt's
+  // /api surface is already 404'd at the nginx layer, so we don't need
+  // middleware to also block it.
+  matcher: ["/((?!_next|uploads|api).*)"],
   runtime: "nodejs",
 };
