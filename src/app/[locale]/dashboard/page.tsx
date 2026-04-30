@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { RevisionChecklist } from "@/components/dashboard/RevisionChecklist";
 import { ActionNeededWidget } from "@/components/dashboard/ActionNeededWidget";
+import { PhotographerCalendarWidget } from "@/components/dashboard/PhotographerCalendarWidget";
 import { AddOnsSection } from "@/app/[locale]/dashboard/subscriptions/AddOnsSection";
 import { getPhotographerTasks } from "@/lib/photographer-tasks";
 import { syncStripeOnboardingIfStale } from "@/lib/stripe-sync";
@@ -268,6 +269,13 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
           </div>
         ))}
       </div>
+
+      {/* Calendar — bookings, deliveries, and busy days at a glance */}
+      {profile.is_approved && (
+        <div className="mt-6">
+          <PhotographerCalendarWidget />
+        </div>
+      )}
 
       {/* Plan */}
       <div className="mt-6 flex items-center gap-3 rounded-xl border border-warm-200 bg-white p-4">

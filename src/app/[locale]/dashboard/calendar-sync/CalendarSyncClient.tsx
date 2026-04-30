@@ -220,17 +220,17 @@ export function CalendarSyncClient() {
           </div>
 
           <div className="rounded-lg bg-white border border-warm-200 p-4">
-            <p className="text-sm font-semibold text-gray-900 mb-2">How to get your Apple Calendar link</p>
+            <p className="text-sm font-semibold text-gray-900 mb-2">How to get your Apple Calendar link <span className="text-xs font-normal text-gray-400">(on your Mac)</span></p>
             <ol className="space-y-1.5 text-sm text-gray-700 list-decimal list-inside">
-              <li>Open <strong>Calendar</strong> app on your Mac (or iPhone Settings → Calendar).</li>
-              <li>In the sidebar, hover over the calendar you want to share → click the <strong>circle/info icon</strong> next to its name.</li>
-              <li>Tick <strong>Public Calendar</strong>.</li>
-              <li>Click <strong>Share Link…</strong> and copy the URL (starts with <code className="px-1 bg-warm-100 rounded">webcal://</code>).</li>
-              <li>Paste it below and click <strong>Connect</strong>.</li>
+              <li>Open the <strong>Calendar</strong> app.</li>
+              <li>In the sidebar, <strong>right-click</strong> the calendar you want to share → <strong>Get Info</strong>.</li>
+              <li>Tick <strong>Public Calendar</strong> → click <strong>OK</strong> to close the popup.</li>
+              <li><strong>Right-click the same calendar again</strong> — now <strong>Copy URL</strong> will appear in the menu. Click it.</li>
+              <li>Paste the URL below (starts with <code className="px-1 bg-warm-100 rounded">webcal://</code>) → <strong>Connect</strong>.</li>
             </ol>
             <p className="mt-3 text-xs text-gray-500">
-              Don&apos;t worry — we only read busy time ranges, never event titles or details.
-              The &quot;public&quot; setting just means the URL itself, not the calendar contents being public elsewhere.
+              The &quot;Copy URL&quot; option only shows up after you close the Get Info popup — that part trips
+              up most people. We only read busy time ranges, never event titles or details.
             </p>
           </div>
 
@@ -346,6 +346,24 @@ export function CalendarSyncClient() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* CTA back to the actual calendar view */}
+      {!loading && (
+        <div className="mt-2 rounded-xl border border-warm-200 bg-warm-50 p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">See it in action</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Your actual schedule — bookings, deliveries, and busy days — lives on the Overview.
+            </p>
+          </div>
+          <a
+            href="/dashboard"
+            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+          >
+            View my schedule →
+          </a>
         </div>
       )}
 
