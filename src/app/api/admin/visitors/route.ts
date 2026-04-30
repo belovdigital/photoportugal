@@ -119,9 +119,11 @@ export async function GET(req: Request) {
     )`;
 
   // Base filters that can run cheaply against visitor_sessions alone (no users join needed).
-  // Role filter for "guest" is also cheap (just vs.user_id IS NULL). Other role filters need
-  // the users join — applied after we've limited to a small candidate set.
-  const baseRoleWhere = roleFilter === "guest" ? "AND vs.user_id IS NULL" : "";
+  // "guest" → vs.user_id IS NULL. "ads" → vs.utm_medium = 'cpc' (paid traffic from any
+  // ad source). Other role filters need the users join — applied post-limit.
+  const baseRoleWhere = roleFilter === "guest" ? "AND vs.user_id IS NULL"
+    : roleFilter === "ads" ? "AND vs.utm_medium = 'cpc'"
+    : "";
   const postRoleWhere = roleFilter === "client" ? "AND u.role = 'client'"
     : roleFilter === "photographer" ? "AND u.role = 'photographer'"
     : roleFilter === "guest" ? ""

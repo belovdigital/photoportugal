@@ -949,7 +949,10 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
   const [vLoading, setVLoading] = useState(true);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [sessionLimit, setSessionLimit] = useState(30);
-  const [roleFilter, setRoleFilter] = useState("all");
+  // Default to the "ads" tab: paid traffic is the highest-value cohort
+  // to inspect first when checking who's actually landing from Google
+  // Ads sitelinks. "All" stays one tap away.
+  const [roleFilter, setRoleFilter] = useState("ads");
   const [countryFilter, setCountryFilter] = useState("all");
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>("30d");
@@ -1080,11 +1083,14 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Recent Visitors</h3>
           <div className="flex flex-wrap items-center gap-1.5">
             {[
+              { key: "ads", label: "Ads", icon: "💸" },
               { key: "all", label: "All", icon: "👥" },
               { key: "client", label: "Clients", icon: "🧳" },
               { key: "photographer", label: "Photographers", icon: "📸" },
               { key: "guest", label: "Guests", icon: "👻" },
-            ].filter(f => f.key === "all" || vd.recentSessions.some(s => f.key === "guest" ? !s.user_role : s.user_role === f.key)).map(f => (
+            // "ads" + "all" are always shown (top-level tabs); the trimming
+            // applies only to role-specific tabs that need actual rows.
+            ].filter(f => f.key === "ads" || f.key === "all" || vd.recentSessions.some(s => f.key === "guest" ? !s.user_role : s.user_role === f.key)).map(f => (
               <button
                 key={f.key}
                 onClick={() => { setRoleFilter(f.key); setSessionLimit(30); setSessionsLoading(true); }}
