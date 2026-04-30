@@ -165,7 +165,90 @@ export function DeliveryUploadClient({
     });
   }
 
+  function isVideo(file: File): boolean {
+    if ((file.type || "").startsWith("video/")) return true;
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    return ["mp4", "mov", "webm", "m4v"].includes(ext);
+  }
+
+  // Videos go to R2 directly via a presigned PUT. Cloudflare's edge proxy
+  // caps multipart bodies at 100MB on Free/Pro plans, so anything bigger
+  // (and we cap photographer videos at 500MB) would be killed in flight
+  // if it went through our origin. The browser hits R2 on its native
+  // endpoint — which CF doesn't proxy — and we only carry presign +
+  // finalize JSON, both tiny.
+  async function uploadVideoViaPresign(file: File): Promise<boolean> {
+    const fileKey = `${file.name}:${file.size}:${file.lastModified}`;
+    fileBytesRef.current.set(fileKey, 0);
+
+    const presignRes = await fetch(`/api/bookings/${bookingId}/delivery/presign`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: file.name,
+        content_type: file.type || "",
+        file_size: file.size,
+      }),
+    });
+    if (!presignRes.ok) {
+      console.error("[delivery upload] presign failed:", await presignRes.text());
+      return false;
+    }
+    const presign = await presignRes.json() as {
+      upload_url: string;
+      s3_key: string;
+      content_type: string;
+      download_filename: string;
+    };
+
+    // Direct PUT to R2. XHR (not fetch) so we still get progress events.
+    const putOk = await new Promise<boolean>((resolve) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", presign.upload_url);
+      xhr.setRequestHeader("Content-Type", presign.content_type);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          fileBytesRef.current.set(fileKey, e.loaded);
+          recomputeBytes();
+        }
+      };
+      xhr.upload.onload = () => {
+        fileBytesRef.current.set(fileKey, file.size);
+        recomputeBytes();
+      };
+      xhr.onload = () => resolve(xhr.status >= 200 && xhr.status < 300);
+      xhr.onerror = () => resolve(false);
+      xhr.onabort = () => resolve(false);
+      xhr.send(file);
+    });
+    if (!putOk) return false;
+
+    // Tell the server the upload landed so it can write the DB row and
+    // kick off background thumbnail/metadata extraction.
+    const finalizeRes = await fetch(`/api/bookings/${bookingId}/delivery/finalize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        s3_key: presign.s3_key,
+        filename: file.name,
+        download_filename: presign.download_filename,
+      }),
+    });
+    if (!finalizeRes.ok) {
+      console.error("[delivery upload] finalize failed:", await finalizeRes.text());
+      return false;
+    }
+    const data = await finalizeRes.json();
+    if (data.uploaded) {
+      setPhotos((prev) => [...prev, ...data.uploaded]);
+      return true;
+    }
+    return false;
+  }
+
   async function uploadOneFile(file: File): Promise<boolean> {
+    if (isVideo(file)) return uploadVideoViaPresign(file);
+
     const fileKey = `${file.name}:${file.size}:${file.lastModified}`;
     fileBytesRef.current.set(fileKey, 0);
     return new Promise<boolean>((resolve) => {
