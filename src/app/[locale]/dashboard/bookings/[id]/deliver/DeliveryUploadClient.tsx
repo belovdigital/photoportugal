@@ -444,48 +444,41 @@ export function DeliveryUploadClient({
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      {/* Title + warm message — always rendered so the photographer can
-          see what they wrote even after sharing, but inputs go read-only
-          (disabled, dimmer bg) once `canEdit` flips false. */}
-      {(canEdit || deliveryTitle || deliveryMessage) && (
-        <div className="mb-6 rounded-xl border border-warm-200 bg-white p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-900">{t("messageHeading")}</h3>
-            <span className="text-xs text-gray-400">
-              {!canEdit
-                ? t("messageLocked")
-                : savingMessage ? t("messageSaving")
-                : messageSaved ? t("messageSaved")
-                : ""}
-            </span>
-          </div>
-          <input
-            type="text"
-            value={deliveryTitle}
-            onChange={(e) => {
-              setDeliveryTitle(e.target.value);
-              scheduleSaveMessage(e.target.value, deliveryMessage);
-            }}
-            placeholder={t("titlePlaceholder")}
-            maxLength={200}
-            disabled={!canEdit}
-            className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-base font-semibold text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 disabled:cursor-not-allowed disabled:opacity-70"
-          />
-          <textarea
-            value={deliveryMessage}
-            onChange={(e) => {
-              setDeliveryMessage(e.target.value);
-              scheduleSaveMessage(deliveryTitle, e.target.value);
-            }}
-            placeholder={t("messagePlaceholder")}
-            maxLength={1500}
-            rows={4}
-            disabled={!canEdit}
-            className="mt-2 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 disabled:cursor-not-allowed disabled:opacity-70"
-          />
-          {canEdit && <p className="mt-1 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>}
+      {/* Title + warm message — always editable, regardless of whether
+          photos are locked. This is just text, not part of the deliverable;
+          letting the photographer fix typos / add a thank-you note even
+          after the client accepted is harmless and useful. */}
+      <div className="mb-6 rounded-xl border border-warm-200 bg-white p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-900">{t("messageHeading")}</h3>
+          <span className="text-xs text-gray-400">
+            {savingMessage ? t("messageSaving") : messageSaved ? t("messageSaved") : ""}
+          </span>
         </div>
-      )}
+        <input
+          type="text"
+          value={deliveryTitle}
+          onChange={(e) => {
+            setDeliveryTitle(e.target.value);
+            scheduleSaveMessage(e.target.value, deliveryMessage);
+          }}
+          placeholder={t("titlePlaceholder")}
+          maxLength={200}
+          className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-base font-semibold text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+        />
+        <textarea
+          value={deliveryMessage}
+          onChange={(e) => {
+            setDeliveryMessage(e.target.value);
+            scheduleSaveMessage(deliveryTitle, e.target.value);
+          }}
+          placeholder={t("messagePlaceholder")}
+          maxLength={1500}
+          rows={4}
+          className="mt-2 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+        />
+        <p className="mt-1 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>
+      </div>
 
       {/* Upload area — shown until the client has accepted (pre-share + post-share edit window). */}
       {canEdit && (

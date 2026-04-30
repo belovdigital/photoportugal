@@ -115,6 +115,147 @@ export async function fetchIcalBusySlots(icalUrl: string): Promise<BusySlot[]> {
 }
 
 /**
+ * Refresh a Google access token using the stored refresh token. Persists
+ * the new access token + expiry on the connection row. Returns the fresh
+ * access token for immediate use.
+ *
+ * Google access tokens are valid for ~1 hour; refresh tokens never expire
+ * unless the user revokes them or the app is unused for 6 months. So in
+ * practice we refresh on demand whenever the cached token is within 60s
+ * of expiry.
+ */
+async function refreshGoogleAccessToken(connectionId: string, refreshToken: string): Promise<string> {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error("Google OAuth not configured");
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      refresh_token: refreshToken,
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "refresh_token",
+    }).toString(),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`token refresh failed: ${res.status} ${txt.slice(0, 200)}`);
+  }
+  const data = await res.json() as { access_token: string; expires_in: number };
+  const expiresAt = new Date(Date.now() + data.expires_in * 1000);
+  await queryOne(
+    "UPDATE calendar_connections SET google_access_token = $1, google_access_token_expires_at = $2, updated_at = NOW() WHERE id = $3 RETURNING id",
+    [data.access_token, expiresAt, connectionId]
+  );
+  return data.access_token;
+}
+
+async function getValidGoogleAccessToken(conn: ConnectionRow): Promise<string> {
+  if (!conn.google_refresh_token) throw new Error("missing refresh token");
+  const expiresAt = conn.google_access_token_expires_at ? new Date(conn.google_access_token_expires_at) : null;
+  // Refresh if missing, expired, or within 60s of expiring.
+  if (!conn.google_access_token || !expiresAt || expiresAt.getTime() - Date.now() < 60_000) {
+    return refreshGoogleAccessToken(conn.id, conn.google_refresh_token);
+  }
+  return conn.google_access_token;
+}
+
+/**
+ * List the calendars on a Google account so the photographer can pick
+ * which ones count as "busy". `primary` is the user's main calendar
+ * (always present). Secondary ones are personal calendars they created
+ * plus any shared calendars they've subscribed to.
+ */
+export async function listGoogleCalendars(connection: ConnectionRow): Promise<{ id: string; summary: string; primary: boolean; selected: boolean }[]> {
+  const accessToken = await getValidGoogleAccessToken(connection);
+  const res = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=250", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error(`calendarList failed: ${res.status}`);
+  const data = await res.json() as { items: { id: string; summary: string; primary?: boolean }[] };
+  const selectedSet = new Set(connection.selected_calendar_ids || []);
+  return (data.items || []).map((c) => ({
+    id: c.id,
+    summary: c.summary,
+    primary: !!c.primary,
+    selected: selectedSet.has(c.id) || (selectedSet.has("primary") && !!c.primary),
+  }));
+}
+
+/**
+ * Query Google's freeBusy endpoint for the photographer's selected
+ * calendars and return aggregated busy slots within our sync window.
+ *
+ * `freeBusy` accepts up to 50 calendars per call and returns merged busy
+ * ranges per calendar — Google takes care of recurring expansion and
+ * cancellation/exception handling for us, unlike iCal where we do that
+ * locally with rrule.
+ *
+ * If the photographer ticked "primary", we resolve it to the actual
+ * primary calendar id since `freeBusy` won't accept the literal string
+ * "primary" reliably across all account types.
+ */
+async function fetchGoogleBusySlots(connection: ConnectionRow): Promise<BusySlot[]> {
+  const accessToken = await getValidGoogleAccessToken(connection);
+
+  // Resolve calendar ids — handle the "primary" pseudo-id by listing.
+  const ids = (connection.selected_calendar_ids && connection.selected_calendar_ids.length > 0)
+    ? connection.selected_calendar_ids
+    : ["primary"];
+  let resolvedIds = ids;
+  if (ids.includes("primary")) {
+    const list = await listGoogleCalendars(connection);
+    const primaryCal = list.find((c) => c.primary);
+    if (primaryCal) {
+      resolvedIds = ids.flatMap((id) => id === "primary" ? [primaryCal.id] : [id]);
+    }
+  }
+
+  const horizonStart = new Date();
+  const horizonEnd = new Date();
+  horizonEnd.setMonth(horizonEnd.getMonth() + SYNC_WINDOW_MONTHS);
+
+  const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      timeMin: horizonStart.toISOString(),
+      timeMax: horizonEnd.toISOString(),
+      items: resolvedIds.map((id) => ({ id })),
+    }),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`freeBusy failed: ${res.status} ${txt.slice(0, 200)}`);
+  }
+  const data = await res.json() as {
+    calendars: Record<string, { busy?: { start: string; end: string }[]; errors?: { reason: string }[] }>;
+  };
+
+  const slots: BusySlot[] = [];
+  for (const calId of resolvedIds) {
+    const cal = data.calendars[calId];
+    if (cal?.errors?.length) {
+      // Don't fail the whole sync on one bad calendar (e.g. user lost
+      // access to a shared one) — surface in logs and continue.
+      console.warn(`[calendar-sync] freeBusy error for ${calId}:`, cal.errors);
+      continue;
+    }
+    if (!cal?.busy) continue;
+    for (const b of cal.busy) {
+      slots.push({
+        starts_at: new Date(b.start),
+        ends_at: new Date(b.end),
+        source_uid: `${calId}@${b.start}`,
+      });
+    }
+  }
+  return slots;
+}
+
+/**
  * Refresh a single connection's busy slots: fetch upstream, replace cached
  * rows for this connection. Updates last_synced_at + last_sync_error so the
  * dashboard can surface "synced 3 min ago" or "failed: invalid URL".
@@ -130,8 +271,7 @@ export async function syncConnection(connection: ConnectionRow): Promise<{ ok: t
       if (!connection.ical_url) throw new Error("missing ical_url");
       slots = await fetchIcalBusySlots(connection.ical_url);
     } else if (connection.type === "google") {
-      // Implemented in a follow-up alongside the OAuth flow.
-      throw new Error("google sync not yet implemented");
+      slots = await fetchGoogleBusySlots(connection);
     } else {
       throw new Error(`unknown connection type: ${connection.type}`);
     }
