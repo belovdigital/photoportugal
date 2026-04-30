@@ -119,11 +119,22 @@ export function PhotographerCalendarWidget() {
 
   return (
     <div className="rounded-xl border border-warm-200 bg-white p-4 sm:p-5">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-2">
         <h3 className="text-sm font-bold text-gray-900">Your calendar</h3>
-        {loading && (
-          <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
-        )}
+        <div className="flex items-center gap-3">
+          {loading && (
+            <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+          )}
+          <a
+            href="/dashboard/availability"
+            className="text-xs font-medium text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
+          >
+            Configure
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-5">

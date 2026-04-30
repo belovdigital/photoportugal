@@ -13,6 +13,7 @@ import { queryOne, query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { normalizeName } from "@/lib/format-name";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
+import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
@@ -362,11 +363,32 @@ export default async function ShootTypePage({
   const packages = await query<{
     id: string; name: string; price: number; duration_minutes: number; num_photos: number;
     photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
-    rating: number; review_count: number;
+    rating: number; review_count: number; is_popular: boolean;
+    portfolio_thumbs: string[];
   }>(
     `SELECT pk.id, pk.name, pk.price, pk.duration_minutes, pk.num_photos,
             pp.slug as photographer_slug, u.name as photographer_name, u.avatar_url as photographer_avatar,
-            pp.rating, pp.review_count
+            pp.rating, pp.review_count, COALESCE(pk.is_popular, FALSE) as is_popular,
+            -- Pull up to 5 portfolio photos per package's photographer.
+            -- Prefer photos tagged with this shoot type; fall back to any
+            -- photographer photo so accounts with sparse tags still get a
+            -- carousel.
+            COALESCE((
+              SELECT array_agg(url ORDER BY rank, sort_order NULLS LAST, created_at)
+                FROM (
+                  SELECT pi.url,
+                         CASE
+                           WHEN pi.shoot_type = ANY($1::text[]) THEN 0
+                           ELSE 1
+                         END as rank,
+                         pi.sort_order, pi.created_at
+                    FROM portfolio_items pi
+                   WHERE pi.photographer_id = pp.id
+                     AND pi.type = 'photo'
+                   ORDER BY rank, pi.sort_order NULLS LAST, pi.created_at
+                   LIMIT 5
+                ) ranked
+            ), ARRAY[]::text[]) as portfolio_thumbs
      FROM packages pk
      JOIN photographer_profiles pp ON pp.id = pk.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -698,36 +720,14 @@ export default async function ShootTypePage({
             </p>
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {packages.map((pkg) => (
-                <Link
+                <PackageCardWithCarousel
                   key={pkg.id}
-                  href={`/book/${pkg.photographer_slug}?package=${pkg.id}`}
-                  className="group flex flex-col rounded-xl border border-warm-200 bg-white p-5 transition hover:border-primary-300 hover:shadow-md"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-100">
-                      {pkg.photographer_avatar && (
-                        <OptimizedImage src={pkg.photographer_avatar} alt={normalizeName(pkg.photographer_name)} width={80} className="h-full w-full object-cover" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-gray-900">{normalizeName(pkg.photographer_name)}</p>
-                      {pkg.review_count > 0 && (
-                        <p className="text-xs text-gray-500">★ {Number(pkg.rating).toFixed(1)} · {pkg.review_count} {pkg.review_count === 1 ? tc("review") : tc("reviews")}</p>
-                      )}
-                    </div>
-                  </div>
-                  <h3 className="mt-4 font-display text-lg font-bold text-gray-900 group-hover:text-primary-600">{pkg.name}</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {pkg.duration_minutes} {t("minutesAbbr")}
-                    {pkg.num_photos > 0 && ` · ${pkg.num_photos} ${t("photosLabel")}`}
-                  </p>
-                  <div className="mt-auto pt-4 flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">€{Math.round(Number(pkg.price))}</span>
-                    <span className="text-sm font-medium text-primary-600 group-hover:underline">
-                      {t("bookCta")}
-                    </span>
-                  </div>
-                </Link>
+                  pkg={pkg}
+                  popularLabel={t("popular")}
+                  minutesAbbrLabel={t("minutesAbbr")}
+                  photosLabel={t("photosLabel")}
+                  bookCtaLabel={t("bookCta")}
+                />
               ))}
             </div>
           </div>

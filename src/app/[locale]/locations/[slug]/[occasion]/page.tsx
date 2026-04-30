@@ -17,6 +17,7 @@ import { queryOne, query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
+import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
@@ -742,11 +743,37 @@ export default async function OccasionPage({
     id: string; name: string; price: string; duration_minutes: number; num_photos: number;
     photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
     rating: number; review_count: number; is_popular: boolean;
+    portfolio_thumbs: string[];
   }>(
     `SELECT pk.id, pk.name, pk.price::text, pk.duration_minutes, COALESCE(pk.num_photos, 0) as num_photos,
             pp.slug as photographer_slug, u.name as photographer_name, u.avatar_url as photographer_avatar,
             COALESCE(pp.rating, 0) as rating, COALESCE(pp.review_count, 0) as review_count,
-            COALESCE(pk.is_popular, FALSE) as is_popular
+            COALESCE(pk.is_popular, FALSE) as is_popular,
+            -- Pull up to 5 portfolio photos per package's photographer.
+            -- Prefer photos tagged with this location AND a matching shoot
+            -- type when available, fall back to anything else by the same
+            -- photographer so newer accounts (sparse tags) still get a
+            -- carousel rather than an empty placeholder.
+            COALESCE((
+              SELECT array_agg(url ORDER BY rank, sort_order NULLS LAST, created_at)
+                FROM (
+                  SELECT pi.url,
+                         CASE
+                           WHEN pi.location_slug = $1
+                                AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]))
+                             THEN 0
+                           WHEN pi.location_slug = $1 THEN 1
+                           WHEN $2::text[] IS NOT NULL AND pi.shoot_type = ANY($2::text[]) THEN 2
+                           ELSE 3
+                         END as rank,
+                         pi.sort_order, pi.created_at
+                    FROM portfolio_items pi
+                   WHERE pi.photographer_id = pp.id
+                     AND pi.type = 'photo'
+                   ORDER BY rank, pi.sort_order NULLS LAST, pi.created_at
+                   LIMIT 5
+                ) ranked
+            ), ARRAY[]::text[]) as portfolio_thumbs
      FROM packages pk
      JOIN photographer_profiles pp ON pp.id = pk.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -918,41 +945,14 @@ export default async function OccasionPage({
             </div>
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {featuredPackages.map((pkg) => (
-                <Link
+                <PackageCardWithCarousel
                   key={pkg.id}
-                  href={`/book/${pkg.photographer_slug}?package=${pkg.id}`}
-                  className="group flex flex-col rounded-2xl border border-warm-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-lg"
-                >
-                  {pkg.is_popular && (
-                    <span className="self-start rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
-                      {tL.packagePopular}
-                    </span>
-                  )}
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-100">
-                      {pkg.photographer_avatar && (
-                        <OptimizedImage src={pkg.photographer_avatar} alt={pkg.photographer_name} width={80} className="h-full w-full object-cover" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-gray-900">{pkg.photographer_name}</p>
-                      {pkg.review_count > 0 && (
-                        <p className="text-xs text-gray-500">★ {Number(pkg.rating).toFixed(1)} · {pkg.review_count} {pkg.review_count === 1 ? tc("review") : tc("reviews")}</p>
-                      )}
-                    </div>
-                  </div>
-                  <h3 className="mt-4 font-display text-lg font-bold text-gray-900 group-hover:text-primary-600">{pkg.name}</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {pkg.duration_minutes} {tL.packageMinutesAbbr}
-                    {pkg.num_photos > 0 && ` · ${pkg.num_photos} ${tL.packagePhotos}`}
-                  </p>
-                  <div className="mt-auto pt-4 flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">€{Math.round(Number(pkg.price))}</span>
-                    <span className="text-sm font-semibold text-primary-600 group-hover:underline">
-                      {tL.packageBookCta} →
-                    </span>
-                  </div>
-                </Link>
+                  pkg={pkg}
+                  popularLabel={tL.packagePopular}
+                  minutesAbbrLabel={tL.packageMinutesAbbr}
+                  photosLabel={tL.packagePhotos}
+                  bookCtaLabel={tL.packageBookCta}
+                />
               ))}
             </div>
           </div>
