@@ -12,7 +12,7 @@ function redirectBack(_req: NextRequest, params: Record<string, string>): NextRe
   // the canonical public host instead — set in env, falls back to the
   // hard-coded production URL.
   const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
-  const url = new URL("/dashboard/calendar-sync", base);
+  const url = new URL("/dashboard/availability", base);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   return NextResponse.redirect(url);
 }

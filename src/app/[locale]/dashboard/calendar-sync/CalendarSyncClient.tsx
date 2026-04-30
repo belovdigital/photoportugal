@@ -207,7 +207,7 @@ export function CalendarSyncClient() {
 
       {/* Recommendation about which calendars to connect */}
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-        <strong>Tip:</strong> connect only calendars you actually use for work. Things like personal birthdays,
+        <strong>Tip:</strong>&nbsp;connect only calendars you actually use for work. Things like personal birthdays,
         kids&apos; school events, or holidays will block clients from booking those days even if you&apos;d be
         happy to shoot. Many photographers keep a dedicated &quot;Work&quot; calendar for this reason.
       </div>

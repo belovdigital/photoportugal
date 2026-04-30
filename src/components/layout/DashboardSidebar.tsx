@@ -32,7 +32,6 @@ export function DashboardSidebar({ initialRole }: { initialRole?: string }) {
     { href: "/dashboard/portfolio", labelKey: "sidebarPortfolio", icon: "image", roles: ["photographer"] },
     { href: "/dashboard/packages", labelKey: "sidebarPackages", icon: "package", roles: ["photographer"] },
     { href: "/dashboard/availability", labelKey: "sidebarAvailability", icon: "clock", roles: ["photographer"] },
-    { href: "/dashboard/calendar-sync", labelKey: "sidebarCalendarSync", icon: "calendar", roles: ["photographer"] },
     { href: "/dashboard/subscriptions", labelKey: "sidebarSubscriptions", icon: "credit-card", roles: ["photographer"] },
     { href: "/dashboard/payouts", labelKey: "sidebarPayouts", icon: "banknotes", roles: ["photographer"] },
     { href: "/dashboard/settings", labelKey: "sidebarSettings", icon: "settings", roles: ["client", "photographer"] },

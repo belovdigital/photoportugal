@@ -32,7 +32,6 @@ const PHOTOGRAPHER_MORE: MoreItem[] = [
   { href: "/dashboard/portfolio", labelKey: "sidebarPortfolio", icon: "image" },
   { href: "/dashboard/packages", labelKey: "sidebarPackages", icon: "package" },
   { href: "/dashboard/availability", labelKey: "sidebarAvailability", icon: "clock" },
-  { href: "/dashboard/calendar-sync", labelKey: "sidebarCalendarSync", icon: "calendar" },
   { href: "/dashboard/subscriptions", labelKey: "sidebarSubscriptions", icon: "credit-card" },
   { href: "/dashboard/payouts", labelKey: "sidebarPayouts", icon: "banknotes" },
   { href: "/dashboard/settings", labelKey: "sidebarSettings", icon: "settings" },

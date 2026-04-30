@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
               ) AS d
         WHERE cbs.photographer_id = $1
           AND cbs.ends_at >= NOW()
-          AND EXTRACT(EPOCH FROM (cbs.ends_at - cbs.starts_at)) >= 4 * 3600
+          AND EXTRACT(EPOCH FROM (cbs.ends_at - cbs.starts_at)) >= 3 * 3600
           AND EXTRACT(HOUR FROM (cbs.starts_at AT TIME ZONE 'Europe/Lisbon')) < 23
           AND EXTRACT(HOUR FROM (cbs.ends_at   AT TIME ZONE 'Europe/Lisbon')) >= 6
         ORDER BY blocked_date ASC`,

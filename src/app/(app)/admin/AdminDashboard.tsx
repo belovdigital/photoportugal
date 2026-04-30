@@ -339,33 +339,22 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
   }
 }
 
-function fillDays(data: { day: string; turnover: number; revenue: number; count: number }[], range: number) {
-  const filled: typeof data = [];
-  const start = new Date();
-  start.setDate(start.getDate() - range + 1);
-  for (let i = 0; i < range; i++) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const found = data.find(r => r.day.split("T")[0] === key);
-    filled.push(found || { day: key, turnover: 0, revenue: 0, count: 0 });
-  }
-  return filled;
-}
-
-function fmtDate(day: string) {
+function fmtDate(day: string, bucket: "day" | "week" | "month" = "day") {
   // Handle both "2026-03-25" and "2026-03-25T00:00:00.000Z"
   const clean = day.split("T")[0];
   const [y, m, d] = clean.split("-").map(Number);
   if (!y || !m || !d) return day;
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  if (bucket === "month") return `${months[m - 1]} ${y}`;
+  if (bucket === "week") return `Week of ${months[m - 1]} ${d}`;
   return `${months[m - 1]} ${d}`;
 }
 
-function BarChart({ title, subtitle, filled, field, color }: {
+function BarChart({ title, subtitle, filled, field, color, bucket }: {
   title: string; subtitle: string;
   filled: { day: string; turnover: number; revenue: number; count: number }[];
   field: "turnover" | "revenue"; color: string;
+  bucket: "day" | "week" | "month";
 }) {
   const max = Math.max(...filled.map(d => d[field]), 1);
   // Show ~5 date labels evenly spaced
@@ -387,7 +376,7 @@ function BarChart({ title, subtitle, filled, field, color }: {
               />
               {val > 0 && (
                 <div className="pointer-events-none absolute -top-10 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
-                  {fmtDate(d.day)}: &euro;{val}
+                  {fmtDate(d.day, bucket)}: &euro;{val}
                 </div>
               )}
             </div>
@@ -399,7 +388,7 @@ function BarChart({ title, subtitle, filled, field, color }: {
         {filled.map((d, i) => (
           <div key={d.day} className="flex-1 text-center">
             {(i % labelInterval === 0 || i === filled.length - 1) && (
-              <span className="text-[9px] text-gray-400">{fmtDate(d.day).replace(/ /g, "\u00A0")}</span>
+              <span className="text-[9px] text-gray-400">{fmtDate(d.day, bucket).replace(/ /g, "\u00A0")}</span>
             )}
           </div>
         ))}
@@ -464,61 +453,110 @@ function UpcomingEvents({ onNavigate }: { onNavigate: () => void }) {
   );
 }
 
+type RevenuePreset = "7" | "30" | "90" | "365" | "all" | "custom";
+
 function RevenueCharts() {
-  const [data, setData] = useState<{ day: string; turnover: number; revenue: number; count: number }[]>([]);
-  const [range, setRange] = useState(30);
+  const [rows, setRows] = useState<{ day: string; turnover: number; revenue: number; count: number }[]>([]);
+  const [bucket, setBucket] = useState<"day" | "week" | "month">("day");
+  const [preset, setPreset] = useState<RevenuePreset>("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState(() => new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let url = "/api/admin/revenue-chart";
+    if (preset === "custom") {
+      if (!customFrom || !customTo) return;
+      url += `?from=${customFrom}&to=${customTo}`;
+    } else {
+      url += `?range=${preset}`;
+    }
     setLoading(true);
-    fetch(`/api/admin/revenue-chart?range=${range}`)
+    fetch(url)
       .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
+      .then(d => {
+        setRows(d.rows || []);
+        setBucket(d.bucket || "day");
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
-  }, [range]);
+  }, [preset, customFrom, customTo]);
 
-  const totalTurnover = data.reduce((s, d) => s + d.turnover, 0);
-  const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
-  const paidBookings = data.reduce((s, d) => s + d.count, 0);
-  const filled = fillDays(data, range);
+  const totalTurnover = rows.reduce((s, d) => s + d.turnover, 0);
+  const totalRevenue = rows.reduce((s, d) => s + d.revenue, 0);
+  const paidBookings = rows.reduce((s, d) => s + d.count, 0);
 
-  const rangeButtons = (
-    <div className="flex gap-1">
-      {[7, 30, 60].map(d => (
-        <button
-          key={d}
-          onClick={() => setRange(d)}
-          className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
-            range === d ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-          }`}
-        >
-          {d}d
-        </button>
-      ))}
-    </div>
-  );
-
-  if (loading) {
-    return (
-      <div className="mt-6 flex items-center justify-center py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
-      </div>
-    );
-  }
+  const presets: { key: RevenuePreset; label: string }[] = [
+    { key: "7", label: "7d" },
+    { key: "30", label: "30d" },
+    { key: "90", label: "90d" },
+    { key: "365", label: "1y" },
+    { key: "all", label: "All" },
+    { key: "custom", label: "Custom" },
+  ];
 
   return (
     <div className="mt-6 space-y-4">
-      <div className="flex justify-end">{rangeButtons}</div>
-      <BarChart
-        title="Turnover"
-        subtitle={`€${totalTurnover.toLocaleString()} from ${paidBookings} paid booking${paidBookings !== 1 ? "s" : ""}`}
-        filled={filled} field="turnover" color="bg-primary-500 hover:bg-primary-600"
-      />
-      <BarChart
-        title="Revenue (Commission)"
-        subtitle={totalRevenue > 0 ? `€${totalRevenue.toLocaleString()} earned` : "No completed payouts yet"}
-        filled={filled} field="revenue" color="bg-green-500 hover:bg-green-600"
-      />
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex gap-1 flex-wrap">
+          {presets.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => setPreset(p.key)}
+              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                preset === p.key ? "bg-primary-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        {preset === "custom" && (
+          <div className="flex items-center gap-1.5 text-xs">
+            <input
+              type="date"
+              value={customFrom}
+              max={customTo}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="rounded-lg border border-warm-200 bg-white px-2 py-1 text-xs"
+            />
+            <span className="text-gray-400">→</span>
+            <input
+              type="date"
+              value={customTo}
+              min={customFrom}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="rounded-lg border border-warm-200 bg-white px-2 py-1 text-xs"
+            />
+          </div>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+        </div>
+      ) : preset === "custom" && (!customFrom || !customTo) ? (
+        <div className="rounded-xl border border-warm-200 bg-white p-8 text-center text-sm text-gray-400">
+          Pick both a start and end date to see the chart.
+        </div>
+      ) : (
+        <>
+          <BarChart
+            title="Turnover"
+            subtitle={`€${totalTurnover.toLocaleString()} from ${paidBookings} paid booking${paidBookings !== 1 ? "s" : ""}${bucket !== "day" ? ` · ${bucket === "week" ? "weekly" : "monthly"} bars` : ""}`}
+            filled={rows} field="turnover" color="bg-primary-500 hover:bg-primary-600"
+            bucket={bucket}
+          />
+          <BarChart
+            title="Revenue (Commission)"
+            subtitle={totalRevenue > 0 ? `€${totalRevenue.toLocaleString()} earned` : "No completed payouts yet"}
+            filled={rows} field="revenue" color="bg-green-500 hover:bg-green-600"
+            bucket={bucket}
+          />
+        </>
+      )}
     </div>
   );
 }

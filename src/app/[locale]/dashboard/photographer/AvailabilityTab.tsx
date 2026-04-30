@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import DatePicker from "@/components/ui/DatePicker";
+import { CalendarSyncClient } from "@/app/[locale]/dashboard/calendar-sync/CalendarSyncClient";
 
 interface UnavailabilityRange {
   id: string;
@@ -174,6 +175,21 @@ export function AvailabilityTab() {
           {leadTimeMessage && (
             <span className="text-xs text-emerald-600">{leadTimeMessage}</span>
           )}
+        </div>
+      </div>
+
+      {/* Connect external calendars (Google / Apple). Lives here because
+          it's another way of saying "I'm not available" — auto-blocks
+          booking days that conflict with the photographer's personal
+          calendar. */}
+      <div className="mt-6 rounded-xl border border-warm-200 bg-white p-5">
+        <h3 className="text-sm font-semibold text-gray-900">Connect my calendars</h3>
+        <p className="mt-1 text-xs text-gray-400">
+          Auto-block days that are already busy on your Google or Apple Calendar.
+          Only busy time ranges are read — never event titles, attendees, or any other details.
+        </p>
+        <div className="mt-4">
+          <CalendarSyncClient />
         </div>
       </div>
 

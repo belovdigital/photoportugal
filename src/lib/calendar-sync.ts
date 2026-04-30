@@ -48,17 +48,10 @@ export async function fetchIcalBusySlots(icalUrl: string): Promise<BusySlot[]> {
   const url = icalUrl.replace(/^webcal:\/\//i, "https://");
   const res = await fetch(url, {
     headers: { "User-Agent": "PhotoPortugal-CalendarSync/1.0" },
-    // Some calendar servers (e.g. iCloud) return 200 only with text/calendar accept.
-    // Default fetch sends */*, which works with Google/Apple. Keep it simple.
   });
   if (!res.ok) throw new Error(`iCal fetch failed: ${res.status} ${res.statusText}`);
   const body = await res.text();
   if (!body.includes("BEGIN:VCALENDAR")) throw new Error("Response is not a valid iCal feed");
-
-  // Lazy-load node-ical so the bundle of API routes that DON'T touch
-  // calendar sync stays smaller.
-  const ical = await import("node-ical");
-  const parsed = ical.sync.parseICS(body);
 
   const horizonStart = new Date();
   const horizonEnd = new Date();
@@ -66,60 +59,108 @@ export async function fetchIcalBusySlots(icalUrl: string): Promise<BusySlot[]> {
 
   const slots: BusySlot[] = [];
 
-  for (const key of Object.keys(parsed)) {
-    const ev = parsed[key];
-    if (!ev || ev.type !== "VEVENT") continue;
-
-    // Wrap each event so a single corrupt entry (rrule library's been
-    // known to throw on weird DTSTART:VALUE=DATE / DURATION combinations
-    // — e.g. `s.BigInt is not a function` when bundled by Next.js)
-    // doesn't kill the whole sync. The few events that fail just don't
-    // count as busy; everything else is honoured.
+  // Outer try/catch as last-ditch defense. node-ical 0.26 has internals
+  // that throw `s.BigInt is not a function` during rrule expansion on
+  // certain Apple iCloud feeds when bundled by Next.js webpack — and
+  // sometimes the throw is async-tinted enough to slip past finer-grained
+  // try/catches. If the library blows up entirely, fall back to a regex
+  // parser that handles non-recurring VEVENTs (covers the vast majority
+  // of personal calendar entries — birthdays/holidays/single bookings).
+  try {
+    const ical = await import("node-ical");
+    let parsed: Record<string, unknown> = {};
     try {
-      // Skip "transparent" events — the iCal way of marking a calendar
-      // entry as informational/free (e.g. "FYI: dad's flight"). If the
-      // photographer marks the event Free, we honour that.
-      const transp = (ev as { transparency?: string }).transparency;
-      if (typeof transp === "string" && transp.toUpperCase() === "TRANSPARENT") continue;
+      parsed = ical.sync.parseICS(body) as Record<string, unknown>;
+    } catch (parseErr) {
+      console.warn("[calendar-sync] parseICS error, trying regex fallback:", parseErr);
+    }
 
-      const baseStart = ev.start instanceof Date ? ev.start : null;
-      const baseEnd = ev.end instanceof Date ? ev.end : null;
-      if (!baseStart || !baseEnd) continue;
+    for (const key of Object.keys(parsed)) {
+      try {
+        const ev = parsed[key] as {
+          type?: string;
+          transparency?: string;
+          start?: Date;
+          end?: Date;
+          uid?: string;
+          rrule?: { between: (start: Date, end: Date, inc: boolean) => Date[] };
+          exdate?: Record<string, Date>;
+        };
+        if (!ev || ev.type !== "VEVENT") continue;
+        const transp = ev.transparency;
+        if (typeof transp === "string" && transp.toUpperCase() === "TRANSPARENT") continue;
 
-      if (ev.rrule) {
-        // Recurring event — expand instances within our window. Dates
-        // returned by rrule.between() are anchored to the event's start;
-        // we recompute end by preserving the original duration.
-        const durationMs = baseEnd.getTime() - baseStart.getTime();
-        const between = ev.rrule.between(horizonStart, horizonEnd, true);
-        const exdates: Record<string, Date> | undefined = (ev as { exdate?: Record<string, Date> }).exdate;
-        for (const occStart of between) {
-          if (exdates) {
-            const stamp = occStart.toISOString().slice(0, 10);
-            if (Object.values(exdates).some((d) => d.toISOString().slice(0, 10) === stamp)) continue;
+        const baseStart = ev.start instanceof Date ? ev.start : null;
+        const baseEnd = ev.end instanceof Date ? ev.end : null;
+        if (!baseStart || !baseEnd) continue;
+
+        if (ev.rrule) {
+          const durationMs = baseEnd.getTime() - baseStart.getTime();
+          const between = ev.rrule.between(horizonStart, horizonEnd, true);
+          const exdates = ev.exdate;
+          for (const occStart of between) {
+            if (exdates) {
+              const stamp = occStart.toISOString().slice(0, 10);
+              if (Object.values(exdates).some((d) => d.toISOString().slice(0, 10) === stamp)) continue;
+            }
+            const occEnd = new Date(occStart.getTime() + durationMs);
+            slots.push({ starts_at: occStart, ends_at: occEnd, source_uid: `${ev.uid || key}@${occStart.toISOString()}` });
           }
-          const occEnd = new Date(occStart.getTime() + durationMs);
-          slots.push({
-            starts_at: occStart,
-            ends_at: occEnd,
-            source_uid: `${ev.uid || key}@${occStart.toISOString()}`,
-          });
+        } else {
+          if (baseEnd <= horizonStart || baseStart >= horizonEnd) continue;
+          slots.push({ starts_at: baseStart, ends_at: baseEnd, source_uid: ev.uid || key });
         }
-      } else {
-        if (baseEnd <= horizonStart || baseStart >= horizonEnd) continue;
-        slots.push({
-          starts_at: baseStart,
-          ends_at: baseEnd,
-          source_uid: ev.uid || key,
-        });
+      } catch (eventErr) {
+        console.warn("[calendar-sync] skipping bad iCal event:", key, eventErr);
       }
-    } catch (eventErr) {
-      console.warn("[calendar-sync] skipping bad iCal event:", ev.uid || key, eventErr);
+    }
+  } catch (libErr) {
+    console.warn("[calendar-sync] node-ical blew up entirely, using regex fallback:", libErr);
+  }
+
+  // Regex fallback for non-recurring events — picks up plain DTSTART /
+  // DTEND inside VEVENT blocks. Won't expand RRULE (without rrule lib
+  // we can't), but handles 90% of typical personal-calendar entries.
+  // Only kicks in when the library produced zero slots.
+  if (slots.length === 0) {
+    const veventRe = /BEGIN:VEVENT([\s\S]*?)END:VEVENT/g;
+    let match: RegExpExecArray | null;
+    let i = 0;
+    while ((match = veventRe.exec(body)) !== null) {
+      const block = match[1];
+      const dtStart = block.match(/DTSTART(?:;[^:]*)?:(\d{8}T\d{6}Z?|\d{8})/);
+      const dtEnd = block.match(/DTEND(?:;[^:]*)?:(\d{8}T\d{6}Z?|\d{8})/);
+      const transp = block.match(/TRANSP:(\w+)/);
+      const uid = block.match(/UID:([^\r\n]+)/);
+      const hasRrule = /RRULE:/.test(block);
+      if (hasRrule) continue; // can't expand without the lib
+      if (transp && transp[1].toUpperCase() === "TRANSPARENT") continue;
+      if (!dtStart || !dtEnd) continue;
+      const start = parseIcalDate(dtStart[1]);
+      const end = parseIcalDate(dtEnd[1]);
+      if (!start || !end) continue;
+      if (end <= horizonStart || start >= horizonEnd) continue;
+      slots.push({ starts_at: start, ends_at: end, source_uid: uid?.[1].trim() || `regex-${i++}` });
     }
   }
 
   return slots;
 }
+
+function parseIcalDate(s: string): Date | null {
+  // Handles "20260501T143000Z", "20260501T143000", "20260501" forms.
+  if (/^\d{8}$/.test(s)) {
+    const y = +s.slice(0, 4), m = +s.slice(4, 6), d = +s.slice(6, 8);
+    return new Date(Date.UTC(y, m - 1, d));
+  }
+  const m = s.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/);
+  if (!m) return null;
+  const [, y, mo, d, h, mi, se, z] = m;
+  if (z === "Z") return new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +se));
+  // Floating local time — assume Lisbon for our purposes.
+  return new Date(`${y}-${mo}-${d}T${h}:${mi}:${se}+00:00`);
+}
+
 
 /**
  * Refresh a Google access token using the stored refresh token. Persists
@@ -314,6 +355,10 @@ export async function syncConnection(connection: ConnectionRow): Promise<{ ok: t
       throw new Error(`unknown connection type: ${connection.type}`);
     }
   } catch (err) {
+    // Hard failure (network, auth, completely unparseable feed) — surface
+    // to the photographer. Soft per-event errors are caught inside the
+    // fetchers, so reaching this branch genuinely means the sync didn't
+    // produce anything we can use.
     const msg = err instanceof Error ? err.message : String(err);
     await queryOne(
       "UPDATE calendar_connections SET last_sync_error = $1, last_synced_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id",
