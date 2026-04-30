@@ -2671,7 +2671,7 @@
       "photographers": {
         "getStarted": {
           "question": "¿Cómo empiezo como fotógrafo?",
-          "answer": "Empezar es simple:\n\n1. **Cree su cuenta** — Regístrese y seleccione 'Hago fotos'\n2. **Complete su perfil** — Añada foto, imagen de portada, bio y slogan\n3. **Suba su portafolio** — Presente al menos 5-10 de sus mejores fotos\n4. **Cree paquetes** — Configure 2-3 paquetes a diferentes niveles de precio\n5. **Seleccione sus lugares** — Marque dónde está disponible para fotografiar\n6. **Conecte Stripe** — Requerido para recibir pagos\n\nUna vez que su perfil esté completo y aprobado por nuestro equipo, aparecerá en los resultados de búsqueda y podrá empezar a recibir reservas."
+          "answer": "Empezar es simple:\n\n1. **Cree su cuenta** — Regístrese y seleccione 'Hago fotos'\n2. **Complete su perfil** — Añada foto, imagen de portada, bio y slogan\n3. **Suba su portafolio** — Presente al menos 15-20 de sus mejores fotos\n4. **Cree paquetes** — Configure 2-3 paquetes a diferentes niveles de precio\n5. **Seleccione sus lugares** — Marque dónde está disponible para fotografiar\n6. **Conecte Stripe** — Requerido para recibir pagos\n\nUna vez que su perfil esté completo y aprobado por nuestro equipo, aparecerá en los resultados de búsqueda y podrá empezar a recibir reservas."
         },
         "subscriptionPlans": {
           "question": "¿Qué planes de suscripción están disponibles?",
@@ -3229,8 +3229,8 @@
       "uploadCoverImageTip": "Use su mejor foto en horizontal panorámica",
       "writeBioTagline": "Escribir su bio y slogan",
       "writeBioTaglineTip": "Mencione su experiencia, estilo y lo que le hace único",
-      "uploadPortfolioPhotos": "Subir al menos 5 fotos de portafolio",
-      "uploadPortfolioPhotosTip": "Suba al menos 10 fotos variadas mostrando su rango",
+      "uploadPortfolioPhotos": "Subir al menos 15 fotos de portafolio",
+      "uploadPortfolioPhotosTip": "Suba al menos 20 fotos variadas mostrando su rango",
       "createFirstPackage": "Crear su primer paquete",
       "createFirstPackageTip": "Empiece con 2-3 paquetes a diferentes precios",
       "selectLocations": "Seleccionar sus lugares",

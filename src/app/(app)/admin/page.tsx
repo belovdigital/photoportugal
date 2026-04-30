@@ -62,7 +62,7 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM users WHERE role = 'client' AND COALESCE(email_verified, FALSE) = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = TRUE AND COALESCE(u.email_verified, FALSE) = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.email_verified, FALSE) = TRUE AND NOT EXISTS (SELECT 1 FROM users uu WHERE uu.id = pp.user_id AND uu.is_banned = TRUE)"),
-    queryOne<{ count: string }>(`SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.email_verified, FALSE) = TRUE AND COALESCE(u.is_banned, FALSE) = FALSE AND (pp.revision_status IS NULL OR pp.revision_status = 'submitted') AND u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10 AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5 AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1 AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1 AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE AND u.phone IS NOT NULL`),
+    queryOne<{ count: string }>(`SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.email_verified, FALSE) = TRUE AND COALESCE(u.is_banned, FALSE) = FALSE AND (pp.revision_status IS NULL OR pp.revision_status = 'submitted') AND u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10 AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15 AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1 AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1 AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE AND u.phone IS NOT NULL`),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status != 'inquiry'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'pending'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'confirmed'"),
@@ -155,7 +155,7 @@ export default async function AdminPage() {
             (pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as stripe_ready,
             (u.phone IS NOT NULL) as has_phone, u.phone,
             (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-             AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
+             AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15
              AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
              AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
              AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE

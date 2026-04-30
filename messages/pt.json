@@ -2913,8 +2913,8 @@
       "uploadCoverImageTip": "Use a sua melhor foto panorâmica",
       "writeBioTagline": "Escreva a sua bio e tagline",
       "writeBioTaglineTip": "Mencione a sua experiência, estilo e o que o torna único",
-      "uploadPortfolioPhotos": "Carregar pelo menos 5 fotos de portfólio",
-      "uploadPortfolioPhotosTip": "Carregue pelo menos 10 fotos diversas que mostrem a sua versatilidade",
+      "uploadPortfolioPhotos": "Carregar pelo menos 15 fotos de portfólio",
+      "uploadPortfolioPhotosTip": "Carregue pelo menos 20 fotos diversas que mostrem a sua versatilidade",
       "createFirstPackage": "Criar o seu primeiro pacote",
       "createFirstPackageTip": "Comece com 2-3 pacotes em diferentes faixas de preço",
       "selectLocations": "Selecionar as suas localizações",
@@ -3008,7 +3008,7 @@
       "photographers": {
         "getStarted": {
           "question": "Como começo a trabalhar no Photo Portugal?",
-          "answer": "Começar é fácil e leva apenas alguns minutos! Siga estes 6 passos: 1) Crie a sua conta de fotógrafo gratuitamente; 2) Complete o seu perfil com foto, bio e tagline; 3) Carregue o seu portfólio com pelo menos 5 fotos de qualidade (recomendamos 10+); 4) Crie os seus pacotes com preços e descrições detalhadas; 5) Selecione as localizações onde está disponível para fotografar; 6) Ligue a sua conta Stripe para receber pagamentos. Assim que completar estes passos e o seu perfil for aprovado pela nossa equipa, ficará visível e poderá começar a receber reservas!"
+          "answer": "Começar é fácil e leva apenas alguns minutos! Siga estes 6 passos: 1) Crie a sua conta de fotógrafo gratuitamente; 2) Complete o seu perfil com foto, bio e tagline; 3) Carregue o seu portfólio com pelo menos 15 fotos de qualidade (recomendamos 20+); 4) Crie os seus pacotes com preços e descrições detalhadas; 5) Selecione as localizações onde está disponível para fotografar; 6) Ligue a sua conta Stripe para receber pagamentos. Assim que completar estes passos e o seu perfil for aprovado pela nossa equipa, ficará visível e poderá começar a receber reservas!"
         },
         "subscriptionPlans": {
           "question": "Que planos de subscrição estão disponíveis?",

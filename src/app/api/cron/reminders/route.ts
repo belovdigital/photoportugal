@@ -1227,7 +1227,7 @@ export async function GET(req: NextRequest) {
          AND u.avatar_url IS NOT NULL
          AND pp.cover_url IS NOT NULL
          AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-         AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
+         AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15
          AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
          AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
          AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
@@ -1255,7 +1255,7 @@ export async function GET(req: NextRequest) {
          AND pp.created_at < NOW() - INTERVAL '6 days'
          AND COALESCE(pp.checklist_deadline_emailed, FALSE) = FALSE
          AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
+           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15
            AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
            AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
            AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
@@ -1302,7 +1302,7 @@ export async function GET(req: NextRequest) {
          AND pp.created_at < NOW() - INTERVAL '7 days'
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 5
+           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15
            AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
            AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
            AND pp.stripe_account_id IS NOT NULL

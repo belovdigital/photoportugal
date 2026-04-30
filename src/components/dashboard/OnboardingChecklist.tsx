@@ -50,8 +50,8 @@ function getPhotographerSteps(
     {
       label: t("photographer.uploadPortfolioPhotos"),
       href: "/dashboard/portfolio",
-      complete: checks.portfolio >= 5,
-      detail: `${Math.min(checks.portfolio, 5)}/5`,
+      complete: checks.portfolio >= 15,
+      detail: `${Math.min(checks.portfolio, 15)}/15`,
       tip: t("photographer.uploadPortfolioPhotosTip"),
     },
     {

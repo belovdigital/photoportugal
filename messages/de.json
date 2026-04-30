@@ -2515,7 +2515,7 @@
       "photographers": {
         "getStarted": {
           "question": "Wie fange ich als Fotograf an?",
-          "answer": "Der Einstieg ist einfach:\n\n1. **Konto erstellen** – Registrieren Sie sich und wählen Sie „Ich mache Fotos\"\n2. **Profil vervollständigen** – Fügen Sie ein Foto, ein Titelbild, eine Bio und einen Slogan hinzu\n3. **Portfolio hochladen** – Zeigen Sie mindestens 5–10 Ihrer besten Aufnahmen\n4. **Pakete erstellen** – Richten Sie 2–3 Pakete zu unterschiedlichen Preisen ein\n5. **Standorte auswählen** – Markieren Sie, wo Sie für Shootings verfügbar sind\n6. **Stripe verbinden** – Erforderlich, um Zahlungen zu erhalten\n\nSobald Ihr Profil vollständig und von unserem Team freigegeben ist, erscheinen Sie in den Suchergebnissen und können Buchungen erhalten."
+          "answer": "Der Einstieg ist einfach:\n\n1. **Konto erstellen** – Registrieren Sie sich und wählen Sie „Ich mache Fotos\"\n2. **Profil vervollständigen** – Fügen Sie ein Foto, ein Titelbild, eine Bio und einen Slogan hinzu\n3. **Portfolio hochladen** – Zeigen Sie mindestens 15–20 Ihrer besten Aufnahmen\n4. **Pakete erstellen** – Richten Sie 2–3 Pakete zu unterschiedlichen Preisen ein\n5. **Standorte auswählen** – Markieren Sie, wo Sie für Shootings verfügbar sind\n6. **Stripe verbinden** – Erforderlich, um Zahlungen zu erhalten\n\nSobald Ihr Profil vollständig und von unserem Team freigegeben ist, erscheinen Sie in den Suchergebnissen und können Buchungen erhalten."
         },
         "subscriptionPlans": {
           "question": "Welche Abo-Tarife gibt es?",
@@ -3073,8 +3073,8 @@
       "uploadCoverImageTip": "Verwenden Sie Ihr bestes Querformat-Foto",
       "writeBioTagline": "Schreiben Sie Ihre Bio & Ihren Slogan",
       "writeBioTaglineTip": "Erwähnen Sie Ihre Erfahrung, Ihren Stil und das, was Sie einzigartig macht",
-      "uploadPortfolioPhotos": "Mindestens 5 Portfolio-Fotos hochladen",
-      "uploadPortfolioPhotosTip": "Laden Sie mindestens 10 vielfältige Fotos hoch, die Ihre Bandbreite zeigen",
+      "uploadPortfolioPhotos": "Mindestens 15 Portfolio-Fotos hochladen",
+      "uploadPortfolioPhotosTip": "Laden Sie mindestens 20 vielfältige Fotos hoch, die Ihre Bandbreite zeigen",
       "createFirstPackage": "Erstellen Sie Ihr erstes Paket",
       "createFirstPackageTip": "Beginnen Sie mit 2-3 Paketen zu unterschiedlichen Preisen",
       "selectLocations": "Wählen Sie Ihre Standorte",

@@ -2515,7 +2515,7 @@
       "photographers": {
         "getStarted": {
           "question": "How do I get started as a photographer?",
-          "answer": "Getting started is simple:\n\n1. **Create your account** — Sign up and select 'I take photos'\n2. **Complete your profile** — Add a photo, cover image, bio, and tagline\n3. **Upload your portfolio** — Showcase at least 5–10 of your best shots\n4. **Create packages** — Set up 2–3 packages at different price points\n5. **Select your locations** — Mark where you're available to shoot\n6. **Connect Stripe** — Required to receive payments\n\nOnce your profile is complete and approved by our team, you'll appear in search results and can start receiving bookings."
+          "answer": "Getting started is simple:\n\n1. **Create your account** — Sign up and select 'I take photos'\n2. **Complete your profile** — Add a photo, cover image, bio, and tagline\n3. **Upload your portfolio** — Showcase at least 15–20 of your best shots\n4. **Create packages** — Set up 2–3 packages at different price points\n5. **Select your locations** — Mark where you're available to shoot\n6. **Connect Stripe** — Required to receive payments\n\nOnce your profile is complete and approved by our team, you'll appear in search results and can start receiving bookings."
         },
         "subscriptionPlans": {
           "question": "What subscription plans are available?",
@@ -3073,8 +3073,8 @@
       "uploadCoverImageTip": "Use your best wide landscape shot",
       "writeBioTagline": "Write your bio & tagline",
       "writeBioTaglineTip": "Mention your experience, style, and what makes you unique",
-      "uploadPortfolioPhotos": "Upload at least 5 portfolio photos",
-      "uploadPortfolioPhotosTip": "Upload at least 10 diverse photos showing your range",
+      "uploadPortfolioPhotos": "Upload at least 15 portfolio photos",
+      "uploadPortfolioPhotosTip": "Upload at least 20 diverse photos showing your range",
       "createFirstPackage": "Create your first package",
       "createFirstPackageTip": "Start with 2-3 packages at different price points",
       "selectLocations": "Select your locations",

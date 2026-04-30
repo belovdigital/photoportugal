@@ -2671,7 +2671,7 @@
       "photographers": {
         "getStarted": {
           "question": "Comment démarrer en tant que photographe ?",
-          "answer": "Démarrer est simple :\n\n1. **Créez votre compte** — Inscrivez-vous et sélectionnez 'Je prends des photos'\n2. **Complétez votre profil** — Ajoutez une photo, image de couverture, bio et slogan\n3. **Téléversez votre portfolio** — Présentez au moins 5-10 de vos meilleures photos\n4. **Créez des forfaits** — Configurez 2-3 forfaits à différents niveaux de prix\n5. **Sélectionnez vos lieux** — Marquez où vous êtes disponible pour photographier\n6. **Connectez Stripe** — Requis pour recevoir les paiements\n\nUne fois votre profil complet et approuvé par notre équipe, vous apparaîtrez dans les résultats de recherche et pourrez commencer à recevoir des réservations."
+          "answer": "Démarrer est simple :\n\n1. **Créez votre compte** — Inscrivez-vous et sélectionnez 'Je prends des photos'\n2. **Complétez votre profil** — Ajoutez une photo, image de couverture, bio et slogan\n3. **Téléversez votre portfolio** — Présentez au moins 15-20 de vos meilleures photos\n4. **Créez des forfaits** — Configurez 2-3 forfaits à différents niveaux de prix\n5. **Sélectionnez vos lieux** — Marquez où vous êtes disponible pour photographier\n6. **Connectez Stripe** — Requis pour recevoir les paiements\n\nUne fois votre profil complet et approuvé par notre équipe, vous apparaîtrez dans les résultats de recherche et pourrez commencer à recevoir des réservations."
         },
         "subscriptionPlans": {
           "question": "Quels plans d'abonnement sont disponibles ?",
@@ -3229,8 +3229,8 @@
       "uploadCoverImageTip": "Utilisez votre meilleure photo paysage large",
       "writeBioTagline": "Écrire votre bio et slogan",
       "writeBioTaglineTip": "Mentionnez votre expérience, style et ce qui vous rend unique",
-      "uploadPortfolioPhotos": "Téléverser au moins 5 photos de portfolio",
-      "uploadPortfolioPhotosTip": "Téléversez au moins 10 photos variées montrant votre éventail",
+      "uploadPortfolioPhotos": "Téléverser au moins 15 photos de portfolio",
+      "uploadPortfolioPhotosTip": "Téléversez au moins 20 photos variées montrant votre éventail",
       "createFirstPackage": "Créer votre premier forfait",
       "createFirstPackageTip": "Commencez avec 2-3 forfaits à différents prix",
       "selectLocations": "Sélectionner vos lieux",

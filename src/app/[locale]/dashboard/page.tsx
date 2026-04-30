@@ -189,7 +189,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
   };
 
   const allStepsComplete = onboardingChecks.avatar && onboardingChecks.cover && onboardingChecks.bio
-    && onboardingChecks.portfolio >= 5 && onboardingChecks.packages >= 1
+    && onboardingChecks.portfolio >= 15 && onboardingChecks.packages >= 1
     && onboardingChecks.locations >= 1 && onboardingChecks.stripeConnected && onboardingChecks.phone;
 
   return (
