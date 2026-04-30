@@ -634,7 +634,12 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 <span className="text-xl font-bold text-gray-900">&euro;{Math.round(Number(selectedPkg.price) * (1 + SERVICE_FEE_RATE))}</span>
               </div>
             </div>
-            <p className="mt-3 text-xs text-gray-400">{t("form.paymentNote")}</p>
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2.5">
+              <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <p className="text-sm font-medium text-emerald-900">{t("form.paymentNote")}</p>
+            </div>
           </div>
         )}
 
@@ -702,7 +707,12 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                   <span className="text-sm font-semibold text-gray-900">{t("summary.total")}</span>
                   <span className="text-xl font-bold text-gray-900">€{Math.round(Number(selectedPkg.price) * (1 + SERVICE_FEE_RATE))}</span>
                 </div>
-                <p className="mt-2 text-[11px] text-gray-400">{t("form.paymentNote")}</p>
+                <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-2">
+                  <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <p className="text-[12px] font-medium text-emerald-900 leading-snug">{t("form.paymentNote")}</p>
+                </div>
               </>
             ) : (
               <p className="mt-4 text-xs text-gray-400 italic">
