@@ -1366,7 +1366,9 @@
       "groupSize": "Group size",
       "occasion": "Occasion",
       "messageTo": "Message to photographer",
+      "messageToNamed": "Message to {name}",
       "messagePlaceholder": "Any special requests, preferred spots, or questions...",
+      "messagePlaceholderNamed": "Tell {name} what you're hoping for — special spots, mood, anything they should know…",
       "submit": "Send Booking Request",
       "submitting": "Sending request...",
       "paymentNote": "Payment is processed securely after the photographer confirms your booking."
@@ -1404,7 +1406,11 @@
     },
     "summary": {
       "serviceFee": "Service fee ({rate}%)",
-      "total": "Total"
+      "total": "Total",
+      "pickPackagePrompt": "Pick a package above to see your total."
+    },
+    "socialProof": {
+      "recentBookings": "{count, plural, one {# person booked {name} in the last 30 days} other {# people booked {name} in the last 30 days}}"
     }
   },
   "chooseBookingType": {

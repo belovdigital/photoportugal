@@ -50,6 +50,9 @@ export async function GET(
       review_count: number;
       session_count: number;
       min_lead_time_hours: number;
+      last_seen_at: string | null;
+      avg_response_minutes: number | null;
+      recent_bookings_30d: number;
     }>(
       `SELECT p.id, p.slug, u.name, ${tagCol} as tagline, ${bioCol} as bio,
               u.avatar_url, p.cover_url, p.cover_position_y,
@@ -57,7 +60,16 @@ export async function GET(
               COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
               p.rating, p.review_count, p.session_count,
-              COALESCE(p.min_lead_time_hours, 0) as min_lead_time_hours
+              COALESCE(p.min_lead_time_hours, 0) as min_lead_time_hours,
+              u.last_seen_at, p.avg_response_minutes,
+              -- Social-proof signal on the booking page: how many paid
+              -- bookings landed in the last 30 days. Paid only so the
+              -- count reflects real demand, not abandoned requests.
+              (SELECT COUNT(*)::int FROM bookings b
+                WHERE b.photographer_id = p.id
+                  AND b.payment_status = 'paid'
+                  AND b.created_at >= NOW() - INTERVAL '30 days'
+              ) as recent_bookings_30d
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.slug = $1 AND p.is_approved = TRUE`,
@@ -96,12 +108,23 @@ export async function GET(
       duration_minutes: number; num_photos: number; price: number;
       is_popular: boolean; delivery_days: number;
       is_custom: boolean;
+      preview_url: string | null;
     }>(
       `SELECT id, ${pkgNameCol} as name, ${pkgDescCol} as description,
               duration_minutes, num_photos, price, is_popular,
               COALESCE(delivery_days, 7) as delivery_days,
               COALESCE(features, '{}') as features,
-              (custom_for_user_id IS NOT NULL) as is_custom
+              (custom_for_user_id IS NOT NULL) as is_custom,
+              -- Per-package thumbnail for the booking-page selector.
+              -- A pseudo-random portfolio photo per package (hash-shuffled
+              -- so two packages from the same photographer don't share
+              -- the same first picture but order is stable per package).
+              (SELECT pi.url FROM portfolio_items pi
+                WHERE pi.photographer_id = packages.photographer_id
+                  AND pi.type = 'photo'
+                ORDER BY hashtext(packages.id::text || pi.url),
+                         pi.sort_order NULLS LAST, pi.created_at
+                LIMIT 1) as preview_url
        FROM packages
        WHERE photographer_id = $1
          AND (is_public = TRUE OR custom_for_user_id = $2::uuid)

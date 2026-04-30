@@ -10,6 +10,9 @@ import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
 import DatePicker, { UnavailableRange } from "@/components/ui/DatePicker";
 import { formatDuration } from "@/lib/package-pricing";
 import { AuthModal } from "@/components/ui/AuthModal";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
+import { normalizeName } from "@/lib/format-name";
 
 interface Package {
   id: string;
@@ -19,6 +22,7 @@ interface Package {
   num_photos: number;
   price: number;
   is_popular: boolean;
+  preview_url?: string | null;
 }
 
 interface BookReview {
@@ -44,6 +48,10 @@ interface Photographer {
    *  Used to compute the earliest selectable date in the picker.
    *  0 = no restriction (default). */
   min_lead_time_hours?: number;
+  last_seen_at?: string | null;
+  avg_response_minutes?: number | null;
+  recent_bookings_30d?: number;
+  is_verified?: boolean;
 }
 
 export default function BookPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -271,27 +279,88 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
     <div className="mx-auto max-w-5xl px-4 py-6 sm:py-12">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr,320px]">
         <div className="min-w-0">
-      <h1 className="font-display text-3xl font-bold text-gray-900">
-        {t("title", { photographer: photographer.name })}
-      </h1>
-      <p className="mt-2 text-gray-500">{t("subtitle")}</p>
+      {/* Photographer header — avatar + name + rating + activity badge.
+          Replaces the cold "Book {name}" h1. The avatar makes the
+          page feel personal and reassures the visitor they're booking
+          a real human. */}
+      <div className="flex items-start gap-4">
+        <Link href={`/photographers/${photographer.slug}`} className="shrink-0">
+          <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-primary-100 text-lg font-bold text-primary-600 shadow-md">
+            {photographer.avatar_url ? (
+              <OptimizedImage
+                src={photographer.avatar_url}
+                alt={normalizeName(photographer.name)}
+                width={200}
+                className="h-full w-full"
+              />
+            ) : (
+              normalizeName(photographer.name).charAt(0)
+            )}
+          </div>
+        </Link>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+            {t("title", { photographer: normalizeName(photographer.name) })}
+          </h1>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
+            {(photographer.review_count || 0) > 0 && (
+              <span className="flex items-center gap-1">
+                <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span className="font-semibold text-gray-900">{Number(photographer.rating || 5).toFixed(1)}</span>
+                <span className="text-gray-400">· {photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")}</span>
+              </span>
+            )}
+            <ActiveBadge lastSeenAt={photographer.last_seen_at ?? null} />
+            <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes ?? null} compact />
+          </div>
+          <p className="mt-2 text-sm text-gray-500">{t("subtitle")}</p>
+        </div>
+      </div>
 
+      {/* Social proof — recent demand. Only show when there's a real
+          number behind it (≥3 paid bookings in last 30 days) so we never
+          mislead with "1 person booked this month" on quiet profiles. */}
+      {(photographer.recent_bookings_30d ?? 0) >= 3 && (
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-800">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+          </span>
+          {t("socialProof.recentBookings", { count: photographer.recent_bookings_30d ?? 0, name: normalizeName(photographer.name) })}
+        </div>
+      )}
+
+      {/* Trust box — green reassurance. Real icons, not flat ✓ marks. */}
       <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
         <p className="text-sm font-semibold text-emerald-900">
           {t("trust.heading")}
         </p>
-        <ul className="mt-2 space-y-1 text-[13px] text-emerald-800">
-          <li className="flex items-start gap-1.5">
-            <span className="mt-0.5">✓</span><span>{t("trust.freeRequest")}</span>
+        <ul className="mt-2.5 grid grid-cols-1 gap-1.5 text-[13px] text-emerald-800 sm:grid-cols-2">
+          <li className="flex items-start gap-2">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{t("trust.freeRequest")}</span>
           </li>
-          <li className="flex items-start gap-1.5">
-            <span className="mt-0.5">✓</span><span>{t("trust.payAfterConfirm")}</span>
+          <li className="flex items-start gap-2">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{t("trust.payAfterConfirm")}</span>
           </li>
-          <li className="flex items-start gap-1.5">
-            <span className="mt-0.5">✓</span><span>{t("trust.cancelAnytime")}</span>
+          <li className="flex items-start gap-2">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12a9 9 0 0118 0m-9-9v3m0 12v3m9-9h-3M6 12H3" />
+            </svg>
+            <span>{t("trust.cancelAnytime")}</span>
           </li>
-          <li className="flex items-start gap-1.5">
-            <span className="mt-0.5">✓</span><span>{t("trust.stripeSecure")}</span>
+          <li className="flex items-start gap-2">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span>{t("trust.stripeSecure")}</span>
           </li>
         </ul>
       </div>
@@ -312,7 +381,11 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       />
 
       <form ref={formRef} onSubmit={handleSubmit} className="mt-8 space-y-6">
-        {/* Package selection */}
+        {/* Package selection — visual cards with a real portfolio thumbnail
+            on the left, package details in the middle, price on the right.
+            Beats a stack of plain radios for choosing between photographers
+            who all bring different visual styles. "Most Popular" lives as
+            an amber pill on the corner of the highlighted option. */}
         {photographer.packages.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">{t("form.selectPackage")}</label>
@@ -320,37 +393,53 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               {photographer.packages.map((pkg) => (
                 <label
                   key={pkg.id}
-                  className={`flex items-center justify-between rounded-xl border-2 p-4 transition cursor-pointer ${
+                  className={`relative flex items-stretch overflow-hidden rounded-xl border-2 transition cursor-pointer ${
                     selectedPackage === pkg.id
                       ? "border-primary-500 bg-primary-50"
-                      : "border-gray-200 hover:border-gray-300"
+                      : "border-gray-200 hover:border-gray-300 bg-white"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="package"
-                      value={pkg.id}
-                      checked={selectedPackage === pkg.id}
-                      onChange={(e) => {
-                        setSelectedPackage(e.target.value);
-                        const url = new URL(window.location.href);
-                        url.searchParams.set("package", e.target.value);
-                        window.history.replaceState(null, "", url.toString());
-                      }}
-                      className="h-4 w-4 text-primary-600"
-                    />
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {pkg.name}
-                        {pkg.is_popular && <span className="ml-2 text-xs text-primary-600">{tc("mostPopular")}</span>}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {formatDuration(pkg.duration_minutes, locale)} &middot; {pkg.num_photos} {tc("photos")}
-                      </p>
+                  {pkg.preview_url && (
+                    <div className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28 bg-warm-100">
+                      <OptimizedImage
+                        src={pkg.preview_url}
+                        alt={pkg.name}
+                        width={400}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
+                  )}
+                  <div className="flex flex-1 items-center justify-between gap-3 px-4 py-3.5">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <input
+                        type="radio"
+                        name="package"
+                        value={pkg.id}
+                        checked={selectedPackage === pkg.id}
+                        onChange={(e) => {
+                          setSelectedPackage(e.target.value);
+                          const url = new URL(window.location.href);
+                          url.searchParams.set("package", e.target.value);
+                          window.history.replaceState(null, "", url.toString());
+                        }}
+                        className="h-4 w-4 shrink-0 text-primary-600"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-gray-900">{pkg.name}</p>
+                          {pkg.is_popular && (
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                              {tc("mostPopular")}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-sm text-gray-500">
+                          {formatDuration(pkg.duration_minutes, locale)} &middot; {pkg.num_photos} {tc("photos")}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-lg font-bold text-gray-900 shrink-0">&euro;{Math.round(Number(pkg.price))}</span>
                   </div>
-                  <span className="text-lg font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</span>
                 </label>
               ))}
             </div>
@@ -514,19 +603,22 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
 
         {/* Message */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">{t("form.messageTo")}</label>
+          <label className="block text-sm font-medium text-gray-700">
+            {t("form.messageToNamed", { name: normalizeName(photographer.name) })}
+          </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            placeholder={t("form.messagePlaceholder")}
+            placeholder={t("form.messagePlaceholderNamed", { name: normalizeName(photographer.name) })}
             className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
           />
         </div>
 
-        {/* Summary */}
+        {/* Summary — visible on mobile only; desktop has the sticky
+            summary card in the right sidebar instead. */}
         {selectedPkg && (
-          <div className="rounded-xl border border-warm-200 bg-white p-5">
+          <div className="rounded-xl border border-warm-200 bg-white p-5 lg:hidden">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">{selectedPkg.name}</span>
@@ -556,9 +648,71 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       </form>
         </div>
 
-        {/* Reviews sidebar */}
-        {sidebarReviews.length > 0 && (
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+        {/* Sidebar — sticky booking summary on top, reviews below.
+            On desktop the visitor always sees who they're booking and
+            what it costs while filling the form. Hidden on mobile (the
+            inline form summary above the submit button covers it). */}
+        <aside className="hidden lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-24 lg:self-start">
+          {/* Booking summary card */}
+          <div className="rounded-2xl border border-warm-200 bg-white p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white bg-primary-100 text-sm font-bold text-primary-600 shadow-sm">
+                {photographer.avatar_url ? (
+                  <OptimizedImage
+                    src={photographer.avatar_url}
+                    alt={normalizeName(photographer.name)}
+                    width={120}
+                    className="h-full w-full"
+                  />
+                ) : (
+                  normalizeName(photographer.name).charAt(0)
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">{normalizeName(photographer.name)}</p>
+                {(photographer.review_count || 0) > 0 && (
+                  <p className="text-xs text-gray-500">
+                    ★ {Number(photographer.rating || 5).toFixed(1)} · {photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {selectedPkg ? (
+              <>
+                <div className="mt-4 rounded-lg bg-warm-50 p-3 space-y-1">
+                  <p className="text-sm font-semibold text-gray-900">{selectedPkg.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {formatDuration(selectedPkg.duration_minutes, locale)}
+                    {selectedPkg.num_photos > 0 && ` · ${selectedPkg.num_photos} ${tc("photos")}`}
+                  </p>
+                </div>
+                <div className="mt-3 space-y-1.5 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">{selectedPkg.name}</span>
+                    <span className="text-gray-900">€{Math.round(Number(selectedPkg.price))}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">{t("summary.serviceFee", { rate: SERVICE_FEE_RATE * 100 })}</span>
+                    <span className="text-gray-900">€{Math.round(Number(selectedPkg.price) * SERVICE_FEE_RATE)}</span>
+                  </div>
+                </div>
+                <hr className="my-3 border-warm-200" />
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-semibold text-gray-900">{t("summary.total")}</span>
+                  <span className="text-xl font-bold text-gray-900">€{Math.round(Number(selectedPkg.price) * (1 + SERVICE_FEE_RATE))}</span>
+                </div>
+                <p className="mt-2 text-[11px] text-gray-400">{t("form.paymentNote")}</p>
+              </>
+            ) : (
+              <p className="mt-4 text-xs text-gray-400 italic">
+                {t("summary.pickPackagePrompt")}
+              </p>
+            )}
+          </div>
+
+          {/* Reviews block */}
+          {sidebarReviews.length > 0 && (
             <div className="rounded-2xl border border-warm-200 bg-white p-5">
               <div className="flex items-center gap-2">
                 <div className="flex gap-0.5">
@@ -596,8 +750,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 {tc("seeAllReviews")} →
               </Link>
             </div>
-          </aside>
-        )}
+          )}
+        </aside>
       </div>
     </div>
   );

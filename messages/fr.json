@@ -421,7 +421,9 @@
       "groupSize": "Taille du groupe",
       "occasion": "Occasion",
       "messageTo": "Message au photographe",
+      "messageToNamed": "Message pour {name}",
       "messagePlaceholder": "Demandes spéciales, lieux préférés, questions...",
+      "messagePlaceholderNamed": "Dites à {name} ce que vous avez en tête — lieux particuliers, ambiance, ce qu'il/elle doit savoir…",
       "submit": "Envoyer la demande",
       "submitting": "Envoi en cours...",
       "paymentNote": "Le paiement est traité de façon sécurisée après que le photographe confirme votre réservation."
@@ -459,7 +461,11 @@
     },
     "summary": {
       "serviceFee": "Frais de service ({rate}%)",
-      "total": "Total"
+      "total": "Total",
+      "pickPackagePrompt": "Choisissez un forfait ci-dessus pour voir le total."
+    },
+    "socialProof": {
+      "recentBookings": "{count, plural, one {# personne a réservé {name} ces 30 derniers jours} other {# personnes ont réservé {name} ces 30 derniers jours}}"
     }
   },
   "chooseBookingType": {

@@ -1366,7 +1366,9 @@
       "groupSize": "Gruppengröße",
       "occasion": "Anlass",
       "messageTo": "Nachricht an den Fotografen",
+      "messageToNamed": "Nachricht an {name}",
       "messagePlaceholder": "Besondere Wünsche, bevorzugte Plätze oder Fragen...",
+      "messagePlaceholderNamed": "Sagen Sie {name}, was Sie sich vorstellen — besondere Orte, Stimmung, alles Wichtige…",
       "submit": "Buchungsanfrage senden",
       "submitting": "Anfrage wird gesendet...",
       "paymentNote": "Die Zahlung wird sicher abgewickelt, nachdem der Fotograf Ihre Buchung bestätigt hat."
@@ -1404,7 +1406,11 @@
     },
     "summary": {
       "serviceFee": "Servicegebühr ({rate} %)",
-      "total": "Gesamt"
+      "total": "Gesamt",
+      "pickPackagePrompt": "Wählen Sie oben ein Paket, um den Gesamtbetrag zu sehen."
+    },
+    "socialProof": {
+      "recentBookings": "{count, plural, one {# Person hat {name} in den letzten 30 Tagen gebucht} other {# Personen haben {name} in den letzten 30 Tagen gebucht}}"
     }
   },
   "chooseBookingType": {
