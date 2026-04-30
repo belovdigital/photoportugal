@@ -220,7 +220,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographer" : "photographers"} ready to shoot in ${loc}`,
     packagesHeading: (occ: string, loc: string) => `${occ} packages in ${loc}`,
-    packagesSub: "Pick a package, book it directly. Each one includes a photographer, duration and edited photos — no hidden fees.",
+    packagesSub: "Pick a package, book it directly. Prices below cover the photographer's time and edited photos. A 10% platform service fee is added at checkout.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "photos",
@@ -249,7 +249,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo pronto" : "fotógrafos prontos"} para fotografar em ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Pacotes de ${occ.toLowerCase()} em ${loc}`,
-    packagesSub: "Escolha um pacote, reserve diretamente. Cada um inclui fotógrafo, duração e fotos editadas — sem taxas escondidas.",
+    packagesSub: "Escolha um pacote, reserve diretamente. Os preços cobrem o tempo do fotógrafo e as fotos editadas. Uma taxa de serviço de 10% é adicionada no pagamento.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "fotos",
@@ -278,7 +278,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "Fotograf bereit" : "Fotografen bereit"} für Shootings in ${loc}`,
     packagesHeading: (occ: string, loc: string) => `${occ}-Pakete in ${loc}`,
-    packagesSub: "Paket wählen, direkt buchen. Jedes enthält Fotograf, Dauer und bearbeitete Fotos — keine versteckten Kosten.",
+    packagesSub: "Paket wählen, direkt buchen. Die Preise unten decken den Fotografen und die bearbeiteten Fotos ab. Beim Checkout wird eine 10% Servicegebühr hinzugefügt.",
     packagePopular: "Beliebt",
     packageMinutesAbbr: "Min.",
     packagePhotos: "Fotos",
@@ -307,7 +307,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo listo" : "fotógrafos listos"} para sesiones en ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Paquetes de ${occ.toLowerCase()} en ${loc}`,
-    packagesSub: "Elija un paquete, resérvelo directamente. Cada uno incluye fotógrafo, duración y fotos editadas — sin tarifas ocultas.",
+    packagesSub: "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Se añade una tarifa de servicio del 10% al pagar.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "fotos",
@@ -336,7 +336,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographe prêt" : "photographes prêts"} pour des séances à ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Forfaits ${occ.toLowerCase()} à ${loc}`,
-    packagesSub: "Choisissez un forfait, réservez directement. Chacun inclut un photographe, la durée et les photos retouchées — sans frais cachés.",
+    packagesSub: "Choisissez un forfait, réservez directement. Les prix couvrent le photographe et les photos retouchées. Des frais de service de 10% sont ajoutés au paiement.",
     packagePopular: "Populaire",
     packageMinutesAbbr: "min",
     packagePhotos: "photos",

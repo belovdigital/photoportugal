@@ -88,7 +88,7 @@ export async function PackageCardWithCarousel({
 
       <Link
         href={`/book/${pkg.photographer_slug}?package=${pkg.id}`}
-        className="flex flex-col p-4 pt-7"
+        className="flex flex-1 flex-col p-4 pt-7"
       >
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-gray-900">
