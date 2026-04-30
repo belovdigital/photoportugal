@@ -1083,42 +1083,54 @@ export function PhotographerDashboardClient({
               </div>
             )}
 
-            {/* Filters — only show if there are tagged photos */}
+            {/* Filters — locations on row 1, shoot types on row 2. Easier to
+                scan and combine (e.g. "Lisbon" + "Family") when the two
+                axes don't share a single wrapped line. */}
             {(usedLocations.length > 0 || usedShootTypes.length > 0) && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => setPortfolioFilter({ location: "", shootType: "" })}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                    !portfolioFilter.location && !portfolioFilter.shootType
-                      ? "bg-primary-600 text-white" : "bg-warm-100 text-gray-500 hover:bg-warm-200"
-                  }`}
-                >
-                  {t("allPhotos", { count: localItems.length })}
-                </button>
-                {usedLocations.map((slug) => (
+              <div className="mt-4 space-y-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   <button
-                    key={slug}
-                    onClick={() => setPortfolioFilter((f) => ({ ...f, location: f.location === slug ? "" : slug }))}
+                    onClick={() => setPortfolioFilter({ location: "", shootType: "" })}
                     className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                      portfolioFilter.location === slug
-                        ? "bg-primary-600 text-white" : "bg-warm-100 text-gray-600 hover:bg-warm-200"
+                      !portfolioFilter.location && !portfolioFilter.shootType
+                        ? "bg-primary-600 text-white" : "bg-warm-100 text-gray-500 hover:bg-warm-200"
                     }`}
                   >
-                    {allLocations.find((l) => l.slug === slug)?.name || slug}
+                    {t("allPhotos", { count: localItems.length })}
                   </button>
-                ))}
-                {usedShootTypes.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setPortfolioFilter((f) => ({ ...f, shootType: f.shootType === type ? "" : type }))}
-                    className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                      portfolioFilter.shootType === type
-                        ? "bg-accent-600 text-white" : "bg-warm-100 text-gray-600 hover:bg-warm-200"
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
+                  {[...usedLocations].sort((a, b) => {
+                    const an = allLocations.find((l) => l.slug === a)?.name || a;
+                    const bn = allLocations.find((l) => l.slug === b)?.name || b;
+                    return an.localeCompare(bn);
+                  }).map((slug) => (
+                    <button
+                      key={slug}
+                      onClick={() => setPortfolioFilter((f) => ({ ...f, location: f.location === slug ? "" : slug }))}
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                        portfolioFilter.location === slug
+                          ? "bg-primary-600 text-white" : "bg-warm-100 text-gray-600 hover:bg-warm-200"
+                      }`}
+                    >
+                      {allLocations.find((l) => l.slug === slug)?.name || slug}
+                    </button>
+                  ))}
+                </div>
+                {usedShootTypes.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {[...usedShootTypes].sort((a, b) => a.localeCompare(b)).map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setPortfolioFilter((f) => ({ ...f, shootType: f.shootType === type ? "" : type }))}
+                        className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                          portfolioFilter.shootType === type
+                            ? "bg-accent-600 text-white" : "bg-warm-100 text-gray-600 hover:bg-warm-200"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
