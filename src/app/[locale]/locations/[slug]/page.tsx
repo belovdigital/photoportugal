@@ -586,14 +586,29 @@ export default async function LocationPage({
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
                   {t("popularTypes", { location: location.name })}
                 </h3>
+                {/* Pills now route into the /locations/[slug]/[occasion]
+                    combo pages — e.g. "Couples" on /lisbon goes to a real
+                    "Couples Photographer in Lisbon" page, not just a
+                    decorative tag. The mapping below converts the
+                    translation key (camelCase) to the combo URL slug
+                    (lowercase, hyphenated) since the two namespaces drift. */}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {(["couples", "family", "soloPortrait", "engagement", "proposal", "honeymoon", "friendsTrip", "anniversary"] as const).map((type) => (
-                    <span
-                      key={type}
-                      className="rounded-full bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700"
+                  {([
+                    { key: "couples", combo: "couples" },
+                    { key: "family", combo: "family" },
+                    { key: "soloPortrait", combo: "solo" },
+                    { key: "engagement", combo: "engagement" },
+                    { key: "proposal", combo: "proposal" },
+                    { key: "honeymoon", combo: "honeymoon" },
+                    { key: "elopement", combo: "elopement" },
+                  ] as const).map(({ key, combo }) => (
+                    <Link
+                      key={key}
+                      href={`/locations/${location.slug}/${combo}`}
+                      className="rounded-full bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700 transition hover:bg-primary-100 hover:text-primary-800"
                     >
-                      {t(`shootTypes.${type}`)}
-                    </span>
+                      {t(`shootTypes.${key}`)}
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -723,10 +738,21 @@ export default async function LocationPage({
             }`}>
               {services.map((service) => {
                 const imgId = SHOOT_TYPE_IMAGES[service.shootTypeSlug];
+                // Route into the /locations/[slug]/[occasion] combo page
+                // when one exists for this shoot type — gives the visitor
+                // an editorial-rich landing for the (city × type) intent
+                // instead of dropping them straight into search results.
+                const COMBO_OCCASIONS = new Set([
+                  "couples", "family", "proposal", "engagement",
+                  "honeymoon", "solo", "elopement",
+                ]);
+                const href = COMBO_OCCASIONS.has(service.shootTypeSlug)
+                  ? `/locations/${slug}/${service.shootTypeSlug}`
+                  : `/photographers?location=${slug}&shoot=${service.shootTypeSlug}`;
                 return (
                   <Link
                     key={service.shootTypeSlug}
-                    href={`/photographers?location=${slug}&shoot=${service.shootTypeSlug}`}
+                    href={href}
                     className="group relative overflow-hidden rounded-2xl bg-gray-900 shadow-lg transition hover:shadow-xl"
                   >
                     <div className="aspect-[4/3] w-full overflow-hidden">
