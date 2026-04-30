@@ -40,13 +40,15 @@ export async function GET(
       rating: number;
       review_count: number;
       session_count: number;
+      min_lead_time_hours: number;
     }>(
       `SELECT p.id, p.slug, u.name, ${tagCol} as tagline, ${bioCol} as bio,
               u.avatar_url, p.cover_url, p.cover_position_y,
               p.languages, p.shoot_types,
               COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
-              p.rating, p.review_count, p.session_count
+              p.rating, p.review_count, p.session_count,
+              COALESCE(p.min_lead_time_hours, 0) as min_lead_time_hours
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.slug = $1 AND p.is_approved = TRUE`,

@@ -57,6 +57,11 @@ CREATE TABLE photographer_profiles (
   cover_position_y INTEGER DEFAULT 50,
   languages TEXT[] DEFAULT '{}',
   shoot_types TEXT[] DEFAULT '{}',
+  -- Minimum advance notice (in hours) the photographer requires before a
+  -- booking starts. The booking flow's date picker disables dates earlier
+  -- than today + min_lead_time_hours and the API rejects creation. 0 = no
+  -- restriction (default). Photographers set this in dashboard/settings.
+  min_lead_time_hours INTEGER NOT NULL DEFAULT 0,
   hourly_rate INTEGER, -- in EUR (whole euros)
   currency VARCHAR(3) DEFAULT 'EUR',
   experience_years INTEGER DEFAULT 0,
@@ -195,6 +200,12 @@ CREATE TABLE bookings (
   delivery_accepted BOOLEAN DEFAULT FALSE,
   delivery_accepted_at TIMESTAMPTZ,
   payout_transferred BOOLEAN DEFAULT FALSE,
+  -- Cancellation metadata. Set by /api/bookings/[id]/cancel (photographer
+  -- or client side, with required `reason`) and by the auto-cancel cron
+  -- job after 48h of unpaid confirmed booking (cancelled_by='system').
+  cancelled_at TIMESTAMPTZ,
+  cancelled_by VARCHAR(20), -- 'photographer' | 'client' | 'system'
+  cancelled_reason TEXT,
   reminder_sent BOOLEAN DEFAULT FALSE,
   payment_reminder_sent BOOLEAN DEFAULT FALSE,
   shoot_reminder_sent BOOLEAN DEFAULT FALSE,
@@ -255,11 +266,14 @@ CREATE TABLE review_photos (
 );
 
 -- ============================================================
--- MESSAGES (between client and photographer per booking)
+-- MESSAGES (chat between client and photographer)
+-- Chats live INDEPENDENTLY of booking lifecycle: when a booking is
+-- deleted, its messages stay (booking_id flips to NULL via SET NULL).
+-- A chat can also exist before any booking. Never re-introduce CASCADE.
 -- ============================================================
 CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
   sender_id UUID NOT NULL REFERENCES users(id),
   text TEXT,
   media_url TEXT,

@@ -84,6 +84,9 @@ export default async function BookingsPage() {
     delivery_accepted: boolean;
     payment_url: string | null;
     updated_at: string;
+    cancelled_at: string | null;
+    cancelled_by: string | null;
+    cancelled_reason: string | null;
   }[] = [];
 
   try {
@@ -95,11 +98,17 @@ export default async function BookingsPage() {
                   p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
                   COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at,
+                  b.cancelled_at, b.cancelled_by, b.cancelled_reason,
                   (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            LEFT JOIN packages p ON p.id = b.package_id
+           -- Hide cancelled bookings older than 30 days from the
+           -- main list (still visible in admin / DB). cancelled_at
+           -- is set whenever status flips to 'cancelled'; legacy
+           -- rows without it stay visible until backfill.
            WHERE b.photographer_id = $1 AND b.status != 'inquiry'
+             AND NOT (b.status = 'cancelled' AND b.cancelled_at IS NOT NULL AND b.cancelled_at < NOW() - INTERVAL '30 days')
            ORDER BY b.created_at DESC`,
           [profile.id]
         );
@@ -109,12 +118,14 @@ export default async function BookingsPage() {
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
-                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at
+                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at,
+                b.cancelled_at, b.cancelled_by, b.cancelled_reason
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users u ON u.id = pp.user_id
          LEFT JOIN packages p ON p.id = b.package_id
          WHERE b.client_id = $1 AND b.status != 'inquiry'
+           AND NOT (b.status = 'cancelled' AND b.cancelled_at IS NOT NULL AND b.cancelled_at < NOW() - INTERVAL '30 days')
          ORDER BY b.created_at DESC`,
         [userId]
       );
@@ -191,6 +202,19 @@ export default async function BookingsPage() {
                 </div>
               </div>
 
+              {/* Cancellation reason banner — shows who cancelled and
+                  why. Reason text is whatever the canceller typed (or
+                  the auto-cancel system message). Renders only for
+                  cancelled bookings. */}
+              {booking.status === "cancelled" && booking.cancelled_reason && (
+                <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    {t("cancellationReasonLabel", { by: booking.cancelled_by || "system" })}
+                  </p>
+                  <p className="mt-1 text-gray-700 italic">&ldquo;{booking.cancelled_reason}&rdquo;</p>
+                </div>
+              )}
+
               {booking.status !== "cancelled" && (
                 <BookingJourney
                   status={booking.status}
@@ -202,7 +226,7 @@ export default async function BookingsPage() {
                   action={
                     <div className="flex flex-wrap gap-2">
                       {isPhotographer && (booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
-                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} />
+                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} paymentStatus={booking.payment_status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} />
                       )}
                       {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
                         <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />

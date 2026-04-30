@@ -40,6 +40,10 @@ interface Photographer {
   locations: { slug: string; name: string }[];
   packages: Package[];
   reviews?: BookReview[];
+  /** Photographer's minimum advance-notice requirement, in hours.
+   *  Used to compute the earliest selectable date in the picker.
+   *  0 = no restriction (default). */
+  min_lead_time_hours?: number;
 }
 
 export default function BookPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -389,11 +393,28 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 label={t("form.preferredDate")}
                 value={shootDate}
                 onChange={setShootDate}
-                min={new Date().toISOString().split("T")[0]}
+                // Earliest selectable date = today + photographer's notice
+                // period (hours rounded up to whole days). 0h → today.
+                // Backend re-validates the same window on submit.
+                min={(() => {
+                  const hours = photographer?.min_lead_time_hours || 0;
+                  const days = Math.ceil(hours / 24);
+                  const earliest = new Date();
+                  earliest.setHours(0, 0, 0, 0);
+                  earliest.setDate(earliest.getDate() + days);
+                  return earliest.toISOString().split("T")[0];
+                })()}
                 required={!flexibleDate}
                 unavailableRanges={unavailableRanges}
                 placeholder={t("form.selectDate")}
               />
+              {(photographer?.min_lead_time_hours || 0) > 0 && (
+                <p className="-mt-2 sm:col-span-2 text-xs text-amber-600">
+                  {t("form.noticeRequiredHint", {
+                    days: Math.ceil((photographer?.min_lead_time_hours || 0) / 24),
+                  })}
+                </p>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700">{t("form.preferredTime")}</label>
                 <select

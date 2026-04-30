@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
+import { CancelWithReasonButton } from "./CancelWithReasonButton";
 
 export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, deliveryAccepted, shootDate }: { bookingId: string; currentStatus: string; paymentStatus?: string | null; deliveryAccepted?: boolean; shootDate?: string | null }) {
   const router = useRouter();
@@ -44,10 +45,9 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
             className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
             {t("convertToBooking")}
           </button>
-          <button onClick={() => updateStatus("cancelled")} disabled={updating}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
-            {t("decline")}
-          </button>
+          {/* Decline an inquiry — captures reason which goes to the
+              other side via email + chat + admin Telegram. */}
+          <CancelWithReasonButton bookingId={bookingId} variant="decline" />
         </div>
         <p className="mt-1.5 text-[11px] text-gray-400 max-w-sm">{t("acceptInquiryHint")}</p>
         {errorBanner}
@@ -62,10 +62,8 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
           className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50">
           {updating ? t("confirming") : t("confirm")}
         </button>
-        <button onClick={() => updateStatus("cancelled")} disabled={updating}
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50">
-          {t("decline")}
-        </button>
+        {/* Photographer declining a pending booking — same reason flow. */}
+        <CancelWithReasonButton bookingId={bookingId} variant="decline" />
         {errorBanner}
       </>
     );
@@ -74,16 +72,25 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
   if (currentStatus === "confirmed") {
     const shootDateStr = shootDate ? (shootDate.includes("T") ? shootDate.split("T")[0] : shootDate) : null;
     const isFutureDate = shootDateStr && new Date(shootDateStr + "T23:59:59") > new Date();
+    const isUnpaid = paymentStatus !== "paid";
     return (
       <div>
-        <button
-          onClick={() => updateStatus("completed")}
-          disabled={updating || !!isFutureDate}
-          title={isFutureDate ? t("markSessionDoneWait", { date: new Date(shootDateStr! + "T12:00:00").toLocaleDateString(dateLocale, { month: "short", day: "numeric" }) }) : undefined}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${isFutureDate ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
-        >
-          {t("markSessionDone")}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => updateStatus("completed")}
+            disabled={updating || !!isFutureDate}
+            title={isFutureDate ? t("markSessionDoneWait", { date: new Date(shootDateStr! + "T12:00:00").toLocaleDateString(dateLocale, { month: "short", day: "numeric" }) }) : undefined}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${isFutureDate ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+          >
+            {t("markSessionDone")}
+          </button>
+          {/* Photographer cancellation of a confirmed-but-unpaid booking
+              — captures reason, notifies client + admins. Hidden once
+              the client has paid (refund flow has its own UX). */}
+          {isUnpaid && (
+            <CancelWithReasonButton bookingId={bookingId} variant="cancel" />
+          )}
+        </div>
         <p className="mt-1.5 text-[11px] text-gray-400 max-w-sm">
           {isFutureDate
             ? t("markSessionDoneWait", { date: new Date(shootDateStr! + "T12:00:00").toLocaleDateString(dateLocale, { weekday: "long", month: "long", day: "numeric" }) })
@@ -138,15 +145,25 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
 
   if (currentStatus === "cancel-only") {
     const isPaid = paymentStatus === "paid";
-    const confirmMessage = isPaid
-      ? t("cancelRefundConfirm")
-      : t("cancelConfirm");
+    // Paid → existing refund path (PATCH with status=cancelled handles
+    // the refund flow downstream). Unpaid → new reason-required cancel
+    // endpoint so the other party + admins see why.
+    if (isPaid) {
+      const confirmMessage = t("cancelRefundConfirm");
+      return (
+        <>
+          <button onClick={async () => { const ok = await confirm("Cancel Booking", confirmMessage, { danger: true, confirmLabel: "Cancel Booking" }); if (ok) updateStatus("cancelled"); }} disabled={updating}
+            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">
+            {updating ? t("cancelling") : t("cancelAndRefund")}
+          </button>
+          {errorBanner}
+          {modal}
+        </>
+      );
+    }
     return (
       <>
-        <button onClick={async () => { const ok = await confirm("Cancel Booking", confirmMessage, { danger: true, confirmLabel: "Cancel Booking" }); if (ok) updateStatus("cancelled"); }} disabled={updating}
-          className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">
-          {updating ? t("cancelling") : isPaid ? t("cancelAndRefund") : t("cancelBooking")}
-        </button>
+        <CancelWithReasonButton bookingId={bookingId} variant="cancel" />
         {errorBanner}
         {modal}
       </>

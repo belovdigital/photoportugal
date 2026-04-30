@@ -222,8 +222,15 @@ export async function GET(req: NextRequest) {
 
     for (const booking of staleUnpaid) {
       try {
+        // Mark cancelled with cancelled_by='system' so the dashboard /
+        // chat / Telegram alerts can distinguish auto-cancel from a
+        // manual photographer/client cancel.
         await queryOne(
-          "UPDATE bookings SET status = 'cancelled' WHERE id = $1 RETURNING id",
+          `UPDATE bookings
+           SET status = 'cancelled', cancelled_at = NOW(),
+               cancelled_by = 'system',
+               cancelled_reason = 'Auto-cancelled — payment not received within 48 hours'
+           WHERE id = $1 RETURNING id`,
           [booking.id]
         );
 

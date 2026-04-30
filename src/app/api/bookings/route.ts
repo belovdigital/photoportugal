@@ -20,9 +20,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
     }
 
-    // Verify photographer exists and is approved
-    const photographerCheck = await queryOne<{ is_approved: boolean; user_id: string }>(
-      "SELECT is_approved, user_id FROM photographer_profiles WHERE id = $1",
+    // Verify photographer exists and is approved. Pull min_lead_time_hours
+    // here too so we can validate the shoot date in a single roundtrip.
+    const photographerCheck = await queryOne<{
+      is_approved: boolean; user_id: string; min_lead_time_hours: number;
+    }>(
+      "SELECT is_approved, user_id, COALESCE(min_lead_time_hours, 0) as min_lead_time_hours FROM photographer_profiles WHERE id = $1",
       [photographer_id]
     );
     if (!photographerCheck) {
@@ -37,8 +40,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "You cannot book yourself" }, { status: 400 });
     }
 
-    // Check availability for non-flexible bookings
+    // Notice-period validation. Photographers can require N hours of
+    // advance notice before a shoot (set in dashboard/settings). 0 = no
+    // restriction. Compared against shoot_date at midnight UTC, which is
+    // good enough for a "X hours ahead" gate (a few hours of TZ skew
+    // doesn't change a 24/48/120h window).
     const isFlexible = shoot_date === "flexible";
+    const minLeadHours = photographerCheck.min_lead_time_hours || 0;
+    if (!isFlexible && shoot_date && minLeadHours > 0) {
+      const shootStart = new Date(`${shoot_date}T00:00:00Z`).getTime();
+      const earliestAllowed = Date.now() + minLeadHours * 3600 * 1000;
+      if (shootStart < earliestAllowed) {
+        const days = Math.round(minLeadHours / 24);
+        const niceWindow = minLeadHours < 24
+          ? `${minLeadHours} hours`
+          : days === 1 ? "1 day" : `${days} days`;
+        return NextResponse.json({
+          error: `This photographer requires at least ${niceWindow} of advance notice. Please pick a later date.`,
+          code: "min_lead_time",
+          minLeadTimeHours: minLeadHours,
+        }, { status: 400 });
+      }
+    }
+
+    // Check availability for non-flexible bookings
     if (!isFlexible && shoot_date) {
       const conflict = await queryOne<{ id: string }>(
         `SELECT id FROM photographer_unavailability
