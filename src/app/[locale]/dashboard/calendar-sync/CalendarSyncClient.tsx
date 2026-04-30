@@ -199,46 +199,69 @@ export function CalendarSyncClient() {
         </a>
         <button
           onClick={() => setShowAdd(!showAdd)}
-          className="rounded-lg border border-warm-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-warm-50"
+          className="rounded-lg border border-warm-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-warm-50 inline-flex items-center gap-2"
         >
-          {showAdd ? "Cancel" : "+ Add iCal URL"}
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+          {showAdd ? "Cancel" : "Apple Calendar"}
         </button>
       </div>
 
-      {/* Add iCal form */}
+      {/* Apple Calendar add form */}
       {showAdd && (
-        <form onSubmit={addIcal} className="rounded-xl border border-warm-200 bg-warm-50 p-4 space-y-3">
+        <form onSubmit={addIcal} className="rounded-xl border border-warm-200 bg-warm-50 p-5 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
-              iCal URL (or webcal://)
+            <h3 className="text-sm font-bold text-gray-900">Connect Apple Calendar</h3>
+            <p className="mt-1 text-sm text-gray-600">
+              Apple doesn&apos;t offer one-click OAuth like Google does, so we connect via a public
+              calendar link. Takes about a minute.
+            </p>
+          </div>
+
+          <div className="rounded-lg bg-white border border-warm-200 p-4">
+            <p className="text-sm font-semibold text-gray-900 mb-2">How to get your Apple Calendar link</p>
+            <ol className="space-y-1.5 text-sm text-gray-700 list-decimal list-inside">
+              <li>Open <strong>Calendar</strong> app on your Mac (or iPhone Settings → Calendar).</li>
+              <li>In the sidebar, hover over the calendar you want to share → click the <strong>circle/info icon</strong> next to its name.</li>
+              <li>Tick <strong>Public Calendar</strong>.</li>
+              <li>Click <strong>Share Link…</strong> and copy the URL (starts with <code className="px-1 bg-warm-100 rounded">webcal://</code>).</li>
+              <li>Paste it below and click <strong>Connect</strong>.</li>
+            </ol>
+            <p className="mt-3 text-xs text-gray-500">
+              Don&apos;t worry — we only read busy time ranges, never event titles or details.
+              The &quot;public&quot; setting just means the URL itself, not the calendar contents being public elsewhere.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Calendar URL
             </label>
             <input
               type="text"
               required
-              placeholder="https://calendar.google.com/calendar/ical/.../basic.ics  or  webcal://p..."
+              placeholder="webcal://p123-caldav.icloud.com/published/2/..."
               value={icalUrl}
               onChange={(e) => setIcalUrl(e.target.value)}
-              className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm font-mono"
+              className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2.5 text-sm font-mono"
             />
-            <p className="mt-1 text-[11px] text-gray-500">
-              Apple Calendar: Calendar → right-click your calendar → Share → Public → copy URL.<br />
-              Google Calendar: Settings → your calendar → Integrate → Secret address in iCal format.<br />
-              Outlook: Settings → Calendar → Shared calendars → Publish → ICS link.
-            </p>
           </div>
+
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
-              Display name <span className="text-gray-400 font-normal">(optional)</span>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Name <span className="text-gray-400 font-normal text-xs">(optional)</span>
             </label>
             <input
               type="text"
-              placeholder="My Apple Calendar"
+              placeholder="My Calendar"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2.5 text-sm"
               maxLength={80}
             />
           </div>
+
           <div className="flex gap-2">
             <button
               type="submit"
