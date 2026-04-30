@@ -122,10 +122,18 @@ CREATE TABLE packages (
   is_popular BOOLEAN DEFAULT FALSE,
   delivery_days INTEGER DEFAULT 7,
   sort_order INTEGER DEFAULT 0,
+  -- Custom one-off proposal targeted at a specific client. When set, the
+  -- package is hidden from public listings (is_public=FALSE always) and
+  -- only visible on /book/[slug] when the viewer's user_id matches.
+  -- Only the matching client can create a booking against this package
+  -- (enforced in /api/bookings). Sent to chat as a normal BOOKING_CARD
+  -- message + a small "Custom" badge in the card UI.
+  custom_for_user_id UUID REFERENCES users(id),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_packages_photographer ON packages(photographer_id);
+CREATE INDEX idx_packages_custom_for ON packages(custom_for_user_id) WHERE custom_for_user_id IS NOT NULL;
 
 -- ============================================================
 -- PORTFOLIO ITEMS (photos & videos)

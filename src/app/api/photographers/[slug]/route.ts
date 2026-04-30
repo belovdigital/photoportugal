@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
+import { auth } from "@/lib/auth";
 
 const LOCALES = new Set(["en", "pt", "de", "es", "fr"]);
 
@@ -74,14 +75,30 @@ export async function GET(
       [profile.id]
     );
 
-    // Packages (locale-aware name + description with fallback to original)
+    // Packages (locale-aware name + description with fallback to original).
+    // Includes any custom one-off proposal targeted at the current viewer
+    // (custom_for_user_id = viewer's user_id) on top of the public catalog,
+    // so the viewer-only "Custom proposal" they got in chat can be selected
+    // and booked from /book/[slug] like any other package. Other clients
+    // never see it.
+    const session = await auth().catch(() => null);
+    const viewerUserId = (session?.user as { id?: string } | undefined)?.id || null;
     const packages = await query<{
       id: string; name: string; description: string | null;
       duration_minutes: number; num_photos: number; price: number;
       is_popular: boolean; delivery_days: number;
+      is_custom: boolean;
     }>(
-      `SELECT id, ${pkgNameCol} as name, ${pkgDescCol} as description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price`,
-      [profile.id]
+      `SELECT id, ${pkgNameCol} as name, ${pkgDescCol} as description,
+              duration_minutes, num_photos, price, is_popular,
+              COALESCE(delivery_days, 7) as delivery_days,
+              COALESCE(features, '{}') as features,
+              (custom_for_user_id IS NOT NULL) as is_custom
+       FROM packages
+       WHERE photographer_id = $1
+         AND (is_public = TRUE OR custom_for_user_id = $2::uuid)
+       ORDER BY (custom_for_user_id IS NOT NULL) DESC, sort_order, price`,
+      [profile.id, viewerUserId]
     );
 
     // Portfolio

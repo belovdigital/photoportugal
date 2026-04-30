@@ -75,14 +75,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Get package price if selected
+    // Get package price if selected. Also enforce one-off proposal
+    // targeting: a custom package (custom_for_user_id IS NOT NULL) can
+    // only be booked by the user it was sent to. This stops a different
+    // client from booking another client's negotiated price by guessing
+    // the package_id.
     let totalPrice = null;
     if (package_id) {
-      const pkg = await queryOne<{ price: number }>(
-        "SELECT price FROM packages WHERE id = $1 AND photographer_id = $2",
+      const pkg = await queryOne<{ price: number; custom_for_user_id: string | null }>(
+        "SELECT price, custom_for_user_id FROM packages WHERE id = $1 AND photographer_id = $2",
         [package_id, photographer_id]
       );
-      if (pkg) totalPrice = pkg.price;
+      if (pkg) {
+        if (pkg.custom_for_user_id && pkg.custom_for_user_id !== userId) {
+          return NextResponse.json({
+            error: "This proposal isn't available to you.",
+            code: "custom_proposal_mismatch",
+          }, { status: 403 });
+        }
+        totalPrice = pkg.price;
+      }
     }
 
     const booking = await queryOne<{ id: string }>(

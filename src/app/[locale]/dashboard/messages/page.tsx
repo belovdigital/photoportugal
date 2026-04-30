@@ -20,7 +20,8 @@ function formatLastMessagePreview(text: string | null): string | null {
   if (text.startsWith("BOOKING_CARD:")) {
     try {
       const card = JSON.parse(text.slice("BOOKING_CARD:".length));
-      return `📦 ${card.name} — €${Math.round(card.price)}`;
+      const icon = card.is_custom ? "✨" : "📦";
+      return `${icon} ${card.name} — €${Math.round(card.price)}`;
     } catch {
       return "📦 Package offer";
     }
@@ -88,6 +89,20 @@ function MessagesContent() {
   const [showPackagePicker, setShowPackagePicker] = useState(false);
   const [shareablePackages, setShareablePackages] = useState<{ id: string; name: string; price: number; duration_minutes: number; num_photos: number }[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
+  // Custom-proposal sub-flow inside the package picker. When the
+  // photographer clicks "+ Create custom proposal" the picker swaps to a
+  // mini form (name/price/duration/photos/description). On submit it hits
+  // PUT /api/messages/share-package which both creates the package row
+  // (private, custom_for_user_id=client) and shares the chat card in one
+  // call. Sender flow stays single-pop-up; no extra dashboard step.
+  const [customMode, setCustomMode] = useState(false);
+  const [customName, setCustomName] = useState("");
+  const [customPrice, setCustomPrice] = useState("");
+  const [customDuration, setCustomDuration] = useState("");
+  const [customPhotos, setCustomPhotos] = useState("");
+  const [customDescription, setCustomDescription] = useState("");
+  const [customSaving, setCustomSaving] = useState(false);
+  const [customError, setCustomError] = useState("");
 
   // Lightbox keyboard nav
   useEffect(() => {
@@ -515,6 +530,69 @@ function MessagesContent() {
     setLoadingPackages(false);
   }
 
+  function resetCustomForm() {
+    setCustomMode(false);
+    setCustomName("");
+    setCustomPrice("");
+    setCustomDuration("");
+    setCustomPhotos("");
+    setCustomDescription("");
+    setCustomError("");
+    setCustomSaving(false);
+  }
+
+  async function submitCustomProposal() {
+    if (!activeChat) return;
+    setCustomError("");
+    const name = customName.trim();
+    const price = Number(customPrice);
+    const duration = Number(customDuration);
+    const photos = Number(customPhotos);
+    if (name.length < 3) return setCustomError(t("customProposalNameTooShort"));
+    if (!Number.isFinite(price) || price < 1) return setCustomError(t("customProposalPriceRequired"));
+    if (!Number.isFinite(duration) || duration < 5) return setCustomError(t("customProposalDurationRequired"));
+    if (!Number.isFinite(photos) || photos < 1) return setCustomError(t("customProposalPhotosRequired"));
+    setCustomSaving(true);
+    try {
+      const res = await fetch("/api/messages/share-package", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_id: activeChat,
+          name,
+          price,
+          duration_minutes: duration,
+          num_photos: photos,
+          description: customDescription.trim() || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCustomError(data.error || "Failed to send");
+        setCustomSaving(false);
+        return;
+      }
+      if (data?.message) {
+        setMessages((prev) => prev.some((m) => m.id === data.message.id) ? prev : [...prev, {
+          ...data.message,
+          sender_name: session?.user?.name || "",
+          sender_avatar: session?.user?.image || null,
+        }]);
+        setConversations((prev) => prev.map((c) =>
+          c.booking_id === activeChat
+            ? { ...c, last_message: data.message.text, last_message_at: data.message.created_at }
+            : c
+        ));
+        setTimeout(() => scrollToBottom(true), 10);
+      }
+      resetCustomForm();
+      setShowPackagePicker(false);
+    } catch {
+      setCustomError("Failed to send");
+      setCustomSaving(false);
+    }
+  }
+
   async function sharePackage(packageId: string) {
     if (!activeChat) return;
     setShowPackagePicker(false);
@@ -798,11 +876,32 @@ function MessagesContent() {
                           try {
                             const card = JSON.parse(msg.text.slice("BOOKING_CARD:".length));
                             const durationLabel = card.duration_minutes >= 60 ? `${card.duration_minutes / 60}h` : `${card.duration_minutes} min`;
+                            // is_custom payload signals a one-off proposal
+                            // (photographer created it on the fly for this
+                            // client). Card gets an amber "Custom" badge so
+                            // both sides know it's not a public package.
+                            const isCustom = !!card.is_custom;
                             return (
                               <div key={msg.id} className="flex justify-center my-3">
-                                <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 to-white p-5 shadow-sm">
-                                  <p className="text-xs font-medium text-primary-500 uppercase tracking-wide">{t("packageLabel")}</p>
+                                <div className={`max-w-[90%] sm:max-w-[70%] rounded-2xl border p-5 shadow-sm ${
+                                  isCustom
+                                    ? "border-amber-300 bg-gradient-to-br from-amber-50 to-white"
+                                    : "border-primary-200 bg-gradient-to-br from-primary-50 to-white"
+                                }`}>
+                                  <div className="flex items-center gap-2">
+                                    <p className={`text-xs font-medium uppercase tracking-wide ${isCustom ? "text-amber-700" : "text-primary-500"}`}>
+                                      {isCustom ? t("customProposalBadge") : t("packageLabel")}
+                                    </p>
+                                    {isCustom && (
+                                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                                        ✨
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className="mt-1 text-base font-bold text-gray-900">{card.name}</p>
+                                  {isCustom && card.description && (
+                                    <p className="mt-1 text-xs text-gray-500 italic">&ldquo;{card.description}&rdquo;</p>
+                                  )}
                                   <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
                                     <span>{durationLabel}</span>
                                     <span className="text-gray-300">&middot;</span>
@@ -811,7 +910,9 @@ function MessagesContent() {
                                   <p className="mt-2 text-xl font-bold text-gray-900">&euro;{Math.round(card.price)}</p>
                                   {card.slug && activeConvo?.other_role === "photographer" && (
                                     <a href={`/book/${card.slug}?package=${card.package_id}`}
-                                      className="mt-3 inline-block rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-700 transition">
+                                      className={`mt-3 inline-block rounded-xl px-6 py-2.5 text-sm font-bold text-white transition ${
+                                        isCustom ? "bg-amber-600 hover:bg-amber-700" : "bg-primary-600 hover:bg-primary-700"
+                                      }`}>
                                       {t("bookNow")}
                                     </a>
                                   )}
@@ -1022,29 +1123,131 @@ function MessagesContent() {
                     )}
                     {showPackagePicker && (
                       <>
-                        <div className="fixed inset-0 z-40" onClick={() => setShowPackagePicker(false)} />
-                        <div className="absolute bottom-12 left-0 z-50 w-72 rounded-xl border border-warm-200 bg-white shadow-xl">
-                          <div className="px-4 py-3 border-b border-warm-100">
-                            <p className="text-sm font-semibold text-gray-900">{t("shareAPackage")}</p>
-                          </div>
-                          <div className="max-h-60 overflow-y-auto py-1">
-                            {loadingPackages ? (
-                              <div className="flex justify-center py-6"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /></div>
-                            ) : shareablePackages.length === 0 ? (
-                              <p className="px-4 py-4 text-sm text-gray-400 text-center">{t("noPackagesYet")}</p>
-                            ) : (
-                              shareablePackages.map((pkg) => (
-                                <button key={pkg.id} type="button" onClick={() => sharePackage(pkg.id)}
-                                  className="w-full px-4 py-2.5 text-left hover:bg-warm-50 transition flex items-center justify-between">
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-900">{pkg.name}</p>
-                                    <p className="text-xs text-gray-400">{pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes} min`} &middot; {pkg.num_photos} photos</p>
-                                  </div>
-                                  <span className="text-sm font-bold text-gray-700">&euro;{Math.round(pkg.price)}</span>
-                                </button>
-                              ))
+                        <div className="fixed inset-0 z-40" onClick={() => { setShowPackagePicker(false); resetCustomForm(); }} />
+                        <div className="absolute bottom-12 left-0 z-50 w-80 rounded-xl border border-warm-200 bg-white shadow-xl">
+                          <div className="flex items-center justify-between px-4 py-3 border-b border-warm-100">
+                            <p className="text-sm font-semibold text-gray-900">
+                              {customMode ? t("customProposalTitle") : t("shareAPackage")}
+                            </p>
+                            {customMode && (
+                              <button
+                                type="button"
+                                onClick={() => resetCustomForm()}
+                                className="text-xs font-medium text-gray-500 hover:text-gray-700"
+                              >
+                                {t("customProposalBack")}
+                              </button>
                             )}
                           </div>
+
+                          {/* Custom-proposal mini form. Photographer picks
+                              "+ Create custom proposal" → swaps to this
+                              view → fills 4 required fields + optional
+                              description → submit shares the card in one
+                              shot via PUT /api/messages/share-package. */}
+                          {customMode ? (
+                            <div className="px-4 py-3 space-y-2">
+                              <div>
+                                <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">{t("customProposalName")}</label>
+                                <input
+                                  type="text"
+                                  value={customName}
+                                  onChange={(e) => setCustomName(e.target.value)}
+                                  maxLength={80}
+                                  placeholder={t("customProposalNamePlaceholder")}
+                                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                                  autoFocus
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">€</label>
+                                  <input
+                                    type="number" min={1} max={99999}
+                                    value={customPrice}
+                                    onChange={(e) => setCustomPrice(e.target.value)}
+                                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">{t("customProposalMin")}</label>
+                                  <input
+                                    type="number" min={5} max={1440} step={5}
+                                    value={customDuration}
+                                    onChange={(e) => setCustomDuration(e.target.value)}
+                                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">{t("customProposalPhotos")}</label>
+                                  <input
+                                    type="number" min={1} max={9999}
+                                    value={customPhotos}
+                                    onChange={(e) => setCustomPhotos(e.target.value)}
+                                    className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-500">{t("customProposalDescription")}</label>
+                                <textarea
+                                  value={customDescription}
+                                  onChange={(e) => setCustomDescription(e.target.value)}
+                                  maxLength={500}
+                                  rows={2}
+                                  placeholder={t("customProposalDescriptionPlaceholder")}
+                                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                                />
+                              </div>
+                              {customError && (
+                                <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{customError}</p>
+                              )}
+                              <button
+                                type="button"
+                                onClick={submitCustomProposal}
+                                disabled={customSaving}
+                                className="mt-1 w-full rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
+                              >
+                                {customSaving ? t("customProposalSending") : t("customProposalSend")}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="max-h-72 overflow-y-auto py-1">
+                              {/* "+ Create custom proposal" sits FIRST so
+                                  it's the natural top option when the
+                                  photographer wants something off-catalog. */}
+                              <button
+                                type="button"
+                                onClick={() => setCustomMode(true)}
+                                className="w-full px-4 py-2.5 text-left hover:bg-primary-50 transition flex items-center gap-2 border-b border-warm-100"
+                              >
+                                <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <div>
+                                  <p className="text-sm font-semibold text-primary-700">{t("customProposalCreate")}</p>
+                                  <p className="text-xs text-gray-400">{t("customProposalSubtitle")}</p>
+                                </div>
+                              </button>
+
+                              {loadingPackages ? (
+                                <div className="flex justify-center py-6"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" /></div>
+                              ) : shareablePackages.length === 0 ? (
+                                <p className="px-4 py-4 text-sm text-gray-400 text-center">{t("noPackagesYet")}</p>
+                              ) : (
+                                shareablePackages.map((pkg) => (
+                                  <button key={pkg.id} type="button" onClick={() => sharePackage(pkg.id)}
+                                    className="w-full px-4 py-2.5 text-left hover:bg-warm-50 transition flex items-center justify-between">
+                                    <div>
+                                      <p className="text-sm font-medium text-gray-900">{pkg.name}</p>
+                                      <p className="text-xs text-gray-400">{pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes} min`} &middot; {pkg.num_photos} photos</p>
+                                    </div>
+                                    <span className="text-sm font-bold text-gray-700">&euro;{Math.round(pkg.price)}</span>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
                         </div>
                       </>
                     )}
