@@ -1066,9 +1066,9 @@ export function PhotographerDashboardClient({
                       </button>
                       <button
                         onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }}
-                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                        className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
                       >
-                        {t("cancel")}
+                        {t("done")}
                       </button>
                     </>
                   ) : (
@@ -1595,16 +1595,21 @@ function SortablePhotoCard({
           </>
         )}
       </div>
-      {/* Tags — not draggable */}
+      {/* Tags — not draggable. Empty fields get a red border so untagged
+          photos stand out at a glance — easy to forget otherwise. */}
       <div className="flex flex-col gap-1.5 p-2.5">
         <select
           value={item.location_slug || ""}
           onChange={(e) => onUpdateTag(item.id, "location_slug", e.target.value)}
           onPointerDown={(e) => e.stopPropagation()}
-          className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+          className={`w-full rounded border px-2 py-1.5 text-xs outline-none focus:border-primary-400 ${
+            item.location_slug
+              ? "border-warm-200 text-gray-600"
+              : "border-red-300 bg-red-50 text-red-600"
+          }`}
         >
           <option value="">{t("locationTag")}</option>
-          {allLocations.map((l) => (
+          {[...allLocations].sort((a, b) => a.name.localeCompare(b.name)).map((l) => (
             <option key={l.slug} value={l.slug}>{l.name}</option>
           ))}
         </select>
@@ -1612,11 +1617,15 @@ function SortablePhotoCard({
           value={item.shoot_type || ""}
           onChange={(e) => onUpdateTag(item.id, "shoot_type", e.target.value)}
           onPointerDown={(e) => e.stopPropagation()}
-          className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+          className={`w-full rounded border px-2 py-1.5 text-xs outline-none focus:border-primary-400 ${
+            item.shoot_type
+              ? "border-warm-200 text-gray-600"
+              : "border-red-300 bg-red-50 text-red-600"
+          }`}
         >
           <option value="">{t("shootTypeTag")}</option>
-          {SHOOT_TYPES.map((t) => (
-            <option key={t} value={t}>{t}</option>
+          {[...SHOOT_TYPES].sort((a, b) => a.localeCompare(b)).map((s) => (
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
       </div>

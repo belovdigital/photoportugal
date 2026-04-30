@@ -2223,6 +2223,7 @@
     "selectAll": "Select All",
     "deleteCount": "Delete ({count})",
     "cancel": "Cancel",
+    "done": "Done",
     "select": "Select",
     "allPhotos": "All ({count})",
     "noPortfolioPhotos": "No portfolio photos yet",

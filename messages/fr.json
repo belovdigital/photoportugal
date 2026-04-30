@@ -2379,6 +2379,7 @@
     "selectAll": "Tout sélectionner",
     "deleteCount": "Supprimer ({count})",
     "cancel": "Annuler",
+    "done": "Terminé",
     "select": "Sélectionner",
     "allPhotos": "Toutes ({count})",
     "noPortfolioPhotos": "Pas encore de photos de portfolio",
