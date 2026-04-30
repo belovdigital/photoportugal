@@ -188,10 +188,11 @@ export async function listGoogleCalendars(connection: ConnectionRow): Promise<{ 
  * Query Google's freeBusy endpoint for the photographer's selected
  * calendars and return aggregated busy slots within our sync window.
  *
- * `freeBusy` accepts up to 50 calendars per call and returns merged busy
- * ranges per calendar — Google takes care of recurring expansion and
- * cancellation/exception handling for us, unlike iCal where we do that
- * locally with rrule.
+ * Google caps a single freeBusy call at ~3 months between timeMin and
+ * timeMax (`timeRangeTooLong` past that), so we chunk the 12-month sync
+ * window into 30-day segments and merge results client-side. Each chunk
+ * is one HTTP call; sequential to keep load on Google low — 12 calls
+ * total finish in a few seconds.
  *
  * If the photographer ticked "primary", we resolve it to the actual
  * primary calendar id since `freeBusy` won't accept the literal string
@@ -217,39 +218,56 @@ async function fetchGoogleBusySlots(connection: ConnectionRow): Promise<BusySlot
   const horizonEnd = new Date();
   horizonEnd.setMonth(horizonEnd.getMonth() + SYNC_WINDOW_MONTHS);
 
-  const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      timeMin: horizonStart.toISOString(),
-      timeMax: horizonEnd.toISOString(),
-      items: resolvedIds.map((id) => ({ id })),
-    }),
-  });
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`freeBusy failed: ${res.status} ${txt.slice(0, 200)}`);
+  const CHUNK_DAYS = 30;
+  const chunks: { start: Date; end: Date }[] = [];
+  for (let cur = new Date(horizonStart); cur < horizonEnd; ) {
+    const next = new Date(cur.getTime() + CHUNK_DAYS * 24 * 60 * 60 * 1000);
+    const chunkEnd = next > horizonEnd ? horizonEnd : next;
+    chunks.push({ start: new Date(cur), end: new Date(chunkEnd) });
+    cur = next;
   }
-  const data = await res.json() as {
-    calendars: Record<string, { busy?: { start: string; end: string }[]; errors?: { reason: string }[] }>;
-  };
 
   const slots: BusySlot[] = [];
-  for (const calId of resolvedIds) {
-    const cal = data.calendars[calId];
-    if (cal?.errors?.length) {
-      // Don't fail the whole sync on one bad calendar (e.g. user lost
-      // access to a shared one) — surface in logs and continue.
-      console.warn(`[calendar-sync] freeBusy error for ${calId}:`, cal.errors);
-      continue;
+  // De-dup across chunk boundaries: if an event spans a chunk boundary,
+  // it'll appear in both chunks. Keying by `${cal}@${start}` collapses
+  // those into one slot.
+  const seen = new Set<string>();
+
+  for (const chunk of chunks) {
+    const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        timeMin: chunk.start.toISOString(),
+        timeMax: chunk.end.toISOString(),
+        items: resolvedIds.map((id) => ({ id })),
+      }),
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`freeBusy failed: ${res.status} ${txt.slice(0, 200)}`);
     }
-    if (!cal?.busy) continue;
-    for (const b of cal.busy) {
-      slots.push({
-        starts_at: new Date(b.start),
-        ends_at: new Date(b.end),
-        source_uid: `${calId}@${b.start}`,
-      });
+    const data = await res.json() as {
+      calendars: Record<string, { busy?: { start: string; end: string }[]; errors?: { reason: string }[] }>;
+    };
+
+    for (const calId of resolvedIds) {
+      const cal = data.calendars[calId];
+      if (cal?.errors?.length) {
+        console.warn(`[calendar-sync] freeBusy error for ${calId}:`, cal.errors);
+        continue;
+      }
+      if (!cal?.busy) continue;
+      for (const b of cal.busy) {
+        const key = `${calId}@${b.start}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        slots.push({
+          starts_at: new Date(b.start),
+          ends_at: new Date(b.end),
+          source_uid: key,
+        });
+      }
     }
   }
   return slots;

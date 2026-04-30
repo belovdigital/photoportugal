@@ -16,14 +16,18 @@ const REDIRECT_URI = "https://photoportugal.com/api/calendar/google/callback";
  * (and reject a callback that wasn't initiated by us).
  */
 export async function GET(req: NextRequest) {
+  // Use canonical public host for relative redirects — `req.url` is
+  // localhost:3000 behind nginx, which would send the user there.
+  const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+
   const user = await authFromRequest(req);
-  if (!user) return NextResponse.redirect(new URL("/auth/signin", req.url));
+  if (!user) return NextResponse.redirect(new URL("/auth/signin", base));
 
   const profile = await queryOne<{ id: string }>(
     "SELECT id FROM photographer_profiles WHERE user_id = $1",
     [user.id]
   );
-  if (!profile) return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (!profile) return NextResponse.redirect(new URL("/dashboard", base));
 
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
