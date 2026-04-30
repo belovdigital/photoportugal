@@ -31,6 +31,12 @@ export async function GET(req: NextRequest) {
        ORDER BY date_from ASC`,
       [photographerId]
     );
+    // Only block a day in the public calendar if there's a substantial
+    // busy event on it — anything < 4 hours is treated as "morning chore"
+    // and the day stays selectable. The booking-time `hasBusyOverlap`
+    // check is still time-precise, so picking the exact conflict window
+    // is rejected at submit; this just keeps the date picker from
+    // greying out a whole Saturday for a 30-min coffee.
     const synced = await query<{ blocked_date: string }>(
       `SELECT DISTINCT to_char(d, 'YYYY-MM-DD') AS blocked_date
          FROM calendar_busy_slots cbs,
@@ -41,6 +47,7 @@ export async function GET(req: NextRequest) {
               ) AS d
         WHERE cbs.photographer_id = $1
           AND cbs.ends_at >= NOW()
+          AND EXTRACT(EPOCH FROM (cbs.ends_at - cbs.starts_at)) >= 4 * 3600
           AND EXTRACT(HOUR FROM (cbs.starts_at AT TIME ZONE 'Europe/Lisbon')) < 23
           AND EXTRACT(HOUR FROM (cbs.ends_at   AT TIME ZONE 'Europe/Lisbon')) >= 6
         ORDER BY blocked_date ASC`,

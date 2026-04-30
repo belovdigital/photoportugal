@@ -205,6 +205,13 @@ export function CalendarSyncClient() {
         <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{error}</div>
       )}
 
+      {/* Recommendation about which calendars to connect */}
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <strong>Tip:</strong> connect only calendars you actually use for work. Things like personal birthdays,
+        kids&apos; school events, or holidays will block clients from booking those days even if you&apos;d be
+        happy to shoot. Many photographers keep a dedicated &quot;Work&quot; calendar for this reason.
+      </div>
+
       {/* Add buttons row */}
       <div className="flex flex-wrap gap-2">
         <a

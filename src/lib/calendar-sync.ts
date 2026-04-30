@@ -70,44 +70,51 @@ export async function fetchIcalBusySlots(icalUrl: string): Promise<BusySlot[]> {
     const ev = parsed[key];
     if (!ev || ev.type !== "VEVENT") continue;
 
-    // Skip "transparent" events — the iCal way of marking a calendar entry
-    // as informational/free (e.g. "FYI: dad's flight"). If the photographer
-    // marks the event Free, we honour that.
-    const transp = (ev as { transparency?: string }).transparency;
-    if (typeof transp === "string" && transp.toUpperCase() === "TRANSPARENT") continue;
+    // Wrap each event so a single corrupt entry (rrule library's been
+    // known to throw on weird DTSTART:VALUE=DATE / DURATION combinations
+    // — e.g. `s.BigInt is not a function` when bundled by Next.js)
+    // doesn't kill the whole sync. The few events that fail just don't
+    // count as busy; everything else is honoured.
+    try {
+      // Skip "transparent" events — the iCal way of marking a calendar
+      // entry as informational/free (e.g. "FYI: dad's flight"). If the
+      // photographer marks the event Free, we honour that.
+      const transp = (ev as { transparency?: string }).transparency;
+      if (typeof transp === "string" && transp.toUpperCase() === "TRANSPARENT") continue;
 
-    const baseStart = ev.start instanceof Date ? ev.start : null;
-    const baseEnd = ev.end instanceof Date ? ev.end : null;
-    if (!baseStart || !baseEnd) continue;
+      const baseStart = ev.start instanceof Date ? ev.start : null;
+      const baseEnd = ev.end instanceof Date ? ev.end : null;
+      if (!baseStart || !baseEnd) continue;
 
-    if (ev.rrule) {
-      // Recurring event — expand all instances within our window. The dates
-      // returned by rrule.between() are anchored to the event's start; we
-      // recompute end by preserving the original duration.
-      const durationMs = baseEnd.getTime() - baseStart.getTime();
-      const between = ev.rrule.between(horizonStart, horizonEnd, true);
-      const exdates: Record<string, Date> | undefined = (ev as { exdate?: Record<string, Date> }).exdate;
-      for (const occStart of between) {
-        // Skip cancelled occurrences (EXDATE).
-        if (exdates) {
-          const stamp = occStart.toISOString().slice(0, 10);
-          if (Object.values(exdates).some((d) => d.toISOString().slice(0, 10) === stamp)) continue;
+      if (ev.rrule) {
+        // Recurring event — expand instances within our window. Dates
+        // returned by rrule.between() are anchored to the event's start;
+        // we recompute end by preserving the original duration.
+        const durationMs = baseEnd.getTime() - baseStart.getTime();
+        const between = ev.rrule.between(horizonStart, horizonEnd, true);
+        const exdates: Record<string, Date> | undefined = (ev as { exdate?: Record<string, Date> }).exdate;
+        for (const occStart of between) {
+          if (exdates) {
+            const stamp = occStart.toISOString().slice(0, 10);
+            if (Object.values(exdates).some((d) => d.toISOString().slice(0, 10) === stamp)) continue;
+          }
+          const occEnd = new Date(occStart.getTime() + durationMs);
+          slots.push({
+            starts_at: occStart,
+            ends_at: occEnd,
+            source_uid: `${ev.uid || key}@${occStart.toISOString()}`,
+          });
         }
-        const occEnd = new Date(occStart.getTime() + durationMs);
+      } else {
+        if (baseEnd <= horizonStart || baseStart >= horizonEnd) continue;
         slots.push({
-          starts_at: occStart,
-          ends_at: occEnd,
-          source_uid: `${ev.uid || key}@${occStart.toISOString()}`,
+          starts_at: baseStart,
+          ends_at: baseEnd,
+          source_uid: ev.uid || key,
         });
       }
-    } else {
-      // Single event — only include if it falls inside the window.
-      if (baseEnd <= horizonStart || baseStart >= horizonEnd) continue;
-      slots.push({
-        starts_at: baseStart,
-        ends_at: baseEnd,
-        source_uid: ev.uid || key,
-      });
+    } catch (eventErr) {
+      console.warn("[calendar-sync] skipping bad iCal event:", ev.uid || key, eventErr);
     }
   }
 

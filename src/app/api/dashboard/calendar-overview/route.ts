@@ -95,6 +95,8 @@ export async function GET(req: NextRequest) {
     [profile.id, from, to]
   );
 
+  // Same 4-hour threshold as the public availability endpoint, so what
+  // the photographer sees here matches what clients see on /book.
   const syncedBlocks = await query<{ blocked_date: string }>(
     `SELECT DISTINCT to_char(d, 'YYYY-MM-DD') AS blocked_date
        FROM calendar_busy_slots cbs,
@@ -105,6 +107,7 @@ export async function GET(req: NextRequest) {
             ) AS d
       WHERE cbs.photographer_id = $1
         AND cbs.ends_at >= NOW()
+        AND EXTRACT(EPOCH FROM (cbs.ends_at - cbs.starts_at)) >= 4 * 3600
         AND EXTRACT(HOUR FROM (cbs.starts_at AT TIME ZONE 'Europe/Lisbon')) < 23
         AND EXTRACT(HOUR FROM (cbs.ends_at   AT TIME ZONE 'Europe/Lisbon')) >= 6
         AND d::date >= $2::date
