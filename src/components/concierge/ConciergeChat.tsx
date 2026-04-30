@@ -236,7 +236,8 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
       // is fine here since we early-returned above on >1).
       nudgeFiredRef.current = true;
       try { sessionStorage.setItem("concierge_nudged", "1"); } catch {}
-      const chipKeys: ("chipProposal" | "chipCouples" | "chipFamily")[] = ["chipProposal", "chipCouples", "chipFamily"];
+      const chipKeys: ("chipProposal" | "chipCouples" | "chipFamily" | "chipExplore")[] =
+        ["chipProposal", "chipCouples", "chipFamily", "chipExplore"];
       const chips = chipKeys.map((k) => t(`nudge.${k}`));
       const nudgeMsg: Msg = {
         role: "assistant",
@@ -388,12 +389,11 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
             return (
             <div key={i} ref={ref} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className="max-w-[85%]">
-                {m.role === "assistant" && i === 0 && (
-                  <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
-                    <img src="/logo-icon.png" alt="" className="h-4 w-4 rounded" />
-                    {t("conciergeBadge")}
-                  </div>
-                )}
+                {/* Old "Photo Portugal Concierge" badge above the first
+                    message is removed: with Lens-the-AI as the named bot
+                    via the nudge bubble below, two different identities
+                    on the same screen reads as inconsistent. The Lens
+                    label on the nudge is enough. */}
                 {/* Lens nudge gets its own visual treatment: amber-tinted
                     bubble + 🤖 sparkle icon row above so the visitor knows
                     this is a friendly automated nudge, not an answer to

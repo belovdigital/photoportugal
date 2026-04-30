@@ -256,6 +256,35 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
+  // Bulk tag — apply location_slug and/or shoot_type to many items at once.
+  // Only the fields explicitly present in the body are updated; an explicit
+  // null clears the tag. Temp ids are filtered out.
+  if (body.action === "bulk-tag" && Array.isArray(body.ids)) {
+    const validIds = body.ids.filter(isUuid);
+    if (validIds.length === 0) return NextResponse.json({ success: true, count: 0 });
+
+    const setClauses: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+    if ("location_slug" in body) {
+      setClauses.push(`location_slug = $${idx++}`);
+      params.push(body.location_slug || null);
+    }
+    if ("shoot_type" in body) {
+      setClauses.push(`shoot_type = $${idx++}`);
+      params.push(body.shoot_type || null);
+    }
+    if (setClauses.length === 0) return NextResponse.json({ success: true, count: 0 });
+
+    params.push(validIds);
+    params.push(profile.id);
+    await query(
+      `UPDATE portfolio_items SET ${setClauses.join(", ")} WHERE id = ANY($${idx++}::uuid[]) AND photographer_id = $${idx}`,
+      params
+    );
+    return NextResponse.json({ success: true, count: validIds.length });
+  }
+
   // Update tags on single item
   const { id: itemId, location_slug, shoot_type } = body;
   if (!itemId) return NextResponse.json({ error: "Item ID required" }, { status: 400 });

@@ -392,6 +392,26 @@ export function PhotographerDashboardClient({
     await Promise.all(ids.map((id) => fetch(`/api/dashboard/portfolio?id=${id}`, { method: "DELETE" })));
   }
 
+  async function bulkApplyTag(field: "location_slug" | "shoot_type", value: string | null) {
+    if (selectedIds.size === 0) return;
+    const ids = [...selectedIds].filter((id) => !id.startsWith("temp-"));
+    if (ids.length === 0) return;
+    // Optimistic update
+    setLocalItems((prev) =>
+      prev.map((p) => (selectedIds.has(p.id) ? { ...p, [field]: value } : p))
+    );
+    showMessage(ids.length !== 1 ? t("photosTaggedPlural", { count: ids.length }) : t("photosTagged", { count: ids.length }));
+    await fetch("/api/dashboard/portfolio", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "bulk-tag",
+        ids,
+        [field]: value,
+      }),
+    });
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
@@ -987,12 +1007,12 @@ export function PhotographerDashboardClient({
 
             {/* Header bar */}
             {localItems.length > 0 && (
-              <div className="mt-4 flex items-center justify-between gap-2">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-gray-500">
                   {localItems.filter((p) => !p._uploading).length !== 1 ? t("photoCountPlural", { count: localItems.filter((p) => !p._uploading).length }) : t("photoCount", { count: localItems.filter((p) => !p._uploading).length })}{!selectMode && t("dragToReorder")}
                   {selectMode && selectedIds.size > 0 && t("selectedCount", { count: selectedIds.size })}
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {selectMode ? (
                     <>
                       <button
@@ -1001,6 +1021,42 @@ export function PhotographerDashboardClient({
                       >
                         {t("selectAll")}
                       </button>
+                      {/* Bulk tag — apply location/shoot_type to all selected. Native select
+                          gets us free mobile UX and a11y. Empty value = clear the tag. */}
+                      <select
+                        value=""
+                        disabled={selectedIds.size === 0}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === "") return;
+                          bulkApplyTag("location_slug", v === "__clear__" ? null : v);
+                          e.currentTarget.value = "";
+                        }}
+                        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                      >
+                        <option value="">{t("setLocation")}</option>
+                        <option value="__clear__">{t("clearLocation")}</option>
+                        {[...allLocations].sort((a, b) => a.name.localeCompare(b.name)).map((loc) => (
+                          <option key={loc.slug} value={loc.slug}>{loc.name}</option>
+                        ))}
+                      </select>
+                      <select
+                        value=""
+                        disabled={selectedIds.size === 0}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === "") return;
+                          bulkApplyTag("shoot_type", v === "__clear__" ? null : v);
+                          e.currentTarget.value = "";
+                        }}
+                        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                      >
+                        <option value="">{t("setShootType")}</option>
+                        <option value="__clear__">{t("clearShootType")}</option>
+                        {SHOOT_TYPES.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
                       <button
                         onClick={deleteSelected}
                         disabled={selectedIds.size === 0}
