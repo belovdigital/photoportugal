@@ -165,20 +165,18 @@ export default async function ShootTypePage({
               COALESCE(pp.rating, 0)::text as rating,
               COALESCE(pp.review_count, 0) as review_count,
               COALESCE(pp.session_count, 0) as session_count,
-              -- HERO carousel: include ALL of this photographer's photos
-              -- so the 12-frame rotation never goes thin (e.g. honeymoon
-              -- has only 6 tagged photos site-wide). Match first, untagged
-              -- second, other shoot types last — relevant work surfaces
-              -- first but the rotation always fills.
+              -- HERO carousel: strict — only photos tagged with this
+              -- shoot type (or untagged backfill). The photographer-level
+              -- tier filter below prefers people with ≥4 matching photos
+              -- so the rotation has real frames; if no one meets that
+              -- threshold we still take whichever photographer is
+              -- available rather than crashing the hero.
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                  AND (pi.shoot_type = ANY($1::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
-                  CASE
-                    WHEN pi.shoot_type = ANY($1::text[]) THEN 0
-                    WHEN pi.shoot_type IS NULL THEN 1
-                    ELSE 2
-                  END,
+                  CASE WHEN pi.shoot_type = ANY($1::text[]) THEN 0 ELSE 1 END,
                   pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 12
               ) as portfolio_urls
@@ -191,13 +189,24 @@ export default async function ShootTypePage({
          AND EXISTS (
            SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
          )
-       ORDER BY -LN(RANDOM()) / (CASE
-         WHEN pp.is_featured THEN 50
-         WHEN pp.is_verified THEN 30
-         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
-         WHEN pp.early_bird_tier IS NOT NULL THEN 5
-         ELSE 2
-       END) ASC
+       -- Two-tier ORDER BY — see combo page for rationale. Same idea
+       -- here: prefer photographers with ≥4 matching-tagged photos so
+       -- the hero has a body of work to rotate through; fall through to
+       -- anyone if nobody meets that threshold.
+       ORDER BY
+         CASE WHEN (
+           SELECT COUNT(*) FROM portfolio_items pi
+           WHERE pi.photographer_id = pp.id
+             AND pi.type = 'photo'
+             AND pi.shoot_type = ANY($1::text[])
+         ) >= 4 THEN 0 ELSE 1 END,
+         -LN(RANDOM()) / (CASE
+           WHEN pp.is_featured THEN 50
+           WHEN pp.is_verified THEN 30
+           WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+           WHEN pp.early_bird_tier IS NOT NULL THEN 5
+           ELSE 2
+         END) ASC
        LIMIT 1`,
       [dbShootTypeNames]
     );

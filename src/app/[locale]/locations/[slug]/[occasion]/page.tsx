@@ -444,21 +444,17 @@ export default async function OccasionPage({
               -- untagged so legacy uploads still surface) — wrong-tagged
               -- shots like family-tagged photos on a couples page were
               -- the reason the user saw kids on /couples pages.
-              -- HERO carousel: include ALL of this photographer's photos
-              -- so the rotation always has 12 frames. Combos like
-              -- /cascais/family had hero stuck on 1 photo because filtered
-              -- pool was thin. Sort puts matching shoot_type first,
-              -- untagged second, other types third — viewer still sees
-              -- relevant work first, but the carousel never goes empty.
+              -- HERO carousel: strict — only photos tagged with this
+              -- occasion (or untagged, since legacy uploads weren't
+              -- always labelled). Photographer-level filter below
+              -- guarantees ≥4 such photos exist, so the carousel
+              -- always has real frames to rotate through.
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                  AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
-                  CASE
-                    WHEN pi.shoot_type = ANY($2::text[]) THEN 0
-                    WHEN pi.shoot_type IS NULL THEN 1
-                    ELSE 2
-                  END,
+                  CASE WHEN pi.shoot_type = ANY($2::text[]) THEN 0 ELSE 1 END,
                   pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 12
               ) as portfolio_urls
@@ -473,13 +469,25 @@ export default async function OccasionPage({
          AND EXISTS (
            SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
          )
-       ORDER BY -LN(RANDOM()) / (CASE
-         WHEN pp.is_featured THEN 50
-         WHEN pp.is_verified THEN 30
-         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
-         WHEN pp.early_bird_tier IS NOT NULL THEN 5
-         ELSE 2
-       END) ASC
+       -- Two-tier ORDER BY: photographers with ≥4 matching-tagged photos
+       -- rank above those with fewer, so hero defaults to someone with a
+       -- real body of work in this occasion. If NO photographer has 4+,
+       -- the tier filter is effectively a no-op and we still pick the
+       -- single available photographer (page never goes empty).
+       ORDER BY
+         CASE WHEN (
+           SELECT COUNT(*) FROM portfolio_items pi
+           WHERE pi.photographer_id = pp.id
+             AND pi.type = 'photo'
+             AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]))
+         ) >= 4 THEN 0 ELSE 1 END,
+         -LN(RANDOM()) / (CASE
+           WHEN pp.is_featured THEN 50
+           WHEN pp.is_verified THEN 30
+           WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+           WHEN pp.early_bird_tier IS NOT NULL THEN 5
+           ELSE 2
+         END) ASC
        LIMIT 1`,
       [slug, shootTypeLabels]
     );
