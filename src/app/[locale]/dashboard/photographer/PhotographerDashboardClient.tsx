@@ -1053,7 +1053,7 @@ export function PhotographerDashboardClient({
                       >
                         <option value="">{t("setShootType")}</option>
                         <option value="__clear__">{t("clearShootType")}</option>
-                        {SHOOT_TYPES.map((type) => (
+                        {[...SHOOT_TYPES].sort((a, b) => a.localeCompare(b)).map((type) => (
                           <option key={type} value={type}>{type}</option>
                         ))}
                       </select>
