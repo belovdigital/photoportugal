@@ -3106,6 +3106,13 @@
     "trustRefund": "Garantia de devolução",
     "openingMessage": "Olá! Sou o seu Smart Concierge da Photo Portugal. Diga-me onde vai estar e a ocasião — encontro-lhe os 2–3 melhores fotógrafos em 30 segundos. ✨",
     "conciergeBadge": "Concierge Photo Portugal",
+    "nudge": {
+      "label": "Lens, o seu concierge IA",
+      "body": "Olá 👋 Não tenha vergonha — sou o **Lens**, a IA da Photo Portugal. A sua mensagem fica entre nós, ninguém humano a ler. Conheço cada fotógrafo na plataforma, os melhores locais em cada cidade e o que torna uma sessão inesquecível. Conte-me sobre a sua viagem e encontro o match em segundos.",
+      "chipProposal": "💍 Pedido surpresa ao pôr do sol em Lisboa",
+      "chipCouples": "❤️ Sessão de casal no Algarve, hora dourada",
+      "chipFamily": "👨‍👩‍👧 Sessão de família em Sintra para 4"
+    },
     "inputPlaceholder": "Conte-me sobre a sua viagem...",
     "send": "Enviar",
     "errorRetry": "Desculpe — algo correu mal. Tente novamente.",

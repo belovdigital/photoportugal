@@ -3106,6 +3106,13 @@
     "trustRefund": "Money-back guarantee",
     "openingMessage": "Hi! I'm your Smart Concierge for Photo Portugal. Tell me where you'll be and the occasion — I'll match you with the 2–3 best photographers in 30 seconds. ✨",
     "conciergeBadge": "Photo Portugal Concierge",
+    "nudge": {
+      "label": "Lens, your AI concierge",
+      "body": "Hey 👋 Don't be shy — I'm **Lens**, the Photo Portugal AI. Your message stays between us, no humans reading. I know every photographer on the platform, the best spots in each city, and what makes a shoot memorable. Tell me about your trip and I'll find your match in seconds.",
+      "chipProposal": "💍 Surprise proposal at sunset in Lisbon",
+      "chipCouples": "❤️ Couples shoot in Algarve, golden hour",
+      "chipFamily": "👨‍👩‍👧 Family photoshoot in Sintra for 4"
+    },
     "inputPlaceholder": "Tell me about your trip...",
     "send": "Send",
     "errorRetry": "Something went wrong — please try again.",

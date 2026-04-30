@@ -93,6 +93,10 @@ interface Msg {
   role: "user" | "assistant";
   content: string;
   action?: Action | null;
+  /** Marks the client-side "Lens" nudge so the renderer can attach
+   *  example-prompt chips below it. Not persisted server-side. */
+  isNudge?: boolean;
+  nudgeChips?: string[];
 }
 
 export function ConciergeChat({ locale, source, pageContext, embedded }: { locale: string; source?: "page" | "drawer"; pageContext?: string; embedded?: boolean }) {
@@ -138,6 +142,13 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
   const [emailSubmitting, setEmailSubmitting] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  // The "shy nudge": after 5s of inactivity on an empty conversation,
+  // Lens (the bot) sends a warm intro + 3 example-prompt chips. Visitors
+  // often hesitate to type because the chat feels formal — the nudge
+  // tells them outright "you're talking to AI, your message is private,
+  // here are example questions". Once-per-session via sessionStorage.
+  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nudgeFiredRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const lastUserMsgRef = useRef<HTMLDivElement>(null);
@@ -192,6 +203,50 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
     initialUserMessageRef.current = null;
     drawer.consumeInitialMessage();
     void send(pending);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
+  // "Lens" nudge — fires 5s after the visitor opens an empty conversation
+  // and only if they haven't started typing. Cancels itself if they do.
+  // Stored once per session so reopening the drawer or refreshing inside
+  // the same tab doesn't re-show it; new session = new nudge.
+  function cancelNudgeTimer() {
+    if (nudgeTimerRef.current) {
+      clearTimeout(nudgeTimerRef.current);
+      nudgeTimerRef.current = null;
+    }
+  }
+  useEffect(() => {
+    if (!hydrated) return;
+    if (nudgeFiredRef.current) return;
+    // Bail if there's already real history (rehydrated from server) — no
+    // point nudging an active conversation.
+    if (messages.length > 1) return;
+    if (initialUserMessageRef.current) return;
+    if (typeof window !== "undefined" && sessionStorage.getItem("concierge_nudged") === "1") {
+      nudgeFiredRef.current = true;
+      return;
+    }
+    nudgeTimerRef.current = setTimeout(() => {
+      // Last-second guards: did anything change while waiting?
+      if (nudgeFiredRef.current) return;
+      if (input.trim().length > 0) return;
+      if (sending) return;
+      // Re-check messages length using a ref-style read (state in closure
+      // is fine here since we early-returned above on >1).
+      nudgeFiredRef.current = true;
+      try { sessionStorage.setItem("concierge_nudged", "1"); } catch {}
+      const chipKeys: ("chipProposal" | "chipCouples" | "chipFamily")[] = ["chipProposal", "chipCouples", "chipFamily"];
+      const chips = chipKeys.map((k) => t(`nudge.${k}`));
+      const nudgeMsg: Msg = {
+        role: "assistant",
+        content: t("nudge.body"),
+        isNudge: true,
+        nudgeChips: chips,
+      };
+      setMessages((prev) => prev.length > 1 ? prev : [...prev, nudgeMsg]);
+    }, 5000);
+    return () => cancelNudgeTimer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
@@ -339,15 +394,45 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
                     {t("conciergeBadge")}
                   </div>
                 )}
+                {/* Lens nudge gets its own visual treatment: amber-tinted
+                    bubble + 🤖 sparkle icon row above so the visitor knows
+                    this is a friendly automated nudge, not an answer to
+                    their (non-existent) question. */}
+                {m.isNudge && (
+                  <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-amber-700">
+                    <span aria-hidden="true">✨</span>
+                    {t("nudge.label")}
+                  </div>
+                )}
                 <div
                   className={`inline-block rounded-2xl px-3.5 py-2 text-[13.5px] leading-relaxed ${
                     m.role === "user"
                       ? "bg-primary-600 text-white"
-                      : "bg-warm-100 text-gray-900"
+                      : m.isNudge
+                        ? "bg-amber-50 text-gray-900 ring-1 ring-amber-200"
+                        : "bg-warm-100 text-gray-900"
                   }`}
                 >
                   {m.role === "assistant" ? <MarkdownText text={m.content} /> : m.content}
                 </div>
+                {/* Example-prompt chips. Click → autofills input + auto-
+                    submits as the visitor's first user message. Disabled
+                    once anything else has been sent. */}
+                {m.isNudge && m.nudgeChips && m.nudgeChips.length > 0 && i === messages.length - 1 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {m.nudgeChips.map((chip, ci) => (
+                      <button
+                        key={ci}
+                        type="button"
+                        onClick={() => { cancelNudgeTimer(); send(chip); }}
+                        disabled={sending}
+                        className="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-[12px] font-medium text-amber-800 transition hover:border-amber-400 hover:bg-amber-50 disabled:opacity-50"
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {m.action?.type === "show_matches" && (
                   <div className="mt-3 space-y-3">
@@ -453,7 +538,12 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
             ref={inputRef}
             rows={1}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              // First keystroke kills the pending nudge — they're already
+              // engaged, no need to interrupt with a tutorial bubble.
+              if (e.target.value.length > 0) cancelNudgeTimer();
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

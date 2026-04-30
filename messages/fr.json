@@ -533,6 +533,13 @@
     "trustSecure": "Paiement sécurisé",
     "trustRefund": "Garantie de remboursement",
     "openingMessage": "Salut ! Je suis votre Smart Concierge pour Photo Portugal. Dites-moi où vous serez et l'occasion — je vous trouve les 2-3 meilleurs photographes en 30 secondes. ✨",
+    "nudge": {
+      "label": "Lens, votre concierge IA",
+      "body": "Hé 👋 Pas de gêne — je suis **Lens**, l'IA de Photo Portugal. Votre message reste entre nous, aucun humain ne lit. Je connais chaque photographe de la plateforme, les meilleurs spots de chaque ville et ce qui rend une séance inoubliable. Parlez-moi de votre voyage et je trouve votre match en quelques secondes.",
+      "chipProposal": "💍 Demande surprise au coucher du soleil à Lisbonne",
+      "chipCouples": "❤️ Séance couple en Algarve, heure dorée",
+      "chipFamily": "👨‍👩‍👧 Séance famille à Sintra pour 4"
+    },
     "conciergeBadge": "Concierge Photo Portugal",
     "inputPlaceholder": "Parlez-moi de votre voyage...",
     "send": "Envoyer",
