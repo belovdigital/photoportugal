@@ -434,10 +434,18 @@ export default async function OccasionPage({
               COALESCE(pp.rating, 0)::text as rating,
               COALESCE(pp.review_count, 0) as review_count,
               COALESCE(pp.session_count, 0) as session_count,
+              -- Photos for the hero carousel: only this occasion (or
+              -- untagged so legacy uploads still surface) — wrong-tagged
+              -- shots like family-tagged photos on a couples page were
+              -- the reason the user saw kids on /couples pages.
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
-                ORDER BY pi.sort_order NULLS LAST, pi.created_at
+                  AND ($2::text IS NULL OR pi.shoot_type = $2 OR pi.shoot_type IS NULL)
+                ORDER BY
+                  -- Tagged matches first, then untagged backfill.
+                  CASE WHEN pi.shoot_type = $2 THEN 0 ELSE 1 END,
+                  pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 12
               ) as portfolio_urls
        FROM photographer_locations pl
@@ -479,9 +487,11 @@ export default async function OccasionPage({
     }
   } catch {}
 
-  // Portfolio pool — same query as polished page (occasion-filtered would
-  // shrink the pool too aggressively; visitors will see what photographers
-  // shoot in this CITY, then compare cards/packages for occasion fit).
+  // Portfolio pool for the mosaic + masonry — strict occasion filter so
+  // /couples pages don't surface family or solo shots (photographers tag
+  // each photo at upload, so wrong-tagged means wrong page). Untagged
+  // legacy photos backfill if the strict pool is thin. Sorting puts
+  // tagged matches first.
   type LocationPortfolioRow = {
     url: string; width: number | null; height: number | null;
     slug: string; name: string; avatar_url: string | null;
@@ -501,15 +511,18 @@ export default async function OccasionPage({
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND (pi.location_slug IS NULL OR pi.location_slug = $1)
-       ORDER BY -LN(RANDOM()) / (CASE
-         WHEN pp.is_featured THEN 50
-         WHEN pp.is_verified THEN 30
-         WHEN COALESCE(pp.is_founding, FALSE) THEN 15
-         WHEN pp.early_bird_tier IS NOT NULL THEN 5
-         ELSE 2
-       END) ASC
+         AND ($2::text IS NULL OR pi.shoot_type = $2 OR pi.shoot_type IS NULL)
+       ORDER BY
+         CASE WHEN pi.shoot_type = $2 THEN 0 ELSE 1 END,
+         -LN(RANDOM()) / (CASE
+           WHEN pp.is_featured THEN 50
+           WHEN pp.is_verified THEN 30
+           WHEN COALESCE(pp.is_founding, FALSE) THEN 15
+           WHEN pp.early_bird_tier IS NOT NULL THEN 5
+           ELSE 2
+         END) ASC
        LIMIT 60`,
-      [slug]
+      [slug, shootTypeLabel]
     );
     locationMosaicPhotos = portfolioRows.slice(0, 24).map((r) => ({
       url: r.url, slug: r.slug, name: r.name, location: localizedName,
@@ -571,7 +584,15 @@ export default async function OccasionPage({
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
-              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
+              ARRAY(
+                SELECT pi.url FROM portfolio_items pi
+                WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                  AND ($2::text IS NULL OR pi.shoot_type = $2 OR pi.shoot_type IS NULL)
+                ORDER BY
+                  CASE WHEN pi.shoot_type = $2 THEN 0 ELSE 1 END,
+                  pi.sort_order NULLS LAST, pi.created_at
+                LIMIT 7
+              ) as portfolio_thumbs,
               COALESCE((
                 SELECT json_agg(
                   json_build_object(
