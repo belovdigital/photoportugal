@@ -28,10 +28,15 @@ export function ConciergeQuickStart({
   placeholder,
   cta,
   locationName,
+  variant = "dark",
 }: {
   placeholder: string;
   cta: string;
   locationName?: string;
+  /** "dark" (default) sits on the hero glass panel — white text on a
+   *  translucent input. "light" is for white-bg hero sections (the
+   *  /photoshoots index sticky-text hero) — gray border, dark text. */
+  variant?: "dark" | "light";
 }) {
   const t = useTranslations("locations.detail.quickStart");
   const drawer = useConciergeDrawer();
@@ -52,6 +57,11 @@ export function ConciergeQuickStart({
     setText("");
   }
 
+  const inputClass = variant === "light"
+    ? "flex-1 min-w-0 rounded-xl border border-warm-200 bg-white px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 sm:text-[15px]"
+    : "flex-1 min-w-0 rounded-xl border border-white/20 bg-white/15 px-4 py-3 text-base text-white placeholder-white/60 focus:border-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 sm:text-[15px]";
+  const footnoteClass = variant === "light" ? "mt-2 text-xs text-gray-400" : "mt-2 text-xs text-white/60";
+
   return (
     <form onSubmit={handleSubmit} className="max-w-xl">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
@@ -62,8 +72,7 @@ export function ConciergeQuickStart({
           placeholder={placeholder}
           // text-base on mobile (16px) avoids iOS Safari auto-zoom on
           // focus; we step down to 15px on desktop where zoom is N/A.
-          // Translucent input matches the surrounding frosted-glass panel.
-          className="flex-1 min-w-0 rounded-xl border border-white/20 bg-white/15 px-4 py-3 text-base text-white placeholder-white/60 focus:border-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 sm:text-[15px]"
+          className={inputClass}
           aria-label={t("inputLabel")}
           maxLength={500}
         />
@@ -80,7 +89,7 @@ export function ConciergeQuickStart({
           {cta}
         </button>
       </div>
-      <p className="mt-2 text-xs text-white/60">{t("footnote")}</p>
+      <p className={footnoteClass}>{t("footnote")}</p>
     </form>
   );
 }

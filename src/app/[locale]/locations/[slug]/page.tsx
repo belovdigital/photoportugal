@@ -344,6 +344,36 @@ export default async function LocationPage({
     );
   } catch {}
 
+  // Featured packages — top 6 bookable packages at this location, ranked
+  // by photographer quality + popular flag + price ascending. These get
+  // promoted to first content under the hero so the page reads as
+  // "buy a photoshoot" first, "pick a photographer" second. Each row is
+  // pre-bookable via /book/[slug]?package=ID — no provider-pick step.
+  const featuredPackages = await query<{
+    id: string; name: string; price: string; duration_minutes: number; num_photos: number;
+    photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
+    rating: number; review_count: number; is_popular: boolean;
+  }>(
+    `SELECT pk.id, pk.name, pk.price::text, pk.duration_minutes, COALESCE(pk.num_photos, 0) as num_photos,
+            pp.slug as photographer_slug, u.name as photographer_name, u.avatar_url as photographer_avatar,
+            COALESCE(pp.rating, 0) as rating, COALESCE(pp.review_count, 0) as review_count,
+            COALESCE(pk.is_popular, FALSE) as is_popular
+     FROM packages pk
+     JOIN photographer_profiles pp ON pp.id = pk.photographer_id
+     JOIN users u ON u.id = pp.user_id
+     JOIN photographer_locations pl ON pl.photographer_id = pp.id
+     WHERE pl.location_slug = $1
+       AND pp.is_approved = TRUE
+       AND COALESCE(pp.is_test, FALSE) = FALSE
+       AND pk.is_public = TRUE
+     ORDER BY pp.is_featured DESC, pp.is_verified DESC,
+              pk.is_popular DESC NULLS LAST,
+              pp.rating DESC NULLS LAST,
+              pk.price ASC
+     LIMIT 6`,
+    [slug]
+  ).catch(() => []);
+
   // Fetch related blog posts that mention this location AND are in the
   // visitor's current locale. Without the locale filter the Spanish or
   // French page was rendering German posts (the only locale where the
@@ -562,6 +592,64 @@ export default async function LocationPage({
         </section>
       )}
 
+      {/* Featured packages — first content under hero so the page reads
+          as "buy a photoshoot" first, "pick a photographer" second. Each
+          card is a complete buyable thing: price, duration, photo count,
+          photographer + rating, "Book this package" CTA going straight
+          to /book/[slug]?package=ID (no extra provider-pick step).
+          Mobile-first: 1 col on phones, 2 on sm, 3 on lg. */}
+      {featuredPackages.length > 0 && (
+        <section id="packages" className="border-b border-warm-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <div className="max-w-3xl">
+              <h2 className="font-display text-3xl font-bold text-gray-900 sm:text-4xl">
+                {t("packagesHeading", { location: localizedName })}
+              </h2>
+              <p className="mt-3 text-gray-500">{t("packagesSub")}</p>
+            </div>
+            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredPackages.map((pkg) => (
+                <Link
+                  key={pkg.id}
+                  href={`/book/${pkg.photographer_slug}?package=${pkg.id}`}
+                  className="group flex flex-col rounded-2xl border border-warm-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-lg"
+                >
+                  {pkg.is_popular && (
+                    <span className="self-start rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                      {t("packagePopular")}
+                    </span>
+                  )}
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-100">
+                      {pkg.photographer_avatar && (
+                        <OptimizedImage src={pkg.photographer_avatar} alt={pkg.photographer_name} width={80} className="h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-gray-900">{pkg.photographer_name}</p>
+                      {pkg.review_count > 0 && (
+                        <p className="text-xs text-gray-500">★ {Number(pkg.rating).toFixed(1)} · {pkg.review_count} {pkg.review_count === 1 ? tc("review") : tc("reviews")}</p>
+                      )}
+                    </div>
+                  </div>
+                  <h3 className="mt-4 font-display text-lg font-bold text-gray-900 group-hover:text-primary-600">{pkg.name}</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {pkg.duration_minutes} {t("packageMinutesAbbr")}
+                    {pkg.num_photos > 0 && ` · ${pkg.num_photos} ${t("packagePhotos")}`}
+                  </p>
+                  <div className="mt-auto pt-4 flex items-baseline justify-between">
+                    <span className="text-2xl font-bold text-gray-900">€{Math.round(Number(pkg.price))}</span>
+                    <span className="text-sm font-semibold text-primary-600 group-hover:underline">
+                      {t("packageBookCta")} →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* About the location — sticky left text + scroll-snap mosaic on the
           right (same pattern as the homepage section 2). Quick facts moved
           into the hero as chips, so this section is purely "why X +
@@ -646,10 +734,10 @@ export default async function LocationPage({
         <section className="border-t border-warm-200 bg-warm-50">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <h2 className="font-display text-3xl font-bold text-gray-900">
-              {t("topPhotographers", { location: location.name })}
+              {t("chooseYourPhotographerHeading")}
             </h2>
             <p className="mt-2 text-gray-500">
-              {t("dedicatedPhotographers", { location: location.name })}
+              {t("chooseYourPhotographerSub", { location: location.name })}
             </p>
             <div className="mt-6">
               <ScarcityBanner count={photographerCount} locationName={location.name} locale={locale} />

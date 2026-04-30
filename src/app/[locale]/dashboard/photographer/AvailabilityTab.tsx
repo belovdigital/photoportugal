@@ -30,6 +30,7 @@ function isPast(dateTo: string) {
 
 export function AvailabilityTab() {
   const t = useTranslations("availability");
+  const tSet = useTranslations("settings");
   const locale = useLocale();
   const [ranges, setRanges] = useState<UnavailabilityRange[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,46 @@ export function AvailabilityTab() {
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // Booking-rules section — was previously in /dashboard/settings,
+  // moved here so all "when can clients reach me" controls live in
+  // one place. Loaded lazily; defaults to 0 (no restriction).
+  const [minLeadTimeHours, setMinLeadTimeHours] = useState<number>(0);
+  const [leadTimeLoaded, setLeadTimeLoaded] = useState(false);
+  const [savingLeadTime, setSavingLeadTime] = useState(false);
+  const [leadTimeMessage, setLeadTimeMessage] = useState("");
+
+  useEffect(() => {
+    fetch("/api/dashboard/booking-settings")
+      .then((r) => r.json())
+      .then((data) => {
+        setMinLeadTimeHours(data.minLeadTimeHours ?? 0);
+        setLeadTimeLoaded(true);
+      })
+      .catch(() => setLeadTimeLoaded(true));
+  }, []);
+
+  async function saveLeadTime(hours: number) {
+    setSavingLeadTime(true);
+    setMinLeadTimeHours(hours);
+    setLeadTimeMessage("");
+    try {
+      const res = await fetch("/api/dashboard/booking-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minLeadTimeHours: hours }),
+      });
+      if (res.ok) {
+        setLeadTimeMessage(tSet("settingsSaved"));
+        setTimeout(() => setLeadTimeMessage(""), 2000);
+      } else {
+        setLeadTimeMessage(tSet("failedToSave"));
+      }
+    } catch {
+      setLeadTimeMessage(tSet("failedToSave"));
+    }
+    setSavingLeadTime(false);
+  }
   const [showArchive, setShowArchive] = useState(false);
 
   async function fetchRanges() {
@@ -96,6 +137,45 @@ export function AvailabilityTab() {
       <p className="text-sm text-gray-500">
         {t("description")}
       </p>
+
+      {/* Booking Rules — minimum advance notice. Sits at the top of
+          Availability because it's the same intent (controlling when
+          clients can reach you). 0 = no restriction. Updates auto-save
+          on change; the green "saved" tick fades out after 2s. */}
+      <div className="mt-6 rounded-xl border border-warm-200 bg-white p-5">
+        <h3 className="text-sm font-semibold text-gray-900">{tSet("bookingRules")}</h3>
+        <p className="mt-1 text-xs text-gray-400">{tSet("bookingRulesDesc")}</p>
+        <label htmlFor="min-lead-time" className="mt-4 block text-sm font-medium text-gray-900">
+          {tSet("minLeadTimeLabel")}
+        </label>
+        <p className="mt-0.5 text-xs text-gray-400">{tSet("minLeadTimeDesc")}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <select
+            id="min-lead-time"
+            value={minLeadTimeHours}
+            onChange={(e) => saveLeadTime(parseInt(e.target.value, 10))}
+            disabled={!leadTimeLoaded || savingLeadTime}
+            className="w-full max-w-sm rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 disabled:opacity-50"
+          >
+            <option value={0}>{tSet("minLeadTimeNone")}</option>
+            <option value={12}>{tSet("minLeadTime12h")}</option>
+            <option value={24}>{tSet("minLeadTime1d")}</option>
+            <option value={48}>{tSet("minLeadTime2d")}</option>
+            <option value={72}>{tSet("minLeadTime3d")}</option>
+            <option value={96}>{tSet("minLeadTime4d")}</option>
+            <option value={120}>{tSet("minLeadTime5d")}</option>
+            <option value={144}>{tSet("minLeadTime6d")}</option>
+            <option value={168}>{tSet("minLeadTime7d")}</option>
+            <option value={192}>{tSet("minLeadTime8d")}</option>
+            <option value={216}>{tSet("minLeadTime9d")}</option>
+            <option value={240}>{tSet("minLeadTime10d")}</option>
+            <option value={336}>{tSet("minLeadTime14d")}</option>
+          </select>
+          {leadTimeMessage && (
+            <span className="text-xs text-emerald-600">{leadTimeMessage}</span>
+          )}
+        </div>
+      </div>
 
       {/* Add new range */}
       <form onSubmit={handleAdd} className="mt-6 rounded-xl border border-warm-200 bg-white p-5">

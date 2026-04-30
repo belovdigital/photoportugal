@@ -1244,6 +1244,14 @@
         "browsePhotographers": "Explorar Fotógrafos em {location}"
       },
       "topPhotographers": "Melhores Fotógrafos Disponíveis em {location}",
+      "chooseYourPhotographerHeading": "Escolha o seu fotógrafo",
+      "chooseYourPhotographerSub": "Ou escolha você mesmo — todos os fotógrafos de {location} abaixo estão disponíveis, com pacotes e avaliações.",
+      "packagesHeading": "Pacotes fotográficos em {location}",
+      "packagesSub": "Escolha um pacote, reserve diretamente. Cada um inclui fotógrafo, duração e fotos editadas — sem taxas escondidas.",
+      "packagePopular": "Popular",
+      "packageMinutesAbbr": "min",
+      "packagePhotos": "fotos",
+      "packageBookCta": "Reservar pacote",
       "realPhotos": {
         "title": "Fotografias reais feitas aqui",
         "subtitle": "Pelos fotógrafos da Photo Portugal — toque numa foto para abrir o perfil",
@@ -1255,11 +1263,12 @@
         "cta": "Ver fotógrafos"
       },
       "quickStart": {
-        "label": "Conte-nos sobre a sua sessão em {location} — encontramos em segundos",
+        "label": "Match com fotógrafo por IA — instantâneo",
+        "labelSubtitle": "Descreva a sessão, receba profissionais de {location} em menos de 10 segundos.",
         "placeholder": "ex.: sessão de casal em {location} sexta à hora dourada",
-        "cta": "Encontrar",
+        "cta": "Ver matches",
         "inputLabel": "Descreva a sua sessão",
-        "footnote": "Grátis · IA Concierge · Resposta em segundos"
+        "footnote": "Grátis · IA responde em segundos · Sem email"
       },
       "relatedArticles": "Artigos Relacionados",
       "readMore": "Ler mais",
@@ -1429,11 +1438,11 @@
     "browseAll": "Ou <link>explorar os {count} fotógrafos</link> em Portugal",
     "location": {
       "availableChip": "{count} fotógrafos disponíveis em {location}",
-      "headline": "Fotógrafos<br></br> em <location>{locationName}</location>",
+      "headline": "Reserve uma sessão fotográfica<br></br> em <location>{locationName}</location>",
       "fromPrice": "Desde €{price}",
       "reviews": "{count} avaliações",
       "byPhotographer": "Em destaque: {name}",
-      "matchPrompt": "Conte-nos sobre a sua sessão em {location} — encontramos o fotógrafo certo"
+      "matchPrompt": "Match com fotógrafo por IA — instantâneo"
     }
   },
   "quickMatch": {
@@ -2644,15 +2653,20 @@
     "bookingRules": "Regras de Reserva",
     "bookingRulesDesc": "Controle como os clientes podem reservar sessões consigo.",
     "minLeadTimeLabel": "Antecedência mínima",
-    "minLeadTimeDesc": "Rejeitar reservas feitas com menos do que este tempo de antecedência.",
+    "minLeadTimeDesc": "Rejeitar reservas feitas com menos antecedência do que este valor.",
     "minLeadTimeNone": "Sem mínimo",
     "minLeadTime12h": "12 horas",
-    "minLeadTime24h": "24 horas (1 dia)",
-    "minLeadTime48h": "48 horas (2 dias)",
-    "minLeadTime72h": "72 horas (3 dias)",
+    "minLeadTime1d": "1 dia",
+    "minLeadTime2d": "2 dias",
+    "minLeadTime3d": "3 dias",
+    "minLeadTime4d": "4 dias",
     "minLeadTime5d": "5 dias",
-    "minLeadTime7d": "7 dias (1 semana)",
-    "minLeadTime14d": "14 dias (2 semanas)",
+    "minLeadTime6d": "6 dias",
+    "minLeadTime7d": "7 dias",
+    "minLeadTime8d": "8 dias",
+    "minLeadTime9d": "9 dias",
+    "minLeadTime10d": "10 dias",
+    "minLeadTime14d": "14 dias",
     "telegramNotifications": "Notificações por Telegram",
     "telegramDesc": "Receba notificações instantâneas na sua aplicação Telegram",
     "telegramNotConnected": "Conecte a sua conta Telegram para receber notificações instantâneas sobre novas reservas, mensagens, pagamentos e mais.",

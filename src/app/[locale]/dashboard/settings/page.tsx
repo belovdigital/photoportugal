@@ -110,12 +110,6 @@ export default function SettingsPage() {
   const [telegramEnabled, setTelegramEnabled] = useState(false);
   const [telegramLoading, setTelegramLoading] = useState(false);
 
-  // Photographer booking-rule settings (notice period). Loaded lazily for
-  // photographers only — clients never see this section.
-  const [minLeadTimeHours, setMinLeadTimeHours] = useState<number>(0);
-  const [bookingSettingsLoaded, setBookingSettingsLoaded] = useState(false);
-  const [savingLeadTime, setSavingLeadTime] = useState(false);
-
   // Delete account
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -166,35 +160,6 @@ export default function SettingsPage() {
     }
   }, [isPhotographer]);
 
-  // Load booking-rule settings (photographer only).
-  useEffect(() => {
-    if (isPhotographer) {
-      fetch("/api/dashboard/booking-settings")
-        .then((r) => r.json())
-        .then((data) => {
-          setMinLeadTimeHours(data.minLeadTimeHours ?? 0);
-          setBookingSettingsLoaded(true);
-        })
-        .catch(() => setBookingSettingsLoaded(true));
-    }
-  }, [isPhotographer]);
-
-  async function saveLeadTime(hours: number) {
-    setSavingLeadTime(true);
-    setMinLeadTimeHours(hours);
-    try {
-      const res = await fetch("/api/dashboard/booking-settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ minLeadTimeHours: hours }),
-      });
-      if (res.ok) showMessage(t("settingsSaved"));
-      else showMessage(t("failedToSave"));
-    } catch {
-      showMessage(t("failedToSave"));
-    }
-    setSavingLeadTime(false);
-  }
 
   async function saveAccount(e: React.FormEvent) {
     e.preventDefault();
@@ -376,37 +341,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
-
-      {/* Booking Rules — photographer only. Notice period gates how
-          close to today a client can book. Default 0 = no restriction. */}
-      {isPhotographer && (
-        <section className="mt-8">
-          <h2 className="text-lg font-bold text-gray-900">{t("bookingRules")}</h2>
-          <p className="mt-1 text-sm text-gray-500">{t("bookingRulesDesc")}</p>
-          <div className="mt-4 rounded-xl border border-warm-200 bg-white px-6 py-5">
-            <label htmlFor="min-lead-time" className="block text-sm font-medium text-gray-900">
-              {t("minLeadTimeLabel")}
-            </label>
-            <p className="mt-1 text-xs text-gray-400">{t("minLeadTimeDesc")}</p>
-            <select
-              id="min-lead-time"
-              value={minLeadTimeHours}
-              onChange={(e) => saveLeadTime(parseInt(e.target.value, 10))}
-              disabled={!bookingSettingsLoaded || savingLeadTime}
-              className="mt-3 w-full max-w-sm rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 disabled:opacity-50"
-            >
-              <option value={0}>{t("minLeadTimeNone")}</option>
-              <option value={12}>{t("minLeadTime12h")}</option>
-              <option value={24}>{t("minLeadTime24h")}</option>
-              <option value={48}>{t("minLeadTime48h")}</option>
-              <option value={72}>{t("minLeadTime72h")}</option>
-              <option value={120}>{t("minLeadTime5d")}</option>
-              <option value={168}>{t("minLeadTime7d")}</option>
-              <option value={336}>{t("minLeadTime14d")}</option>
-            </select>
-          </div>
-        </section>
-      )}
 
       {/* Telegram Notifications */}
       {isPhotographer && (

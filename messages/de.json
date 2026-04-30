@@ -1244,6 +1244,14 @@
         "browsePhotographers": "{location}-Fotografen durchsuchen"
       },
       "topPhotographers": "Beste verfügbare Fotografen in {location}",
+      "chooseYourPhotographerHeading": "Wählen Sie Ihren Fotografen",
+      "chooseYourPhotographerSub": "Oder suchen Sie sich selbst aus — alle {location}-Fotografen unten sind verfügbar, mit Paketen und Live-Bewertungen.",
+      "packagesHeading": "Fotoshooting-Pakete in {location}",
+      "packagesSub": "Paket wählen, direkt buchen. Jedes enthält Fotograf, Dauer und bearbeitete Fotos — keine versteckten Kosten.",
+      "packagePopular": "Beliebt",
+      "packageMinutesAbbr": "Min.",
+      "packagePhotos": "Fotos",
+      "packageBookCta": "Paket buchen",
       "realPhotos": {
         "title": "Echte Fotos, hier aufgenommen",
         "subtitle": "Von Fotografen auf Photo Portugal — Foto antippen für das Profil",
@@ -1255,11 +1263,12 @@
         "cta": "Ansehen"
       },
       "quickStart": {
-        "label": "Erzählen Sie uns von Ihrem {location}-Shooting — wir finden in Sekunden den passenden Fotografen",
+        "label": "KI-Fotografen-Match — sofort",
+        "labelSubtitle": "Beschreiben Sie Ihr Shooting — handverlesene {location}-Profis in unter 10 Sekunden.",
         "placeholder": "z. B. Paar-Shooting in {location} am Freitag zur goldenen Stunde",
-        "cta": "Match",
+        "cta": "Vorschläge holen",
         "inputLabel": "Beschreiben Sie Ihr Shooting",
-        "footnote": "Kostenlos · KI-Concierge · Antwort in Sekunden"
+        "footnote": "Kostenlos · KI antwortet in Sekunden · Keine E-Mail nötig"
       },
       "relatedArticles": "Verwandte Artikel",
       "readMore": "Mehr lesen",
@@ -1429,11 +1438,11 @@
     "browseAll": "Oder <link>alle {count} Fotografen durchsuchen</link> in ganz Portugal",
     "location": {
       "availableChip": "{count} Fotografen in {location} verfügbar",
-      "headline": "Fotografen<br></br> in <location>{locationName}</location>",
+      "headline": "Fotoshooting buchen<br></br> in <location>{locationName}</location>",
       "fromPrice": "Ab €{price}",
       "reviews": "{count} Bewertungen",
       "byPhotographer": "Mit {name}",
-      "matchPrompt": "Erzählen Sie uns von Ihrem {location}-Shooting — wir finden den passenden Fotografen"
+      "matchPrompt": "KI-Fotografen-Match — sofort"
     }
   },
   "quickMatch": {
@@ -2804,15 +2813,20 @@
     "bookingRules": "Buchungsregeln",
     "bookingRulesDesc": "Bestimmen Sie, wie Kunden Sessions bei Ihnen buchen können.",
     "minLeadTimeLabel": "Mindestvorlaufzeit",
-    "minLeadTimeDesc": "Lehne Buchungen ab, die weniger Vorlauf zum Shoot haben.",
+    "minLeadTimeDesc": "Buchungen ablehnen, deren Vorlauf zum Shoot kürzer ist.",
     "minLeadTimeNone": "Kein Minimum",
     "minLeadTime12h": "12 Stunden",
-    "minLeadTime24h": "24 Stunden (1 Tag)",
-    "minLeadTime48h": "48 Stunden (2 Tage)",
-    "minLeadTime72h": "72 Stunden (3 Tage)",
+    "minLeadTime1d": "1 Tag",
+    "minLeadTime2d": "2 Tage",
+    "minLeadTime3d": "3 Tage",
+    "minLeadTime4d": "4 Tage",
     "minLeadTime5d": "5 Tage",
-    "minLeadTime7d": "7 Tage (1 Woche)",
-    "minLeadTime14d": "14 Tage (2 Wochen)",
+    "minLeadTime6d": "6 Tage",
+    "minLeadTime7d": "7 Tage",
+    "minLeadTime8d": "8 Tage",
+    "minLeadTime9d": "9 Tage",
+    "minLeadTime10d": "10 Tage",
+    "minLeadTime14d": "14 Tage",
     "telegramNotifications": "Telegram-Benachrichtigungen",
     "telegramDesc": "Erhalten Sie sofortige Benachrichtigungen in Ihrer Telegram-App",
     "telegramNotConnected": "Verbinden Sie Ihr Telegram-Konto, um sofortige Benachrichtigungen über neue Buchungen, Nachrichten, Zahlungen und mehr zu erhalten.",

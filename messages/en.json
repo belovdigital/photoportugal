@@ -1244,6 +1244,14 @@
         "browsePhotographers": "Browse {location} Photographers"
       },
       "topPhotographers": "Best Photographers Available in {location}",
+      "chooseYourPhotographerHeading": "Choose your photographer",
+      "chooseYourPhotographerSub": "Or pick the right pro yourself — every {location} photographer below is available, with their packages and live ratings.",
+      "packagesHeading": "Photoshoot packages in {location}",
+      "packagesSub": "Pick a package, book it directly. Each one includes a photographer, duration and edited photos — no hidden fees.",
+      "packagePopular": "Popular",
+      "packageMinutesAbbr": "min",
+      "packagePhotos": "photos",
+      "packageBookCta": "Book this package",
       "realPhotos": {
         "title": "Real photos shot here",
         "subtitle": "By the photographers on Photo Portugal — tap any photo to open their profile",
@@ -1255,11 +1263,12 @@
         "cta": "Browse"
       },
       "quickStart": {
-        "label": "Tell us about your {location} photoshoot — we'll match you in seconds",
+        "label": "AI photographer match — instant",
+        "labelSubtitle": "Describe your shoot, get hand-picked {location} pros in under 10 seconds.",
         "placeholder": "e.g. couples shoot in {location} next Friday at golden hour",
-        "cta": "Match me",
+        "cta": "Get matches",
         "inputLabel": "Describe your photoshoot",
-        "footnote": "Free service · Powered by AI Concierge · Reply in seconds"
+        "footnote": "Free · AI replies in seconds · No email needed"
       },
       "relatedArticles": "Related Articles",
       "readMore": "Read more",
@@ -1429,11 +1438,11 @@
     "browseAll": "Or <link>browse all {count} photographers</link> across Portugal",
     "location": {
       "availableChip": "{count} photographers available in {location}",
-      "headline": "Photographers<br></br> in <location>{locationName}</location>",
+      "headline": "Book a Photoshoot<br></br> in <location>{locationName}</location>",
       "fromPrice": "From €{price}",
       "reviews": "{count} reviews",
       "byPhotographer": "Featuring {name}",
-      "matchPrompt": "Tell us about your {location} photoshoot — we'll match you"
+      "matchPrompt": "AI photographer match — instant"
     }
   },
   "quickMatch": {
@@ -2804,15 +2813,20 @@
     "bookingRules": "Booking Rules",
     "bookingRulesDesc": "Control how clients can book sessions with you.",
     "minLeadTimeLabel": "Minimum advance notice",
-    "minLeadTimeDesc": "Reject bookings made less than this many hours before the shoot date.",
+    "minLeadTimeDesc": "Reject bookings made closer to the shoot date than this.",
     "minLeadTimeNone": "No minimum",
     "minLeadTime12h": "12 hours",
-    "minLeadTime24h": "24 hours (1 day)",
-    "minLeadTime48h": "48 hours (2 days)",
-    "minLeadTime72h": "72 hours (3 days)",
+    "minLeadTime1d": "1 day",
+    "minLeadTime2d": "2 days",
+    "minLeadTime3d": "3 days",
+    "minLeadTime4d": "4 days",
     "minLeadTime5d": "5 days",
-    "minLeadTime7d": "7 days (1 week)",
-    "minLeadTime14d": "14 days (2 weeks)",
+    "minLeadTime6d": "6 days",
+    "minLeadTime7d": "7 days",
+    "minLeadTime8d": "8 days",
+    "minLeadTime9d": "9 days",
+    "minLeadTime10d": "10 days",
+    "minLeadTime14d": "14 days",
     "telegramNotifications": "Telegram Notifications",
     "telegramDesc": "Receive instant notifications in your Telegram app",
     "telegramNotConnected": "Connect your Telegram account to receive instant notifications about new bookings, messages, payments, and more.",

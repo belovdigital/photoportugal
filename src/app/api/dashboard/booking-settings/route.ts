@@ -7,7 +7,10 @@ import { queryOne } from "@/lib/db";
 // profile fields and we just want to nudge a single value (min_lead_time_hours).
 // Future booking rules (e.g. blackout periods, max bookings/day) live here.
 
-const ALLOWED_LEAD_TIMES = new Set([0, 12, 24, 48, 72, 120, 168, 336]);
+// 0 = no minimum, 12h, then 1-10 days in daily steps, plus 14 days.
+// Photographers think in days for advance notice; the 12h slot is the
+// only sub-day option (for "next-morning" availability).
+const ALLOWED_LEAD_TIMES = new Set([0, 12, 24, 48, 72, 96, 120, 144, 168, 192, 216, 240, 336]);
 
 export async function GET(req: NextRequest) {
   const user = await authFromRequest(req);

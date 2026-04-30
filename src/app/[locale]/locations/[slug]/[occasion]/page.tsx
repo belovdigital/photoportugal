@@ -178,6 +178,24 @@ const IN_PREP: Record<string, string> = {
   en: "in", pt: "em", de: "in", es: "en", fr: "à",
 };
 
+// Experience-led hero label. Used to compose "Book a X Photoshoot" on the
+// combo page hero h1. The OCCASIONS map's `title` field reads as
+// "Couples Photographer" which is provider-led — we want the visitor to
+// see "Book a Couples Photoshoot in Lisbon" so the H1 matches the actual
+// search intent ("photoshoot lisbon couples", not "lisbon photographers").
+const BOOK_A: Record<string, string> = {
+  en: "Book a", pt: "Reserve uma", de: "Buchen Sie ein", es: "Reserve una", fr: "Réservez une",
+};
+const BOOKING_LABEL: Record<string, Record<string, string>> = {
+  couples: { en: "Couples Photoshoot", pt: "Sessão de Casais", de: "Paar-Fotoshooting", es: "Sesión de Parejas", fr: "Séance Couple" },
+  family: { en: "Family Photoshoot", pt: "Sessão de Família", de: "Familien-Fotoshooting", es: "Sesión de Familia", fr: "Séance Famille" },
+  proposal: { en: "Proposal Photoshoot", pt: "Sessão de Pedido de Casamento", de: "Antrags-Fotoshooting", es: "Sesión de Pedida de Mano", fr: "Séance Demande en Mariage" },
+  engagement: { en: "Engagement Photoshoot", pt: "Sessão de Noivado", de: "Verlobungs-Fotoshooting", es: "Sesión de Compromiso", fr: "Séance Fiançailles" },
+  honeymoon: { en: "Honeymoon Photoshoot", pt: "Sessão de Lua de Mel", de: "Flitterwochen-Fotoshooting", es: "Sesión de Luna de Miel", fr: "Séance Lune de Miel" },
+  solo: { en: "Solo Photoshoot", pt: "Sessão Solo", de: "Solo-Fotoshooting", es: "Sesión Solo", fr: "Séance Solo" },
+  elopement: { en: "Elopement Photoshoot", pt: "Sessão de Elopement", de: "Elopement-Fotoshooting", es: "Sesión de Boda Íntima", fr: "Séance Elopement" },
+};
+
 // ─── Page-local UI strings ──────────────────────────────────────────────
 const L = {
   en: {
@@ -200,6 +218,14 @@ const L = {
     introHeading: (occ: string, loc: string) => `${occ} in ${loc}`,
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographer" : "photographers"} ready to shoot in ${loc}`,
+    packagesHeading: (occ: string, loc: string) => `${occ} packages in ${loc}`,
+    packagesSub: "Pick a package, book it directly. Each one includes a photographer, duration and edited photos — no hidden fees.",
+    packagePopular: "Popular",
+    packageMinutesAbbr: "min",
+    packagePhotos: "photos",
+    packageBookCta: "Book this package",
+    chooseYourPhotographerHeading: "Choose your photographer",
+    chooseYourPhotographerSub: (occ: string, loc: string) => `Or browse the ${occ.toLowerCase()} pros covering ${loc} below — packages, ratings, and live availability.`,
   },
   pt: {
     metaTitle: (occ: string, loc: string) => `${occ} em ${loc} — Reserve Sessão Fotográfica`,
@@ -221,6 +247,14 @@ const L = {
     introHeading: (occ: string, loc: string) => `${occ} em ${loc}`,
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo pronto" : "fotógrafos prontos"} para fotografar em ${loc}`,
+    packagesHeading: (occ: string, loc: string) => `Pacotes de ${occ.toLowerCase()} em ${loc}`,
+    packagesSub: "Escolha um pacote, reserve diretamente. Cada um inclui fotógrafo, duração e fotos editadas — sem taxas escondidas.",
+    packagePopular: "Popular",
+    packageMinutesAbbr: "min",
+    packagePhotos: "fotos",
+    packageBookCta: "Reservar pacote",
+    chooseYourPhotographerHeading: "Escolha o seu fotógrafo",
+    chooseYourPhotographerSub: (occ: string, loc: string) => `Ou veja os fotógrafos de ${occ.toLowerCase()} em ${loc} abaixo — pacotes, avaliações e disponibilidade.`,
   },
   de: {
     metaTitle: (occ: string, loc: string) => `${occ} in ${loc} — Fotoshooting buchen`,
@@ -242,6 +276,14 @@ const L = {
     introHeading: (occ: string, loc: string) => `${occ} in ${loc}`,
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "Fotograf bereit" : "Fotografen bereit"} für Shootings in ${loc}`,
+    packagesHeading: (occ: string, loc: string) => `${occ}-Pakete in ${loc}`,
+    packagesSub: "Paket wählen, direkt buchen. Jedes enthält Fotograf, Dauer und bearbeitete Fotos — keine versteckten Kosten.",
+    packagePopular: "Beliebt",
+    packageMinutesAbbr: "Min.",
+    packagePhotos: "Fotos",
+    packageBookCta: "Paket buchen",
+    chooseYourPhotographerHeading: "Wählen Sie Ihren Fotografen",
+    chooseYourPhotographerSub: (occ: string, loc: string) => `Oder durchsuchen Sie die ${occ}-Profis in ${loc} — Pakete, Bewertungen und Live-Verfügbarkeit.`,
   },
   es: {
     metaTitle: (occ: string, loc: string) => `${occ} en ${loc} — Reserve su sesión fotográfica`,
@@ -263,6 +305,14 @@ const L = {
     introHeading: (occ: string, loc: string) => `${occ} en ${loc}`,
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo listo" : "fotógrafos listos"} para sesiones en ${loc}`,
+    packagesHeading: (occ: string, loc: string) => `Paquetes de ${occ.toLowerCase()} en ${loc}`,
+    packagesSub: "Elija un paquete, resérvelo directamente. Cada uno incluye fotógrafo, duración y fotos editadas — sin tarifas ocultas.",
+    packagePopular: "Popular",
+    packageMinutesAbbr: "min",
+    packagePhotos: "fotos",
+    packageBookCta: "Reservar paquete",
+    chooseYourPhotographerHeading: "Elija su fotógrafo",
+    chooseYourPhotographerSub: (occ: string, loc: string) => `O explore los fotógrafos de ${occ.toLowerCase()} en ${loc} debajo — paquetes, valoraciones y disponibilidad.`,
   },
   fr: {
     metaTitle: (occ: string, loc: string) => `${occ} à ${loc} — Réservez votre séance photo`,
@@ -284,6 +334,14 @@ const L = {
     introHeading: (occ: string, loc: string) => `${occ} à ${loc}`,
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographe prêt" : "photographes prêts"} pour des séances à ${loc}`,
+    packagesHeading: (occ: string, loc: string) => `Forfaits ${occ.toLowerCase()} à ${loc}`,
+    packagesSub: "Choisissez un forfait, réservez directement. Chacun inclut un photographe, la durée et les photos retouchées — sans frais cachés.",
+    packagePopular: "Populaire",
+    packageMinutesAbbr: "min",
+    packagePhotos: "photos",
+    packageBookCta: "Réserver le forfait",
+    chooseYourPhotographerHeading: "Choisissez votre photographe",
+    chooseYourPhotographerSub: (occ: string, loc: string) => `Ou parcourez les photographes ${occ.toLowerCase()} à ${loc} ci-dessous — forfaits, avis et disponibilité.`,
   },
 } as const;
 
@@ -565,6 +623,15 @@ export default async function OccasionPage({
     totalPhotographers = totalRow?.count ?? 0;
   } catch {}
 
+  // Compose the experience-led hero label "Book a {Occasion} Photoshoot"
+  // (or whichever locale equivalent). Falls back to the provider-led
+  // OCCASIONS title if a combo isn't in the booking-label map (rare).
+  const bookA = BOOK_A[locale] || BOOK_A.en;
+  const occBookingNoun = BOOKING_LABEL[occasion]?.[locale]
+    || BOOKING_LABEL[occasion]?.en
+    || occT;
+  const heroOccasionLabel = `${bookA} ${occBookingNoun}`;
+
   const heroLocationContext: HeroLocationContext = {
     slug,
     name: localizedName,
@@ -574,7 +641,7 @@ export default async function OccasionPage({
     durationText,
     avgRating: avgRating || null,
     totalReviews,
-    occasionLabel: occT,
+    occasionLabel: heroOccasionLabel,
     occasionPreposition: IN_PREP[locale] || "in",
   };
 
@@ -664,6 +731,38 @@ export default async function OccasionPage({
 
   // Other occasions in this location — exclude the current one.
   const otherOccasions = Object.entries(OCCASIONS).filter(([key]) => key !== occasion);
+
+  // Featured packages for this combo — same intent as the parent
+  // location page's package-first section. Filtered to photographers
+  // covering this occasion. Each card is buyable in 1 click via
+  // /book/[slug]?package=ID. SQL ranks by photographer quality + popular
+  // package flag + price ascending so the cheapest popular pro packages
+  // surface first.
+  const featuredPackages = await query<{
+    id: string; name: string; price: string; duration_minutes: number; num_photos: number;
+    photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
+    rating: number; review_count: number; is_popular: boolean;
+  }>(
+    `SELECT pk.id, pk.name, pk.price::text, pk.duration_minutes, COALESCE(pk.num_photos, 0) as num_photos,
+            pp.slug as photographer_slug, u.name as photographer_name, u.avatar_url as photographer_avatar,
+            COALESCE(pp.rating, 0) as rating, COALESCE(pp.review_count, 0) as review_count,
+            COALESCE(pk.is_popular, FALSE) as is_popular
+     FROM packages pk
+     JOIN photographer_profiles pp ON pp.id = pk.photographer_id
+     JOIN users u ON u.id = pp.user_id
+     JOIN photographer_locations pl ON pl.photographer_id = pp.id
+     WHERE pl.location_slug = $1
+       AND pp.is_approved = TRUE
+       AND COALESCE(pp.is_test, FALSE) = FALSE
+       AND pk.is_public = TRUE
+       AND ($2::text[] IS NULL OR pp.shoot_types && $2::text[])
+     ORDER BY pp.is_featured DESC, pp.is_verified DESC,
+              pk.is_popular DESC NULLS LAST,
+              pp.rating DESC NULLS LAST,
+              pk.price ASC
+     LIMIT 6`,
+    [slug, shootTypeLabels]
+  ).catch(() => []);
 
   // ─── Schema.org JSON-LD ────────────────────────────────────────────────
   const jsonLdService = {
@@ -804,6 +903,62 @@ export default async function OccasionPage({
         </div>
       </section>
 
+      {/* Featured packages for this combo — first buyable thing the
+          visitor sees, before any "browse photographers" decision. Same
+          shape as the parent location-page packages section but filtered
+          to photographers covering this occasion. Mobile-first 1/2/3-col. */}
+      {featuredPackages.length > 0 && (
+        <section id="packages" className="border-b border-warm-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
+            <div className="max-w-3xl">
+              <h2 className="font-display text-3xl font-bold text-gray-900 sm:text-4xl">
+                {tL.packagesHeading(occT, localizedName)}
+              </h2>
+              <p className="mt-3 text-gray-500">{tL.packagesSub}</p>
+            </div>
+            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredPackages.map((pkg) => (
+                <Link
+                  key={pkg.id}
+                  href={`/book/${pkg.photographer_slug}?package=${pkg.id}`}
+                  className="group flex flex-col rounded-2xl border border-warm-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-lg"
+                >
+                  {pkg.is_popular && (
+                    <span className="self-start rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                      {tL.packagePopular}
+                    </span>
+                  )}
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary-100">
+                      {pkg.photographer_avatar && (
+                        <OptimizedImage src={pkg.photographer_avatar} alt={pkg.photographer_name} width={80} className="h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-gray-900">{pkg.photographer_name}</p>
+                      {pkg.review_count > 0 && (
+                        <p className="text-xs text-gray-500">★ {Number(pkg.rating).toFixed(1)} · {pkg.review_count} {pkg.review_count === 1 ? tc("review") : tc("reviews")}</p>
+                      )}
+                    </div>
+                  </div>
+                  <h3 className="mt-4 font-display text-lg font-bold text-gray-900 group-hover:text-primary-600">{pkg.name}</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {pkg.duration_minutes} {tL.packageMinutesAbbr}
+                    {pkg.num_photos > 0 && ` · ${pkg.num_photos} ${tL.packagePhotos}`}
+                  </p>
+                  <div className="mt-auto pt-4 flex items-baseline justify-between">
+                    <span className="text-2xl font-bold text-gray-900">€{Math.round(Number(pkg.price))}</span>
+                    <span className="text-sm font-semibold text-primary-600 group-hover:underline">
+                      {tL.packageBookCta} →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* About location — sticky text + portfolio mosaic (same pattern as
           polished page). The shoot-type pill row here points to other
           occasion combos so users can explore neighbouring intent. */}
@@ -867,10 +1022,10 @@ export default async function OccasionPage({
         <section className="border-t border-warm-200 bg-warm-50">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <h2 className="font-display text-3xl font-bold text-gray-900">
-              {occT} {tL.inLocation} {localizedName}
+              {tL.chooseYourPhotographerHeading}
             </h2>
             <p className="mt-2 text-gray-500">
-              {tL.photographersAvailable(photographerCount, localizedName)}
+              {tL.chooseYourPhotographerSub(occT, localizedName)}
             </p>
             <div className="mt-6">
               <ScarcityBanner count={photographerCount} locationName={localizedName} locale={locale} />

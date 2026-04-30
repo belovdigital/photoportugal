@@ -564,11 +564,26 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
               so the photo behind shows through clearly while still keeping
               the form readable. */}
           <div className="mt-7 rounded-2xl bg-white/[0.06] backdrop-blur-md border border-white/25 p-4 shadow-2xl">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/80">
-              {locationContext
-                ? tLoc("matchPrompt", { location: locationContext.name })
-                : t("matchPrompt", { firstName })}
-            </p>
+            {/* AI-led heading: ✨ icon + "instant match" wording. The
+                old copy ("Tell us about your X photoshoot — we'll match")
+                buried the AI/instant promise. The icon + new label make
+                it obvious that pressing the CTA gets an immediate AI
+                reply, not an email-back-later workflow. */}
+            <div className="mb-1 flex items-center gap-1.5">
+              <svg className="h-4 w-4 text-amber-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2l1.7 4.6L18 8l-4.3 1.4L12 14l-1.7-4.6L6 8l4.3-1.4L12 2zm6 9l1 2.5L21.5 14l-2.5 1L18 17l-1-2-2.5-1L17 13l1-2zM5 14l1 2.5L8.5 17 6 18l-1 2-1-2-2.5-1L4 16l1-2z" />
+              </svg>
+              <p className="text-xs font-semibold uppercase tracking-wider text-white/90">
+                {locationContext
+                  ? tLoc("matchPrompt", { location: locationContext.name })
+                  : t("matchPrompt", { firstName })}
+              </p>
+            </div>
+            {locationContext && (
+              <p className="mb-3 text-[12px] text-white/70">
+                {tLocQuickStart("labelSubtitle", { location: locationContext.name })}
+              </p>
+            )}
             {/* On location pages we ditch the email-capture form in favour
                 of a free-text input that drops the visitor's question
                 straight into the on-page AI concierge drawer. Lower
