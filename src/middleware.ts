@@ -1,6 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { NextRequest, NextResponse } from "next/server";
+import { getRedirect } from "./lib/redirects-cache";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -106,8 +107,34 @@ const EXCLUDED_PREFIXES = [
   "/uploads",
 ];
 
-export default function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+  const host = (request.headers.get("host") || "").split(":")[0].toLowerCase();
+  const isLensPt = host === "lens.pt" || host === "www.lens.pt";
+
+  // === Admin-managed redirects (DB-driven, in-memory cached, ~60s TTL) ===
+  // Runs FIRST so a rule on `lens.pt/foo` wins over any built-in routing.
+  // Query string is forwarded only when the target has none of its own —
+  // lets the admin choose: target with `?utm=keep` overrides incoming query;
+  // bare path `/x` carries the inbound query through.
+  const rule = await getRedirect(host, pathname);
+  if (rule) {
+    let target = rule.target_url;
+    if (request.nextUrl.search && !target.includes("?")) {
+      target = target + request.nextUrl.search;
+    }
+    return NextResponse.redirect(target, rule.status_code as 301 | 302 | 307 | 308);
+  }
+
+  // lens.pt is a redirect-only domain — anything without an explicit rule is
+  // a hard 404. We don't want any of the photoportugal.com app surface to be
+  // reachable from this hostname.
+  if (isLensPt) {
+    return new NextResponse("Not found", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
 
   // Skip excluded paths
   if (
@@ -347,5 +374,9 @@ export default function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|uploads|api).*)"],
+  // Includes /api so middleware can 404 lens.pt's API surface; the existing
+  // EXCLUDED_PREFIXES short-circuit lets /api on photoportugal.com pass through
+  // untouched after the host/redirect check at the top of the function.
+  matcher: ["/((?!_next|uploads).*)"],
+  runtime: "nodejs",
 };

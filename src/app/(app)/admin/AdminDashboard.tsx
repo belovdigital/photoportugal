@@ -6,6 +6,7 @@ import { AuditLog as AuditLogTab } from "./AuditLog";
 import AdminCalendarTab from "./AdminCalendarTab";
 import { AdminConciergeTab } from "./AdminConciergeTab";
 import { AdminPopupStats } from "./AdminPopupStats";
+import { RedirectsManager } from "./RedirectsManager";
 
 function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "telegram"; title: string }) {
   const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; error_message?: string | null; from?: string; created_at: string; price?: string | null; direction?: string }[]>([]);
@@ -280,6 +281,7 @@ const tabGroups = [
       { key: "blog", label: "Blog", icon: "document" },
       { key: "promos", label: "Promo Codes", icon: "tag" },
       { key: "locations", label: "Locations", icon: "map" },
+      { key: "redirects", label: "Redirects", icon: "search" },
     ],
   },
   {
@@ -293,7 +295,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "popupStats" | "savedLeads" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "logs" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "popupStats" | "savedLeads" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "redirects" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -940,6 +942,7 @@ export function AdminDashboard({
           {activeTab === "blog" && blogSection}
           {activeTab === "promos" && promosSection}
           {activeTab === "locations" && locationsSection}
+          {activeTab === "redirects" && <RedirectsManager />}
           {activeTab === "logs" && (
             <div>
               <div className="flex gap-1 overflow-x-auto mb-4 pb-1">
