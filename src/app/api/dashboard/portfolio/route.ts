@@ -96,24 +96,37 @@ export async function POST(req: NextRequest) {
     if (!isImage) {
       return NextResponse.json({ error: "Only images are allowed" }, { status: 400 });
     }
-    const ext = ALLOWED_EXTENSIONS.includes(rawExt) ? rawExt : "jpg";
-    const filename = `${crypto.randomUUID()}.${ext}`;
-    const r2Key = `portfolio/${profile.id}/${filename}`;
 
     const rawBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Resize main image to max 2000px wide, JPEG quality 85
+    // Resize + convert to JPEG. iPhone HEIC uploads were previously
+    // saved with a .heic extension while the buffer was JPEG bytes —
+    // browsers and image proxies refused to render them. Now if sharp
+    // succeeds, we ALWAYS use .jpg extension. If sharp throws (rare)
+    // we keep the original buffer + extension as a fallback.
     let buffer: Buffer;
+    let convertedToJpeg = false;
     try {
       buffer = await sharp(rawBuffer)
         .rotate()
         .resize(2000, undefined, { fit: "inside", withoutEnlargement: true })
         .jpeg({ quality: 85 })
         .toBuffer();
-    } catch {
+      convertedToJpeg = true;
+    } catch (err) {
+      console.warn("[portfolio] sharp convert failed, using raw:", err);
       buffer = rawBuffer;
     }
-    await uploadToS3(r2Key, buffer, "image/jpeg");
+
+    const ext = convertedToJpeg
+      ? "jpg"
+      : (ALLOWED_EXTENSIONS.includes(rawExt) ? rawExt : "jpg");
+    const filename = `${crypto.randomUUID()}.${ext}`;
+    const r2Key = `portfolio/${profile.id}/${filename}`;
+    const contentType = convertedToJpeg
+      ? "image/jpeg"
+      : (file.type || "image/jpeg");
+    await uploadToS3(r2Key, buffer, contentType);
 
     // Generate thumbnail (400px wide, WebP, quality 75). Upload alongside the
     // main image — thumbnail loading is no longer needed once Cloudflare Image
