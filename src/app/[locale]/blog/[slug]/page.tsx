@@ -8,6 +8,7 @@ import { localeAlternates } from "@/lib/seo";
 import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
+import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { fetchBlogConversionAssets } from "@/lib/blog-conversion-assets";
 import {
   BlogHeroCarousel,
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale, slug } = await params;
 
   const post = await queryOne<BlogPost>(
-    "SELECT id, slug, title, excerpt, meta_title, meta_description, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
+    "SELECT id, slug, title, excerpt, content, meta_title, meta_description, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
     [slug, locale]
   );
 
@@ -64,6 +65,60 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const pageTitle = post.meta_title || post.title;
   const pageDescription = post.meta_description || post.excerpt || `Read "${post.title}" on the Photo Portugal blog.`;
 
+  // Resolve og:image: prefer the explicit cover_image_url, but for posts
+  // where it's NULL (e.g. native long-form posts that rely on a runtime
+  // hero from a photographer's portfolio) compute the same hero photo
+  // here so social-share previews aren't blank. Falls through to the
+  // site default (no images key) only when we genuinely have nothing.
+  let ogImageUrl: string | null = null;
+  if (post.cover_image_url) {
+    ogImageUrl = post.cover_image_url.startsWith("http")
+      ? post.cover_image_url
+      : `https://photoportugal.com${post.cover_image_url}`;
+  } else {
+    const contentLower = (post.title + " " + (post.content || "")).toLowerCase();
+    const locSlugs = locations
+      .filter((loc) => contentLower.includes(loc.name.toLowerCase()))
+      .slice(0, 4)
+      .map((l) => l.slug);
+    const stNames = shootTypes
+      .filter((st) => contentLower.includes(st.name.toLowerCase()) || contentLower.includes(st.slug))
+      .slice(0, 3)
+      .map((s) => s.name);
+    if (locSlugs.length > 0 || stNames.length > 0) {
+      const heroPhoto = await queryOne<{ url: string }>(
+        `SELECT pi.url
+           FROM portfolio_items pi
+           JOIN photographer_profiles pp ON pp.id = pi.photographer_id
+          WHERE pp.is_approved = TRUE
+            AND COALESCE(pp.is_test, FALSE) = FALSE
+            AND pi.type = 'photo'
+            -- Skip HEIC for og:image — Facebook/Twitter/WhatsApp don't
+            -- render it, so the social preview would be blank.
+            AND lower(pi.url) NOT LIKE '%.heic'
+            AND lower(pi.url) NOT LIKE '%.heif'
+            AND (
+              $2::text[] = ARRAY[]::text[]
+              OR pi.shoot_type = ANY($2::text[])
+              OR (pi.shoot_type IS NULL AND pp.shoot_types && $2::text[])
+            )
+            AND (
+              ($1::text[] != ARRAY[]::text[] AND pi.location_slug = ANY($1::text[]))
+              OR ($2::text[] != ARRAY[]::text[] AND pi.shoot_type = ANY($2::text[]))
+              OR EXISTS (
+                SELECT 1 FROM photographer_locations plx
+                 WHERE plx.photographer_id = pp.id
+                   AND ($1::text[] != ARRAY[]::text[] AND plx.location_slug = ANY($1::text[]))
+              )
+            )
+          ORDER BY hashtext($3::text || pi.url)
+          LIMIT 1`,
+        [locSlugs, stNames, post.id]
+      ).catch(() => null);
+      if (heroPhoto?.url) ogImageUrl = heroPhoto.url;
+    }
+  }
+
   return {
     title: pageTitle,
     description: pageDescription,
@@ -75,12 +130,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "article",
       publishedTime: post.published_at,
       authors: [post.author],
-      ...(post.cover_image_url && {
+      ...(ogImageUrl && {
         images: [
           {
-            url: post.cover_image_url.startsWith("http")
-              ? post.cover_image_url
-              : `https://photoportugal.com${post.cover_image_url}`,
+            url: ogImageUrl,
             width: 1200,
             height: 630,
             alt: post.title,
@@ -92,6 +145,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       card: "summary_large_image",
       title: pageTitle,
       description: pageDescription,
+      ...(ogImageUrl && { images: [ogImageUrl] }),
     },
   };
 }
@@ -650,6 +704,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     postId: post.id,
     locationSlugs: mentionedLocationSlugs,
     shootTypeNames: mentionedShootTypeNames,
+    locale,
   });
 
   // Split content by H2 markdown so we can inject carousels between sections.
@@ -746,10 +801,10 @@ export default async function BlogPostPage({ params }: PageProps) {
       "@type": "WebPage",
       "@id": `https://photoportugal.com/blog/${post.slug}`,
     },
-    ...(post.cover_image_url && {
-      image: post.cover_image_url.startsWith("http")
-        ? post.cover_image_url
-        : `https://photoportugal.com${post.cover_image_url}`,
+    ...((post.cover_image_url || heroSrc) && {
+      image: (post.cover_image_url || heroSrc)!.startsWith("http")
+        ? (post.cover_image_url || heroSrc)!
+        : `https://photoportugal.com${post.cover_image_url || heroSrc}`,
     }),
   };
 
@@ -960,50 +1015,6 @@ export default async function BlogPostPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* End-cap package picker — up to 6 different photographers'
-              top packages. Mobile: horizontal scroll-snap so swipe is
-              the primary interaction. Desktop: 3-column grid that fills
-              available width. */}
-          {(conversion.endCapPackages.length > 0 || relatedPackages.length > 0) && (
-            <div className="-mx-4 sm:-mx-6 mt-12 border-t border-warm-200 pt-10 px-4 sm:px-6">
-              <h3 className="font-display text-2xl font-bold text-gray-900">
-                {mentionedLocations.length > 0
-                  ? t("relatedPhotographersInLocation", { location: mentionedLocations[0].name })
-                  : t("relatedPhotographersGeneric")}
-              </h3>
-              <p className="mt-2 text-sm text-gray-500">
-                {t("relatedPhotographersSub")}
-              </p>
-              {/* Mobile: horizontal scroll-snap row */}
-              <div className="mt-6 flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 lg:hidden -mx-4 px-4 sm:-mx-6 sm:px-6" style={{ scrollbarWidth: "none" }}>
-                {(conversion.endCapPackages.length > 0 ? conversion.endCapPackages : relatedPackages).map((pkg) => (
-                  <div key={pkg.id} className="shrink-0 snap-start" style={{ width: "min(85vw, 340px)" }}>
-                    <PackageCardWithCarousel
-                      pkg={pkg}
-                      popularLabel={t("packagePopular")}
-                      minutesAbbrLabel={t("packageMinutesAbbr")}
-                      photosLabel={t("packagePhotos")}
-                      bookCtaLabel={t("packageBookCta")}
-                    />
-                  </div>
-                ))}
-              </div>
-              {/* Desktop: grid */}
-              <div className="mt-6 hidden lg:grid grid-cols-3 gap-5">
-                {(conversion.endCapPackages.length > 0 ? conversion.endCapPackages : relatedPackages).slice(0, 6).map((pkg) => (
-                  <PackageCardWithCarousel
-                    key={pkg.id}
-                    pkg={pkg}
-                    popularLabel={t("packagePopular")}
-                    minutesAbbrLabel={t("packageMinutesAbbr")}
-                    photosLabel={t("packagePhotos")}
-                    bookCtaLabel={t("packageBookCta")}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Related Locations — internal links based on location mentions */}
           {mentionedLocations.length > 0 && (
             <div className="mt-12 border-t border-warm-200 pt-8">
@@ -1053,6 +1064,122 @@ export default async function BlogPostPage({ params }: PageProps) {
           )}
         </div>
       </article>
+
+      {/* End-cap photographer picker — full-width section (max-w-7xl)
+          rendered OUTSIDE the article body so the cards aren't squeezed
+          into the article's max-w-3xl reading width. Same component used
+          on /locations/[slug] — carousel + avatar + tagline + reviews +
+          inline package CTAs. Mobile: horizontal scroll-snap. Desktop:
+          3-per-row grid that fills the page. */}
+      {conversion.endCapPhotographers.length > 0 ? (
+        <section className="border-t border-warm-200 bg-warm-50/50">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <h3 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
+              {mentionedLocations.length > 0
+                ? t("relatedPhotographersInLocation", { location: mentionedLocations[0].name })
+                : t("relatedPhotographersGeneric")}
+            </h3>
+            <p className="mt-2 text-sm text-gray-500">
+              {t("relatedPhotographersSub")}
+            </p>
+            {/* Mobile: horizontal scroll-snap row of full cards */}
+            <div className="mt-6 flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 lg:hidden -mx-4 px-4 sm:-mx-6 sm:px-6" style={{ scrollbarWidth: "none" }}>
+              {conversion.endCapPhotographers.map((ph) => (
+                <div key={ph.id} className="shrink-0 snap-start" style={{ width: "min(85vw, 340px)" }}>
+                  <PhotographerCardCompact
+                    p={{
+                      slug: ph.slug,
+                      name: ph.name,
+                      tagline: ph.tagline,
+                      avatar_url: ph.avatar_url,
+                      cover_url: ph.cover_url,
+                      cover_position_y: ph.cover_position_y,
+                      portfolio_thumbs: ph.portfolio_thumbs,
+                      is_featured: ph.is_featured,
+                      is_verified: ph.is_verified,
+                      is_founding: ph.is_founding,
+                      rating: Number(ph.rating),
+                      review_count: ph.review_count,
+                      min_price: ph.starting_price ? Number(ph.starting_price) : null,
+                      locations: ph.locations,
+                      last_active_at: ph.last_active_at,
+                      avg_response_minutes: ph.avg_response_minutes,
+                      packages: ph.packages ?? [],
+                      packages_total_count: ph.packages_total_count,
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+            {/* Desktop: 3-per-row grid of full cards at the page width */}
+            <div className="mt-6 hidden lg:grid grid-cols-3 gap-6">
+              {conversion.endCapPhotographers.slice(0, 6).map((ph) => (
+                <PhotographerCardCompact
+                  key={ph.id}
+                  p={{
+                    slug: ph.slug,
+                    name: ph.name,
+                    tagline: ph.tagline,
+                    avatar_url: ph.avatar_url,
+                    cover_url: ph.cover_url,
+                    cover_position_y: ph.cover_position_y,
+                    portfolio_thumbs: ph.portfolio_thumbs,
+                    is_featured: ph.is_featured,
+                    is_verified: ph.is_verified,
+                    is_founding: ph.is_founding,
+                    rating: Number(ph.rating),
+                    review_count: ph.review_count,
+                    min_price: ph.starting_price ? Number(ph.starting_price) : null,
+                    locations: ph.locations,
+                    last_active_at: ph.last_active_at,
+                    avg_response_minutes: ph.avg_response_minutes,
+                    packages: ph.packages ?? [],
+                    packages_total_count: ph.packages_total_count,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : relatedPackages.length > 0 ? (
+        <section className="border-t border-warm-200 bg-warm-50/50">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+            <h3 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
+              {mentionedLocations.length > 0
+                ? t("relatedPhotographersInLocation", { location: mentionedLocations[0].name })
+                : t("relatedPhotographersGeneric")}
+            </h3>
+            <p className="mt-2 text-sm text-gray-500">
+              {t("relatedPhotographersSub")}
+            </p>
+            <div className="mt-6 flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 lg:hidden -mx-4 px-4 sm:-mx-6 sm:px-6" style={{ scrollbarWidth: "none" }}>
+              {relatedPackages.map((pkg) => (
+                <div key={pkg.id} className="shrink-0 snap-start" style={{ width: "min(85vw, 340px)" }}>
+                  <PackageCardWithCarousel
+                    pkg={pkg}
+                    popularLabel={t("packagePopular")}
+                    minutesAbbrLabel={t("packageMinutesAbbr")}
+                    photosLabel={t("packagePhotos")}
+                    bookCtaLabel={t("packageBookCta")}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 hidden lg:grid grid-cols-3 gap-6">
+              {relatedPackages.slice(0, 6).map((pkg) => (
+                <PackageCardWithCarousel
+                  key={pkg.id}
+                  pkg={pkg}
+                  popularLabel={t("packagePopular")}
+                  minutesAbbrLabel={t("packageMinutesAbbr")}
+                  photosLabel={t("packagePhotos")}
+                  bookCtaLabel={t("packageBookCta")}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* CTA */}
       <section className="border-t border-warm-200 bg-primary-50">
@@ -1127,9 +1254,9 @@ export default async function BlogPostPage({ params }: PageProps) {
       {/* Sticky mobile bottom bar — appears after 15% scroll, shows
           live count of photographers matching the post topic. Mobile
           only; desktop has the inline breakouts and end-cap grid. */}
-      {(conversion.endCapPackages.length > 0 || conversion.breakouts.length > 0) && (
+      {(conversion.endCapPhotographers.length > 0 || conversion.breakouts.length > 0) && (
         <BlogStickyMobileBar
-          count={Math.max(conversion.endCapPackages.length, conversion.breakouts.length, relatedPackages.length)}
+          count={Math.max(conversion.endCapPhotographers.length, conversion.breakouts.length, relatedPackages.length)}
           primaryHref={mentionedLocations.length > 0
             ? `/photographers?location=${mentionedLocations[0].slug}`
             : "/photographers"}

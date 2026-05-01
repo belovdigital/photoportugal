@@ -49,33 +49,41 @@ export type TopicReview = {
   photographer_slug: string;
 };
 
-export type EndCapPackage = {
+export type EndCapPhotographer = {
   id: string;
+  slug: string;
   name: string;
-  price: string;
-  duration_minutes: number;
-  num_photos: number;
-  is_popular: boolean;
-  photographer_slug: string;
-  photographer_name: string;
-  photographer_avatar: string | null;
+  tagline: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
+  cover_position_y: number | null;
+  portfolio_thumbs: string[];
+  is_featured: boolean;
+  is_verified: boolean;
+  is_founding: boolean;
   rating: number;
   review_count: number;
-  portfolio_thumbs: string[];
+  starting_price: string | null;
+  locations: string | null;
+  last_active_at: string | null;
+  avg_response_minutes: number | null;
+  packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number }[];
+  packages_total_count: number;
 };
 
 export async function fetchBlogConversionAssets(opts: {
   postId: string;
   locationSlugs: string[];
   shootTypeNames: string[];
+  locale?: string;
 }): Promise<{
   heroCarousel: HeroCarouselData | null;
   photoStrip: PhotoStripItem[];
   breakouts: PhotographerBreakout[];
   reviews: TopicReview[];
-  endCapPackages: EndCapPackage[];
+  endCapPhotographers: EndCapPhotographer[];
 }> {
-  const { postId, locationSlugs, shootTypeNames } = opts;
+  const { postId, locationSlugs, shootTypeNames, locale } = opts;
 
   // Bail early if the post mentions nothing — we have no signal to
   // pick photographers, so all assets stay empty and the page renders
@@ -86,19 +94,19 @@ export async function fetchBlogConversionAssets(opts: {
       photoStrip: [],
       breakouts: [],
       reviews: [],
-      endCapPackages: [],
+      endCapPhotographers: [],
     };
   }
 
-  const [heroCarousel, photoStrip, breakouts, reviews, endCapPackages] = await Promise.all([
+  const [heroCarousel, photoStrip, breakouts, reviews, endCapPhotographers] = await Promise.all([
     fetchHeroCarousel(postId, locationSlugs, shootTypeNames),
     fetchPhotoStrip(postId, locationSlugs, shootTypeNames),
     fetchPhotographerBreakouts(postId, locationSlugs, shootTypeNames),
     fetchTopicReviews(locationSlugs, shootTypeNames),
-    fetchEndCapPackages(postId, locationSlugs, shootTypeNames),
+    fetchEndCapPhotographers(postId, locationSlugs, shootTypeNames, locale),
   ]);
 
-  return { heroCarousel, photoStrip, breakouts, reviews, endCapPackages };
+  return { heroCarousel, photoStrip, breakouts, reviews, endCapPhotographers };
 }
 
 // ---------------------------------------------------------------------------
@@ -362,69 +370,95 @@ async function fetchTopicReviews(
 }
 
 // ---------------------------------------------------------------------------
-// End-cap packages — 6 packages from 6 different photographers.
-async function fetchEndCapPackages(
+// End-cap photographers — up to 6 different photographers shown as full
+// "compact full" cards (same component used on /locations/[slug]). Strict
+// AND match: photographer must cover a mentioned location AND match a
+// mentioned shoot type when both are present. Returns all the data the
+// PhotographerCardCompact component needs to render inline package CTAs.
+async function fetchEndCapPhotographers(
   postId: string,
   locationSlugs: string[],
-  shootTypeNames: string[]
-): Promise<EndCapPackage[]> {
-  return query<EndCapPackage>(
-    `WITH per_photographer AS (
-       SELECT pk.id, pk.name, pk.price::text AS price, pk.duration_minutes,
-              COALESCE(pk.num_photos, 0) as num_photos,
-              pp.id as profile_id,
-              pp.slug as photographer_slug, u.name as photographer_name,
-              u.avatar_url as photographer_avatar,
-              COALESCE(pp.rating, 0) as rating,
-              COALESCE(pp.review_count, 0) as review_count,
-              COALESCE(pk.is_popular, FALSE) as is_popular,
-              pp.is_featured,
-              ROW_NUMBER() OVER (
-                PARTITION BY pp.id
-                ORDER BY COALESCE(pk.is_popular, FALSE) DESC, pk.price ASC
-              ) as rn_per_photographer
-         FROM packages pk
-         JOIN photographer_profiles pp ON pp.id = pk.photographer_id
-         JOIN users u ON u.id = pp.user_id
-        WHERE pp.is_approved = TRUE
-          AND COALESCE(pp.is_test, FALSE) = FALSE
-          AND pk.is_public = TRUE
-          AND pk.custom_for_user_id IS NULL
-          -- Strict AND match — same rule as the breakouts.
-          AND (
-            $1::text[] = ARRAY[]::text[]
-            OR EXISTS (
-              SELECT 1 FROM photographer_locations plx
-               WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
-            )
-          )
-          AND (
-            $2::text[] = ARRAY[]::text[]
-            OR pp.shoot_types && $2::text[]
-          )
-     )
-     SELECT id, name, price, duration_minutes, num_photos,
-            photographer_slug, photographer_name, photographer_avatar,
-            rating, review_count, is_popular,
+  shootTypeNames: string[],
+  locale?: string
+): Promise<EndCapPhotographer[]> {
+  const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
+  const useLoc = locale && TR_LOCALES.has(locale) ? locale : null;
+  const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
+
+  return query<EndCapPhotographer>(
+    `SELECT pp.id, pp.slug, u.name, u.avatar_url,
+            pp.cover_url, pp.cover_position_y,
+            pp.is_featured, pp.is_verified,
+            COALESCE(pp.is_founding, FALSE) as is_founding,
+            ${taglineSql} as tagline,
+            COALESCE(pp.rating, 0) as rating,
+            COALESCE(pp.review_count, 0) as review_count,
+            u.last_seen_at as last_active_at, pp.avg_response_minutes,
+            (SELECT MIN(price)::text FROM packages
+              WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL) as starting_price,
+            (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
             COALESCE((
               SELECT array_agg(url ORDER BY shuffle, sort_order NULLS LAST, created_at)
                 FROM (
                   SELECT pi.url,
-                         hashtext(pp.profile_id::text || pi.url) as shuffle,
+                         hashtext($3::text || pi.url) as shuffle,
                          pi.sort_order, pi.created_at
                     FROM portfolio_items pi
-                   WHERE pi.photographer_id = pp.profile_id
+                   WHERE pi.photographer_id = pp.id
                      AND pi.type = 'photo'
                    ORDER BY shuffle, pi.sort_order NULLS LAST, pi.created_at
-                   LIMIT 5
+                   LIMIT 7
                 ) ranked
-            ), ARRAY[]::text[]) as portfolio_thumbs
-       FROM per_photographer pp
-      WHERE rn_per_photographer = 1
+            ), ARRAY[]::text[]) as portfolio_thumbs,
+            COALESCE((
+              SELECT json_agg(
+                json_build_object(
+                  'id', pk.id,
+                  'name', pk.name,
+                  'price', pk.price,
+                  'duration_minutes', pk.duration_minutes,
+                  'num_photos', COALESCE(pk.num_photos, 0)
+                ) ORDER BY pk.sort_order NULLS LAST, pk.price ASC
+              )
+              FROM packages pk
+              WHERE pk.photographer_id = pp.id
+                AND pk.is_public = TRUE
+                AND pk.custom_for_user_id IS NULL
+            ), '[]'::json) as packages,
+            (SELECT COUNT(*) FROM packages
+              WHERE photographer_id = pp.id
+                AND is_public = TRUE
+                AND custom_for_user_id IS NULL)::int as packages_total_count
+       FROM photographer_profiles pp
+       JOIN users u ON u.id = pp.user_id
+      WHERE pp.is_approved = TRUE
+        AND COALESCE(pp.is_test, FALSE) = FALSE
+        -- Strict AND: must cover the mentioned location AND match the
+        -- mentioned shoot type when both are present.
+        AND (
+          $1::text[] = ARRAY[]::text[]
+          OR EXISTS (
+            SELECT 1 FROM photographer_locations plx
+             WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
+          )
+        )
+        AND (
+          $2::text[] = ARRAY[]::text[]
+          OR pp.shoot_types && $2::text[]
+        )
+        -- Only include photographers with at least one bookable package
+        -- so the "View packages" CTA on the card always lands somewhere.
+        AND EXISTS (
+          SELECT 1 FROM packages pk
+           WHERE pk.photographer_id = pp.id
+             AND pk.is_public = TRUE
+             AND pk.custom_for_user_id IS NULL
+        )
       ORDER BY pp.is_featured DESC,
-               pp.is_popular DESC NULLS LAST,
+               pp.is_verified DESC,
                pp.review_count DESC NULLS LAST,
-               hashtext($3::text || pp.profile_id::text)
+               hashtext($3::text || pp.id::text)
       LIMIT 6`,
     [locationSlugs, shootTypeNames, postId]
   ).catch(() => []);

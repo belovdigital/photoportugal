@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AdminBanToggle } from "./AdminControls";
 import { Avatar } from "@/components/ui/Avatar";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
@@ -109,6 +109,31 @@ export function AdminClientsList({ clients, bookingsByClient }: { clients: Admin
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // Deep-link from /admin#client-<id> (e.g. clicking a client name in the
+  // bookings tab): jump to the page that contains that client, auto-expand
+  // its row, and scroll into view. Reacts to hashchange so navigation
+  // from another tab works without a full page reload.
+  useEffect(() => {
+    function applyHash() {
+      const hash = window.location.hash;
+      if (!hash.startsWith("#client-")) return;
+      const id = hash.slice("#client-".length);
+      const idx = filtered.findIndex((c) => c.id === id);
+      if (idx === -1) return;
+      const targetPage = Math.floor(idx / PAGE_SIZE);
+      setPage(targetPage);
+      setExpandedId(id);
+      // Wait for the page to render before scrolling — pagination is
+      // synchronous but the DOM update is one frame away.
+      setTimeout(() => {
+        document.getElementById(`client-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    }
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, [filtered]);
 
   return (
     <div className="space-y-3">

@@ -101,6 +101,23 @@ export function VisitorTracker() {
       }).catch(() => {});
     } else {
       sessionStorage.setItem("vs_last", String(Date.now()));
+      // If user clicks a fresh ad while an existing session is still active,
+      // capture the new gclid/UTMs anyway so attribution doesn't get lost.
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const freshGclid = params.get("gclid");
+        if (freshGclid) {
+          sessionStorage.setItem("gclid", freshGclid);
+          localStorage.setItem("pp_gclid", JSON.stringify({ v: freshGclid, ts: Date.now() }));
+        }
+        for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term"] as const) {
+          const v = params.get(k);
+          if (v) {
+            sessionStorage.setItem(k, v);
+            localStorage.setItem(`pp_${k}`, JSON.stringify({ v, ts: Date.now() }));
+          }
+        }
+      } catch {}
     }
 
     lastPathRef.current = pathname;

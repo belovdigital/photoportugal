@@ -5,9 +5,9 @@
  * linked to the original ad click via gclid, plus Enhanced Conversions for Leads
  * user data (hashed email/phone) for improved attribution match rate.
  *
- * Conversion actions in Google Ads account 853-315-7376:
- * - "Booking Created" — when a visitor from an ad creates a booking
- * - "Payment Completed" — when that booking is paid
+ * Conversion actions in Google Ads account 853-315-7376 (UPLOAD_CLICKS type, required for offline upload):
+ * - "Booking Created (Offline)" — when a visitor from an ad creates a booking
+ * - "Payment Completed (Offline)" — when that booking is paid
  */
 
 import { createHash } from "crypto";
@@ -80,9 +80,9 @@ async function getConversionActionResourceNames(): Promise<{
   try {
     const customer = await getCustomer();
     const rows = await customer.query(`
-      SELECT conversion_action.resource_name, conversion_action.name
+      SELECT conversion_action.resource_name, conversion_action.name, conversion_action.type
       FROM conversion_action
-      WHERE conversion_action.status = 'ENABLED'
+      WHERE conversion_action.status = 'ENABLED' AND conversion_action.type = 'UPLOAD_CLICKS'
     `);
 
     let bookingCreated: string | null = null;
@@ -91,8 +91,8 @@ async function getConversionActionResourceNames(): Promise<{
     for (const row of rows) {
       const name = row.conversion_action?.name;
       const resourceName = row.conversion_action?.resource_name;
-      if (name === "Booking Created") bookingCreated = resourceName;
-      if (name === "Payment Completed") paymentCompleted = resourceName;
+      if (name === "Booking Created (Offline)") bookingCreated = resourceName;
+      if (name === "Payment Completed (Offline)") paymentCompleted = resourceName;
     }
 
     if (bookingCreated) conversionActionCache.bookingCreated = bookingCreated;
@@ -102,6 +102,33 @@ async function getConversionActionResourceNames(): Promise<{
   } catch (error) {
     console.error("[google-ads-conversions] Failed to fetch conversion actions:", error);
     return { bookingCreated: null, paymentCompleted: null };
+  }
+}
+
+/**
+ * Decode partial_failure_error proto buffer into readable text so it shows up
+ * in logs instead of "[object Object]". The errors come back as a Buffer
+ * containing the protobuf-serialized GoogleAdsFailure; we read the human-readable
+ * string segments from it.
+ */
+function decodePartialFailure(err: unknown): string {
+  if (!err) return "";
+  try {
+    const e = err as { details?: Array<{ value?: { type?: string; data?: number[] } }>; message?: string };
+    if (e.details?.length) {
+      const parts: string[] = [];
+      for (const d of e.details) {
+        if (d.value?.type === "Buffer" && Array.isArray(d.value.data)) {
+          const text = Buffer.from(d.value.data).toString("utf-8").replace(/[^\x20-\x7e]+/g, " ").trim();
+          if (text) parts.push(text);
+        }
+      }
+      if (parts.length) return parts.join(" | ");
+    }
+    if (e.message) return e.message;
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
   }
 }
 
@@ -181,7 +208,8 @@ export async function uploadBookingCreatedConversion(
       userData,
     });
 
-    console.log("[google-ads-conversions] Booking Created conversion uploaded for gclid:", gclid, result?.partial_failure_error ? `(partial failure: ${result.partial_failure_error})` : "(success)");
+    const failure = result?.partial_failure_error ? decodePartialFailure(result.partial_failure_error) : "";
+    console.log("[google-ads-conversions] Booking Created uploaded gclid=" + gclid + " " + (failure ? `FAILURE: ${failure}` : "SUCCESS"));
   } catch (error) {
     console.error("[google-ads-conversions] Failed to upload Booking Created conversion:", error);
   }
@@ -217,7 +245,8 @@ export async function uploadPaymentCompletedConversion(
       userData,
     });
 
-    console.log("[google-ads-conversions] Payment Completed conversion uploaded for gclid:", gclid, "value:", conversionValue, result?.partial_failure_error ? `(partial failure: ${result.partial_failure_error})` : "(success)");
+    const failure = result?.partial_failure_error ? decodePartialFailure(result.partial_failure_error) : "";
+    console.log("[google-ads-conversions] Payment Completed uploaded gclid=" + gclid + " value=" + conversionValue + " " + (failure ? `FAILURE: ${failure}` : "SUCCESS"));
   } catch (error) {
     console.error("[google-ads-conversions] Failed to upload Payment Completed conversion:", error);
   }
