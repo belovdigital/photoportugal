@@ -91,6 +91,9 @@ export async function PATCH(
             { type: "review", slug: reviewDetails.slug }
           )
         ).catch(err => console.error("[reviews] push error:", err));
+        import("@/lib/realtime").then((m) =>
+          m.notifyUser(reviewDetails.photographer_user_id, "review_approved")
+        );
       }
     } catch (err) {
       console.error("[reviews] review approved notification error:", err);

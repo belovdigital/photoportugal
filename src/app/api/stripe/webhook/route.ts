@@ -205,6 +205,9 @@ export async function POST(req: NextRequest) {
                       { type: "booking", bookingId: bookingId || "" }
                     )
                   ).catch(err => console.error("[webhook] payment push error:", err));
+                  import("@/lib/realtime").then((m) =>
+                    m.notifyUser(photographerUser.id, "payment_received", { bookingId })
+                  );
                 }
               } catch (smsErr) {
                 console.error("[webhook] payment whatsapp/sms error:", smsErr);
@@ -226,6 +229,9 @@ export async function POST(req: NextRequest) {
                       { type: "booking", bookingId: bookingId || "" }
                     )
                   ).catch(err => console.error("[webhook] client payment push error:", err));
+                  import("@/lib/realtime").then((m) =>
+                    m.notifyUser(clientUser.id, "payment_received", { bookingId })
+                  );
                 }
               } catch {}
 

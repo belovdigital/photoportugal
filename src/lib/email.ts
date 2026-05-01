@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { queryOne } from "@/lib/db";
+import { formatShootDate } from "@/lib/format-shoot-date";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.migadu.com",
@@ -186,6 +187,7 @@ export async function sendBookingNotification(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
+  shootDate = formatShootDate(shootDate, locale);
   const clientFirstName = clientName.split(" ")[0];
 
   const T = pickT({
@@ -217,6 +219,7 @@ export async function sendBookingRequestToClient(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
+  shootDate = formatShootDate(shootDate, locale);
   const firstName = clientName.split(" ")[0];
   const T = pickT({
     en: {
@@ -289,6 +292,7 @@ export async function sendBookingConfirmation(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
+  shootDate = formatShootDate(shootDate, locale);
   const socialProof = await emailSocialProof();
   const T = pickT({
     en: {
@@ -370,6 +374,7 @@ export async function sendBookingConfirmationWithPayment(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl, formatPrice } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
+  shootDate = formatShootDate(shootDate, locale);
   const price = totalPrice ? Math.round(Number(totalPrice)) : null;
   const firstName = clientName.split(" ")[0];
 
@@ -1238,6 +1243,7 @@ export async function sendAdminNewBookingNotification(
   packageName: string | null,
   shootDate: string | null
 ) {
+  shootDate = formatShootDate(shootDate, "en");
   await sendToAllAdmins(
       `[New Booking] ${clientName} \u2192 ${photographerName}`,
       emailLayout(`
@@ -1337,6 +1343,7 @@ export async function sendShootReminderToClient(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(clientEmail);
+  shootDate = formatShootDate(shootDate, locale) || shootDate;
   const firstName = clientName.split(" ")[0];
   const T = pickT({
     en: {
@@ -1402,6 +1409,7 @@ export async function sendShootReminderToPhotographer(
 ) {
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
+  shootDate = formatShootDate(shootDate, locale) || shootDate;
   const clientFirstName = clientName.split(" ")[0];
   const T = pickT({
     en: {
@@ -1546,6 +1554,7 @@ export function renderPaymentReminderToClient(
 export function renderShootReminderToClient(
   clientName: string, photographerName: string, shootDate: string
 ): { subject: string; html: string } {
+  shootDate = formatShootDate(shootDate, "en") || shootDate;
   return {
     subject: `Tomorrow: Your photoshoot with ${photographerName}!`,
     html: emailLayout(`
@@ -1561,6 +1570,7 @@ export function renderShootReminderToClient(
 export function renderShootReminderToPhotographer(
   photographerName: string, clientName: string, shootDate: string
 ): { subject: string; html: string } {
+  shootDate = formatShootDate(shootDate, "en") || shootDate;
   const clientFirstName = clientName.split(" ")[0];
   return {
     subject: `Tomorrow: Photoshoot with ${clientFirstName}`,
@@ -1635,9 +1645,7 @@ export async function sendAdminBookingConfirmedNotification(
   totalPrice: number | null,
   packageName: string | null
 ) {
-  const dateStr = shootDate
-    ? new Date(shootDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
-    : "Flexible dates";
+  const dateStr = formatShootDate(shootDate, "en", { weekday: "long", month: "long", day: "numeric", year: "numeric" }) || "Flexible dates";
   await sendToAllAdmins(
     `[Booking Confirmed] ${clientName} ↔ ${photographerName}`,
     emailLayout(`

@@ -114,11 +114,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   sendCancellationMessage(id, cancelledBy, reason, user.id).catch(() => {});
 
   // Email the OTHER side with the reason, in plain language.
-  import("@/lib/email").then(({ sendEmail, emailLayout, emailButton }) => {
+  import("@/lib/email").then(async ({ sendEmail, emailLayout, emailButton }) => {
+    const { formatShootDate } = await import("@/lib/format-shoot-date");
+    const { getUserLocaleByEmail } = await import("@/lib/email-locale");
     const recipientEmail = cancelledBy === "photographer" ? booking.client_email : booking.photographer_email;
+    const recipientLocale = await getUserLocaleByEmail(recipientEmail);
     const cancellerName = cancelledBy === "photographer" ? booking.photographer_name : booking.client_name;
     const otherFirstName = (cancelledBy === "photographer" ? booking.client_name : booking.photographer_name).split(" ")[0] || "there";
-    const dateLine = booking.shoot_date ? `<p style="margin:0 0 8px;color:#666;">Date: ${booking.shoot_date}</p>` : "";
+    const formattedDate = formatShootDate(booking.shoot_date, recipientLocale);
+    const dateLine = formattedDate ? `<p style="margin:0 0 8px;color:#666;">Date: ${formattedDate}</p>` : "";
     const priceLine = booking.total_price ? `<p style="margin:0 0 8px;color:#666;">Amount: €${Math.round(Number(booking.total_price))}</p>` : "";
     const subject = cancelledBy === "photographer"
       ? `Your booking with ${booking.photographer_name} was cancelled`
@@ -139,12 +143,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Telegram admins — short structured ping with the full reason.
   import("@/lib/telegram").then(({ sendTelegram }) => {
     const role = cancelledBy === "photographer" ? "photographer" : "client";
-    const dateText = booking.shoot_date ? ` · ${booking.shoot_date}` : "";
-    const priceText = booking.total_price ? ` · €${Math.round(Number(booking.total_price))}` : "";
-    sendTelegram(
-      `❌ <b>Booking cancelled</b> (by ${role})\n\n${booking.client_name} ↔ ${booking.photographer_name}${dateText}${priceText}\n\nReason: <i>${reason.replace(/[<>]/g, "")}</i>`,
-      "bookings"
-    ).catch(() => {});
+    const cancellerName = cancelledBy === "photographer" ? booking.photographer_name : booking.client_name;
+    const fmtDate = (d: unknown): string | null => {
+      if (!d) return null;
+      const date = d instanceof Date ? d : new Date(String(d));
+      if (isNaN(date.getTime())) return null;
+      return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+    };
+    const dateStr = fmtDate(booking.shoot_date);
+    const lines: string[] = [
+      `❌ <b>Booking cancelled</b>`,
+      `<b>By:</b> ${role} (${cancellerName})`,
+      `<b>Client:</b> ${booking.client_name}`,
+      `<b>Photographer:</b> ${booking.photographer_name}`,
+    ];
+    if (dateStr) lines.push(`<b>Shoot date:</b> ${dateStr}`);
+    if (booking.total_price) lines.push(`<b>Amount:</b> €${Math.round(Number(booking.total_price))}`);
+    lines.push(`<b>Reason:</b> <i>${reason.replace(/[<>]/g, "")}</i>`);
+    sendTelegram(lines.join("\n"), "bookings").catch(() => {});
   }).catch(() => {});
 
   return NextResponse.json({ success: true });

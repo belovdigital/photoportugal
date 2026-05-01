@@ -239,6 +239,11 @@ export async function POST(req: NextRequest) {
           { type: "message", bookingId: booking_id }
         )
       ).catch((err) => console.error("[messages] push notification error:", err));
+      // Real-time conversation list refresh on the recipient's other
+      // open clients (mobile + web tabs).
+      import("@/lib/realtime").then((m) =>
+        m.notifyUser(recipientId, "new_message", { bookingId: booking_id })
+      );
 
       // Telegram notification to photographer (when sender is client)
       if (userId === booking.client_id) {

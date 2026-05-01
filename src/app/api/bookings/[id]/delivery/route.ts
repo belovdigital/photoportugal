@@ -275,6 +275,9 @@ export async function POST(
               { type: "booking", bookingId: id }
             )
           ).catch(err => console.error("[delivery] push error:", err));
+          import("@/lib/realtime").then((m) =>
+            m.notifyUser(deliveryDetails.client_id, "delivery_uploaded", { bookingId: id })
+          );
         }
       } catch (smsErr) {
         console.error("[delivery] whatsapp/sms error:", smsErr);

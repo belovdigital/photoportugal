@@ -57,15 +57,19 @@ export default function PaymentCountdown({ confirmedAt, viewerRole = "client" }:
     : (t("slotHeldBody") || "Payment guarantees your slot. If unpaid by the deadline, your booking will be automatically cancelled and the slot released to other clients.");
 
   return (
-    <div className={`mt-3 rounded-lg border px-4 py-5 text-center ${wrapClass}`}>
-      <div className={`text-3xl sm:text-4xl font-mono font-bold tabular-nums leading-none ${timerClass}`}>
-        {timeStr}
+    <div className={`mt-3 rounded-lg border px-4 py-3 ${wrapClass}`}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold">{title}</div>
+          <div className="text-xs mt-0.5 opacity-80">{body}</div>
+        </div>
+        <div className="flex flex-row sm:flex-col items-baseline sm:items-end gap-2 sm:gap-0 shrink-0">
+          <div className={`text-2xl font-mono font-bold tabular-nums leading-none ${timerClass}`}>{timeStr}</div>
+          <div className="text-[10px] uppercase tracking-wide opacity-70">
+            {t("timeRemaining") || "remaining"}
+          </div>
+        </div>
       </div>
-      <div className="mt-1 text-[10px] uppercase tracking-[0.2em] opacity-70">
-        {t("timeRemaining") || "remaining"}
-      </div>
-      <div className="mt-3 text-sm font-semibold">{title}</div>
-      <div className="mt-1 text-xs opacity-80 max-w-md mx-auto">{body}</div>
     </div>
   );
 }

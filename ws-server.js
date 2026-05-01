@@ -25,6 +25,32 @@ const listenPool = new Pool({ connectionString: DATABASE_URL }); // dedicated fo
 const rooms = new Map(); // booking_id -> Set<{ ws, userId, userName }>
 const socketMeta = new Map(); // ws -> { userId, userName, bookingId }
 
+// User rooms for cross-screen real-time updates: when a booking
+// changes status, new message arrives, payment lands, etc., we
+// pg_notify('user_event', { user_id, event, data }) and broadcast to
+// every WS connection belonging to that user. Clients then invalidate
+// their React Query caches so dashboards update without a refresh.
+const userRooms = new Map(); // userId -> Set<WebSocket>
+
+function joinUserRoom(userId, ws) {
+  if (!userRooms.has(userId)) userRooms.set(userId, new Set());
+  userRooms.get(userId).add(ws);
+}
+function leaveUserRoom(userId, ws) {
+  const set = userRooms.get(userId);
+  if (!set) return;
+  set.delete(ws);
+  if (set.size === 0) userRooms.delete(userId);
+}
+function broadcastToUser(userId, payload) {
+  const set = userRooms.get(userId);
+  if (!set) return;
+  const msg = JSON.stringify(payload);
+  for (const ws of set) {
+    if (ws.readyState === WebSocket.OPEN) ws.send(msg);
+  }
+}
+
 // Auth: verify JWT token
 function verifyAuth(token) {
   try {
@@ -88,6 +114,11 @@ wss.on("connection", (ws, req) => {
   }
 
   console.log(`[ws] Connected: ${user.name || user.id}`);
+
+  // Auto-join the user's own user-room so cross-screen events reach
+  // them without an explicit join from the client. Mobile/web only
+  // need to handle the "user_event" type as it arrives.
+  joinUserRoom(user.id, ws);
 
   // Handle messages from client
   ws.on("message", async (raw) => {
@@ -161,6 +192,7 @@ wss.on("connection", (ws, req) => {
 
   // Cleanup on disconnect
   ws.on("close", () => {
+    leaveUserRoom(user.id, ws);
     const meta = socketMeta.get(ws);
     if (meta) {
       const room = rooms.get(meta.bookingId);
@@ -191,24 +223,40 @@ const heartbeat = setInterval(() => {
 
 wss.on("close", () => clearInterval(heartbeat));
 
-// PostgreSQL LISTEN for new messages
+// PostgreSQL LISTEN for new_message + user_event channels.
+// new_message → broadcast to per-booking chat room (legacy chat sync).
+// user_event → broadcast to per-user room (dashboard sync, list refresh).
+// Both channels share one connection, both are wrapped in try/catch so
+// a malformed payload on one doesn't kill the listener for the other.
 async function startListener() {
   const client = await listenPool.connect();
   await client.query("LISTEN new_message");
+  await client.query("LISTEN user_event");
   client.on("notification", (msg) => {
     try {
       const data = JSON.parse(msg.payload);
-      const { booking_id, message } = data;
-      broadcastToRoom(booking_id, { type: "message", message });
+      if (msg.channel === "new_message") {
+        const { booking_id, message } = data;
+        broadcastToRoom(booking_id, { type: "message", message });
+      } else if (msg.channel === "user_event") {
+        // { user_id, event, data? }
+        if (data.user_id) {
+          broadcastToUser(data.user_id, {
+            type: "user_event",
+            event: data.event,
+            data: data.data || null,
+          });
+        }
+      }
     } catch (err) {
-      console.error("[ws] notification parse error:", err.message);
+      console.error("[ws] notification parse error:", msg.channel, err.message);
     }
   });
   client.on("error", (err) => {
     console.error("[ws] pg listener error:", err.message);
     setTimeout(startListener, 3000);
   });
-  console.log(`[ws] Listening for pg notifications`);
+  console.log(`[ws] Listening on new_message + user_event`);
 }
 
 startListener();

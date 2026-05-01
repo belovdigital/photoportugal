@@ -327,6 +327,9 @@ export async function PATCH(
                   { type: "booking", bookingId: id }
                 )
               ).catch(err => console.error("[bookings] cancel push error:", err));
+              import("@/lib/realtime").then((m) =>
+                m.notifyUser(recipientId, "booking_changed", { bookingId: id, status: "cancelled" })
+              );
             }
           }
 
@@ -460,6 +463,9 @@ export async function PATCH(
                   { type: "booking", bookingId: id }
                 )
               ).catch(err => console.error("[bookings] unpaid cancel push error:", err));
+              import("@/lib/realtime").then((m) =>
+                m.notifyUser(recipientId, "booking_changed", { bookingId: id, status: "cancelled" })
+              );
             }
           }
 
@@ -673,6 +679,9 @@ export async function PATCH(
               { type: "booking", bookingId: id }
             )
           ).catch(err => console.error("[bookings] confirm push error:", err));
+          import("@/lib/realtime").then((m) =>
+            m.notifyUser(bookingDetails.client_id, "booking_changed", { bookingId: id, status: "confirmed" })
+          );
 
           // Send confirmation email with payment link (show fee-inclusive total)
           sendBookingConfirmationWithPayment(

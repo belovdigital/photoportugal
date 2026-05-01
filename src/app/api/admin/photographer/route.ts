@@ -179,6 +179,9 @@ export async function PATCH(req: NextRequest) {
                   { type: "profile_approved" }
                 )
               ).catch(err => console.error("[admin] approval push error:", err));
+              import("@/lib/realtime").then((m) =>
+                m.notifyUser(photographerPhone.user_id, "profile_approved")
+              );
             }
             // Telegram notification to admins with phone for WhatsApp group addition
             import("@/lib/telegram").then(({ sendTelegram }) => {

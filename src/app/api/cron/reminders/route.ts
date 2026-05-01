@@ -592,11 +592,11 @@ export async function GET(req: NextRequest) {
 
     for (const booking of sessionReminders) {
       try {
-        const dateDisplay = booking.shoot_date
-          ? new Date(booking.shoot_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-          : booking.flexible_date_to
-            ? new Date(booking.flexible_date_to).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-            : "your scheduled date";
+        const { formatShootDate } = await import("@/lib/format-shoot-date");
+        const dateOpts = { month: "long" as const, day: "numeric" as const, year: "numeric" as const };
+        const dateDisplay = formatShootDate(booking.shoot_date, "en", dateOpts)
+          || formatShootDate(booking.flexible_date_to, "en", dateOpts)
+          || "your scheduled date";
         const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
 
         await sendEmail(

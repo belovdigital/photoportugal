@@ -4,6 +4,7 @@ import { queryOne } from "@/lib/db";
 import { sendEmail, sendBookingConfirmationWithPayment, sendAdminBookingConfirmedNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { locations } from "@/lib/locations-data";
+import { formatShootDate } from "@/lib/format-shoot-date";
 
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           <p style="margin:0 0 8px;font-size:14px;"><strong>Location:</strong> ${locationName}</p>
           <p style="margin:0 0 8px;font-size:14px;"><strong>Type:</strong> ${shootTypeLabel}</p>
           <p style="margin:0 0 8px;font-size:14px;"><strong>Group size:</strong> ${matchReq.group_size} people</p>
-          ${matchReq.shoot_date ? `<p style="margin:0 0 8px;font-size:14px;"><strong>Date:</strong> ${new Date(matchReq.shoot_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>` : ""}
+          ${(() => { const d = formatShootDate(matchReq.shoot_date, "en"); return d ? `<p style="margin:0 0 8px;font-size:14px;"><strong>Date:</strong> ${d}</p>` : ""; })()}
           ${price ? `<p style="margin:0;font-size:14px;"><strong>Price:</strong> €${price}</p>` : ""}
         </div>
         <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>

@@ -205,9 +205,10 @@ export async function POST(req: NextRequest) {
       const clientInfo = await queryOne<{ name: string; email: string }>("SELECT name, email FROM users WHERE id = $1", [userId]);
       const pkgInfo = package_id ? await queryOne<{ name: string }>("SELECT name FROM packages WHERE id = $1", [package_id]) : null;
 
+      const { formatShootDate } = await import("@/lib/format-shoot-date");
       const dateDisplay = isFlexible && flexible_date_from && flexible_date_to
-        ? `flexible (${flexible_date_from} — ${flexible_date_to})`
-        : shoot_date || null;
+        ? `flexible (${formatShootDate(flexible_date_from, "en") || flexible_date_from} — ${formatShootDate(flexible_date_to, "en") || flexible_date_to})`
+        : (formatShootDate(shoot_date, "en") || shoot_date || null);
 
       if (photographerInfo && clientInfo && prefs?.email_bookings !== false) {
         sendBookingNotification(
@@ -286,6 +287,11 @@ export async function POST(req: NextRequest) {
             { type: "booking", bookingId: booking?.id || "" }
           )
         ).catch((err) => console.error("[bookings] push notification error:", err));
+        // Real-time bookings-list refresh on photographer's other
+        // open clients.
+        import("@/lib/realtime").then((m) =>
+          m.notifyUser(photographerInfo!.user_id, "booking_created", { bookingId: booking?.id })
+        );
       }
 
       // Telegram notification to photographer
