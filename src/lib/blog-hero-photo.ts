@@ -59,7 +59,11 @@ export async function attachBlogHeroPhotos<T extends BlogHeroAttachable>(posts: 
         WHERE pp.is_approved = TRUE
           AND COALESCE(pp.is_test, FALSE) = FALSE
           AND pi.type = 'photo'
-          AND ($2::text[] = ARRAY[]::text[] OR pi.shoot_type IS NULL OR pi.shoot_type = ANY($2::text[]))
+          AND (
+            $2::text[] = ARRAY[]::text[]
+            OR pi.shoot_type = ANY($2::text[])
+            OR (pi.shoot_type IS NULL AND pp.shoot_types && $2::text[])
+          )
           AND (
             ($1::text[] != ARRAY[]::text[] AND pi.location_slug = ANY($1::text[]))
             OR ($2::text[] != ARRAY[]::text[] AND pi.shoot_type = ANY($2::text[]))
