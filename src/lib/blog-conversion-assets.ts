@@ -34,6 +34,9 @@ export type PhotographerBreakout = {
   tagline: string | null;
   thumbnails: string[];
   packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number; is_popular: boolean }[];
+  /** Whether this photographer actually covers the mentioned location.
+   *  Lets the UI show "Featured in {location}" only when truthful. */
+  covers_mentioned_location: boolean;
 };
 
 export type TopicReview = {
@@ -113,15 +116,24 @@ async function fetchHeroCarousel(
       WHERE pp.is_approved = TRUE
         AND COALESCE(pp.is_test, FALSE) = FALSE
         AND pi.type = 'photo'
-        AND ($2::text[] = ARRAY[]::text[] OR pi.shoot_type = ANY($2::text[]) OR (pi.shoot_type IS NULL AND pp.shoot_types && $2::text[]))
+        -- Photographer must cover the location AND match the shoot type
+        -- when both are present in the post. The photo itself must also
+        -- be on-topic (matching shoot_type, or untagged-from-specialist).
         AND (
-          ($1::text[] != ARRAY[]::text[] AND pi.location_slug = ANY($1::text[]))
-          OR ($2::text[] != ARRAY[]::text[] AND pi.shoot_type = ANY($2::text[]))
+          $1::text[] = ARRAY[]::text[]
           OR EXISTS (
             SELECT 1 FROM photographer_locations plx
-             WHERE plx.photographer_id = pp.id
-               AND ($1::text[] != ARRAY[]::text[] AND plx.location_slug = ANY($1::text[]))
+             WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
           )
+        )
+        AND (
+          $2::text[] = ARRAY[]::text[]
+          OR pp.shoot_types && $2::text[]
+        )
+        AND (
+          $2::text[] = ARRAY[]::text[]
+          OR pi.shoot_type = ANY($2::text[])
+          OR (pi.shoot_type IS NULL AND pp.shoot_types && $2::text[])
         )
       ORDER BY hashtext($3::text || pp.id::text), pp.is_featured DESC, pp.review_count DESC NULLS LAST
       LIMIT 1`,
@@ -195,15 +207,23 @@ async function fetchPhotoStrip(
         WHERE pp.is_approved = TRUE
           AND COALESCE(pp.is_test, FALSE) = FALSE
           AND pi.type = 'photo'
-          AND ($2::text[] = ARRAY[]::text[] OR pi.shoot_type = ANY($2::text[]) OR (pi.shoot_type IS NULL AND pp.shoot_types && $2::text[]))
+          -- Strict AND: photographer covers location AND matches shoot type.
           AND (
-            ($1::text[] != ARRAY[]::text[] AND pi.location_slug = ANY($1::text[]))
-            OR ($2::text[] != ARRAY[]::text[] AND pi.shoot_type = ANY($2::text[]))
+            $1::text[] = ARRAY[]::text[]
             OR EXISTS (
               SELECT 1 FROM photographer_locations plx
-               WHERE plx.photographer_id = pp.id
-                 AND ($1::text[] != ARRAY[]::text[] AND plx.location_slug = ANY($1::text[]))
+               WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
             )
+          )
+          AND (
+            $2::text[] = ARRAY[]::text[]
+            OR pp.shoot_types && $2::text[]
+          )
+          -- Photo itself must be on-topic for the shoot_type when one is mentioned.
+          AND (
+            $2::text[] = ARRAY[]::text[]
+            OR pi.shoot_type = ANY($2::text[])
+            OR (pi.shoot_type IS NULL AND pp.shoot_types && $2::text[])
           )
      )
      SELECT url, photographer_name, photographer_slug
@@ -223,6 +243,10 @@ async function fetchPhotographerBreakouts(
   locationSlugs: string[],
   shootTypeNames: string[]
 ): Promise<PhotographerBreakout[]> {
+  // Photographers who BOTH cover a mentioned location AND match a
+  // mentioned shoot type score highest. Location-only is OK. Shoot-type
+  // only is acceptable but ranks last so that "featured in {location}"
+  // claims stay accurate.
   const photographers = await query<{
     id: string;
     slug: string;
@@ -231,24 +255,37 @@ async function fetchPhotographerBreakouts(
     rating: number;
     review_count: number;
     tagline: string | null;
+    covers_mentioned_location: boolean;
   }>(
     `SELECT pp.id, pp.slug, u.name, u.avatar_url,
             COALESCE(pp.rating, 0) as rating,
             COALESCE(pp.review_count, 0) as review_count,
-            pp.tagline
+            pp.tagline,
+            EXISTS (
+              SELECT 1 FROM photographer_locations plx
+               WHERE plx.photographer_id = pp.id
+                 AND ($1::text[] != ARRAY[]::text[] AND plx.location_slug = ANY($1::text[]))
+            ) as covers_mentioned_location
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
       WHERE pp.is_approved = TRUE
         AND COALESCE(pp.is_test, FALSE) = FALSE
+        -- Require BOTH location AND shoot-type match when both are
+        -- mentioned. If only one is mentioned, require that one. No
+        -- fallback OR — a "Featured in Lisbon" claim must be true.
         AND (
-          ($1::text[] != ARRAY[]::text[] AND EXISTS (
-             SELECT 1 FROM photographer_locations plx
-              WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
-          ))
-          OR ($2::text[] != ARRAY[]::text[] AND pp.shoot_types && $2::text[])
+          $1::text[] = ARRAY[]::text[]
+          OR EXISTS (
+            SELECT 1 FROM photographer_locations plx
+             WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
+          )
         )
-      ORDER BY hashtext($3::text || pp.id::text),
-               pp.is_featured DESC, pp.review_count DESC NULLS LAST
+        AND (
+          $2::text[] = ARRAY[]::text[]
+          OR pp.shoot_types && $2::text[]
+        )
+      ORDER BY pp.is_featured DESC, pp.review_count DESC NULLS LAST,
+               hashtext($3::text || pp.id::text)
       LIMIT 3`,
     [locationSlugs, shootTypeNames, postId]
   ).catch(() => []);
@@ -308,11 +345,15 @@ async function fetchTopicReviews(
         AND LENGTH(r.text) > 60
         AND r.rating >= 4
         AND (
-          ($1::text[] != ARRAY[]::text[] AND EXISTS (
-             SELECT 1 FROM photographer_locations plx
-              WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
-          ))
-          OR ($2::text[] != ARRAY[]::text[] AND pp.shoot_types && $2::text[])
+          $1::text[] = ARRAY[]::text[]
+          OR EXISTS (
+            SELECT 1 FROM photographer_locations plx
+             WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
+          )
+        )
+        AND (
+          $2::text[] = ARRAY[]::text[]
+          OR pp.shoot_types && $2::text[]
         )
       ORDER BY r.rating DESC, r.created_at DESC
       LIMIT 6`,
@@ -349,12 +390,17 @@ async function fetchEndCapPackages(
           AND COALESCE(pp.is_test, FALSE) = FALSE
           AND pk.is_public = TRUE
           AND pk.custom_for_user_id IS NULL
+          -- Strict AND match — same rule as the breakouts.
           AND (
-            ($1::text[] != ARRAY[]::text[] AND EXISTS (
-               SELECT 1 FROM photographer_locations plx
-                WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
-            ))
-            OR ($2::text[] != ARRAY[]::text[] AND pp.shoot_types && $2::text[])
+            $1::text[] = ARRAY[]::text[]
+            OR EXISTS (
+              SELECT 1 FROM photographer_locations plx
+               WHERE plx.photographer_id = pp.id AND plx.location_slug = ANY($1::text[])
+            )
+          )
+          AND (
+            $2::text[] = ARRAY[]::text[]
+            OR pp.shoot_types && $2::text[]
           )
      )
      SELECT id, name, price, duration_minutes, num_photos,

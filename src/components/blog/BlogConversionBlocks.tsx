@@ -193,6 +193,7 @@ export type PhotographerBreakoutData = {
   tagline: string | null;
   thumbnails: string[];
   packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number; is_popular: boolean }[];
+  covers_mentioned_location?: boolean;
 };
 
 /**
@@ -229,6 +230,12 @@ export function BlogPhotographerBreakout({
     return () => el.removeEventListener("scroll", onScroll);
   }, [data.thumbnails.length]);
 
+  const scrollBy = (dir: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
+  };
+
   if (data.thumbnails.length === 0) return null;
 
   return (
@@ -248,11 +255,31 @@ export function BlogPhotographerBreakout({
             ))}
           </div>
           {data.thumbnails.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              {data.thumbnails.map((_, i) => (
-                <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-6 bg-white" : "w-1.5 bg-white/60"}`} />
-              ))}
-            </div>
+            <>
+              <button
+                onClick={() => scrollBy(-1)}
+                aria-label="Previous photo"
+                className="absolute left-2 top-1/2 -translate-y-1/2 hidden lg:flex opacity-0 group-hover/breakout:opacity-100 transition h-9 w-9 items-center justify-center rounded-full bg-white/30 backdrop-blur text-white hover:bg-white/50"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => scrollBy(1)}
+                aria-label="Next photo"
+                className="absolute right-2 top-1/2 -translate-y-1/2 hidden lg:flex opacity-0 group-hover/breakout:opacity-100 transition h-9 w-9 items-center justify-center rounded-full bg-white/30 backdrop-blur text-white hover:bg-white/50"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                {data.thumbnails.map((_, i) => (
+                  <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-6 bg-white" : "w-1.5 bg-white/60"}`} />
+                ))}
+              </div>
+            </>
           )}
         </div>
 

@@ -883,11 +883,12 @@ export default async function BlogPostPage({ params }: PageProps) {
             ))}
 
             {/* Featured photographer #1 — full breakout with carousel +
-                packages. Strong mid-article CTA without breaking flow. */}
+                packages. Strong mid-article CTA without breaking flow.
+                Label only claims "Featured in {location}" when truthful. */}
             {conversion.breakouts[0] && (
               <BlogPhotographerBreakout
                 data={conversion.breakouts[0]}
-                introLabel={mentionedLocations.length > 0
+                introLabel={mentionedLocations.length > 0 && conversion.breakouts[0].covers_mentioned_location
                   ? `Featured in ${mentionedLocations[0].name}`
                   : "Featured photographer"}
                 bookCta="See all packages"
