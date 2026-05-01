@@ -41,7 +41,7 @@ const FEATURED_COMBOS: { city: string; occ: string }[] = [
 
 export function Footer() {
   const t = useTranslations("footer");
-  const tShoot = useTranslations("common.shootTypes");
+  const tShoot = useTranslations("nav.shootTypes");
   const topLocations = locations.filter((l) => TOP_LOCATIONS.includes(l.slug));
 
   return (

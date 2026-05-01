@@ -70,11 +70,12 @@ export function OptimizedImage({
         onLoad={() => setLoaded(true)}
         onError={() => { setError(true); setLoaded(true); }}
         onClick={onClick}
-        className={
-          priority
-            ? "h-full w-full object-cover"
-            : `h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`
-        }
+        // The fade-in transition (opacity-0 → 100 on load) made images
+        // invisible whenever hydration was delayed or didn't fire — SSR
+        // ships opacity-0, JS never flips, image stays hidden. The
+        // skeleton placeholder already handles the loading state cleanly,
+        // so we render the image at full opacity from the start.
+        className="h-full w-full object-cover"
         style={style}
       />
 

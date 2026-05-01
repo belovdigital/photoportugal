@@ -584,7 +584,22 @@ export default async function BlogPostPage({ params }: PageProps) {
   // Falls back silently to cover_image_url if no match found.
   const heroPhoto = (mentionedLocationSlugs.length > 0 || mentionedShootTypeNames.length > 0)
     ? await queryOne<{ url: string; photographer_name: string; photographer_slug: string }>(
-        `SELECT pi.url, u.name as photographer_name, pp.slug as photographer_slug
+        `SELECT pi.url, u.name as photographer_name, pp.slug as photographer_slug,
+                -- Lower rank = better match. 0 = both location+type tagged,
+                -- 1 = location-tagged, 2 = shoot-type-tagged, 3 = photographer
+                -- covers the mentioned location (even if this photo isn't
+                -- tagged). Ensures the cover actually looks like the topic.
+                CASE
+                  WHEN $1::text[] != ARRAY[]::text[]
+                       AND $2::text[] != ARRAY[]::text[]
+                       AND pi.location_slug = ANY($1::text[])
+                       AND pi.shoot_type = ANY($2::text[]) THEN 0
+                  WHEN $1::text[] != ARRAY[]::text[]
+                       AND pi.location_slug = ANY($1::text[]) THEN 1
+                  WHEN $2::text[] != ARRAY[]::text[]
+                       AND pi.shoot_type = ANY($2::text[]) THEN 2
+                  ELSE 3
+                END as match_rank
            FROM portfolio_items pi
            JOIN photographer_profiles pp ON pp.id = pi.photographer_id
            JOIN users u ON u.id = pp.user_id
@@ -600,7 +615,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                    AND ($1::text[] != ARRAY[]::text[] AND plx.location_slug = ANY($1::text[]))
               )
             )
-          ORDER BY hashtext($3::text || pi.url)
+          ORDER BY match_rank, hashtext($3::text || pi.url)
           LIMIT 1`,
         [mentionedLocationSlugs, mentionedShootTypeNames, post.id]
       ).catch(() => null)
