@@ -2083,7 +2083,7 @@
           "released": "Una vez que el cliente acepta la entrega, la parte del fotógrafo (menos comisión de plataforma) se le libera",
           "autoRelease": "Si el cliente no responde en <strong>14 días</strong> tras la entrega, el pago se libera automáticamente al fotógrafo",
           "support": "Si el cliente no acepta ni disputa en 7 días, el fotógrafo puede contactar con nuestro equipo de soporte para resolver la situación",
-          "autoCancellation": "Si el fotógrafo no ha confirmado la reserva y el pago no se ha recibido en <strong>48 horas</strong> tras la solicitud, la reserva se cancela automáticamente y se emite un reembolso completo al cliente"
+          "autoCancellation": "Una vez que el fotógrafo confirma la reserva, el pago debe recibirse en <strong>24 horas</strong> para asegurar el horario. Si el pago no se recibe a tiempo, la reserva se cancela automáticamente y el horario queda disponible para otros clientes"
         }
       },
       "commission": {
@@ -3096,6 +3096,13 @@
     "paymentDueMessage": "en {hours} horas. Su reserva se cancelará automáticamente si no se paga.",
     "paymentOverdueLabel": "Pago vencido",
     "paymentOverdueMessage": "Su reserva puede ser cancelada en cualquier momento. Por favor pague inmediatamente para evitar la cancelación.",
+    "slotHeldTitle": "Horario reservado — pague para asegurarlo",
+    "slotHeldBody": "El pago garantiza su horario. Si no se paga antes del plazo, la reserva se cancelará automáticamente y el horario quedará disponible para otros clientes.",
+    "photogSlotHeldTitle": "Esperando pago del cliente",
+    "photogSlotHeldBody": "Si el cliente no paga antes del plazo, la reserva se cancelará automáticamente y el horario quedará disponible.",
+    "photogPaymentOverdueLabel": "Pago del cliente vencido",
+    "photogPaymentOverdueMessage": "Esta reserva se cancelará automáticamente en breve. El horario quedará disponible pronto.",
+    "timeRemaining": "restantes",
     "shootDate": "Fecha",
     "price": "Precio",
     "occasion": "Ocasión",

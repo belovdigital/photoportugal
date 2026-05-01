@@ -1927,7 +1927,7 @@
           "released": "Once the client accepts the delivery, the photographer's share (minus platform commission) is released to them",
           "autoRelease": "If the client does not respond within <strong>14 days</strong> after delivery, the payment is automatically released to the photographer",
           "support": "If the client does not accept or dispute within 7 days, the photographer may contact our support team to resolve the situation",
-          "autoCancellation": "If the photographer has not confirmed the booking and payment has not been received within <strong>48 hours</strong> of the booking request, the booking is automatically cancelled and a full refund is issued to the client"
+          "autoCancellation": "Once the photographer confirms the booking, payment must be received within <strong>24 hours</strong> to secure the slot. If payment is not received in time, the booking is automatically cancelled and the slot released to other clients"
         }
       },
       "commission": {
@@ -2940,6 +2940,13 @@
     "paymentDueMessage": "within {hours} hours. Your booking will be automatically cancelled if not paid.",
     "paymentOverdueLabel": "Payment overdue",
     "paymentOverdueMessage": "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation.",
+    "slotHeldTitle": "Slot held — pay to secure it",
+    "slotHeldBody": "Payment guarantees your slot. If unpaid by the deadline, your booking will be automatically cancelled and the slot released to other clients.",
+    "photogSlotHeldTitle": "Awaiting client payment",
+    "photogSlotHeldBody": "If the client doesn't pay by the deadline, the booking auto-cancels and the slot is released.",
+    "photogPaymentOverdueLabel": "Client payment overdue",
+    "photogPaymentOverdueMessage": "This booking is eligible for auto-cancel. The slot will be released shortly.",
+    "timeRemaining": "remaining",
     "shootDate": "Date",
     "price": "Price",
     "occasion": "Occasion",

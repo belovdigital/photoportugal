@@ -375,7 +375,7 @@ export async function sendBookingConfirmationWithPayment(
 
   const T = pickT({
     en: {
-      subject: `${photographerName} confirmed your booking${totalPrice ? ` — pay now to secure` : ""}!`,
+      subject: `${photographerName} confirmed your booking${totalPrice ? ` — pay within 24h to secure` : ""}!`,
       h2: "Booking Confirmed!",
       greeting: `Hi ${firstName},`,
       confirmed: `<strong>${photographerName}</strong> has confirmed your photoshoot${shootDate ? ` on ${shootDate}` : ""}.`,
@@ -383,12 +383,14 @@ export async function sendBookingConfirmationWithPayment(
       paymentBody: (priceStr: string) => `Please pay ${priceStr} to secure your session. Your payment is held safely until you receive and accept your photos.`,
       payNow: (priceStr: string) => `Pay Now — ${priceStr}`,
       viewBooking: "View Booking",
+      deadlineLabel: "⏰ Important — your slot is held for 24 hours.",
+      deadlineBody: `Payment guarantees your slot. ${photographerName} is holding this time for you, but if payment is not received within 24 hours, the booking will be automatically cancelled and the slot released to other clients.`,
       tipLabel: "Tip:",
       tip: "We also recommend messaging your photographer to discuss meeting point, outfit ideas, and any special requests.",
       cta: "Open Messages",
     },
     pt: {
-      subject: `${photographerName} confirmou a sua reserva${totalPrice ? ` — pague agora para garantir` : ""}!`,
+      subject: `${photographerName} confirmou a sua reserva${totalPrice ? ` — pague em 24h para garantir` : ""}!`,
       h2: "Reserva Confirmada!",
       greeting: `Olá ${firstName},`,
       confirmed: `<strong>${photographerName}</strong> confirmou a sua sessão fotográfica${shootDate ? ` a ${shootDate}` : ""}.`,
@@ -396,12 +398,14 @@ export async function sendBookingConfirmationWithPayment(
       paymentBody: (priceStr: string) => `Por favor, pague ${priceStr} para garantir a sua sessão. O pagamento fica guardado em segurança até receber e aceitar as suas fotos.`,
       payNow: (priceStr: string) => `Pagar Agora — ${priceStr}`,
       viewBooking: "Ver Reserva",
+      deadlineLabel: "⏰ Importante — o seu horário está reservado por 24 horas.",
+      deadlineBody: `O pagamento garante o seu horário. ${photographerName} está a reservar este tempo para si, mas se o pagamento não for recebido em 24 horas, a reserva será automaticamente cancelada e o horário libertado para outros clientes.`,
       tipLabel: "Dica:",
       tip: "Recomendamos também enviar uma mensagem ao seu fotógrafo para combinar o ponto de encontro, ideias de outfit e quaisquer pedidos especiais.",
       cta: "Abrir Mensagens",
     },
     de: {
-      subject: `${photographerName} hat Ihre Buchung bestätigt${totalPrice ? ` — jetzt bezahlen, um sie zu sichern` : ""}!`,
+      subject: `${photographerName} hat Ihre Buchung bestätigt${totalPrice ? ` — innerhalb 24h bezahlen, um sie zu sichern` : ""}!`,
       h2: "Buchung bestätigt!",
       greeting: `Hallo ${firstName},`,
       confirmed: `<strong>${photographerName}</strong> hat Ihr Fotoshooting${shootDate ? ` am ${shootDate}` : ""} bestätigt.`,
@@ -409,12 +413,14 @@ export async function sendBookingConfirmationWithPayment(
       paymentBody: (priceStr: string) => `Bitte zahlen Sie ${priceStr}, um Ihren Termin zu sichern. Ihre Zahlung wird sicher verwahrt, bis Sie Ihre Fotos erhalten und annehmen.`,
       payNow: (priceStr: string) => `Jetzt bezahlen — ${priceStr}`,
       viewBooking: "Buchung anzeigen",
+      deadlineLabel: "⏰ Wichtig — Ihr Termin ist 24 Stunden reserviert.",
+      deadlineBody: `Die Zahlung sichert Ihren Termin. ${photographerName} hält diese Zeit für Sie frei, aber wenn die Zahlung nicht innerhalb von 24 Stunden eingeht, wird die Buchung automatisch storniert und der Termin für andere Kunden freigegeben.`,
       tipLabel: "Tipp:",
       tip: "Wir empfehlen, Ihrem Fotografen eine Nachricht zu senden, um Treffpunkt, Outfit-Ideen und Sonderwünsche zu besprechen.",
       cta: "Nachrichten öffnen",
     },
     fr: {
-      subject: `${photographerName} a confirmé votre réservation${totalPrice ? ` — payez maintenant pour la sécuriser` : ""} !`,
+      subject: `${photographerName} a confirmé votre réservation${totalPrice ? ` — payez sous 24h pour la sécuriser` : ""} !`,
       h2: "Réservation confirmée !",
       greeting: `Bonjour ${firstName},`,
       confirmed: `<strong>${photographerName}</strong> a confirmé votre séance photo${shootDate ? ` le ${shootDate}` : ""}.`,
@@ -422,12 +428,14 @@ export async function sendBookingConfirmationWithPayment(
       paymentBody: (priceStr: string) => `Veuillez payer ${priceStr} pour sécuriser votre séance. Votre paiement est conservé en sécurité jusqu'à ce que vous receviez et acceptiez vos photos.`,
       payNow: (priceStr: string) => `Payer maintenant — ${priceStr}`,
       viewBooking: "Voir la réservation",
+      deadlineLabel: "⏰ Important — votre créneau est réservé pendant 24 heures.",
+      deadlineBody: `Le paiement garantit votre créneau. ${photographerName} réserve ce moment pour vous, mais si le paiement n'est pas reçu dans les 24 heures, la réservation sera automatiquement annulée et le créneau libéré pour d'autres clients.`,
       tipLabel: "Astuce :",
       tip: "Nous recommandons aussi d'envoyer un message à votre photographe pour discuter du point de rencontre, des idées de tenue et de toute demande spéciale.",
       cta: "Ouvrir les messages",
     },
     es: {
-      subject: `¡${photographerName} confirmó su reserva${totalPrice ? ` — pague ahora para asegurarla` : ""}!`,
+      subject: `¡${photographerName} confirmó su reserva${totalPrice ? ` — pague en 24h para asegurarla` : ""}!`,
       h2: "¡Reserva confirmada!",
       greeting: `Hola ${firstName},`,
       confirmed: `<strong>${photographerName}</strong> ha confirmado su sesión fotográfica${shootDate ? ` el ${shootDate}` : ""}.`,
@@ -435,6 +443,8 @@ export async function sendBookingConfirmationWithPayment(
       paymentBody: (priceStr: string) => `Por favor pague ${priceStr} para asegurar su sesión. Su pago queda guardado de forma segura hasta que reciba y acepte sus fotos.`,
       payNow: (priceStr: string) => `Pagar ahora — ${priceStr}`,
       viewBooking: "Ver reserva",
+      deadlineLabel: "⏰ Importante — su horario está reservado por 24 horas.",
+      deadlineBody: `El pago garantiza su horario. ${photographerName} está reservando este tiempo para usted, pero si no se recibe el pago en 24 horas, la reserva se cancelará automáticamente y el horario quedará disponible para otros clientes.`,
       tipLabel: "Consejo:",
       tip: "Le recomendamos también enviar un mensaje a su fotógrafo para acordar el punto de encuentro, ideas de outfit y cualquier petición especial.",
       cta: "Abrir mensajes",
@@ -442,11 +452,18 @@ export async function sendBookingConfirmationWithPayment(
   }, locale);
 
   const priceStr = price ? formatPrice(price, locale) : "";
+  const deadlineSection = paymentUrl && price
+    ? `<div style="margin:16px 0;padding:16px;background:#FFF5E5;border-radius:10px;border:2px solid #F59E0B;">
+        <p style="margin:0 0 6px;font-size:15px;line-height:1.5;color:#92400E;font-weight:700;">${T.deadlineLabel}</p>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#78350F;">${T.deadlineBody}</p>
+      </div>`
+    : "";
   const paymentSection = paymentUrl && price
     ? `<div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
         <p style="margin:0;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${T.paymentLabel}</strong> ${T.paymentBody(priceStr)}</p>
       </div>
-      ${emailButton(paymentUrl, T.payNow(priceStr), "#16A34A")}`
+      ${emailButton(paymentUrl, T.payNow(priceStr), "#16A34A")}
+      ${deadlineSection}`
     : emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.viewBooking);
 
   const socialProof = await emailSocialProof();
@@ -1249,47 +1266,47 @@ export async function sendPaymentReminderToClient(
   const priceStr = totalPrice ? formatPrice(Number(totalPrice), locale) : "";
   const T = pickT({
     en: {
-      subject: `Reminder: Complete your payment for the session with ${photographerName}`,
-      h2: "Payment Reminder",
+      subject: `~18h left to pay — your slot with ${photographerName} is held`,
+      h2: "Your slot is held — pay to secure it",
       greeting: `Hi ${firstName},`,
-      body1: `Your booking with <strong>${photographerName}</strong> has been confirmed, but we haven't received your payment yet.`,
-      body2: "Please complete your payment to secure your photoshoot session.",
+      body1: `<strong>${photographerName}</strong> is holding your photoshoot slot, but we haven't received payment yet.`,
+      body2: `Payment guarantees your slot. If we don't receive it within the next ~18 hours, your booking will be automatically cancelled and the slot released to other clients.`,
       payNow: `Pay Now — ${priceStr}`,
       viewBooking: "View Booking",
     },
     pt: {
-      subject: `Lembrete: complete o pagamento da sessão com ${photographerName}`,
-      h2: "Lembrete de pagamento",
+      subject: `Restam ~18h para pagar — o seu horário com ${photographerName} está reservado`,
+      h2: "O seu horário está reservado — pague para garantir",
       greeting: `Olá ${firstName},`,
-      body1: `A sua reserva com <strong>${photographerName}</strong> foi confirmada, mas ainda não recebemos o pagamento.`,
-      body2: "Por favor complete o pagamento para garantir a sua sessão fotográfica.",
+      body1: `<strong>${photographerName}</strong> está a reservar o seu horário, mas ainda não recebemos o pagamento.`,
+      body2: `O pagamento garante o seu horário. Se não o recebermos nas próximas ~18 horas, a sua reserva será automaticamente cancelada e o horário libertado para outros clientes.`,
       payNow: `Pagar agora — ${priceStr}`,
       viewBooking: "Ver reserva",
     },
     de: {
-      subject: `Erinnerung: Schließen Sie die Zahlung für die Session mit ${photographerName} ab`,
-      h2: "Zahlungserinnerung",
+      subject: `Noch ~18h zum Bezahlen — Ihr Termin mit ${photographerName} ist reserviert`,
+      h2: "Ihr Termin ist reserviert — bezahlen Sie, um ihn zu sichern",
       greeting: `Hallo ${firstName},`,
-      body1: `Ihre Buchung mit <strong>${photographerName}</strong> wurde bestätigt, aber wir haben die Zahlung noch nicht erhalten.`,
-      body2: "Bitte schließen Sie die Zahlung ab, um Ihren Fototermin zu sichern.",
+      body1: `<strong>${photographerName}</strong> hält Ihren Termin frei, aber wir haben die Zahlung noch nicht erhalten.`,
+      body2: `Die Zahlung sichert Ihren Termin. Wenn wir sie nicht innerhalb der nächsten ~18 Stunden erhalten, wird Ihre Buchung automatisch storniert und der Termin für andere Kunden freigegeben.`,
       payNow: `Jetzt bezahlen — ${priceStr}`,
       viewBooking: "Buchung anzeigen",
     },
     es: {
-      subject: `Recordatorio: complete el pago de la sesión con ${photographerName}`,
-      h2: "Recordatorio de pago",
+      subject: `Quedan ~18h para pagar — su sesión con ${photographerName} está reservada`,
+      h2: "Su horario está reservado — pague para asegurarlo",
       greeting: `Hola ${firstName},`,
-      body1: `Su reserva con <strong>${photographerName}</strong> ha sido confirmada, pero aún no hemos recibido el pago.`,
-      body2: "Por favor complete el pago para asegurar su sesión de fotos.",
+      body1: `<strong>${photographerName}</strong> está reservando su horario, pero aún no hemos recibido el pago.`,
+      body2: `El pago garantiza su horario. Si no lo recibimos en las próximas ~18 horas, su reserva se cancelará automáticamente y el horario quedará disponible para otros clientes.`,
       payNow: `Pagar ahora — ${priceStr}`,
       viewBooking: "Ver reserva",
     },
     fr: {
-      subject: `Rappel : complétez le paiement de la séance avec ${photographerName}`,
-      h2: "Rappel de paiement",
+      subject: `~18h restantes pour payer — votre créneau avec ${photographerName} est réservé`,
+      h2: "Votre créneau est réservé — payez pour le sécuriser",
       greeting: `Bonjour ${firstName},`,
-      body1: `Votre réservation avec <strong>${photographerName}</strong> a été confirmée, mais nous n'avons pas encore reçu le paiement.`,
-      body2: "Veuillez compléter le paiement pour sécuriser votre séance photo.",
+      body1: `<strong>${photographerName}</strong> réserve votre créneau, mais nous n'avons pas encore reçu le paiement.`,
+      body2: `Le paiement garantit votre créneau. Si nous ne le recevons pas dans les ~18 prochaines heures, votre réservation sera automatiquement annulée et le créneau libéré pour d'autres clients.`,
       payNow: `Payer maintenant — ${priceStr}`,
       viewBooking: "Voir la réservation",
     },

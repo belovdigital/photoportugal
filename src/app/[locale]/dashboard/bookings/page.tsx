@@ -8,6 +8,7 @@ import { BookingStatusButtons } from "./BookingStatusButtons";
 import { DateNegotiation } from "./DateNegotiation";
 import { Avatar } from "@/components/ui/Avatar";
 import { PaymentTracker } from "./PaymentTracker";
+import PaymentCountdown from "./PaymentCountdown";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { BookingJourney } from "./BookingJourney";
 import { normalizeName } from "@/lib/format-name";
@@ -84,6 +85,7 @@ export default async function BookingsPage() {
     delivery_accepted: boolean;
     payment_url: string | null;
     updated_at: string;
+    confirmed_at: string | null;
     cancelled_at: string | null;
     cancelled_by: string | null;
     cancelled_reason: string | null;
@@ -97,7 +99,7 @@ export default async function BookingsPage() {
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
                   p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
-                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at,
+                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at, b.confirmed_at,
                   b.cancelled_at, b.cancelled_by, b.cancelled_reason,
                   (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country
            FROM bookings b
@@ -118,7 +120,7 @@ export default async function BookingsPage() {
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
-                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at,
+                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at, b.confirmed_at,
                 b.cancelled_at, b.cancelled_by, b.cancelled_reason
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -309,26 +311,12 @@ export default async function BookingsPage() {
                 <p className="mt-3 rounded-lg bg-warm-50 px-3 py-2 text-sm text-gray-600 italic">&ldquo;{booking.message}&rdquo;</p>
               )}
 
-              {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (() => {
-                const confirmedAt = new Date(booking.updated_at);
-                const deadline = new Date(confirmedAt.getTime() + 48 * 60 * 60 * 1000);
-                const now = new Date();
-                const hoursRemaining = Math.max(0, Math.round((deadline.getTime() - now.getTime()) / (1000 * 60 * 60)));
-                if (hoursRemaining > 0) {
-                  return (
-                    <div className="mt-3 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
-                      <strong>{t("paymentDueLabel") || "Payment due"}</strong>{" "}
-                      {t("paymentDueMessage", { hours: hoursRemaining }) || `within ${hoursRemaining} hours. Your booking will be automatically cancelled if not paid.`}
-                    </div>
-                  );
-                }
-                return (
-                  <div className="mt-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-                    <strong>{t("paymentOverdueLabel") || "Payment overdue"}</strong>{" "}
-                    {t("paymentOverdueMessage") || "Your booking may be cancelled at any time. Please pay immediately to avoid cancellation."}
-                  </div>
-                );
-              })()}
+              {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
+                <PaymentCountdown
+                  confirmedAt={booking.confirmed_at || booking.updated_at}
+                  viewerRole={isPhotographer ? "photographer" : "client"}
+                />
+              )}
 
               {!["cancelled", "completed", "delivered"].includes(booking.status) && (
                 <DateNegotiation

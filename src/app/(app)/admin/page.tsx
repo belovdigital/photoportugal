@@ -181,9 +181,10 @@ export default async function AdminPage() {
     client_country: string | null;
     client_phone: string | null; client_email: string | null;
     photographer_phone: string | null; photographer_email: string | null;
+    confirmed_at: string | null;
   }>(
     `SELECT b.id, b.client_id, cu.name as client_name, pu.name as photographer_name, pp.slug as photographer_slug,
-            b.status, b.shoot_date, b.total_price, b.created_at, b.payment_status,
+            b.status, b.shoot_date, b.total_price, b.created_at, b.confirmed_at, b.payment_status,
             b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,
             b.flexible_date_from, b.flexible_date_to, b.date_note,

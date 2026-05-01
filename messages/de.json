@@ -1927,7 +1927,7 @@
           "released": "Sobald der Kunde die Übermittlung akzeptiert, wird der Anteil des Fotografen (abzüglich Plattformprovision) an ihn ausgezahlt",
           "autoRelease": "Wenn der Kunde nicht innerhalb von <strong>14 Tagen</strong> nach der Übermittlung reagiert, wird die Zahlung automatisch an den Fotografen freigegeben",
           "support": "Wenn der Kunde innerhalb von 7 Tagen weder akzeptiert noch eine Reklamation erhebt, kann sich der Fotograf an unser Support-Team wenden, um die Situation zu klären",
-          "autoCancellation": "Wenn der Fotograf die Buchung nicht bestätigt hat und die Zahlung nicht innerhalb von <strong>48 Stunden</strong> nach der Buchungsanfrage eingegangen ist, wird die Buchung automatisch storniert und dem Kunden eine vollständige Erstattung gewährt"
+          "autoCancellation": "Nachdem der Fotograf die Buchung bestätigt hat, muss die Zahlung innerhalb von <strong>24 Stunden</strong> eingehen, um den Termin zu sichern. Geht die Zahlung nicht rechtzeitig ein, wird die Buchung automatisch storniert und der Termin für andere Kunden freigegeben"
         }
       },
       "commission": {
@@ -2940,6 +2940,13 @@
     "paymentDueMessage": "innerhalb von {hours} Stunden. Ihre Buchung wird automatisch storniert, wenn nicht bezahlt wird.",
     "paymentOverdueLabel": "Zahlung überfällig",
     "paymentOverdueMessage": "Ihre Buchung kann jederzeit storniert werden. Bitte zahlen Sie sofort, um eine Stornierung zu vermeiden.",
+    "slotHeldTitle": "Termin reserviert — bezahlen, um zu sichern",
+    "slotHeldBody": "Die Zahlung sichert Ihren Termin. Wird bis zum Ablauf der Frist nicht gezahlt, wird die Buchung automatisch storniert und der Termin für andere Kunden freigegeben.",
+    "photogSlotHeldTitle": "Warten auf Zahlung des Kunden",
+    "photogSlotHeldBody": "Wenn der Kunde nicht rechtzeitig bezahlt, wird die Buchung automatisch storniert und der Termin freigegeben.",
+    "photogPaymentOverdueLabel": "Zahlung des Kunden überfällig",
+    "photogPaymentOverdueMessage": "Diese Buchung wird in Kürze automatisch storniert. Der Termin wird bald freigegeben.",
+    "timeRemaining": "verbleibend",
     "shootDate": "Datum",
     "price": "Preis",
     "occasion": "Anlass",

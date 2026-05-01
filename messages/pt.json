@@ -1927,7 +1927,7 @@
           "released": "Assim que o cliente aceitar a entrega, a parte do fotógrafo (menos a comissão da plataforma) é-lhe libertada",
           "autoRelease": "Se o cliente não responder no prazo de <strong>14 dias</strong> após a entrega, o pagamento é automaticamente libertado para o fotógrafo",
           "support": "Se o cliente não aceitar nem contestar no prazo de 7 dias, o fotógrafo pode contactar a nossa equipa de apoio para resolver a situação",
-          "autoCancellation": "Se o fotógrafo não tiver confirmado a reserva e o pagamento não tiver sido recebido no prazo de <strong>48 horas</strong> após o pedido de reserva, a reserva é automaticamente cancelada e é emitido um reembolso total ao cliente"
+          "autoCancellation": "Após o fotógrafo confirmar a reserva, o pagamento deve ser recebido em <strong>24 horas</strong> para garantir o horário. Se o pagamento não for recebido a tempo, a reserva é automaticamente cancelada e o horário libertado para outros clientes"
         }
       },
       "commission": {
@@ -2780,6 +2780,13 @@
     "paymentDueMessage": "dentro de {hours} horas. A sua reserva será automaticamente cancelada se não for paga.",
     "paymentOverdueLabel": "Pagamento em atraso",
     "paymentOverdueMessage": "A sua reserva pode ser cancelada a qualquer momento. Pague imediatamente para evitar o cancelamento.",
+    "slotHeldTitle": "Horário reservado — pague para garantir",
+    "slotHeldBody": "O pagamento garante o seu horário. Se não for pago até ao fim do prazo, a reserva será automaticamente cancelada e o horário libertado para outros clientes.",
+    "photogSlotHeldTitle": "A aguardar pagamento do cliente",
+    "photogSlotHeldBody": "Se o cliente não pagar até ao fim do prazo, a reserva será automaticamente cancelada e o horário libertado.",
+    "photogPaymentOverdueLabel": "Pagamento do cliente em atraso",
+    "photogPaymentOverdueMessage": "Esta reserva é elegível para cancelamento automático. O horário será libertado em breve.",
+    "timeRemaining": "restantes",
     "shootDate": "Data",
     "price": "Preço",
     "occasion": "Ocasião",

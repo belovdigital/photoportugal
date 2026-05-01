@@ -2083,7 +2083,7 @@
           "released": "Une fois que le client accepte la livraison, la part du photographe (moins la commission plateforme) lui est libérée",
           "autoRelease": "Si le client ne répond pas dans les <strong>14 jours</strong> suivant la livraison, le paiement est automatiquement libéré au photographe",
           "support": "Si le client n'accepte ni ne conteste sous 7 jours, le photographe peut contacter notre équipe support pour résoudre la situation",
-          "autoCancellation": "Si le photographe n'a pas confirmé la réservation et que le paiement n'a pas été reçu dans les <strong>48 heures</strong> suivant la demande, la réservation est automatiquement annulée et un remboursement intégral est émis au client"
+          "autoCancellation": "Une fois la réservation confirmée par le photographe, le paiement doit être reçu dans les <strong>24 heures</strong> pour sécuriser le créneau. Si le paiement n'est pas reçu à temps, la réservation est automatiquement annulée et le créneau libéré pour d'autres clients"
         }
       },
       "commission": {
@@ -3096,6 +3096,13 @@
     "paymentDueMessage": "sous {hours} heures. Votre réservation sera automatiquement annulée si non payée.",
     "paymentOverdueLabel": "Paiement en retard",
     "paymentOverdueMessage": "Votre réservation peut être annulée à tout moment. Veuillez payer immédiatement pour éviter l'annulation.",
+    "slotHeldTitle": "Créneau réservé — payez pour le sécuriser",
+    "slotHeldBody": "Le paiement garantit votre créneau. Si non payé dans le délai, la réservation sera automatiquement annulée et le créneau libéré pour d'autres clients.",
+    "photogSlotHeldTitle": "En attente du paiement du client",
+    "photogSlotHeldBody": "Si le client ne paie pas dans le délai, la réservation sera automatiquement annulée et le créneau libéré.",
+    "photogPaymentOverdueLabel": "Paiement du client en retard",
+    "photogPaymentOverdueMessage": "Cette réservation sera bientôt annulée automatiquement. Le créneau sera libéré sous peu.",
+    "timeRemaining": "restantes",
     "shootDate": "Date",
     "price": "Prix",
     "occasion": "Occasion",

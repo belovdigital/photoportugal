@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { AdminBookingActions } from "./AdminControls";
+import { AdminPaymentCountdown } from "./AdminPaymentCountdown";
 
 export interface AdminBooking {
   id: string;
@@ -33,6 +34,7 @@ export interface AdminBooking {
   client_email: string | null;
   photographer_phone: string | null;
   photographer_email: string | null;
+  confirmed_at: string | null;
 }
 
 const TIME_LABELS: Record<string, string> = {
@@ -184,6 +186,9 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                      b.status === "pending" ? "awaiting confirmation" :
                      b.status}
                   </span>
+                  {b.status === "confirmed" && b.payment_status !== "paid" && (b.confirmed_at || b.created_at) && (
+                    <AdminPaymentCountdown confirmedAt={b.confirmed_at || b.created_at} inline />
+                  )}
                   <div className="flex items-center gap-2">
                     {b.total_price && <span className="text-base font-bold text-gray-900">&euro;{Math.round(Number(b.total_price))}</span>}
                     <svg
@@ -233,6 +238,9 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                   {/* Journey stepper */}
                   {b.status !== "cancelled" && (
                     <AdminBookingJourney status={b.status} paymentStatus={b.payment_status} deliveryAccepted={!!b.delivery_accepted} />
+                  )}
+                  {b.status === "confirmed" && b.payment_status !== "paid" && (b.confirmed_at || b.created_at) && (
+                    <AdminPaymentCountdown confirmedAt={b.confirmed_at || b.created_at} />
                   )}
                   {/* Client message */}
                   {/* Info grid */}

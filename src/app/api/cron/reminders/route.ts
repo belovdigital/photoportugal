@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     errors: [] as string[],
   };
 
-  // === 1. Payment reminders (24h after confirmation if unpaid) ===
+  // === 1. Payment reminder #1 (6h after confirmation if unpaid — early nudge) ===
   try {
     const unpaidBookings = await query<{
       id: string;
@@ -72,8 +72,8 @@ export async function GET(req: NextRequest) {
        JOIN users pu ON pu.id = pp.user_id
        WHERE b.status = 'confirmed'
          AND b.payment_status != 'paid'
-         AND COALESCE(b.confirmed_at, b.created_at) < NOW() - INTERVAL '24 hours'
-         AND COALESCE(b.confirmed_at, b.created_at) > NOW() - INTERVAL '48 hours'
+         AND COALESCE(b.confirmed_at, b.created_at) < NOW() - INTERVAL '6 hours'
+         AND COALESCE(b.confirmed_at, b.created_at) > NOW() - INTERVAL '24 hours'
          AND b.payment_reminder_sent = FALSE`
     );
 
@@ -97,10 +97,11 @@ export async function GET(req: NextRequest) {
             const cLocale = await getUserLocaleById(booking.client_id);
             const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
             const smsBody = pickT({
-              en: `Photo Portugal: Reminder — your booking with ${booking.photographer_name}${priceStr} is awaiting payment. Pay now to secure your spot: https://photoportugal.com/dashboard/bookings`,
-              pt: `Photo Portugal: Lembrete — a sua reserva com ${booking.photographer_name}${priceStr} aguarda pagamento. Pague agora para garantir o seu lugar: https://photoportugal.com/dashboard/bookings`,
-              de: `Photo Portugal: Erinnerung — Ihre Buchung mit ${booking.photographer_name}${priceStr} wartet auf Zahlung. Jetzt bezahlen, um Ihren Termin zu sichern: https://photoportugal.com/dashboard/bookings`,
-              fr: `Photo Portugal : Rappel — votre réservation avec ${booking.photographer_name}${priceStr} attend le paiement. Payez maintenant pour sécuriser votre place : https://photoportugal.com/dashboard/bookings`,
+              en: `Photo Portugal: Your slot with ${booking.photographer_name}${priceStr} is held until payment. Auto-cancel in ~18h if unpaid: https://photoportugal.com/dashboard/bookings`,
+              pt: `Photo Portugal: O seu horário com ${booking.photographer_name}${priceStr} está reservado até ao pagamento. Cancelamento automático em ~18h: https://photoportugal.com/dashboard/bookings`,
+              de: `Photo Portugal: Ihr Termin mit ${booking.photographer_name}${priceStr} ist nur bis zur Zahlung reserviert. Auto-Storno in ~18h: https://photoportugal.com/dashboard/bookings`,
+              es: `Photo Portugal: Su sesión con ${booking.photographer_name}${priceStr} está reservada hasta el pago. Cancelación automática en ~18h: https://photoportugal.com/dashboard/bookings`,
+              fr: `Photo Portugal : Votre créneau avec ${booking.photographer_name}${priceStr} est réservé jusqu'au paiement. Annulation automatique dans ~18h : https://photoportugal.com/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -130,7 +131,7 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Payment reminders query: ${err}`);
   }
 
-  // === 1b. Final payment reminder (42h after confirmation — 6h before auto-cancel) ===
+  // === 1b. Final payment reminder (18h after confirmation — 6h before auto-cancel) ===
   let paymentFinalReminders = 0;
   try {
     const finalReminderBookings = await query<{
@@ -151,24 +152,35 @@ export async function GET(req: NextRequest) {
        JOIN users pu ON pu.id = pp.user_id
        WHERE b.status = 'confirmed'
          AND b.payment_status != 'paid'
-         AND b.confirmed_at < NOW() - INTERVAL '42 hours'
-         AND b.confirmed_at > NOW() - INTERVAL '48 hours'
+         AND b.confirmed_at < NOW() - INTERVAL '18 hours'
+         AND b.confirmed_at > NOW() - INTERVAL '24 hours'
          AND b.payment_final_reminder_sent = FALSE`
     );
 
     for (const booking of finalReminderBookings) {
       try {
         const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+        const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
+        const cLocale = await getUserLocaleByEmail(booking.client_email);
+        const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
+        const firstName = booking.client_name.split(" ")[0];
+        const T = pickT({
+          en: { subject: "Last chance — your booking will be cancelled in 6 hours", h2: "Your Booking Will Be Cancelled Soon", greet: `Hi ${firstName},`, body1: `Your photoshoot with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in 6 hours</strong> if payment is not received.`, body2: `${booking.photographer_name} is holding this time slot for you — don't miss out!`, cta: "Pay Now & Secure Your Booking", footer: "If you no longer wish to proceed, the booking will be cancelled automatically. No action needed." },
+          pt: { subject: "Última oportunidade — a sua reserva será cancelada em 6 horas", h2: "A sua reserva será cancelada em breve", greet: `Olá ${firstName},`, body1: `A sua sessão com <strong>${booking.photographer_name}</strong>${priceStr} será <strong>automaticamente cancelada em 6 horas</strong> se o pagamento não for recebido.`, body2: `${booking.photographer_name} está a reservar este horário para si — não perca esta oportunidade!`, cta: "Pagar agora e garantir a reserva", footer: "Se já não pretende avançar, a reserva será cancelada automaticamente. Nenhuma ação necessária." },
+          de: { subject: "Letzte Chance — Ihre Buchung wird in 6 Stunden storniert", h2: "Ihre Buchung wird bald storniert", greet: `Hallo ${firstName},`, body1: `Ihr Fotoshooting mit <strong>${booking.photographer_name}</strong>${priceStr} wird <strong>in 6 Stunden automatisch storniert</strong>, wenn keine Zahlung eingeht.`, body2: `${booking.photographer_name} hält diesen Termin für Sie frei — verpassen Sie ihn nicht!`, cta: "Jetzt bezahlen und Buchung sichern", footer: "Wenn Sie nicht mehr fortfahren möchten, wird die Buchung automatisch storniert. Keine Aktion erforderlich." },
+          es: { subject: "Última oportunidad — su reserva se cancelará en 6 horas", h2: "Su reserva se cancelará pronto", greet: `Hola ${firstName},`, body1: `Su sesión con <strong>${booking.photographer_name}</strong>${priceStr} se <strong>cancelará automáticamente en 6 horas</strong> si no se recibe el pago.`, body2: `${booking.photographer_name} está reservando este horario para usted — ¡no lo pierda!`, cta: "Pagar ahora y asegurar la reserva", footer: "Si ya no desea continuar, la reserva se cancelará automáticamente. No es necesario hacer nada." },
+          fr: { subject: "Dernière chance — votre réservation sera annulée dans 6 heures", h2: "Votre réservation sera bientôt annulée", greet: `Bonjour ${firstName},`, body1: `Votre séance photo avec <strong>${booking.photographer_name}</strong>${priceStr} sera <strong>automatiquement annulée dans 6 heures</strong> si le paiement n'est pas reçu.`, body2: `${booking.photographer_name} réserve ce créneau pour vous — ne le manquez pas !`, cta: "Payer maintenant et sécuriser la réservation", footer: "Si vous ne souhaitez plus continuer, la réservation sera annulée automatiquement. Aucune action requise." },
+        }, cLocale);
         await sendEmail(
           booking.client_email,
-          `Last chance — your booking will be cancelled in 6 hours`,
+          T.subject,
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #C94536;">Your Booking Will Be Cancelled Soon</h2>
-            <p>Hi ${booking.client_name.split(" ")[0]},</p>
-            <p>Your photoshoot with <strong>${booking.photographer_name}</strong>${booking.total_price ? ` (€${Math.round(booking.total_price)})` : ""} will be <strong>automatically cancelled in 6 hours</strong> if payment is not received.</p>
-            <p>${booking.photographer_name} is holding this time slot for you — don't miss out!</p>
-            <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Pay Now & Secure Your Booking</a></p>
-            <p style="color: #999; font-size: 12px;">If you no longer wish to proceed, the booking will be cancelled automatically. No action needed.</p>
+            <h2 style="color: #C94536;">${T.h2}</h2>
+            <p>${T.greet}</p>
+            <p>${T.body1}</p>
+            <p>${T.body2}</p>
+            <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">${T.cta}</a></p>
+            <p style="color: #999; font-size: 12px;">${T.footer}</p>
             <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
           </div>`
         );
@@ -179,12 +191,11 @@ export async function GET(req: NextRequest) {
             [booking.client_id]
           );
           if (smsPrefs?.sms_bookings !== false) {
-            const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
-            const cLocale = await getUserLocaleById(booking.client_id);
             const smsBody = pickT({
               en: `Photo Portugal: Last chance! Your booking with ${booking.photographer_name} will be cancelled in 6 hours if not paid. Pay now: https://photoportugal.com/dashboard/bookings`,
               pt: `Photo Portugal: Última oportunidade! A sua reserva com ${booking.photographer_name} será cancelada em 6 horas se não for paga. Pague agora: https://photoportugal.com/dashboard/bookings`,
               de: `Photo Portugal: Letzte Chance! Ihre Buchung mit ${booking.photographer_name} wird in 6 Stunden storniert, wenn nicht bezahlt. Jetzt bezahlen: https://photoportugal.com/dashboard/bookings`,
+              es: `Photo Portugal: ¡Última oportunidad! Su reserva con ${booking.photographer_name} se cancelará en 6 horas si no se paga. Pague ahora: https://photoportugal.com/dashboard/bookings`,
               fr: `Photo Portugal : Dernière chance ! Votre réservation avec ${booking.photographer_name} sera annulée dans 6 heures si non payée. Payez maintenant : https://photoportugal.com/dashboard/bookings`,
             }, cLocale);
             sendSMS(
@@ -206,7 +217,91 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Final payment reminders query: ${err}`);
   }
 
-  // === 1c. Auto-cancel unpaid bookings (48h after confirmation) ===
+  // === 1bb. CRITICAL 30-min final warning (23h30m after confirmation — last chance) ===
+  let paymentCriticalReminders = 0;
+  try {
+    const criticalBookings = await query<{
+      id: string;
+      client_email: string;
+      client_name: string;
+      client_phone: string | null;
+      client_id: string;
+      photographer_name: string;
+      total_price: number | null;
+    }>(
+      `SELECT b.id, u.email as client_email, u.name as client_name,
+              u.phone as client_phone, u.id as client_id,
+              pu.name as photographer_name, b.total_price
+       FROM bookings b
+       JOIN users u ON u.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.status = 'confirmed'
+         AND b.payment_status != 'paid'
+         AND b.confirmed_at < NOW() - INTERVAL '23 hours 30 minutes'
+         AND b.confirmed_at > NOW() - INTERVAL '24 hours'
+         AND b.payment_critical_reminder_sent = FALSE`
+    );
+
+    for (const booking of criticalBookings) {
+      try {
+        const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+        const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
+        const cLocale = await getUserLocaleByEmail(booking.client_email);
+        const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
+        const firstName = booking.client_name.split(" ")[0];
+        const T = pickT({
+          en: { subject: "🚨 FINAL WARNING — 30 minutes left to pay", h2: "30 Minutes Left — Last Chance", greet: `Hi ${firstName},`, body1: `This is the FINAL warning. Your booking with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in approximately 30 minutes</strong>.`, body2: `Pay now or lose your slot — there will be no further warnings.`, cta: "Pay Now — Final Chance" },
+          pt: { subject: "🚨 AVISO FINAL — restam 30 minutos para pagar", h2: "30 Minutos Restantes — Última Oportunidade", greet: `Olá ${firstName},`, body1: `Este é o aviso FINAL. A sua reserva com <strong>${booking.photographer_name}</strong>${priceStr} será <strong>automaticamente cancelada em aproximadamente 30 minutos</strong>.`, body2: `Pague agora ou perca o seu horário — não haverá mais avisos.`, cta: "Pagar agora — Última oportunidade" },
+          de: { subject: "🚨 LETZTE WARNUNG — 30 Minuten zum Bezahlen", h2: "30 Minuten verbleibend — Letzte Chance", greet: `Hallo ${firstName},`, body1: `Dies ist die LETZTE Warnung. Ihre Buchung mit <strong>${booking.photographer_name}</strong>${priceStr} wird <strong>in etwa 30 Minuten automatisch storniert</strong>.`, body2: `Jetzt bezahlen oder den Termin verlieren — es wird keine weiteren Warnungen geben.`, cta: "Jetzt bezahlen — Letzte Chance" },
+          es: { subject: "🚨 AVISO FINAL — quedan 30 minutos para pagar", h2: "30 Minutos Restantes — Última Oportunidad", greet: `Hola ${firstName},`, body1: `Este es el aviso FINAL. Su reserva con <strong>${booking.photographer_name}</strong>${priceStr} se <strong>cancelará automáticamente en aproximadamente 30 minutos</strong>.`, body2: `Pague ahora o pierda su horario — no habrá más avisos.`, cta: "Pagar ahora — Última oportunidad" },
+          fr: { subject: "🚨 DERNIER AVERTISSEMENT — 30 minutes pour payer", h2: "30 Minutes Restantes — Dernière Chance", greet: `Bonjour ${firstName},`, body1: `Ceci est le DERNIER avertissement. Votre réservation avec <strong>${booking.photographer_name}</strong>${priceStr} sera <strong>automatiquement annulée dans environ 30 minutes</strong>.`, body2: `Payez maintenant ou perdez votre créneau — il n'y aura plus d'avertissement.`, cta: "Payer maintenant — Dernière chance" },
+        }, cLocale);
+        await sendEmail(
+          booking.client_email,
+          T.subject,
+          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
+            <h2 style="color: #DC2626;">${T.h2}</h2>
+            <p>${T.greet}</p>
+            <p style="font-size: 16px; line-height: 1.6;">${T.body1}</p>
+            <p style="font-size: 15px; font-weight: bold; color: #DC2626;">${T.body2}</p>
+            <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #DC2626; color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 17px;">${T.cta}</a></p>
+            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+
+        // Critical SMS — short and urgent
+        if (booking.client_phone) {
+          const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
+            "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+            [booking.client_id]
+          );
+          if (smsPrefs?.sms_bookings !== false) {
+            const smsBody = pickT({
+              en: `🚨 Photo Portugal: FINAL WARNING — your booking with ${booking.photographer_name} will be cancelled in ~30 minutes if not paid. Pay NOW: https://photoportugal.com/dashboard/bookings`,
+              pt: `🚨 Photo Portugal: AVISO FINAL — a sua reserva com ${booking.photographer_name} será cancelada em ~30 min se não for paga. Pague JÁ: https://photoportugal.com/dashboard/bookings`,
+              de: `🚨 Photo Portugal: LETZTE WARNUNG — Ihre Buchung mit ${booking.photographer_name} wird in ~30 Min storniert, wenn nicht bezahlt. JETZT zahlen: https://photoportugal.com/dashboard/bookings`,
+              es: `🚨 Photo Portugal: AVISO FINAL — su reserva con ${booking.photographer_name} se cancelará en ~30 min si no se paga. Pague YA: https://photoportugal.com/dashboard/bookings`,
+              fr: `🚨 Photo Portugal : DERNIER AVERTISSEMENT — votre réservation avec ${booking.photographer_name} sera annulée dans ~30 min si non payée. Payez MAINTENANT : https://photoportugal.com/dashboard/bookings`,
+            }, cLocale);
+            sendSMS(booking.client_phone, smsBody).catch(err => console.error("[cron] critical sms error:", err));
+          }
+        }
+
+        await queryOne(
+          "UPDATE bookings SET payment_critical_reminder_sent = TRUE WHERE id = $1 RETURNING id",
+          [booking.id]
+        );
+        paymentCriticalReminders++;
+      } catch (err) {
+        results.errors.push(`Critical reminder for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Critical reminders query: ${err}`);
+  }
+
+  // === 1c. Auto-cancel unpaid bookings (24h after confirmation) ===
   try {
     const staleUnpaid = await query<{
       id: string;
@@ -226,7 +321,7 @@ export async function GET(req: NextRequest) {
        JOIN users pu ON pu.id = pp.user_id
        WHERE b.status = 'confirmed'
          AND b.payment_status IS DISTINCT FROM 'paid'
-         AND COALESCE(b.confirmed_at, b.updated_at) < NOW() - INTERVAL '48 hours'`
+         AND COALESCE(b.confirmed_at, b.updated_at) < NOW() - INTERVAL '24 hours'`
     );
 
     for (const booking of staleUnpaid) {
@@ -238,21 +333,30 @@ export async function GET(req: NextRequest) {
           `UPDATE bookings
            SET status = 'cancelled', cancelled_at = NOW(),
                cancelled_by = 'system',
-               cancelled_reason = 'Auto-cancelled — payment not received within 48 hours'
+               cancelled_reason = 'Auto-cancelled — payment not received within 24 hours'
            WHERE id = $1 RETURNING id`,
           [booking.id]
         );
 
-        // Notify client
+        // Notify client (localized)
+        const { getUserLocaleByEmail: gulb, pickT: pkt } = await import("@/lib/email-locale");
+        const cLoc = await gulb(booking.client_email);
+        const Tcancel = pkt({
+          en: { subject: "Booking cancelled — payment not received", h2: "Booking Auto-Cancelled", greet: `Hi ${booking.client_name},`, body1: `Your booking with <strong>${booking.photographer_name}</strong> has been automatically cancelled because payment was not received within 24 hours.`, body2: "If you'd still like to book, feel free to submit a new request.", cta: "Browse Photographers" },
+          pt: { subject: "Reserva cancelada — pagamento não recebido", h2: "Reserva cancelada automaticamente", greet: `Olá ${booking.client_name},`, body1: `A sua reserva com <strong>${booking.photographer_name}</strong> foi cancelada automaticamente porque o pagamento não foi recebido em 24 horas.`, body2: "Se ainda desejar reservar, fique à vontade para enviar um novo pedido.", cta: "Ver fotógrafos" },
+          de: { subject: "Buchung storniert — Zahlung nicht erhalten", h2: "Buchung automatisch storniert", greet: `Hallo ${booking.client_name},`, body1: `Ihre Buchung mit <strong>${booking.photographer_name}</strong> wurde automatisch storniert, da die Zahlung nicht innerhalb von 24 Stunden eingegangen ist.`, body2: "Wenn Sie weiterhin buchen möchten, senden Sie gerne eine neue Anfrage.", cta: "Fotografen ansehen" },
+          es: { subject: "Reserva cancelada — pago no recibido", h2: "Reserva cancelada automáticamente", greet: `Hola ${booking.client_name},`, body1: `Su reserva con <strong>${booking.photographer_name}</strong> ha sido cancelada automáticamente porque no se recibió el pago en 24 horas.`, body2: "Si aún desea reservar, no dude en enviar una nueva solicitud.", cta: "Ver fotógrafos" },
+          fr: { subject: "Réservation annulée — paiement non reçu", h2: "Réservation annulée automatiquement", greet: `Bonjour ${booking.client_name},`, body1: `Votre réservation avec <strong>${booking.photographer_name}</strong> a été automatiquement annulée car le paiement n'a pas été reçu dans les 24 heures.`, body2: "Si vous souhaitez toujours réserver, n'hésitez pas à envoyer une nouvelle demande.", cta: "Voir les photographes" },
+        }, cLoc);
         sendEmail(
           booking.client_email,
-          `Booking cancelled — payment not received`,
+          Tcancel.subject,
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #C94536;">Booking Auto-Cancelled</h2>
-            <p>Hi ${booking.client_name},</p>
-            <p>Your booking with <strong>${booking.photographer_name}</strong> has been automatically cancelled because payment was not received within 48 hours.</p>
-            <p>If you'd still like to book, feel free to submit a new request.</p>
-            <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Browse Photographers</a></p>
+            <h2 style="color: #C94536;">${Tcancel.h2}</h2>
+            <p>${Tcancel.greet}</p>
+            <p>${Tcancel.body1}</p>
+            <p>${Tcancel.body2}</p>
+            <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">${Tcancel.cta}</a></p>
             <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
           </div>`
         );
@@ -264,7 +368,7 @@ export async function GET(req: NextRequest) {
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #C94536;">Booking Auto-Cancelled</h2>
             <p>Hi ${booking.photographer_name},</p>
-            <p>The booking with <strong>${booking.client_name}</strong> has been automatically cancelled because payment was not received within 48 hours.</p>
+            <p>The booking with <strong>${booking.client_name}</strong> has been automatically cancelled because payment was not received within 24 hours.</p>
             <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
             <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
           </div>`
@@ -272,7 +376,7 @@ export async function GET(req: NextRequest) {
 
         results.autoCancelled++;
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`⏰ <b>Booking Auto-Cancelled</b>\n\n${booking.client_name} → ${booking.photographer_name}\nReason: Payment not received within 48h`, "bookings");
+          sendTelegram(`⏰ <b>Booking Auto-Cancelled</b>\n\n${booking.client_name} → ${booking.photographer_name}\nReason: Payment not received within 24h`, "bookings");
         }).catch((err) => console.error("[cron] telegram auto-cancel error:", err));
         sendAdminAutoCancelNotification(booking.client_name, booking.photographer_name)
           .catch((err) => console.error("[cron] admin email auto-cancel error:", err));
@@ -291,7 +395,7 @@ export async function GET(req: NextRequest) {
             queueNotification({
               channel: "sms",
               recipient: photographerPhone.phone,
-              body: `Photo Portugal: Booking with ${booking.client_name} has been auto-cancelled (payment not received within 48h). Log in to view: https://photoportugal.com/dashboard/bookings`,
+              body: `Photo Portugal: Booking with ${booking.client_name} has been auto-cancelled (payment not received within 24h). Log in to view: https://photoportugal.com/dashboard/bookings`,
               dedupKey: `auto_cancel_sms:${booking.id}`,
             }).catch(err => console.error("[cron] sms auto-cancel error:", err));
           }
@@ -303,7 +407,7 @@ export async function GET(req: NextRequest) {
         import("@/lib/notify-photographer").then(m =>
           m.notifyPhotographerViaTelegram(
             booking.photographer_profile_id,
-            `⏰ Booking auto-cancelled\n\nClient: ${booking.client_name}\nReason: Payment not received within 48h\n\nView: https://photoportugal.com/dashboard/bookings`
+            `⏰ Booking auto-cancelled\n\nClient: ${booking.client_name}\nReason: Payment not received within 24h\n\nView: https://photoportugal.com/dashboard/bookings`
           )
         ).catch((err) => console.error("[cron] telegram photographer auto-cancel error:", err));
       } catch (err) {
