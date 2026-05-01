@@ -8,6 +8,14 @@ import { localeAlternates } from "@/lib/seo";
 import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
+import { fetchBlogConversionAssets } from "@/lib/blog-conversion-assets";
+import {
+  BlogHeroCarousel,
+  BlogPhotoStrip,
+  BlogPhotographerBreakout,
+  BlogReviewsCarousel,
+  BlogStickyMobileBar,
+} from "@/components/blog/BlogConversionBlocks";
 import sanitize from "sanitize-html";
 
 export const revalidate = 300; // ISR: refresh every 5 minutes
@@ -637,6 +645,26 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   const heroSrc = heroPhoto?.url || post.cover_image_url;
 
+  // ── Conversion assets (carousels, breakouts, reviews, end-cap) ─────────
+  const conversion = await fetchBlogConversionAssets({
+    postId: post.id,
+    locationSlugs: mentionedLocationSlugs,
+    shootTypeNames: mentionedShootTypeNames,
+  });
+
+  // Split content by H2 markdown so we can inject carousels between sections.
+  // Intro = everything before the first ##; sections = each ## block.
+  const _allParts = post.content.split(/(?=^## )/m);
+  const introContent = _allParts[0] || "";
+  const sectionContents = _allParts.slice(1);
+
+  // Decide injection points. With ≥6 sections we sprinkle blocks at
+  // 1/4, 2/4, 3/4. Shorter posts get fewer injections so we don't crowd.
+  const totalSections = sectionContents.length;
+  const inject1 = Math.max(1, Math.floor(totalSections * 0.25));
+  const inject2 = Math.max(2, Math.floor(totalSections * 0.5));
+  const inject3 = Math.max(3, Math.floor(totalSections * 0.75));
+
   const publishedDate = new Date(post.published_at);
 
   const breadcrumbJsonLd = {
@@ -743,12 +771,16 @@ export default async function BlogPostPage({ params }: PageProps) {
       )}
 
       <article>
-        {/* Cover image hero — prefers a real photographer's portfolio
-            photo when one matches the post's locations/shoot types. Falls
-            back to the stored cover_image_url (legacy AI/Unsplash) when
-            no match is available. Bottom-right pill credits the
-            photographer with a link to their profile. */}
-        {heroSrc && (
+        {/* Hero — prefer multi-photo carousel from one photographer
+            (richer, swipeable) over the single-cover fallback. */}
+        {conversion.heroCarousel && conversion.heroCarousel.thumbnails.length > 0 ? (
+          <BlogHeroCarousel
+            thumbnails={conversion.heroCarousel.thumbnails}
+            photographerName={conversion.heroCarousel.photographerName}
+            photographerSlug={conversion.heroCarousel.photographerSlug}
+            fallbackTitle={post.title}
+          />
+        ) : heroSrc ? (
           <div className="relative h-[300px] sm:h-[400px] lg:h-[480px] w-full overflow-hidden bg-gray-900">
             <OptimizedImage
               src={heroSrc}
@@ -763,15 +795,11 @@ export default async function BlogPostPage({ params }: PageProps) {
                 href={`/photographers/${heroPhoto.photographer_slug}`}
                 className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur px-3 py-1.5 text-xs font-medium text-white hover:bg-black/60 transition"
               >
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
                 Photo by {heroPhoto.photographer_name} →
               </Link>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* Content */}
         <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
@@ -831,9 +859,75 @@ export default async function BlogPostPage({ params }: PageProps) {
             )}
           </div>
 
-          {/* Article body */}
+          {/* Article body — split by ## sections so we can inject
+              conversion blocks (photo strip, photographer breakouts,
+              reviews carousel) between sections. Pure markdown chunks
+              still go through the same renderContent. */}
           <div className="mt-8 text-base sm:text-lg">
-            {renderContent(post.content)}
+            {renderContent(introContent)}
+
+            {/* After intro: cross-photographer photo strip — visual
+                statement that this isn't a generic blog, it's a working
+                marketplace. */}
+            {conversion.photoStrip.length > 0 && (
+              <BlogPhotoStrip
+                photos={conversion.photoStrip}
+                heading={mentionedLocations.length > 0
+                  ? `Real shots from ${mentionedLocations[0].name}`
+                  : "Real shots from our photographers"}
+              />
+            )}
+
+            {sectionContents.slice(0, inject1).map((s, i) => (
+              <div key={`s1-${i}`}>{renderContent(s)}</div>
+            ))}
+
+            {/* Featured photographer #1 — full breakout with carousel +
+                packages. Strong mid-article CTA without breaking flow. */}
+            {conversion.breakouts[0] && (
+              <BlogPhotographerBreakout
+                data={conversion.breakouts[0]}
+                introLabel={mentionedLocations.length > 0
+                  ? `Featured in ${mentionedLocations[0].name}`
+                  : "Featured photographer"}
+                bookCta="See all packages"
+                popularLabel="Popular"
+              />
+            )}
+
+            {sectionContents.slice(inject1, inject2).map((s, i) => (
+              <div key={`s2-${i}`}>{renderContent(s)}</div>
+            ))}
+
+            {/* Reviews carousel from clients who shot this kind of
+                session. Social proof exactly when the reader is
+                considering booking. */}
+            {conversion.reviews.length > 0 && (
+              <BlogReviewsCarousel
+                reviews={conversion.reviews}
+                heading="What clients say about this kind of shoot"
+              />
+            )}
+
+            {sectionContents.slice(inject2, inject3).map((s, i) => (
+              <div key={`s3-${i}`}>{renderContent(s)}</div>
+            ))}
+
+            {/* Featured photographer #2 — different person, different
+                style. Gives the reader a real choice without forcing
+                them to scroll through the directory. */}
+            {conversion.breakouts[1] && (
+              <BlogPhotographerBreakout
+                data={conversion.breakouts[1]}
+                introLabel="Also worth booking"
+                bookCta="See all packages"
+                popularLabel="Popular"
+              />
+            )}
+
+            {sectionContents.slice(inject3).map((s, i) => (
+              <div key={`s4-${i}`}>{renderContent(s)}</div>
+            ))}
           </div>
 
           {/* Inline CTA */}
@@ -865,11 +959,11 @@ export default async function BlogPostPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Related photographers — package cards filtered by mentioned
-              locations + shoot types. Higher conversion than another "browse
-              all" link because the visitor sees specific people + prices
-              they could book right now. */}
-          {relatedPackages.length > 0 && (
+          {/* End-cap package picker — up to 6 different photographers'
+              top packages. Mobile: horizontal scroll-snap so swipe is
+              the primary interaction. Desktop: 3-column grid that fills
+              available width. */}
+          {(conversion.endCapPackages.length > 0 || relatedPackages.length > 0) && (
             <div className="-mx-4 sm:-mx-6 mt-12 border-t border-warm-200 pt-10 px-4 sm:px-6">
               <h3 className="font-display text-2xl font-bold text-gray-900">
                 {mentionedLocations.length > 0
@@ -879,8 +973,23 @@ export default async function BlogPostPage({ params }: PageProps) {
               <p className="mt-2 text-sm text-gray-500">
                 {t("relatedPhotographersSub")}
               </p>
-              <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {relatedPackages.map((pkg) => (
+              {/* Mobile: horizontal scroll-snap row */}
+              <div className="mt-6 flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 lg:hidden -mx-4 px-4 sm:-mx-6 sm:px-6" style={{ scrollbarWidth: "none" }}>
+                {(conversion.endCapPackages.length > 0 ? conversion.endCapPackages : relatedPackages).map((pkg) => (
+                  <div key={pkg.id} className="shrink-0 snap-start" style={{ width: "min(85vw, 340px)" }}>
+                    <PackageCardWithCarousel
+                      pkg={pkg}
+                      popularLabel={t("packagePopular")}
+                      minutesAbbrLabel={t("packageMinutesAbbr")}
+                      photosLabel={t("packagePhotos")}
+                      bookCtaLabel={t("packageBookCta")}
+                    />
+                  </div>
+                ))}
+              </div>
+              {/* Desktop: grid */}
+              <div className="mt-6 hidden lg:grid grid-cols-3 gap-5">
+                {(conversion.endCapPackages.length > 0 ? conversion.endCapPackages : relatedPackages).slice(0, 6).map((pkg) => (
                   <PackageCardWithCarousel
                     key={pkg.id}
                     pkg={pkg}
@@ -1012,6 +1121,22 @@ export default async function BlogPostPage({ params }: PageProps) {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Sticky mobile bottom bar — appears after 15% scroll, shows
+          live count of photographers matching the post topic. Mobile
+          only; desktop has the inline breakouts and end-cap grid. */}
+      {(conversion.endCapPackages.length > 0 || conversion.breakouts.length > 0) && (
+        <BlogStickyMobileBar
+          count={Math.max(conversion.endCapPackages.length, conversion.breakouts.length, relatedPackages.length)}
+          primaryHref={mentionedLocations.length > 0
+            ? `/photographers?location=${mentionedLocations[0].slug}`
+            : "/photographers"}
+          primaryLabel="Browse"
+          contextLabel={mentionedLocations.length > 0
+            ? `in ${mentionedLocations[0].name} ready to shoot`
+            : "ready to book"}
+        />
       )}
     </>
   );
