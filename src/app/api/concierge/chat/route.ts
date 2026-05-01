@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { query, queryOne } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { loadPhotographersForConcierge } from "@/lib/concierge/photographer-context";
 import { buildSystemPrompt } from "@/lib/concierge/system-prompt";
 
@@ -167,11 +167,12 @@ export async function POST(req: NextRequest) {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   // Pull user_id from session if authenticated — used both for memory lookup
-  // and for chat→user linkage during INSERT below.
+  // and for chat→user linkage during INSERT below. authFromRequest handles
+  // both NextAuth cookies (web) and Bearer JWT (mobile).
   let userId: string | null = null;
   try {
-    const session = await auth();
-    userId = (session?.user as { id?: string } | undefined)?.id || null;
+    const u = await authFromRequest(req);
+    userId = u?.id || null;
   } catch {}
 
   // Persona memory — pull a short summary from the visitor's previous (archived) chats
