@@ -108,6 +108,15 @@ export async function GET(req: NextRequest) {
             ).catch(err => console.error("[cron] payment reminder sms error:", err));
           }
         }
+        // Push: client gets a tap-through to bookings.
+        import("@/lib/push").then(m =>
+          m.sendPushNotification(
+            booking.client_id,
+            "Payment reminder",
+            `Your booking with ${booking.photographer_name} is awaiting payment.`,
+            { type: "booking", bookingId: booking.id }
+          )
+        ).catch(err => console.error("[cron] payment reminder push error:", err));
         await queryOne(
           "UPDATE bookings SET payment_reminder_sent = TRUE WHERE id = $1 RETURNING id",
           [booking.id]
@@ -414,6 +423,25 @@ export async function GET(req: NextRequest) {
           }
         } catch (smsErr) {
           console.error("[cron] shoot reminder sms error:", smsErr);
+        }
+
+        // Push notifications to both parties — same dedup-by-update guard
+        // as SMS (only fires once because we set shoot_reminder_sent below).
+        if (smsInfo) {
+          import("@/lib/push").then(m => Promise.all([
+            m.sendPushNotification(
+              smsInfo.photographer_user_id,
+              "Photoshoot tomorrow",
+              `You have a photoshoot with ${booking.client_name} tomorrow.`,
+              { type: "booking", bookingId: booking.id }
+            ),
+            m.sendPushNotification(
+              smsInfo.client_id,
+              "Photoshoot tomorrow",
+              `Your session with ${booking.photographer_name} is tomorrow!`,
+              { type: "booking", bookingId: booking.id }
+            ),
+          ])).catch(err => console.error("[cron] shoot reminder push error:", err));
         }
 
         await queryOne(

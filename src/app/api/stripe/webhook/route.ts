@@ -194,9 +194,40 @@ export async function POST(req: NextRequest) {
                     ).catch(err => console.error("[sms] error:", err));
                   }
                 }
+                // Push to photographer — fires regardless of phone, lets
+                // photographers without SMS prefs still hear about money.
+                if (photographerUser?.id) {
+                  import("@/lib/push").then(m =>
+                    m.sendPushNotification(
+                      photographerUser.id,
+                      "Payment received",
+                      `€${Number(bookingInfo.total_price)} from ${bookingInfo.client_name}`,
+                      { type: "booking", bookingId: bookingId || "" }
+                    )
+                  ).catch(err => console.error("[webhook] payment push error:", err));
+                }
               } catch (smsErr) {
                 console.error("[webhook] payment whatsapp/sms error:", smsErr);
               }
+
+              // Push to client — payment confirmation tap-through to
+              // booking detail.
+              try {
+                const clientUser = await queryOne<{ id: string }>(
+                  "SELECT client_id as id FROM bookings WHERE id = $1",
+                  [bookingId]
+                );
+                if (clientUser?.id) {
+                  import("@/lib/push").then(m =>
+                    m.sendPushNotification(
+                      clientUser.id,
+                      "Booking confirmed",
+                      `Payment received. Your session with ${bookingInfo.photographer_name} is booked!`,
+                      { type: "booking", bookingId: bookingId || "" }
+                    )
+                  ).catch(err => console.error("[webhook] client payment push error:", err));
+                }
+              } catch {}
 
               // Telegram notification to photographer
               try {

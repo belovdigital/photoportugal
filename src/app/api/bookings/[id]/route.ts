@@ -167,7 +167,7 @@ export async function PATCH(
           }
 
           const cancelInfo = await client.query(
-            `SELECT cu.email as client_email, cu.name as client_name,
+            `SELECT cu.email as client_email, cu.name as client_name, cu.id as client_user_id,
                     pu.email as photographer_email, pu.name as photographer_name,
                     pu.id as photographer_user_id, pp.id as photographer_profile_id,
                     b.total_price, b.service_fee, b.shoot_date
@@ -295,6 +295,30 @@ export async function PATCH(
             console.error("[bookings] cancellation sms error:", smsErr);
           }
 
+          // Push to whichever party did NOT cancel (the one who got the
+          // unpleasant surprise). Cancelled-by-self is shown in their own
+          // UI directly so they don't need a notification.
+          {
+            const recipientId = cancelledBy === "client"
+              ? cancelInfo.photographer_user_id
+              : cancelInfo.client_user_id;
+            const otherName = cancelledBy === "client"
+              ? cancelInfo.client_name
+              : cancelInfo.photographer_name;
+            if (recipientId) {
+              import("@/lib/push").then(m =>
+                m.sendPushNotification(
+                  recipientId,
+                  "Booking cancelled",
+                  refundPercent > 0
+                    ? `${otherName} cancelled. Refund €${refundAmount.toFixed(2)} processed.`
+                    : `${otherName} cancelled the booking.`,
+                  { type: "booking", bookingId: id }
+                )
+              ).catch(err => console.error("[bookings] cancel push error:", err));
+            }
+          }
+
           // Telegram to photographer
           import("@/lib/notify-photographer").then(m =>
             m.notifyPhotographerViaTelegram(
@@ -336,11 +360,11 @@ export async function PATCH(
     if (status === "cancelled") {
       try {
         const cancelInfo = await queryOne<{
-          client_email: string; client_name: string;
+          client_email: string; client_name: string; client_user_id: string;
           photographer_email: string; photographer_name: string;
           photographer_user_id: string; photographer_profile_id: string;
         }>(
-          `SELECT cu.email as client_email, cu.name as client_name,
+          `SELECT cu.email as client_email, cu.name as client_name, cu.id as client_user_id,
                   pu.email as photographer_email, pu.name as photographer_name,
                   pu.id as photographer_user_id, pp.id as photographer_profile_id
            FROM bookings b
@@ -395,6 +419,23 @@ export async function PATCH(
             }
           } catch (smsErr) {
             console.error("[bookings] cancellation sms error:", smsErr);
+          }
+
+          // Push to the OTHER party (the one who didn't cancel).
+          {
+            const recipientId = isClient
+              ? cancelInfo.photographer_user_id
+              : cancelInfo.client_user_id;
+            if (recipientId) {
+              import("@/lib/push").then(m =>
+                m.sendPushNotification(
+                  recipientId,
+                  "Booking cancelled",
+                  `${cancellerName} cancelled the booking.`,
+                  { type: "booking", bookingId: id }
+                )
+              ).catch(err => console.error("[bookings] unpaid cancel push error:", err));
+            }
           }
 
           // Telegram to photographer
@@ -597,6 +638,16 @@ export async function PATCH(
           } catch (smsErr) {
             console.error("[bookings] confirmation sms error:", smsErr);
           }
+
+          // Push to client — booking accepted, includes payment CTA
+          import("@/lib/push").then(m =>
+            m.sendPushNotification(
+              bookingDetails.client_id,
+              "Booking confirmed!",
+              `${bookingDetails.photographer_name} confirmed your session. Tap to pay.`,
+              { type: "booking", bookingId: id }
+            )
+          ).catch(err => console.error("[bookings] confirm push error:", err));
 
           // Send confirmation email with payment link (show fee-inclusive total)
           sendBookingConfirmationWithPayment(

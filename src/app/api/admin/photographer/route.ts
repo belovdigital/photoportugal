@@ -169,6 +169,17 @@ export async function PATCH(req: NextRequest) {
                 ).catch(err => console.error("[sms] error:", err));
               }
             }
+            // Push to photographer — celebratory notif, opens dashboard
+            if (photographerPhone?.user_id) {
+              import("@/lib/push").then(m =>
+                m.sendPushNotification(
+                  photographerPhone.user_id,
+                  "Profile approved! 🎉",
+                  "Clients can now find and book you on Photo Portugal.",
+                  { type: "profile_approved" }
+                )
+              ).catch(err => console.error("[admin] approval push error:", err));
+            }
             // Telegram notification to admins with phone for WhatsApp group addition
             import("@/lib/telegram").then(({ sendTelegram }) => {
               sendTelegram(`✅ <b>Photographer Approved!</b>\n\n<b>Name:</b> ${photographer.name}\n<b>Phone:</b> ${photographerPhone?.phone || "not set"}\n\n👉 Add to WhatsApp group`, "photographers");

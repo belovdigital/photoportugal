@@ -66,9 +66,9 @@ export async function PATCH(
   // Notify photographer that a review was approved
   if (body.is_approved === true) {
     try {
-      const reviewDetails = await queryOne<{ rating: number; client_name: string; photographer_email: string; photographer_name: string; slug: string; title: string | null; text: string | null }>(
+      const reviewDetails = await queryOne<{ rating: number; client_name: string; photographer_email: string; photographer_name: string; photographer_user_id: string; slug: string; title: string | null; text: string | null }>(
         `SELECT r.rating, r.title, r.text, COALESCE(r.client_name_override, cu.name, 'A client') as client_name,
-                pu.email as photographer_email, pu.name as photographer_name, pp.slug
+                pu.email as photographer_email, pu.name as photographer_name, pu.id as photographer_user_id, pp.slug
          FROM reviews r
          LEFT JOIN users cu ON cu.id = r.client_id
          JOIN photographer_profiles pp ON pp.id = r.photographer_id
@@ -81,6 +81,16 @@ export async function PATCH(
           reviewDetails.client_name, reviewDetails.rating, reviewDetails.slug,
           reviewDetails.title, reviewDetails.text
         ).catch(err => console.error("[reviews] review approved email error:", err));
+        // Push to photographer — celebratory notif, opens profile.
+        const stars = "⭐".repeat(reviewDetails.rating);
+        import("@/lib/push").then(m =>
+          m.sendPushNotification(
+            reviewDetails.photographer_user_id,
+            `New ${reviewDetails.rating}-star review ${stars}`,
+            `${reviewDetails.client_name} left you a review.`,
+            { type: "review", slug: reviewDetails.slug }
+          )
+        ).catch(err => console.error("[reviews] push error:", err));
       }
     } catch (err) {
       console.error("[reviews] review approved notification error:", err);

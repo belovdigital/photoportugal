@@ -232,7 +232,7 @@ export async function POST(
         console.error("[delivery] email error:", e);
       }
 
-      // SMS to client about delivery
+      // Notify client (SMS + push) about delivery
       try {
         const deliveryDetails = await queryOne<{
           client_id: string; client_phone: string | null; photographer_name: string;
@@ -264,6 +264,17 @@ export async function POST(
               smsBody
             ).catch(err => console.error("[sms] error:", err));
           }
+        }
+        // Push to client — tap → booking detail (delivery card lives there)
+        if (deliveryDetails?.client_id) {
+          import("@/lib/push").then(m =>
+            m.sendPushNotification(
+              deliveryDetails.client_id,
+              "Your photos are ready! 📸",
+              `${deliveryDetails.photographer_name} delivered your gallery.`,
+              { type: "booking", bookingId: id }
+            )
+          ).catch(err => console.error("[delivery] push error:", err));
         }
       } catch (smsErr) {
         console.error("[delivery] whatsapp/sms error:", smsErr);
