@@ -67,13 +67,18 @@ const PAGE_SIZE = 50;
 
 export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  // "active" = everything except cancelled. Default so the list isn't
+  // cluttered with finalized/cancelled rows when you're looking at what
+  // needs attention. "all" stays available for completeness.
+  const [statusFilter, setStatusFilter] = useState<string>("active");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
 
   const filtered = useMemo(() => {
     let result = bookings;
-    if (statusFilter !== "all") {
+    if (statusFilter === "active") {
+      result = result.filter((b) => b.status !== "cancelled");
+    } else if (statusFilter !== "all") {
       result = result.filter((b) => b.status === statusFilter);
     }
     if (search.trim()) {
@@ -88,9 +93,12 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const statusOrder = ["all", "inquiry", "pending", "confirmed", "completed", "delivered", "cancelled"];
+  const statusOrder = ["active", "all", "inquiry", "pending", "confirmed", "completed", "delivered", "cancelled"];
   const existingStatuses = new Set(bookings.map((b) => b.status));
-  const statuses = statusOrder.filter((s) => s === "all" || existingStatuses.has(s));
+  // Always show "active" and "all"; show concrete statuses only when at
+  // least one booking has them.
+  const statuses = statusOrder.filter((s) => s === "active" || s === "all" || existingStatuses.has(s));
+  const cancelledCount = bookings.filter((b) => b.status === "cancelled").length;
 
   return (
     <div className="space-y-3">
@@ -109,19 +117,28 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
           />
         </div>
         <div className="flex gap-1 overflow-x-auto">
-          {statuses.map((s) => (
-            <button
-              key={s}
-              onClick={() => { setStatusFilter(s); setPage(0); }}
-              className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition ${
-                statusFilter === s
-                  ? "bg-primary-600 text-white"
-                  : "bg-white border border-warm-200 text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
-            </button>
-          ))}
+          {statuses.map((s) => {
+            const label = s === "active"
+              ? "Active"
+              : s === "all"
+                ? `All${cancelledCount > 0 ? ` (incl. cancelled)` : ""}`
+                : s === "cancelled"
+                  ? `Cancelled${cancelledCount > 0 ? ` (${cancelledCount})` : ""}`
+                  : s.charAt(0).toUpperCase() + s.slice(1);
+            return (
+              <button
+                key={s}
+                onClick={() => { setStatusFilter(s); setPage(0); }}
+                className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition ${
+                  statusFilter === s
+                    ? "bg-primary-600 text-white"
+                    : "bg-white border border-warm-200 text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -325,7 +342,7 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
 
         {filtered.length === 0 && (
           <div className="rounded-xl border border-warm-200 bg-white px-4 py-8 text-center text-gray-400">
-            {search || statusFilter !== "all" ? "No bookings match your filters" : "No bookings yet"}
+            {search || (statusFilter !== "all" && statusFilter !== "active") ? "No bookings match your filters" : "No bookings yet"}
           </div>
         )}
       </div>
