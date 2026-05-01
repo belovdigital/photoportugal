@@ -268,7 +268,15 @@ export default async function middleware(request: NextRequest) {
   //     gets the language their browser actually advertises.
   //   - The legacy `locale_pref` cookie is preserved but ignored (it gets cleared on
   //     the next manual switcher click); we leave it expiring naturally.
-  if (!isBot) {
+  // Skip browser-based auto-redirect for /blog/* paths. Blog post slugs
+  // are unique per locale (a DE post doesn't exist in EN), so redirecting
+  // an EN-browser visitor away from a DE blog URL gives them a 404 on
+  // the destination. If they followed a /de/blog/... link they meant it.
+  // The lang_choice cookie (explicit UI switch) is still honoured below.
+  const isBlogPath = pathname === "/blog" || pathname.startsWith("/blog/")
+    || /^\/(pt|de|es|fr)\/blog(\/|$)/.test(pathname);
+
+  if (!isBot && !isBlogPath) {
     const explicitChoice = request.cookies.get("lang_choice")?.value as
       | "en" | "pt" | "de" | "es" | "fr" | undefined;
     const browserPref = preferredLocale();
