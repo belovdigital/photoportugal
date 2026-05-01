@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { localeAlternates } from "@/lib/seo";
+import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
 
 const POSTS_PER_PAGE = 48;
 
@@ -39,6 +40,10 @@ interface BlogPost {
   cover_image_url: string | null;
   author: string;
   published_at: string;
+  target_keywords?: string | null;
+  hero_photo_url?: string | null;
+  hero_photographer_name?: string | null;
+  hero_photographer_slug?: string | null;
 }
 
 export default async function BlogPaginatedPage({
@@ -69,9 +74,10 @@ export default async function BlogPaginatedPage({
     totalCount = parseInt(countRow?.count || "0");
 
     posts = await query<BlogPost>(
-      "SELECT id, slug, title, excerpt, cover_image_url, author, published_at FROM blog_posts WHERE is_published = TRUE AND (locale = $1) ORDER BY published_at DESC LIMIT $2 OFFSET $3",
+      "SELECT id, slug, title, excerpt, cover_image_url, author, published_at, target_keywords FROM blog_posts WHERE is_published = TRUE AND (locale = $1) ORDER BY published_at DESC LIMIT $2 OFFSET $3",
       [locale, POSTS_PER_PAGE, offset]
     );
+    posts = await attachBlogHeroPhotos(posts);
   } catch (e) {
     console.error("[blog] Failed to fetch posts:", e);
   }
@@ -144,12 +150,24 @@ export default async function BlogPaginatedPage({
         ) : (
           <>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {posts.map((post) => (
+              {posts.map((post) => {
+                const coverSrc = post.hero_photo_url || post.cover_image_url;
+                return (
                 <article key={post.id} className="group overflow-hidden rounded-xl border border-warm-200 bg-white transition hover:shadow-lg">
                   <Link href={`/blog/${post.slug}`}>
-                    {post.cover_image_url ? (
-                      <div className="aspect-[16/9] overflow-hidden">
-                        <OptimizedImage src={post.cover_image_url} alt={post.title} width={400} className="h-full w-full transition group-hover:scale-105" />
+                    {coverSrc ? (
+                      <div className="relative aspect-[16/9] overflow-hidden">
+                        <OptimizedImage
+                          src={coverSrc}
+                          alt={post.hero_photographer_name ? `Photo by ${post.hero_photographer_name}` : post.title}
+                          width={400}
+                          className="h-full w-full transition group-hover:scale-105"
+                        />
+                        {post.hero_photographer_name && (
+                          <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-black/40 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-white">
+                            ◉ {post.hero_photographer_name}
+                          </span>
+                        )}
                       </div>
                     ) : (
                       <div className="flex aspect-[16/9] items-center justify-center bg-warm-100">
@@ -177,7 +195,8 @@ export default async function BlogPaginatedPage({
                     </Link>
                   </div>
                 </article>
-              ))}
+              );
+              })}
             </div>
 
             {totalPages > 1 && (

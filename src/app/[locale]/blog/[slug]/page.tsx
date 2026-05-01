@@ -606,6 +606,17 @@ export default async function BlogPostPage({ params }: PageProps) {
           WHERE pp.is_approved = TRUE
             AND COALESCE(pp.is_test, FALSE) = FALSE
             AND pi.type = 'photo'
+            -- Hard exclusion: when the post is about a specific shoot
+            -- type (solo, proposal, family…), photos tagged with a
+            -- DIFFERENT shoot type get dropped. A solo-travel post
+            -- can't have a proposal photo as cover. Untagged photos
+            -- (shoot_type IS NULL) are still allowed because they're
+            -- visually neutral.
+            AND (
+              $2::text[] = ARRAY[]::text[]
+              OR pi.shoot_type IS NULL
+              OR pi.shoot_type = ANY($2::text[])
+            )
             AND (
               ($1::text[] != ARRAY[]::text[] AND pi.location_slug = ANY($1::text[]))
               OR ($2::text[] != ARRAY[]::text[] AND pi.shoot_type = ANY($2::text[]))
