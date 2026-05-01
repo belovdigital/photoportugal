@@ -156,6 +156,21 @@ export async function POST(req: NextRequest) {
       [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, group_size || 2, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null]
     );
 
+    // Post the client's booking message to the chat as the first real message —
+    // gives the photographer something concrete to react to and starts the
+    // conversation off naturally instead of an empty thread.
+    const trimmedMessage = (message || "").trim();
+    if (trimmedMessage && booking?.id) {
+      try {
+        await queryOne(
+          "INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, FALSE) RETURNING id",
+          [booking.id, userId, trimmedMessage]
+        );
+      } catch (err) {
+        console.error("[bookings] failed to post client message to chat:", err);
+      }
+    }
+
     // Upload "Booking Created" offline conversion to Google Ads if gclid present
     if (gclid && booking?.id) {
       const clientUser = await queryOne<{ email: string; phone: string | null }>(

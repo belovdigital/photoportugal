@@ -5,11 +5,13 @@ import { useRouter, Link } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import { CancelWithReasonButton } from "./CancelWithReasonButton";
+import { ConfirmWithWelcomeModal } from "./ConfirmWithWelcomeModal";
 
-export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, deliveryAccepted, shootDate }: { bookingId: string; currentStatus: string; paymentStatus?: string | null; deliveryAccepted?: boolean; shootDate?: string | null }) {
+export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, deliveryAccepted, shootDate, clientFirstName }: { bookingId: string; currentStatus: string; paymentStatus?: string | null; deliveryAccepted?: boolean; shootDate?: string | null; clientFirstName?: string }) {
   const router = useRouter();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const t = useTranslations("bookingActions");
   const locale = useLocale();
   const dateLocale = ({pt:"pt-PT",de:"de-DE",es:"es-ES",fr:"fr-FR",en:"en-US"} as Record<string,string>)[locale] || "en-US";
@@ -58,13 +60,21 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
   if (currentStatus === "pending") {
     return (
       <>
-        <button onClick={() => updateStatus("confirmed")} disabled={updating}
+        <button onClick={() => setWelcomeModalOpen(true)} disabled={updating}
           className="rounded-lg bg-accent-600 px-4 py-2 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-50">
           {updating ? t("confirming") : t("confirm")}
         </button>
         {/* Photographer declining a pending booking — same reason flow. */}
         <CancelWithReasonButton bookingId={bookingId} variant="decline" />
         {errorBanner}
+        {welcomeModalOpen && (
+          <ConfirmWithWelcomeModal
+            bookingId={bookingId}
+            clientFirstName={(clientFirstName || "").split(" ")[0] || "there"}
+            onConfirmed={() => { setWelcomeModalOpen(false); router.refresh(); }}
+            onClose={() => setWelcomeModalOpen(false)}
+          />
+        )}
       </>
     );
   }

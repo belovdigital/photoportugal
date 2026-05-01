@@ -228,7 +228,7 @@ export default async function BookingsPage() {
                   action={
                     <div className="flex flex-wrap gap-2">
                       {isPhotographer && (booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
-                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} paymentStatus={booking.payment_status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} />
+                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} paymentStatus={booking.payment_status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} clientFirstName={isPhotographer ? normalizeName(booking.other_name) : undefined} />
                       )}
                       {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
                         <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />

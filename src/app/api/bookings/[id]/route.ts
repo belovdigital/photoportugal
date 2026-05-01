@@ -57,7 +57,7 @@ export async function PATCH(
 
   const { id } = await params;
   const userId = user.id;
-  const { status } = await req.json();
+  const { status, welcome_message } = await req.json();
 
   const validStatuses = ["pending", "confirmed", "completed", "delivered", "cancelled"];
   if (!validStatuses.includes(status)) {
@@ -89,6 +89,17 @@ export async function PATCH(
     // Only photographer can confirm/complete
     if ((status === "confirmed" || status === "completed" || status === "delivered") && !isPhotographer) {
       return NextResponse.json({ error: "Only the photographer can confirm bookings" }, { status: 403 });
+    }
+
+    // Confirming a booking now requires a welcome message — clients who hear
+    // from their photographer right after booking are far more likely to pay,
+    // so we won't let confirmation through without one.
+    const trimmedWelcome = typeof welcome_message === "string" ? welcome_message.trim() : "";
+    if (status === "confirmed" && trimmedWelcome.length < 30) {
+      return NextResponse.json(
+        { error: "Please write a welcome message for your client (at least 30 characters)." },
+        { status: 400 }
+      );
     }
 
     // Validate status transitions
@@ -348,6 +359,20 @@ export async function PATCH(
 
     // Send system message to chat for status change
     sendBookingStatusMessage(id, status, userId).catch((err) => console.error("[bookings] status message error:", err));
+
+    // For confirmation, also post the photographer's welcome message as the
+    // first real chat message — this turns silent "system" confirmations into
+    // a warm hand-off that nudges the client toward paying.
+    if (status === "confirmed" && updateResult && trimmedWelcome) {
+      try {
+        await queryOne(
+          "INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, FALSE) RETURNING id",
+          [id, userId, trimmedWelcome]
+        );
+      } catch (err) {
+        console.error("[bookings] failed to post welcome message:", err);
+      }
+    }
 
     if (!updateResult) {
       return NextResponse.json(
