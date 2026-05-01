@@ -575,6 +575,39 @@ export default async function BlogPostPage({ params }: PageProps) {
       ).catch(() => [])
     : [];
 
+  // Dynamic hero photo from one of our photographers' portfolios. Replaces
+  // generic AI / Unsplash covers with real work by a real human, plus
+  // attribution that links to the photographer's profile — every blog
+  // post becomes a portfolio surface. Hash-shuffled by post.id so the
+  // same post always shows the same cover (predictable for sharing) but
+  // different posts naturally rotate across photographers.
+  // Falls back silently to cover_image_url if no match found.
+  const heroPhoto = (mentionedLocationSlugs.length > 0 || mentionedShootTypeNames.length > 0)
+    ? await queryOne<{ url: string; photographer_name: string; photographer_slug: string }>(
+        `SELECT pi.url, u.name as photographer_name, pp.slug as photographer_slug
+           FROM portfolio_items pi
+           JOIN photographer_profiles pp ON pp.id = pi.photographer_id
+           JOIN users u ON u.id = pp.user_id
+          WHERE pp.is_approved = TRUE
+            AND COALESCE(pp.is_test, FALSE) = FALSE
+            AND pi.type = 'photo'
+            AND (
+              ($1::text[] != ARRAY[]::text[] AND pi.location_slug = ANY($1::text[]))
+              OR ($2::text[] != ARRAY[]::text[] AND pi.shoot_type = ANY($2::text[]))
+              OR EXISTS (
+                SELECT 1 FROM photographer_locations plx
+                 WHERE plx.photographer_id = pp.id
+                   AND ($1::text[] != ARRAY[]::text[] AND plx.location_slug = ANY($1::text[]))
+              )
+            )
+          ORDER BY hashtext($3::text || pi.url)
+          LIMIT 1`,
+        [mentionedLocationSlugs, mentionedShootTypeNames, post.id]
+      ).catch(() => null)
+    : null;
+
+  const heroSrc = heroPhoto?.url || post.cover_image_url;
+
   const publishedDate = new Date(post.published_at);
 
   const breadcrumbJsonLd = {
@@ -681,17 +714,33 @@ export default async function BlogPostPage({ params }: PageProps) {
       )}
 
       <article>
-        {/* Cover image hero */}
-        {post.cover_image_url && (
+        {/* Cover image hero — prefers a real photographer's portfolio
+            photo when one matches the post's locations/shoot types. Falls
+            back to the stored cover_image_url (legacy AI/Unsplash) when
+            no match is available. Bottom-right pill credits the
+            photographer with a link to their profile. */}
+        {heroSrc && (
           <div className="relative h-[300px] sm:h-[400px] lg:h-[480px] w-full overflow-hidden bg-gray-900">
             <OptimizedImage
-              src={post.cover_image_url}
-              alt={post.title}
+              src={heroSrc}
+              alt={heroPhoto ? `Photo by ${heroPhoto.photographer_name}` : post.title}
               width={1200}
               priority
               className="h-full w-full opacity-80"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            {heroPhoto && (
+              <Link
+                href={`/photographers/${heroPhoto.photographer_slug}`}
+                className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur px-3 py-1.5 text-xs font-medium text-white hover:bg-black/60 transition"
+              >
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Photo by {heroPhoto.photographer_name} →
+              </Link>
+            )}
           </div>
         )}
 
