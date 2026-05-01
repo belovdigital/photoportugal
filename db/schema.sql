@@ -509,9 +509,15 @@ CREATE TABLE IF NOT EXISTS ai_generations (
   session_id VARCHAR(64) NOT NULL,
   ip INET,
   email VARCHAR(255),
+  -- Authenticated mobile users have user_id set; anonymous web visitors
+  -- are tracked by session_id+ip only. When user_id is set the quota is
+  -- a hard lifetime cap (3 free generations) — no 24h rolling.
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   scene_id VARCHAR(50) NOT NULL,
   reference_image_key TEXT,
   result_image_key TEXT,
+  result_image_keys TEXT[],
+  result_scene_ids TEXT[],
   cost_cents INTEGER,
   user_agent TEXT,
   status VARCHAR(20) NOT NULL DEFAULT 'pending',
@@ -521,6 +527,7 @@ CREATE TABLE IF NOT EXISTS ai_generations (
 CREATE INDEX IF NOT EXISTS idx_ai_gens_session_recent ON ai_generations(session_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_gens_ip_recent ON ai_generations(ip, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_gens_email ON ai_generations(email) WHERE email IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_ai_gens_user_recent ON ai_generations(user_id, created_at DESC) WHERE user_id IS NOT NULL;
 
 -- ============================================================
 -- POPUP EVENTS (exit-intent / AI concierge popup analytics)

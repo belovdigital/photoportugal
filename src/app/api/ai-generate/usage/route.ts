@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 import { getScene } from "@/lib/ai-scenes";
 
@@ -10,6 +10,7 @@ const PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com
 // Free quota WITHOUT email; quota WITH email; absolute hard cap per session+ip per day.
 const FREE_NO_EMAIL = 1;
 const FREE_WITH_EMAIL = 3;
+const FREE_AUTHED_LIFETIME = 3; // mirror of POST route
 
 // Mirror of UNLIMITED_USER_IDS in the POST route — staff/test accounts.
 const UNLIMITED_USER_IDS = new Set([
@@ -30,18 +31,27 @@ interface LatestRow {
   result_scene_ids: string[] | null;
 }
 
-async function fetchLatestResult(sessionId: string | null, ip: string | null) {
-  if (!sessionId && !ip) return null;
-  const row = await queryOne<LatestRow>(
-    `SELECT id, scene_id, result_image_key, result_image_keys, result_scene_ids
-     FROM ai_generations
-     WHERE ((session_id = $1 AND $1 IS NOT NULL) OR (ip = $2 AND $2 IS NOT NULL))
-       AND status = 'success'
-       AND created_at > NOW() - INTERVAL '24 hours'
-     ORDER BY created_at DESC
-     LIMIT 1`,
-    [sessionId, ip]
-  );
+async function fetchLatestResult(sessionId: string | null, ip: string | null, userId: string | null) {
+  if (!sessionId && !ip && !userId) return null;
+  // Authed users see their lifetime latest; anonymous users see 24h window.
+  const row = userId
+    ? await queryOne<LatestRow>(
+        `SELECT id, scene_id, result_image_key, result_image_keys, result_scene_ids
+         FROM ai_generations
+         WHERE user_id = $1 AND status = 'success'
+         ORDER BY created_at DESC LIMIT 1`,
+        [userId]
+      )
+    : await queryOne<LatestRow>(
+        `SELECT id, scene_id, result_image_key, result_image_keys, result_scene_ids
+         FROM ai_generations
+         WHERE ((session_id = $1 AND $1 IS NOT NULL) OR (ip = $2 AND $2 IS NOT NULL))
+           AND status = 'success'
+           AND created_at > NOW() - INTERVAL '24 hours'
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [sessionId, ip]
+      );
   if (!row) return null;
   const keys = row.result_image_keys && row.result_image_keys.length > 0
     ? row.result_image_keys
@@ -70,14 +80,15 @@ export async function GET(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
 
   let unlimited = false;
+  let userId: string | null = null;
   try {
-    const session = await auth();
-    const uid = (session?.user as { id?: string } | undefined)?.id;
-    if (uid && UNLIMITED_USER_IDS.has(uid)) unlimited = true;
+    const u = await authFromRequest(req);
+    userId = u?.id || null;
+    if (userId && UNLIMITED_USER_IDS.has(userId)) unlimited = true;
   } catch { /* anon */ }
 
   if (unlimited) {
-    const latest_result = await fetchLatestResult(sessionId, ip);
+    const latest_result = await fetchLatestResult(sessionId, ip, userId);
     return NextResponse.json({
       used: 0,
       free_no_email: 999,
@@ -87,6 +98,31 @@ export async function GET(req: NextRequest) {
       requires_email: false,
       blocked: false,
       unlimited: true,
+      latest_result,
+    });
+  }
+
+  // Authed mobile users — per-user lifetime quota.
+  if (userId) {
+    await query(
+      "UPDATE ai_generations SET status='failed', error='timeout' WHERE status='pending' AND created_at < NOW() - INTERVAL '10 minutes'"
+    ).catch(() => {});
+    const userRow = await queryOne<{ total: string }>(
+      `SELECT COUNT(*)::text AS total FROM ai_generations
+       WHERE user_id = $1 AND status IN ('success','pending')`,
+      [userId]
+    );
+    const userUsed = Number(userRow?.total || 0);
+    const remaining = Math.max(0, FREE_AUTHED_LIFETIME - userUsed);
+    const latest_result = await fetchLatestResult(sessionId, ip, userId);
+    return NextResponse.json({
+      used: userUsed,
+      free_no_email: FREE_AUTHED_LIFETIME,
+      free_with_email: FREE_AUTHED_LIFETIME,
+      remaining,
+      email: null,
+      requires_email: false,
+      blocked: userUsed >= FREE_AUTHED_LIFETIME,
       latest_result,
     });
   }
@@ -134,7 +170,7 @@ export async function GET(req: NextRequest) {
   const requires_email = used >= FREE_NO_EMAIL && !email;
   const blocked = used >= FREE_WITH_EMAIL;
 
-  const latest_result = await fetchLatestResult(sessionId, ip);
+  const latest_result = await fetchLatestResult(sessionId, ip, null);
 
   return NextResponse.json({
     used,

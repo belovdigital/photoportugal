@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import OpenAI from "openai";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -24,6 +24,11 @@ const IMAGES_PER_GENERATION = 4;
 
 const FREE_NO_EMAIL = 1;
 const FREE_WITH_EMAIL = 3;
+// Authenticated users (mobile app) get a hard LIFETIME cap — they passed
+// the registration gate so we trust them, but burning $0.20 per generation
+// adds up. 3 lifetime is enough to wow a new install without bankrupting
+// us if they spam. Can be relaxed later when conversion data is in.
+const FREE_AUTHED_LIFETIME = 3;
 
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_REFERENCE_BYTES = 15 * 1024 * 1024; // 15 MB — modern phone photos can hit ~10-12 MB
@@ -56,11 +61,13 @@ export async function POST(req: NextRequest) {
   const userAgent = req.headers.get("user-agent")?.slice(0, 500) || null;
 
   // Logged-in staff/test users get unlimited generations — bypass quota + abuse guards.
+  // authFromRequest handles BOTH NextAuth cookies (web) AND Bearer tokens
+  // (mobile JWT) so a single endpoint serves both clients.
   let unlimited = false;
   let userId: string | null = null;
   try {
-    const session = await auth();
-    userId = (session?.user as { id?: string } | undefined)?.id || null;
+    const u = await authFromRequest(req);
+    userId = u?.id || null;
     if (userId && UNLIMITED_USER_IDS.has(userId)) unlimited = true;
   } catch { /* not logged in */ }
 
@@ -102,8 +109,30 @@ export async function POST(req: NextRequest) {
     "UPDATE ai_generations SET status='failed', error='timeout' WHERE status='pending' AND created_at < NOW() - INTERVAL '10 minutes'"
   ).catch(() => {});
 
-  // Quota check (counts both successful and currently-in-flight pending rows so
-  // a user can't fire a second generation while the first is still rendering).
+  // Authenticated users get a per-user LIFETIME quota that travels across
+  // devices and ignores the 24h window. Skip the email-gate flow entirely
+  // since their email is already attached to the account.
+  if (userId && !unlimited) {
+    const userUsageRow = await queryOne<{ total: string }>(
+      `SELECT COUNT(*)::text AS total FROM ai_generations
+       WHERE user_id = $1 AND status IN ('success','pending')`,
+      [userId]
+    );
+    const userUsed = Number(userUsageRow?.total || 0);
+    if (userUsed >= FREE_AUTHED_LIFETIME) {
+      return NextResponse.json({
+        error: "limit_reached",
+        reason: "limit_reached",
+        used: userUsed,
+        cap: FREE_AUTHED_LIFETIME,
+      }, { status: 429 });
+    }
+  }
+
+  // Anonymous quota check (counts both successful and currently-in-flight
+  // pending rows so a user can't fire a second generation while the first
+  // is still rendering). Anonymous users still hit the 24h email-gated
+  // flow so the web freemium funnel keeps working.
   const usageRow = await queryOne<{ total: string }>(
     `SELECT COUNT(*)::text AS total FROM ai_generations
      WHERE (session_id = $1 OR (ip = $2 AND $2 IS NOT NULL))
@@ -119,7 +148,9 @@ export async function POST(req: NextRequest) {
   );
   const effectiveEmail = email || priorEmail?.email || null;
 
-  if (!unlimited) {
+  // Skip the anonymous-window check for authed users — they already passed
+  // the per-user lifetime check above.
+  if (!unlimited && !userId) {
     if (used >= FREE_WITH_EMAIL) {
       return NextResponse.json({ error: "limit_reached", reason: "limit_reached", used, cap: FREE_WITH_EMAIL }, { status: 429 });
     }
@@ -138,9 +169,9 @@ export async function POST(req: NextRequest) {
 
   // Insert pending row
   const pending = await queryOne<{ id: string }>(
-    `INSERT INTO ai_generations (session_id, ip, email, scene_id, reference_image_key, user_agent, status)
-     VALUES ($1, $2, $3, $4, $5, $6, 'pending') RETURNING id`,
-    [sessionId, ip, effectiveEmail, sceneId, refKey, userAgent]
+    `INSERT INTO ai_generations (session_id, ip, email, user_id, scene_id, reference_image_key, user_agent, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending') RETURNING id`,
+    [sessionId, ip, effectiveEmail, userId, sceneId, refKey, userAgent]
   );
   const genId = pending?.id;
   if (!genId) {
@@ -161,8 +192,25 @@ export async function POST(req: NextRequest) {
     console.error(`[ai-generate ${genId}] background error:`, err);
   });
 
+  // Mobile (authed) sees per-user lifetime quota; web sees the 24h
+  // email-gated tier.
   const newUsed = used + 1;
-  const cap = effectiveEmail ? FREE_WITH_EMAIL : FREE_NO_EMAIL;
+  const anonCap = effectiveEmail ? FREE_WITH_EMAIL : FREE_NO_EMAIL;
+  let remaining: number;
+  let cap: number;
+  if (userId && !unlimited) {
+    cap = FREE_AUTHED_LIFETIME;
+    const userTotal = await queryOne<{ total: string }>(
+      `SELECT COUNT(*)::text AS total FROM ai_generations
+       WHERE user_id = $1 AND status IN ('success','pending')`,
+      [userId]
+    );
+    const userUsed = Number(userTotal?.total || 0);
+    remaining = Math.max(0, cap - userUsed);
+  } else {
+    cap = anonCap;
+    remaining = Math.max(0, cap - newUsed);
+  }
 
   const res = NextResponse.json({
     success: true,
@@ -171,9 +219,9 @@ export async function POST(req: NextRequest) {
     scene_id: sceneId,
     concierge_loc: scene.conciergeLoc,
     used: newUsed,
-    remaining: Math.max(0, cap - newUsed),
+    remaining,
     has_email: !!effectiveEmail,
-    requires_email_next: newUsed >= FREE_NO_EMAIL && !effectiveEmail,
+    requires_email_next: !userId && newUsed >= FREE_NO_EMAIL && !effectiveEmail,
   });
   if (setSessionCookie) {
     res.cookies.set("ai_session", sessionId, {

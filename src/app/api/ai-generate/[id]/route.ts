@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
+import { authFromRequest } from "@/lib/mobile-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,7 @@ const PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com
 interface Row {
   id: string;
   session_id: string;
+  user_id: string | null;
   scene_id: string;
   status: string;
   result_image_key: string | null;
@@ -19,8 +21,12 @@ interface Row {
 /**
  * GET /api/ai-generate/[id]
  * Polling endpoint: returns current status of a generation kicked off via POST.
- * Authorisation is by session cookie — only the session that started the
- * generation can read its result.
+ *
+ * Authorisation:
+ * - web: session cookie (ai_session) must match the generation's session_id
+ * - mobile: Bearer token's user_id must match the generation's user_id
+ *
+ * Either gate passes — both work simultaneously without conflict.
  */
 export async function GET(
   req: NextRequest,
@@ -31,16 +37,23 @@ export async function GET(
     return NextResponse.json({ error: "bad id" }, { status: 400 });
   }
   const sessionId = req.cookies.get("ai_session")?.value || null;
-  if (!sessionId) {
+  const authedUser = await authFromRequest(req).catch(() => null);
+
+  if (!sessionId && !authedUser) {
     return NextResponse.json({ error: "no session" }, { status: 403 });
   }
 
   const row = await queryOne<Row>(
-    "SELECT id, session_id, scene_id, status, result_image_key, result_image_keys, result_scene_ids, error FROM ai_generations WHERE id = $1",
+    "SELECT id, session_id, user_id, scene_id, status, result_image_key, result_image_keys, result_scene_ids, error FROM ai_generations WHERE id = $1",
     [id]
   );
   if (!row) return NextResponse.json({ error: "not found" }, { status: 404 });
-  if (row.session_id !== sessionId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+
+  const sessionMatch = !!sessionId && row.session_id === sessionId;
+  const userMatch = !!authedUser && row.user_id === authedUser.id;
+  if (!sessionMatch && !userMatch) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   // New rows: result_image_keys (4 variants) + result_scene_ids parallel array.
   // Legacy: just result_image_key + scene_id.
