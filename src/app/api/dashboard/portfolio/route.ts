@@ -34,7 +34,10 @@ export async function GET(req: NextRequest) {
 
   try {
     const items = await query(
-      "SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC",
+      // Alias `url` → `image_url` so mobile clients (which expect that
+      // field name, matching the public /photographers/:slug shape) can
+      // render thumbnails AND open the lightbox without remapping.
+      "SELECT id, type, url AS image_url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC",
       [profile.id]
     );
     return NextResponse.json(items);

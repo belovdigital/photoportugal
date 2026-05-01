@@ -31,23 +31,50 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(rows.map((r) => r.photographer_id));
   }
 
-  // Full list with photographer info
-  const rows = await query<{
-    photographer_id: string;
-    slug: string;
-    name: string;
-    tagline: string | null;
-    avatar_url: string | null;
-    cover_url: string | null;
-    rating: number;
-    review_count: number;
-    min_price: number | null;
-    wishlisted_at: string;
-  }>(
-    `SELECT w.photographer_id, pp.slug, u.name, pp.tagline, u.avatar_url, pp.cover_url,
+  // Full list with photographer info — returns the same rich shape as
+  // the explore-list endpoint (`/api/photographers`) so the saved tab
+  // can render the same Instagram-style PhotographerFullCard with cover
+  // carousel and inline package list, instead of a flat thumbnail card.
+  const rows = await query(
+    `SELECT w.photographer_id AS id, pp.slug, u.name, pp.tagline,
+            u.avatar_url, pp.cover_url,
+            pp.is_verified, pp.is_featured,
             pp.rating, pp.review_count,
-            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,
-            w.created_at as wishlisted_at
+            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) AS min_price,
+            ARRAY(SELECT pl.location_slug FROM photographer_locations pl WHERE pl.photographer_id = pp.id) AS locations,
+            COALESCE((
+              SELECT array_agg(url ORDER BY shuffle, sort_order NULLS LAST, created_at)
+                FROM (
+                  SELECT pi.url,
+                         hashtext(pp.id::text || pi.url) AS shuffle,
+                         pi.sort_order, pi.created_at
+                    FROM portfolio_items pi
+                   WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                   ORDER BY shuffle, pi.sort_order NULLS LAST, pi.created_at
+                   LIMIT 6
+                ) t
+            ), ARRAY[]::text[]) AS portfolio_thumbs,
+            COALESCE((
+              SELECT json_agg(
+                json_build_object(
+                  'id', pk.id,
+                  'name', pk.name,
+                  'price', pk.price,
+                  'duration_minutes', pk.duration_minutes,
+                  'num_photos', COALESCE(pk.num_photos, 0)
+                ) ORDER BY pk.is_popular DESC NULLS LAST, pk.sort_order NULLS LAST, pk.price ASC
+              )
+              FROM (
+                SELECT id, name, price, duration_minutes, num_photos, is_popular, sort_order
+                  FROM packages
+                 WHERE photographer_id = pp.id
+                   AND is_public = TRUE
+                   AND custom_for_user_id IS NULL
+                 ORDER BY is_popular DESC NULLS LAST, sort_order NULLS LAST, price ASC
+                 LIMIT 3
+              ) pk
+            ), '[]'::json) AS packages,
+            w.created_at AS wishlisted_at
      FROM wishlists w
      JOIN photographer_profiles pp ON pp.id = w.photographer_id
      JOIN users u ON u.id = pp.user_id

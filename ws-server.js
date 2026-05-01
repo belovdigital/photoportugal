@@ -87,11 +87,32 @@ function broadcastToRoom(bookingId, data, excludeWs) {
   }
 }
 
-// Get online users in room
-function getOnlineUsers(bookingId) {
-  const room = rooms.get(bookingId);
-  if (!room) return [];
-  return [...room].map(c => ({ userId: c.userId, userName: c.userName }));
+// Online presence — global, not chat-scoped. The OTHER participant
+// of a booking is "online" whenever they have ANY WebSocket connection
+// open (i.e., they're authed and the app is foregrounded). This is
+// closer to what users intuitively expect: "online" means "currently
+// using the site / app", not "currently has the chat with me open".
+//
+// We still surface the result through the existing `online` event in
+// the chat room so the client UI doesn't have to change.
+async function getOnlineUsers(bookingId) {
+  // Find both parties of the booking via DB.
+  const result = await pool.query(
+    `SELECT cu.id as client_id, cu.name as client_name,
+            pu.id as photographer_user_id, pu.name as photographer_name
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+      WHERE b.id = $1`,
+    [bookingId]
+  );
+  if (result.rows.length === 0) return [];
+  const { client_id, client_name, photographer_user_id, photographer_name } = result.rows[0];
+  const online = [];
+  if (userRooms.has(client_id)) online.push({ userId: client_id, userName: client_name });
+  if (userRooms.has(photographer_user_id)) online.push({ userId: photographer_user_id, userName: photographer_name });
+  return online;
 }
 
 // WSS
@@ -118,7 +139,30 @@ wss.on("connection", (ws, req) => {
   // Auto-join the user's own user-room so cross-screen events reach
   // them without an explicit join from the client. Mobile/web only
   // need to handle the "user_event" type as it arrives.
+  const wasOffline = !userRooms.has(user.id);
   joinUserRoom(user.id, ws);
+
+  // If this is the user's FIRST WS connection (i.e., they just came
+  // online from fully offline), broadcast presence to every active
+  // chat room where they're a participant so the other party's chat
+  // UI flips them to online without needing to rejoin.
+  if (wasOffline) {
+    pool.query(
+      `SELECT b.id
+         FROM bookings b
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+        WHERE b.client_id = $1 OR pp.user_id = $1`,
+      [user.id]
+    ).then(async (res) => {
+      for (const { id: bookingId } of res.rows) {
+        if (!rooms.has(bookingId)) continue;
+        const onlineList = await getOnlineUsers(bookingId);
+        broadcastToRoom(bookingId, { type: "online", users: onlineList });
+      }
+    }).catch((err) => {
+      console.error("[ws] presence broadcast on connect failed:", err.message);
+    });
+  }
 
   // Handle messages from client
   ws.on("message", async (raw) => {
@@ -135,7 +179,10 @@ wss.on("connection", (ws, req) => {
               if (c.ws === ws) { prevRoom.delete(c); break; }
             }
             if (prevRoom.size === 0) rooms.delete(prev.bookingId);
-            else broadcastToRoom(prev.bookingId, { type: "online", users: getOnlineUsers(prev.bookingId) });
+            else {
+              const onlineList = await getOnlineUsers(prev.bookingId);
+              broadcastToRoom(prev.bookingId, { type: "online", users: onlineList });
+            }
           }
         }
 
@@ -152,10 +199,11 @@ wss.on("connection", (ws, req) => {
         rooms.get(data.booking_id).add(client);
         socketMeta.set(ws, { userId: user.id, userName: user.name, bookingId: data.booking_id });
 
-        // Broadcast online status
-        broadcastToRoom(data.booking_id, { type: "online", users: getOnlineUsers(data.booking_id) });
+        // Broadcast online status — global presence (anyone signed in)
+        const onlineList = await getOnlineUsers(data.booking_id);
+        broadcastToRoom(data.booking_id, { type: "online", users: onlineList });
         // Send current online to joiner
-        ws.send(JSON.stringify({ type: "online", users: getOnlineUsers(data.booking_id) }));
+        ws.send(JSON.stringify({ type: "online", users: onlineList }));
         ws.send(JSON.stringify({ type: "joined", booking_id: data.booking_id }));
       }
 
@@ -191,7 +239,7 @@ wss.on("connection", (ws, req) => {
   });
 
   // Cleanup on disconnect
-  ws.on("close", () => {
+  ws.on("close", async () => {
     leaveUserRoom(user.id, ws);
     const meta = socketMeta.get(ws);
     if (meta) {
@@ -201,9 +249,34 @@ wss.on("connection", (ws, req) => {
           if (c.ws === ws) { room.delete(c); break; }
         }
         if (room.size === 0) rooms.delete(meta.bookingId);
-        else broadcastToRoom(meta.bookingId, { type: "online", users: getOnlineUsers(meta.bookingId) });
+        else {
+          const onlineList = await getOnlineUsers(meta.bookingId);
+          broadcastToRoom(meta.bookingId, { type: "online", users: onlineList });
+        }
       }
       socketMeta.delete(ws);
+    }
+
+    // If this was the user's LAST WebSocket connection, they've gone
+    // fully offline — notify every active chat room where they're a
+    // participant so the other party's UI reflects the change.
+    if (!userRooms.has(user.id)) {
+      try {
+        const res = await pool.query(
+          `SELECT b.id
+             FROM bookings b
+             JOIN photographer_profiles pp ON pp.id = b.photographer_id
+            WHERE b.client_id = $1 OR pp.user_id = $1`,
+          [user.id]
+        );
+        for (const { id: bookingId } of res.rows) {
+          if (!rooms.has(bookingId)) continue;
+          const onlineList = await getOnlineUsers(bookingId);
+          broadcastToRoom(bookingId, { type: "online", users: onlineList });
+        }
+      } catch (err) {
+        console.error("[ws] presence broadcast on close failed:", err.message);
+      }
     }
   });
 

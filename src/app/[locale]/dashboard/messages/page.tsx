@@ -144,6 +144,25 @@ function MessagesContent() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const convoRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Lock outer page scroll on desktop while the messages page is
+  // mounted. The chat container is already height-bound to the
+  // viewport, so the body shouldn't need to scroll — but without
+  // this, momentum scroll inside the message list can chain up to
+  // the document. Mobile keeps body scroll because the sidebar/
+  // chat each fill the viewport individually.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 639px)").matches) return;
+    const prevHtml = document.documentElement.style.overflow;
+    const prevBody = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = prevHtml;
+      document.body.style.overflow = prevBody;
+    };
+  }, []);
+
   const isUserScrolledUp = useRef(false);
 
   const scrollToBottom = useCallback((force?: boolean) => {
@@ -691,7 +710,7 @@ function MessagesContent() {
             activeChat ? "hidden sm:block" : ""
           }`}
         >
-          <div className="overflow-y-auto p-2 h-full">
+          <div className="overflow-y-auto p-2 h-full" style={{ overscrollBehavior: "contain" }}>
             {loadingConvos ? (
               <div className="space-y-3 p-2">
                 {[...Array(3)].map((_, i) => (
@@ -829,6 +848,7 @@ function MessagesContent() {
               <div
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto px-4 py-3"
+                style={{ overscrollBehavior: "contain" }}
               >
                 {loadingMessages ? (
                   <div className="flex h-full items-center justify-center">
