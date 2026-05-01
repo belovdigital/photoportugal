@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
     duration_minutes: pkg.duration_minutes,
     num_photos: pkg.num_photos,
     slug: profile?.slug || "",
+    photographer_id: booking.photographer_id,
   });
 
   // Insert as a system message from the photographer
@@ -210,6 +211,7 @@ export async function PUT(req: NextRequest) {
     duration_minutes: Math.round(durationMinutes),
     num_photos: Math.round(numPhotos),
     slug: profile?.slug || "",
+    photographer_id: booking.photographer_id,
     is_custom: true,
     description,
   });
