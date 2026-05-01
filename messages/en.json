@@ -1690,7 +1690,15 @@
       "description": "Browse portfolios, compare packages, and book a verified local photographer in minutes.",
       "browsePhotographers": "Browse Photographers",
       "getMatched": "Get Matched for Free"
-    }
+    },
+    "relatedPhotographersInLocation": "Photographers ready to shoot in {location}",
+    "relatedPhotographersGeneric": "Photographers worth booking",
+    "relatedPhotographersSub": "Hand-picked from our verified pros — book directly with no extra fee.",
+    "packagePopular": "Popular",
+    "packageMinutesAbbr": "min",
+    "packagePhotos": "photos",
+    "packageBookCta": "Book this package",
+    "lastUpdated": "Updated {date}"
   },
   "exitIntent": {
     "title": "Don't leave without your photos!",

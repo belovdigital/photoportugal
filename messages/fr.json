@@ -1846,7 +1846,15 @@
       "description": "Parcourez les portfolios, comparez les forfaits et réservez un photographe local vérifié en quelques minutes.",
       "browsePhotographers": "Parcourir les photographes",
       "getMatched": "Trouvez votre photographe — gratuit"
-    }
+    },
+    "relatedPhotographersInLocation": "Photographes prêts à shooter à {location}",
+    "relatedPhotographersGeneric": "Photographes à découvrir",
+    "relatedPhotographersSub": "Sélectionnés parmi nos pros vérifiés — réservez directement, sans frais supplémentaires.",
+    "packagePopular": "Populaire",
+    "packageMinutesAbbr": "min",
+    "packagePhotos": "photos",
+    "packageBookCta": "Réserver ce forfait",
+    "lastUpdated": "Mis à jour le {date}"
   },
   "exitIntent": {
     "conciergeTitle": "Attendez — discutez avec notre AI Concierge",

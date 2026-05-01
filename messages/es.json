@@ -1377,7 +1377,15 @@
       "description": "Explore portafolios, compare paquetes y reserve un fotógrafo local verificado en minutos.",
       "browsePhotographers": "Explorar fotógrafos",
       "getMatched": "Encuentre su fotógrafo — gratis"
-    }
+    },
+    "relatedPhotographersInLocation": "Fotógrafos listos para fotografiar en {location}",
+    "relatedPhotographersGeneric": "Fotógrafos a considerar",
+    "relatedPhotographersSub": "Seleccionados de nuestros profesionales verificados — reserve directamente, sin recargos.",
+    "packagePopular": "Popular",
+    "packageMinutesAbbr": "min",
+    "packagePhotos": "fotos",
+    "packageBookCta": "Reservar este paquete",
+    "lastUpdated": "Actualizado el {date}"
   },
   "exitIntent": {
     "conciergeTitle": "Espere — chatee con nuestro AI Concierge",

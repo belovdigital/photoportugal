@@ -1690,7 +1690,15 @@
       "description": "Stöbern Sie in Portfolios, vergleichen Sie Pakete und buchen Sie in wenigen Minuten einen verifizierten lokalen Fotografen.",
       "browsePhotographers": "Fotografen durchsuchen",
       "getMatched": "Kostenlos vermitteln lassen"
-    }
+    },
+    "relatedPhotographersInLocation": "Fotografen für Shootings in {location}",
+    "relatedPhotographersGeneric": "Fotografen, die einen Blick wert sind",
+    "relatedPhotographersSub": "Handverlesen aus unseren verifizierten Profis — direkt buchen ohne Aufpreis.",
+    "packagePopular": "Beliebt",
+    "packageMinutesAbbr": "Min.",
+    "packagePhotos": "Fotos",
+    "packageBookCta": "Paket buchen",
+    "lastUpdated": "Aktualisiert am {date}"
   },
   "exitIntent": {
     "conciergeTitle": "Warten Sie — chatten Sie mit unserem AI Concierge",

@@ -7,6 +7,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { localeAlternates } from "@/lib/seo";
 import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
+import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import sanitize from "sanitize-html";
 
 export const revalidate = 300; // ISR: refresh every 5 minutes
@@ -484,6 +485,96 @@ export default async function BlogPostPage({ params }: PageProps) {
     (st) => contentLower.includes(st.name.toLowerCase()) || contentLower.includes(st.slug)
   ).slice(0, 3);
 
+  // Related photographers — converts blog readers to bookings far better
+  // than another "browse all" CTA. Picks up to 3 photographers whose
+  // coverage matches the locations and shoot types this post mentions,
+  // ranked by how many tags overlap. One package per photographer (same
+  // diversification rule we use on location/shoot-type pages) so the
+  // grid shows three distinct people, not three packages from one star.
+  const mentionedLocationSlugs = mentionedLocations.map((l) => l.slug);
+  const mentionedShootTypeNames = mentionedShootTypes.map((s) => s.name);
+  const relatedPackages = (mentionedLocationSlugs.length > 0 || mentionedShootTypeNames.length > 0)
+    ? await query<{
+        id: string; name: string; price: string; duration_minutes: number; num_photos: number;
+        photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
+        rating: number; review_count: number; is_popular: boolean;
+        portfolio_thumbs: string[];
+      }>(
+        `WITH per_photographer AS (
+           SELECT pk.id, pk.name, pk.price::text AS price, pk.duration_minutes,
+                  COALESCE(pk.num_photos, 0) as num_photos,
+                  pp.id as profile_id,
+                  pp.slug as photographer_slug, u.name as photographer_name,
+                  u.avatar_url as photographer_avatar,
+                  COALESCE(pp.rating, 0) as rating,
+                  COALESCE(pp.review_count, 0) as review_count,
+                  COALESCE(pk.is_popular, FALSE) as is_popular,
+                  pp.is_featured, pp.is_verified,
+                  -- Score by tag overlap so the most-relevant photographers
+                  -- bubble up. Both signals count; either alone qualifies.
+                  (
+                    CASE WHEN $1::text[] = ARRAY[]::text[] THEN 0
+                         ELSE (
+                           SELECT COUNT(*) FROM photographer_locations plx
+                            WHERE plx.photographer_id = pp.id
+                              AND plx.location_slug = ANY($1::text[])
+                         )::int * 2
+                    END
+                  ) +
+                  (
+                    CASE WHEN $2::text[] = ARRAY[]::text[] THEN 0
+                         WHEN pp.shoot_types && $2::text[] THEN 3
+                         ELSE 0
+                    END
+                  ) AS relevance,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY pp.id
+                    ORDER BY COALESCE(pk.is_popular, FALSE) DESC, pk.price ASC
+                  ) as rn_per_photographer
+             FROM packages pk
+             JOIN photographer_profiles pp ON pp.id = pk.photographer_id
+             JOIN users u ON u.id = pp.user_id
+            WHERE pp.is_approved = TRUE
+              AND COALESCE(pp.is_test, FALSE) = FALSE
+              AND pk.is_public = TRUE
+              AND (
+                ($1::text[] = ARRAY[]::text[] AND $2::text[] = ARRAY[]::text[])
+                OR EXISTS (
+                  SELECT 1 FROM photographer_locations plx
+                   WHERE plx.photographer_id = pp.id
+                     AND ($1::text[] = ARRAY[]::text[] OR plx.location_slug = ANY($1::text[]))
+                )
+                OR ($2::text[] != ARRAY[]::text[] AND pp.shoot_types && $2::text[])
+              )
+         )
+         SELECT id, name, price, duration_minutes, num_photos,
+                photographer_slug, photographer_name, photographer_avatar,
+                rating, review_count, is_popular,
+                COALESCE((
+                  SELECT array_agg(url ORDER BY shuffle, sort_order NULLS LAST, created_at)
+                    FROM (
+                      SELECT pi.url,
+                             hashtext(pp.profile_id::text || pi.url) as shuffle,
+                             pi.sort_order, pi.created_at
+                        FROM portfolio_items pi
+                       WHERE pi.photographer_id = pp.profile_id
+                         AND pi.type = 'photo'
+                       ORDER BY shuffle, pi.sort_order NULLS LAST, pi.created_at
+                       LIMIT 5
+                    ) ranked
+                ), ARRAY[]::text[]) as portfolio_thumbs
+           FROM per_photographer pp
+          WHERE rn_per_photographer = 1
+            AND relevance > 0
+          ORDER BY relevance DESC,
+                   pp.is_featured DESC, pp.is_verified DESC,
+                   pp.review_count DESC NULLS LAST,
+                   pp.rating DESC NULLS LAST
+          LIMIT 3`,
+        [mentionedLocationSlugs, mentionedShootTypeNames]
+      ).catch(() => [])
+    : [];
+
   const publishedDate = new Date(post.published_at);
 
   const breadcrumbJsonLd = {
@@ -628,8 +719,12 @@ export default async function BlogPostPage({ params }: PageProps) {
             {post.title}
           </h1>
 
-          {/* Author & date */}
-          <div className="mt-4 flex items-center gap-3 text-sm text-gray-500">
+          {/* Author & date — show "Updated {date}" badge when the post was
+              meaningfully revised (>14 days after publish), not on
+              first-day saves. Helps Google + readers see the post is
+              fresh; suppresses the badge on never-edited posts where it
+              would be misleading. */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
             <span className="font-medium text-gray-700">{post.author}</span>
             <span>&middot;</span>
             <time dateTime={post.published_at}>
@@ -639,6 +734,23 @@ export default async function BlogPostPage({ params }: PageProps) {
                 year: "numeric",
               })}
             </time>
+            {post.updated_at && new Date(post.updated_at).getTime() - new Date(post.published_at).getTime() > 14 * 86400000 && (
+              <>
+                <span>&middot;</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {t("lastUpdated", {
+                    date: new Date(post.updated_at).toLocaleDateString(({pt: "pt-PT", de: "de-DE", es: "es-ES", fr: "fr-FR"} as Record<string, string>)[locale] || "en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    }),
+                  })}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Article body */}
@@ -674,6 +786,35 @@ export default async function BlogPostPage({ params }: PageProps) {
               </Link>
             </div>
           </div>
+
+          {/* Related photographers — package cards filtered by mentioned
+              locations + shoot types. Higher conversion than another "browse
+              all" link because the visitor sees specific people + prices
+              they could book right now. */}
+          {relatedPackages.length > 0 && (
+            <div className="-mx-4 sm:-mx-6 mt-12 border-t border-warm-200 pt-10 px-4 sm:px-6">
+              <h3 className="font-display text-2xl font-bold text-gray-900">
+                {mentionedLocations.length > 0
+                  ? t("relatedPhotographersInLocation", { location: mentionedLocations[0].name })
+                  : t("relatedPhotographersGeneric")}
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                {t("relatedPhotographersSub")}
+              </p>
+              <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {relatedPackages.map((pkg) => (
+                  <PackageCardWithCarousel
+                    key={pkg.id}
+                    pkg={pkg}
+                    popularLabel={t("packagePopular")}
+                    minutesAbbrLabel={t("packageMinutesAbbr")}
+                    photosLabel={t("packagePhotos")}
+                    bookCtaLabel={t("packageBookCta")}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Related Locations — internal links based on location mentions */}
           {mentionedLocations.length > 0 && (
