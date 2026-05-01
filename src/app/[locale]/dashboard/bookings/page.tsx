@@ -292,7 +292,7 @@ export default async function BookingsPage() {
                 {booking.group_size && booking.group_size > 1 && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("groupLabel") || "Group"}</p>
-                    <p className="text-sm font-medium text-gray-800">{booking.group_size} {t("people", { count: booking.group_size }) || "people"}</p>
+                    <p className="text-sm font-medium text-gray-800">{t("people", { count: booking.group_size })}</p>
                   </div>
                 )}
                 <div className="rounded-lg bg-warm-50 px-3 py-2">

@@ -113,37 +113,24 @@ export default async function LocationPage({
       count: string; avg_rating: string | null; total_reviews: string;
       min_price: string | null; min_duration: string | null; max_duration: string | null;
     }>(
-      // Strict: only photographers who have at least one portfolio
-      // photo tagged with this location count toward the "N
-      // photographers in Sintra" headline + price/duration bounds.
-      // Listing someone who's never shot here misleads the visitor.
       `SELECT COUNT(DISTINCT pp.id) as count,
               AVG(pp.rating) FILTER (WHERE pp.rating IS NOT NULL AND pp.review_count > 0) as avg_rating,
               COALESCE(SUM(pp.review_count), 0) as total_reviews,
               (SELECT MIN(pk.price) FROM packages pk
                JOIN photographer_locations pl2 ON pl2.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
-               WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE AND pk.is_public = TRUE
-                 AND EXISTS (SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp2.id AND pi.type = 'photo' AND pi.location_slug = $1)) as min_price,
+               WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE AND pk.is_public = TRUE) as min_price,
               (SELECT MIN(pk.duration_minutes) FROM packages pk
                JOIN photographer_locations pl3 ON pl3.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp3 ON pp3.id = pk.photographer_id
-               WHERE pl3.location_slug = $1 AND pp3.is_approved = TRUE AND pk.is_public = TRUE AND pk.duration_minutes IS NOT NULL
-                 AND EXISTS (SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp3.id AND pi.type = 'photo' AND pi.location_slug = $1)) as min_duration,
+               WHERE pl3.location_slug = $1 AND pp3.is_approved = TRUE AND pk.is_public = TRUE AND pk.duration_minutes IS NOT NULL) as min_duration,
               (SELECT MAX(pk.duration_minutes) FROM packages pk
                JOIN photographer_locations pl4 ON pl4.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp4 ON pp4.id = pk.photographer_id
-               WHERE pl4.location_slug = $1 AND pp4.is_approved = TRUE AND pk.is_public = TRUE AND pk.duration_minutes IS NOT NULL
-                 AND EXISTS (SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp4.id AND pi.type = 'photo' AND pi.location_slug = $1)) as max_duration
+               WHERE pl4.location_slug = $1 AND pp4.is_approved = TRUE AND pk.is_public = TRUE AND pk.duration_minutes IS NOT NULL) as max_duration
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
-       WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
-         AND EXISTS (
-           SELECT 1 FROM portfolio_items pi
-            WHERE pi.photographer_id = pp.id
-              AND pi.type = 'photo'
-              AND pi.location_slug = $1
-         )`,
+       WHERE pl.location_slug = $1 AND pp.is_approved = TRUE`,
       [slug]
     );
     photographerCount = parseInt(row?.count || "0");
@@ -176,15 +163,16 @@ export default async function LocationPage({
         const TR_LOCALES = new Set(["pt", "de", "es", "fr"]);
         const useLoc = TR_LOCALES.has(locale) ? locale : null;
         const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
-        // Strict: photographer can only be the location hero if they
-        // have at least one portfolio_item.location_slug = $1. Without
-        // this, e.g. Achitei (covers Sintra in photographer_locations
-        // but has zero Sintra-tagged shots) would surface and the
-        // carousel would show his Cascais/Lisbon work — misleading on
-        // a /locations/sintra page. Featured/verified/founding weights
-        // still apply within the qualifying pool.
-        // The portfolio_urls subquery also surfaces sintra-tagged
-        // photos first so the carousel leads with on-location work.
+        // Soft preference: photographers who have actually tagged photos
+        // with this location get ×5 weight bonus on top of their tier.
+        // When ≥1 specialist exists, they almost always win the random
+        // pick. When location has zero specialists (small city, early
+        // platform phase), the page still gets a hero from anyone who
+        // covers it — better than an empty page or a misleading-looking
+        // "Featured" claim.
+        // The portfolio_urls subquery sorts location-tagged photos
+        // first inside the carousel, so even a fallback hero leads
+        // with their on-location work when they have any.
         return `SELECT pp.slug, u.name, ${taglineSql} as tagline, pp.cover_url, u.avatar_url,
               COALESCE(pp.rating, 0)::text as rating,
               COALESCE(pp.review_count, 0) as review_count,
@@ -205,10 +193,7 @@ export default async function LocationPage({
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND EXISTS (
-           SELECT 1 FROM portfolio_items pi
-            WHERE pi.photographer_id = pp.id
-              AND pi.type = 'photo'
-              AND pi.location_slug = $1
+           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
          )
        ORDER BY -LN(RANDOM()) / (CASE
          WHEN pp.is_featured THEN 50
@@ -216,7 +201,12 @@ export default async function LocationPage({
          WHEN COALESCE(pp.is_founding, FALSE) THEN 15
          WHEN pp.early_bird_tier IS NOT NULL THEN 5
          ELSE 2
-       END) ASC
+       END * (CASE WHEN EXISTS (
+         SELECT 1 FROM portfolio_items pi3
+          WHERE pi3.photographer_id = pp.id
+            AND pi3.type = 'photo'
+            AND pi3.location_slug = $1
+       ) THEN 5 ELSE 1 END)) ASC
        LIMIT 1`;
       })(),
       [slug]
@@ -365,13 +355,16 @@ export default async function LocationPage({
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        JOIN users u ON u.id = pp.user_id
        WHERE pl.location_slug = $1 AND pp.is_approved = TRUE
-         AND EXISTS (
-           SELECT 1 FROM portfolio_items pi
-            WHERE pi.photographer_id = pp.id
-              AND pi.type = 'photo'
-              AND pi.location_slug = $1
-         )
-       ORDER BY pp.is_featured DESC, pp.is_verified DESC, RANDOM()
+       -- Soft preference: photographers with actual tagged photos for
+       -- this location come first, then featured/verified, then random.
+       -- Never filtered out — small locations would empty otherwise.
+       ORDER BY (CASE WHEN EXISTS (
+         SELECT 1 FROM portfolio_items pi
+          WHERE pi.photographer_id = pp.id
+            AND pi.type = 'photo'
+            AND pi.location_slug = $1
+       ) THEN 0 ELSE 1 END),
+                pp.is_featured DESC, pp.is_verified DESC, RANDOM()
        LIMIT 6`;
       })(),
       [slug]
@@ -416,16 +409,6 @@ export default async function LocationPage({
           AND pp.is_approved = TRUE
           AND COALESCE(pp.is_test, FALSE) = FALSE
           AND pk.is_public = TRUE
-          -- Strict: photographer must have at least one portfolio photo
-          -- tagged with this location, otherwise we end up promoting a
-          -- "Porto Photoshoot" package on /locations/sintra because the
-          -- photographer happens to also list Sintra as a covered area.
-          AND EXISTS (
-            SELECT 1 FROM portfolio_items pi
-             WHERE pi.photographer_id = pp.id
-               AND pi.type = 'photo'
-               AND pi.location_slug = $1
-          )
      )
      SELECT id, name, price, duration_minutes, num_photos,
             photographer_slug, photographer_name, photographer_avatar,
@@ -446,7 +429,13 @@ export default async function LocationPage({
             ), ARRAY[]::text[]) as portfolio_thumbs
        FROM per_photographer pp
       WHERE rn_per_photographer = 1
-      ORDER BY pp.is_featured DESC, pp.is_verified DESC,
+      ORDER BY (CASE WHEN EXISTS (
+                 SELECT 1 FROM portfolio_items pi
+                  WHERE pi.photographer_id = pp.profile_id
+                    AND pi.type = 'photo'
+                    AND pi.location_slug = $1
+               ) THEN 0 ELSE 1 END),
+               pp.is_featured DESC, pp.is_verified DESC,
                pp.is_popular DESC NULLS LAST,
                pp.rating DESC NULLS LAST,
                pp.price ASC

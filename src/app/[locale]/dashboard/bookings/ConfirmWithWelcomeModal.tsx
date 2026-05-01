@@ -48,7 +48,7 @@ export function ConfirmWithWelcomeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
         <h3 className="text-lg font-bold text-gray-900">
-          {t("welcomeModalTitle") || `Confirm and welcome ${clientFirstName}`}
+          {t("welcomeModalTitle", { name: clientFirstName })}
         </h3>
         <p className="mt-2 text-sm text-gray-600">
           {t("welcomeModalSubtitle") || "Clients who hear from you right away are much more likely to pay. Take a moment to introduce yourself, mention what excites you about this shoot, and invite them to ask any questions."}

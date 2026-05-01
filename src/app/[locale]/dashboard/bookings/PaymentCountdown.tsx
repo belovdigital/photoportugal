@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 const WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export default function PaymentCountdown({ confirmedAt, viewerRole = "client" }: { confirmedAt: string; viewerRole?: "client" | "photographer" }) {
-  const t = useTranslations("bookingsPage");
+  const t = useTranslations("bookings");
   const deadline = new Date(confirmedAt).getTime() + WINDOW_MS;
 
   const [now, setNow] = useState(() => Date.now());
@@ -57,19 +57,15 @@ export default function PaymentCountdown({ confirmedAt, viewerRole = "client" }:
     : (t("slotHeldBody") || "Payment guarantees your slot. If unpaid by the deadline, your booking will be automatically cancelled and the slot released to other clients.");
 
   return (
-    <div className={`mt-3 rounded-lg border px-4 py-3 ${wrapClass}`}>
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <div className="text-sm font-semibold">{title}</div>
-          <div className="text-xs mt-0.5 opacity-80">{body}</div>
-        </div>
-        <div className="flex flex-col items-end">
-          <div className={`text-2xl font-mono font-bold tabular-nums ${timerClass}`}>{timeStr}</div>
-          <div className="text-[10px] uppercase tracking-wide opacity-70">
-            {t("timeRemaining") || "remaining"}
-          </div>
-        </div>
+    <div className={`mt-3 rounded-lg border px-4 py-5 text-center ${wrapClass}`}>
+      <div className={`text-3xl sm:text-4xl font-mono font-bold tabular-nums leading-none ${timerClass}`}>
+        {timeStr}
       </div>
+      <div className="mt-1 text-[10px] uppercase tracking-[0.2em] opacity-70">
+        {t("timeRemaining") || "remaining"}
+      </div>
+      <div className="mt-3 text-sm font-semibold">{title}</div>
+      <div className="mt-1 text-xs opacity-80 max-w-md mx-auto">{body}</div>
     </div>
   );
 }
