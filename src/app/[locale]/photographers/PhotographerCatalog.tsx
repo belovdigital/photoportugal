@@ -572,8 +572,8 @@ export function PhotographerCatalog({
 
             {showLocationDropdown && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowLocationDropdown(false)} />
-                <div className="absolute left-0 top-full z-20 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-warm-200 bg-white shadow-lg">
+                <div className="fixed inset-0 z-40" onClick={() => setShowLocationDropdown(false)} />
+                <div className="absolute left-0 top-full z-50 mt-1 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-warm-200 bg-white shadow-lg">
                   <div className="p-2">
                     <input
                       type="text"
@@ -643,8 +643,8 @@ export function PhotographerCatalog({
 
             {showFiltersDropdown && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowFiltersDropdown(false)} />
-                <div className="absolute left-0 top-full z-20 mt-1 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-warm-200 bg-white p-4 shadow-lg">
+                <div className="fixed inset-0 z-40" onClick={() => setShowFiltersDropdown(false)} />
+                <div className="absolute left-0 top-full z-50 mt-1 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-warm-200 bg-white p-4 shadow-lg">
                   <div>
                     <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("filters.occasion")}</h4>
                     <div className="flex flex-wrap gap-1.5">
