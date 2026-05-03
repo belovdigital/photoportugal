@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useMemo, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { localizeShootType } from "@/lib/shoot-type-labels";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
@@ -496,7 +497,7 @@ export function PhotographerCatalog({
           <p className="mt-1 text-sm text-gray-400">{t("trustLine")}</p>
         </div>
 
-        <a href="/find-photographer" className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/70 px-5 py-4 shadow-lg backdrop-blur-xl transition hover:shadow-xl hover:bg-white/90 lg:w-1/2 lg:shrink-0">
+        <Link href="/find-photographer" className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/70 px-5 py-4 shadow-lg backdrop-blur-xl transition hover:shadow-xl hover:bg-white/90 lg:w-1/2 lg:shrink-0">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 shadow-md">
             <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -508,7 +509,7 @@ export function PhotographerCatalog({
             <TeamOnlineIndicator />
           </div>
           <svg className="h-4 w-4 shrink-0 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-        </a>
+        </Link>
       </div>
 
       {/* Seasonal urgency — April to September */}
@@ -548,26 +549,6 @@ export function PhotographerCatalog({
       {/* Desktop filter bar (>= sm) — buckets + controls in a single row */}
       <div className="mt-4 hidden sm:block">
         <div className="flex flex-wrap items-center gap-1.5">
-          {BUCKETS.map((b) => {
-            const active = activeBucket === b.key;
-            return (
-              <button
-                key={b.key}
-                onClick={() => applyBucket(b.key)}
-                className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
-                  active
-                    ? "border-primary-500 bg-primary-600 text-white shadow-sm"
-                    : "border-warm-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-700"
-                }`}
-              >
-                <span aria-hidden>{b.icon}</span>
-                {b.label}
-              </button>
-            );
-          })}
-
-          {/* Divider */}
-          <span aria-hidden className="mx-1 h-5 w-px bg-warm-200" />
           {/* Location dropdown with multi-select */}
           <div className="relative">
             <button
@@ -733,6 +714,27 @@ export function PhotographerCatalog({
             </button>
           )}
 
+          {/* Divider */}
+          <span aria-hidden className="mx-1 h-5 w-px bg-warm-200" />
+
+          {BUCKETS.map((b) => {
+            const active = activeBucket === b.key;
+            return (
+              <button
+                key={b.key}
+                onClick={() => applyBucket(b.key)}
+                className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
+                  active
+                    ? "border-primary-500 bg-primary-600 text-white shadow-sm"
+                    : "border-warm-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-700"
+                }`}
+              >
+                <span aria-hidden>{b.icon}</span>
+                {b.label}
+              </button>
+            );
+          })}
+
           {/* Search — icon chip pinned to the right edge of the row. Width never changes, so nothing shifts when typing. */}
           <div className="relative ml-auto">
             <button
@@ -797,7 +799,7 @@ export function PhotographerCatalog({
           <Fragment key={photographer.id}>
             <PhotographerCard photographer={photographer} quote={quotes[photographer.id]} />
             {idx === 2 && filtered.length > 3 && (
-              <a
+              <Link
                 href="/find-photographer"
                 className="flex items-center gap-3 rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 to-accent-50 p-5 shadow-sm transition hover:shadow-md sm:hidden"
               >
@@ -814,7 +816,7 @@ export function PhotographerCatalog({
                 <svg className="h-4 w-4 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             )}
           </Fragment>
         ))}
