@@ -15,7 +15,6 @@ import { ReviewsManager } from "./ReviewsManager";
 import { AnalyticsDashboard, VisitorsTab } from "./AnalyticsDashboard";
 import { AdminMatchRequestsTab } from "./AdminMatchRequestsTab";
 import { isBelowMinimum } from "@/lib/package-pricing";
-import { AuditLog } from "./AuditLog";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
@@ -176,6 +175,9 @@ export default async function AdminPage() {
     message: string | null; location_slug: string | null; occasion: string | null;
     group_size: number | null; shoot_time: string | null; package_name: string | null;
     package_duration: number | null; service_fee: number | null; payout_amount: number | null;
+    stripe_amount_subtotal_cents: number | null; stripe_amount_paid_cents: number | null;
+    stripe_amount_discount_cents: number | null; stripe_currency: string | null;
+    stripe_promo_code: string | null; stripe_coupon_name: string | null; stripe_coupon_percent_off: number | null;
     flexible_date_from: string | null; flexible_date_to: string | null; date_note: string | null;
     delivery_accepted: boolean | null; delivery_accepted_at: string | null; location_detail: string | null;
     client_country: string | null;
@@ -187,6 +189,8 @@ export default async function AdminPage() {
             b.status, b.shoot_date, b.total_price, b.created_at, b.confirmed_at, b.payment_status,
             b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,
+            b.stripe_amount_subtotal_cents, b.stripe_amount_paid_cents, b.stripe_amount_discount_cents,
+            b.stripe_currency, b.stripe_promo_code, b.stripe_coupon_name, b.stripe_coupon_percent_off,
             b.flexible_date_from, b.flexible_date_to, b.date_note,
             b.delivery_accepted, b.delivery_accepted_at, b.location_detail,
             (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,

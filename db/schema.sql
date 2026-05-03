@@ -215,6 +215,13 @@ CREATE TABLE bookings (
   service_fee NUMERIC,
   platform_fee NUMERIC,
   payout_amount NUMERIC,
+  stripe_amount_subtotal_cents INTEGER, -- Stripe Checkout subtotal before discounts
+  stripe_amount_paid_cents INTEGER, -- actual Stripe Checkout amount after discounts
+  stripe_amount_discount_cents INTEGER, -- total Stripe Checkout discount amount
+  stripe_currency VARCHAR(10),
+  stripe_promo_code TEXT,
+  stripe_coupon_name TEXT,
+  stripe_coupon_percent_off NUMERIC,
   payment_url TEXT,
   delivery_token VARCHAR(64) UNIQUE,
   delivery_password VARCHAR(64),

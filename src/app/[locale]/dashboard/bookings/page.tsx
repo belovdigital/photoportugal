@@ -24,6 +24,12 @@ const TIME_LABEL_KEYS: Record<string, string> = {
   sunset: "timeSunset",
 };
 
+function formatStripeAmount(cents: number | null, currency: string | null) {
+  if (typeof cents !== "number") return null;
+  const symbol = (currency || "eur").toLowerCase() === "eur" ? "€" : `${(currency || "").toUpperCase()} `;
+  return `${symbol}${(cents / 100).toFixed(2)}`;
+}
+
 export default async function BookingsPage() {
   const session = await auth();
   const t = await getTranslations("bookings");
@@ -55,6 +61,10 @@ export default async function BookingsPage() {
     total_price: number | null;
     service_fee: number | null;
     payout_amount: number | null;
+    stripe_amount_paid_cents: number | null;
+    stripe_amount_discount_cents: number | null;
+    stripe_currency: string | null;
+    stripe_promo_code: string | null;
     duration_minutes: number | null;
     location_slug: string | null;
     location_detail: string | null;
@@ -82,7 +92,9 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
+                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount,
+                  b.stripe_amount_paid_cents, b.stripe_amount_discount_cents, b.stripe_currency, b.stripe_promo_code,
+                  b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
                   COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
                   b.delivery_expires_at,
@@ -115,7 +127,9 @@ export default async function BookingsPage() {
     } else {
       bookings = await query(
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
+                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount,
+                b.stripe_amount_paid_cents, b.stripe_amount_discount_cents, b.stripe_currency, b.stripe_promo_code,
+                b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
                 COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
                 b.delivery_expires_at,
@@ -270,6 +284,17 @@ export default async function BookingsPage() {
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
                     <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price))}</p>
+                    {booking.stripe_amount_paid_cents !== null && (
+                      <p className="text-[10px] font-medium text-green-700">
+                        Paid: {formatStripeAmount(booking.stripe_amount_paid_cents, booking.stripe_currency)}
+                      </p>
+                    )}
+                    {Number(booking.stripe_amount_discount_cents) > 0 && (
+                      <p className="text-[10px] font-medium text-primary-600">
+                        Discount: -{formatStripeAmount(booking.stripe_amount_discount_cents, booking.stripe_currency)}
+                        {booking.stripe_promo_code ? ` · ${booking.stripe_promo_code}` : ""}
+                      </p>
+                    )}
                     {isPhotographer && (Number(booking.service_fee) > 0 || Number(booking.payout_amount) > 0) && (
                       <p className="text-[10px] text-gray-400">Fee: &euro;{Math.round(Number(booking.service_fee))} &middot; Payout: &euro;{Math.round(Number(booking.payout_amount))}</p>
                     )}

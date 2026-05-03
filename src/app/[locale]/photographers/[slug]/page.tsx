@@ -310,6 +310,7 @@ export default async function PhotographerProfilePage({
   const isPreview = !!process.env.ADMIN_PREVIEW_SECRET && sp.preview === process.env.ADMIN_PREVIEW_SECRET;
   const session = await auth();
   const viewerUserId = (session?.user as { id?: string } | undefined)?.id;
+  const viewerIsPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const result = await getPhotographer(slug, isPreview, viewerUserId, locale);
 
   if (!result) {
@@ -747,17 +748,17 @@ export default async function PhotographerProfilePage({
                 </div>
               )}
 
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500">
-                {hasExperience && (
-                  <span>{tc("yrsExperience", { years: photographer.experience_years })}</span>
-                )}
-                {hasExperience && hasLanguages && <span className="text-gray-300">·</span>}
-                {hasLanguages && (
-                  <span>{localizeLanguageNames(photographer.languages, locale).join(", ")}</span>
-                )}
-                {(hasExperience || hasLanguages) && <span className="text-gray-300">·</span>}
-                <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} compact />
-              </div>
+              {(hasExperience || hasLanguages) && (
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500">
+                  {hasExperience && (
+                    <span>{tc("yrsExperience", { years: photographer.experience_years })}</span>
+                  )}
+                  {hasExperience && hasLanguages && <span className="text-gray-300">·</span>}
+                  {hasLanguages && (
+                    <span>{localizeLanguageNames(photographer.languages, locale).join(", ")}</span>
+                  )}
+                </div>
+              )}
 
               {shootTypeChipItems.length > 0 && (
                 <div className="mt-2 border-t border-warm-200 pt-2">
@@ -772,10 +773,13 @@ export default async function PhotographerProfilePage({
               )}
             </div>
 
-            {result.type === "db" && (
-              <div id="message" className="flex items-center gap-3 shrink-0 sm:ml-auto sm:self-center">
-                <WishlistButton photographerId={photographer.id} size="md" className="border border-warm-200 shadow-sm" />
-                <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} />
+            {result.type === "db" && !viewerIsPhotographer && (
+              <div id="message" className="flex shrink-0 flex-col items-end gap-1.5 sm:ml-auto sm:self-center">
+                <div className="flex items-center gap-3">
+                  <WishlistButton photographerId={photographer.id} size="md" className="border border-warm-200 shadow-sm" />
+                  <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} />
+                </div>
+                <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
               </div>
             )}
           </div>

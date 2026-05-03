@@ -24,6 +24,13 @@ export interface AdminBooking {
   package_duration: number | null;
   service_fee: number | null;
   payout_amount: number | null;
+  stripe_amount_subtotal_cents: number | null;
+  stripe_amount_paid_cents: number | null;
+  stripe_amount_discount_cents: number | null;
+  stripe_currency: string | null;
+  stripe_promo_code: string | null;
+  stripe_coupon_name: string | null;
+  stripe_coupon_percent_off: number | null;
   flexible_date_from: string | null;
   flexible_date_to: string | null;
   date_note: string | null;
@@ -48,23 +55,15 @@ const TIME_LABELS: Record<string, string> = {
   flexible: "Flexible",
 };
 
+function formatStripeAmount(cents: number | null, currency: string | null) {
+  if (typeof cents !== "number") return null;
+  const symbol = (currency || "eur").toLowerCase() === "eur" ? "€" : `${(currency || "").toUpperCase()} `;
+  return `${symbol}${(cents / 100).toFixed(2)}`;
+}
+
 function codeToFlag(code: string): string {
   return code.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-100 text-yellow-700",
-  confirmed: "bg-green-100 text-green-700",
-  completed: "bg-blue-100 text-blue-700",
-  delivered: "bg-purple-100 text-purple-700",
-  cancelled: "bg-gray-100 text-gray-500",
-};
-
-const PAYMENT_COLORS: Record<string, string> = {
-  paid: "bg-green-100 text-green-700",
-  refunded: "bg-red-100 text-red-600",
-  pending: "bg-yellow-100 text-yellow-700",
-};
 
 const PAGE_SIZE = 50;
 
@@ -277,6 +276,17 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                     <div>
                       <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Price</label>
                       <p className="mt-1 text-sm font-medium text-gray-700">{b.total_price ? `€${Math.round(Number(b.total_price))}` : "—"}</p>
+                      {b.stripe_amount_paid_cents !== null && (
+                        <p className="text-[10px] font-medium text-green-700">
+                          Paid: {formatStripeAmount(b.stripe_amount_paid_cents, b.stripe_currency)}
+                        </p>
+                      )}
+                      {Number(b.stripe_amount_discount_cents) > 0 && (
+                        <p className="text-[10px] font-medium text-primary-600">
+                          Discount: -{formatStripeAmount(b.stripe_amount_discount_cents, b.stripe_currency)}
+                          {b.stripe_promo_code ? ` · ${b.stripe_promo_code}` : ""}
+                        </p>
+                      )}
                       {Number(b.service_fee) > 0 || Number(b.payout_amount) > 0 ? (
                         <p className="text-[10px] text-gray-400">Fee: €{Math.round(Number(b.service_fee))} · Payout: €{Math.round(Number(b.payout_amount))}</p>
                       ) : null}

@@ -38,6 +38,10 @@ function fmtAmount(amountCents: number | null | undefined, currency?: string | n
   return `${symbol}${(amountCents / 100).toFixed(2)}`;
 }
 
+function safeTelegramText(value: unknown): string {
+  return String(value ?? "").replace(/[<>]/g, "");
+}
+
 interface StripeWebhookEvent {
   id: string;
   type: string;
@@ -210,6 +214,51 @@ async function notifyAdminSubscriptionEvent(
   }
 }
 
+async function getCheckoutPaymentSummary(
+  checkoutSession: Record<string, unknown>,
+): Promise<{
+  amountDiscount: number;
+  amountSubtotal: number | null;
+  amountTotal: number | null;
+  currency: string | null;
+  code: string | null;
+  couponName: string | null;
+  percentOff: number | null;
+}> {
+  const amountDiscount = (checkoutSession.total_details as { amount_discount?: number } | null | undefined)?.amount_discount || 0;
+  let expandedSession = checkoutSession;
+  const sessionId = typeof checkoutSession.id === "string" ? checkoutSession.id : null;
+
+  if (amountDiscount > 0 && sessionId) {
+    try {
+      expandedSession = await requireStripe().checkout.sessions.retrieve(sessionId, {
+        expand: ["discounts", "discounts.promotion_code", "discounts.coupon"],
+      } as never) as unknown as Record<string, unknown>;
+    } catch (err) {
+      console.error("[webhook] checkout discount expand failed:", err);
+    }
+  }
+
+  const discounts = Array.isArray(expandedSession.discounts) ? expandedSession.discounts : [];
+  const firstDiscount = discounts[0] as Record<string, unknown> | undefined;
+  const promotionCode = firstDiscount?.promotion_code && typeof firstDiscount.promotion_code === "object"
+    ? firstDiscount.promotion_code as Record<string, unknown>
+    : null;
+  const coupon = firstDiscount?.coupon && typeof firstDiscount.coupon === "object"
+    ? firstDiscount.coupon as Record<string, unknown>
+    : null;
+
+  return {
+    amountDiscount,
+    amountSubtotal: typeof expandedSession.amount_subtotal === "number" ? expandedSession.amount_subtotal : null,
+    amountTotal: typeof expandedSession.amount_total === "number" ? expandedSession.amount_total : null,
+    currency: typeof expandedSession.currency === "string" ? expandedSession.currency : null,
+    code: typeof promotionCode?.code === "string" ? promotionCode.code : null,
+    couponName: typeof coupon?.name === "string" ? coupon.name : null,
+    percentOff: typeof coupon?.percent_off === "number" ? coupon.percent_off : null,
+  };
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
@@ -258,11 +307,34 @@ export async function POST(req: NextRequest) {
           }
         } else if ((checkoutType === "booking" || bookingId) && checkoutSession.payment_intent) {
           // Booking payment completed
+          const paymentSummary = await getCheckoutPaymentSummary(checkoutSession as unknown as Record<string, unknown>);
           await queryOne(
             `UPDATE bookings SET stripe_payment_intent_id = $1, payment_status = 'paid'
              WHERE id = $2 RETURNING id`,
             [checkoutSession.payment_intent, bookingId]
           );
+          queryOne(
+            `UPDATE bookings
+                SET stripe_amount_subtotal_cents = $1,
+                    stripe_amount_paid_cents = $2,
+                    stripe_amount_discount_cents = $3,
+                    stripe_currency = $4,
+                    stripe_promo_code = $5,
+                    stripe_coupon_name = $6,
+                    stripe_coupon_percent_off = $7
+              WHERE id = $8
+              RETURNING id`,
+            [
+              paymentSummary.amountSubtotal,
+              paymentSummary.amountTotal,
+              paymentSummary.amountDiscount,
+              paymentSummary.currency,
+              paymentSummary.code,
+              paymentSummary.couponName,
+              paymentSummary.percentOff,
+              bookingId,
+            ]
+          ).catch((err) => console.error("[webhook] failed to persist Stripe payment details:", err));
           console.log(`[webhook] Checkout completed for booking ${bookingId}, PI: ${checkoutSession.payment_intent}`);
 
           // Add system message to chat
@@ -360,6 +432,25 @@ export async function POST(req: NextRequest) {
               import("@/lib/telegram").then(({ sendTelegram }) => {
                 sendTelegram(`💰 <b>Payment Received!</b>\n\n<b>Amount:</b> €${Number(bookingInfo!.total_price)}\n<b>Client:</b> ${bookingInfo!.client_name}\n<b>Photographer:</b> ${bookingInfo!.photographer_name}`, "bookings");
               }).catch((err) => console.error("[webhook] telegram payment error:", err));
+
+              Promise.resolve(paymentSummary).then((discount) => {
+                if (discount.amountDiscount <= 0) return;
+                const lines = [
+                  "🎟 <b>Coupon Used!</b>",
+                  "",
+                  `<b>Discount:</b> ${fmtAmount(discount.amountDiscount, discount.currency)}`,
+                  `<b>Client:</b> ${safeTelegramText(bookingInfo!.client_name)}`,
+                  `<b>Photographer:</b> ${safeTelegramText(bookingInfo!.photographer_name)}`,
+                ];
+                if (discount.code) lines.splice(2, 0, `<b>Code:</b> ${safeTelegramText(discount.code)}`);
+                if (discount.percentOff) lines.push(`<b>Percent:</b> ${discount.percentOff}%`);
+                if (discount.couponName) lines.push(`<b>Coupon:</b> ${safeTelegramText(discount.couponName)}`);
+                if (discount.amountSubtotal !== null) lines.push(`<b>Before discount:</b> ${fmtAmount(discount.amountSubtotal, discount.currency)}`);
+                if (discount.amountTotal !== null) lines.push(`<b>Paid in Stripe:</b> ${fmtAmount(discount.amountTotal, discount.currency)}`);
+                if (bookingId) lines.push(`<b>Booking:</b> ${safeTelegramText(String(bookingId).slice(0, 8))}`);
+
+                return sendTelegram(lines.join("\n"), "bookings");
+              }).catch((err) => console.error("[webhook] telegram coupon payment error:", err));
 
               // WhatsApp/SMS to photographer
               try {
