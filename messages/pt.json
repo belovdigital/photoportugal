@@ -283,11 +283,15 @@
       "paymentProtection": "Proteção de Pagamento"
     },
     "socialProofStrip": {
-      "trustedBy": "países confiam em nós",
-      "photographers": "fotógrafos verificados",
-      "locations": "localizações incríveis",
+      "photographers": "fotógrafos escolhidos a dedo",
+      "portugalWide": "Todo Portugal",
+      "coverage": "continente, Madeira e Açores",
+      "verified": "Avaliações verificadas",
+      "verifiedSub": "perfis, pacotes e reserva segura",
+      "realProfiles": "Perfis revistos",
       "securePayment": "Pagamento seguro",
-      "islandsCovered": "Ilhas cobertas"
+      "directBooking": "Reserva direta",
+      "islandsCovered": "Cobertura nas ilhas dos Açores"
     },
     "featured": {
       "badge": "Destaque",

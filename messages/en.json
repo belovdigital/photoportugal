@@ -283,11 +283,15 @@
       "paymentProtection": "Payment Protection"
     },
     "socialProofStrip": {
-      "trustedBy": "countries trust us",
-      "photographers": "verified photographers",
-      "locations": "stunning locations",
+      "photographers": "hand-picked photographers",
+      "portugalWide": "Portugal-wide",
+      "coverage": "mainland, Madeira and the Azores",
+      "verified": "Verified reviews",
+      "verifiedSub": "profiles, packages and secure booking",
+      "realProfiles": "Reviewed profiles",
       "securePayment": "Secure payment",
-      "islandsCovered": "Islands covered"
+      "directBooking": "Direct booking",
+      "islandsCovered": "Azores island coverage"
     },
     "featured": {
       "badge": "Featured",

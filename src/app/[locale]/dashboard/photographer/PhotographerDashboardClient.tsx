@@ -222,18 +222,68 @@ export function PhotographerDashboardClient({
     setter(arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item]);
   }
 
-  function isCoverageInherited(slug: string, selected: string[] = selectedCoverageNodes) {
-    return getAncestorNodeSlugs(slug).some((ancestor) => selected.includes(ancestor));
+  function nodeContainsSlug(node: LocationNode, slug: string): boolean {
+    return node.slug === slug || (node.children || []).some((child) => nodeContainsSlug(child, slug));
+  }
+
+  function getNearestSelectedAncestor(slug: string, selected: string[]) {
+    return getAncestorNodeSlugs(slug).reverse().find((ancestor) => selected.includes(ancestor));
+  }
+
+  function isCoverageCovered(slug: string, selected: string[] = selectedCoverageNodes) {
+    return selected.includes(slug) || getAncestorNodeSlugs(slug).some((ancestor) => selected.includes(ancestor));
+  }
+
+  function expandNodeExcluding(node: LocationNode, excludedSlug: string): string[] {
+    if (node.slug === excludedSlug) return [];
+    if (!node.children || node.children.length === 0) return [node.slug];
+
+    return node.children.flatMap((child) => (
+      nodeContainsSlug(child, excludedSlug) ? expandNodeExcluding(child, excludedSlug) : [child.slug]
+    ));
+  }
+
+  function removeCoverageNode(selected: string[], slug: string) {
+    const selectedSet = new Set(selected);
+    const node = getLocationNode(slug);
+
+    if (selectedSet.has(slug)) {
+      const descendants = new Set(node ? getDescendantNodeSlugs(node) : []);
+      return selected.filter((item) => item !== slug && !descendants.has(item));
+    }
+
+    const selectedAncestor = getNearestSelectedAncestor(slug, selected);
+    if (selectedAncestor) {
+      const ancestorNode = getLocationNode(selectedAncestor);
+      const ancestorDescendants = new Set(ancestorNode ? getDescendantNodeSlugs(ancestorNode) : []);
+      const expanded = ancestorNode ? expandNodeExcluding(ancestorNode, slug) : [];
+      return Array.from(new Set([
+        ...selected.filter((item) => item !== selectedAncestor && !ancestorDescendants.has(item)),
+        ...expanded,
+      ]));
+    }
+
+    const descendants = new Set(node ? getDescendantNodeSlugs(node) : []);
+    return selected.filter((item) => item !== slug && !descendants.has(item));
+  }
+
+  function getCoverageState(node: LocationNode, selected: string[] = selectedCoverageNodes): "checked" | "partial" | "unchecked" {
+    if (isCoverageCovered(node.slug, selected)) return "checked";
+    if (!node.children || node.children.length === 0) return "unchecked";
+    const childStates = node.children.map((child) => getCoverageState(child, selected));
+    if (childStates.every((state) => state === "checked")) return "checked";
+    if (childStates.some((state) => state === "checked" || state === "partial")) return "partial";
+    return "unchecked";
   }
 
   function toggleCoverageNode(slug: string, maxNodes: number) {
     setSelectedCoverageNodes((current) => {
-      if (current.includes(slug)) return current.filter((item) => item !== slug);
-      if (isCoverageInherited(slug, current)) return current;
-      if (maxNodes !== Infinity && current.length >= maxNodes) return current;
+      const node = getLocationNode(slug);
+      const currentState = node ? getCoverageState(node, current) : current.includes(slug) ? "checked" : "unchecked";
+      if (currentState === "checked") return removeCoverageNode(current, slug);
+      if (maxNodes !== Infinity && current.length >= maxNodes && currentState === "unchecked") return current;
 
-      const selectedNode = getLocationNode(slug);
-      const descendants = new Set(selectedNode ? getDescendantNodeSlugs(selectedNode) : []);
+      const descendants = new Set(node ? getDescendantNodeSlugs(node) : []);
       const ancestors = new Set(getAncestorNodeSlugs(slug));
       return [...current.filter((item) => !descendants.has(item) && !ancestors.has(item)), slug];
     });
@@ -242,10 +292,12 @@ export function PhotographerDashboardClient({
   }
 
   function renderCoverageNode(node: LocationNode, maxNodes: number, depth = 0): ReactNode {
+    const coverageState = getCoverageState(node);
     const isSelected = selectedCoverageNodes.includes(node.slug);
-    const isInherited = !isSelected && isCoverageInherited(node.slug);
+    const isCovered = coverageState === "checked";
+    const isPartial = coverageState === "partial";
     const atLimit = selectedCoverageNodes.length >= maxNodes;
-    const isDisabled = !isSelected && !isInherited && atLimit;
+    const isDisabled = coverageState === "unchecked" && atLimit;
     const legacyCount = expandLocationCoverageToLegacySlugs([node.slug]).length;
 
     return (
@@ -253,12 +305,14 @@ export function PhotographerDashboardClient({
         <button
           type="button"
           onClick={() => toggleCoverageNode(node.slug, maxNodes)}
-          disabled={isDisabled || isInherited}
+          disabled={isDisabled}
           className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
             isSelected
               ? "bg-primary-50 text-primary-700"
-              : isInherited
+              : isCovered
                 ? "bg-emerald-50 text-emerald-700"
+                : isPartial
+                  ? "bg-amber-50 text-amber-700"
                 : isDisabled
                   ? "cursor-not-allowed opacity-40"
                   : "hover:bg-warm-50"
@@ -267,12 +321,15 @@ export function PhotographerDashboardClient({
         >
           <span className="flex min-w-0 items-center gap-2">
             <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-              isSelected ? "border-primary-500 bg-primary-500" : isInherited ? "border-emerald-500 bg-emerald-500" : "border-gray-300 bg-white"
+              isSelected ? "border-primary-500 bg-primary-500" : isCovered ? "border-emerald-500 bg-emerald-500" : isPartial ? "border-amber-500 bg-amber-500" : "border-gray-300 bg-white"
             }`}>
-              {(isSelected || isInherited) && (
+              {isCovered && (
                 <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
+              )}
+              {isPartial && (
+                <span className="h-0.5 w-2 rounded-full bg-white" />
               )}
             </span>
             <span className="truncate font-medium">{node.name}</span>
@@ -283,7 +340,7 @@ export function PhotographerDashboardClient({
             )}
           </span>
           <span className="shrink-0 text-xs text-gray-400">
-            {isInherited ? t("locationIncluded") : legacyCount > 1 ? t("locationAreas", { count: legacyCount }) : ""}
+            {isCovered && !isSelected ? t("locationIncluded") : legacyCount > 1 ? t("locationAreas", { count: legacyCount }) : ""}
           </span>
         </button>
         {node.children && (
@@ -912,6 +969,31 @@ export function PhotographerDashboardClient({
               />
             </div>
 
+            <div className="rounded-xl border border-primary-100 bg-primary-50/50 p-4 shadow-sm">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800">{t("careerStartYear")}</label>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {(() => {
+                      const y = parseInt(careerStartYear);
+                      if (!y || y < 1960 || y > currentYear) return t("careerStartYearHint");
+                      const years = currentYear - y + 1;
+                      return t("careerStartYearComputed", { years });
+                    })()}
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  value={careerStartYear}
+                  onChange={(e) => setCareerStartYear(e.target.value)}
+                  min="1960"
+                  max={currentYear}
+                  placeholder={(currentYear - 5).toString()}
+                  className="block w-full rounded-xl border border-primary-200 bg-white px-4 py-3 text-base font-semibold text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 sm:w-36"
+                />
+              </div>
+            </div>
+
             {/* Languages */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t("languages")} <span className="text-red-500">*</span></label>
@@ -970,35 +1052,12 @@ export function PhotographerDashboardClient({
                         <> &middot; {t("locationsPublicAreas", { count: selectedLocations.length })}</>
                       )}
                     </p>
-                    <div className="grid gap-2 lg:grid-cols-2">
+                    <div className="grid gap-2 lg:grid-cols-2 xl:grid-cols-3">
                       {LOCATION_TREE.map((node) => renderCoverageNode(node, maxLocations))}
                     </div>
                   </>
                 );
               })()}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">{t("careerStartYear")}</label>
-                <input
-                  type="number"
-                  value={careerStartYear}
-                  onChange={(e) => setCareerStartYear(e.target.value)}
-                  min="1960"
-                  max={currentYear}
-                  placeholder={(currentYear - 5).toString()}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                />
-                <p className="mt-1.5 text-xs text-gray-500">
-                  {(() => {
-                    const y = parseInt(careerStartYear);
-                    if (!y || y < 1960 || y > currentYear) return t("careerStartYearHint");
-                    const years = currentYear - y + 1;
-                    return t("careerStartYearComputed", { years });
-                  })()}
-                </p>
-              </div>
             </div>
 
           </form>

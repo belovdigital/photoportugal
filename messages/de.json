@@ -283,11 +283,15 @@
       "paymentProtection": "Zahlungsschutz"
     },
     "socialProofStrip": {
-      "trustedBy": "Länder vertrauen uns",
-      "photographers": "verifizierte Fotografen",
-      "locations": "atemberaubende Orte",
+      "photographers": "handverlesene Fotografen",
+      "portugalWide": "Ganz Portugal",
+      "coverage": "Festland, Madeira und Azoren",
+      "verified": "Verifizierte Bewertungen",
+      "verifiedSub": "Profile, Pakete und sichere Buchung",
+      "realProfiles": "Geprüfte Profile",
       "securePayment": "Sichere Zahlung",
-      "islandsCovered": "Inseln abgedeckt"
+      "directBooking": "Direkte Buchung",
+      "islandsCovered": "Abdeckung der Azoreninseln"
     },
     "featured": {
       "badge": "Empfohlen",

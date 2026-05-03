@@ -283,11 +283,15 @@
       "paymentProtection": "Protection des paiements"
     },
     "socialProofStrip": {
-      "trustedBy": "pays nous font confiance",
-      "photographers": "photographes vérifiés",
-      "locations": "lieux magnifiques",
+      "photographers": "photographes sélectionnés",
+      "portugalWide": "Tout le Portugal",
+      "coverage": "continent, Madère et Açores",
+      "verified": "Avis vérifiés",
+      "verifiedSub": "profils, offres et réservation sécurisée",
+      "realProfiles": "Profils vérifiés",
       "securePayment": "Paiement sécurisé",
-      "islandsCovered": "Îles couvertes"
+      "directBooking": "Réservation directe",
+      "islandsCovered": "Couverture des îles des Açores"
     },
     "featured": {
       "badge": "À la une",

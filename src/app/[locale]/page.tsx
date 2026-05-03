@@ -11,9 +11,7 @@ import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
 import { getHomepageReviews, getSiteReviewStats } from "@/lib/reviews-data";
 import { heroImages } from "@/lib/hero-images";
-import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
-import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 import { HeroSingleVariant } from "@/components/ui/HeroSingleVariant";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
@@ -162,23 +160,23 @@ async function SchemaLdScripts({ locale }: { locale: string }) {
 async function SocialProofSection({
   texts,
 }: {
-  texts: { trustedBy: string; photographers: string; locations: string; securePayment: string; islandsCovered: string };
+  texts: {
+    photographers: string;
+    portugalWide: string;
+    coverage: string;
+    verified: string;
+    verifiedSub: string;
+    realProfiles: string;
+    securePayment: string;
+    directBooking: string;
+    islandsCovered: string;
+  };
 }) {
-  let socialProofCountries: string[] = [];
   let socialProofPhotographers = 22;
   let socialProofAvatars: { slug: string; avatar_url: string; name: string }[] = [];
-  let socialProofLocationSlugs: string[] = [];
   try {
     const { query, queryOne } = await import("@/lib/db");
-    const [countryRows, countRow, avatarRows, locRows] = await Promise.all([
-      query<{ country: string }>(
-        `WITH top_countries AS (
-           SELECT country, COUNT(*) as visits FROM visitor_sessions
-           WHERE country IS NOT NULL AND country != '??' AND country != 'PT'
-           GROUP BY country ORDER BY visits DESC LIMIT 25
-         )
-         SELECT country FROM top_countries ORDER BY RANDOM()`
-      ),
+    const [countRow, avatarRows] = await Promise.all([
       queryOne<{ count: number }>(
         `SELECT COUNT(*)::int as count FROM photographer_profiles
          WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE`
@@ -191,25 +189,15 @@ async function SocialProofSection({
          ORDER BY RANDOM()
          LIMIT 30`
       ),
-      query<{ location_slug: string }>(
-        `SELECT DISTINCT location_slug FROM photographer_locations
-         JOIN photographer_profiles pp ON pp.id = photographer_locations.photographer_id
-         WHERE pp.is_approved = TRUE`
-      ),
     ]);
-    socialProofCountries = countryRows.map((r) => r.country);
     if (countRow) socialProofPhotographers = countRow.count;
     socialProofAvatars = avatarRows;
-    socialProofLocationSlugs = locRows.map((r) => r.location_slug);
   } catch {}
 
   return (
     <SocialProofStrip
-      countryCodes={socialProofCountries}
       photographerCount={socialProofPhotographers}
-      locationCount={locations.length}
       avatars={socialProofAvatars}
-      locationSlugs={socialProofLocationSlugs}
       texts={texts}
     />
   );
@@ -218,13 +206,14 @@ async function SocialProofSection({
 // Skeleton matches SocialProofStrip vertical size to avoid CLS while streaming.
 function SocialProofSkeleton() {
   return (
-    <section className="border-y border-warm-200 bg-warm-50/50 py-8 sm:py-14 overflow-hidden">
+    <section className="border-y border-warm-200 bg-white py-8 sm:py-12">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-3 gap-3 text-center sm:gap-8">
+        <div className="grid gap-8 md:grid-cols-3 md:gap-10">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="flex flex-col items-center">
-              <div className="h-10 w-16 rounded bg-warm-200/60 animate-pulse sm:h-14 sm:w-20" />
-              <div className="mt-2 h-3 w-24 rounded bg-warm-200/60 animate-pulse" />
+            <div key={i}>
+              <div className="h-11 w-36 animate-pulse rounded bg-warm-200/60" />
+              <div className="mt-3 h-3 w-48 animate-pulse rounded bg-warm-200/60" />
+              <div className="mt-5 h-16 w-full max-w-[310px] animate-pulse rounded-lg bg-warm-100" />
             </div>
           ))}
         </div>
@@ -390,10 +379,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const lcpSrcset: string | undefined = undefined;
 
   const socialProofTexts = {
-    trustedBy: t("socialProofStrip.trustedBy"),
     photographers: t("socialProofStrip.photographers"),
-    locations: t("socialProofStrip.locations"),
+    portugalWide: t("socialProofStrip.portugalWide"),
+    coverage: t("socialProofStrip.coverage"),
+    verified: t("socialProofStrip.verified"),
+    verifiedSub: t("socialProofStrip.verifiedSub"),
+    realProfiles: t("socialProofStrip.realProfiles"),
     securePayment: t("socialProofStrip.securePayment"),
+    directBooking: t("socialProofStrip.directBooking"),
     islandsCovered: t("socialProofStrip.islandsCovered"),
   };
 
