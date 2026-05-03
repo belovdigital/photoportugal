@@ -847,7 +847,11 @@ export function PhotographerCatalog({
             className="absolute inset-0 bg-black/50"
             onClick={() => setMobileSheet(null)}
           />
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-2xl bg-white shadow-2xl">
+          <div className={`absolute inset-x-0 flex flex-col bg-white shadow-2xl ${
+            mobileSheet === "location"
+              ? "top-20 max-h-[calc(100dvh-5rem)] rounded-b-2xl"
+              : "bottom-0 max-h-[85dvh] rounded-t-2xl"
+          }`}>
             <div className="flex items-center justify-between border-b border-warm-100 px-4 py-3">
               <h2 className="text-base font-bold text-gray-900">
                 {mobileSheet === "location" ? t("filters.allLocations") : t("filters.mobileFilters")}
@@ -862,7 +866,7 @@ export function PhotographerCatalog({
                 </svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
               {mobileSheet === "location" ? (
                 <>
                   <input
