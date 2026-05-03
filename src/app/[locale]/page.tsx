@@ -187,7 +187,12 @@ async function SocialProofSection({
          JOIN users u ON u.id = pp.user_id
          WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
            AND u.avatar_url IS NOT NULL
-         ORDER BY RANDOM()
+         ORDER BY
+           CASE WHEN pp.is_featured THEN 0 ELSE 1 END,
+           CASE
+             WHEN pp.is_featured THEN RANDOM()
+             ELSE -LN(GREATEST(RANDOM(), 0.000001)) / CASE WHEN pp.is_verified THEN 3.0 ELSE 1.0 END
+           END
          LIMIT 30`
       ),
     ]);
