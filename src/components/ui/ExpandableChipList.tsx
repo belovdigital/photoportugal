@@ -19,7 +19,7 @@ export function ExpandableChipList({
 }: {
   items: ExpandableChip[];
   visibleCount?: number;
-  moreLabel: (count: number) => string;
+  moreLabel: string;
   className?: string;
   chipClassName?: string;
   moreClassName?: string;
@@ -92,7 +92,7 @@ export function ExpandableChipList({
             className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium transition ${moreClassName}`}
             aria-expanded={open}
           >
-            {moreLabel(hiddenItems.length)}
+            {moreLabel}
           </button>
           {open && (
             <div className="absolute left-0 top-full z-30 mt-2 min-w-48 rounded-xl border border-warm-200 bg-white p-2 shadow-lg">

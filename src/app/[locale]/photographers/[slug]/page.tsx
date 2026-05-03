@@ -351,6 +351,7 @@ export default async function PhotographerProfilePage({
     label: chip.name,
     href: chip.hrefSlug ? `/locations/${chip.hrefSlug}` : undefined,
   }));
+  const hiddenCoverageChipCount = Math.max(0, coverageChipItems.length - 4);
   const mobileCoverageLabel = formatMobileCoverageLabel(coverageGroups);
   const shootTypeChipItems = (photographer.shoot_types || []).map((type: string) => {
     const matched = allShootTypes.find((st) =>
@@ -362,6 +363,7 @@ export default async function PhotographerProfilePage({
       href: matched ? `/photoshoots/${matched.slug}` : undefined,
     };
   });
+  const hiddenShootTypeChipCount = Math.max(0, shootTypeChipItems.length - 5);
   const hasExperience = photographer.experience_years > 0;
   const hasLanguages = photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "";
   let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string | null; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
@@ -736,7 +738,7 @@ export default async function PhotographerProfilePage({
                     <ExpandableChipList
                       items={coverageChipItems}
                       visibleCount={4}
-                      moreLabel={(count) => t("coverageMore", { count })}
+                      moreLabel={t("coverageMore", { count: hiddenCoverageChipCount })}
                       className="min-w-0 flex-1"
                       chipClassName="border-warm-200 bg-warm-50 text-gray-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
                       moreClassName="border-warm-200 bg-white text-gray-500 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
@@ -762,7 +764,7 @@ export default async function PhotographerProfilePage({
                   <ExpandableChipList
                     items={shootTypeChipItems}
                     visibleCount={5}
-                    moreLabel={(count) => t("coverageMore", { count })}
+                    moreLabel={t("coverageMore", { count: hiddenShootTypeChipCount })}
                     chipClassName="border-primary-200 bg-white/60 text-primary-600 hover:bg-primary-50"
                     moreClassName="border-primary-200 bg-white text-primary-600 hover:bg-primary-50"
                   />
