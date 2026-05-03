@@ -30,24 +30,27 @@ export async function GET() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const promoCodes = await (stripeClient.promotionCodes.list as any)({
       limit: 50,
-      expand: ["data.coupon"],
+      expand: ["data.promotion.coupon"],
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = promoCodes.data.map((pc: any) => ({
-      id: pc.id,
-      code: pc.code,
-      coupon_name: pc.coupon?.name || "",
-      percent_off: pc.coupon?.percent_off || null,
-      amount_off: pc.coupon?.amount_off ? pc.coupon.amount_off / 100 : null,
-      currency: pc.coupon?.currency || null,
-      duration: pc.coupon?.duration || "",
-      duration_in_months: pc.coupon?.duration_in_months || null,
-      times_redeemed: pc.times_redeemed || 0,
-      max_redemptions: pc.max_redemptions || null,
-      active: pc.active,
-      expires_at: pc.expires_at || null,
-    }));
+    const data = promoCodes.data.map((pc: any) => {
+      const coupon = pc.promotion?.coupon;
+      return {
+        id: pc.id,
+        code: pc.code,
+        coupon_name: coupon?.name || "",
+        percent_off: coupon?.percent_off || null,
+        amount_off: coupon?.amount_off ? coupon.amount_off / 100 : null,
+        currency: coupon?.currency || null,
+        duration: coupon?.duration || "",
+        duration_in_months: coupon?.duration_in_months || null,
+        times_redeemed: pc.times_redeemed || 0,
+        max_redemptions: pc.max_redemptions || null,
+        active: pc.active,
+        expires_at: pc.expires_at || null,
+      };
+    });
 
     return NextResponse.json(data);
   } catch (error) {
@@ -100,7 +103,7 @@ export async function POST(req: NextRequest) {
     // Build promotion code params
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const promoParams: any = {
-      coupon: coupon.id,
+      promotion: { type: "coupon", coupon: coupon.id },
       code: code.toUpperCase(),
     };
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
-import { queryOne, query } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 // Create a review (client only, after completed booking)
@@ -69,49 +69,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Don't update photographer rating yet — admin must approve first
-
-    // Mint a 10% off promo code as a thank-you and email it to the client.
-    // Fire-and-forget — Stripe outages must not fail the review POST.
-    if (review) {
-      (async () => {
-        try {
-          const { createReviewRewardPromoCode } = await import("@/lib/stripe");
-          const reward = await createReviewRewardPromoCode({ percentOff: 10, validForDays: 365, reviewId: review.id });
-          await query(
-            "UPDATE reviews SET promo_code = $1, promo_code_id = $2 WHERE id = $3",
-            [reward.code, reward.promotionCodeId, review.id]
-          );
-          const client = await queryOne<{ email: string; name: string }>(
-            "SELECT email, name FROM users WHERE id = $1",
-            [userId]
-          );
-          if (client?.email) {
-            const firstName = client.name?.split(" ")[0] || "";
-            const { sendEmail } = await import("@/lib/email");
-            await sendEmail(
-              client.email,
-              "Your 10% off code is here 🎁",
-              `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-                <h2 style="color: #C94536;">Thank you for the review${firstName ? `, ${firstName}` : ""}!</h2>
-                <p>Reviews like yours help travelers find the right photographer — really, thank you.</p>
-                <p>As promised, here's your <strong>10% off code</strong> for any future booking on Photo Portugal:</p>
-                <div style="background: #FFF8E1; border: 2px dashed #FFCA28; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
-                  <div style="font-size: 11px; color: #888; letter-spacing: 1px; text-transform: uppercase;">Your code</div>
-                  <div style="font-size: 28px; font-weight: 800; letter-spacing: 2px; color: #333; margin-top: 6px; font-family: monospace;">${reward.code}</div>
-                  <div style="font-size: 12px; color: #666; margin-top: 8px;">Valid for 12 months · One use</div>
-                </div>
-                <p>Apply it at checkout when you book your next session.</p>
-                <p><a href="https://photoportugal.com" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: bold;">Browse photographers</a></p>
-                <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
-              </div>`
-            );
-          }
-        } catch (err) {
-          console.error("[reviews] promo reward error:", err);
-          try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/reviews", method: "POST", statusCode: 500 }); } catch {}
-        }
-      })().catch(() => {});
-    }
 
     // Admin-only notifications (photographer is notified after approval, not before)
     try {

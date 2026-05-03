@@ -117,6 +117,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
   const [editTitle, setEditTitle] = useState("");
   const [editText, setEditText] = useState("");
   const [editClientName, setEditClientName] = useState("");
+  const [viewReview, setViewReview] = useState<Review | null>(null);
   const { modal, confirm } = useConfirmModal();
   const [saving, setSaving] = useState(false);
 
@@ -322,6 +323,7 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
                 <div className="flex gap-2 flex-wrap mb-2">
                   {newPhotoPreviews.map((src, i) => (
                     <div key={i} className="relative h-14 w-14 rounded-lg overflow-hidden border border-gray-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={src} alt="Review photo preview" aria-hidden="true" className="h-full w-full object-cover" />
                       <button onClick={() => { setNewPhotos(p => p.filter((_, j) => j !== i)); setNewPhotoPreviews(p => p.filter((_, j) => j !== i)); }} className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">×</button>
                     </div>
@@ -436,7 +438,16 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
                           </div>
                         )}
                         {r.title && <p className="font-medium text-gray-900 truncate">{r.title}</p>}
-                        {r.text && <p className="text-gray-500 truncate text-xs">{r.text}</p>}
+                        {r.text && <p className="text-gray-500 line-clamp-2 text-xs">{r.text}</p>}
+                        {(r.title || r.text || r.video_url) && (
+                          <button
+                            type="button"
+                            onClick={() => setViewReview(r)}
+                            className="mt-1 text-[11px] font-semibold text-primary-600 hover:text-primary-700"
+                          >
+                            View full
+                          </button>
+                        )}
                         {!r.title && !r.text && !r.video_url && <span className="text-gray-300">No text</span>}
                       </>
                     )}
@@ -464,6 +475,71 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
         </div>
         </>
       ) : null}
+      {viewReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  {viewReview.client_name || "Private Client"} → {viewReview.photographer_name}
+                </p>
+                <div className="mt-1 flex gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <svg key={i} className={`h-4 w-4 ${i < viewReview.rating ? "text-yellow-400" : "text-gray-200"}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewReview(null)}
+                className="rounded-full p-2 text-gray-400 hover:bg-warm-50 hover:text-gray-700"
+                aria-label="Close"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {viewReview.title && (
+              <h3 className="mt-5 text-xl font-bold text-gray-900">{viewReview.title}</h3>
+            )}
+            {viewReview.text && (
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-gray-700">{viewReview.text}</p>
+            )}
+            {viewReview.video_url && (
+              <video src={viewReview.video_url} controls preload="metadata" className="mt-4 w-full rounded-xl border border-gray-200" />
+            )}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  startEdit(viewReview);
+                  setViewReview(null);
+                }}
+                className="rounded-lg border border-warm-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-warm-50"
+              >
+                Edit
+              </button>
+              {!viewReview.is_approved && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleApprove(viewReview.id, true);
+                    setViewReview(null);
+                  }}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                >
+                  Approve
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {modal}
     </div>
   );

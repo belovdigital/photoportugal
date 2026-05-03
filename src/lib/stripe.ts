@@ -81,7 +81,7 @@ export async function createReviewRewardPromoCode(opts: {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const promo = await (stripeClient.promotionCodes.create as any)({
-    coupon: coupon.id,
+    promotion: { type: "coupon", coupon: coupon.id },
     code,
     max_redemptions: 1,
     expires_at: expiresAt,
