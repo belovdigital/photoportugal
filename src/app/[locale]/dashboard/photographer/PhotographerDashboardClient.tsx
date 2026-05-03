@@ -835,9 +835,10 @@ export function PhotographerDashboardClient({
       <div className={standalone ? "" : "mt-8"}>
         {activeTab === "profile" && (
           <>
-          <form onSubmit={saveProfile} onChange={() => { setSaved(false); setIsDirty(true); }} className="max-w-2xl space-y-6 pb-20">
-            {/* Avatar */}
-            <AvatarUpload initialUrl={profile.avatar_url} fallbackChar={profile.name.charAt(0)} onMessage={showMessage} />
+            <form onSubmit={saveProfile} onChange={() => { setSaved(false); setIsDirty(true); }} className="space-y-6 pb-20">
+            <div className="max-w-2xl space-y-6">
+              {/* Avatar */}
+              <AvatarUpload initialUrl={profile.avatar_url} fallbackChar={profile.name.charAt(0)} onMessage={showMessage} />
 
             {/* Cover Image */}
             <CoverUpload initialUrl={profile.cover_url} initialPositionY={profile.cover_position_y ?? 50} onMessage={showMessage} />
@@ -1035,6 +1036,7 @@ export function PhotographerDashboardClient({
                 ))}
               </div>
             </div>
+            </div>
 
             {/* Locations */}
             <div>
@@ -1060,7 +1062,7 @@ export function PhotographerDashboardClient({
               })()}
             </div>
 
-          </form>
+            </form>
 
           {/* Fixed save bar — full width. Sits above mobile bottom nav (64px + safe area). */}
           <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-warm-200 bg-white/95 backdrop-blur-sm md:bottom-0" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>

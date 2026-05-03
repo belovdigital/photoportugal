@@ -23,9 +23,88 @@ import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { StickyBookBar } from "@/components/ui/StickyBookBar";
 import { MobilePhotographerHero } from "@/components/photographers/MobilePhotographerHero";
+import { getAncestorNodeSlugs, getLocationNode, type LocationNode } from "@/lib/location-hierarchy";
+import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
 
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
+
+type PublicLocation = (typeof allLocations)[number];
+
+type CoverageGroup = {
+  regionSlug: string;
+  regionName: string;
+  hrefSlug: string | null;
+  wholeRegion: boolean;
+  items: Array<{
+    slug: string;
+    name: string;
+    hrefSlug: string | null;
+  }>;
+};
+
+const publicLocationSlugs = new Set(allLocations.map((location) => location.slug));
+
+function publicHrefSlugForNode(node: LocationNode): string | null {
+  return node.legacySlugs?.find((slug) => publicLocationSlugs.has(slug)) || null;
+}
+
+function coverageRegionForNode(node: LocationNode): LocationNode {
+  const regionSlug = getAncestorNodeSlugs(node.slug)[0] || node.slug;
+  return getLocationNode(regionSlug) || node;
+}
+
+function buildCoverageGroups(coverageNodeSlugs: string[], fallbackLocations: PublicLocation[]): CoverageGroup[] {
+  const fallbackBySlug = new Map(fallbackLocations.map((location) => [location.slug, location]));
+  const sourceSlugs = coverageNodeSlugs.length > 0 ? coverageNodeSlugs : fallbackLocations.map((location) => location.slug);
+  const groups = new Map<string, CoverageGroup>();
+
+  for (const slug of sourceSlugs) {
+    const node = getLocationNode(slug);
+    const fallback = fallbackBySlug.get(slug);
+    if (!node && fallback) {
+      groups.set(fallback.slug, {
+        regionSlug: fallback.slug,
+        regionName: fallback.name,
+        hrefSlug: fallback.slug,
+        wholeRegion: true,
+        items: [],
+      });
+      continue;
+    }
+    if (!node) continue;
+
+    const region = coverageRegionForNode(node);
+    const group = groups.get(region.slug) || {
+      regionSlug: region.slug,
+      regionName: region.name,
+      hrefSlug: publicHrefSlugForNode(region),
+      wholeRegion: false,
+      items: [],
+    };
+
+    if (node.slug === region.slug) {
+      group.wholeRegion = true;
+      group.items = [];
+      group.hrefSlug = publicHrefSlugForNode(node) || group.hrefSlug;
+    } else if (!group.wholeRegion && !group.items.some((item) => item.slug === node.slug)) {
+      group.items.push({
+        slug: node.slug,
+        name: node.name,
+        hrefSlug: publicHrefSlugForNode(node),
+      });
+    }
+
+    groups.set(region.slug, group);
+  }
+
+  return Array.from(groups.values());
+}
+
+function formatCoveragePlaces(names: string[], moreLabel: (count: number) => string): string {
+  if (names.length <= 2) return names.join(" & ");
+  return `${names.slice(0, 2).join(", ")} ${moreLabel(names.length - 2)}`;
+}
 
 async function getPhotographer(slug: string, canViewUnapproved = false, viewerUserId?: string, locale: string = "en") {
   const isAdmin = canViewUnapproved;
@@ -83,6 +162,9 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
     const locs = locationRows
       .map((r) => allLocations.find((l) => l.slug === r.location_slug))
       .filter((l): l is (typeof allLocations)[number] => l !== undefined);
+    const legacyLocationSlugs = locs.map((location) => location.slug);
+    const coverageNodeSlugs = await getPhotographerCoverageNodeSlugs(profile.id, legacyLocationSlugs)
+      .catch(() => legacyLocationSlugs);
 
     const pkgs = await query<{
       id: string;
@@ -112,6 +194,7 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
       data: {
         ...profile,
         locations: locs,
+        coverageNodeSlugs,
         packages: pkgs,
         portfolioItems,
       },
@@ -231,6 +314,27 @@ export default async function PhotographerProfilePage({
   }
 
   const photographer = result.data;
+  const coverageGroups = buildCoverageGroups(photographer.coverageNodeSlugs || [], photographer.locations || []);
+  const coverageTitle = (() => {
+    if (coverageGroups.length === 0) return "";
+    if (coverageGroups.length === 1) {
+      const group = coverageGroups[0];
+      if (group.wholeRegion) return t("coverageWide", { region: group.regionName });
+      const placeNames = group.items.map((item) => item.name);
+      return t("coveragePlaces", {
+        places: formatCoveragePlaces(placeNames, (count) => t("coverageMore", { count })),
+      });
+    }
+    if (coverageGroups.length === 2) {
+      return t("coverageRegionsTwo", { first: coverageGroups[0].regionName, second: coverageGroups[1].regionName });
+    }
+    return t("coverageRegionsMany", { count: coverageGroups.length });
+  })();
+  const coverageChips = coverageGroups.length === 1 && !coverageGroups[0].wholeRegion
+    ? coverageGroups[0].items.map((item) => ({ key: item.slug, name: item.name, hrefSlug: item.hrefSlug }))
+    : coverageGroups.map((group) => ({ key: group.regionSlug, name: group.regionName, hrefSlug: group.hrefSlug }));
+  const visibleCoverageChips = coverageChips.slice(0, 4);
+  const hiddenCoverageChipCount = Math.max(0, coverageChips.length - visibleCoverageChips.length);
   let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string | null; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
   const portfolioItems = (photographer as { portfolioItems?: { url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
@@ -593,15 +697,34 @@ export default async function PhotographerProfilePage({
                 </a>
               )}
 
-              {/* Locations — text with pin icons */}
-              {photographer.locations && photographer.locations.length > 0 && (
-                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-                  {photographer.locations.map((loc: { slug: string; name: string }) => (
-                    <Link key={loc.slug} href={`/locations/${loc.slug}`} className="inline-flex items-center gap-1 text-sm text-gray-600 transition hover:text-primary-600">
-                      <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                      {loc.name}
-                    </Link>
-                  ))}
+              {/* Location coverage */}
+              {coverageGroups.length > 0 && (
+                <div className="mt-3 max-w-2xl rounded-2xl border border-warm-200 bg-white/80 px-3.5 py-3 shadow-sm">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21s7-4.35 7-11a7 7 0 10-14 0c0 6.65 7 11 7 11z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" /></svg>
+                    </span>
+                    <span>{coverageTitle}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {visibleCoverageChips.map((chip) => {
+                      const className = "inline-flex items-center rounded-full border border-warm-200 bg-warm-50 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700";
+                      return chip.hrefSlug ? (
+                        <Link key={chip.key} href={`/locations/${chip.hrefSlug}`} className={className}>
+                          {chip.name}
+                        </Link>
+                      ) : (
+                        <span key={chip.key} className={className}>
+                          {chip.name}
+                        </span>
+                      );
+                    })}
+                    {hiddenCoverageChipCount > 0 && (
+                      <span className="inline-flex items-center rounded-full border border-warm-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-500">
+                        {t("coverageMore", { count: hiddenCoverageChipCount })}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
