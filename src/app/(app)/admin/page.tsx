@@ -177,7 +177,7 @@ export default async function AdminPage() {
     group_size: number | null; shoot_time: string | null; package_name: string | null;
     package_duration: number | null; service_fee: number | null; payout_amount: number | null;
     flexible_date_from: string | null; flexible_date_to: string | null; date_note: string | null;
-    delivery_accepted: boolean | null; location_detail: string | null;
+    delivery_accepted: boolean | null; delivery_accepted_at: string | null; location_detail: string | null;
     client_country: string | null;
     client_phone: string | null; client_email: string | null;
     photographer_phone: string | null; photographer_email: string | null;
@@ -188,7 +188,7 @@ export default async function AdminPage() {
             b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,
             b.flexible_date_from, b.flexible_date_to, b.date_note,
-            b.delivery_accepted, b.location_detail,
+            b.delivery_accepted, b.delivery_accepted_at, b.location_detail,
             (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,
             cu.phone as client_phone, cu.email as client_email,
             pu.phone as photographer_phone, pu.email as photographer_email

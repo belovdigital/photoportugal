@@ -1234,19 +1234,39 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
 
                             {/* Page info — path links to the live URL in a new
                                 tab. stopPropagation so the link click doesn't
-                                also toggle the session card. */}
+                                also toggle the session card. Delivery URLs
+                                are collapsed to "delivery" + booking id and
+                                the link includes ?admin=1 so the gallery
+                                opens without prompting for the password
+                                (verify route accepts admin cookie bypass). */}
                             <div className={`flex-1 ${!isLast ? "pb-2" : ""}`}>
                               <div className="flex items-center gap-1.5">
                                 <span className="text-xs">{getIcon(pv.path)}</span>
-                                <a
-                                  href={pv.path}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-xs font-medium text-gray-900 hover:text-primary-600 hover:underline"
-                                >
-                                  {shortPath(pv.path)}
-                                </a>
+                                {pv.path.startsWith("/delivery/") ? (
+                                  <a
+                                    href={`${pv.path}?admin=1`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-xs font-medium text-gray-900 hover:text-primary-600 hover:underline"
+                                    title={pv.path}
+                                  >
+                                    delivery
+                                    {(pv as unknown as { delivery?: { booking_id: string } }).delivery
+                                      ? ` (${(pv as unknown as { delivery: { booking_id: string } }).delivery.booking_id.slice(0, 8)})`
+                                      : ""}
+                                  </a>
+                                ) : (
+                                  <a
+                                    href={pv.path}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-xs font-medium text-gray-900 hover:text-primary-600 hover:underline"
+                                  >
+                                    {shortPath(pv.path)}
+                                  </a>
+                                )}
                               </div>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-[10px] text-gray-400">{timeStr}</span>

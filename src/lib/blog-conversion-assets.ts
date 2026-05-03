@@ -124,6 +124,7 @@ async function fetchHeroCarousel(
       WHERE pp.is_approved = TRUE
         AND COALESCE(pp.is_test, FALSE) = FALSE
         AND pi.type = 'photo'
+        AND ($1::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($1::text[]))
         -- Photographer must cover the location AND match the shoot type
         -- when both are present in the post. The photo itself must also
         -- be on-topic (matching shoot_type, or untagged-from-specialist).
@@ -152,9 +153,10 @@ async function fetchHeroCarousel(
 
   const photos = await query<{ url: string }>(
     `SELECT pi.url
-       FROM portfolio_items pi
+     FROM portfolio_items pi
       WHERE pi.photographer_id = $1
         AND pi.type = 'photo'
+        AND ($2::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($2::text[]))
         AND ($3::text[] = ARRAY[]::text[] OR pi.shoot_type = ANY($3::text[]) OR pi.shoot_type IS NULL)
       ORDER BY
         CASE
@@ -215,6 +217,12 @@ async function fetchPhotoStrip(
         WHERE pp.is_approved = TRUE
           AND COALESCE(pp.is_test, FALSE) = FALSE
           AND pi.type = 'photo'
+          -- If the post has a primary location, the strip photo itself must
+          -- be tagged there; otherwise the "Real shots from X" label lies.
+          AND (
+            $1::text[] = ARRAY[]::text[]
+            OR pi.location_slug = ANY($1::text[])
+          )
           -- Strict AND: photographer covers location AND matches shoot type.
           AND (
             $1::text[] = ARRAY[]::text[]
@@ -292,6 +300,17 @@ async function fetchPhotographerBreakouts(
           $2::text[] = ARRAY[]::text[]
           OR pp.shoot_types && $2::text[]
         )
+        AND EXISTS (
+          SELECT 1 FROM portfolio_items pix
+           WHERE pix.photographer_id = pp.id
+             AND pix.type = 'photo'
+             AND ($1::text[] = ARRAY[]::text[] OR pix.location_slug = ANY($1::text[]))
+             AND (
+               $2::text[] = ARRAY[]::text[]
+               OR pix.shoot_type = ANY($2::text[])
+               OR pix.shoot_type IS NULL
+             )
+        )
       ORDER BY pp.is_featured DESC, pp.review_count DESC NULLS LAST,
                hashtext($3::text || pp.id::text)
       LIMIT 3`,
@@ -307,10 +326,16 @@ async function fetchPhotographerBreakouts(
         query<{ url: string }>(
           `SELECT pi.url FROM portfolio_items pi
             WHERE pi.photographer_id = $1 AND pi.type = 'photo'
+              AND ($3::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($3::text[]))
+              AND (
+                $4::text[] = ARRAY[]::text[]
+                OR pi.shoot_type = ANY($4::text[])
+                OR pi.shoot_type IS NULL
+              )
             ORDER BY hashtext($2::text || pi.url),
                      pi.sort_order NULLS LAST, pi.created_at
             LIMIT 5`,
-          [p.id, postId]
+          [p.id, postId, locationSlugs, shootTypeNames]
         ).catch(() => []),
         query<{ id: string; name: string; price: number; duration_minutes: number; num_photos: number; is_popular: boolean }>(
           `SELECT id, name, price, duration_minutes,
@@ -407,6 +432,12 @@ async function fetchEndCapPhotographers(
                     FROM portfolio_items pi
                    WHERE pi.photographer_id = pp.id
                      AND pi.type = 'photo'
+                     AND ($1::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($1::text[]))
+                     AND (
+                       $2::text[] = ARRAY[]::text[]
+                       OR pi.shoot_type = ANY($2::text[])
+                       OR pi.shoot_type IS NULL
+                     )
                    ORDER BY shuffle, pi.sort_order NULLS LAST, pi.created_at
                    LIMIT 7
                 ) ranked

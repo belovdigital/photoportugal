@@ -155,25 +155,13 @@ export function BookingStatusButtons({ bookingId, currentStatus, paymentStatus, 
 
   if (currentStatus === "cancel-only") {
     const isPaid = paymentStatus === "paid";
-    // Paid → existing refund path (PATCH with status=cancelled handles
-    // the refund flow downstream). Unpaid → new reason-required cancel
-    // endpoint so the other party + admins see why.
-    if (isPaid) {
-      const confirmMessage = t("cancelRefundConfirm");
-      return (
-        <>
-          <button onClick={async () => { const ok = await confirm("Cancel Booking", confirmMessage, { danger: true, confirmLabel: "Cancel Booking" }); if (ok) updateStatus("cancelled"); }} disabled={updating}
-            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">
-            {updating ? t("cancelling") : t("cancelAndRefund")}
-          </button>
-          {errorBanner}
-          {modal}
-        </>
-      );
-    }
+    // Both paid + unpaid now ask for a reason. Paid uses "refund" variant
+    // which routes through PATCH so the Stripe refund still runs; unpaid
+    // uses the dedicated /cancel endpoint. Reason hits Telegram + chat
+    // either way.
     return (
       <>
-        <CancelWithReasonButton bookingId={bookingId} variant="cancel" />
+        <CancelWithReasonButton bookingId={bookingId} variant={isPaid ? "refund" : "cancel"} />
         {errorBanner}
         {modal}
       </>

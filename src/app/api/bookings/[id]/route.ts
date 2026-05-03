@@ -57,7 +57,8 @@ export async function PATCH(
 
   const { id } = await params;
   const userId = user.id;
-  const { status, welcome_message } = await req.json();
+  const { status, welcome_message, reason } = await req.json();
+  const trimmedReason = typeof reason === "string" ? reason.trim().slice(0, 500) : "";
 
   const validStatuses = ["pending", "confirmed", "completed", "delivered", "cancelled"];
   if (!validStatuses.includes(status)) {
@@ -218,9 +219,16 @@ export async function PATCH(
           }
 
           const paymentStatus = refundPercent === 100 ? "refunded" : refundPercent > 0 ? "partially_refunded" : "no_refund";
+          // Persist cancellation metadata (by/reason/at) so the booking
+          // card surfaces the reason on both sides + admin can audit.
+          const cancellerCol = isClient ? "client" : "photographer";
           await client.query(
-            "UPDATE bookings SET status = 'cancelled', payment_status = $1 WHERE id = $2",
-            [paymentStatus, id]
+            `UPDATE bookings
+                SET status = 'cancelled', payment_status = $1,
+                    cancelled_at = NOW(), cancelled_by = $2,
+                    cancelled_reason = COALESCE(NULLIF($3, ''), cancelled_reason)
+              WHERE id = $4`,
+            [paymentStatus, cancellerCol, trimmedReason, id]
           );
 
           return { info, refundPercent, totalPaid, refundAmount, paymentStatus };
@@ -283,7 +291,17 @@ export async function PATCH(
             cancelInfo.client_name, cancelInfo.photographer_name, cancelledBy, refundAmount
           ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)`, "bookings");
+            const lines = [
+              `❌ <b>Booking Cancelled</b>`,
+              ``,
+              `Cancelled by ${cancelledBy}`,
+              `${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}`,
+              `Refund: €${refundAmount.toFixed(2)} (${refundPercent}%)`,
+            ];
+            if (trimmedReason) {
+              lines.push(``, `<b>Reason:</b>`, `<i>${trimmedReason.replace(/[<>]/g, "")}</i>`);
+            }
+            sendTelegram(lines.join("\n"), "bookings");
           }).catch((err) => console.error("[bookings] telegram cancellation error:", err));
 
           // SMS/WhatsApp to photographer
@@ -426,7 +444,16 @@ export async function PATCH(
             cancelInfo.client_name, cancelInfo.photographer_name, cancelledBy, null
           ).catch((err) => console.error("[bookings] admin cancel notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`❌ <b>Booking Cancelled</b>\n\nCancelled by ${cancelledBy}\n${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}`, "bookings");
+            const lines = [
+              `❌ <b>Booking Cancelled</b>`,
+              ``,
+              `Cancelled by ${cancelledBy}`,
+              `${cancelInfo!.client_name} → ${cancelInfo!.photographer_name}`,
+            ];
+            if (trimmedReason) {
+              lines.push(``, `<b>Reason:</b>`, `<i>${trimmedReason.replace(/[<>]/g, "")}</i>`);
+            }
+            sendTelegram(lines.join("\n"), "bookings");
           }).catch((err) => console.error("[bookings] telegram cancellation error:", err));
 
           // SMS/WhatsApp to photographer
@@ -702,7 +729,18 @@ export async function PATCH(
             bookingDetails.package_name
           ).catch(err => console.error("[bookings] admin confirmed notification error:", err));
           import("@/lib/telegram").then(({ sendTelegram }) => {
-            sendTelegram(`✅ <b>Booking Confirmed!</b>\n\n${bookingDetails!.client_name} → ${bookingDetails!.photographer_name}\n${bookingDetails!.package_name || ""}\n€${Math.round(bookingDetails!.total_price || 0)}`, "bookings");
+            const lines = [
+              `✅ <b>Booking Confirmed!</b>`,
+              ``,
+              `${bookingDetails!.client_name} → ${bookingDetails!.photographer_name}`,
+              `${bookingDetails!.package_name || ""}`,
+              `€${Math.round(bookingDetails!.total_price || 0)}`,
+            ];
+            if (trimmedWelcome) {
+              const safe = trimmedWelcome.replace(/[<>]/g, "").slice(0, 500);
+              lines.push(``, `<b>Welcome message:</b>`, `<i>${safe}</i>`);
+            }
+            sendTelegram(lines.join("\n"), "bookings");
           }).catch((err) => console.error("[bookings] telegram confirmation error:", err));
         }
       } catch (emailErr) {

@@ -109,8 +109,14 @@ export async function POST(
     return NextResponse.json({ success: true, already_accepted: true, payout_transferred: false });
   }
 
-  // Trigger payout if payment was made and not already transferred
-  if (booking.payment_status === "paid" && !booking.payout_transferred && booking.photographer_stripe_id) {
+  // Trigger payout if payment was made and not already transferred.
+  // CRITICAL: also require stripe_payment_intent_id to be set — without
+  // it there's no client charge backing this payout, and stripe.transfers
+  // .create would pull the money straight out of the platform balance
+  // (real loss). A "paid" flag without a PI means the row was either
+  // hand-edited, partially-recovered from a webhook failure, or test
+  // data; in any case we should NOT be transferring to the photographer.
+  if (booking.payment_status === "paid" && booking.stripe_payment_intent_id && !booking.payout_transferred && booking.photographer_stripe_id) {
     // Check if photographer completed Stripe onboarding
     if (!booking.photographer_stripe_ready) {
       console.log(`[delivery/accept] Photographer Stripe not ready for booking ${booking.id}, skipping payout`);
@@ -145,38 +151,64 @@ export async function POST(
       }
 
       if (payoutAmount && payoutAmount > 0) {
-        // Create a transfer to the photographer's connected account
-        await stripeClient.transfers.create({
-          amount: Math.round(payoutAmount * 100), // Convert to cents
-          currency: "eur",
-          destination: booking.photographer_stripe_id,
-          ...(booking.stripe_payment_intent_id
-            ? { transfer_group: booking.stripe_payment_intent_id }
-            : {}),
-          metadata: {
-            booking_id: booking.id,
-            type: "delivery_payout",
-            ...(booking.stripe_payment_intent_id
-              ? { payment_intent_id: booking.stripe_payment_intent_id }
-              : {}),
-          },
-        });
-
-        // Mark payout as transferred
-        await queryOne(
-          "UPDATE bookings SET payout_transferred = TRUE WHERE id = $1 RETURNING id",
+        // ── Atomic claim ────────────────────────────────────────────
+        // Flip payout_transferred=TRUE in a single SQL statement that
+        // ALSO checks "...AND payout_transferred=FALSE" — at most one
+        // concurrent process wins this race. The losers see rowCount=0
+        // and skip the transfer entirely. This closes the race window
+        // between /accept and the cron retry path firing for the same
+        // booking simultaneously.
+        const claim = await queryOne<{ id: string }>(
+          "UPDATE bookings SET payout_transferred = TRUE WHERE id = $1 AND COALESCE(payout_transferred, FALSE) = FALSE RETURNING id",
           [booking.id]
         );
+        if (!claim) {
+          // Another path (or this one re-running) already claimed.
+          console.log(`[delivery/accept] payout already claimed for ${booking.id}, skipping transfer`);
+        } else {
+          try {
+            // Idempotency key — even if this exact request body fires
+            // twice (network retry, double-click, redeploy mid-flight),
+            // Stripe returns the same transfer rather than creating a
+            // second one. Belt-and-braces with the atomic claim above.
+            await stripeClient.transfers.create({
+              amount: Math.round(payoutAmount * 100), // Convert to cents
+              currency: "eur",
+              destination: booking.photographer_stripe_id,
+              ...(booking.stripe_payment_intent_id
+                ? { transfer_group: booking.stripe_payment_intent_id }
+                : {}),
+              metadata: {
+                booking_id: booking.id,
+                type: "delivery_payout",
+                ...(booking.stripe_payment_intent_id
+                  ? { payment_intent_id: booking.stripe_payment_intent_id }
+                  : {}),
+              },
+            }, { idempotencyKey: `payout_${booking.id}` });
 
-        payoutSuccess = true;
+            payoutSuccess = true;
 
-        // Send payout email to photographer
-        sendDeliveryAcceptedToPhotographer(
-          booking.photographer_email,
-          booking.photographer_name,
-          booking.client_name,
-          payoutAmount
-        );
+            // Send payout email to photographer
+            sendDeliveryAcceptedToPhotographer(
+              booking.photographer_email,
+              booking.photographer_name,
+              booking.client_name,
+              payoutAmount
+            );
+          } catch (transferErr) {
+            // Transfer failed (network, Stripe error). Roll back the
+            // claim so the cron retry path can pick it up again. The
+            // idempotency key means a successful retry doesn't double-
+            // pay even if the original transfer DID complete and we
+            // just missed the response.
+            await queryOne(
+              "UPDATE bookings SET payout_transferred = FALSE WHERE id = $1 RETURNING id",
+              [booking.id]
+            ).catch(() => {});
+            throw transferErr;
+          }
+        }
       }
     } catch (stripeErr) {
       console.error("[delivery/accept] payout error:", stripeErr);

@@ -65,16 +65,21 @@ export function DeliveryPageClient({
   const [acceptError, setAcceptError] = useState("");
   const { modal, confirm } = useConfirmModal();
 
-  // Auto-login with URL param or cached password
+  // Auto-login with URL param, cached password, or admin bypass.
+  // `?admin=1` POSTs without a password — the verify endpoint accepts
+  // it when the admin_token cookie is present, so non-admins can't
+  // exploit the URL flag.
   useEffect(() => {
-    const urlPw = new URLSearchParams(window.location.search).get("pw");
+    const params = new URLSearchParams(window.location.search);
+    const urlPw = params.get("pw");
+    const adminBypass = params.get("admin") === "1";
     const cached = urlPw || sessionStorage.getItem(`delivery_pw_${token}`);
     if (urlPw) sessionStorage.setItem(`delivery_pw_${token}`, urlPw);
-    if (cached) {
+    if (cached || adminBypass) {
       fetch(`/api/delivery/${token}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: cached }),
+        body: JSON.stringify({ password: cached || "" }),
       })
         .then(r => r.ok ? r.json() : null)
         .then(data => {

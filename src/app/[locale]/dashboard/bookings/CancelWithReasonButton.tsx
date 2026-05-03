@@ -9,14 +9,18 @@ import { useTranslations } from "next-intl";
  * which validates the caller is the booking's photographer or client and
  * that the booking is still cancellable (unpaid + not yet completed).
  *
+ * For paid cancellations (variant="refund") we route through PATCH instead
+ * so the existing refund flow runs; the reason is included in the body.
+ *
  * The reason text is required (5-500 chars) and is forwarded to:
  * - the other party by email
  * - admins via Telegram
  * - the existing chat as a system message
  *
- * Variant prop swaps button text + colour:
+ * Variant prop swaps button text + colour + endpoint:
  * - "decline" → photographer rejecting an inquiry/pending request
  * - "cancel"  → either side cancelling a confirmed-unpaid booking
+ * - "refund"  → cancelling a paid booking (triggers Stripe refund)
  */
 export function CancelWithReasonButton({
   bookingId,
@@ -24,7 +28,7 @@ export function CancelWithReasonButton({
   className,
 }: {
   bookingId: string;
-  variant?: "cancel" | "decline";
+  variant?: "cancel" | "decline" | "refund";
   className?: string;
 }) {
   const router = useRouter();
@@ -47,11 +51,19 @@ export function CancelWithReasonButton({
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/bookings/${bookingId}/cancel`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: trimmed }),
-      });
+      // Paid bookings route through PATCH so the existing refund flow runs;
+      // unpaid + decline use the dedicated /cancel endpoint.
+      const res = variant === "refund"
+        ? await fetch(`/api/bookings/${bookingId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "cancelled", reason: trimmed }),
+          })
+        : await fetch(`/api/bookings/${bookingId}/cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason: trimmed }),
+          });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error || t("failedUpdate"));
@@ -75,7 +87,7 @@ export function CancelWithReasonButton({
         onClick={() => setOpen(true)}
         className={className || baseClass}
       >
-        {variant === "decline" ? t("decline") : t("cancelBooking")}
+        {variant === "decline" ? t("decline") : variant === "refund" ? t("cancelAndRefund") : t("cancelBooking")}
       </button>
 
       {open && (

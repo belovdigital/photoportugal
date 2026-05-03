@@ -109,3 +109,33 @@ export async function sendCancellationMessage(
     console.error("[booking-messages] cancellation error:", err);
   }
 }
+
+// Kate's user_id — Photo Portugal co-founder. Used as sender for
+// review-request system messages so her name + avatar render on the card.
+// If Kate's account is ever deleted/replaced, swap this constant.
+export const KATE_USER_ID = "1fe40315-bd00-4530-a6be-39fa970617bd";
+
+/**
+ * Insert a Kate-voice review-request system message into the booking's
+ * chat. Idempotent at the caller level via bookings.review_chat_sent.
+ *
+ * Payload: `REVIEW_REQUEST:<bookingId>[:<urlEncodedFirstName>]` — the
+ * first name is embedded so renderers can greet the client by name without
+ * an extra DB lookup.
+ */
+export async function sendReviewRequestMessage(bookingId: string, firstName?: string): Promise<boolean> {
+  try {
+    const trimmed = (firstName || "").trim();
+    const payload = trimmed
+      ? `REVIEW_REQUEST:${bookingId}:${encodeURIComponent(trimmed)}`
+      : `REVIEW_REQUEST:${bookingId}`;
+    await queryOne(
+      `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE)`,
+      [bookingId, KATE_USER_ID, payload]
+    );
+    return true;
+  } catch (err) {
+    console.error("[booking-messages] review request error:", err);
+    return false;
+  }
+}

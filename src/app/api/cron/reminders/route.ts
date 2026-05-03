@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
     deliveryAutoRefunds: 0,
     autoReleasedPayments: 0,
     trustpilotFollowUps: 0,
+    reviewChatRequests: 0,
     errors: [] as string[],
   };
 
@@ -869,6 +870,7 @@ export async function GET(req: NextRequest) {
        WHERE b.status = 'delivered'
          AND COALESCE(b.delivery_accepted, FALSE) = FALSE
          AND b.payment_status = 'paid'
+         AND b.stripe_payment_intent_id IS NOT NULL
          AND b.updated_at < NOW() - INTERVAL '14 days'`
     );
 
@@ -892,26 +894,42 @@ export async function GET(req: NextRequest) {
             }
 
             if (payoutAmount && payoutAmount > 0) {
-              await stripeClient.transfers.create({
-                amount: Math.round(payoutAmount * 100),
-                currency: "eur",
-                destination: booking.photographer_stripe_id,
-                ...(booking.stripe_payment_intent_id
-                  ? { transfer_group: booking.stripe_payment_intent_id }
-                  : {}),
-                metadata: {
-                  booking_id: booking.id,
-                  type: "auto_release_payout",
-                  ...(booking.stripe_payment_intent_id
-                    ? { payment_intent_id: booking.stripe_payment_intent_id }
-                    : {}),
-                },
-              });
-
-              await queryOne(
-                "UPDATE bookings SET payout_transferred = TRUE WHERE id = $1 RETURNING id",
+              // Atomic claim — flip TRUE only if currently FALSE so a
+              // concurrent /accept call can't fire transfers.create
+              // for the same booking. See accept/route.ts for the full
+              // race-condition rationale.
+              const claim = await queryOne<{ id: string }>(
+                "UPDATE bookings SET payout_transferred = TRUE WHERE id = $1 AND COALESCE(payout_transferred, FALSE) = FALSE RETURNING id",
                 [booking.id]
               );
+              if (claim) {
+                try {
+                  await stripeClient.transfers.create({
+                    amount: Math.round(payoutAmount * 100),
+                    currency: "eur",
+                    destination: booking.photographer_stripe_id,
+                    ...(booking.stripe_payment_intent_id
+                      ? { transfer_group: booking.stripe_payment_intent_id }
+                      : {}),
+                    metadata: {
+                      booking_id: booking.id,
+                      type: "auto_release_payout",
+                      ...(booking.stripe_payment_intent_id
+                        ? { payment_intent_id: booking.stripe_payment_intent_id }
+                        : {}),
+                    },
+                  }, { idempotencyKey: `payout_${booking.id}` });
+                } catch (transferErr) {
+                  // Roll back claim so this booking can be retried.
+                  // Idempotency key means a re-run won't double-pay
+                  // even if the failed call actually went through.
+                  await queryOne(
+                    "UPDATE bookings SET payout_transferred = FALSE WHERE id = $1 RETURNING id",
+                    [booking.id]
+                  ).catch(() => {});
+                  throw transferErr;
+                }
+              }
             }
           } catch (stripeErr) {
             console.error(`[cron] auto-release payout error for booking ${booking.id}:`, stripeErr);
@@ -1028,6 +1046,7 @@ export async function GET(req: NextRequest) {
        JOIN users pu ON pu.id = pp.user_id
        WHERE b.delivery_accepted = TRUE
          AND b.payment_status = 'paid'
+         AND b.stripe_payment_intent_id IS NOT NULL
          AND COALESCE(b.payout_transferred, FALSE) = FALSE
          AND pp.stripe_account_id IS NOT NULL
          AND pp.stripe_onboarding_complete = TRUE
@@ -1043,14 +1062,35 @@ export async function GET(req: NextRequest) {
           payoutAmount = payment.photographerPayout;
         }
         if (payoutAmount && payoutAmount > 0) {
-          await stripeClient.transfers.create({
-            amount: Math.round(payoutAmount * 100),
-            currency: "eur",
-            destination: booking.photographer_stripe_id,
-            ...(booking.stripe_payment_intent_id ? { transfer_group: booking.stripe_payment_intent_id } : {}),
-            metadata: { booking_id: booking.id, type: "retry_payout" },
-          });
-          await queryOne("UPDATE bookings SET payout_transferred = TRUE WHERE id = $1", [booking.id]);
+          // Atomic claim — wins the race against /accept and other
+          // cron paths. Same pattern as accept/route.ts. Note the
+          // idempotency key reuses the booking id so a transfer that
+          // actually completed but whose response we lost won't be
+          // re-issued on retry — Stripe returns the original.
+          const claim = await queryOne<{ id: string }>(
+            "UPDATE bookings SET payout_transferred = TRUE WHERE id = $1 AND COALESCE(payout_transferred, FALSE) = FALSE RETURNING id",
+            [booking.id]
+          );
+          if (!claim) continue;
+          try {
+            await stripeClient.transfers.create({
+              amount: Math.round(payoutAmount * 100),
+              currency: "eur",
+              destination: booking.photographer_stripe_id,
+              ...(booking.stripe_payment_intent_id ? { transfer_group: booking.stripe_payment_intent_id } : {}),
+              metadata: {
+                booking_id: booking.id,
+                type: "retry_payout",
+                ...(booking.stripe_payment_intent_id ? { payment_intent_id: booking.stripe_payment_intent_id } : {}),
+              },
+            }, { idempotencyKey: `payout_${booking.id}` });
+          } catch (transferErr) {
+            await queryOne(
+              "UPDATE bookings SET payout_transferred = FALSE WHERE id = $1 RETURNING id",
+              [booking.id]
+            ).catch(() => {});
+            throw transferErr;
+          }
           sendEmail(booking.photographer_email, "Payment transferred!",
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2 style="color: #C94536;">Payment Transferred!</h2>
@@ -1067,6 +1107,38 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Retry payouts query: ${err}`);
+  }
+
+  // === 4. Review request chat from Kate (3h after delivery accepted) ===
+  // Primary signal — Kate-voice card in the booking chat with a 10%-off
+  // promise. Runs BEFORE the day-1 email so the chat lands first.
+  try {
+    const needsReviewChat = await query<{ id: string; client_name: string }>(
+      `SELECT b.id, cu.name as client_name
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       WHERE b.delivery_accepted = TRUE
+         AND b.delivery_accepted_at < NOW() - INTERVAL '3 hours'
+         AND b.delivery_accepted_at > NOW() - INTERVAL '24 hours'
+         AND COALESCE(b.review_chat_sent, FALSE) = FALSE
+         AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = b.id)`
+    );
+
+    const { sendReviewRequestMessage } = await import("@/lib/booking-messages");
+    for (const booking of needsReviewChat) {
+      try {
+        const firstName = (booking.client_name || "").split(" ")[0];
+        const ok = await sendReviewRequestMessage(booking.id, firstName);
+        if (ok) {
+          await query("UPDATE bookings SET review_chat_sent = TRUE WHERE id = $1", [booking.id]);
+          results.reviewChatRequests++;
+        }
+      } catch (err) {
+        results.errors.push(`Review chat for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Review chat query: ${err}`);
   }
 
   // === 4a. Review reminder (1 day after delivery accepted, no review yet) ===
@@ -1097,6 +1169,7 @@ export async function GET(req: NextRequest) {
     for (const booking of needsReviewReminder) {
       try {
         const firstName = booking.client_name.split(" ")[0];
+        const reviewUrl = `${baseUrl}/dashboard/bookings?review=${encodeURIComponent(booking.id)}`;
         await sendEmail(
           booking.client_email,
           `How was your photoshoot with ${booking.photographer_name}?`,
@@ -1105,7 +1178,8 @@ export async function GET(req: NextRequest) {
             <p>Hi ${firstName},</p>
             <p>We hope you love your photos from <strong>${booking.photographer_name}</strong>!</p>
             <p>A quick review would mean the world — it helps other travelers find great photographers and supports ${booking.photographer_name.split(" ")[0]}'s work on our platform.</p>
-            <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px;">Leave a Review</a></p>
+            <p style="background: #FFF8E1; border: 1px solid #FFE082; border-radius: 10px; padding: 12px 16px; font-size: 14px;">🎁 As a thank-you, you'll get a <strong>10% off code</strong> for your next session — valid for 12 months.</p>
+            <p><a href="${reviewUrl}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px;">Leave a Review</a></p>
             <p style="color: #666; font-size: 13px;">It only takes a minute and makes a big difference.</p>
             <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
           </div>`
@@ -1147,7 +1221,7 @@ export async function GET(req: NextRequest) {
       try {
         const firstName = booking.client_name.split(" ")[0];
         const cLocale = normalizeLocale(booking.client_locale);
-        const url = localizedUrl("/dashboard/bookings", cLocale);
+        const url = localizedUrl(`/dashboard/bookings?review=${encodeURIComponent(booking.id)}`, cLocale);
         const body = pickT({
           en: `Hi ${firstName}! We'd love to hear about your photoshoot with ${booking.photographer_name}. A quick review helps other travelers: ${url}`,
           pt: `Olá ${firstName}! Gostaríamos de saber como correu a sua sessão com ${booking.photographer_name}. Uma avaliação rápida ajuda outros viajantes: ${url}`,
@@ -1285,6 +1359,82 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Stuck ZIP rebuild: ${err}`);
   }
 
+  // === 4d. Delivery expiry warning (7 days before public link expires) ===
+  // Public delivery URL is good for 90 days; on day 83 we email the client
+  // a single-click ZIP download so they don't lose photos by inertia. The
+  // plaintext password is recovered from the auto-sent DELIVERY chat
+  // message (delivery_password column is bcrypted, can't be reused in URL).
+  let deliveryExpiryWarnings = 0;
+  try {
+    const expiringSoon = await query<{
+      id: string; client_email: string; client_name: string; client_locale: string | null;
+      photographer_name: string; delivery_token: string; delivery_expires_at: string;
+      zip_ready: boolean; zip_size: number | null;
+      delivery_chat_payload: string | null;
+    }>(
+      `SELECT b.id, cu.email as client_email, cu.name as client_name, cu.locale as client_locale,
+              pu.name as photographer_name, b.delivery_token, b.delivery_expires_at,
+              COALESCE(b.zip_ready, FALSE) as zip_ready, b.zip_size,
+              (SELECT m.text FROM messages m
+                WHERE m.booking_id = b.id AND m.text LIKE 'DELIVERY:%'
+                ORDER BY m.created_at DESC LIMIT 1) as delivery_chat_payload
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.delivery_token IS NOT NULL
+         AND b.delivery_expires_at IS NOT NULL
+         AND b.delivery_expires_at > NOW()
+         AND b.delivery_expires_at < NOW() + INTERVAL '7 days'
+         AND COALESCE(b.delivery_expiry_warning_sent, FALSE) = FALSE
+         AND EXISTS (SELECT 1 FROM delivery_photos dp WHERE dp.booking_id = b.id)`
+    );
+
+    const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+    for (const booking of expiringSoon) {
+      try {
+        let pw = "";
+        if (booking.delivery_chat_payload?.startsWith("DELIVERY:")) {
+          const parts = booking.delivery_chat_payload.split(":");
+          pw = parts[parts.length - 1] || "";
+        }
+        const galleryUrl = `${baseUrl}/delivery/${booking.delivery_token}${pw ? `?pw=${encodeURIComponent(pw)}` : ""}`;
+        const downloadUrl = pw
+          ? `${baseUrl}/api/delivery/${booking.delivery_token}/download?password=${encodeURIComponent(pw)}`
+          : null;
+        const firstName = booking.client_name.split(" ")[0];
+        const expiresOn = new Date(booking.delivery_expires_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        const sizeText = booking.zip_size ? ` (${(Number(booking.zip_size) / 1024 / 1024).toFixed(0)} MB)` : "";
+
+        const ctaBlock = booking.zip_ready && downloadUrl
+          ? `<p style="text-align: center; margin: 24px 0;"><a href="${downloadUrl}" style="display: inline-block; background: #C94536; color: white; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 17px;">⬇️ Download all photos${sizeText}</a></p>
+             <p style="text-align: center; font-size: 12px; color: #999;">One click — no login needed.</p>`
+          : `<p style="text-align: center; margin: 24px 0;"><a href="${galleryUrl}" style="display: inline-block; background: #C94536; color: white; padding: 16px 32px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 17px;">📸 Open your gallery</a></p>
+             <p style="text-align: center; font-size: 12px; color: #999;">Download photos one by one from the gallery page.</p>`;
+
+        await sendEmail(
+          booking.client_email,
+          `Your photos from ${booking.photographer_name} expire in 7 days`,
+          `<div style="font-family: sans-serif; max-width: 520px; margin: 0 auto;">
+            <h2 style="color: #C94536;">Don't lose your photos!</h2>
+            <p>Hi ${firstName},</p>
+            <p>Your gallery from <strong>${booking.photographer_name}</strong> will be removed from Photo Portugal on <strong>${expiresOn}</strong> (7 days from now).</p>
+            <p>Make sure to download the full ZIP to keep them forever:</p>
+            ${ctaBlock}
+            <p style="font-size: 13px; color: #666;">After ${expiresOn}, the public link stops working. We keep a hidden backup for another 3 months in case anything goes wrong, but the cleanest path is to download now.</p>
+            <p style="color: #999; font-size: 12px; margin-top: 24px;">Photo Portugal — photoportugal.com</p>
+          </div>`
+        );
+        await query("UPDATE bookings SET delivery_expiry_warning_sent = TRUE WHERE id = $1", [booking.id]);
+        deliveryExpiryWarnings++;
+      } catch (err) {
+        results.errors.push(`Delivery expiry warning for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Delivery expiry warning query: ${err}`);
+  }
+
   // === 5. Expired delivery file cleanup ===
   let expiredDeliveriesCleaned = 0;
   try {
@@ -1418,16 +1568,30 @@ export async function GET(req: NextRequest) {
   }
 
   // === Auto-deactivate photographers who didn't complete checklist in 7 days ===
-  // IMPORTANT: For Stripe we only require `stripe_account_id IS NOT NULL` (i.e.
-  // they STARTED Stripe Connect onboarding). Stripe's KYC verification can take
-  // 1-3 business days to flip stripe_onboarding_complete=TRUE — that's on
-  // Stripe's side, not on the photographer. Counting that wait as "incomplete"
-  // would unfairly deactivate accounts that are genuinely just waiting for
-  // Stripe approval.
+  // Two-tier Stripe check:
+  //   1. SQL pre-filter — checklist treats `stripe_onboarding_complete=TRUE`
+  //      as the only "Stripe done" signal. Anyone whose KYC isn't fully
+  //      verified makes it into the candidate pool, including people who
+  //      finished filling everything in but Stripe is still verifying.
+  //   2. Stripe API check — for each candidate with a stripe_account_id,
+  //      fetch the account and look at `details_submitted`:
+  //        TRUE  → photographer did their part, waiting on Stripe KYC
+  //                (don't punish, skip deactivation)
+  //        FALSE → bailed mid-onboarding, never submitted their info
+  //                → deactivate
+  //      No stripe_account_id at all → deactivate.
+  //   The previous version treated "started Stripe" as "complete enough",
+  //   which let abandoned-mid-onboarding accounts slip through forever.
   let checklistDeactivated = 0;
   try {
-    const expired = await query<{ id: string; email: string; name: string }>(
-      `SELECT pp.id, u.email, u.name
+    const candidates = await query<{
+      id: string; email: string; name: string;
+      stripe_account_id: string | null;
+      stripe_onboarding_complete: boolean;
+    }>(
+      `SELECT pp.id, u.email, u.name,
+              pp.stripe_account_id,
+              COALESCE(pp.stripe_onboarding_complete, FALSE) as stripe_onboarding_complete
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = FALSE
@@ -1437,11 +1601,54 @@ export async function GET(req: NextRequest) {
            AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15
            AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id) >= 1
            AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
-           AND pp.stripe_account_id IS NOT NULL
+           AND COALESCE(pp.stripe_onboarding_complete, FALSE) = TRUE
            AND u.phone IS NOT NULL)`
     );
-    for (const p of expired) {
+
+    const stripeClient = (() => {
+      try { return requireStripe(); } catch { return null; }
+    })();
+
+    for (const p of candidates) {
       try {
+        // If photographer started Stripe AND filled in their details,
+        // give them the benefit of the doubt — Stripe's verification is
+        // out of their hands. If they never started Stripe, OR started
+        // but bailed before submitting, deactivate.
+        let waitingOnStripe = false;
+        if (p.stripe_account_id && stripeClient) {
+          if (p.stripe_onboarding_complete) {
+            waitingOnStripe = true; // already verified, must be other checklist gaps
+          } else {
+            try {
+              const acct = await stripeClient.accounts.retrieve(p.stripe_account_id);
+              if (acct.details_submitted) waitingOnStripe = true;
+              // Sync DB flag back from Stripe — when a photographer
+              // completes the onboarding form, Stripe flips
+              // charges_enabled + payouts_enabled but our DB doesn't
+              // know unless they trigger the booking flow that
+              // refreshes it. Catching it here prevents the next 15-min
+              // cron tick from hammering the Stripe API for the same
+              // already-resolved account.
+              if (acct.charges_enabled && acct.payouts_enabled) {
+                await query(
+                  "UPDATE photographer_profiles SET stripe_onboarding_complete = TRUE WHERE id = $1 AND COALESCE(stripe_onboarding_complete, FALSE) = FALSE",
+                  [p.id]
+                ).catch(() => {});
+              }
+            } catch (err) {
+              console.error(`[cron] stripe accounts.retrieve failed for ${p.email}:`, err);
+              // Be cautious — if Stripe fetch fails (transient), skip
+              // deactivation this run. We'll re-evaluate next cron tick.
+              waitingOnStripe = true;
+            }
+          }
+        }
+        if (waitingOnStripe) {
+          // Skip — only Stripe-verification-pending blocking them.
+          continue;
+        }
+
         await query("UPDATE users SET is_banned = TRUE WHERE id = (SELECT user_id FROM photographer_profiles WHERE id = $1)", [p.id]);
         await sendEmail(
           p.email,

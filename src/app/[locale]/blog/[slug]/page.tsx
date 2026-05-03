@@ -5,10 +5,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { localeAlternates } from "@/lib/seo";
-import { locations } from "@/lib/locations-data";
-import { shootTypes } from "@/lib/shoot-types-data";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
+import { deriveBlogTopic } from "@/lib/blog-topic";
 import { fetchBlogConversionAssets } from "@/lib/blog-conversion-assets";
 import {
   BlogHeroCarousel,
@@ -45,7 +44,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale, slug } = await params;
 
   const post = await queryOne<BlogPost>(
-    "SELECT id, slug, title, excerpt, content, meta_title, meta_description, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
+    "SELECT id, slug, title, excerpt, content, meta_title, meta_description, target_keywords, cover_image_url, author, published_at, created_at FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
     [slug, locale]
   );
 
@@ -76,15 +75,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ? post.cover_image_url
       : `https://photoportugal.com${post.cover_image_url}`;
   } else {
-    const contentLower = (post.title + " " + (post.content || "")).toLowerCase();
-    const locSlugs = locations
-      .filter((loc) => contentLower.includes(loc.name.toLowerCase()))
-      .slice(0, 4)
-      .map((l) => l.slug);
-    const stNames = shootTypes
-      .filter((st) => contentLower.includes(st.name.toLowerCase()) || contentLower.includes(st.slug))
-      .slice(0, 3)
-      .map((s) => s.name);
+    const topic = deriveBlogTopic(post);
+    const locSlugs = topic.primaryLocation ? [topic.primaryLocation.slug] : [];
+    const stNames = topic.primaryShootType ? [topic.primaryShootType.name] : [];
     if (locSlugs.length > 0 || stNames.length > 0) {
       const heroPhoto = await queryOne<{ url: string }>(
         `SELECT pi.url
@@ -103,13 +96,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
               OR (pi.shoot_type IS NULL AND pp.shoot_types && $2::text[])
             )
             AND (
-              ($1::text[] != ARRAY[]::text[] AND pi.location_slug = ANY($1::text[]))
-              OR ($2::text[] != ARRAY[]::text[] AND pi.shoot_type = ANY($2::text[]))
-              OR EXISTS (
-                SELECT 1 FROM photographer_locations plx
-                 WHERE plx.photographer_id = pp.id
-                   AND ($1::text[] != ARRAY[]::text[] AND plx.location_slug = ANY($1::text[]))
-              )
+              $1::text[] = ARRAY[]::text[]
+              OR pi.location_slug = ANY($1::text[])
             )
           ORDER BY hashtext($3::text || pi.url)
           LIMIT 1`,
@@ -490,13 +478,9 @@ export default async function BlogPostPage({ params }: PageProps) {
   );
 
   // Score each post by relevance to current post
-  const currentText = (post.title + " " + (post.target_keywords || "")).toLowerCase();
-  const currentLocations = locations.filter(
-    (loc) => currentText.includes(loc.name.toLowerCase()) || post.content.toLowerCase().includes(loc.name.toLowerCase())
-  );
-  const currentShootTypes = shootTypes.filter(
-    (st) => currentText.includes(st.name.toLowerCase()) || currentText.includes(st.slug)
-  );
+  const blogTopic = deriveBlogTopic(post);
+  const currentLocations = blogTopic.locations;
+  const currentShootTypes = blogTopic.shootTypes;
 
   const scoredPosts = allOtherPosts.map((p) => {
     let score = 0;
@@ -534,18 +518,12 @@ export default async function BlogPostPage({ params }: PageProps) {
   scoredPosts.sort((a, b) => b.score - a.score || new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
   const relatedPosts = scoredPosts.slice(0, 3).map(({ score, target_keywords, content: _c, ...rest }) => rest);
 
-  // Find locations mentioned in post title or content for internal linking
-  const mentionedLocations = locations.filter(
-    (loc) =>
-      post.title.toLowerCase().includes(loc.name.toLowerCase()) ||
-      post.content.toLowerCase().includes(loc.name.toLowerCase())
-  ).slice(0, 4);
-
-  // Find shoot types mentioned in post for internal linking
-  const contentLower = (post.title + " " + post.content).toLowerCase();
-  const mentionedShootTypes = shootTypes.filter(
-    (st) => contentLower.includes(st.name.toLowerCase()) || contentLower.includes(st.slug)
-  ).slice(0, 3);
+  // Primary topic drives conversion blocks. Secondary mentions stay available
+  // for internal links, but they must not hijack "Featured in ..." modules.
+  const mentionedLocations = blogTopic.locations;
+  const mentionedShootTypes = blogTopic.shootTypes;
+  const primaryLocation = blogTopic.primaryLocation;
+  const primaryShootType = blogTopic.primaryShootType;
 
   // Related photographers — converts blog readers to bookings far better
   // than another "browse all" CTA. Picks up to 3 photographers whose
@@ -553,9 +531,9 @@ export default async function BlogPostPage({ params }: PageProps) {
   // ranked by how many tags overlap. One package per photographer (same
   // diversification rule we use on location/shoot-type pages) so the
   // grid shows three distinct people, not three packages from one star.
-  const mentionedLocationSlugs = mentionedLocations.map((l) => l.slug);
-  const mentionedShootTypeNames = mentionedShootTypes.map((s) => s.name);
-  const relatedPackages = (mentionedLocationSlugs.length > 0 || mentionedShootTypeNames.length > 0)
+  const conversionLocationSlugs = primaryLocation ? [primaryLocation.slug] : [];
+  const conversionShootTypeNames = primaryShootType ? [primaryShootType.name] : [];
+  const relatedPackages = (conversionLocationSlugs.length > 0 || conversionShootTypeNames.length > 0)
     ? await query<{
         id: string; name: string; price: string; duration_minutes: number; num_photos: number;
         photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
@@ -600,13 +578,16 @@ export default async function BlogPostPage({ params }: PageProps) {
               AND COALESCE(pp.is_test, FALSE) = FALSE
               AND pk.is_public = TRUE
               AND (
-                ($1::text[] = ARRAY[]::text[] AND $2::text[] = ARRAY[]::text[])
+                $1::text[] = ARRAY[]::text[]
                 OR EXISTS (
                   SELECT 1 FROM photographer_locations plx
                    WHERE plx.photographer_id = pp.id
-                     AND ($1::text[] = ARRAY[]::text[] OR plx.location_slug = ANY($1::text[]))
+                     AND plx.location_slug = ANY($1::text[])
                 )
-                OR ($2::text[] != ARRAY[]::text[] AND pp.shoot_types && $2::text[])
+              )
+              AND (
+                $2::text[] = ARRAY[]::text[]
+                OR pp.shoot_types && $2::text[]
               )
          )
          SELECT id, name, price, duration_minutes, num_photos,
@@ -621,6 +602,12 @@ export default async function BlogPostPage({ params }: PageProps) {
                         FROM portfolio_items pi
                        WHERE pi.photographer_id = pp.profile_id
                          AND pi.type = 'photo'
+                         AND ($1::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($1::text[]))
+                         AND (
+                           $2::text[] = ARRAY[]::text[]
+                           OR pi.shoot_type = ANY($2::text[])
+                           OR pi.shoot_type IS NULL
+                         )
                        ORDER BY shuffle, pi.sort_order NULLS LAST, pi.created_at
                        LIMIT 5
                     ) ranked
@@ -633,7 +620,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                    pp.review_count DESC NULLS LAST,
                    pp.rating DESC NULLS LAST
           LIMIT 3`,
-        [mentionedLocationSlugs, mentionedShootTypeNames]
+        [conversionLocationSlugs, conversionShootTypeNames]
       ).catch(() => [])
     : [];
 
@@ -644,7 +631,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   // same post always shows the same cover (predictable for sharing) but
   // different posts naturally rotate across photographers.
   // Falls back silently to cover_image_url if no match found.
-  const heroPhoto = (mentionedLocationSlugs.length > 0 || mentionedShootTypeNames.length > 0)
+  const heroPhoto = (conversionLocationSlugs.length > 0 || conversionShootTypeNames.length > 0)
     ? await queryOne<{ url: string; photographer_name: string; photographer_slug: string }>(
         `SELECT pi.url, u.name as photographer_name, pp.slug as photographer_slug,
                 -- Lower rank = better match. 0 = both location+type tagged,
@@ -683,17 +670,12 @@ export default async function BlogPostPage({ params }: PageProps) {
               OR (pi.shoot_type IS NULL AND pp.shoot_types && $2::text[])
             )
             AND (
-              ($1::text[] != ARRAY[]::text[] AND pi.location_slug = ANY($1::text[]))
-              OR ($2::text[] != ARRAY[]::text[] AND pi.shoot_type = ANY($2::text[]))
-              OR EXISTS (
-                SELECT 1 FROM photographer_locations plx
-                 WHERE plx.photographer_id = pp.id
-                   AND ($1::text[] != ARRAY[]::text[] AND plx.location_slug = ANY($1::text[]))
-              )
+              $1::text[] = ARRAY[]::text[]
+              OR pi.location_slug = ANY($1::text[])
             )
           ORDER BY match_rank, hashtext($3::text || pi.url)
           LIMIT 1`,
-        [mentionedLocationSlugs, mentionedShootTypeNames, post.id]
+        [conversionLocationSlugs, conversionShootTypeNames, post.id]
       ).catch(() => null)
     : null;
 
@@ -702,8 +684,8 @@ export default async function BlogPostPage({ params }: PageProps) {
   // ── Conversion assets (carousels, breakouts, reviews, end-cap) ─────────
   const conversion = await fetchBlogConversionAssets({
     postId: post.id,
-    locationSlugs: mentionedLocationSlugs,
-    shootTypeNames: mentionedShootTypeNames,
+    locationSlugs: conversionLocationSlugs,
+    shootTypeNames: conversionShootTypeNames,
     locale,
   });
 

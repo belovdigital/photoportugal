@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
+import { cookies } from "next/headers";
 import { queryOne, query } from "@/lib/db";
 import crypto from "crypto";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
+import { verifyToken } from "@/app/api/admin/login/route";
+
+// Admins (verified via the admin_token cookie) can pull any gallery
+// without a password — used by the Recent Visitors panel to inspect
+// what a client/photographer saw, without needing the gallery
+// password each time.
+async function isAdmin(): Promise<boolean> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("admin_token")?.value;
+  if (!token) return false;
+  const data = verifyToken(token);
+  if (!data) return false;
+  const user = await queryOne<{ role: string }>(
+    "SELECT role FROM users WHERE email = $1",
+    [data.email]
+  );
+  return user?.role === "admin";
+}
 
 // POST: Verify password and return gallery data
 export async function POST(
@@ -13,8 +32,9 @@ export async function POST(
   const { token } = await params;
 
   const { password } = await req.json();
+  const admin = await isAdmin();
 
-  if (!password) {
+  if (!password && !admin) {
     return NextResponse.json({ error: "Password required" }, { status: 400 });
   }
 
@@ -58,14 +78,16 @@ export async function POST(
     return NextResponse.json({ error: "This gallery has expired" }, { status: 410 });
   }
 
-  // Check password (bcrypt, with SHA256 fallback for old deliveries)
-  const { compare: bcryptCompare } = await import("bcryptjs");
-  const isBcrypt = booking.delivery_password.startsWith("$2");
-  const passwordMatch = isBcrypt
-    ? await bcryptCompare(password, booking.delivery_password)
-    : crypto.createHash("sha256").update(password).digest("hex") === booking.delivery_password;
-  if (!passwordMatch) {
-    return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+  // Check password unless caller is an admin (admin cookie bypass).
+  if (!admin) {
+    const { compare: bcryptCompare } = await import("bcryptjs");
+    const isBcrypt = booking.delivery_password.startsWith("$2");
+    const passwordMatch = isBcrypt
+      ? await bcryptCompare(password, booking.delivery_password)
+      : crypto.createHash("sha256").update(password).digest("hex") === booking.delivery_password;
+    if (!passwordMatch) {
+      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+    }
   }
 
   // Password correct — return gallery data

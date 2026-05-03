@@ -242,3 +242,18 @@ body[data-concierge-open="true"] iframe[src*="intercom"] {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* Lift Intercom launcher above sticky mobile bottom bars on routes
+   that mount one (location detail, photoshoot detail, photographer
+   profile, dashboard). Only kicks in on mobile widths where the bars
+   are visible and the launcher would otherwise overlap them.
+   `body.intercom-lifted` is toggled by IntercomWidget.tsx based on
+   the current pathname. */
+@media (max-width: 767px) {
+  body.intercom-lifted .intercom-lightweight-app-launcher,
+  body.intercom-lifted .intercom-launcher,
+  body.intercom-lifted iframe[name="intercom-launcher-frame"],
+  body.intercom-lifted iframe[title*="Intercom" i] {
+    bottom: 90px !important;
+  }
+}

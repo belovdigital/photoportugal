@@ -28,6 +28,7 @@ export interface AdminBooking {
   flexible_date_to: string | null;
   date_note: string | null;
   delivery_accepted: boolean | null;
+  delivery_accepted_at: string | null;
   location_detail: string | null;
   client_country: string | null;
   client_phone: string | null;
@@ -69,9 +70,10 @@ const PAGE_SIZE = 50;
 
 export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
   const [search, setSearch] = useState("");
-  // "active" = everything except cancelled. Default so the list isn't
-  // cluttered with finalized/cancelled rows when you're looking at what
-  // needs attention. "all" stays available for completeness.
+  // "active" = everything except cancelled and delivery-accepted (the two
+  // terminal states). Default so the list isn't cluttered with finalized
+  // rows when you're looking at what needs attention. "all" stays
+  // available for completeness.
   const [statusFilter, setStatusFilter] = useState<string>("active");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
@@ -79,7 +81,7 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
   const filtered = useMemo(() => {
     let result = bookings;
     if (statusFilter === "active") {
-      result = result.filter((b) => b.status !== "cancelled");
+      result = result.filter((b) => b.status !== "cancelled" && !b.delivery_accepted);
     } else if (statusFilter !== "all") {
       result = result.filter((b) => b.status === statusFilter);
     }
@@ -88,6 +90,16 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
       result = result.filter(
         (b) => b.client_name.toLowerCase().includes(q) || b.photographer_name.toLowerCase().includes(q) || b.id.includes(q)
       );
+    }
+    // For the Delivered tab, sort by acceptance date (newest first) so admin
+    // can scan recently completed deliveries at the top. Server returns
+    // bookings ordered by created_at DESC, which is irrelevant for delivered.
+    if (statusFilter === "delivered") {
+      result = [...result].sort((a, b) => {
+        const aT = a.delivery_accepted_at ? new Date(a.delivery_accepted_at).getTime() : new Date(a.created_at).getTime();
+        const bT = b.delivery_accepted_at ? new Date(b.delivery_accepted_at).getTime() : new Date(b.created_at).getTime();
+        return bT - aT;
+      });
     }
     return result;
   }, [bookings, search, statusFilter]);

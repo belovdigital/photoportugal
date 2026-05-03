@@ -23,10 +23,25 @@ export function IntercomWidget() {
         .catch(() => null)
         .then(user => {
           const isMobile = window.matchMedia("(max-width: 767px)").matches;
+          // Compute vertical_padding at boot time too — Intercom on
+          // some browsers (notably mobile Safari) only honours the
+          // padding from the initial boot settings and ignores later
+          // `update` calls. Computing it here from the CURRENT
+          // pathname guarantees the launcher starts at the correct
+          // height; route changes after boot still go through the
+          // second useEffect's update.
+          const path = window.location.pathname;
+          const hasBottomBar = isMobile && (
+            /^\/(?:[a-z]{2}\/)?locations\/[^/]+/.test(path) ||
+            /^\/(?:[a-z]{2}\/)?photographers\/[^/]+/.test(path) ||
+            /^\/(?:[a-z]{2}\/)?photoshoots\/[^/]+/.test(path) ||
+            path.includes("/dashboard")
+          );
           const settings: Record<string, unknown> = {
             app_id: "d02q0i7w",
             is_mobile: isMobile,
             device_type: isMobile ? "mobile" : "desktop",
+            vertical_padding: hasBottomBar ? 100 : 20,
           };
           if (user && user.id) {
             settings.user_id = user.id;
@@ -65,29 +80,50 @@ export function IntercomWidget() {
     };
   }, []);
 
-  // Hide Intercom on mobile dashboard and admin routes — the launcher
-  // can't be positioned reliably above our bottom tab bar, so keep the
-  // mobile dashboard clean and let photographers reach support via the
-  // sidebar Support link instead.
+  // Lift Intercom above sticky mobile bottom bars. The Intercom JS
+  // `vertical_padding` setting is silently ignored by the mobile
+  // launcher (only the desktop launcher honours it), so we go with a
+  // CSS-level override that targets the iframe wrappers Intercom
+  // injects into our DOM. Toggling a body class lets us scope the
+  // override to routes that actually have a sticky bottom bar.
   //
-  // ALSO hide on mobile location detail pages: those have a sticky
-  // "Browse" CTA bar at the bottom and the Intercom launcher overlaps
-  // its action button (vertical_padding bumps proved unreliable across
-  // browsers). Visitors there have the AI Concierge quick-start form in
-  // the hero AND a /concierge link, so chat support is one tap away
-  // without the launcher.
+  // Selectors cover both the pre-boot lightweight launcher and the
+  // fully booted iframe launcher; Intercom switches between them
+  // depending on session state.
   useEffect(() => {
-    if (!(window as any).Intercom) return;
     const isMobile = window.innerWidth < 768;
-    const isDashboard = pathname.includes("/dashboard");
     const isAdmin = pathname.includes("/admin");
     const isLocationDetail = /^\/(?:[a-z]{2}\/)?locations\/[^/]+/.test(pathname);
-    const hide = isMobile && (isDashboard || isAdmin || isLocationDetail);
-    (window as any).Intercom("update", {
-      hide_default_launcher: hide,
-      vertical_padding: 20,
+    const isPhotographerProfile = /^\/(?:[a-z]{2}\/)?photographers\/[^/]+/.test(pathname);
+    const isPhotoshootType = /^\/(?:[a-z]{2}\/)?photoshoots\/[^/]+/.test(pathname);
+    const isDashboard = pathname.includes("/dashboard");
+
+    const hasMobileBottomBar =
+      isMobile && (isLocationDetail || isPhotographerProfile || isPhotoshootType || isDashboard);
+
+    document.body.classList.toggle("intercom-lifted", hasMobileBottomBar);
+
+    // Also send hide_default_launcher and page through Intercom for
+    // analytics/admin behaviour, with retry for boot delay.
+    const settings = {
+      hide_default_launcher: isAdmin,
       page: pathname,
-    });
+    };
+    let attempts = 0;
+    const apply = () => {
+      const ic = (window as Window & { Intercom?: (cmd: string, s?: unknown) => void }).Intercom;
+      if (typeof ic === "function") {
+        ic("update", settings);
+        return true;
+      }
+      return false;
+    };
+    if (apply()) return;
+    const id = setInterval(() => {
+      attempts += 1;
+      if (apply() || attempts > 60) clearInterval(id);
+    }, 500);
+    return () => clearInterval(id);
   }, [pathname]);
 
   return null;

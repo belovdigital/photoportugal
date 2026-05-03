@@ -81,6 +81,35 @@ export async function POST(req: NextRequest) {
     ]);
   } catch {}
 
+  // Telegram admin ping — photographer pushed a package to a client. Useful
+  // as an early funnel signal: shares often precede bookings.
+  (async () => {
+    try {
+      const names = await queryOne<{ photographer_name: string; client_name: string }>(
+        `SELECT pu.name as photographer_name, cu.name as client_name
+         FROM bookings b
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+         JOIN users cu ON cu.id = b.client_id
+         WHERE b.id = $1`,
+        [booking_id]
+      );
+      if (names) {
+        const { sendTelegram } = await import("@/lib/telegram");
+        const lines = [
+          `📦 <b>Package shared in chat</b>`,
+          ``,
+          `${names.photographer_name} → ${names.client_name}`,
+          `<b>${pkg.name}</b> · €${Math.round(Number(pkg.price))}`,
+          `${pkg.duration_minutes} min · ${pkg.num_photos} photos`,
+        ];
+        await sendTelegram(lines.join("\n"), "bookings");
+      }
+    } catch (err) {
+      console.error("[share-package] telegram error:", err);
+    }
+  })().catch(() => {});
+
   return NextResponse.json({
     success: true,
     message: {
@@ -246,6 +275,39 @@ export async function PUT(req: NextRequest) {
       }),
     ]);
   } catch {}
+
+  // Telegram admin ping — custom one-off proposal. Same shape as the
+  // public-package share but with a ✨ marker + the description so admins
+  // can see how photographers are pricing custom asks.
+  (async () => {
+    try {
+      const names = await queryOne<{ photographer_name: string; client_name: string }>(
+        `SELECT pu.name as photographer_name, cu.name as client_name
+         FROM bookings b
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+         JOIN users cu ON cu.id = b.client_id
+         WHERE b.id = $1`,
+        [bookingId]
+      );
+      if (names) {
+        const { sendTelegram } = await import("@/lib/telegram");
+        const lines = [
+          `✨ <b>Custom proposal sent</b>`,
+          ``,
+          `${names.photographer_name} → ${names.client_name}`,
+          `<b>${name.replace(/[<>]/g, "")}</b> · €${Math.round(price)}`,
+          `${Math.round(durationMinutes)} min · ${Math.round(numPhotos)} photos`,
+        ];
+        if (description) {
+          lines.push(``, `<i>${description.replace(/[<>]/g, "")}</i>`);
+        }
+        await sendTelegram(lines.join("\n"), "bookings");
+      }
+    } catch (err) {
+      console.error("[share-package custom] telegram error:", err);
+    }
+  })().catch(() => {});
 
   return NextResponse.json({
     success: true,

@@ -83,6 +83,8 @@ export default async function BookingsPage() {
     payment_status: string | null;
     delivery_token: string | null;
     delivery_accepted: boolean;
+    delivery_expires_at: string | null;
+    delivery_chat_payload: string | null;
     payment_url: string | null;
     updated_at: string;
     confirmed_at: string | null;
@@ -99,7 +101,10 @@ export default async function BookingsPage() {
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
                   p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
-                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at, b.confirmed_at,
+                  COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
+                  b.delivery_expires_at,
+                  NULL::text as delivery_chat_payload,
+                  b.payment_url, b.updated_at, b.confirmed_at,
                   b.cancelled_at, b.cancelled_by, b.cancelled_reason,
                   (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country
            FROM bookings b
@@ -120,7 +125,15 @@ export default async function BookingsPage() {
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
-                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted, b.payment_url, b.updated_at, b.confirmed_at,
+                COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
+                b.delivery_expires_at,
+                -- Latest DELIVERY:<count>:<url>:<password> chat payload, used to
+                -- recover the plaintext password (delivery_password is bcrypted)
+                -- and surface a one-click "See Your Photos" button on the card.
+                (SELECT m.text FROM messages m
+                  WHERE m.booking_id = b.id AND m.text LIKE 'DELIVERY:%'
+                  ORDER BY m.created_at DESC LIMIT 1) as delivery_chat_payload,
+                b.payment_url, b.updated_at, b.confirmed_at,
                 b.cancelled_at, b.cancelled_by, b.cancelled_reason
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -331,6 +344,42 @@ export default async function BookingsPage() {
                 />
               )}
 
+              {/* CLIENT — prominent "See Your Photos" CTA. Visible from
+                  the moment the photographer shares delivery (status=delivered,
+                  pre OR post accept) until the gallery's 90-day public link
+                  expires. We pull the plaintext password out of the auto-sent
+                  DELIVERY chat message so the link opens the gallery directly,
+                  no password prompt. */}
+              {!isPhotographer && booking.delivery_token && booking.status === "delivered" && (() => {
+                const notExpired = !booking.delivery_expires_at || new Date(booking.delivery_expires_at) > new Date();
+                if (!notExpired) return null;
+                let pw = "";
+                if (booking.delivery_chat_payload?.startsWith("DELIVERY:")) {
+                  const parts = booking.delivery_chat_payload.split(":");
+                  pw = parts[parts.length - 1] || "";
+                }
+                const url = `/delivery/${booking.delivery_token}${pw ? `?pw=${encodeURIComponent(pw)}` : ""}`;
+                return (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-3.5 text-base font-bold text-white shadow-md transition hover:from-accent-600 hover:to-accent-700"
+                  >
+                    📸 {booking.delivery_accepted ? t("downloadYourPhotos") : t("seeYourPhotos")}
+                  </a>
+                );
+              })()}
+
+              {/* CLIENT — giant Leave a Review CTA. Yellow gradient + star,
+                  full-width on mobile so it can't be missed. The Message link
+                  drops below it. */}
+              {!isPhotographer && (booking.status === "completed" || booking.status === "delivered") && !booking.has_review && (
+                <div className="mt-4">
+                  <ReviewForm bookingId={booking.id} photographerName={normalizeName(booking.other_name)} />
+                </div>
+              )}
+
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Link
                   href={`/dashboard/messages?chat=${booking.id}`}
@@ -340,9 +389,6 @@ export default async function BookingsPage() {
                 </Link>
                 {!isPhotographer && (booking.status === "pending" || booking.status === "confirmed") && (
                   <BookingStatusButtons bookingId={booking.id} currentStatus="cancel-only" paymentStatus={booking.payment_status} />
-                )}
-                {!isPhotographer && (booking.status === "completed" || booking.status === "delivered") && !booking.has_review && (
-                  <ReviewForm bookingId={booking.id} photographerName={normalizeName(booking.other_name)} />
                 )}
                 {booking.has_review && (
                   <span className="flex items-center gap-1 px-2 text-sm text-green-600">

@@ -7,6 +7,185 @@ import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToP
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
 import { sendTelegram } from "@/lib/telegram";
 
+// Stripe events we surface in the `stripe` Telegram topic. Anything
+// not listed (most notably payment_intent.created — fires on every
+// "Pay" button click and is pure noise) gets dropped silently.
+const STRIPE_EVENTS_TO_FORWARD = new Set<string>([
+  "payment_intent.succeeded",
+  "payment_intent.payment_failed",
+  "charge.refunded",
+  "charge.dispute.created",
+  "checkout.session.completed",
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "invoice.payment_succeeded",
+  "invoice.payment_failed",
+  "transfer.created",
+  "transfer.reversed",
+  "transfer.failed",
+  "payout.created",
+  "payout.paid",
+  "payout.failed",
+  "account.updated",
+  "review.opened",
+  "radar.early_fraud_warning.created",
+]);
+
+function fmtAmount(amountCents: number | null | undefined, currency?: string | null): string {
+  if (typeof amountCents !== "number") return "?";
+  const symbol = (currency || "").toLowerCase() === "eur" ? "€" : (currency || "").toUpperCase() + " ";
+  return `${symbol}${(amountCents / 100).toFixed(2)}`;
+}
+
+interface StripeWebhookEvent {
+  id: string;
+  type: string;
+  account?: string;
+  data: { object: Record<string, unknown> };
+}
+
+function summariseStripeEvent(event: StripeWebhookEvent): string {
+  const obj = (event.data?.object || {}) as Record<string, unknown>;
+  const lines: string[] = [];
+
+  // Pick a human-friendly headline emoji per event family.
+  const emojiMap: Record<string, string> = {
+    "payment_intent.succeeded": "💳",
+    "payment_intent.payment_failed": "❌",
+    "charge.refunded": "↩️",
+    "charge.dispute.created": "⚠️",
+    "checkout.session.completed": "🛒",
+    "customer.subscription.created": "🆕",
+    "customer.subscription.updated": "🔄",
+    "customer.subscription.deleted": "🚪",
+    "invoice.payment_succeeded": "📄",
+    "invoice.payment_failed": "📄❌",
+    "transfer.created": "💸",
+    "transfer.reversed": "↪️",
+    "transfer.failed": "🚫",
+    "payout.created": "🏦",
+    "payout.paid": "✅",
+    "payout.failed": "🚫",
+    "account.updated": "👤",
+    "review.opened": "🔍",
+    "radar.early_fraud_warning.created": "🚨",
+  };
+  const emoji = emojiMap[event.type] || "📌";
+  lines.push(`${emoji} <b>${event.type}</b>`);
+
+  // Event-type-specific detail row.
+  switch (event.type) {
+    case "payment_intent.succeeded":
+    case "payment_intent.payment_failed": {
+      const amount = obj.amount as number | undefined;
+      const currency = obj.currency as string | undefined;
+      const meta = (obj.metadata as Record<string, string>) || {};
+      lines.push(`Amount: ${fmtAmount(amount, currency)}`);
+      if (meta.booking_id) lines.push(`Booking: ${meta.booking_id.slice(0, 8)}`);
+      if (event.type === "payment_intent.payment_failed" && obj.last_payment_error) {
+        const err = obj.last_payment_error as { message?: string };
+        if (err.message) lines.push(`Reason: ${String(err.message).slice(0, 200)}`);
+      }
+      break;
+    }
+    case "charge.refunded": {
+      lines.push(`Amount refunded: ${fmtAmount(obj.amount_refunded as number, obj.currency as string)}`);
+      const meta = (obj.metadata as Record<string, string>) || {};
+      if (meta.booking_id) lines.push(`Booking: ${meta.booking_id.slice(0, 8)}`);
+      break;
+    }
+    case "charge.dispute.created": {
+      lines.push(`Disputed: ${fmtAmount(obj.amount as number, obj.currency as string)}`);
+      if (obj.reason) lines.push(`Reason: ${String(obj.reason)}`);
+      lines.push(`⚠️ Respond before evidence due date in Stripe dashboard.`);
+      break;
+    }
+    case "checkout.session.completed": {
+      const meta = (obj.metadata as Record<string, string>) || {};
+      const mode = obj.mode as string | undefined;
+      lines.push(`Mode: ${mode || "?"}`);
+      lines.push(`Total: ${fmtAmount(obj.amount_total as number, obj.currency as string)}`);
+      if (meta.type) lines.push(`Type: ${meta.type}`);
+      if (meta.booking_id) lines.push(`Booking: ${meta.booking_id.slice(0, 8)}`);
+      break;
+    }
+    case "customer.subscription.created":
+    case "customer.subscription.updated":
+    case "customer.subscription.deleted": {
+      const items = (obj.items as { data?: Array<{ price?: { id?: string; nickname?: string } }> } | undefined)?.data || [];
+      const status = obj.status as string | undefined;
+      lines.push(`Status: ${status || "?"}`);
+      const priceLabels = items
+        .map((it) => it.price?.nickname || it.price?.id)
+        .filter(Boolean);
+      if (priceLabels.length) lines.push(`Products: ${priceLabels.join(", ")}`);
+      break;
+    }
+    case "invoice.payment_succeeded":
+    case "invoice.payment_failed": {
+      lines.push(`Amount: ${fmtAmount(obj.amount_due as number, obj.currency as string)}`);
+      if (obj.billing_reason) lines.push(`Reason: ${String(obj.billing_reason)}`);
+      break;
+    }
+    case "transfer.created":
+    case "transfer.reversed":
+    case "transfer.failed": {
+      const meta = (obj.metadata as Record<string, string>) || {};
+      lines.push(`Amount: ${fmtAmount(obj.amount as number, obj.currency as string)}`);
+      lines.push(`Destination: ${String(obj.destination || "?")}`);
+      if (meta.booking_id) lines.push(`Booking: ${meta.booking_id.slice(0, 8)}`);
+      if (meta.type) lines.push(`Type: ${meta.type}`);
+      break;
+    }
+    case "payout.created":
+    case "payout.paid":
+    case "payout.failed": {
+      lines.push(`Amount: ${fmtAmount(obj.amount as number, obj.currency as string)}`);
+      lines.push(`Method: ${String(obj.method || "?")}`);
+      if (event.account) lines.push(`Connect acct: ${event.account}`);
+      if (event.type === "payout.failed" && obj.failure_message) {
+        lines.push(`Reason: ${String(obj.failure_message).slice(0, 200)}`);
+      }
+      break;
+    }
+    case "account.updated": {
+      const charges = obj.charges_enabled as boolean | undefined;
+      const payouts = obj.payouts_enabled as boolean | undefined;
+      const submitted = obj.details_submitted as boolean | undefined;
+      const requirements = obj.requirements as { disabled_reason?: string | null; currently_due?: string[] } | undefined;
+      lines.push(`Acct: ${event.account || obj.id || "?"}`);
+      lines.push(`details_submitted: ${submitted}, charges: ${charges}, payouts: ${payouts}`);
+      if (requirements?.disabled_reason) lines.push(`Disabled: ${requirements.disabled_reason}`);
+      if (requirements?.currently_due?.length) {
+        lines.push(`Pending: ${requirements.currently_due.slice(0, 5).join(", ")}${requirements.currently_due.length > 5 ? "…" : ""}`);
+      }
+      break;
+    }
+    case "review.opened": {
+      lines.push(`Reason: ${String(obj.reason || "?")}`);
+      if (obj.charge) lines.push(`Charge: ${String(obj.charge)}`);
+      break;
+    }
+    case "radar.early_fraud_warning.created": {
+      lines.push(`Type: ${String(obj.fraud_type || "?")}`);
+      if (obj.charge) lines.push(`Charge: ${String(obj.charge)}`);
+      lines.push(`⚠️ Bank flagged a charge as likely fraudulent. Refund or contest.`);
+      break;
+    }
+  }
+
+  // Footer with id + Stripe dashboard deeplink for one-tap inspection.
+  if (event.id) lines.push(`Event: ${event.id}`);
+  return lines.join("\n");
+}
+
+async function forwardStripeEventToTelegram(event: StripeWebhookEvent): Promise<void> {
+  if (!STRIPE_EVENTS_TO_FORWARD.has(event.type)) return;
+  const summary = summariseStripeEvent(event);
+  await sendTelegram(summary, "stripe");
+}
+
 async function notifyAdminSubscriptionEvent(
   photographerId: string,
   emoji: string,
@@ -50,6 +229,15 @@ export async function POST(req: NextRequest) {
     console.error("[stripe/webhook] Signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
+
+  // ── Stripe activity firehose ───────────────────────────────────
+  // Forward a one-line summary of every event we care about into the
+  // dedicated `stripe` Telegram topic. Independent of the business
+  // logic below — runs first, fire-and-forget so a Telegram outage
+  // can't break payment processing.
+  forwardStripeEventToTelegram(event as unknown as StripeWebhookEvent).catch((e) =>
+    console.error("[webhook] stripe firehose telegram failed:", e)
+  );
 
   try {
     switch (event.type) {

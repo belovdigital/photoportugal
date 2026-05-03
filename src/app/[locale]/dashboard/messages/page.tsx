@@ -31,6 +31,9 @@ function formatLastMessagePreview(text: string | null): string | null {
     const count = parts[1];
     return `📸 Gallery delivered${count ? ` (${count} photos)` : ""}`;
   }
+  if (text.startsWith("REVIEW_REQUEST:")) {
+    return "⭐ How was your photoshoot?";
+  }
   return text;
 }
 
@@ -942,6 +945,57 @@ function MessagesContent() {
                           } catch {
                             // fall through to default system message
                           }
+                        }
+                        // Kate's review-request card. Payload format:
+                        //   REVIEW_REQUEST:<bookingId>[:<urlEncodedFirstName>]
+                        // Photographer-side gets an info-only version so they
+                        // don't think Kate is asking THEM for a review.
+                        if (msg.text?.startsWith("REVIEW_REQUEST:")) {
+                          const payload = msg.text.slice("REVIEW_REQUEST:".length).trim();
+                          const [reviewBookingId, encodedName] = payload.split(":");
+                          const firstName = encodedName ? (() => { try { return decodeURIComponent(encodedName); } catch { return ""; } })() : "";
+                          // viewer is photographer when the OTHER side of the convo is the client
+                          const viewerIsPhotographer = activeConvo?.other_role === "client";
+                          if (viewerIsPhotographer) {
+                            return (
+                              <div key={msg.id} className="flex justify-center my-3">
+                                <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-yellow-200 bg-yellow-50 p-4 shadow-sm">
+                                  <div className="flex items-center gap-3">
+                                    <Avatar src={msg.sender_avatar} alt={msg.sender_name || "Kate"} fallback={msg.sender_name || "K"} size="sm" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-bold text-gray-900">{msg.sender_name || "Kate Belova"}</p>
+                                      <p className="text-xs text-gray-500">{t("founderRole") || "Founder of Photo Portugal"}</p>
+                                    </div>
+                                  </div>
+                                  <p className="mt-2 text-xs text-gray-600">{firstName
+                                    ? (t("reviewRequestPhotographerWithName", { name: firstName }) || `⭐ Kate asked ${firstName} to leave a review. They'll get 10% off their next booking as a thank-you.`)
+                                    : (t("reviewRequestPhotographer") || "⭐ Kate asked your client to leave a review. They'll get 10% off their next booking as a thank-you.")}</p>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div key={msg.id} className="flex justify-center my-3">
+                              <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-white p-5 shadow-sm">
+                                <div className="flex items-start gap-3">
+                                  <Avatar src={msg.sender_avatar} alt={msg.sender_name || "Kate"} fallback={msg.sender_name || "K"} size="md" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-gray-900">{msg.sender_name || "Kate Belova"}</p>
+                                    <p className="text-xs text-gray-500">{t("founderRole") || "Founder of Photo Portugal"}</p>
+                                  </div>
+                                </div>
+                                <p className="mt-3 text-sm text-gray-700">{firstName
+                                  ? (t("reviewRequestTextWithName", { name: firstName }) || `Hi ${firstName}, hope you loved your shoot! A quick review means the world to us — and as a thank-you, we'll send you a 10% off code for your next session.`)
+                                  : (t("reviewRequestText") || "Hope you loved your shoot! A quick review means the world to us — and as a thank-you, we'll send you a 10% off code for your next session.")}</p>
+                                <a
+                                  href={`/dashboard/bookings?review=${encodeURIComponent(reviewBookingId)}`}
+                                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-yellow-400 px-5 py-2.5 text-sm font-bold text-gray-900 transition hover:bg-yellow-500"
+                                >
+                                  ⭐ {t("leaveReviewCta") || "Leave a review"}
+                                </a>
+                              </div>
+                            </div>
+                          );
                         }
                         return (
                           <div key={msg.id} className="flex justify-center my-3">

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { trackReviewSubmitted } from "@/lib/analytics";
 import { VideoReviewRecorder } from "./VideoReviewRecorder";
 
 export function ReviewForm({ bookingId, photographerName }: { bookingId: string; photographerName: string }) {
   const router = useRouter();
   const t = useTranslations("reviewForm");
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [showVideoRecorder, setShowVideoRecorder] = useState(false);
   const [rating, setRating] = useState(5);
@@ -20,6 +22,19 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hasAutoOpened = useRef(false);
+
+  // Auto-open + scroll into view when arriving from a Kate chat link
+  // (?review=<this-booking-id>). One shot per page mount.
+  useEffect(() => {
+    if (hasAutoOpened.current) return;
+    if (searchParams?.get("review") === bookingId) {
+      hasAutoOpened.current = true;
+      setOpen(true);
+      setTimeout(() => containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    }
+  }, [searchParams, bookingId]);
 
   useEffect(() => {
     return () => {
@@ -90,6 +105,9 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
     return (
       <div className="space-y-2">
         <span className="text-sm font-medium text-accent-600">{t("submitted")}</span>
+        <p className="text-xs text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 w-fit max-w-md">
+          🎁 {t("rewardEmailed")}
+        </p>
         <a
           href="https://g.page/r/CbWG7PogT_K2EBM/review"
           target="_blank"
@@ -104,22 +122,29 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
   }
 
   return (
-    <>
-      <div className="flex gap-2 flex-wrap">
+    <div ref={containerRef}>
+      <div className="flex flex-col sm:flex-row gap-2">
         <button
           onClick={() => setOpen(true)}
-          className="rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-2 text-sm font-semibold text-yellow-700 transition hover:bg-yellow-100"
+          className="flex-1 group relative overflow-hidden rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 px-6 py-4 text-base font-bold text-gray-900 shadow-md transition hover:from-yellow-500 hover:to-amber-600 hover:shadow-lg"
         >
-          {t("leaveReview")}
+          <span className="relative flex items-center justify-center gap-2">
+            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+            {t("leaveReview")}
+            <span className="ml-1 rounded-full bg-gray-900/10 px-2 py-0.5 text-xs font-semibold">{t("rewardBadge")}</span>
+          </span>
         </button>
         <button
           onClick={() => setShowVideoRecorder(true)}
-          className="rounded-lg bg-primary-50 border border-primary-200 px-4 py-2 text-sm font-semibold text-primary-700 transition hover:bg-primary-100 flex items-center gap-1.5"
+          className="flex-1 sm:flex-none group relative overflow-hidden rounded-xl bg-gradient-to-r from-primary-500 to-primary-700 px-6 py-4 text-base font-bold text-white shadow-md transition hover:from-primary-600 hover:to-primary-800 hover:shadow-lg"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          {t("videoReview")}
+          <span className="relative flex items-center justify-center gap-2">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            {t("videoReview")}
+            <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">{t("videoRewardBadge")}</span>
+          </span>
         </button>
       </div>
 
@@ -137,10 +162,12 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-label={t("leaveReview")}>
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-bold text-gray-900">
               {t("dialogTitle", { name: photographerName })}
             </h2>
+            <p className="mt-1 text-xs text-gray-500">{t("starsOnlyHint")}</p>
+            <p className="mt-2 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">{t("rewardHint")}</p>
 
             {error && (
               <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
@@ -245,6 +272,6 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

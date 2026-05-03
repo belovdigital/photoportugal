@@ -219,7 +219,10 @@ CREATE TABLE bookings (
   shoot_reminder_sent BOOLEAN DEFAULT FALSE,
   delivery_reminder_sent BOOLEAN DEFAULT FALSE,
   review_requested BOOLEAN DEFAULT FALSE,
+  review_chat_sent BOOLEAN DEFAULT FALSE,
+  review_sms_sent BOOLEAN DEFAULT FALSE,
   trustpilot_sent BOOLEAN DEFAULT FALSE,
+  delivery_expiry_warning_sent BOOLEAN DEFAULT FALSE,
   session_reminder_sent BOOLEAN DEFAULT FALSE,
   delivery_review_reminder_sent BOOLEAN DEFAULT FALSE,
   client_followup_sent BOOLEAN DEFAULT FALSE,
@@ -256,6 +259,8 @@ CREATE TABLE reviews (
   is_verified BOOLEAN DEFAULT TRUE, -- verified because tied to a real booking
   is_approved BOOLEAN DEFAULT TRUE,
   client_name_override VARCHAR(255), -- for admin-created reviews without a real client
+  promo_code TEXT, -- 10% off thank-you code generated on review submission
+  promo_code_id TEXT, -- Stripe promotion_code ID (for activation/lookup)
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

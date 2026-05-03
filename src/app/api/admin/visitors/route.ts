@@ -238,6 +238,41 @@ export async function GET(req: Request) {
     ORDER BY day ASC
   `);
 
+  // Decode each session's pageviews JSON, and for any /delivery/<token>
+  // path attach the booking id + password so the admin can click
+  // through to the gallery without having to look up the password
+  // separately. Done as a single bulk query rather than per-row.
+  const decodedSessions = recentSessions.map(s => ({
+    ...s,
+    pageviews: s.pageviews ? JSON.parse(s.pageviews) : [],
+  }));
+
+  const deliveryTokens = new Set<string>();
+  for (const s of decodedSessions) {
+    for (const pv of s.pageviews as Array<{ path: string }>) {
+      const m = /^\/delivery\/([a-zA-Z0-9_-]+)/.exec(pv.path);
+      if (m) deliveryTokens.add(m[1]);
+    }
+  }
+  const deliveryMap: Record<string, { booking_id: string; password: string }> = {};
+  if (deliveryTokens.size > 0) {
+    const rows = await query<{ id: string; delivery_token: string; delivery_password: string }>(
+      "SELECT id, delivery_token, delivery_password FROM bookings WHERE delivery_token = ANY($1::text[])",
+      [Array.from(deliveryTokens)]
+    );
+    for (const row of rows) {
+      deliveryMap[row.delivery_token] = { booking_id: row.id, password: row.delivery_password || "" };
+    }
+  }
+  for (const s of decodedSessions) {
+    for (const pv of s.pageviews as Array<{ path: string; delivery?: { booking_id: string; password: string } }>) {
+      const m = /^\/delivery\/([a-zA-Z0-9_-]+)/.exec(pv.path);
+      if (m && deliveryMap[m[1]]) {
+        pv.delivery = deliveryMap[m[1]];
+      }
+    }
+  }
+
   return NextResponse.json({
     summary: {
       sessions: parseInt(summary?.sessions || "0"),
@@ -256,10 +291,7 @@ export async function GET(req: Request) {
     countries,
     sources,
     landingPages,
-    recentSessions: recentSessions.map(s => ({
-      ...s,
-      pageviews: s.pageviews ? JSON.parse(s.pageviews) : [],
-    })),
+    recentSessions: decodedSessions,
     dailySessions,
     seriesBucket,
     period,
