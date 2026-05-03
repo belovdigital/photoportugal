@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
 import { locations } from "@/lib/locations-data";
 import { PhotographerDashboardClient } from "../photographer/PhotographerDashboardClient";
+import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,8 @@ export default async function ProfilePage() {
     "SELECT location_slug FROM photographer_locations WHERE photographer_id = $1",
     [profile.id]
   );
+  const locationSlugs = locationRows.map((r) => r.location_slug);
+  const coverageNodeSlugs = await getPhotographerCoverageNodeSlugs(profile.id, locationSlugs);
 
   const portfolioItems = await query<{
     id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number;
@@ -64,7 +67,7 @@ export default async function ProfilePage() {
   return (
     <div className="p-6 sm:p-8">
       <PhotographerDashboardClient
-        profile={{ ...profile, location_slugs: locationRows.map((r) => r.location_slug) }}
+        profile={{ ...profile, location_slugs: locationSlugs, coverage_node_slugs: coverageNodeSlugs }}
         portfolioItems={portfolioItems}
         packages={packages}
         bookings={bookings}

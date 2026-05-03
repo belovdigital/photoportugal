@@ -2212,6 +2212,14 @@
     "locationsUnlimited": "{count}/unlimited locations selected",
     "limitReached": " (limit reached)",
     "upgradeForMore": "Upgrade for more",
+    "locationIncluded": "included",
+    "locationAreas": "{count} areas",
+    "locationsPublicAreas": "Covers {count} public areas",
+    "locationNodeTypes": {
+      "region": "Region",
+      "group": "Island group",
+      "island": "Island"
+    },
     "yearsOfExperience": "Years of Experience",
     "careerStartYear": "Year You Started Photography",
     "careerStartYearHint": "We'll compute your years of experience automatically.",

@@ -108,6 +108,20 @@ CREATE TABLE photographer_locations (
 
 CREATE INDEX idx_photoloc_location ON photographer_locations(location_slug);
 
+-- Explicit hierarchical coverage selected by photographers. The legacy
+-- photographer_locations table remains the expanded compatibility surface
+-- used by public pages and existing filters.
+CREATE TABLE IF NOT EXISTS photographer_location_coverage (
+  photographer_id UUID NOT NULL REFERENCES photographer_profiles(id) ON DELETE CASCADE,
+  node_slug VARCHAR(100) NOT NULL,
+  source VARCHAR(30) NOT NULL DEFAULT 'dashboard',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (photographer_id, node_slug)
+);
+
+CREATE INDEX IF NOT EXISTS idx_photographer_location_coverage_node
+  ON photographer_location_coverage(node_slug);
+
 -- ============================================================
 -- PACKAGES
 -- ============================================================

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
+import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 
 async function isAdmin() {
   const cookieStore = await cookies();
@@ -25,7 +26,15 @@ export async function GET() {
       ORDER BY pp.rating DESC NULLS LAST`
     );
 
-    return NextResponse.json(rows);
+    const coverageByPhotographer = await getCoverageNodeSlugsByPhotographerIds(rows.map((row) => row.id as string));
+    return NextResponse.json(rows.map((row) => ({
+      ...row,
+      coverage_nodes: coverageByPhotographer[row.id as string] || [],
+      locations: Array.from(new Set([
+        ...(coverageByPhotographer[row.id as string] || []),
+        ...((row.locations as string[] | null) || []),
+      ])),
+    })));
   } catch (error) {
     console.error("[admin/match-request/photographers] GET error:", error);
     try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/admin/match-request/photographers", method: "GET", statusCode: 500 }); } catch {}

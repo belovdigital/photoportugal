@@ -1,4 +1,5 @@
 import { query } from "@/lib/db";
+import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 
 export interface ConciergePhotographer {
   id: string;
@@ -70,6 +71,8 @@ export async function loadPhotographersForConcierge(): Promise<ConciergePhotogra
      ORDER BY pp.is_featured DESC, pp.is_verified DESC, pp.rating DESC, pp.review_count DESC`
   );
 
+  const coverageByPhotographer = await getCoverageNodeSlugsByPhotographerIds(rows.map((r) => r.id));
+
   const photographers: ConciergePhotographer[] = rows.map((r) => ({
     id: r.id,
     slug: r.slug,
@@ -80,7 +83,7 @@ export async function loadPhotographersForConcierge(): Promise<ConciergePhotogra
     is_featured: r.is_featured,
     is_verified: r.is_verified,
     is_founding: r.is_founding,
-    locations: r.locations || [],
+    locations: Array.from(new Set([...(coverageByPhotographer[r.id] || []), ...(r.locations || [])])),
     shoot_types: r.shoot_types || [],
     languages: r.languages || [],
     min_price: r.min_price ? parseInt(r.min_price) : null,

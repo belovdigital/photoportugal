@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import Cropper from "react-easy-crop";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
 import { resolveImageUrl } from "@/lib/image-url";
@@ -31,6 +31,14 @@ import { Avatar } from "@/components/ui/Avatar";
 import { parsePhone } from "@/lib/phone-codes";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { DURATION_OPTIONS, getPricingForDuration, formatDuration } from "@/lib/package-pricing";
+import {
+  LOCATION_TREE,
+  expandLocationCoverageToLegacySlugs,
+  getAncestorNodeSlugs,
+  getDescendantNodeSlugs,
+  getLocationNode,
+  type LocationNode,
+} from "@/lib/location-hierarchy";
 
 interface Profile {
   id: string;
@@ -54,6 +62,7 @@ interface Profile {
   session_count: number;
   is_approved: boolean;
   location_slugs: string[];
+  coverage_node_slugs?: string[];
 }
 
 interface PortfolioItem {
@@ -177,7 +186,10 @@ export function PhotographerDashboardClient({
   const [bio, setBio] = useState(profile.bio ?? "");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(profile.languages);
   const [selectedShootTypes, setSelectedShootTypes] = useState<string[]>(profile.shoot_types);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(profile.location_slugs);
+  const [selectedCoverageNodes, setSelectedCoverageNodes] = useState<string[]>(
+    profile.coverage_node_slugs?.length ? profile.coverage_node_slugs : profile.location_slugs
+  );
+  const selectedLocations = expandLocationCoverageToLegacySlugs(selectedCoverageNodes);
   const currentYear = new Date().getFullYear();
   // Prefer career_start_year; fall back to year inferred from legacy experience_years for the input's initial value.
   const initialCareerStartYear = profile.career_start_year != null
@@ -210,6 +222,79 @@ export function PhotographerDashboardClient({
     setter(arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item]);
   }
 
+  function isCoverageInherited(slug: string, selected: string[] = selectedCoverageNodes) {
+    return getAncestorNodeSlugs(slug).some((ancestor) => selected.includes(ancestor));
+  }
+
+  function toggleCoverageNode(slug: string, maxNodes: number) {
+    setSelectedCoverageNodes((current) => {
+      if (current.includes(slug)) return current.filter((item) => item !== slug);
+      if (isCoverageInherited(slug, current)) return current;
+      if (maxNodes !== Infinity && current.length >= maxNodes) return current;
+
+      const selectedNode = getLocationNode(slug);
+      const descendants = new Set(selectedNode ? getDescendantNodeSlugs(selectedNode) : []);
+      const ancestors = new Set(getAncestorNodeSlugs(slug));
+      return [...current.filter((item) => !descendants.has(item) && !ancestors.has(item)), slug];
+    });
+    setSaved(false);
+    setIsDirty(true);
+  }
+
+  function renderCoverageNode(node: LocationNode, maxNodes: number, depth = 0): ReactNode {
+    const isSelected = selectedCoverageNodes.includes(node.slug);
+    const isInherited = !isSelected && isCoverageInherited(node.slug);
+    const atLimit = selectedCoverageNodes.length >= maxNodes;
+    const isDisabled = !isSelected && !isInherited && atLimit;
+    const legacyCount = expandLocationCoverageToLegacySlugs([node.slug]).length;
+
+    return (
+      <div key={node.slug} className={depth === 0 ? "rounded-xl border border-warm-200 bg-white p-3" : ""}>
+        <button
+          type="button"
+          onClick={() => toggleCoverageNode(node.slug, maxNodes)}
+          disabled={isDisabled || isInherited}
+          className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
+            isSelected
+              ? "bg-primary-50 text-primary-700"
+              : isInherited
+                ? "bg-emerald-50 text-emerald-700"
+                : isDisabled
+                  ? "cursor-not-allowed opacity-40"
+                  : "hover:bg-warm-50"
+          }`}
+          style={{ paddingLeft: `${12 + depth * 14}px` }}
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+              isSelected ? "border-primary-500 bg-primary-500" : isInherited ? "border-emerald-500 bg-emerald-500" : "border-gray-300 bg-white"
+            }`}>
+              {(isSelected || isInherited) && (
+                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="truncate font-medium">{node.name}</span>
+            {node.type !== "city" && node.type !== "spot" && (
+              <span className="rounded-full bg-warm-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-gray-500">
+                {t(`locationNodeTypes.${node.type}`)}
+              </span>
+            )}
+          </span>
+          <span className="shrink-0 text-xs text-gray-400">
+            {isInherited ? t("locationIncluded") : legacyCount > 1 ? t("locationAreas", { count: legacyCount }) : ""}
+          </span>
+        </button>
+        {node.children && (
+          <div className={depth === 0 ? "mt-1 space-y-1" : "space-y-1"}>
+            {node.children.map((child) => renderCoverageNode(child, maxNodes, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // === Profile ===
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -230,6 +315,7 @@ export function PhotographerDashboardClient({
         shoot_types: selectedShootTypes,
         career_start_year: careerStartYear ? parseInt(careerStartYear) : null,
         locations: selectedLocations,
+        coverage_nodes: selectedCoverageNodes,
         custom_slug: profile.plan === "premium" ? customSlug : undefined,
       }),
     });
@@ -792,9 +878,9 @@ export function PhotographerDashboardClient({
                       {t("customUrlUpgrade", { plan: "Premium" })}
                     </p>
                   </div>
-                  <a href="/dashboard/subscriptions" className="shrink-0 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-bold text-white transition hover:shadow-md">
+                  <Link href="/dashboard/subscriptions" className="shrink-0 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-bold text-white transition hover:shadow-md">
                     {td("upgrade")}
-                  </a>
+                  </Link>
                 </div>
               </div>
             )}
@@ -873,36 +959,19 @@ export function PhotographerDashboardClient({
               <label className="block text-sm font-medium text-gray-700 mb-1">{t("locationsCover")}</label>
               {(() => {
                 const maxLocations = profile.plan === "premium" ? Infinity : profile.plan === "pro" ? 5 : 1;
-                const atLimit = selectedLocations.length >= maxLocations;
+                const atLimit = selectedCoverageNodes.length >= maxLocations;
                 return (
                   <>
                     <p className="text-xs text-gray-400 mb-2">
-                      {maxLocations === Infinity ? t("locationsUnlimited", { count: selectedLocations.length }) : t("locationsSelected", { count: selectedLocations.length, max: maxLocations })}
+                      {maxLocations === Infinity ? t("locationsUnlimited", { count: selectedCoverageNodes.length }) : t("locationsSelected", { count: selectedCoverageNodes.length, max: maxLocations })}
                       {maxLocations !== Infinity && atLimit && t("limitReached")}
-                      {maxLocations !== Infinity && <> &middot; <a href="/dashboard/subscriptions" className="text-primary-600 hover:underline">{t("upgradeForMore")}</a></>}
+                      {maxLocations !== Infinity && <> &middot; <Link href="/dashboard/subscriptions" className="text-primary-600 hover:underline">{t("upgradeForMore")}</Link></>}
+                      {selectedLocations.length > selectedCoverageNodes.length && (
+                        <> &middot; {t("locationsPublicAreas", { count: selectedLocations.length })}</>
+                      )}
                     </p>
-                    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                      {[...allLocations].sort((a, b) => a.name.localeCompare(b.name)).map((loc) => {
-                        const isSelected = selectedLocations.includes(loc.slug);
-                        const isDisabled = !isSelected && atLimit;
-                        return (
-                          <label
-                            key={loc.slug}
-                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition ${
-                              isSelected ? "bg-primary-50 text-primary-700" : isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:bg-warm-50"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => { if (!isDisabled) toggleItem(selectedLocations, loc.slug, setSelectedLocations); }}
-                              disabled={isDisabled}
-                              className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                            />
-                            {loc.name}
-                          </label>
-                        );
-                      })}
+                    <div className="grid gap-2 lg:grid-cols-2">
+                      {LOCATION_TREE.map((node) => renderCoverageNode(node, maxLocations))}
                     </div>
                   </>
                 );

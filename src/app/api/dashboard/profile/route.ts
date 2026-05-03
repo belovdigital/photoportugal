@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { revalidatePath } from "next/cache";
-import { detectContactInfo } from "@/lib/content-filter";
+import {
+  expandCoverageForLegacyLocations,
+  getPhotographerCoverageNodeSlugs,
+  savePhotographerCoverageNodeSlugs,
+} from "@/lib/photographer-location-coverage";
+import { normalizeCoverageNodeSlugs } from "@/lib/location-hierarchy";
 
 export async function GET(req: NextRequest) {
   const user = await authFromRequest(req);
@@ -34,7 +38,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    return NextResponse.json(profile);
+    const fallbackLocations = Array.isArray(profile.locations) ? profile.locations as string[] : [];
+    const coverageNodes = await getPhotographerCoverageNodeSlugs(profile.id as string, fallbackLocations);
+
+    return NextResponse.json({ ...profile, coverage_nodes: coverageNodes });
   } catch (error) {
     console.error("[dashboard/profile] GET error:", error);
     try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/profile", method: req.method, statusCode: 500 }); } catch {}
@@ -63,6 +70,7 @@ export async function PUT(req: NextRequest) {
       experience_years,
       career_start_year,
       locations: locationSlugs,
+      coverage_nodes: coverageNodeSlugs,
       custom_slug,
     } = body;
 
@@ -204,13 +212,26 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Update locations (many-to-many) with plan-based limits
-    if (Array.isArray(locationSlugs)) {
+    // Update hierarchical coverage with plan-based limits. Then expand it
+    // into legacy photographer_locations so the public site keeps working
+    // during the migration.
+    if (Array.isArray(coverageNodeSlugs) || Array.isArray(locationSlugs)) {
       const maxLocations = profile.plan === "premium" ? Infinity : profile.plan === "pro" ? 5 : 1;
-      const limitedSlugs = locationSlugs.slice(0, maxLocations === Infinity ? locationSlugs.length : maxLocations);
+      const requestedCoverageNodes = Array.isArray(coverageNodeSlugs)
+        ? normalizeCoverageNodeSlugs(coverageNodeSlugs)
+        : normalizeCoverageNodeSlugs(locationSlugs || []);
+      const limitedCoverageNodes = requestedCoverageNodes.slice(
+        0,
+        maxLocations === Infinity ? requestedCoverageNodes.length : maxLocations
+      );
+      const expandedLegacySlugs = Array.isArray(coverageNodeSlugs)
+        ? expandCoverageForLegacyLocations(limitedCoverageNodes)
+        : (locationSlugs || []).slice(0, maxLocations === Infinity ? locationSlugs.length : maxLocations);
+
+      await savePhotographerCoverageNodeSlugs(profile.id, limitedCoverageNodes);
 
       await query("DELETE FROM photographer_locations WHERE photographer_id = $1", [profile.id]);
-      for (const slug of limitedSlugs) {
+      for (const slug of expandedLegacySlugs) {
         await query(
           "INSERT INTO photographer_locations (photographer_id, location_slug) VALUES ($1, $2) ON CONFLICT DO NOTHING",
           [profile.id, slug]

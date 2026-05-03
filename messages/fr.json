@@ -2368,6 +2368,14 @@
     "locationsUnlimited": "{count}/illimité lieux sélectionnés",
     "limitReached": " (limite atteinte)",
     "upgradeForMore": "Mettre à niveau pour plus",
+    "locationIncluded": "inclus",
+    "locationAreas": "{count} zones",
+    "locationsPublicAreas": "Couvre {count} zones publiques",
+    "locationNodeTypes": {
+      "region": "Région",
+      "group": "Groupe d'îles",
+      "island": "Île"
+    },
     "yearsOfExperience": "Années d'expérience",
     "careerStartYear": "Année de début en photographie",
     "careerStartYearHint": "Nous calculerons automatiquement vos années d'expérience.",
