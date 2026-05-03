@@ -909,8 +909,8 @@ export default async function BlogPostPage({ params }: PageProps) {
             {conversion.photoStrip.length > 0 && (
               <BlogPhotoStrip
                 photos={conversion.photoStrip}
-                heading={mentionedLocations.length > 0
-                  ? `Real shots from ${mentionedLocations[0].name}`
+                heading={primaryLocation
+                  ? `Real shots from ${primaryLocation.name}`
                   : "Real shots from our photographers"}
               />
             )}
@@ -925,8 +925,8 @@ export default async function BlogPostPage({ params }: PageProps) {
             {conversion.breakouts[0] && (
               <BlogPhotographerBreakout
                 data={conversion.breakouts[0]}
-                introLabel={mentionedLocations.length > 0 && conversion.breakouts[0].covers_mentioned_location
-                  ? `Featured in ${mentionedLocations[0].name}`
+                introLabel={primaryLocation && conversion.breakouts[0].covers_mentioned_location
+                  ? `Featured in ${primaryLocation.name}`
                   : "Featured photographer"}
                 bookCta="See all packages"
                 popularLabel="Popular"
@@ -971,8 +971,8 @@ export default async function BlogPostPage({ params }: PageProps) {
           {/* Inline CTA */}
           <div className="mt-10 rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50/50 to-warm-50 p-6 sm:p-8 text-center">
             <h3 className="font-display text-xl font-bold text-gray-900 sm:text-2xl">
-              {mentionedLocations.length > 0
-                ? t("blogCta.titleLocation", { location: mentionedLocations[0].name })
+              {primaryLocation
+                ? t("blogCta.titleLocation", { location: primaryLocation.name })
                 : t("blogCta.title")}
             </h3>
             <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
@@ -980,7 +980,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             </p>
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
-                href={mentionedLocations.length > 0 ? `/photographers?location=${mentionedLocations[0].slug}` : "/photographers"}
+                href={primaryLocation ? `/photographers?location=${primaryLocation.slug}` : "/photographers"}
                 className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-primary-700"
               >
                 {t("blogCta.browsePhotographers")}
@@ -1057,8 +1057,8 @@ export default async function BlogPostPage({ params }: PageProps) {
         <section className="border-t border-warm-200 bg-warm-50/50">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
             <h3 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-              {mentionedLocations.length > 0
-                ? t("relatedPhotographersInLocation", { location: mentionedLocations[0].name })
+              {primaryLocation
+                ? t("relatedPhotographersInLocation", { location: primaryLocation.name })
                 : t("relatedPhotographersGeneric")}
             </h3>
             <p className="mt-2 text-sm text-gray-500">
@@ -1127,8 +1127,8 @@ export default async function BlogPostPage({ params }: PageProps) {
         <section className="border-t border-warm-200 bg-warm-50/50">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
             <h3 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-              {mentionedLocations.length > 0
-                ? t("relatedPhotographersInLocation", { location: mentionedLocations[0].name })
+              {primaryLocation
+                ? t("relatedPhotographersInLocation", { location: primaryLocation.name })
                 : t("relatedPhotographersGeneric")}
             </h3>
             <p className="mt-2 text-sm text-gray-500">
@@ -1239,12 +1239,12 @@ export default async function BlogPostPage({ params }: PageProps) {
       {(conversion.endCapPhotographers.length > 0 || conversion.breakouts.length > 0) && (
         <BlogStickyMobileBar
           count={Math.max(conversion.endCapPhotographers.length, conversion.breakouts.length, relatedPackages.length)}
-          primaryHref={mentionedLocations.length > 0
-            ? `/photographers?location=${mentionedLocations[0].slug}`
+          primaryHref={primaryLocation
+            ? `/photographers?location=${primaryLocation.slug}`
             : "/photographers"}
           primaryLabel="Browse"
-          contextLabel={mentionedLocations.length > 0
-            ? `in ${mentionedLocations[0].name} ready to shoot`
+          contextLabel={primaryLocation
+            ? `in ${primaryLocation.name} ready to shoot`
             : "ready to book"}
         />
       )}
