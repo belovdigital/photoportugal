@@ -293,7 +293,6 @@ export function PhotographerDashboardClient({
 
   function renderCoverageNode(node: LocationNode, maxNodes: number, depth = 0): ReactNode {
     const coverageState = getCoverageState(node);
-    const isSelected = selectedCoverageNodes.includes(node.slug);
     const isCovered = coverageState === "checked";
     const isPartial = coverageState === "partial";
     const atLimit = selectedCoverageNodes.length >= maxNodes;
@@ -307,21 +306,17 @@ export function PhotographerDashboardClient({
           onClick={() => toggleCoverageNode(node.slug, maxNodes)}
           disabled={isDisabled}
           className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
-            isSelected
-              ? "bg-primary-50 text-primary-700"
-              : isCovered
-                ? "bg-emerald-50 text-emerald-700"
-                : isPartial
-                  ? "bg-amber-50 text-amber-700"
-                : isDisabled
-                  ? "cursor-not-allowed opacity-40"
-                  : "hover:bg-warm-50"
+            isCovered
+              ? "bg-green-50 text-gray-900"
+              : isDisabled
+                ? "cursor-not-allowed opacity-40"
+                : "text-gray-900 hover:bg-warm-50"
           }`}
           style={{ paddingLeft: `${12 + depth * 14}px` }}
         >
           <span className="flex min-w-0 items-center gap-2">
             <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-              isSelected ? "border-primary-500 bg-primary-500" : isCovered ? "border-emerald-500 bg-emerald-500" : isPartial ? "border-amber-500 bg-amber-500" : "border-gray-300 bg-white"
+              isCovered ? "border-green-600 bg-green-600" : isPartial ? "border-green-500 bg-white" : "border-gray-300 bg-white"
             }`}>
               {isCovered && (
                 <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -329,7 +324,7 @@ export function PhotographerDashboardClient({
                 </svg>
               )}
               {isPartial && (
-                <span className="h-0.5 w-2 rounded-full bg-white" />
+                <span className="h-0.5 w-2 rounded-full bg-green-600" />
               )}
             </span>
             <span className="truncate font-medium">{node.name}</span>
@@ -340,7 +335,7 @@ export function PhotographerDashboardClient({
             )}
           </span>
           <span className="shrink-0 text-xs text-gray-400">
-            {isCovered && !isSelected ? t("locationIncluded") : legacyCount > 1 ? t("locationAreas", { count: legacyCount }) : ""}
+            {legacyCount > 1 ? t("locationAreas", { count: legacyCount }) : ""}
           </span>
         </button>
         {node.children && (
@@ -771,7 +766,7 @@ export function PhotographerDashboardClient({
   ];
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-7xl">
       {!standalone && (
         <>
           {/* Header */}

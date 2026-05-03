@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Link } from "@/i18n/navigation";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { queryOne, query } from "@/lib/db";
@@ -25,6 +24,7 @@ import { StickyBookBar } from "@/components/ui/StickyBookBar";
 import { MobilePhotographerHero } from "@/components/photographers/MobilePhotographerHero";
 import { flattenLocationNodes, getAncestorNodeSlugs, getLocationNode, type LocationNode } from "@/lib/location-hierarchy";
 import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
+import { ExpandableChipList } from "@/components/ui/ExpandableChipList";
 
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
@@ -346,9 +346,24 @@ export default async function PhotographerProfilePage({
         ...coverageGroups[0].items.map((item) => ({ key: item.slug, name: item.name, hrefSlug: item.hrefSlug })),
       ]
     : coverageGroups.map((group) => ({ key: group.regionSlug, name: group.regionName, hrefSlug: group.hrefSlug }));
-  const visibleCoverageChips = coverageChips.slice(0, 4);
-  const hiddenCoverageChipCount = Math.max(0, coverageChips.length - visibleCoverageChips.length);
+  const coverageChipItems = coverageChips.map((chip) => ({
+    key: chip.key,
+    label: chip.name,
+    href: chip.hrefSlug ? `/locations/${chip.hrefSlug}` : undefined,
+  }));
   const mobileCoverageLabel = formatMobileCoverageLabel(coverageGroups);
+  const shootTypeChipItems = (photographer.shoot_types || []).map((type: string) => {
+    const matched = allShootTypes.find((st) =>
+      (st.photographerShootTypeNames || [st.name]).includes(type)
+    );
+    return {
+      key: type,
+      label: localizeShootType(type, locale),
+      href: matched ? `/photoshoots/${matched.slug}` : undefined,
+    };
+  });
+  const hasExperience = photographer.experience_years > 0;
+  const hasLanguages = photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "";
   let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string | null; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
   const portfolioItems = (photographer as { portfolioItems?: { url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
@@ -654,22 +669,24 @@ export default async function PhotographerProfilePage({
 
       {/* Desktop hero — original avatar+text layout. Hidden on mobile via
           `hidden lg:block` since MobilePhotographerHero owns that surface. */}
-      <div className="hidden lg:block bg-warm-50 pt-8 pb-6">
+      <div className="hidden lg:block bg-warm-50 pt-6 pb-4">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
             {/* Avatar */}
             <div className="relative shrink-0">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full ring-4 ring-white bg-primary-100 text-3xl font-bold text-primary-600 sm:h-28 sm:w-28 overflow-hidden shadow-md">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full ring-4 ring-white bg-primary-100 text-3xl font-bold text-primary-600 overflow-hidden shadow-md">
                 {photographer.avatar_url ? (
                   <OptimizedImage src={photographer.avatar_url} alt={normalizeName(photographer.name)} width={400} priority className="h-full w-full" />
                 ) : (
                   normalizeName(photographer.name).charAt(0)
                 )}
               </div>
+              <div className="mt-2 flex justify-center">
+                <ActiveBadge lastSeenAt={photographer.last_seen_at} size="sm" />
+              </div>
             </div>
 
             <div className="min-w-0 flex-1">
-              {/* Name + verified + active */}
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
                   {normalizeName(photographer.name)}
@@ -687,15 +704,12 @@ export default async function PhotographerProfilePage({
                 {photographer.is_founding && (
                   <span className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2.5 py-0.5 text-xs font-bold text-white">{tc("foundingPhotographer")}</span>
                 )}
-                <ActiveBadge lastSeenAt={photographer.last_seen_at} size="md" />
               </div>
 
-              {/* Tagline */}
               {photographer.tagline && (
                 <p className="mt-1 max-w-3xl text-sm leading-relaxed text-gray-500">{photographer.tagline}</p>
               )}
 
-              {/* Rating */}
               {photographer.review_count > 0 && (
                 <a href="#reviews" className="mt-1.5 inline-flex items-center gap-1 text-sm transition hover:text-primary-600">
                   <span className="flex items-center gap-0.5 text-amber-500">
@@ -710,91 +724,58 @@ export default async function PhotographerProfilePage({
                 </a>
               )}
 
-              {/* Location coverage */}
               {coverageGroups.length > 0 && (
-                <div className="mt-3 max-w-2xl rounded-2xl border border-warm-200 bg-white/80 px-3.5 py-3 shadow-sm">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21s7-4.35 7-11a7 7 0 10-14 0c0 6.65 7 11 7 11z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" /></svg>
-                    </span>
-                    <span>{coverageTitle}</span>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {visibleCoverageChips.map((chip) => {
-                      const className = "inline-flex items-center rounded-full border border-warm-200 bg-warm-50 px-2.5 py-1 text-xs font-medium text-gray-600 transition hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700";
-                      return chip.hrefSlug ? (
-                        <Link key={chip.key} href={`/locations/${chip.hrefSlug}`} className={className}>
-                          {chip.name}
-                        </Link>
-                      ) : (
-                        <span key={chip.key} className={className}>
-                          {chip.name}
-                        </span>
-                      );
-                    })}
-                    {hiddenCoverageChipCount > 0 && (
-                      <span className="inline-flex items-center rounded-full border border-warm-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-500">
-                        {t("coverageMore", { count: hiddenCoverageChipCount })}
+                <div className="mt-2 max-w-3xl rounded-xl border border-warm-200 bg-white/75 px-3 py-2 shadow-sm">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-gray-900">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21s7-4.35 7-11a7 7 0 10-14 0c0 6.65 7 11 7 11z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" /></svg>
                       </span>
-                    )}
+                      <span>{coverageTitle}</span>
+                    </div>
+                    <ExpandableChipList
+                      items={coverageChipItems}
+                      visibleCount={4}
+                      moreLabel={(count) => t("coverageMore", { count })}
+                      className="min-w-0 flex-1"
+                      chipClassName="border-warm-200 bg-warm-50 text-gray-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                      moreClassName="border-warm-200 bg-white text-gray-500 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                    />
                   </div>
                 </div>
               )}
 
-              {/* Experience · Languages · Response time — one line */}
-              <p className="mt-2 flex flex-wrap items-center gap-x-1.5 text-sm text-gray-500">
-                {photographer.experience_years > 0 && (
-                  <><span>{tc("yrsExperience", { years: photographer.experience_years })}</span><span className="text-gray-300">·</span></>
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500">
+                {hasExperience && (
+                  <span>{tc("yrsExperience", { years: photographer.experience_years })}</span>
                 )}
-                {photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "" && (
+                {hasExperience && hasLanguages && <span className="text-gray-300">·</span>}
+                {hasLanguages && (
                   <span>{localizeLanguageNames(photographer.languages, locale).join(", ")}</span>
                 )}
-              </p>
-              <div className="mt-1.5 hidden sm:block">
-                <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
+                {(hasExperience || hasLanguages) && <span className="text-gray-300">·</span>}
+                <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} compact />
               </div>
 
-              {/* Specialties — clickable pills routing to the polished
-                  /photoshoots/[type] index. Each pill resolves the DB
-                  label (e.g. "Solo Portrait") back to the canonical
-                  shoot-type slug ("solo") via the alias-aware lookup
-                  on shoot-types-data. Falls back to a plain span when
-                  the label has no /photoshoots/[type] page. */}
-              {photographer.shoot_types && photographer.shoot_types.length > 0 && (
-                <div className="mt-3 border-t border-warm-200 pt-3 flex flex-wrap gap-1.5">
-                  {photographer.shoot_types.map((type: string) => {
-                    const matched = allShootTypes.find((st) =>
-                      (st.photographerShootTypeNames || [st.name]).includes(type)
-                    );
-                    const className = "rounded-full border border-primary-200 px-2.5 py-1.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50";
-                    if (matched) {
-                      return (
-                        <Link key={type} href={`/photoshoots/${matched.slug}`} className={className}>
-                          {localizeShootType(type, locale)}
-                        </Link>
-                      );
-                    }
-                    return (
-                      <span key={type} className="rounded-full border border-primary-200 px-2.5 py-1.5 text-xs font-medium text-primary-600">
-                        {localizeShootType(type, locale)}
-                      </span>
-                    );
-                  })}
+              {shootTypeChipItems.length > 0 && (
+                <div className="mt-2 border-t border-warm-200 pt-2">
+                  <ExpandableChipList
+                    items={shootTypeChipItems}
+                    visibleCount={5}
+                    moreLabel={(count) => t("coverageMore", { count })}
+                    chipClassName="border-primary-200 bg-white/60 text-primary-600 hover:bg-primary-50"
+                    moreClassName="border-primary-200 bg-white text-primary-600 hover:bg-primary-50"
+                  />
                 </div>
               )}
             </div>
 
-            {/* Actions — top right on desktop */}
             {result.type === "db" && (
               <div id="message" className="flex items-center gap-3 shrink-0 sm:ml-auto sm:self-center">
                 <WishlistButton photographerId={photographer.id} size="md" className="border border-warm-200 shadow-sm" />
                 <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} />
               </div>
             )}
-            {/* Response time — mobile only, after actions */}
-            <div className="sm:hidden">
-              <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
-            </div>
           </div>
         </div>
       </div>
