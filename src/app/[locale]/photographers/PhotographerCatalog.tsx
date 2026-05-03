@@ -56,6 +56,64 @@ interface Props {
   initialShootType?: string;
 }
 
+type SortKey = "featured" | "rating" | "reviews" | "newest" | "fastest";
+type BucketFlag = "rating45" | "activeWeek" | "fastReply" | "founding";
+
+const SORT_KEYS: SortKey[] = ["featured", "rating", "reviews", "newest", "fastest"];
+
+function splitParam(value: string | null | undefined): string[] {
+  if (!value) return [];
+  return value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function uniqueValues(values: string[]): string[] {
+  return Array.from(new Set(values));
+}
+
+function resolveShootTypeParam(value: string, shootTypes: string[]): string | null {
+  const normalized = value.toLowerCase();
+  return shootTypes.find((type) => type === value)
+    || shootTypes.find((type) => type.toLowerCase().replace(/\s+/g, "-") === normalized)
+    || shootTypes.find((type) => type.toLowerCase().startsWith(normalized))
+    || null;
+}
+
+function bucketStateFor(key: string | null): { flags: Set<BucketFlag>; sortBy: SortKey; activeBucket: string | null } {
+  const flags = new Set<BucketFlag>();
+  let sortBy: SortKey = "featured";
+  let activeBucket: string | null = null;
+
+  switch (key) {
+    case "popular":
+      sortBy = "reviews";
+      activeBucket = key;
+      break;
+    case "topRated":
+      sortBy = "rating";
+      flags.add("rating45");
+      activeBucket = key;
+      break;
+    case "new":
+      sortBy = "newest";
+      activeBucket = key;
+      break;
+    case "founding":
+      flags.add("founding");
+      activeBucket = key;
+      break;
+    case "fast":
+      sortBy = "fastest";
+      flags.add("fastReply");
+      activeBucket = key;
+      break;
+  }
+
+  return { flags, sortBy, activeBucket };
+}
+
 export function PhotographerCatalog({
   photographers,
   quotes = {},
@@ -66,13 +124,11 @@ export function PhotographerCatalog({
 }: Props) {
   const t = useTranslations("photographers");
   const locale = useLocale();
-  const [locationFilters, setLocationFilters] = useState<string[]>(initialLocation ? [initialLocation] : []);
+  const [locationFilters, setLocationFilters] = useState<string[]>(() => uniqueValues(splitParam(initialLocation)));
   const [locationSearch, setLocationSearch] = useState("");
-  const [shootTypeFilters, setShootTypeFilters] = useState<string[]>(initialShootType ? [initialShootType] : []);
+  const [shootTypeFilters, setShootTypeFilters] = useState<string[]>(() => uniqueValues(splitParam(initialShootType)));
   const [languageFilter, setLanguageFilter] = useState("");
-  type SortKey = "featured" | "rating" | "reviews" | "newest" | "fastest";
   const [sortBy, setSortBy] = useState<SortKey>("featured");
-  type BucketFlag = "rating45" | "activeWeek" | "fastReply" | "founding";
   const [bucketFlags, setBucketFlags] = useState<Set<BucketFlag>>(new Set());
   const [activeBucket, setActiveBucket] = useState<string | null>(null);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -81,10 +137,68 @@ export function PhotographerCatalog({
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const hasReadUrl = useRef(false);
+  const skipNextUrlWrite = useRef(true);
 
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus();
   }, [searchOpen]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const locationsFromUrl = uniqueValues(splitParam(params.get("location")));
+    const shootTypesFromUrl = uniqueValues([
+      ...splitParam(params.get("shootType")),
+      ...splitParam(params.get("shoot")),
+      ...splitParam(params.get("shoot_type")),
+    ])
+      .map((value) => resolveShootTypeParam(value, shootTypes))
+      .filter((value): value is string => Boolean(value));
+    const nextSort = params.get("sort");
+    const bucket = bucketStateFor(params.get("bucket"));
+
+    setLocationFilters(locationsFromUrl);
+    setShootTypeFilters(uniqueValues(shootTypesFromUrl));
+    setLanguageFilter(params.get("language") || "");
+    setSearchQuery(params.get("q") || "");
+    setActiveBucket(bucket.activeBucket);
+    setBucketFlags(bucket.flags);
+    setSortBy(bucket.activeBucket ? bucket.sortBy : SORT_KEYS.includes(nextSort as SortKey) ? (nextSort as SortKey) : "featured");
+
+    hasReadUrl.current = true;
+  }, [shootTypes]);
+
+  useEffect(() => {
+    if (!hasReadUrl.current) return;
+    if (skipNextUrlWrite.current) {
+      skipNextUrlWrite.current = false;
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.delete("location");
+    params.delete("shoot");
+    params.delete("shootType");
+    params.delete("shoot_type");
+    params.delete("language");
+    params.delete("sort");
+    params.delete("bucket");
+    params.delete("q");
+
+    if (locationFilters.length > 0) params.set("location", locationFilters.join(","));
+    if (shootTypeFilters.length > 0) params.set("shootType", shootTypeFilters.join(","));
+    if (languageFilter) params.set("language", languageFilter);
+    if (activeBucket) params.set("bucket", activeBucket);
+    if (!activeBucket && sortBy !== "featured") params.set("sort", sortBy);
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+  }, [locationFilters, shootTypeFilters, languageFilter, sortBy, activeBucket, searchQuery]);
 
   // Accent-insensitive normalization: á/ã/ç/é/ü... → a/a/c/e/u (works for Portuguese, German, French, etc.)
   const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -97,17 +211,9 @@ export function PhotographerCatalog({
       return;
     }
     setActiveBucket(key);
-    const flags = new Set<BucketFlag>();
-    let sort: SortKey = "featured";
-    switch (key) {
-      case "popular": sort = "reviews"; break;
-      case "topRated": sort = "rating"; flags.add("rating45"); break;
-      case "new": sort = "newest"; break;
-      case "founding": flags.add("founding"); break;
-      case "fast": sort = "fastest"; flags.add("fastReply"); break;
-    }
-    setBucketFlags(flags);
-    setSortBy(sort);
+    const bucket = bucketStateFor(key);
+    setBucketFlags(bucket.flags);
+    setSortBy(bucket.sortBy);
   }
 
   function handleSortChange(next: SortKey) {
@@ -289,7 +395,7 @@ export function PhotographerCatalog({
               onChange={(e) => setSearchQuery(e.target.value)}
               onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
               placeholder={t("filters.searchPlaceholder")}
-              className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+              className="flex-1 min-w-0 bg-transparent text-base text-gray-700 placeholder:text-gray-400 outline-none"
             />
             {searchQuery && (
               <button
@@ -352,8 +458,8 @@ export function PhotographerCatalog({
           </button>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="shrink-0 rounded-full border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 outline-none"
+            onChange={(e) => handleSortChange(e.target.value as SortKey)}
+            className="shrink-0 rounded-full border border-gray-300 bg-white px-3 py-2 text-base font-medium text-gray-700 outline-none"
           >
             <option value="featured">{t("filters.sortFeatured")}</option>
             <option value="rating">{t("filters.sortTopRated")}</option>
@@ -493,7 +599,7 @@ export function PhotographerCatalog({
                       value={locationSearch}
                       onChange={(e) => setLocationSearch(e.target.value)}
                       placeholder={t("filters.searchLocations")}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-400"
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-base outline-none focus:border-primary-400 md:text-sm"
                       autoFocus
                     />
                   </div>
@@ -581,7 +687,7 @@ export function PhotographerCatalog({
                     <select
                       value={languageFilter}
                       onChange={(e) => setLanguageFilter(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-primary-400"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-base text-gray-700 outline-none focus:border-primary-400 md:text-sm"
                     >
                       <option value="">{t("filters.anyLanguage")}</option>
                       {allLanguages.map((l) => (
@@ -608,7 +714,7 @@ export function PhotographerCatalog({
           <select
             value={sortBy}
             onChange={(e) => handleSortChange(e.target.value as SortKey)}
-            className="rounded-full border border-warm-200 bg-white px-3 py-1 text-xs font-medium text-gray-700 outline-none"
+            className="rounded-full border border-warm-200 bg-white px-3 py-1 text-base font-medium text-gray-700 outline-none md:text-xs"
           >
             <option value="featured">{t("filters.sortFeatured")}</option>
             <option value="rating">{t("filters.sortTopRated")}</option>
@@ -663,7 +769,7 @@ export function PhotographerCatalog({
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Escape") setSearchOpen(false); if (e.key === "Enter") setSearchOpen(false); }}
                       placeholder={t("filters.searchPlaceholder")}
-                      className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                      className="flex-1 min-w-0 bg-transparent text-base text-gray-700 placeholder:text-gray-400 outline-none md:text-sm"
                     />
                     {searchQuery && (
                       <button
@@ -764,7 +870,7 @@ export function PhotographerCatalog({
                     value={locationSearch}
                     onChange={(e) => setLocationSearch(e.target.value)}
                     placeholder={t("filters.searchLocations")}
-                    className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-primary-400"
+                    className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-base outline-none focus:border-primary-400"
                   />
                   <button
                     onClick={() => { setLocationFilters([]); setLocationSearch(""); }}
@@ -820,7 +926,7 @@ export function PhotographerCatalog({
                     <select
                       value={languageFilter}
                       onChange={(e) => setLanguageFilter(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-700 outline-none"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base text-gray-700 outline-none"
                     >
                       <option value="">{t("filters.anyLanguage")}</option>
                       {allLanguages.map((l) => (
