@@ -38,6 +38,11 @@ function fmtAmount(amountCents: number | null | undefined, currency?: string | n
   return `${symbol}${(amountCents / 100).toFixed(2)}`;
 }
 
+function paymentAmountFromStripe(amountCents: number | null | undefined, fallbackEuros: number | null | undefined): number {
+  if (typeof amountCents === "number") return amountCents / 100;
+  return Number(fallbackEuros || 0);
+}
+
 function safeTelegramText(value: unknown): string {
   return String(value ?? "").replace(/[<>]/g, "");
 }
@@ -308,6 +313,9 @@ export async function POST(req: NextRequest) {
         } else if ((checkoutType === "booking" || bookingId) && checkoutSession.payment_intent) {
           // Booking payment completed
           const paymentSummary = await getCheckoutPaymentSummary(checkoutSession as unknown as Record<string, unknown>);
+          const paidAmountLabel = typeof paymentSummary.amountTotal === "number"
+            ? fmtAmount(paymentSummary.amountTotal, paymentSummary.currency)
+            : null;
           await queryOne(
             `UPDATE bookings SET stripe_payment_intent_id = $1, payment_status = 'paid'
              WHERE id = $2 RETURNING id`,
@@ -347,10 +355,11 @@ export async function POST(req: NextRequest) {
             if (bookingForMsg) {
               const firstName = bookingForMsg.client_name?.split(" ")[0] || "Client";
               const phoneNote = bookingForMsg.client_phone ? `\n\nClient phone: ${bookingForMsg.client_phone}` : "";
+              const displayAmount = paidAmountLabel || `€${Number(bookingForMsg.total_price)}`;
               await queryOne(
                 `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE) RETURNING id`,
                 [bookingId, bookingForMsg.client_id,
-                  `✅ Payment of €${Number(bookingForMsg.total_price)} received from ${firstName}.${phoneNote}`]
+                  `✅ Payment of ${displayAmount} received from ${firstName}.${phoneNote}`]
               );
             }
           } catch (msgErr) {
@@ -365,8 +374,9 @@ export async function POST(req: NextRequest) {
               [bookingId]
             );
             if (gclidBooking?.gclid) {
+              const conversionValue = paymentAmountFromStripe(paymentSummary.amountTotal, gclidBooking.total_price);
               import("@/lib/google-ads-conversions").then(({ uploadPaymentCompletedConversion }) => {
-                uploadPaymentCompletedConversion(gclidBooking.gclid!, Number(gclidBooking.total_price || 0), {
+                uploadPaymentCompletedConversion(gclidBooking.gclid!, conversionValue, {
                   email: gclidBooking.client_email,
                   phone: gclidBooking.client_phone,
                 });
@@ -394,19 +404,21 @@ export async function POST(req: NextRequest) {
               [bookingId]
             );
             if (bookingInfo) {
+              const paidAmount = paymentAmountFromStripe(paymentSummary.amountTotal, bookingInfo.total_price);
+              const displayPaidAmount = paidAmountLabel || `€${Number(bookingInfo.total_price)}`;
               sendPaymentReceivedToPhotographer(
                 bookingInfo.photographer_email,
                 bookingInfo.photographer_name,
                 bookingInfo.client_name,
                 bookingId!,
-                bookingInfo.total_price,
+                paidAmount,
                 bookingInfo.client_phone
               );
               sendPaymentConfirmedToClient(
                 bookingInfo.client_email,
                 bookingInfo.client_name,
                 bookingInfo.photographer_name,
-                bookingInfo.total_price
+                paidAmount
               );
               // Admin notification
               try {
@@ -415,10 +427,10 @@ export async function POST(req: NextRequest) {
                 for (const email of adminEmails) {
                   sendEmail(
                     email,
-                    `Payment received — €${Number(bookingInfo.total_price)} from ${bookingInfo.client_name}`,
+                    `Payment received — ${displayPaidAmount} from ${bookingInfo.client_name}`,
                     `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
                       <h2 style="color: #16a34a;">Payment Received</h2>
-                      <p><strong>${bookingInfo.client_name}</strong> paid <strong>€${Number(bookingInfo.total_price)}</strong> for a booking with <strong>${bookingInfo.photographer_name}</strong>.</p>
+                      <p><strong>${bookingInfo.client_name}</strong> paid <strong>${displayPaidAmount}</strong> for a booking with <strong>${bookingInfo.photographer_name}</strong>.</p>
                       <p><a href="https://photoportugal.com/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View in Admin</a></p>
                     </div>`
                   );
@@ -427,10 +439,10 @@ export async function POST(req: NextRequest) {
 
               // WhatsApp/SMS to all admin phones
               sendAdminSMS(
-                `Photo Portugal: €${Number(bookingInfo.total_price)} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
+                `Photo Portugal: ${displayPaidAmount} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
               );
               import("@/lib/telegram").then(({ sendTelegram }) => {
-                sendTelegram(`💰 <b>Payment Received!</b>\n\n<b>Amount:</b> €${Number(bookingInfo!.total_price)}\n<b>Client:</b> ${bookingInfo!.client_name}\n<b>Photographer:</b> ${bookingInfo!.photographer_name}`, "bookings");
+                sendTelegram(`💰 <b>Payment Received!</b>\n\n<b>Amount:</b> ${displayPaidAmount}\n<b>Client:</b> ${bookingInfo!.client_name}\n<b>Photographer:</b> ${bookingInfo!.photographer_name}`, "bookings");
               }).catch((err) => console.error("[webhook] telegram payment error:", err));
 
               Promise.resolve(paymentSummary).then((discount) => {
@@ -469,7 +481,7 @@ export async function POST(req: NextRequest) {
                   if (smsPrefs?.sms_bookings !== false) {
                     sendSMS(
                       photographerUser.phone,
-                      `Photo Portugal: Payment of €${Number(bookingInfo.total_price)} received for your booking with ${bookingInfo.client_name}. Log in to view details.`
+                      `Photo Portugal: Payment of ${displayPaidAmount} received for your booking with ${bookingInfo.client_name}. Log in to view details.`
                     ).catch(err => console.error("[sms] error:", err));
                   }
                 }
@@ -480,7 +492,7 @@ export async function POST(req: NextRequest) {
                     m.sendPushNotification(
                       photographerUser.id,
                       "Payment received",
-                      `€${Number(bookingInfo.total_price)} from ${bookingInfo.client_name}`,
+                      `${displayPaidAmount} from ${bookingInfo.client_name}`,
                       { type: "booking", bookingId: bookingId || "" }
                     )
                   ).catch(err => console.error("[webhook] payment push error:", err));
@@ -524,7 +536,7 @@ export async function POST(req: NextRequest) {
                   import("@/lib/notify-photographer").then(m =>
                     m.notifyPhotographerViaTelegram(
                       photographerProfileId.photographer_id,
-                      `Payment received from ${clientFirst}!\n\nAmount: \u20ac${Number(bookingInfo.total_price)}\n\nView: https://photoportugal.com/dashboard/bookings`
+                      `Payment received from ${clientFirst}!\n\nAmount: ${displayPaidAmount}\n\nView: https://photoportugal.com/dashboard/bookings`
                     )
                   ).catch((err) => console.error("[webhook] telegram photographer payment error:", err));
                 }

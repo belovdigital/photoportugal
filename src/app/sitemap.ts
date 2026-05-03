@@ -3,27 +3,35 @@ import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { photoSpots, spotSlug } from "@/lib/photo-spots-data";
 import { query } from "@/lib/db";
+import { localizedUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
-const BASE = "https://photoportugal.com";
 const LOCALES = ["en", "pt", "de", "es", "fr"] as const;
+const HREFLANGS: Record<(typeof LOCALES)[number], string[]> = {
+  en: ["en-GB", "en-US"],
+  pt: ["pt-PT"],
+  de: ["de-DE"],
+  es: ["es-ES"],
+  fr: ["fr-FR"],
+};
+const CONTENT_LAST_MODIFIED = new Date("2026-05-03T00:00:00.000Z");
 
 function urlFor(path: string, locale: string): string {
-  return locale === "en" ? `${BASE}${path}` : `${BASE}/${locale}${path}`;
+  const safeLocale = LOCALES.includes(locale as (typeof LOCALES)[number])
+    ? locale as (typeof LOCALES)[number]
+    : "en";
+  return localizedUrl(path || "/", safeLocale);
 }
 
 function localized(path: string, opts: Omit<MetadataRoute.Sitemap[0], "url">): MetadataRoute.Sitemap {
-  const languages: Record<string, string> = {
-    "en-GB": urlFor(path, "en"),
-    "en-US": urlFor(path, "en"),
-    "pt-PT": urlFor(path, "pt"),
-    "de-DE": urlFor(path, "de"),
-    "es-ES": urlFor(path, "es"),
-    "fr-FR": urlFor(path, "fr"),
-    "x-default": urlFor(path, "en"),
-  };
+  const languages: Record<string, string> = { "x-default": urlFor(path, "en") };
+  for (const locale of LOCALES) {
+    for (const hreflang of HREFLANGS[locale]) {
+      languages[hreflang] = urlFor(path, locale);
+    }
+  }
   return LOCALES.map((locale) => ({
     ...opts,
     url: urlFor(path, locale),
@@ -32,7 +40,7 @@ function localized(path: string, opts: Omit<MetadataRoute.Sitemap[0], "url">): M
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+  const contentLastModified = CONTENT_LAST_MODIFIED;
 
   const staticPages = [
     { path: "", changeFrequency: "weekly" as const, priority: 1 },
@@ -50,10 +58,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/find-photographer", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/contact", changeFrequency: "monthly" as const, priority: 0.4 },
     { path: "/support", changeFrequency: "monthly" as const, priority: 0.5 },
-  ].flatMap((p) => localized(p.path, { lastModified: now, changeFrequency: p.changeFrequency, priority: p.priority }));
+  ].flatMap((p) => localized(p.path, { lastModified: contentLastModified, changeFrequency: p.changeFrequency, priority: p.priority }));
 
   const locationPages = locations.flatMap((loc) =>
-    localized(`/locations/${loc.slug}`, { lastModified: now, changeFrequency: "weekly", priority: 0.9 })
+    localized(`/locations/${loc.slug}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.9 })
   );
 
   // Occasion sub-pages — 34 locations × 7 occasions = 238 unique combos.
@@ -63,18 +71,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const occasions = ["proposal", "honeymoon", "couples", "family", "solo", "engagement", "elopement"];
   const occasionPages = locations.flatMap((loc) =>
     occasions.flatMap((occ) =>
-      localized(`/locations/${loc.slug}/${occ}`, { lastModified: now, changeFrequency: "weekly", priority: 0.85 })
+      localized(`/locations/${loc.slug}/${occ}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.85 })
     )
   );
 
   const shootTypePages = shootTypes.flatMap((type) =>
-    localized(`/photoshoots/${type.slug}`, { lastModified: now, changeFrequency: "weekly", priority: 0.8 })
+    localized(`/photoshoots/${type.slug}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.8 })
   );
 
   // Spot pages: /spots/[city]/[spot]
   const spotPages = Object.entries(photoSpots).flatMap(([city, spots]) =>
     spots.flatMap((s) =>
-      localized(`/spots/${city}/${spotSlug(s.name)}`, { lastModified: now, changeFrequency: "monthly", priority: 0.7 })
+      localized(`/spots/${city}/${spotSlug(s.name)}`, { lastModified: contentLastModified, changeFrequency: "monthly", priority: 0.7 })
     )
   );
 
@@ -116,7 +124,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // /photographers/location/[slug] — clean URL filtered catalogs
   const photographerLocationPages = locations.flatMap((loc) =>
-    localized(`/photographers/location/${loc.slug}`, { lastModified: now, changeFrequency: "weekly", priority: 0.85 })
+    localized(`/photographers/location/${loc.slug}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.85 })
   );
 
   const blogCategories = [
@@ -124,7 +132,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "family", "planning", "proposals", "solo", "comparisons",
   ];
   const blogCategoryPages = blogCategories.flatMap((cat) =>
-    localized(`/blog/category/${cat}`, { lastModified: now, changeFrequency: "weekly", priority: 0.7 })
+    localized(`/blog/category/${cat}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.7 })
   );
 
   return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...spotPages, ...photographerLocationPages, ...photographerPages, ...blogPages, ...blogCategoryPages];
