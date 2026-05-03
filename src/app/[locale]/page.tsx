@@ -206,16 +206,19 @@ async function SocialProofSection({
 // Skeleton matches SocialProofStrip vertical size to avoid CLS while streaming.
 function SocialProofSkeleton() {
   return (
-    <section className="border-y border-warm-200 bg-white py-8 sm:py-12">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-8 md:grid-cols-3 md:gap-10">
-          {[0, 1, 2].map((i) => (
-            <div key={i}>
-              <div className="h-11 w-36 animate-pulse rounded bg-warm-200/60" />
-              <div className="mt-3 h-3 w-48 animate-pulse rounded bg-warm-200/60" />
-              <div className="mt-5 h-16 w-full max-w-[310px] animate-pulse rounded-lg bg-warm-100" />
-            </div>
-          ))}
+    <section className="border-y border-warm-200 bg-white py-9 sm:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] lg:items-center lg:gap-12">
+          <div>
+            <div className="h-16 w-48 animate-pulse rounded bg-warm-200/60" />
+            <div className="mt-6 h-28 w-full max-w-xl animate-pulse rounded-2xl bg-warm-100" />
+            <div className="mt-6 h-5 w-3/4 animate-pulse rounded bg-warm-200/60" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="h-40 animate-pulse rounded-xl bg-warm-100" />
+            <div className="h-40 animate-pulse rounded-xl bg-warm-100" />
+            <div className="h-20 animate-pulse rounded-xl bg-warm-100 sm:col-span-2" />
+          </div>
         </div>
       </div>
     </section>

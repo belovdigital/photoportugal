@@ -106,6 +106,18 @@ function formatCoveragePlaces(names: string[], moreLabel: (count: number) => str
   return `${names.slice(0, 2).join(", ")} ${moreLabel(names.length - 2)}`;
 }
 
+function compactRegionName(name: string): string {
+  if (name === "Lisbon Region") return "Lisbon";
+  if (name === "Porto & North") return "Porto";
+  return name;
+}
+
+function formatMobileCoverageLabel(groups: CoverageGroup[]): string | null {
+  if (groups.length === 0) return null;
+  if (groups.length >= 3) return "Portugal-wide";
+  return groups.map((group) => compactRegionName(group.regionName)).join(" · ");
+}
+
 async function getPhotographer(slug: string, canViewUnapproved = false, viewerUserId?: string, locale: string = "en") {
   const isAdmin = canViewUnapproved;
   // Locale-aware column resolution: COALESCE(p.bio_<loc>, p.bio) for non-EN locales
@@ -335,6 +347,7 @@ export default async function PhotographerProfilePage({
     : coverageGroups.map((group) => ({ key: group.regionSlug, name: group.regionName, hrefSlug: group.hrefSlug }));
   const visibleCoverageChips = coverageChips.slice(0, 4);
   const hiddenCoverageChipCount = Math.max(0, coverageChips.length - visibleCoverageChips.length);
+  const mobileCoverageLabel = formatMobileCoverageLabel(coverageGroups);
   let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string | null; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
   const portfolioItems = (photographer as { portfolioItems?: { url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
@@ -620,7 +633,6 @@ export default async function PhotographerProfilePage({
           if (item.url && !thumbs.includes(item.url)) thumbs.push(item.url);
           if (thumbs.length >= 8) break;
         }
-        const primaryLocationName = photographer.locations?.[0]?.name ?? null;
         return (
           <MobilePhotographerHero
             slug={slug}
@@ -632,7 +644,7 @@ export default async function PhotographerProfilePage({
             reviewCount={photographer.review_count}
             lastSeenAt={photographer.last_seen_at ?? null}
             responseLabel={null}
-            primaryLocationName={primaryLocationName}
+            primaryLocationName={mobileCoverageLabel}
             thumbnails={thumbs}
             coverPositionY={photographer.cover_position_y ?? null}
           />
@@ -679,7 +691,7 @@ export default async function PhotographerProfilePage({
 
               {/* Tagline */}
               {photographer.tagline && (
-                <p className="mt-1 text-sm text-gray-500">{photographer.tagline}</p>
+                <p className="mt-1 max-w-3xl text-sm leading-relaxed text-gray-500">{photographer.tagline}</p>
               )}
 
               {/* Rating */}
@@ -813,7 +825,7 @@ export default async function PhotographerProfilePage({
               about={
                 photographer.bio ? (
                   <section>
-                    <p className="text-gray-600 leading-relaxed">{photographer.bio}</p>
+                    <p className="max-w-3xl text-gray-600 leading-relaxed">{photographer.bio}</p>
                   </section>
                 ) : null
               }
