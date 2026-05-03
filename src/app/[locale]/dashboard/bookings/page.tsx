@@ -15,15 +15,6 @@ import { normalizeName } from "@/lib/format-name";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_LABEL_KEYS: Record<string, string> = {
-  inquiry: "statusInquiry",
-  pending: "statusPending",
-  confirmed: "statusConfirmed",
-  completed: "statusCompleted",
-  delivered: "statusDelivered",
-  cancelled: "statusCancelled",
-};
-
 const TIME_LABEL_KEYS: Record<string, string> = {
   sunrise: "timeSunrise",
   morning: "timeMorning",
@@ -31,15 +22,6 @@ const TIME_LABEL_KEYS: Record<string, string> = {
   afternoon: "timeAfternoon",
   golden_hour: "timeGoldenHour",
   sunset: "timeSunset",
-};
-
-const STATUS_STYLES: Record<string, string> = {
-  inquiry: "bg-purple-100 text-purple-700",
-  pending: "bg-yellow-100 text-yellow-700",
-  confirmed: "bg-green-100 text-green-700",
-  completed: "bg-blue-100 text-blue-700",
-  delivered: "bg-accent-100 text-accent-700",
-  cancelled: "bg-gray-100 text-gray-500",
 };
 
 export default async function BookingsPage() {
@@ -91,6 +73,7 @@ export default async function BookingsPage() {
     cancelled_at: string | null;
     cancelled_by: string | null;
     cancelled_reason: string | null;
+    has_photographer_message: boolean;
   }[] = [];
 
   try {
@@ -106,6 +89,15 @@ export default async function BookingsPage() {
                   NULL::text as delivery_chat_payload,
                   b.payment_url, b.updated_at, b.confirmed_at,
                   b.cancelled_at, b.cancelled_by, b.cancelled_reason,
+                  EXISTS (
+                    SELECT 1
+                    FROM messages m
+                    JOIN bookings previous_b ON previous_b.id = m.booking_id
+                    WHERE previous_b.client_id = b.client_id
+                      AND previous_b.photographer_id = b.photographer_id
+                      AND m.sender_id = $2
+                      AND COALESCE(m.is_system, FALSE) = FALSE
+                  ) as has_photographer_message,
                   (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country
            FROM bookings b
            JOIN users u ON u.id = b.client_id
@@ -117,7 +109,7 @@ export default async function BookingsPage() {
            WHERE b.photographer_id = $1 AND b.status != 'inquiry'
              AND NOT (b.status = 'cancelled' AND b.cancelled_at IS NOT NULL AND b.cancelled_at < NOW() - INTERVAL '30 days')
            ORDER BY b.created_at DESC`,
-          [profile.id]
+          [profile.id, userId]
         );
       }
     } else {
@@ -134,7 +126,8 @@ export default async function BookingsPage() {
                   WHERE m.booking_id = b.id AND m.text LIKE 'DELIVERY:%'
                   ORDER BY m.created_at DESC LIMIT 1) as delivery_chat_payload,
                 b.payment_url, b.updated_at, b.confirmed_at,
-                b.cancelled_at, b.cancelled_by, b.cancelled_reason
+                b.cancelled_at, b.cancelled_by, b.cancelled_reason,
+                FALSE as has_photographer_message
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users u ON u.id = pp.user_id
@@ -241,7 +234,7 @@ export default async function BookingsPage() {
                   action={
                     <div className="flex flex-wrap gap-2">
                       {isPhotographer && (booking.status === "pending" || booking.status === "confirmed" || booking.status === "completed" || booking.status === "delivered") && (
-                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} paymentStatus={booking.payment_status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} clientFirstName={isPhotographer ? normalizeName(booking.other_name) : undefined} />
+                        <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} paymentStatus={booking.payment_status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} clientFirstName={isPhotographer ? normalizeName(booking.other_name) : undefined} hasPhotographerMessage={booking.has_photographer_message} />
                       )}
                       {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
                         <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />
@@ -414,7 +407,7 @@ export default async function BookingsPage() {
               : t("noBookingsClientDesc")}
           </p>
           {!isPhotographer && (
-            <a href="/photographers" className="mt-4 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700">{t("browsePhotographers")}</a>
+            <Link href="/photographers" className="mt-4 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700">{t("browsePhotographers")}</Link>
           )}
         </div>
       )}

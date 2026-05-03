@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification, sendAdminBookingConfirmedNotification } from "@/lib/email";
@@ -57,6 +56,7 @@ export async function PATCH(
 
   const { id } = await params;
   const userId = user.id;
+  const isMobileApiRequest = req.headers.get("authorization")?.startsWith("Bearer ") ?? false;
   const { status, welcome_message, reason } = await req.json();
   const trimmedReason = typeof reason === "string" ? reason.trim().slice(0, 500) : "";
 
@@ -92,15 +92,28 @@ export async function PATCH(
       return NextResponse.json({ error: "Only the photographer can confirm bookings" }, { status: 403 });
     }
 
-    // Confirming a booking now requires a welcome message — clients who hear
-    // from their photographer right after booking are far more likely to pay,
-    // so we won't let confirmation through without one.
     const trimmedWelcome = typeof welcome_message === "string" ? welcome_message.trim() : "";
-    if (status === "confirmed" && trimmedWelcome.length < 30) {
-      return NextResponse.json(
-        { error: "Please write a welcome message for your client (at least 30 characters)." },
-        { status: 400 }
+    if (status === "confirmed" && !isMobileApiRequest && trimmedWelcome.length < 30) {
+      const previousPhotographerMessage = await queryOne<{ has_message: boolean }>(
+        `SELECT EXISTS (
+           SELECT 1
+           FROM messages m
+           JOIN bookings previous_b ON previous_b.id = m.booking_id
+           JOIN bookings current_b ON current_b.id = $2
+           WHERE previous_b.client_id = $1
+             AND previous_b.photographer_id = current_b.photographer_id
+             AND m.sender_id = $3
+             AND COALESCE(m.is_system, FALSE) = FALSE
+         ) as has_message`,
+        [booking.client_id, id, booking.photographer_user_id]
       );
+
+      if (!previousPhotographerMessage?.has_message) {
+        return NextResponse.json(
+          { error: "Please write a welcome message for your client (at least 30 characters)." },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate status transitions
@@ -238,7 +251,7 @@ export async function PATCH(
           return NextResponse.json({ error: "Booking already cancelled or not eligible for refund" }, { status: 400 });
         }
 
-        const { info: cancelInfo, refundPercent, totalPaid, refundAmount, paymentStatus } = cancelResult;
+        const { info: cancelInfo, refundPercent, totalPaid, refundAmount } = cancelResult;
 
         if (cancelInfo) {
           const cancelledBy = isClient ? "client" : "photographer";
