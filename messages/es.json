@@ -1033,6 +1033,7 @@
       "perHour": "/hora",
       "portfolio": "Portafolio",
       "coverageWide": "Cubre toda la región de {region}",
+      "coverageRegion": "Cubre {region}",
       "coverageRegionsTwo": "Cubre {first} y {second}",
       "coverageRegionsMany": "Cubre {count} regiones en Portugal",
       "coveragePlaces": "Cubre {places}",

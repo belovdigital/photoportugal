@@ -23,7 +23,7 @@ import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { StickyBookBar } from "@/components/ui/StickyBookBar";
 import { MobilePhotographerHero } from "@/components/photographers/MobilePhotographerHero";
-import { getAncestorNodeSlugs, getLocationNode, type LocationNode } from "@/lib/location-hierarchy";
+import { flattenLocationNodes, getAncestorNodeSlugs, getLocationNode, type LocationNode } from "@/lib/location-hierarchy";
 import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
 
 export const dynamicParams = true;
@@ -44,6 +44,7 @@ type CoverageGroup = {
 };
 
 const publicLocationSlugs = new Set(allLocations.map((location) => location.slug));
+const locationNodeSortIndex = new Map(flattenLocationNodes().map((node, index) => [node.slug, index]));
 
 function publicHrefSlugForNode(node: LocationNode): string | null {
   return node.legacySlugs?.find((slug) => publicLocationSlugs.has(slug)) || null;
@@ -98,12 +99,12 @@ function buildCoverageGroups(coverageNodeSlugs: string[], fallbackLocations: Pub
     groups.set(region.slug, group);
   }
 
-  return Array.from(groups.values());
-}
-
-function formatCoveragePlaces(names: string[], moreLabel: (count: number) => string): string {
-  if (names.length <= 2) return names.join(" & ");
-  return `${names.slice(0, 2).join(", ")} ${moreLabel(names.length - 2)}`;
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      items: [...group.items].sort((a, b) => (locationNodeSortIndex.get(a.slug) ?? 9999) - (locationNodeSortIndex.get(b.slug) ?? 9999)),
+    }))
+    .sort((a, b) => (locationNodeSortIndex.get(a.regionSlug) ?? 9999) - (locationNodeSortIndex.get(b.regionSlug) ?? 9999));
 }
 
 function compactRegionName(name: string): string {
@@ -332,10 +333,7 @@ export default async function PhotographerProfilePage({
     if (coverageGroups.length === 1) {
       const group = coverageGroups[0];
       if (group.wholeRegion) return t("coverageWide", { region: group.regionName });
-      const placeNames = group.items.map((item) => item.name);
-      return t("coveragePlaces", {
-        places: formatCoveragePlaces(placeNames, (count) => t("coverageMore", { count })),
-      });
+      return t("coverageRegion", { region: group.regionName });
     }
     if (coverageGroups.length === 2) {
       return t("coverageRegionsTwo", { first: coverageGroups[0].regionName, second: coverageGroups[1].regionName });
@@ -343,7 +341,10 @@ export default async function PhotographerProfilePage({
     return t("coverageRegionsMany", { count: coverageGroups.length });
   })();
   const coverageChips = coverageGroups.length === 1 && !coverageGroups[0].wholeRegion
-    ? coverageGroups[0].items.map((item) => ({ key: item.slug, name: item.name, hrefSlug: item.hrefSlug }))
+    ? [
+        { key: coverageGroups[0].regionSlug, name: coverageGroups[0].regionName, hrefSlug: coverageGroups[0].hrefSlug },
+        ...coverageGroups[0].items.map((item) => ({ key: item.slug, name: item.name, hrefSlug: item.hrefSlug })),
+      ]
     : coverageGroups.map((group) => ({ key: group.regionSlug, name: group.regionName, hrefSlug: group.hrefSlug }));
   const visibleCoverageChips = coverageChips.slice(0, 4);
   const hiddenCoverageChipCount = Math.max(0, coverageChips.length - visibleCoverageChips.length);

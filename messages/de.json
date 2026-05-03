@@ -1186,6 +1186,7 @@
       "perHour": "/Stunde",
       "portfolio": "Portfolio",
       "coverageWide": "Deckt die ganze Region {region} ab",
+      "coverageRegion": "Deckt {region} ab",
       "coverageRegionsTwo": "Deckt {first} und {second} ab",
       "coverageRegionsMany": "Deckt {count} Regionen in Portugal ab",
       "coveragePlaces": "Deckt {places} ab",
