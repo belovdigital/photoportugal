@@ -5,7 +5,7 @@ import { ConciergeChat } from "@/components/concierge/ConciergeChat";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getHomepageReviews } from "@/lib/reviews-data";
 import { queryOne } from "@/lib/db";
-import { locations as ALL_LOCATIONS } from "@/lib/locations-data";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +37,6 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
   const photographerCount = parseInt(stats?.photographer_count || "30");
   const totalReviews = parseInt(stats?.total_reviews || "0");
   const avgRating = stats?.avg_rating || "5.0";
-  const locationsCount = ALL_LOCATIONS.length;
   const minPrice = stats?.min_price ? parseInt(stats.min_price) : 90;
 
   return (
@@ -71,8 +70,8 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
                   <p className="mt-1 text-xs font-medium text-gray-500">{t("stats.photographers")}</p>
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white/70 p-4 backdrop-blur-sm">
-                  <p className="font-display text-3xl font-bold text-gray-900">{locationsCount}</p>
-                  <p className="mt-1 text-xs font-medium text-gray-500">{t("stats.locations")}</p>
+                  <p className="font-display text-3xl font-bold text-gray-900">{portugalCoverageStats.displayPlacesLabel}</p>
+                  <p className="mt-1 text-xs font-medium text-gray-500">{t("stats.locations", { regions: portugalCoverageStats.regions })}</p>
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white/70 p-4 backdrop-blur-sm">
                   <p className="font-display text-3xl font-bold text-gray-900">⭐ {avgRating}</p>

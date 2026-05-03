@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { locations } from "@/lib/locations-data";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 const TOP_LOCATIONS = ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"];
 
@@ -70,16 +71,20 @@ export function Footer() {
               className="h-[40px]"
             />
           </a>
-          <div className="relative">
+          <a
+            href="https://play.google.com/store/apps/details?id=com.photoportugal.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition hover:opacity-80"
+          >
             <img
               src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
               alt={t("googlePlayAlt")}
               width={155}
               height={58}
-              className="h-[58px] opacity-30 grayscale"
+              className="h-[58px]"
             />
-            <span className="absolute top-0 -right-1.5 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold text-white uppercase leading-none">{t("soon")}</span>
-          </div>
+          </a>
         </div>
       </div>
     </section>
@@ -124,7 +129,7 @@ export function Footer() {
                   href="/locations"
                   className="text-sm font-medium text-primary-600 transition hover:text-primary-700 py-2 inline-block"
                 >
-                  {t("viewAllLocations", { count: locations.length })}
+                  {t("viewAllLocations", { count: portugalCoverageStats.displayPlacesLabel })}
                 </Link>
               </li>
             </ul>

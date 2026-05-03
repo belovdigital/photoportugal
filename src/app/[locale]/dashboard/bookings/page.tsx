@@ -12,6 +12,7 @@ import PaymentCountdown from "./PaymentCountdown";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { BookingJourney } from "./BookingJourney";
 import { normalizeName } from "@/lib/format-name";
+import { bookingStripePaymentSelect } from "@/lib/booking-stripe-payment-fields";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,7 @@ export default async function BookingsPage() {
     cancelled_reason: string | null;
     has_photographer_message: boolean;
   }[] = [];
+  const stripePaymentSelect = await bookingStripePaymentSelect("b");
 
   try {
     if (isPhotographer) {
@@ -93,7 +95,7 @@ export default async function BookingsPage() {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
                   p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount,
-                  b.stripe_amount_paid_cents, b.stripe_amount_discount_cents, b.stripe_currency, b.stripe_promo_code,
+                  ${stripePaymentSelect},
                   b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
                   COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
@@ -128,7 +130,7 @@ export default async function BookingsPage() {
       bookings = await query(
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount,
-                b.stripe_amount_paid_cents, b.stripe_amount_discount_cents, b.stripe_currency, b.stripe_promo_code,
+                ${stripePaymentSelect},
                 b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
                 COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,

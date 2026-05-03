@@ -1735,7 +1735,7 @@
   },
   "photographersMeta": {
     "title": "Fotograf in Portugal buchen – Lissabon, Porto, Algarve",
-    "description": "Finden und buchen Sie einen professionellen Fotografen in Lissabon, Porto, Sintra, Algarve und über 20 weiteren Orten in Portugal. Stöbern Sie in Portfolios, vergleichen Sie Preise und lesen Sie verifizierte Bewertungen. Buchen Sie Ihr Urlaubs-Fotoshooting online – Paare, Familie, Hochzeit, Elopement. Ab 150 €.",
+    "description": "Finden und buchen Sie einen professionellen Fotografen in Lissabon, Porto, Sintra, Algarve und über 40 weiteren Orten in Portugal. Stöbern Sie in Portfolios, vergleichen Sie Preise und lesen Sie verifizierte Bewertungen. Buchen Sie Ihr Urlaubs-Fotoshooting online – Paare, Familie, Hochzeit, Elopement. Ab 150 €.",
     "locationTitle": "Fotografen in {location} finden — Portfolios & Preise",
     "locationDescription": "Finden und buchen Sie verifizierte Fotografen in {location}, Portugal. Portfolios ansehen, Bewertungen lesen, Pakete vergleichen. Ab 150 €. Sofortbuchung.",
     "ogAlt": "Fotografen in {location}, Portugal",
@@ -3220,7 +3220,7 @@
     "suggestion4": "Hochzeit im Dourotal",
     "stats": {
       "photographers": "Verifizierte Fotografen",
-      "locations": "Orte in Portugal",
+      "locations": "Orte in {regions} Regionen",
       "rating": "Durchschnittliche Bewertung ({count})",
       "from": "Ab"
     },
@@ -3317,7 +3317,7 @@
     "ogTitle": "Reise- & Urlaubsfotograf in Portugal — Online buchen",
     "ogDescription": "{photographers}+ professionelle Reise- & Urlaubsfotografen in Portugal. {reviews}Ab {price} €.",
     "schemaWebsite": "Finden und buchen Sie professionelle Fotografen in ganz Portugal für Urlaubs-Fotoshootings.",
-    "schemaService": "Marktplatz für Urlaubsfotografie in Portugal. Buchen Sie professionelle Fotografen in Lissabon, Porto, Algarve und über 25 weiteren Orten.",
+    "schemaService": "Marktplatz für Urlaubsfotografie in Portugal. Buchen Sie professionelle Fotografen in Lissabon, Porto, Algarve und über {locations} weiteren Orten.",
     "reviewsCount": "{count}+ verifizierte Bewertungen. ",
     "inLanguage": "de-DE"
   },

@@ -16,6 +16,7 @@ import { AnalyticsDashboard, VisitorsTab } from "./AnalyticsDashboard";
 import { AdminMatchRequestsTab } from "./AdminMatchRequestsTab";
 import { isBelowMinimum } from "@/lib/package-pricing";
 import { verifyToken } from "@/app/api/admin/login/route";
+import { bookingStripePaymentSelect } from "@/lib/booking-stripe-payment-fields";
 
 export const dynamic = "force-dynamic";
 
@@ -168,6 +169,8 @@ export default async function AdminPage() {
      ORDER BY pp.is_approved DESC, COALESCE(u.is_banned, FALSE) ASC, pp.created_at DESC`
   );
 
+  const stripePaymentSelect = await bookingStripePaymentSelect("b");
+
   const bookings = await query<{
     id: string; client_name: string; photographer_name: string; status: string;
     client_id: string; photographer_slug: string;
@@ -189,8 +192,7 @@ export default async function AdminPage() {
             b.status, b.shoot_date, b.total_price, b.created_at, b.confirmed_at, b.payment_status,
             b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,
-            b.stripe_amount_subtotal_cents, b.stripe_amount_paid_cents, b.stripe_amount_discount_cents,
-            b.stripe_currency, b.stripe_promo_code, b.stripe_coupon_name, b.stripe_coupon_percent_off,
+            ${stripePaymentSelect},
             b.flexible_date_from, b.flexible_date_to, b.date_note,
             b.delivery_accepted, b.delivery_accepted_at, b.location_detail,
             (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,

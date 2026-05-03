@@ -13,6 +13,7 @@ import { getHomepageReviews } from "@/lib/reviews-data";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { ConciergeQuickStart } from "@/components/concierge/ConciergeQuickStart";
 import { localizeShootType } from "@/lib/shoot-type-labels";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 // Force-dynamic so per-location photographer counts and min prices are
 // always fresh — these are the conversion-relevant numbers on the cards.
@@ -29,10 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   setRequestLocale(locale);
   const t = await getTranslations("locations");
   return {
-    title: `${locations.length} ${t("title")}`,
-    description: t("subtitle", { count: locations.length }),
+    title: `${portugalCoverageStats.displayPlacesLabel} ${t("title")}`,
+    description: t("subtitle", { count: portugalCoverageStats.displayPlaces }),
     alternates: localeAlternates("/locations", locale),
-    openGraph: { title: `${locations.length} ${t("title")}`, description: t("subtitle", { count: locations.length }), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/locations` },
+    openGraph: { title: `${portugalCoverageStats.displayPlacesLabel} ${t("title")}`, description: t("subtitle", { count: portugalCoverageStats.displayPlaces }), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/locations` },
   };
 }
 
@@ -169,14 +170,14 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
               </span>
-              {locations.length} {tt.destinations}
+              {portugalCoverageStats.displayPlacesLabel} {tt.destinations}
             </div>
 
             <h1 className="mt-5 font-display text-4xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-[3.5rem]">
               {t("title")}
             </h1>
             <p className="mt-4 max-w-2xl text-lg text-primary-100/90">
-              {t("subtitle", { count: locations.length })}
+              {t("subtitle", { count: portugalCoverageStats.displayPlaces })}
             </p>
 
             {/* Stats chips — same pattern as the location-page hero so the

@@ -7,6 +7,7 @@ import { usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { locations } from "@/lib/locations-data";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
@@ -369,7 +370,7 @@ export function Header() {
                       ))}
                   </div>
                   <Link href="/locations" onClick={() => setActiveMenu(null)} className="mt-3 inline-flex px-2 text-sm font-semibold text-primary-600 hover:text-primary-700">
-                    {t("allLocations", { count: locations.length })}
+                    {t("allLocations", { count: portugalCoverageStats.displayPlacesLabel })}
                   </Link>
                 </div>
 

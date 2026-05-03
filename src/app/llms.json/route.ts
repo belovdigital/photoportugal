@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
-import { query, queryOne } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 import { PLAN_PRICES } from "@/lib/stripe";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export async function GET() {
   let photographerCount = 0;
-  let locationCount = locations.length;
+  const locationCount = portugalCoverageStats.places;
   let reviewCount = 0;
   let avgRating = 0;
   let minPrice: number | null = null;
@@ -46,6 +47,7 @@ export async function GET() {
       "Photo Portugal is a marketplace connecting travelers with professional vacation photographers across Portugal. Travelers can browse verified photographer portfolios, read real reviews, compare prices, and book photoshoots online with instant confirmation. Photographers are vetted for quality and professionalism.",
     photographer_count: photographerCount,
     location_count: locationCount,
+    region_count: portugalCoverageStats.regions,
     review_count: reviewCount,
     avg_rating: avgRating,
     min_price_eur: minPrice,

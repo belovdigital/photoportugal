@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -134,7 +135,7 @@ Photo Portugal is an online marketplace that connects travelers visiting Portuga
 
 ## Key Facts
 - ${photographerCount} approved photographers
-- ${locations.length} locations across Portugal
+- ${portugalCoverageStats.displayPlacesLabel} places across ${portugalCoverageStats.regions} Portugal regions
 - ${reviewCount} verified reviews from real bookings
 - Average rating: ${avgRating}/5
 - Sessions starting from EUR${minPrice ?? 150}

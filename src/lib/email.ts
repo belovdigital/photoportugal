@@ -1104,7 +1104,7 @@ export async function sendWelcomeEmail(
         greeting: `Hallo ${firstName},`,
         intro: "Alles bereit! So buchen Sie Ihr perfektes Fotoshooting in Portugal:",
         s1Title: "Fotografen entdecken",
-        s1Body: "Finden Sie Ihren Stil in Lissabon, Porto, Algarve und 20 weiteren Orten",
+        s1Body: "Finden Sie Ihren Stil in Lissabon, Porto, Algarve und über 40 weiteren Orten",
         s2Title: "Paket auswählen",
         s2Body: "Wählen Sie Dauer und Anzahl der Fotos",
         s3Title: "Sicher buchen und bezahlen",

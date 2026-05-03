@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { photoSpots, spotSlug, getSpot, spotLocalized } from "@/lib/photo-spots-data";
-import { getLocationBySlug, locations } from "@/lib/locations-data";
+import { getLocationBySlug } from "@/lib/locations-data";
 import { query } from "@/lib/db";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
@@ -11,6 +11,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
 import { localeAlternates } from "@/lib/seo";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 const L = {
   en: {
@@ -394,7 +395,7 @@ export default async function SpotPage({
               <h3 className="text-sm font-bold text-gray-900">{t.exploreMore}</h3>
               <ul className="mt-3 space-y-1.5 text-sm">
                 <li><Link href={`/locations/${city}`} className="text-primary-600 hover:underline">{location.name} {t.travelGuide}</Link></li>
-                <li><Link href="/locations" className="text-primary-600 hover:underline">{t.allLocations.replace("{count}", String(locations.length))}</Link></li>
+                <li><Link href="/locations" className="text-primary-600 hover:underline">{t.allLocations.replace("{count}", portugalCoverageStats.displayPlacesLabel)}</Link></li>
                 <li><Link href="/photoshoots" className="text-primary-600 hover:underline">{t.browseByType}</Link></li>
               </ul>
             </div>

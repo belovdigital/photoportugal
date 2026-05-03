@@ -587,7 +587,7 @@
     "suggestion4": "Mariage dans la vallée du Douro",
     "stats": {
       "photographers": "Photographes vérifiés",
-      "locations": "Lieux à travers le Portugal",
+      "locations": "Lieux dans {regions} régions",
       "rating": "Note moyenne ({count})",
       "from": "À partir de"
     },
@@ -1891,7 +1891,7 @@
   },
   "photographersMeta": {
     "title": "Engagez un photographe au Portugal — Lisbonne, Porto, Algarve",
-    "description": "Trouvez et engagez un photographe professionnel à Lisbonne, Porto, Sintra, Algarve et 20+ lieux au Portugal. Parcourez les portfolios, comparez les prix, lisez les avis vérifiés. Réservez votre séance de vacances en ligne — couples, famille, mariage, mariage intime. À partir de 150 €.",
+    "description": "Trouvez et engagez un photographe professionnel à Lisbonne, Porto, Sintra, Algarve et plus de 40 lieux au Portugal. Parcourez les portfolios, comparez les prix, lisez les avis vérifiés. Réservez votre séance de vacances en ligne — couples, famille, mariage, mariage intime. À partir de 150 €.",
     "locationTitle": "Trouvez des photographes à {location} — Portfolios et tarifs",
     "locationDescription": "Trouvez et réservez des photographes vérifiés à {location}, Portugal. Parcourez les portfolios, lisez les avis, comparez les forfaits. À partir de 150 €. Réservation immédiate.",
     "ogAlt": "Photographes à {location}, Portugal",
@@ -3317,7 +3317,7 @@
     "ogTitle": "Photographe de voyage et de vacances au Portugal — Réservez en ligne",
     "ogDescription": "{photographers}+ photographes professionnels de voyage et de vacances au Portugal. {reviews}À partir de {price} €.",
     "schemaWebsite": "Trouvez et réservez des photographes professionnels partout au Portugal pour vos séances de vacances.",
-    "schemaService": "Marketplace de photographie de vacances au Portugal. Réservez des photographes professionnels à Lisbonne, Porto, Algarve et plus de 25 lieux.",
+    "schemaService": "Marketplace de photographie de vacances au Portugal. Réservez des photographes professionnels à Lisbonne, Porto, Algarve et plus de {locations} lieux.",
     "reviewsCount": "{count}+ avis vérifiés. ",
     "inLanguage": "fr-FR"
   },

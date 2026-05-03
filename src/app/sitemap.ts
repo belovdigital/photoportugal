@@ -64,7 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localized(`/locations/${loc.slug}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.9 })
   );
 
-  // Occasion sub-pages — 34 locations × 7 occasions = 238 unique combos.
+  // Occasion sub-pages — public location pages × 7 occasions.
   // These are the primary paid-ad sitelink targets, so priority is high
   // (matches /locations/[slug]) and changefreq is weekly to reflect the
   // dynamic photographer/portfolio pulls that refresh on every render.

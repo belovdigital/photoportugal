@@ -1735,7 +1735,7 @@
   },
   "photographersMeta": {
     "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve",
-    "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 20+ locations across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €150.",
+    "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 40+ places across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €150.",
     "locationTitle": "Find Photographers in {location} — Portfolios & Prices",
     "locationDescription": "Find and book verified photographers in {location}, Portugal. Browse portfolios, read reviews, compare packages. From €150. Instant booking.",
     "ogAlt": "Photographers in {location}, Portugal",
@@ -3220,7 +3220,7 @@
     "suggestion4": "Wedding in Douro Valley",
     "stats": {
       "photographers": "Verified photographers",
-      "locations": "Locations across Portugal",
+      "locations": "Places across {regions} regions",
       "rating": "Average rating ({count})",
       "from": "Starting price"
     },
@@ -3317,7 +3317,7 @@
     "ogTitle": "Travel & Vacation Photographer in Portugal — Book Online",
     "ogDescription": "{photographers}+ professional travel & vacation photographers in Portugal. {reviews}From €{price}.",
     "schemaWebsite": "Find and book professional photographers across Portugal for vacation photoshoots.",
-    "schemaService": "Vacation photography marketplace in Portugal. Book professional photographers in Lisbon, Porto, Algarve and 25+ locations.",
+    "schemaService": "Vacation photography marketplace in Portugal. Book professional photographers in Lisbon, Porto, Algarve and {locations}+ places.",
     "reviewsCount": "{count}+ verified reviews. ",
     "inLanguage": "en"
   },

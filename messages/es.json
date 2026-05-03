@@ -587,7 +587,7 @@
     "suggestion4": "Boda en el valle del Duero",
     "stats": {
       "photographers": "Fotógrafos verificados",
-      "locations": "Lugares en todo Portugal",
+      "locations": "Lugares en {regions} regiones",
       "rating": "Valoración media ({count})",
       "from": "Precio desde"
     },
@@ -1422,7 +1422,7 @@
   },
   "photographersMeta": {
     "title": "Contrate un fotógrafo en Portugal — Lisboa, Oporto, Algarve",
-    "description": "Encuentre y contrate un fotógrafo profesional en Lisboa, Oporto, Sintra, Algarve y 20+ lugares de Portugal. Explore portafolios, compare precios, lea reseñas verificadas. Reserve su sesión de vacaciones online — pareja, familia, boda, boda íntima. Desde 150 €.",
+    "description": "Encuentre y contrate un fotógrafo profesional en Lisboa, Oporto, Sintra, Algarve y más de 40 lugares de Portugal. Explore portafolios, compare precios, lea reseñas verificadas. Reserve su sesión de vacaciones online — pareja, familia, boda, boda íntima. Desde 150 €.",
     "locationTitle": "Encuentre fotógrafos en {location} — Portafolios y precios",
     "locationDescription": "Encuentre y reserve fotógrafos verificados en {location}, Portugal. Vea portafolios, lea reseñas, compare paquetes. Desde 150 €. Reserva al instante.",
     "ogAlt": "Fotógrafos en {location}, Portugal",
@@ -3317,7 +3317,7 @@
     "ogTitle": "Fotógrafo de viajes y vacaciones en Portugal — Reserva online",
     "ogDescription": "{photographers}+ fotógrafos profesionales de viajes y vacaciones en Portugal. {reviews}Desde {price} €.",
     "schemaWebsite": "Encuentre y reserve fotógrafos profesionales en todo Portugal para sesiones de vacaciones.",
-    "schemaService": "Marketplace de fotografía de vacaciones en Portugal. Reserve fotógrafos profesionales en Lisboa, Oporto, Algarve y más de 25 lugares.",
+    "schemaService": "Marketplace de fotografía de vacaciones en Portugal. Reserve fotógrafos profesionales en Lisboa, Oporto, Algarve y más de {locations} lugares.",
     "reviewsCount": "{count}+ reseñas verificadas. ",
     "inLanguage": "es-ES"
   },

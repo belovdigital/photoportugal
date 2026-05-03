@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { getLocale } from "next-intl/server";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | Photo Portugal",
   },
   description:
-    "Book a hand-picked vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 25+ locations. Every photographer personally vetted. Verified reviews, secure payments, private photo gallery. From EUR150.",
+    `Book a hand-picked vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places. Every photographer personally vetted. Verified reviews, secure payments, private photo gallery. From EUR150.`,
   keywords: [
     "photographer portugal",
     "vacation photographer lisbon",
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Photo Portugal",
     title: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
-    description: "Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & 25+ locations.",
+    description: `Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places.`,
     url: "https://photoportugal.com",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal" }],
   },

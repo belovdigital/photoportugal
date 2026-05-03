@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
-import { locations } from "@/lib/locations-data";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -55,7 +55,7 @@ export default async function FAQPage({
 
   const faqs = FAQ_KEYS.map((key) => ({
     question: t(`questions.${key}.question`),
-    answer: (t.raw(`questions.${key}.answer`) as string).replace(/\{locationCount\}/g, String(locations.length)),
+    answer: (t.raw(`questions.${key}.answer`) as string).replace(/\{locationCount\}/g, String(portugalCoverageStats.displayPlaces)),
   }));
 
   const jsonLd = {

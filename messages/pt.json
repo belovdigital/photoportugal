@@ -1735,7 +1735,7 @@
   },
   "photographersMeta": {
     "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve",
-    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e 20+ localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €150.",
+    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e mais de 40 localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €150.",
     "locationTitle": "Encontre Fotógrafos em {location} — Portfólios e Preços",
     "locationDescription": "Encontre e reserve fotógrafos verificados em {location}, Portugal. Veja portfólios, leia avaliações, compare pacotes. Desde €150.",
     "ogAlt": "Fotógrafos em {location}, Portugal",
@@ -3220,7 +3220,7 @@
     "suggestion4": "Casamento no Douro",
     "stats": {
       "photographers": "Fotógrafos verificados",
-      "locations": "Localizações em Portugal",
+      "locations": "Localizações em {regions} regiões",
       "rating": "Avaliação média ({count})",
       "from": "A partir de"
     },
@@ -3317,7 +3317,7 @@
     "ogTitle": "Fotógrafo de Férias em Portugal — Photo Portugal",
     "ogDescription": "{photographers}+ fotógrafos profissionais em Portugal. A partir de €{price}.",
     "schemaWebsite": "Encontre e reserve fotógrafos profissionais em Portugal para sessões fotográficas de férias.",
-    "schemaService": "Marketplace de fotografia de férias em Portugal. Reserve fotógrafos profissionais em Lisboa, Porto, Algarve e mais de 25 localizações.",
+    "schemaService": "Marketplace de fotografia de férias em Portugal. Reserve fotógrafos profissionais em Lisboa, Porto, Algarve e mais de {locations} localizações.",
     "reviewsCount": "{count}+ avaliações verificadas. ",
     "inLanguage": "pt-PT"
   },

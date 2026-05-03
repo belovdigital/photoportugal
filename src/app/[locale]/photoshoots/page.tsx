@@ -12,6 +12,7 @@ import { getHomepageReviews } from "@/lib/reviews-data";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { locations } from "@/lib/locations-data";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 // Force-dynamic so live counts + min prices + the random representative
 // photo per tile reshuffle on each request — same freshness pattern as
@@ -202,7 +203,7 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
                   </span>
                 )}
                 <span className="rounded-full bg-warm-100 px-3 py-1 text-gray-700">
-                  {locations.length} destinations
+                  {portugalCoverageStats.displayPlacesLabel} destinations
                 </span>
               </div>
 

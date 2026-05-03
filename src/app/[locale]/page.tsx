@@ -15,6 +15,7 @@ import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { HeroSingleVariant } from "@/components/ui/HeroSingleVariant";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 // Force-dynamic so the random Hero photographer reshuffles on every request
 // rather than getting stuck on whichever person was picked when ISR last ran.
@@ -51,7 +52,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const reviewText = reviewCount > 0 ? t("reviewsCount", { count: reviewCount }) : "";
   const params2 = {
     photographers: photographerCount,
-    locations: locations.length - 4,
+    locations: portugalCoverageStats.displayPlaces,
     reviews: reviewText,
     price: minPrice,
   };
@@ -110,7 +111,7 @@ async function SchemaLdScripts({ locale }: { locale: string }) {
     name: "Photo Portugal",
     url: base,
     image: `${base}/og-image.png`,
-    description: t("schemaService"),
+    description: t("schemaService", { locations: portugalCoverageStats.displayPlaces }),
     priceRange: "€€",
     address: { "@type": "PostalAddress", addressLocality: "Lisbon", addressCountry: "PT" },
     geo: { "@type": "GeoCoordinates", latitude: 38.7223, longitude: -9.1393 },
@@ -568,7 +569,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             href="/locations"
             className="inline-flex items-center gap-2 rounded-xl border border-primary-200 px-6 py-3 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
           >
-            {t("locations.viewAll", { count: locations.length })}
+            {t("locations.viewAll", { count: portugalCoverageStats.displayPlacesLabel })}
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>

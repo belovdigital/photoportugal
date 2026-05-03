@@ -351,7 +351,7 @@ function pickL(locale: string): typeof L.en {
 }
 
 export function generateStaticParams() {
-  // 34 locations × 7 occasions = 238 paths. Don't pre-generate — `dynamic
+  // Public location pages × occasion pages. Don't pre-generate — `dynamic
   // = "force-dynamic"` above keeps these on-demand and fresh.
   return [] as Array<{ slug: string; occasion: string }>;
 }

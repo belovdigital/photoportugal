@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { locations } from "@/lib/locations-data";
+import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
 
@@ -135,7 +135,7 @@ export default async function AboutPage({
               </div>
               <h3 className="mt-3 font-bold text-gray-900">
                 {item.key === "locationsCovered"
-                  ? t(`trustPoints.${item.key}.title`, { count: locations.length })
+                  ? t(`trustPoints.${item.key}.title`, { count: portugalCoverageStats.displayPlaces })
                   : t(`trustPoints.${item.key}.title`)}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-500">{t(`trustPoints.${item.key}.text`)}</p>

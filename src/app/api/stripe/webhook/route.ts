@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient } from "@/lib/email";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
 import { sendTelegram } from "@/lib/telegram";
+import { bookingStripePaymentColumnsExist } from "@/lib/booking-stripe-payment-fields";
 
 // Stripe events we surface in the `stripe` Telegram topic. Anything
 // not listed (most notably payment_intent.created — fires on every
@@ -321,28 +322,30 @@ export async function POST(req: NextRequest) {
              WHERE id = $2 RETURNING id`,
             [checkoutSession.payment_intent, bookingId]
           );
-          queryOne(
-            `UPDATE bookings
-                SET stripe_amount_subtotal_cents = $1,
-                    stripe_amount_paid_cents = $2,
-                    stripe_amount_discount_cents = $3,
-                    stripe_currency = $4,
-                    stripe_promo_code = $5,
-                    stripe_coupon_name = $6,
-                    stripe_coupon_percent_off = $7
-              WHERE id = $8
-              RETURNING id`,
-            [
-              paymentSummary.amountSubtotal,
-              paymentSummary.amountTotal,
-              paymentSummary.amountDiscount,
-              paymentSummary.currency,
-              paymentSummary.code,
-              paymentSummary.couponName,
-              paymentSummary.percentOff,
-              bookingId,
-            ]
-          ).catch((err) => console.error("[webhook] failed to persist Stripe payment details:", err));
+          if (await bookingStripePaymentColumnsExist()) {
+            queryOne(
+              `UPDATE bookings
+                  SET stripe_amount_subtotal_cents = $1,
+                      stripe_amount_paid_cents = $2,
+                      stripe_amount_discount_cents = $3,
+                      stripe_currency = $4,
+                      stripe_promo_code = $5,
+                      stripe_coupon_name = $6,
+                      stripe_coupon_percent_off = $7
+                WHERE id = $8
+                RETURNING id`,
+              [
+                paymentSummary.amountSubtotal,
+                paymentSummary.amountTotal,
+                paymentSummary.amountDiscount,
+                paymentSummary.currency,
+                paymentSummary.code,
+                paymentSummary.couponName,
+                paymentSummary.percentOff,
+                bookingId,
+              ]
+            ).catch((err) => console.error("[webhook] failed to persist Stripe payment details:", err));
+          }
           console.log(`[webhook] Checkout completed for booking ${bookingId}, PI: ${checkoutSession.payment_intent}`);
 
           // Add system message to chat
