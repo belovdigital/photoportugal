@@ -43,7 +43,7 @@ export function DashboardSidebar({ initialRole }: { initialRole?: string }) {
   return (
     <>
       {/* Sidebar — desktop only. Mobile uses DashboardMobileNav. */}
-      <aside className="sticky top-[100px] hidden h-auto w-56 shrink-0 bg-transparent md:block" style={{ maxHeight: "calc(100dvh - 100px)" }}>
+      <aside className="sticky top-16 hidden h-auto w-56 shrink-0 self-start bg-transparent md:block" style={{ maxHeight: "calc(100dvh - 4rem)" }}>
         <nav className="flex flex-col gap-0.5 p-3">
           {filteredItems.map((item) => {
             const isActive = pathname === item.href || pathname.endsWith(item.href) || (item.href !== "/dashboard" && pathname.includes(item.href));
