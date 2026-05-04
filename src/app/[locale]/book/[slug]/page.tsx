@@ -10,6 +10,7 @@ import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
 import DatePicker, { UnavailableRange } from "@/components/ui/DatePicker";
 import { formatDuration } from "@/lib/package-pricing";
 import { AuthModal } from "@/components/ui/AuthModal";
+import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { normalizeName } from "@/lib/format-name";
@@ -727,6 +728,10 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         >
           {submitting ? t("form.submitting") : t("form.submit")}
         </button>
+
+        <div className="mt-3 flex justify-center">
+          <GoogleReviewsBadge variant="compact" />
+        </div>
       </form>
         </div>
 

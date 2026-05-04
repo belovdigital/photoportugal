@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { locations } from "@/lib/locations-data";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
+import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 
 const TOP_LOCATIONS = ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"];
 
@@ -288,6 +289,9 @@ export function Footer() {
             <a href="mailto:info@photoportugal.com" className="hover:text-primary-600 transition">info@photoportugal.com</a>
             <span className="text-gray-300">&middot;</span>
             <a href="tel:+351308800496" className="hover:text-primary-600 transition">+351 308 800 496</a>
+          </div>
+          <div className="mt-4 flex justify-center">
+            <GoogleReviewsBadge variant="compact" />
           </div>
           <p className="mt-2 text-center text-sm text-gray-400">
             &copy; {new Date().getFullYear()} {t("copyright")}

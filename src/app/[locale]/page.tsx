@@ -116,6 +116,15 @@ async function SchemaLdScripts({ locale }: { locale: string }) {
     address: { "@type": "PostalAddress", addressLocality: "Lisbon", addressCountry: "PT" },
     geo: { "@type": "GeoCoordinates", latitude: 38.7223, longitude: -9.1393 },
     areaServed: { "@type": "Country", name: "Portugal" },
+    // Link to external profiles so Google can connect the website to the GMB
+    // listing and other social properties — strengthens entity signal in SERP.
+    sameAs: [
+      "https://g.page/r/CbWG7PogT_K2EBM",
+      "https://www.instagram.com/photoportugal_com",
+      "https://www.facebook.com/photoportugalofficial",
+      "https://www.linkedin.com/company/photoportugal",
+      "https://www.tiktok.com/@photoportugal_com",
+    ],
     ...(siteStats.count > 0 && {
       aggregateRating: {
         "@type": "AggregateRating",

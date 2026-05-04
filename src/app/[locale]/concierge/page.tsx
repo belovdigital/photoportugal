@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ConciergeChat } from "@/components/concierge/ConciergeChat";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
+import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 import { getHomepageReviews } from "@/lib/reviews-data";
 import { queryOne } from "@/lib/db";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
@@ -95,6 +96,9 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
                   <svg className="h-4 w-4 text-accent-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
                   {t("trustVerified")}
                 </span>
+              </div>
+              <div className="mt-6">
+                <GoogleReviewsBadge variant="full" />
               </div>
             </aside>
 
