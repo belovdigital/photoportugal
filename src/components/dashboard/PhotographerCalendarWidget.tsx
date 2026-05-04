@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "@/i18n/navigation";
 
 type Shoot = {
   id: string;
@@ -125,7 +126,7 @@ export function PhotographerCalendarWidget() {
           {loading && (
             <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
           )}
-          <a
+          <Link
             href="/dashboard/availability"
             className="text-xs font-medium text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
           >
@@ -133,7 +134,7 @@ export function PhotographerCalendarWidget() {
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -169,10 +170,12 @@ export function PhotographerCalendarWidget() {
               const isSelected = date === selectedDate;
               const isToday = date === today;
 
-              // Style precedence: selected > blocked > today > current-month > out-of-month.
+              // Style precedence: selected > manual unavailable > today > current-month > out-of-month.
+              // Synced calendar events are time-based now, so they get a small marker
+              // instead of making the whole day look unavailable.
               let cellCls = "text-gray-300";
               if (isSelected) cellCls = "bg-primary-500 text-white";
-              else if (blockSrc && isCurrentMonth) cellCls = "bg-gray-100 text-gray-400 line-through";
+              else if (blockSrc === "manual" && isCurrentMonth) cellCls = "bg-gray-100 text-gray-400 line-through";
               else if (isToday) cellCls = "bg-emerald-50 text-emerald-700 font-semibold ring-1 ring-emerald-300";
               else if (isCurrentMonth) cellCls = "text-gray-900 hover:bg-warm-50";
 
@@ -183,10 +186,11 @@ export function PhotographerCalendarWidget() {
                   className={`relative flex flex-col items-center py-1.5 rounded-lg text-sm transition ${cellCls}`}
                 >
                   <span className="text-[13px]">{day}</span>
-                  {(hasShoot || hasDelivery) && (
+                  {(hasShoot || hasDelivery || blockSrc === "synced") && (
                     <div className="flex gap-0.5 mt-0.5">
                       {hasShoot && <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white" : "bg-blue-500"}`} />}
                       {hasDelivery && <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white/60" : "bg-orange-400"}`} />}
+                      {blockSrc === "synced" && <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-white/50" : "bg-gray-300"}`} />}
                     </div>
                   )}
                 </button>
@@ -197,7 +201,8 @@ export function PhotographerCalendarWidget() {
           <div className="mt-3 pt-3 border-t border-warm-100 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Shoot</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400" /> Delivery due</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-100 border border-gray-200" /> Busy</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300" /> Calendar busy</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-100 border border-gray-200" /> Unavailable</span>
           </div>
         </div>
 
@@ -212,7 +217,7 @@ export function PhotographerCalendarWidget() {
               <span className="font-medium text-gray-900">Blocked.</span>{" "}
               {selectedBlocked.source === "manual"
                 ? selectedBlocked.reason || "Marked unavailable in your settings."
-                : "Your synced calendar has a busy event on this day."}
+                : "Your synced calendar has busy time on this day. Only overlapping booking times are blocked."}
             </div>
           )}
 
@@ -224,7 +229,7 @@ export function PhotographerCalendarWidget() {
                 const isPast = selectedDate < today;
                 const timeLabel = s.shoot_time || "Time TBD";
                 return (
-                  <a
+                  <Link
                     key={`shoot-${s.id}`}
                     href="/dashboard/bookings"
                     className={`block rounded-xl border bg-white p-3 transition ${isPast ? "border-gray-200 opacity-70" : "border-blue-200 hover:border-blue-300"}`}
@@ -252,13 +257,13 @@ export function PhotographerCalendarWidget() {
                         </span>
                       </div>
                     </div>
-                  </a>
+                  </Link>
                 );
               })}
               {selectedDeliveries.map((d) => {
                 const isOverdue = d.due_date < today;
                 return (
-                  <a
+                  <Link
                     key={`delivery-${d.id}`}
                     href="/dashboard/bookings"
                     className={`block rounded-xl border bg-white p-3 transition ${
@@ -275,7 +280,7 @@ export function PhotographerCalendarWidget() {
                         </div>
                       </div>
                     </div>
-                  </a>
+                  </Link>
                 );
               })}
             </div>

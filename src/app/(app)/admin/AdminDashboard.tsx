@@ -172,79 +172,6 @@ interface AdminStats {
   funnelReviewed: number;
 }
 
-function SavedLeadsTab() {
-  const [items, setItems] = useState<{
-    id: string;
-    email: string;
-    photographer_name: string;
-    photographer_slug: string;
-    locale: string;
-    created_at: string;
-    email_sent: boolean;
-    converted_user_id: string | null;
-  }[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/admin/saved-photographers", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        setItems(d.items || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <h2 className="mb-1 text-lg font-bold text-gray-900">Saved Leads</h2>
-      <p className="mb-4 text-xs text-gray-400">
-        Anonymous visitors who entered email on the exit-intent popup to save a photographer for later.
-        {" "}
-        {items.length} lead{items.length !== 1 ? "s" : ""}.
-      </p>
-      {items.length === 0 ? (
-        <p className="py-8 text-center text-gray-400">No saved leads yet</p>
-      ) : (
-        <div className="space-y-1.5">
-          {items.map((it) => (
-            <div key={it.id} className="flex items-start gap-3 rounded-lg border border-warm-200 bg-white px-3 py-2.5 text-sm">
-              <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${it.converted_user_id ? "bg-green-100 text-green-700" : it.email_sent ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>
-                {it.converted_user_id ? "converted" : it.email_sent ? "sent" : "pending"}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-gray-900">
-                  <a href={`mailto:${it.email}`} className="hover:text-primary-600">{it.email}</a>
-                </p>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>saved</span>
-                  <a href={`/photographers/${it.photographer_slug}`} target="_blank" rel="noreferrer" className="truncate font-medium text-primary-600 hover:underline">
-                    {it.photographer_name}
-                  </a>
-                  <span className="text-gray-300">·</span>
-                  <span className="uppercase">{it.locale}</span>
-                </div>
-              </div>
-              <span className="shrink-0 whitespace-nowrap text-xs text-gray-400">
-                {new Date(it.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}{" "}
-                {new Date(it.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 const tabGroups = [
   {
     label: null, // no header for top group
@@ -263,7 +190,6 @@ const tabGroups = [
       { key: "matchRequests", label: "Match Requests", icon: "search" },
       { key: "concierge", label: "Concierge AI", icon: "sparkles" },
       { key: "popupStats", label: "Exit Popup", icon: "chart" },
-      { key: "savedLeads", label: "Saved Leads", icon: "heart" },
       { key: "disputes", label: "Disputes", icon: "flag" },
       { key: "reviews", label: "Reviews", icon: "star" },
     ],
@@ -295,7 +221,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "popupStats" | "savedLeads" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "redirects" | "logs" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "popupStats" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "redirects" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -983,7 +909,6 @@ export function AdminDashboard({
           {activeTab === "matchRequests" && matchRequestsSection}
           {activeTab === "concierge" && <AdminConciergeTab />}
           {activeTab === "popupStats" && <AdminPopupStats />}
-          {activeTab === "savedLeads" && <SavedLeadsTab />}
           {activeTab === "visitors" && visitorsSection}
           {activeTab === "disputes" && disputesSection}
           {activeTab === "reviews" && reviewsSection}

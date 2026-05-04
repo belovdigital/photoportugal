@@ -55,6 +55,7 @@ const EVENT_COLOURS: Record<string, string> = {
  * `/api/admin/popup-stats`.
  */
 export function AdminPopupStats() {
+  const [view, setView] = useState<"stats" | "saved">("stats");
   const [data, setData] = useState<PopupStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,8 +69,17 @@ export function AdminPopupStats() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
-  if (error) return <p className="text-sm text-red-600">Error: {error}</p>;
+  if (view === "saved") {
+    return (
+      <div className="space-y-5">
+        <ExitPopupSubnav view={view} setView={setView} />
+        <SavedPhotographersPanel />
+      </div>
+    );
+  }
+
+  if (loading) return <div className="space-y-5"><ExitPopupSubnav view={view} setView={setView} /><p className="text-sm text-gray-500">Loading…</p></div>;
+  if (error) return <div className="space-y-5"><ExitPopupSubnav view={view} setView={setView} /><p className="text-sm text-red-600">Error: {error}</p></div>;
   if (!data) return null;
 
   const { totals, daily, byPage, funnel } = data;
@@ -85,6 +95,7 @@ export function AdminPopupStats() {
 
   return (
     <div className="space-y-8">
+      <ExitPopupSubnav view={view} setView={setView} />
       <div>
         <h2 className="text-lg font-bold text-gray-900">Exit-intent popup</h2>
         <p className="mt-1 text-sm text-gray-500">
@@ -186,6 +197,102 @@ export function AdminPopupStats() {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function ExitPopupSubnav({ view, setView }: { view: "stats" | "saved"; setView: (view: "stats" | "saved") => void }) {
+  return (
+    <div className="inline-flex rounded-xl border border-warm-200 bg-white p-1">
+      {[
+        { key: "stats" as const, label: "Stats" },
+        { key: "saved" as const, label: "Saved photographers" },
+      ].map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          onClick={() => setView(item.key)}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+            view === item.key ? "bg-primary-600 text-white shadow-sm" : "text-gray-500 hover:bg-warm-50 hover:text-gray-900"
+          }`}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SavedPhotographersPanel() {
+  const [items, setItems] = useState<{
+    id: string;
+    email: string;
+    photographer_name: string;
+    photographer_slug: string;
+    locale: string;
+    created_at: string;
+    email_sent: boolean;
+    converted_user_id: string | null;
+  }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/saved-photographers", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => {
+        setItems(d.items || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="mb-1 text-lg font-bold text-gray-900">Saved Photographers</h2>
+      <p className="mb-4 text-xs text-gray-400">
+        Legacy save-for-later emails from the old photographer-profile popup.
+        New exit popups now route visitors into the AI Concierge and are tracked in Stats.
+        {" "}
+        {items.length} lead{items.length !== 1 ? "s" : ""}.
+      </p>
+      {items.length === 0 ? (
+        <p className="py-8 text-center text-gray-400">No saved photographers yet</p>
+      ) : (
+        <div className="space-y-1.5">
+          {items.map((it) => (
+            <div key={it.id} className="flex items-start gap-3 rounded-lg border border-warm-200 bg-white px-3 py-2.5 text-sm">
+              <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${it.converted_user_id ? "bg-green-100 text-green-700" : it.email_sent ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}>
+                {it.converted_user_id ? "converted" : it.email_sent ? "sent" : "pending"}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-gray-900">
+                  <a href={`mailto:${it.email}`} className="hover:text-primary-600">{it.email}</a>
+                </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>saved</span>
+                  <a href={`/photographers/${it.photographer_slug}`} target="_blank" rel="noreferrer" className="truncate font-medium text-primary-600 hover:underline">
+                    {it.photographer_name}
+                  </a>
+                  <span className="text-gray-300">·</span>
+                  <span className="uppercase">{it.locale}</span>
+                </div>
+              </div>
+              <span className="shrink-0 whitespace-nowrap text-xs text-gray-400">
+                {new Date(it.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}{" "}
+                {new Date(it.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
