@@ -1400,6 +1400,7 @@
       "couple": "Paar (2 Personen)",
       "small": "Kleine Gruppe (3-4)",
       "group": "Gruppe (5-8)",
+      "peopleCount": "{count} Personen",
       "large": "Größere Gruppe (9+)"
     },
     "occasions": {

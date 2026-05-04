@@ -58,7 +58,6 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const searchParams = useSearchParams();
   const { status } = useSession();
   const t = useTranslations("book");
-  const tc = useTranslations("common");
   const locale = useLocale();
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -589,12 +588,12 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             >
               <option value="1">{t("groupSizes.solo")}</option>
               <option value="2">{t("groupSizes.couple")}</option>
-              <option value="3">3 {tc("people")}</option>
-              <option value="4">4 {tc("people")}</option>
-              <option value="5">5 {tc("people")}</option>
-              <option value="6">6 {tc("people")}</option>
-              <option value="7">7 {tc("people")}</option>
-              <option value="8">8 {tc("people")}</option>
+              <option value="3">{t("groupSizes.peopleCount", { count: 3 })}</option>
+              <option value="4">{t("groupSizes.peopleCount", { count: 4 })}</option>
+              <option value="5">{t("groupSizes.peopleCount", { count: 5 })}</option>
+              <option value="6">{t("groupSizes.peopleCount", { count: 6 })}</option>
+              <option value="7">{t("groupSizes.peopleCount", { count: 7 })}</option>
+              <option value="8">{t("groupSizes.peopleCount", { count: 8 })}</option>
               <option value="larger">{t("groupSizes.large")}</option>
             </select>
             {groupSize === "larger" && (

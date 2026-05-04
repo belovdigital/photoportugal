@@ -1400,6 +1400,7 @@
       "couple": "Casal (2 pessoas)",
       "small": "Grupo pequeno (3-4)",
       "group": "Grupo (5-8)",
+      "peopleCount": "{count} pessoas",
       "large": "Grupo maior (9+)"
     },
     "occasions": {

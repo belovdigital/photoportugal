@@ -449,6 +449,7 @@
       "couple": "Couple (2 personnes)",
       "small": "Petit groupe (3-4)",
       "group": "Groupe (5-8)",
+      "peopleCount": "{count} personnes",
       "large": "Groupe plus grand (9+)"
     },
     "occasions": {
