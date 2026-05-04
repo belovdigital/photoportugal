@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
-import { locations } from "@/lib/locations-data";
 import { sendEmail, getAdminEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getLocationDisplayName, isKnownLocationSlug } from "@/lib/location-hierarchy";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +32,10 @@ export async function POST(req: NextRequest) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
-    const location = locations.find(l => l.slug === location_slug);
-    if (!location) {
+    if (!isKnownLocationSlug(location_slug)) {
       return NextResponse.json({ error: "Invalid location" }, { status: 400 });
     }
+    const locationName = getLocationDisplayName(location_slug);
     const normalizedShootType = shoot_type && VALID_SHOOT_TYPES.includes(shoot_type) ? shoot_type : null;
 
     // Pull user_id if the visitor is signed in (so we can link follow-ups later)
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       const adminEmail = await getAdminEmail();
       if (adminEmail) {
         const recipients = adminEmail.split(",").map(e => e.trim()).filter(Boolean);
-        const locLabel = location.name;
+        const locLabel = locationName;
         await Promise.all(recipients.map(to => sendEmail(
           to,
           `⚡ Quick Match request — ${locLabel}${normalizedShootType ? ` · ${normalizedShootType}` : ""}`,
@@ -90,9 +90,9 @@ export async function POST(req: NextRequest) {
         `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
           <h2 style="color: #C94536;">We're on it 🎯</h2>
           <p>Hi ${escapeHtml(firstName)},</p>
-          <p>Thanks for your request! Our team will reach out within a few hours to understand what you're looking for in <strong>${escapeHtml(location.name)}</strong>, and send you 2-3 hand-picked photographer recommendations.</p>
+          <p>Thanks for your request! Our team will reach out within a few hours to understand what you're looking for in <strong>${escapeHtml(locationName)}</strong>, and send you 2-3 hand-picked photographer recommendations.</p>
           <p>In the meantime, feel free to browse:</p>
-          <p><a href="${BASE_URL}/photographers/location/${location_slug}" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Browse ${escapeHtml(location.name)} Photographers</a></p>
+          <p><a href="${BASE_URL}/photographers?location=${encodeURIComponent(location_slug)}" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Browse ${escapeHtml(locationName)} Photographers</a></p>
           <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
         </div>`
       );
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
     try {
       import("@/lib/telegram").then(({ sendTelegram }) => {
         sendTelegram(
-          `⚡ <b>Quick Match lead</b>\n<b>Location:</b> ${location.name}${normalizedShootType ? `\n<b>Type:</b> ${normalizedShootType}` : ""}\n<b>Email:</b> ${email.trim()}`,
+          `⚡ <b>Quick Match lead</b>\n<b>Location:</b> ${locationName}${normalizedShootType ? `\n<b>Type:</b> ${normalizedShootType}` : ""}\n<b>Email:</b> ${email.trim()}`,
           "match_requests"
         );
       }).catch(() => {});

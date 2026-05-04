@@ -152,6 +152,18 @@ export function getLocationNode(slug: string): LocationNode | undefined {
   return nodeBySlug.get(slug);
 }
 
+export function getLocationDisplayName(slug: string): string {
+  const node = nodeBySlug.get(slug);
+  if (node) return node.name;
+  const location = locations.find((loc) => loc.slug === slug);
+  if (location) return location.name;
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+export function isKnownLocationSlug(slug: string): boolean {
+  return nodeBySlug.has(slug) || legacyLocationSlugs.has(slug);
+}
+
 export function getDescendantNodeSlugs(node: LocationNode): string[] {
   return (node.children || []).flatMap((child) => [child.slug, ...getDescendantNodeSlugs(child)]);
 }
@@ -182,4 +194,17 @@ export function expandLocationCoverageToLegacySlugs(slugs: string[]): string[] {
     return node ? collectLegacySlugs(node) : legacy(slug);
   });
   return Array.from(new Set(legacySlugs.filter((slug) => legacyLocationSlugs.has(slug))));
+}
+
+export function getCompatibleCoverageNodeSlugs(slugs: string[]): string[] {
+  const compatible = slugs.flatMap((slug) => {
+    const node = nodeBySlug.get(slug);
+    if (!node) return [];
+    return [
+      slug,
+      ...getAncestorNodeSlugs(slug),
+      ...getDescendantNodeSlugs(node),
+    ];
+  });
+  return normalizeCoverageNodeSlugs(Array.from(new Set(compatible)));
 }

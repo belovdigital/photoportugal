@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getShootTypeBySlug } from "@/lib/shoot-types-data";
+import {
+  expandLocationCoverageToLegacySlugs,
+  getCompatibleCoverageNodeSlugs,
+} from "@/lib/location-hierarchy";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +27,7 @@ export async function GET(req: NextRequest) {
              p.rating, p.review_count,
              (SELECT MIN(price) FROM packages WHERE photographer_id = p.id AND is_public = TRUE) as min_price,
              ARRAY(SELECT pl.location_slug FROM photographer_locations pl WHERE pl.photographer_id = p.id) as locations,
+             ARRAY(SELECT plc.node_slug FROM photographer_location_coverage plc WHERE plc.photographer_id = p.id ORDER BY plc.created_at, plc.node_slug) as coverage_nodes,
              COALESCE((
                SELECT array_agg(url ORDER BY shuffle, sort_order NULLS LAST, created_at)
                  FROM (
@@ -59,13 +64,20 @@ export async function GET(req: NextRequest) {
       JOIN users u ON u.id = p.user_id
       WHERE p.is_approved = TRUE
     `;
-    const params: string[] = [];
+    const params: (string | string[])[] = [];
     let paramIdx = 1;
 
     if (location) {
-      sql += ` AND p.id IN (SELECT photographer_id FROM photographer_locations WHERE location_slug = $${paramIdx})`;
-      params.push(location);
-      paramIdx++;
+      const requestedLocations = location.split(",").map((part) => part.trim()).filter(Boolean);
+      const legacySlugs = expandLocationCoverageToLegacySlugs(requestedLocations);
+      const compatibleNodeSlugs = getCompatibleCoverageNodeSlugs(requestedLocations);
+      sql += ` AND (
+        p.id IN (SELECT photographer_id FROM photographer_locations WHERE location_slug = ANY($${paramIdx}::text[]))
+        OR p.id IN (SELECT photographer_id FROM photographer_location_coverage WHERE node_slug = ANY($${paramIdx + 1}::text[]))
+      )`;
+      params.push(legacySlugs.length > 0 ? legacySlugs : requestedLocations);
+      params.push(compatibleNodeSlugs.length > 0 ? compatibleNodeSlugs : requestedLocations);
+      paramIdx += 2;
     }
 
     if (shootType) {
@@ -74,7 +86,7 @@ export async function GET(req: NextRequest) {
       const st = getShootTypeBySlug(shootType);
       const aliases = st?.photographerShootTypeNames ?? (st ? [st.name] : [shootType]);
       sql += ` AND p.shoot_types && $${paramIdx}::text[]`;
-      (params as unknown as (string | string[])[]).push(aliases);
+      params.push(aliases);
       paramIdx++;
     }
 

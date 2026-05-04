@@ -78,6 +78,7 @@ export interface PhotographerProfile {
   hourly_rate: number;
   currency: string;
   locations: Location[];
+  coverage_nodes?: string[];
   packages: Package[];
   shoot_types: string[];
   experience_years: number;

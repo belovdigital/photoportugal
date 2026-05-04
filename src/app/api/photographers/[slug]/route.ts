@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { queryOne, query } from "@/lib/db";
 import { locations as allLocations } from "@/lib/locations-data";
+import { getLocationDisplayName } from "@/lib/location-hierarchy";
+import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
 import { auth } from "@/lib/auth";
 
 // CRITICAL: this route is per-user (custom-proposal packages are scoped
@@ -94,6 +96,10 @@ export async function GET(
       "SELECT location_slug FROM photographer_locations WHERE photographer_id = $1",
       [profile.id]
     );
+    const coverageLocationSlugs = await getPhotographerCoverageNodeSlugs(
+      profile.id,
+      locations.map((location) => location.location_slug)
+    );
 
     // Packages (locale-aware name + description with fallback to original).
     // Includes any custom one-off proposal targeted at the current viewer
@@ -168,6 +174,10 @@ export async function GET(
         const loc = allLocations.find(x => x.slug === l.location_slug);
         return { slug: l.location_slug, name: loc?.name || l.location_slug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) };
       }),
+      coverage_locations: coverageLocationSlugs.map((slug) => ({
+        slug,
+        name: getLocationDisplayName(slug),
+      })),
       packages,
       portfolio,
       reviews,

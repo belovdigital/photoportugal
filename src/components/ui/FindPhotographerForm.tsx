@@ -5,9 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { locations } from "@/lib/locations-data";
 import DatePicker from "@/components/ui/DatePicker";
 import { AuthModal } from "@/components/ui/AuthModal";
+import { LocationTreeSelect } from "@/components/ui/LocationTreeSelect";
 
 const SHOOT_TYPES = ["couples", "family", "proposal", "wedding", "honeymoon", "elopement", "solo", "engagement", "birthday", "friends"] as const;
 
@@ -28,7 +28,7 @@ const TIME_OPTIONS = [
 ] as const;
 
 export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defaultPhone = "", userId }: { defaultName?: string; defaultEmail?: string; defaultPhone?: string; userId?: string }) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const t = useTranslations("findPhotographer");
   const tShoot = useTranslations("nav.shootTypes");
   const SHOOT_TYPE_KEY: Record<string, string> = {
@@ -53,6 +53,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
     }
   }
   const tb = useTranslations("book");
+  type BookTranslationKey = Parameters<typeof tb>[0];
   const searchParams = useSearchParams();
 
   const [firstName, setFirstName] = useState(defaultName.split(" ")[0] || "");
@@ -207,17 +208,14 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-gray-700">{t("locationLabel")} *</label>
-            <select value={locationSlug} onChange={(e) => setLocationSlug(e.target.value)} required className={inputCls}>
-              <option value="">{t("locationPlaceholder")}</option>
-              {/* Lisbon first, then separator, then alphabetical */}
-              {locations.filter(l => l.slug === "lisbon").map((loc) => (
-                <option key={loc.slug} value={loc.slug}>{loc.name}</option>
-              ))}
-              <option disabled>───────────</option>
-              {[...locations].filter(l => l.slug !== "lisbon").sort((a, b) => a.name.localeCompare(b.name)).map((loc) => (
-                <option key={loc.slug} value={loc.slug}>{loc.name}</option>
-              ))}
-            </select>
+            <LocationTreeSelect
+              value={locationSlug}
+              onChange={setLocationSlug}
+              placeholder={t("locationPlaceholder")}
+              searchPlaceholder={t("locationPlaceholder")}
+              noMatchLabel={t("error")}
+              buttonClassName={`${inputCls} flex items-center justify-between gap-3 text-left`}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">{t("shootTypeLabel")} *</label>
@@ -243,7 +241,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
               <label className="block text-sm font-medium text-gray-700">{t("timeLabel")}</label>
               <select value={shootTime} onChange={(e) => setShootTime(e.target.value)} className={inputCls}>
                 {TIME_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{tb(`time.${opt.key}` as any)}</option>
+                  <option key={opt.value} value={opt.value}>{tb(`time.${opt.key}` as BookTranslationKey)}</option>
                 ))}
               </select>
             </div>

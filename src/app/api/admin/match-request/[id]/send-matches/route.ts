@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
-import { locations } from "@/lib/locations-data";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
+import { getLocationDisplayName } from "@/lib/location-hierarchy";
 
 async function isAdmin() {
   const cookieStore = await cookies();
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       })
     );
 
-    const locationName = locations.find((l) => l.slug === matchReq.location_slug)?.name || matchReq.location_slug;
+    const locationName = getLocationDisplayName(matchReq.location_slug);
     const shootTypeLabel = matchReq.shoot_type
       ? matchReq.shoot_type.charAt(0).toUpperCase() + matchReq.shoot_type.slice(1)
       : "Photoshoot";
@@ -432,7 +432,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         })
       );
 
-      const locationName = locations.find((l) => l.slug === matchReq.location_slug)?.name || matchReq.location_slug;
+      const locationName = getLocationDisplayName(matchReq.location_slug);
       const shootTypeLabel = matchReq.shoot_type
       ? matchReq.shoot_type.charAt(0).toUpperCase() + matchReq.shoot_type.slice(1)
       : "Photoshoot";

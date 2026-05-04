@@ -3,8 +3,8 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail, sendBookingConfirmationWithPayment, sendAdminBookingConfirmedNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
-import { locations } from "@/lib/locations-data";
 import { formatShootDate } from "@/lib/format-shoot-date";
+import { getLocationDisplayName } from "@/lib/location-hierarchy";
 
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     );
 
     // === Notifications ===
-    const locationName = locations.find((l) => l.slug === matchReq.location_slug)?.name || matchReq.location_slug;
+    const locationName = getLocationDisplayName(matchReq.location_slug);
     const shootTypeLabel = matchReq.shoot_type.charAt(0).toUpperCase() + matchReq.shoot_type.slice(1);
 
     // Email to photographer about new confirmed booking

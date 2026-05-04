@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { locations } from "@/lib/locations-data";
+import { getLocationDisplayName } from "@/lib/location-hierarchy";
 import { MatchRequestsList } from "./MatchRequestsList";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +37,7 @@ interface MatchRequestRow {
 }
 
 function getLocationName(slug: string): string {
-  return locations.find((l) => l.slug === slug)?.name || slug;
+  return getLocationDisplayName(slug);
 }
 
 export default async function MatchRequestsPage() {

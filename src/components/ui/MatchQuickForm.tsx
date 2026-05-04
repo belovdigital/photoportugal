@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { locations } from "@/lib/locations-data";
+import { LocationTreeOptions, getLocationTreeLabel } from "@/components/ui/LocationTreeOptions";
 
 // Reusable inline match CTA — minimal 2-3 field form.
 // Props:
@@ -43,16 +43,7 @@ export function MatchQuickForm({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Lisbon first, then alphabetical — matches /photographers filter UX.
-  const sortedLocations = [...locations].sort((a, b) => {
-    if (a.slug === "lisbon") return -1;
-    if (b.slug === "lisbon") return 1;
-    return a.name.localeCompare(b.name);
-  });
-  const filteredLocations = locSearch
-    ? sortedLocations.filter(l => l.name.toLowerCase().includes(locSearch.toLowerCase()))
-    : sortedLocations;
-  const selectedLocationName = sortedLocations.find(l => l.slug === locationSlug)?.name;
+  const selectedLocationName = locationSlug ? getLocationTreeLabel(locationSlug) : "";
 
   // Position dropdown below the button in viewport coords — survives any ancestor overflow:hidden.
   const openDropdown = () => {
@@ -205,38 +196,12 @@ export function MatchQuickForm({
                   />
                 </div>
                 <div className="max-h-72 sm:max-h-60 overflow-y-auto px-1 py-1 sm:pb-1">
-                  {filteredLocations.map((loc, idx) => {
-                    const isLisbon = loc.slug === "lisbon";
-                    const isSelected = locationSlug === loc.slug;
-                    return (
-                      <div key={loc.slug}>
-                        <button
-                          type="button"
-                          onClick={() => { setLocationSlug(loc.slug); setLocOpen(false); setLocSearch(""); }}
-                          className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${
-                            isSelected ? "font-semibold text-primary-600" : isLisbon ? "font-bold text-gray-800" : "text-gray-700"
-                          }`}
-                        >
-                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                            isSelected ? "border-primary-500 bg-primary-500" : "border-gray-300"
-                          }`}>
-                            {isSelected && (
-                              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </span>
-                          {loc.name}
-                        </button>
-                        {isLisbon && !locSearch && idx < filteredLocations.length - 1 && (
-                          <div className="mx-3 my-1 border-b border-warm-200" />
-                        )}
-                      </div>
-                    );
-                  })}
-                  {filteredLocations.length === 0 && (
-                    <p className="px-3 py-2 text-xs text-gray-400">{tc("noMatch")}</p>
-                  )}
+                  <LocationTreeOptions
+                    selectedSlugs={locationSlug ? [locationSlug] : []}
+                    onSelect={(slug) => { setLocationSlug(slug); setLocOpen(false); setLocSearch(""); }}
+                    searchQuery={locSearch}
+                    noMatchLabel={tc("noMatch")}
+                  />
                 </div>
               </div>,
               document.body

@@ -7,6 +7,7 @@ import { getOneLinerQuotesForPhotographers } from "@/lib/reviews-data";
 import { query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
+import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -68,6 +69,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
     );
 
     if (profiles.length === 0) return [];
+    const coverageByPhotographer = await getCoverageNodeSlugsByPhotographerIds(profiles.map((profile) => profile.id));
 
     // Get locations for all photographers
     const allLocRows = await query<{ photographer_id: string; location_slug: string }>(
@@ -125,6 +127,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
         hourly_rate: 0,
         currency: "EUR",
         locations: locs,
+        coverage_nodes: coverageByPhotographer[p.id] || [],
         packages: pkgs,
         shoot_types: p.shoot_types || [],
         experience_years: p.experience_years,

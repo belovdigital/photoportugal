@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { locations } from "@/lib/locations-data";
+import { getLocationDisplayName } from "@/lib/location-hierarchy";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface MatchRequest {
@@ -47,7 +47,7 @@ interface Photographer {
 }
 
 function getLocationName(slug: string): string {
-  return locations.find((l) => l.slug === slug)?.name || slug;
+  return getLocationDisplayName(slug);
 }
 
 function timeAgo(dateStr: string): string {

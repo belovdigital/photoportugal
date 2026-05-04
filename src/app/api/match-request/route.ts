@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import { sendEmail, getAdminEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { locations } from "@/lib/locations-data";
 import { auth } from "@/lib/auth";
+import { getLocationDisplayName, isKnownLocationSlug } from "@/lib/location-hierarchy";
 
 const VALID_BUDGETS = ["150-299", "300-599", "600+"];
 const VALID_SHOOT_TYPES = ["couples", "family", "proposal", "wedding", "honeymoon", "elopement", "solo", "engagement", "birthday", "friends"];
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please fill in all required fields." }, { status: 400 });
     }
 
-    if (!locations.find(l => l.slug === location_slug)) {
+    if (!isKnownLocationSlug(location_slug)) {
       return NextResponse.json({ error: "Invalid location." }, { status: 400 });
     }
 
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       ]
     );
 
-    const locationName = locations.find(l => l.slug === location_slug)?.name || location_slug;
+    const locationName = getLocationDisplayName(location_slug);
     const shootTypeLabel = shoot_type.charAt(0).toUpperCase() + shoot_type.slice(1);
     const budgetLabel = budget_range === "400+" ? "€400+" : `€${budget_range.replace("-", "–")}`;
     const dateDisplay = date_flexible
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
           <p style="margin:0;font-size:14px;color:#4A4A4A;"><strong>Budget:</strong> ${escapeHtml(budgetLabel)}</p>
         </div>
         <p style="font-size:13px;color:#999;">In the meantime, feel free to browse our photographers:</p>
-        <p><a href="${BASE_URL}/photographers/location/${location_slug}" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Browse Photographers</a></p>
+        <p><a href="${BASE_URL}/photographers?location=${encodeURIComponent(location_slug)}" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Browse Photographers</a></p>
         <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
       </div>`
     ).catch(err => console.error("[match-request] client email error:", err));

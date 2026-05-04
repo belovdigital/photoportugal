@@ -8,18 +8,22 @@ import { query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
 import { getTranslations } from "next-intl/server";
 import { locField } from "@/lib/locations-data";
+import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
+import { flattenLocationNodes, getLocationDisplayName, getLocationNode } from "@/lib/location-hierarchy";
 
 export async function generateStaticParams() {
-  return locations.map((loc) => ({ slug: loc.slug }));
+  const nodeSlugs = flattenLocationNodes().map((node) => node.slug);
+  return Array.from(new Set([...locations.map((loc) => loc.slug), ...nodeSlugs])).map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
   const { locale, slug } = await params;
   const location = locations.find((l) => l.slug === slug);
-  if (!location) return {};
+  const locationNode = getLocationNode(slug);
+  if (!location && !locationNode) return {};
 
   const t = await getTranslations({ locale, namespace: "photographersMeta" });
-  const localizedName = locField(location, "name", locale) || location.name;
+  const localizedName = location ? (locField(location, "name", locale) || location.name) : getLocationDisplayName(slug);
   const title = t("locationTitle", { location: localizedName });
   const description = t("locationDescription", { location: localizedName });
   const localePrefix = locale === "en" ? "" : `/${locale}`;
@@ -31,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title,
       description,
       url: `https://photoportugal.com${localePrefix}/photographers/location/${slug}`,
-      images: [{ url: location.cover_image || "/og-image.png", width: 1200, height: 630, alt: t("ogAlt", { location: localizedName }) }],
+      images: [{ url: location?.cover_image || "/og-image.png", width: 1200, height: 630, alt: t("ogAlt", { location: localizedName }) }],
     },
   };
 }
@@ -61,6 +65,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
     );
 
     if (profiles.length === 0) return [];
+    const coverageByPhotographer = await getCoverageNodeSlugsByPhotographerIds(profiles.map((profile) => profile.id));
 
     const allLocRows = await query<{ photographer_id: string; location_slug: string }>(
       "SELECT photographer_id, location_slug FROM photographer_locations"
@@ -89,7 +94,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
         id: p.id, user_id: "", slug: p.slug, name: p.name, tagline: p.tagline || "", bio: p.bio || "",
         avatar_url: p.avatar_url, cover_url: p.cover_url, cover_position_y: p.cover_position_y ?? 50,
         languages: p.languages || [], hourly_rate: 0, currency: "EUR",
-        locations: locs, packages: pkgs, shoot_types: p.shoot_types || [],
+        locations: locs, coverage_nodes: coverageByPhotographer[p.id] || [], packages: pkgs, shoot_types: p.shoot_types || [],
         experience_years: p.experience_years, is_verified: p.is_verified,
         is_featured: p.is_featured, is_founding: p.is_founding, plan: p.plan,
         rating: Number(p.rating), review_count: p.review_count,
@@ -110,7 +115,8 @@ export default async function LocationPhotographersPage({
   setRequestLocale(locale);
 
   const location = locations.find((l) => l.slug === slug);
-  if (!location) notFound();
+  const locationName = location?.name || getLocationDisplayName(slug);
+  if (!location && !getLocationNode(slug)) notFound();
 
   const dbPhotographers = await getDbPhotographers(locale);
 
@@ -118,10 +124,12 @@ export default async function LocationPhotographersPage({
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Professional Photographers in ${location.name}, Portugal`,
-    numberOfItems: dbPhotographers.filter(p => p.locations.some(l => l.slug === slug)).length,
+    name: `Professional Photographers in ${locationName}, Portugal`,
+    numberOfItems: dbPhotographers.filter(p =>
+      p.locations.some(l => l.slug === slug) || (p.coverage_nodes || []).includes(slug)
+    ).length,
     itemListElement: dbPhotographers
-      .filter(p => p.locations.some(l => l.slug === slug))
+      .filter(p => p.locations.some(l => l.slug === slug) || (p.coverage_nodes || []).includes(slug))
       .slice(0, 20)
       .map((p, i) => ({
         "@type": "ListItem",

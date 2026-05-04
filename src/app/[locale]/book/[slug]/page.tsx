@@ -42,6 +42,7 @@ interface Photographer {
   rating?: number;
   review_count?: number;
   locations: { slug: string; name: string }[];
+  coverage_locations?: { slug: string; name: string }[];
   packages: Package[];
   reviews?: BookReview[];
   /** Photographer's minimum advance-notice requirement, in hours.
@@ -107,8 +108,9 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               const popular = data.packages.find((p: Package) => p.is_popular);
               setSelectedPackage(fromUrl?.id || popular?.id || data.packages[0].id);
             }
-            if (data.locations?.length > 0) {
-              setSelectedLocation(data.locations[0].slug);
+            const locationOptions = data.coverage_locations?.length ? data.coverage_locations : data.locations;
+            if (locationOptions?.length > 0) {
+              setSelectedLocation(locationOptions[0].slug);
             }
             // Fetch photographer unavailability
             fetch(`/api/availability?photographer_id=${data.id}`)
@@ -464,7 +466,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         )}
 
         {/* Location */}
-        {photographer.locations.length > 0 && (
+        {(photographer.coverage_locations?.length || photographer.locations.length) > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700">{t("form.preferredLocation")}</label>
             <select
@@ -472,7 +474,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               onChange={(e) => setSelectedLocation(e.target.value)}
               className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
             >
-              {photographer.locations.map((loc: { slug: string; name: string }) => (
+              {(photographer.coverage_locations?.length ? photographer.coverage_locations : photographer.locations).map((loc: { slug: string; name: string }) => (
                 <option key={loc.slug} value={loc.slug}>{loc.name}</option>
               ))}
             </select>

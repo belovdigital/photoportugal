@@ -7,6 +7,11 @@ import { localizeShootType } from "@/lib/shoot-type-labels";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { trackSearch } from "@/lib/analytics";
+import {
+  LocationTreeOptions,
+  getLocationTreeLabel,
+  locationMatchesSelection,
+} from "@/components/ui/LocationTreeOptions";
 
 function TeamOnlineIndicator() {
   const t = useTranslations("photographers");
@@ -118,7 +123,6 @@ function bucketStateFor(key: string | null): { flags: Set<BucketFlag>; sortBy: S
 export function PhotographerCatalog({
   photographers,
   quotes = {},
-  locations,
   shootTypes,
   initialLocation,
   initialShootType,
@@ -231,29 +235,16 @@ export function PhotographerCatalog({
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
-    const locationName = locationFilters.map((s) => locations.find((l) => l.slug === s)?.name).filter(Boolean).join(", ");
+    const locationName = locationFilters.map(getLocationTreeLabel).filter(Boolean).join(", ");
     trackSearch({ location: locationName || undefined, shootType: shootTypeFilters.join(", ") || undefined });
-  }, [locationFilters, shootTypeFilters, locations]);
+  }, [locationFilters, shootTypeFilters]);
 
   // Only show locations that have at least 1 photographer
-  const locationsWithPhotographers = useMemo(() => {
+  const availableLegacyLocationSlugs = useMemo(() => {
     const slugsWithPhotographers = new Set<string>();
     photographers.forEach((p) => p.locations.forEach((l) => slugsWithPhotographers.add(l.slug)));
-    return locations.filter((l) => slugsWithPhotographers.has(l.slug));
-  }, [locations, photographers]);
-
-  const filteredLocations = useMemo(() => {
-    const list = !locationSearch
-      ? locationsWithPhotographers
-      : locationsWithPhotographers.filter((l) =>
-          l.name.toLowerCase().includes(locationSearch.toLowerCase())
-        );
-    return [...list].sort((a, b) => {
-      if (a.slug === "lisbon") return -1;
-      if (b.slug === "lisbon") return 1;
-      return a.name.localeCompare(b.name);
-    });
-  }, [locationsWithPhotographers, locationSearch]);
+    return Array.from(slugsWithPhotographers);
+  }, [photographers]);
 
   function toggleLocation(slug: string) {
     setLocationFilters((prev) =>
@@ -281,7 +272,11 @@ export function PhotographerCatalog({
 
     if (locationFilters.length > 0) {
       result = result.filter((p) =>
-        p.locations.some((l) => locationFilters.includes(l.slug))
+        locationMatchesSelection(
+          p.locations.map((l) => l.slug),
+          (p as PhotographerProfile & { coverage_nodes?: string[] }).coverage_nodes,
+          locationFilters
+        )
       );
     }
 
@@ -359,9 +354,7 @@ export function PhotographerCatalog({
     { key: "fast", label: t("buckets.fast"), icon: "⚡" },
   ];
 
-  const selectedLocationNames = locationFilters
-    .map((s) => locations.find((l) => l.slug === s)?.name)
-    .filter(Boolean);
+  const selectedLocationNames = locationFilters.map(getLocationTreeLabel);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -585,34 +578,16 @@ export function PhotographerCatalog({
                     />
                   </div>
                   <div className="max-h-60 overflow-y-auto px-1 pb-1">
-                    <button
-                      onClick={() => { setLocationFilters([]); setLocationSearch(""); }}
-                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${locationFilters.length === 0 ? "font-semibold text-primary-600" : "text-gray-600"}`}
-                    >
-                      {t("filters.allLocations")}
-                    </button>
-                    {filteredLocations.map((loc, idx) => (
-                      <div key={loc.slug}>
-                        <button
-                          onClick={() => toggleLocation(loc.slug)}
-                          className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-warm-50 ${locationFilters.includes(loc.slug) ? "font-semibold text-primary-600" : loc.slug === "lisbon" ? "font-bold text-gray-800" : "text-gray-600"}`}
-                        >
-                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                            locationFilters.includes(loc.slug) ? "border-primary-500 bg-primary-500" : "border-gray-300"
-                          }`}>
-                            {locationFilters.includes(loc.slug) && (
-                              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                          </span>
-                          {loc.name}
-                        </button>
-                        {loc.slug === "lisbon" && idx < filteredLocations.length - 1 && (
-                          <div className="mx-3 my-1 border-b border-warm-200" />
-                        )}
-                      </div>
-                    ))}
+                    <LocationTreeOptions
+                      selectedSlugs={locationFilters}
+                      onSelect={toggleLocation}
+                      mode="multiple"
+                      searchQuery={locationSearch}
+                      availableLegacySlugs={availableLegacyLocationSlugs}
+                      allLabel={t("filters.allLocations")}
+                      onClear={() => { setLocationFilters([]); setLocationSearch(""); }}
+                      noMatchLabel={t("noMatch")}
+                    />
                   </div>
                 </div>
               </>
@@ -884,28 +859,15 @@ export function PhotographerCatalog({
                   >
                     {t("filters.allLocations")}
                   </button>
-                  {filteredLocations.map((loc, idx) => (
-                    <div key={loc.slug}>
-                      <button
-                        onClick={() => toggleLocation(loc.slug)}
-                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition ${locationFilters.includes(loc.slug) ? "bg-primary-50 font-semibold text-primary-700" : loc.slug === "lisbon" ? "font-bold text-gray-800" : "text-gray-600"}`}
-                      >
-                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
-                          locationFilters.includes(loc.slug) ? "border-primary-500 bg-primary-500" : "border-gray-300"
-                        }`}>
-                          {locationFilters.includes(loc.slug) && (
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </span>
-                        {loc.name}
-                      </button>
-                      {loc.slug === "lisbon" && idx < filteredLocations.length - 1 && (
-                        <div className="mx-3 my-1 border-b border-warm-200" />
-                      )}
-                    </div>
-                  ))}
+                  <LocationTreeOptions
+                    selectedSlugs={locationFilters}
+                    onSelect={toggleLocation}
+                    mode="multiple"
+                    searchQuery={locationSearch}
+                    availableLegacySlugs={availableLegacyLocationSlugs}
+                    noMatchLabel={t("noMatch")}
+                    className="-mx-1"
+                  />
                 </>
               ) : (
                 <>
