@@ -13,6 +13,7 @@ import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { locations } from "@/lib/locations-data";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
+import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 
 // Force-dynamic so live counts + min prices + the random representative
 // photo per tile reshuffle on each request — same freshness pattern as
@@ -174,6 +175,14 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
           on mobile so it doesn't push the form below the fold. The
           mosaic auto-rotates between 24 real photos Portugal-wide. */}
       <section className="relative bg-warm-50">
+        <div className="pointer-events-none absolute inset-x-0 top-4 z-10 hidden lg:block">
+          <div className="mx-auto flex max-w-7xl justify-end px-4 sm:px-6 lg:px-8">
+            <GoogleReviewsBadge
+              variant="compact"
+              className="pointer-events-auto border-warm-200 bg-white/95 shadow-lg shadow-black/5 backdrop-blur-md"
+            />
+          </div>
+        </div>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-2 lg:gap-12 lg:py-20">
             <div className="max-w-xl lg:sticky lg:top-24">
@@ -205,6 +214,12 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
                 <span className="rounded-full bg-warm-100 px-3 py-1 text-gray-700">
                   {portugalCoverageStats.displayPlacesLabel} destinations
                 </span>
+              </div>
+              <div className="mt-3 lg:hidden">
+                <GoogleReviewsBadge
+                  variant="compact"
+                  className="border-warm-200 bg-white/95 shadow-sm"
+                />
               </div>
 
               {/* AI-led match panel with sparkle icon — same visual

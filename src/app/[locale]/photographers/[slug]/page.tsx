@@ -730,7 +730,7 @@ export default async function PhotographerProfilePage({
 
               {coverageGroups.length > 0 && (
                 <div className={compactCoverageCard
-                  ? "mt-2 inline-flex max-w-full rounded-xl border border-warm-200 bg-white/75 px-3 py-2 shadow-sm"
+                  ? "mt-2 flex w-fit max-w-full rounded-xl border border-warm-200 bg-white/75 px-3 py-2 shadow-sm"
                   : "mt-2 block max-w-3xl rounded-xl border border-warm-200 bg-white/75 px-3 py-2 shadow-sm"
                 }>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
