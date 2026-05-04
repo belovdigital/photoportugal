@@ -869,14 +869,8 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                     {presenceLabel || activeConvo.other_role}
                   </p>
                 </div>
-                {/* Connection & online status indicator */}
+                {/* Connection status indicator */}
                 <div className="ml-auto flex items-center gap-1.5">
-                  {otherOnline && (
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-green-500" />
-                      <span className="text-[11px] text-green-600 hidden sm:inline">{presenceLabel}</span>
-                    </span>
-                  )}
                   {sseStatus === "reconnecting" && (
                     <span className="flex items-center gap-1">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-yellow-500" />
