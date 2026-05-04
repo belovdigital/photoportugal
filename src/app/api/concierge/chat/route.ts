@@ -18,7 +18,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "show_locations",
-      description: "Suggest 2-4 Portugal locations as clickable cards when the visitor is undecided WHERE to shoot. ONLY use slugs from this list: lisbon, sintra, cascais, douro-valley, porto, algarve, lagos, faro, albufeira, tavira, madeira, comporta, caparica, setubal, arrabida, aveiro, guimaraes, coimbra, nazare, evora, obidos, ericeira, sesimbra, peniche, geres, funchal, ponta-delgada, azores, tomar. Use this BEFORE show_matches when the visitor has not picked a specific city.",
+      description: "Suggest 2-4 PUBLIC Portugal destination cards when the visitor is undecided WHERE to shoot. ONLY use slugs from this public-card list: lisbon, sintra, cascais, douro-valley, porto, algarve, lagos, faro, albufeira, tavira, madeira, comporta, caparica, setubal, arrabida, aveiro, guimaraes, coimbra, nazare, evora, obidos, ericeira, sesimbra, peniche, geres, funchal, ponta-delgada, azores, tomar. Do NOT use new coverage-only slugs such as lisbon-region, porto-north, azores-central-group, terceira, pico, faial, sao-miguel here because they do not have public cards yet. Use show_matches for confirmed coverage-only locations.",
       parameters: {
         type: "object",
         properties: {
@@ -29,7 +29,7 @@ const tools = [
             items: {
               type: "object",
               properties: {
-                slug: { type: "string", description: "Location slug (must be from the list above)" },
+                slug: { type: "string", description: "Public destination card slug (must be from the list above)" },
                 reason: { type: "string", description: "Why this location fits — 1 sentence, max 140 chars" },
               },
               required: ["slug", "reason"],
@@ -45,7 +45,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "show_matches",
-      description: "Show 3 photographer matches to the user. ONLY call this once the visitor has CONFIRMED ONE specific location (not 'one of these three'). Never call this in the same turn as show_locations.",
+      description: "Show 3 photographer matches to the user. ONLY call this once the visitor has CONFIRMED ONE specific location (not 'one of these three'). The confirmed location may be a public city/region OR a new coverage node such as Terceira, Pico, Faial, Sao Miguel, Lisbon Region, Algarve, Madeira, or an Azores island group. Match using photographers' locations=[...] coverage slugs. Never call this in the same turn as show_locations.",
       parameters: {
         type: "object",
         properties: {
@@ -89,6 +89,26 @@ interface IncomingMessage {
   role: "user" | "assistant";
   content: string;
 }
+
+const coverageToPublicCardSlug: Record<string, string> = {
+  "lisbon-region": "lisbon",
+  "porto-north": "porto",
+  "central-portugal": "coimbra",
+  "azores-eastern-group": "azores",
+  "azores-central-group": "azores",
+  "azores-western-group": "azores",
+  "sao-miguel": "azores",
+  "santa-maria": "azores",
+  terceira: "azores",
+  graciosa: "azores",
+  "sao-jorge": "azores",
+  pico: "azores",
+  faial: "azores",
+  flores: "azores",
+  corvo: "azores",
+  portimao: "algarve",
+  vilamoura: "algarve",
+};
 
 // Lightweight language detector based on script + characteristic words.
 // Returns ISO 639-1 code or null if uncertain. Doesn't pretend to be perfect —
@@ -277,8 +297,14 @@ export async function POST(req: NextRequest) {
         // cover images (the static /images/locations/*.jpg files don't exist).
         const { locations: allLocations } = await import("@/lib/locations-data");
         const { locationImage } = await import("@/lib/unsplash-images");
+        const seenPublicSlugs = new Set<string>();
         const items = (args.locations || []).map((l: { slug: string; reason: string }) => {
-          const loc = allLocations.find((x) => x.slug === l.slug);
+          const publicSlug = allLocations.some((x) => x.slug === l.slug)
+            ? l.slug
+            : coverageToPublicCardSlug[l.slug];
+          if (!publicSlug || seenPublicSlugs.has(publicSlug)) return null;
+          seenPublicSlugs.add(publicSlug);
+          const loc = allLocations.find((x) => x.slug === publicSlug);
           if (!loc) return null;
           return {
             slug: loc.slug,

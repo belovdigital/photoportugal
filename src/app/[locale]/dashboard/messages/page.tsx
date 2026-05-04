@@ -41,6 +41,8 @@ interface Conversation {
   booking_id: string;
   other_name: string;
   other_avatar: string | null;
+  other_user_id: string;
+  other_last_seen_at: string | null;
   other_role: "client" | "photographer";
   other_slug: string | null;
   last_message: string | null;
@@ -65,21 +67,45 @@ interface Message {
 
 type SSEStatus = "connected" | "reconnecting" | "disconnected";
 
-function MessagesContent() {
+function isRecentlyOnline(lastSeenAt: string | null | undefined): boolean {
+  if (!lastSeenAt) return false;
+  return Date.now() - new Date(lastSeenAt).getTime() < 75_000;
+}
+
+function formatPresenceLabel(
+  lastSeenAt: string | null | undefined,
+  online: boolean,
+  t: ReturnType<typeof useTranslations>
+): string {
+  if (online) return t("online");
+  if (!lastSeenAt) return "";
+  const minutesAgo = Math.max(1, Math.floor((Date.now() - new Date(lastSeenAt).getTime()) / 60_000));
+  if (minutesAgo < 2) return t("lastSeenJustNow");
+  if (minutesAgo < 60) return t("lastSeenMinutes", { count: minutesAgo });
+  const hoursAgo = Math.floor(minutesAgo / 60);
+  if (hoursAgo < 24) return t("lastSeenHours", { count: hoursAgo });
+  return t("lastSeenDays", { count: Math.floor(hoursAgo / 24) });
+}
+
+export function MessagesContent({ initialChatId }: { initialChatId?: string } = {}) {
   const { data: session, status: authStatus } = useSession();
   const t = useTranslations("messages");
   const locale = useLocale();
   const searchParams = useSearchParams();
-  const initialChat = searchParams.get("chat");
+  const initialChat = initialChatId || searchParams.get("chat");
   const userId = (session?.user as { id?: string })?.id;
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeChat, setActiveChatRaw] = useState<string | null>(initialChat);
   function setActiveChat(chatId: string | null) {
     setActiveChatRaw(chatId);
-    const url = chatId ? `?chat=${chatId}` : window.location.pathname;
+    const basePath = window.location.pathname.replace(/\/dashboard\/messages\/[^/?#]+$/, "/dashboard/messages");
+    const url = chatId ? `${basePath}/${chatId}` : basePath;
     window.history.replaceState(null, "", url);
   }
+  useEffect(() => {
+    setActiveChatRaw(initialChat);
+  }, [initialChat]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -140,6 +166,7 @@ function MessagesContent() {
   const [wsToken, setWsToken] = useState<string | null>(null);
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<{ userId: string; userName: string }[]>([]);
+  const [, setPresenceTick] = useState(0);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTypingSent = useRef<number>(0);
 
@@ -217,6 +244,11 @@ function MessagesContent() {
       if (convoRefreshRef.current) clearInterval(convoRefreshRef.current);
     };
   }, [fetchConversations]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setPresenceTick((tick) => tick + 1), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // --- Fetch full message history for a chat ---
   async function fetchMessages(bookingId: string) {
@@ -672,6 +704,13 @@ function MessagesContent() {
   }
 
   const activeConvo = conversations.find((c) => c.booking_id === activeChat);
+  const otherOnline = activeConvo ? (
+    onlineUsers.some((u) => u.userId === activeConvo.other_user_id) ||
+    isRecentlyOnline(activeConvo.other_last_seen_at)
+  ) : false;
+  const presenceLabel = activeConvo
+    ? formatPresenceLabel(activeConvo.other_last_seen_at, otherOnline, t)
+    : "";
 
   if (authStatus === "loading")
     return (
@@ -826,14 +865,16 @@ function MessagesContent() {
                   ) : (
                     <span className="text-sm font-semibold text-gray-900">{activeConvo.other_name}</span>
                   )}
-                  <p className="text-[11px] text-gray-400 capitalize">{activeConvo.other_role}</p>
+                  <p className={`text-[11px] ${otherOnline ? "text-green-600" : "text-gray-400"}`}>
+                    {presenceLabel || activeConvo.other_role}
+                  </p>
                 </div>
                 {/* Connection & online status indicator */}
                 <div className="ml-auto flex items-center gap-1.5">
-                  {onlineUsers.some(u => u.userId !== userId) && (
+                  {otherOnline && (
                     <span className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-green-500" />
-                      <span className="text-[11px] text-green-600 hidden sm:inline">{t("online")}</span>
+                      <span className="text-[11px] text-green-600 hidden sm:inline">{presenceLabel}</span>
                     </span>
                   )}
                   {sseStatus === "reconnecting" && (

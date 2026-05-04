@@ -1,4 +1,14 @@
 import { ConciergePhotographer, photographersToSystemPromptBlock } from "./photographer-context";
+import { LOCATION_TREE, type LocationNode } from "@/lib/location-hierarchy";
+
+function flattenLocationTreeForPrompt(nodes: LocationNode[] = LOCATION_TREE, depth = 0): string[] {
+  return nodes.flatMap((node) => [
+    `${"  ".repeat(depth)}- ${node.name} (${node.slug}, ${node.type})`,
+    ...flattenLocationTreeForPrompt(node.children || [], depth + 1),
+  ]);
+}
+
+const locationHierarchyPromptBlock = flattenLocationTreeForPrompt().join("\n");
 
 export function buildSystemPrompt(photographers: ConciergePhotographer[], opts?: { language?: string }) {
   const photogBlock = photographersToSystemPromptBlock(photographers);
@@ -44,12 +54,28 @@ Use this for location recommendations (do NOT make up new ones):
 - **Évora / Óbidos** — historic medieval towns, walled village, charming alleys. Best for: couples seeking quaint charm.
 - **Azores / Ponta Delgada** — volcanic landscapes, lakes, hot springs. Best for: adventure couples, content creators. The Azores are 9 islands: São Miguel (Ponta Delgada), Santa Maria, Terceira, Graciosa, São Jorge, Pico, Faial, Flores, and Corvo. If a visitor names an island, treat photographers with that exact island coverage or general Azores coverage as relevant.
 
+## New location coverage hierarchy — use this for matching
+
+Photographers now select coverage in a nested hierarchy. Their \`locations=[...]\` list may contain both old public location slugs and new hierarchy node slugs. Understand these parent/child relationships when matching:
+
+${locationHierarchyPromptBlock}
+
+Important matching rules:
+- Public location cards are NOT the same as coverage nodes. \`show_locations\` can only show public card slugs from its tool description.
+- \`show_matches\` may match against any photographer coverage slug shown in the photographer list, including regions, island groups, islands, and cities.
+- If the visitor names a specific island/city, prefer photographers with that exact slug first, then its parent group/region, then broader legacy coverage.
+- If the visitor says "Azores" without an island, ask which island if the shoot location matters. If they are flexible or want general options, Azores-wide photographers are acceptable.
+- If the visitor says an island such as Terceira, Pico, Faial, São Jorge, Flores, Corvo, Santa Maria, São Miguel, or Graciosa, treat it as a specific location and match photographers who cover that island or a parent Azores group/region.
+- If the visitor says "Lisbon area", "near Lisbon", "Cascais/Sintra/Caparica", understand that these belong to Lisbon Region. Exact city wins over the broad region.
+- If the visitor says "Algarve", photographers with Algarve-wide coverage are relevant; for Lagos/Faro/Albufeira/Tavira/Portimão/Vilamoura prefer exact city coverage when available.
+- Never reject a location just because it is not a public location card. For matching, use the hierarchy and the photographers' coverage slugs.
+
 ## Decision logic — STRICT separation of phases
 
 **You have 3 tools. Use exactly ONE per turn.**
 
-- **show_locations** — when the visitor hasn't picked a specific city. Don't list locations as plain text — call this tool and pass 2-4 valid slugs. The UI renders them as clickable cards with photos. Don't combine with show_matches.
-- **show_matches** — only when the visitor has confirmed ONE specific city. Never call in same turn as show_locations.
+- **show_locations** — when the visitor hasn't picked a specific public destination. Don't list locations as plain text — call this tool and pass 2-4 valid public card slugs. The UI renders them as clickable cards with photos. Don't combine with show_matches.
+- **show_matches** — only when the visitor has confirmed ONE specific location, which may be a city, region, island, or island group from the hierarchy. Never call in same turn as show_locations.
 - **request_human_match** — fallback only.
 
 **Decision tree:**

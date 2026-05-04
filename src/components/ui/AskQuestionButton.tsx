@@ -62,7 +62,7 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
     setSending(false);
     if (res.ok) {
       const data = await res.json();
-      router.push(`/dashboard/messages?chat=${data.booking_id}`);
+      router.push(`/dashboard/messages/${data.booking_id}`);
     } else {
       const data = await res.json();
       setError(data.error || t("failedToSend"));

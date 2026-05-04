@@ -117,7 +117,7 @@ export async function getPhotographerTasks(profileId: string, userId: string): P
       bookingId: row.id,
       deadline: row.last_message_at,
       urgency,
-      href: `/dashboard/messages?chat=${row.id}`,
+      href: `/dashboard/messages/${row.id}`,
     });
   }
 

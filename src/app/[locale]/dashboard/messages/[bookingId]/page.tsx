@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { Suspense, use } from "react";
+import { MessagesContent } from "../page";
 
 export default function MessageRedirect({ params }: { params: Promise<{ bookingId: string }> }) {
-  const router = useRouter();
-
-  useEffect(() => {
-    params.then(({ bookingId }) => {
-      router.replace(`/dashboard/messages?chat=${bookingId}`);
-    });
-  }, [params, router]);
-
-  return null;
+  const { bookingId } = use(params);
+  return (
+    <Suspense>
+      <MessagesContent initialChatId={bookingId} />
+    </Suspense>
+  );
 }
