@@ -1161,6 +1161,11 @@
         "label": "Premiers 50",
         "reward": "3 mois de Pro gratuit",
         "rewardDetail": "Plan Pro (valeur 29 €/mois) gratuit pendant 3 mois. Ensuite, choisissez n'importe quel plan."
+      },
+      "first100": {
+        "label": "100 premiers",
+        "reward": "6 mois Premium offerts",
+        "rewardDetail": "Plan Premium (valeur 59 €/mois) offert pendant 6 mois. Ensuite, choisissez n'importe quel forfait."
       }
     },
     "whatYouGet": {
@@ -1604,7 +1609,8 @@
         "proposal": "Demande en mariage",
         "honeymoon": "Lune de miel",
         "friendsTrip": "Voyage entre amis",
-        "anniversary": "Anniversaire de mariage"
+        "anniversary": "Anniversaire de mariage",
+        "elopement": "Mariage intime"
       },
       "explore": "Explorer :",
       "faqHeading": "Questions fréquentes sur la photographie à {location}",
@@ -1850,7 +1856,8 @@
     "guidesTitle": "Guides photo {name}",
     "guidesSubtitle": "Conseils et inspiration pour votre séance {nameLower} au Portugal",
     "popularPackages": "Forfaits photo populaires {name}",
-    "popularPackagesSub": "Prix réels de photographes vérifiés proposant des séances {nameLower} au Portugal."
+    "popularPackagesSub": "Prix réels de photographes vérifiés proposant des séances {nameLower} au Portugal.",
+    "popular": "Populaire"
   },
   "blogDetail": {
     "home": "Accueil",
@@ -2625,7 +2632,8 @@
     "featFullAnalytics": "Analytique complète",
     "featCustomUrl": "URL de profil personnalisée",
     "featPrioritySupport": "Support prioritaire",
-    "featCommission": "Commission de {rate}%"
+    "featCommission": "Commission de {rate}%",
+    "first100": "100 premiers"
   },
   "payouts": {
     "title": "Virements",
@@ -2963,7 +2971,8 @@
     "cancelReasonTooShort": "Veuillez écrire au moins quelques mots.",
     "keepBooking": "Garder la réservation",
     "cancelConfirm2": "Oui, annuler",
-    "declineConfirm": "Oui, refuser"
+    "declineConfirm": "Oui, refuser",
+    "deliveryAccepted": "Livraison acceptée"
   },
   "clientDashboard": {
     "title": "Mon tableau de bord"
@@ -3120,7 +3129,8 @@
     "clientReviewsTitle": "Rappels d’avis",
     "clientReviewsDesc": "Recevez un email quelques jours après la séance pour vous inviter à laisser un avis",
     "clientSmsBookingsTitle": "Rappels par SMS",
-    "clientSmsBookingsDesc": "Recevez un SMS pour les confirmations de réservation et un rappel 24 h avant la séance"
+    "clientSmsBookingsDesc": "Recevez un SMS pour les confirmations de réservation et un rappel 24 h avant la séance",
+    "telegramDisconnectTitle": "Déconnecter Telegram"
   },
   "bookings": {
     "bookingRequests": "Demandes de réservation",

@@ -1148,7 +1148,8 @@
         "proposal": "Pedida de mano",
         "honeymoon": "Luna de miel",
         "friendsTrip": "Viaje con amigos",
-        "anniversary": "Aniversario"
+        "anniversary": "Aniversario",
+        "elopement": "Boda íntima"
       },
       "explore": "Explorar:",
       "faqHeading": "Preguntas frecuentes sobre fotografía en {location}",
@@ -1381,7 +1382,8 @@
     "guidesTitle": "Guías de fotografía de {name}",
     "guidesSubtitle": "Consejos e inspiración para su sesión de {nameLower} en Portugal",
     "popularPackages": "Paquetes populares de fotografía de {name}",
-    "popularPackagesSub": "Precios reales de fotógrafos verificados que ofrecen sesiones de {nameLower} en Portugal."
+    "popularPackagesSub": "Precios reales de fotógrafos verificados que ofrecen sesiones de {nameLower} en Portugal.",
+    "popular": "Popular"
   },
   "blogDetail": {
     "home": "Inicio",
@@ -1664,6 +1666,11 @@
         "label": "Primeros 50",
         "reward": "3 meses de Pro gratis",
         "rewardDetail": "Plan Pro (valor 29 €/mes) gratis durante 3 meses. Después, elija cualquier plan."
+      },
+      "first100": {
+        "label": "Primeros 100",
+        "reward": "6 meses Premium gratis",
+        "rewardDetail": "Plan Premium (valor de €59/mes) gratis durante 6 meses. Luego elija cualquier plan."
       }
     },
     "whatYouGet": {
@@ -2625,7 +2632,8 @@
     "featFullAnalytics": "Análisis completo",
     "featCustomUrl": "URL de perfil personalizada",
     "featPrioritySupport": "Soporte prioritario",
-    "featCommission": "Comisión del {rate}%"
+    "featCommission": "Comisión del {rate}%",
+    "first100": "Primeros 100"
   },
   "payouts": {
     "title": "Pagos",
@@ -2963,7 +2971,8 @@
     "cancelReasonTooShort": "Por favor escriba al menos unas palabras.",
     "keepBooking": "Mantener reserva",
     "cancelConfirm2": "Sí, cancelar",
-    "declineConfirm": "Sí, rechazar"
+    "declineConfirm": "Sí, rechazar",
+    "deliveryAccepted": "Entrega aceptada"
   },
   "clientDashboard": {
     "title": "Mi panel"
@@ -3120,7 +3129,8 @@
     "clientReviewsTitle": "Recordatorios de reseña",
     "clientReviewsDesc": "Reciba un email unos días después de la sesión invitándole a dejar una reseña",
     "clientSmsBookingsTitle": "Recordatorios por SMS",
-    "clientSmsBookingsDesc": "Reciba SMS para confirmaciones de reserva y recordatorio 24 h antes de la sesión"
+    "clientSmsBookingsDesc": "Reciba SMS para confirmaciones de reserva y recordatorio 24 h antes de la sesión",
+    "telegramDisconnectTitle": "Desconectar Telegram"
   },
   "bookings": {
     "bookingRequests": "Solicitudes de reserva",

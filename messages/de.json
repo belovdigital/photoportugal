@@ -852,6 +852,11 @@
         "label": "Erste 50",
         "reward": "3 Monate Pro kostenlos",
         "rewardDetail": "Pro-Plan (Wert 29 €/Mon.) 3 Monate kostenlos. Danach freie Planwahl."
+      },
+      "first100": {
+        "label": "Erste 100",
+        "reward": "6 Monate Premium kostenlos",
+        "rewardDetail": "Premium-Plan (im Wert von 59 €/Monat) 6 Monate lang kostenlos. Danach beliebigen Plan wählen."
       }
     },
     "whatYouGet": {
@@ -1295,7 +1300,8 @@
         "proposal": "Heiratsantrag",
         "honeymoon": "Flitterwochen",
         "friendsTrip": "Freunde-Trip",
-        "anniversary": "Jubiläum"
+        "anniversary": "Jubiläum",
+        "elopement": "Elopement"
       },
       "explore": "Erkunden:",
       "faqHeading": "Häufig gestellte Fragen zur Fotografie in {location}",
@@ -1694,7 +1700,8 @@
     "guidesTitle": "{name}-Fotografie-Ratgeber",
     "guidesSubtitle": "Tipps und Inspiration für Ihr {nameLower}-Fotoshooting in Portugal",
     "popularPackages": "Beliebte {name}-Fotoshooting-Pakete",
-    "popularPackagesSub": "Echte Preise von verifizierten Fotografen, die {nameLower}-Fotoshooting-Pakete in Portugal anbieten."
+    "popularPackagesSub": "Echte Preise von verifizierten Fotografen, die {nameLower}-Fotoshooting-Pakete in Portugal anbieten.",
+    "popular": "Beliebt"
   },
   "blogDetail": {
     "home": "Startseite",
@@ -2469,7 +2476,8 @@
     "featFullAnalytics": "Vollständige Analytik",
     "featCustomUrl": "Individuelle Profil-URL",
     "featPrioritySupport": "Vorrangiger Support",
-    "featCommission": "{rate}% Provision"
+    "featCommission": "{rate}% Provision",
+    "first100": "Erste 100"
   },
   "payouts": {
     "title": "Auszahlungen",
@@ -2807,7 +2815,8 @@
     "cancelReasonTooShort": "Bitte schreiben Sie zumindest ein paar Worte.",
     "keepBooking": "Buchung behalten",
     "cancelConfirm2": "Ja, stornieren",
-    "declineConfirm": "Ja, ablehnen"
+    "declineConfirm": "Ja, ablehnen",
+    "deliveryAccepted": "Lieferung angenommen"
   },
   "clientDashboard": {
     "title": "Mein Dashboard"
@@ -2964,7 +2973,8 @@
     "clientReviewsTitle": "Bewertungserinnerungen",
     "clientReviewsDesc": "Einige Tage nach dem Shooting eine E-Mail mit der Einladung zur Bewertung",
     "clientSmsBookingsTitle": "SMS-Erinnerungen",
-    "clientSmsBookingsDesc": "SMS für Buchungsbestätigungen und 24-Stunden-Erinnerung vor dem Shooting"
+    "clientSmsBookingsDesc": "SMS für Buchungsbestätigungen und 24-Stunden-Erinnerung vor dem Shooting",
+    "telegramDisconnectTitle": "Telegram trennen"
   },
   "bookings": {
     "bookingRequests": "Buchungsanfragen",

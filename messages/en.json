@@ -1295,7 +1295,8 @@
         "proposal": "Proposal",
         "honeymoon": "Honeymoon",
         "friendsTrip": "Friends Trip",
-        "anniversary": "Anniversary"
+        "anniversary": "Anniversary",
+        "elopement": "Elopement"
       },
       "explore": "Explore:",
       "faqHeading": "Frequently Asked Questions About Photography in {location}",
@@ -1694,7 +1695,8 @@
     "guidesTitle": "{name} Photography Guides",
     "guidesSubtitle": "Tips and inspiration for your {nameLower} photoshoot in Portugal",
     "popularPackages": "Popular {name} Photography Packages",
-    "popularPackagesSub": "Real prices from verified photographers offering {nameLower} photography packages in Portugal."
+    "popularPackagesSub": "Real prices from verified photographers offering {nameLower} photography packages in Portugal.",
+    "popular": "Popular"
   },
   "blogDetail": {
     "home": "Home",
@@ -2807,7 +2809,8 @@
     "cancelReasonTooShort": "Please write at least a few words.",
     "keepBooking": "Keep booking",
     "cancelConfirm2": "Yes, cancel",
-    "declineConfirm": "Yes, decline"
+    "declineConfirm": "Yes, decline",
+    "deliveryAccepted": "Delivery accepted"
   },
   "clientDashboard": {
     "title": "My Dashboard"
@@ -2964,7 +2967,8 @@
     "clientReviewsTitle": "Review reminders",
     "clientReviewsDesc": "Get an email a few days after your shoot inviting you to leave a review",
     "clientSmsBookingsTitle": "SMS reminders",
-    "clientSmsBookingsDesc": "Get an SMS for booking confirmations and a 24h reminder before your shoot"
+    "clientSmsBookingsDesc": "Get an SMS for booking confirmations and a 24h reminder before your shoot",
+    "telegramDisconnectTitle": "Disconnect Telegram"
   },
   "bookings": {
     "bookingRequests": "Booking Requests",
