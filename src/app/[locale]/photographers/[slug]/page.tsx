@@ -353,6 +353,7 @@ export default async function PhotographerProfilePage({
     href: chip.hrefSlug ? `/locations/${chip.hrefSlug}` : undefined,
   }));
   const hiddenCoverageChipCount = Math.max(0, coverageChipItems.length - 4);
+  const compactCoverageCard = coverageGroups.length === 1 && coverageChipItems.length <= 2;
   const mobileCoverageLabel = formatMobileCoverageLabel(coverageGroups);
   const shootTypeChipItems = (photographer.shoot_types || []).map((type: string) => {
     const matched = allShootTypes.find((st) =>
@@ -728,7 +729,7 @@ export default async function PhotographerProfilePage({
               )}
 
               {coverageGroups.length > 0 && (
-                <div className="mt-2 max-w-3xl rounded-xl border border-warm-200 bg-white/75 px-3 py-2 shadow-sm">
+                <div className={`mt-2 max-w-full rounded-xl border border-warm-200 bg-white/75 px-3 py-2 shadow-sm ${compactCoverageCard ? "inline-flex w-fit" : "block max-w-3xl"}`}>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-gray-900">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
@@ -740,7 +741,7 @@ export default async function PhotographerProfilePage({
                       items={coverageChipItems}
                       visibleCount={4}
                       moreLabel={t("coverageMore", { count: hiddenCoverageChipCount })}
-                      className="min-w-0 flex-1"
+                      className={compactCoverageCard ? "min-w-0" : "min-w-0 flex-1"}
                       chipClassName="border-warm-200 bg-warm-50 text-gray-600 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
                       moreClassName="border-warm-200 bg-white text-gray-500 hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
                     />
