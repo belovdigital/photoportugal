@@ -163,6 +163,7 @@ interface AdminStats {
   disputesOpen: number;
   inquiriesCount: number;
   matchRequestsNew: number;
+  reviewsPending: number;
   // Funnel
   funnelMessages: number;
   funnelBookings: number;
@@ -693,6 +694,7 @@ export function AdminDashboard({
     if (key === "inquiries") return stats.inquiriesCount;
     if (key === "matchRequests") return stats.matchRequestsNew;
     if (key === "disputes") return stats.disputesOpen;
+    if (key === "reviews") return stats.reviewsPending;
     return 0;
   }
 

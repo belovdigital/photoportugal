@@ -59,6 +59,7 @@ export default async function AdminPage() {
     messageCount,
     blogCount,
     matchRequestsNewCount,
+    reviewsPendingCount,
   ] = await Promise.all([
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM users WHERE role = 'client' AND COALESCE(email_verified, FALSE) = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = TRUE AND COALESCE(u.email_verified, FALSE) = TRUE"),
@@ -74,6 +75,7 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM messages"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM match_requests WHERE status = 'new'").catch(() => null),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM reviews WHERE COALESCE(is_approved, FALSE) = FALSE"),
   ]);
 
   // Platform settings
@@ -301,6 +303,7 @@ export default async function AdminPage() {
     disputesOpen: parseInt(disputeCount?.count || "0"),
     inquiriesCount: inquiries.filter(i => !i.has_reply && !i.converted_to_booking_id && !i.archived).length,
     matchRequestsNew: parseInt(matchRequestsNewCount?.count || "0"),
+    reviewsPending: parseInt(reviewsPendingCount?.count || "0"),
     // Funnel: unique clients at each stage
     funnelMessages: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT sender_id) as count FROM messages WHERE is_system = FALSE").catch(() => null))?.count || "0"),
     funnelBookings: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT client_id) as count FROM bookings WHERE status != 'inquiry'").catch(() => null))?.count || "0"),
