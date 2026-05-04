@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import type { MouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import type mapboxgl from "mapbox-gl";
 import type { Map as MapboxMap, Marker as MapboxMarker } from "mapbox-gl";
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
@@ -266,12 +266,24 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
   const [filmstripMode, setFilmstripMode] = useState<"regions" | "places">("regions");
   const [selectedPlaceSlug, setSelectedPlaceSlug] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [mobileSheetSnap, setMobileSheetSnap] = useState<"peek" | "mid" | "full">("peek");
+  const [mobileSheetDragY, setMobileSheetDragY] = useState(0);
+  const [mobileSheetDragging, setMobileSheetDragging] = useState(false);
+  const mobileSheetDragRef = useRef({ active: false, startY: 0, startSnap: "peek" as "peek" | "mid" | "full" });
+  const mobileSheetExpanded = mobileSheetSnap !== "peek";
+
+  const setMobileSheetExpanded = (expanded: boolean) => {
+    setMobileSheetSnap(expanded ? "mid" : "peek");
+    setMobileSheetDragY(0);
+  };
 
   const handleQueryChange = (value: string) => {
     setQuery(value);
     if (value.trim()) {
       setScope("all");
       setFilmstripMode("places");
+      setMobileSheetSnap("full");
+      setMobileSheetDragY(0);
     }
   };
 
@@ -296,6 +308,50 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
 
   const stopFilmstripDrag = () => {
     dragRef.current.active = false;
+  };
+
+  const snapOrder: Array<"peek" | "mid" | "full"> = ["peek", "mid", "full"];
+  const mobileSheetClass = {
+    peek: "h-[218px]",
+    mid: "h-[52svh]",
+    full: "h-[78svh]",
+  }[mobileSheetSnap];
+  const mobileSheetListClass = mobileSheetSnap === "full" ? "max-h-[42svh]" : "max-h-[24svh]";
+
+  const startMobileSheetDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    mobileSheetDragRef.current = {
+      active: true,
+      startY: event.clientY,
+      startSnap: mobileSheetSnap,
+    };
+    setMobileSheetDragging(true);
+    setMobileSheetDragY(0);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const moveMobileSheetDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!mobileSheetDragRef.current.active) return;
+    const delta = event.clientY - mobileSheetDragRef.current.startY;
+    setMobileSheetDragY(Math.max(-120, Math.min(180, delta)));
+  };
+
+  const stopMobileSheetDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!mobileSheetDragRef.current.active) return;
+    mobileSheetDragRef.current.active = false;
+    setMobileSheetDragging(false);
+    const delta = event.clientY - mobileSheetDragRef.current.startY;
+    const currentIndex = snapOrder.indexOf(mobileSheetDragRef.current.startSnap);
+    let nextIndex = currentIndex;
+
+    if (delta < -44) nextIndex = Math.min(snapOrder.length - 1, currentIndex + 1);
+    else if (delta > 44) nextIndex = Math.max(0, currentIndex - 1);
+    else if (Math.abs(delta) < 10) nextIndex = currentIndex === 0 ? 1 : currentIndex === 1 ? 2 : 0;
+
+    setMobileSheetSnap(snapOrder[nextIndex]);
+    setMobileSheetDragY(0);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
 
   const allPlaces = useMemo(
@@ -442,6 +498,7 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
         setSelectedSlug(region.slug);
         setSelectedPlaceSlug("");
         setFilmstripMode("places");
+        setMobileSheetExpanded(true);
         setLocationCardOpen(true);
       });
 
@@ -533,6 +590,11 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
   const selectedSummary = selectedPlace
     ? `${selectedPlace.name} is inside ${selectedPlace.parentName}. Open photographers who cover this exact place, or use the region card to browse nearby options.`
     : selectedRegion.summary;
+  const mobileSheetTitle = showPlaceFilmstrip
+    ? query.trim()
+      ? `Places matching "${query.trim()}"`
+      : `${selectedRegion.name} places`
+    : copy.swipe;
 
   const showPrevPhoto = () => {
     setPhotoIndex((current) => (selectedPhotos.length > 0 ? (current - 1 + selectedPhotos.length) % selectedPhotos.length : 0));
@@ -580,7 +642,7 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
           display: none !important;
         }
       `}</style>
-      <div className="relative h-[calc(100vh-64px)] min-h-[700px]">
+      <div className="relative h-[calc(100svh-64px)] min-h-[620px] lg:h-[calc(100vh-64px)] lg:min-h-[700px]">
         {mapboxToken ? (
           <div className="absolute inset-0 h-full w-full">
             <div ref={mapContainerRef} className="photoportugal-location-map h-full w-full" />
@@ -612,7 +674,7 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
                   </span>
                 )}
               </div>
-              <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 <label className="relative block">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   <input
@@ -624,11 +686,12 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
                   {query && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setQuery("");
-                        setSelectedPlaceSlug("");
-                        setFilmstripMode("regions");
-                      }}
+	                      onClick={() => {
+	                        setQuery("");
+	                        setSelectedPlaceSlug("");
+	                        setFilmstripMode("regions");
+	                        setMobileSheetExpanded(false);
+	                      }}
                       className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition hover:bg-warm-100 hover:text-gray-800"
                       aria-label="Clear search"
                     >
@@ -797,7 +860,181 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
             </div>
           )}
 
-          <div className="pointer-events-auto absolute bottom-0 left-1/2 z-20 w-screen -translate-x-1/2">
+          <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-40 lg:hidden">
+            <div
+              className={`mx-auto max-w-md overflow-hidden rounded-t-[24px] border border-warm-200 bg-white shadow-[0_-14px_40px_rgba(15,23,42,0.18)] ${mobileSheetClass} ${
+                mobileSheetDragging ? "" : "transition-[height,transform] duration-300"
+              }`}
+              style={{ transform: `translateY(${mobileSheetDragY}px)` }}
+            >
+              <button
+                type="button"
+                onPointerDown={startMobileSheetDrag}
+                onPointerMove={moveMobileSheetDrag}
+                onPointerUp={stopMobileSheetDrag}
+                onPointerCancel={stopMobileSheetDrag}
+                className="touch-none block w-full cursor-grab px-4 pb-2 pt-3 active:cursor-grabbing"
+                aria-expanded={mobileSheetExpanded}
+              >
+                <span className="mx-auto block h-1.5 w-11 rounded-full bg-warm-300" />
+              </button>
+
+              <div className="px-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => selectedPhotos.length > 0 && setLightboxIndex(photoIndex)}
+                    className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-warm-100"
+                    aria-label={`Open ${selectedTitle} photo`}
+                  >
+                    {selectedPhotos[photoIndex] && (
+                      <OptimizedImage
+                        src={selectedPhotos[photoIndex]}
+                        alt={selectedTitle}
+                        width={300}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-bold uppercase tracking-wide text-primary-700">
+                      {selectedKicker}
+                    </p>
+                    <h2 className="truncate font-display text-2xl font-bold text-gray-950">{selectedTitle}</h2>
+                    <p className="truncate text-sm font-semibold text-gray-500">
+                      {availableNowLabel(selectedCount, copy)}
+                    </p>
+                  </div>
+                </div>
+
+                <a
+                  href={selectedPhotographersHref}
+                  className="mt-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 text-sm font-semibold text-white transition hover:bg-primary-700"
+                >
+                  {copy.show}
+                  <ChevronRight className="h-4 w-4" />
+                </a>
+
+                <div className={`transition-opacity duration-200 ${mobileSheetExpanded ? "opacity-100" : "pointer-events-none opacity-0"}`}>
+                  {mobileSheetSnap === "full" && selectedPhotos.length > 1 && (
+                    <div className="-mx-4 mt-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                      {selectedPhotos.slice(0, 6).map((photo, index) => (
+                        <button
+                          key={`${photo}-${index}-mobile`}
+                          type="button"
+                          onClick={() => {
+                            setPhotoIndex(index);
+                            setLightboxIndex(index);
+                          }}
+                          className="h-24 w-36 shrink-0 snap-start overflow-hidden rounded-xl bg-warm-100"
+                          aria-label={`Open photo ${index + 1}`}
+                        >
+                          <OptimizedImage src={photo} alt={`${selectedTitle} photo ${index + 1}`} width={420} className="h-full w-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-bold uppercase tracking-wide text-gray-500">
+                        {mobileSheetTitle}
+                      </p>
+                    </div>
+                    {showPlaceFilmstrip && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuery("");
+                          setSelectedPlaceSlug("");
+                          setFilmstripMode("regions");
+                          setMobileSheetExpanded(true);
+                        }}
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full border border-warm-200 bg-white px-3 py-1.5 text-xs font-bold text-primary-700"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                        Regions
+                      </button>
+                    )}
+                  </div>
+
+                  <div className={`mt-3 space-y-2 overflow-y-auto pr-1 ${mobileSheetListClass}`}>
+                    {(showPlaceFilmstrip ? filmstripPlaces : filteredRegions).length === 0 ? (
+                      <div className="rounded-2xl border border-warm-200 bg-warm-50 p-5 text-center text-sm text-gray-500">
+                        {copy.noResults}
+                      </div>
+                    ) : showPlaceFilmstrip ? (
+                      filmstripPlaces.map((place) => {
+                        const isSelected = place.slug === selectedPlaceSlug;
+                        const count = coverageCounts[place.slug] || 0;
+                        return (
+                          <button
+                            key={place.slug}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSlug(place.parentSlug);
+                              setSelectedPlaceSlug(place.slug);
+                              setFilmstripMode("places");
+                              setMobileSheetExpanded(false);
+                              setLocationCardOpen(true);
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-2xl border p-2 text-left transition ${
+                              isSelected ? "border-primary-200 bg-primary-50" : "border-warm-200 bg-white"
+                            }`}
+                          >
+                            <div className="h-14 w-16 shrink-0 overflow-hidden rounded-xl bg-warm-100">
+                              <OptimizedImage src={placeImage(place)} alt={place.name} width={260} className="h-full w-full object-cover" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[11px] font-bold uppercase tracking-wide text-primary-700">
+                                {place.type} in {place.parentName}
+                              </p>
+                              <h3 className="truncate text-base font-bold text-gray-950">{place.name}</h3>
+                              <p className="truncate text-xs font-semibold text-gray-500">{availableNowLabel(count, copy)}</p>
+                            </div>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      filteredRegions.map((region) => {
+                        const isSelected = region.slug === selectedSlug && !selectedPlaceSlug;
+                        const count = coverageCounts[region.slug] || 0;
+                        return (
+                          <button
+                            key={region.slug}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSlug(region.slug);
+                              setSelectedPlaceSlug("");
+                              setFilmstripMode("places");
+                              setMobileSheetExpanded(true);
+                              setLocationCardOpen(true);
+                            }}
+                            className={`flex w-full items-center gap-3 rounded-2xl border p-2 text-left transition ${
+                              isSelected ? "border-primary-200 bg-primary-50" : "border-warm-200 bg-white"
+                            }`}
+                          >
+                            <div className="h-14 w-16 shrink-0 overflow-hidden rounded-xl bg-warm-100">
+                              <OptimizedImage src={regionImage(region)} alt={region.name} width={260} className="h-full w-full object-cover" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[11px] font-bold uppercase tracking-wide text-primary-700">
+                                {region.scope === "islands" ? copy.islands : copy.mainland}
+                              </p>
+                              <h3 className="truncate text-base font-bold text-gray-950">{region.name}</h3>
+                              <p className="truncate text-xs font-semibold text-gray-500">{availableNowLabel(count, copy)}</p>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pointer-events-auto absolute bottom-0 left-1/2 z-20 hidden w-screen -translate-x-1/2 lg:block">
             {(showPlaceFilmstrip ? filmstripPlaces.length : filteredRegions.length) === 0 ? (
               <div className="mx-4 mb-5 max-w-sm rounded-2xl border border-warm-200 bg-white/92 px-5 py-8 text-center text-sm text-gray-500 shadow-2xl sm:mx-6 lg:mx-8">
                 {copy.noResults}

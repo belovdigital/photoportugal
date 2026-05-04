@@ -3,6 +3,19 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com https://widget.intercom.io https://js.intercomcdn.com https://www.clarity.ms https://*.clarity.ms",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' data: blob: https: http:",
+  "font-src 'self' https://fonts.gstatic.com https://js.intercomcdn.com https://fonts.intercomcdn.com https://api.mapbox.com",
+  "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://www.google.com https://googleads.g.doubleclick.net https://api.stripe.com https://api-iam.intercom.io https://nexus-websocket-a.intercom.io https://*.clarity.ms https://c.bing.com https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com wss: blob:",
+  "worker-src 'self' blob:",
+  "child-src blob:",
+  "frame-src https://js.stripe.com https://hooks.stripe.com https://intercom-sheets.com https://www.intercom-reporting.com",
+  "media-src 'self' blob: https://files.photoportugal.com",
+].join("; ");
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
@@ -58,6 +71,10 @@ const nextConfig: NextConfig = {
             // fullscreen for lightboxes; block everything else.
             key: "Permissions-Policy",
             value: "camera=(self), microphone=(self), payment=*, fullscreen=(self), autoplay=(self), encrypted-media=(self), picture-in-picture=(self), geolocation=(), usb=(), serial=(), bluetooth=(), midi=(), accelerometer=(), gyroscope=(), magnetometer=(), display-capture=(), ambient-light-sensor=()",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: contentSecurityPolicy,
           },
         ],
       },
