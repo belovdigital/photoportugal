@@ -11,9 +11,10 @@ import { queryOne, query } from "@/lib/db";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getHomepageReviews } from "@/lib/reviews-data";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
-import { ConciergeQuickStart } from "@/components/concierge/ConciergeQuickStart";
 import { localizeShootType } from "@/lib/shoot-type-labels";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
+import { LocationExplorer } from "@/components/locations/LocationExplorer";
+import { getCompatibleCoverageNodeSlugs } from "@/lib/location-hierarchy";
 
 // Force-dynamic so per-location photographer counts and min prices are
 // always fresh — these are the conversion-relevant numbers on the cards.
@@ -24,6 +25,49 @@ export const dynamic = "force-dynamic";
 // for tourist photography in Portugal — keeping the list short (6) so
 // each card can be visually big without wrapping.
 const FEATURED_SLUGS = ["lisbon", "porto", "sintra", "algarve", "cascais", "madeira"];
+
+function buildCoverageCounts(rows: { photographer_id: string; node_slug: string }[]): Record<string, number> {
+  const slugsByPhotographer = new Map<string, Set<string>>();
+  for (const row of rows) {
+    const compatibleSlugs = getCompatibleCoverageNodeSlugs([row.node_slug]);
+    if (compatibleSlugs.length === 0) continue;
+    const photographerSlugs = slugsByPhotographer.get(row.photographer_id) || new Set<string>();
+    compatibleSlugs.forEach((slug) => photographerSlugs.add(slug));
+    slugsByPhotographer.set(row.photographer_id, photographerSlugs);
+  }
+
+  const counts: Record<string, number> = {};
+  for (const photographerSlugs of slugsByPhotographer.values()) {
+    photographerSlugs.forEach((slug) => {
+      counts[slug] = (counts[slug] || 0) + 1;
+    });
+  }
+  return counts;
+}
+
+async function getExplorerCoverageCounts(): Promise<Record<string, number>> {
+  try {
+    const rows = await query<{ photographer_id: string; node_slug: string }>(
+      `SELECT pp.id::text as photographer_id, plc.node_slug
+       FROM photographer_location_coverage plc
+       JOIN photographer_profiles pp ON pp.id = plc.photographer_id
+       WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE`
+    );
+    return buildCoverageCounts(rows);
+  } catch {
+    try {
+      const rows = await query<{ photographer_id: string; node_slug: string }>(
+        `SELECT pp.id::text as photographer_id, pl.location_slug as node_slug
+         FROM photographer_locations pl
+         JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+         WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE`
+      );
+      return buildCoverageCounts(rows);
+    } catch {
+      return {};
+    }
+  }
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -41,33 +85,21 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const t = await getTranslations("locations");
   const tc = await getTranslations("common");
 
   // ─── Portugal-wide stats for the hero chip row ───────────────────────
   let totalPhotographers = 0;
-  let minPrice: number | null = null;
-  let avgRating = 0;
-  let totalReviews = 0;
   try {
-    const stats = await queryOne<{
-      total_photographers: string;
-      min_price: string | null;
-      avg_rating: string | null;
-      total_reviews: string;
-    }>(
-      `SELECT (SELECT COUNT(*)::text FROM photographer_profiles WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE) as total_photographers,
-              (SELECT MIN(price)::text FROM packages pk
-                 JOIN photographer_profiles pp ON pp.id = pk.photographer_id
-                 WHERE pp.is_approved = TRUE AND pk.is_public = TRUE) as min_price,
-              (SELECT AVG(rating) FILTER (WHERE rating IS NOT NULL AND review_count > 0)::text FROM photographer_profiles WHERE is_approved = TRUE) as avg_rating,
-              (SELECT COALESCE(SUM(review_count), 0)::text FROM photographer_profiles WHERE is_approved = TRUE) as total_reviews`
+    const stats = await queryOne<{ total_photographers: string }>(
+      `SELECT COUNT(*)::text as total_photographers
+       FROM photographer_profiles
+       WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE`
     );
     totalPhotographers = parseInt(stats?.total_photographers || "0");
-    minPrice = stats?.min_price ? parseFloat(stats.min_price) : null;
-    avgRating = stats?.avg_rating ? parseFloat(parseFloat(stats.avg_rating).toFixed(1)) : 0;
-    totalReviews = parseInt(stats?.total_reviews || "0");
   } catch {}
+
+  const explorerCoverageCounts = await getExplorerCoverageCounts();
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
   // ─── Per-location photographer counts + min prices for the cards ─────
   // Single roundtrip — group by location_slug so each card can show "live"
@@ -149,80 +181,12 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
         ]}
       />
 
-      {/* Hero — full-bleed image with overlay copy, Portugal-wide live
-          stats, and the concierge match form. Image is the Lisbon cover
-          (most universally evocative single shot for "Portugal photoshoot"
-          intent); the cards below carry the destination variety. */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <OptimizedImage
-            src={locationImage("lisbon", "hero")}
-            alt="Photographers across Portugal"
-            priority
-            className="h-full w-full"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-950/85 via-primary-900/65 to-primary-800/40" />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              {portugalCoverageStats.displayPlacesLabel} {tt.destinations}
-            </div>
-
-            <h1 className="mt-5 font-display text-4xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-[3.5rem]">
-              {t("title")}
-            </h1>
-            <p className="mt-4 max-w-2xl text-lg text-primary-100/90">
-              {t("subtitle", { count: portugalCoverageStats.displayPlaces })}
-            </p>
-
-            {/* Stats chips — same pattern as the location-page hero so the
-                visual language carries. */}
-            <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-              {totalPhotographers > 0 && (
-                <span className="rounded-full bg-white/10 px-3 py-1 text-white/90 backdrop-blur-sm">
-                  {totalPhotographers}+ {tt.photographers}
-                </span>
-              )}
-              {minPrice !== null && (
-                <span className="rounded-full bg-white/10 px-3 py-1 text-white/90 backdrop-blur-sm">
-                  {tt.from}{Math.round(minPrice)}
-                </span>
-              )}
-              {avgRating > 0 && totalReviews > 0 && (
-                <span className="rounded-full bg-white/10 px-3 py-1 text-white/90 backdrop-blur-sm">
-                  ⭐ {avgRating.toFixed(1)} · {totalReviews} {tt.reviews}
-                </span>
-              )}
-            </div>
-
-            {/* AI-led match panel — same visual + behaviour as the
-                location-page hero. Drops the visitor's free-text prompt
-                straight into the AI concierge drawer (no email capture
-                / async wait), so the "instant AI" promise lines up with
-                what actually happens when they press the CTA. */}
-            <div className="mt-7 max-w-xl rounded-2xl bg-white/[0.06] backdrop-blur-md border border-white/25 p-4 shadow-2xl">
-              <div className="mb-1 flex items-center gap-1.5">
-                <svg className="h-4 w-4 text-amber-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 2l1.7 4.6L18 8l-4.3 1.4L12 14l-1.7-4.6L6 8l4.3-1.4L12 2zm6 9l1 2.5L21.5 14l-2.5 1L18 17l-1-2-2.5-1L17 13l1-2zM5 14l1 2.5L8.5 17 6 18l-1 2-1-2-2.5-1L4 16l1-2z" />
-                </svg>
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/90">
-                  {tt.matchHeading}
-                </p>
-              </div>
-              <p className="mb-3 text-[12px] text-white/70">{tt.matchSubtitle}</p>
-              <ConciergeQuickStart
-                placeholder={tt.matchPlaceholder}
-                cta={tt.matchCta}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      <LocationExplorer
+        locale={locale}
+        mapboxToken={mapboxToken}
+        totalPhotographers={totalPhotographers}
+        coverageCounts={explorerCoverageCounts}
+      />
 
       {/* Featured destinations — the 6 highest-traffic cities as large
           editorial cards. Each card carries cover photo + live photographer
