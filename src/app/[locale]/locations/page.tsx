@@ -3,7 +3,6 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations, locField } from "@/lib/locations-data";
 import { LocationCard } from "@/components/ui/LocationCard";
-import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { locationImage, IMAGE_SIZES } from "@/lib/unsplash-images";
@@ -13,7 +12,8 @@ import { getHomepageReviews } from "@/lib/reviews-data";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { localizeShootType } from "@/lib/shoot-type-labels";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
-import { LocationExplorer } from "@/components/locations/LocationExplorer";
+import { LocationExplorer, type LocationExplorerPhotographer } from "@/components/locations/LocationExplorer";
+import { LOCATION_EXPLORER_REGIONS } from "@/lib/location-explorer-data";
 import { getCompatibleCoverageNodeSlugs } from "@/lib/location-hierarchy";
 
 // Force-dynamic so per-location photographer counts and min prices are
@@ -69,6 +69,78 @@ async function getExplorerCoverageCounts(): Promise<Record<string, number>> {
   }
 }
 
+async function getExplorerRegionPhotographers(): Promise<Record<string, LocationExplorerPhotographer[]>> {
+  try {
+    const rows = await query<{
+      id: string;
+      slug: string;
+      name: string;
+      cover_url: string | null;
+      rating: string | null;
+      is_featured: boolean | null;
+      is_verified: boolean | null;
+      is_founding: boolean | null;
+      location_slug: string;
+    }>(
+      `SELECT DISTINCT pp.id::text,
+              pp.slug,
+              u.name,
+              pp.cover_url,
+              COALESCE(pp.rating, 0)::text as rating,
+              COALESCE(pp.is_featured, FALSE) as is_featured,
+              COALESCE(pp.is_verified, FALSE) as is_verified,
+              COALESCE(pp.is_founding, FALSE) as is_founding,
+              pl.location_slug
+       FROM photographer_locations pl
+       JOIN photographer_profiles pp ON pp.id = pl.photographer_id
+       JOIN users u ON u.id = pp.user_id
+       WHERE pp.is_approved = TRUE
+         AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(u.is_banned, FALSE) = FALSE
+         AND pp.cover_url IS NOT NULL`
+    );
+
+    const regionSlugs = new Set(LOCATION_EXPLORER_REGIONS.map((region) => region.slug));
+    const byRegion = new Map<string, Map<string, LocationExplorerPhotographer & { score: number }>>();
+
+    for (const row of rows) {
+      const compatibleSlugs = getCompatibleCoverageNodeSlugs([row.location_slug]).filter((slug) => regionSlugs.has(slug));
+      const score = (row.is_featured ? 100 : 0) + (row.is_verified ? 40 : 0) + (row.is_founding ? 15 : 0) + Number(row.rating || 0);
+      for (const regionSlug of compatibleSlugs) {
+        const current = byRegion.get(regionSlug) || new Map<string, LocationExplorerPhotographer & { score: number }>();
+        const existing = current.get(row.id);
+        if (!existing || existing.score < score) {
+          current.set(row.id, {
+            slug: row.slug,
+            name: row.name,
+            cover_url: row.cover_url,
+            rating: Number(row.rating || 0),
+            score,
+          });
+        }
+        byRegion.set(regionSlug, current);
+      }
+    }
+
+    return Object.fromEntries(
+      Array.from(byRegion.entries()).map(([regionSlug, photographers]) => [
+        regionSlug,
+        Array.from(photographers.values())
+          .sort((a, b) => b.score - a.score || Math.random() - 0.5)
+          .slice(0, 5)
+          .map((photographer) => ({
+            slug: photographer.slug,
+            name: photographer.name,
+            cover_url: photographer.cover_url,
+            rating: photographer.rating,
+          })),
+      ])
+    );
+  } catch {
+    return {};
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -84,7 +156,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function LocationsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-
   const tc = await getTranslations("common");
 
   // ─── Portugal-wide stats for the hero chip row ───────────────────────
@@ -99,6 +170,7 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
   } catch {}
 
   const explorerCoverageCounts = await getExplorerCoverageCounts();
+  const explorerRegionPhotographers = await getExplorerRegionPhotographers();
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
   // ─── Per-location photographer counts + min prices for the cards ─────
@@ -174,18 +246,12 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
-      <Breadcrumbs
-        items={[
-          { name: tc("home"), href: "/" },
-          { name: tc("locations"), href: "/locations" },
-        ]}
-      />
-
       <LocationExplorer
         locale={locale}
         mapboxToken={mapboxToken}
         totalPhotographers={totalPhotographers}
         coverageCounts={explorerCoverageCounts}
+        regionPhotographers={explorerRegionPhotographers}
       />
 
       {/* Featured destinations — the 6 highest-traffic cities as large

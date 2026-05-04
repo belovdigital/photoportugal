@@ -243,6 +243,21 @@ body[data-concierge-open="true"] iframe[src*="intercom"] {
   pointer-events: none !important;
 }
 
+/* On the map-first locations index, keep the launcher out of the first
+   viewport until the visitor starts moving down the page. */
+body[data-intercom-delayed="true"] .intercom-lightweight-app-launcher,
+body[data-intercom-delayed="true"] .intercom-launcher-frame,
+body[data-intercom-delayed="true"] .intercom-lightweight-app,
+body[data-intercom-delayed="true"] .intercom-app,
+body[data-intercom-delayed="true"] iframe[name="intercom-launcher-frame"],
+body[data-intercom-delayed="true"] iframe[title*="Intercom" i],
+body[data-intercom-delayed="true"] iframe[src*="intercom"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* Lift Intercom launcher above sticky mobile bottom bars on routes
    that mount one (location detail, photoshoot detail, photographer
    profile, dashboard). Only kicks in on mobile widths where the bars

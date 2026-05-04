@@ -10,6 +10,26 @@ export function IntercomWidget() {
   const pathname = usePathname();
 
   useEffect(() => {
+    const isLocationsIndex = /^\/(?:[a-z]{2}\/)?locations\/?$/.test(pathname);
+    if (!isLocationsIndex) {
+      document.body.removeAttribute("data-intercom-delayed");
+      return;
+    }
+
+    const updateVisibility = () => {
+      if (window.scrollY < 260) document.body.setAttribute("data-intercom-delayed", "true");
+      else document.body.removeAttribute("data-intercom-delayed");
+    };
+
+    updateVisibility();
+    window.addEventListener("scroll", updateVisibility, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", updateVisibility);
+      document.body.removeAttribute("data-intercom-delayed");
+    };
+  }, [pathname]);
+
+  useEffect(() => {
     if (SUPPRESS_INTERCOM_ROUTES.some(r => pathname.includes(r))) return;
     if ((window as any).__intercomLoaded) return;
 
