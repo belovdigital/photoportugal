@@ -58,6 +58,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const searchParams = useSearchParams();
   const { status } = useSession();
   const t = useTranslations("book");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [loading, setLoading] = useState(true);

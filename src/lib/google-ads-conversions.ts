@@ -48,7 +48,8 @@ function buildUserIdentifiers(userData?: { email?: string | null; phone?: string
 }
 
 // These will be fetched dynamically on first use and cached
-let conversionActionCache: { bookingCreated?: string; paymentCompleted?: string } = {};
+const conversionActionCache: { bookingCreated?: string; paymentCompleted?: string } = {};
+const BOOKING_CREATED_VALUE_RATE = 0.3;
 
 async function getCustomer() {
   const { GoogleAdsApi } = require("google-ads-api");
@@ -203,7 +204,7 @@ export async function uploadBookingCreatedConversion(
       gclid,
       conversionActionResourceName: actions.bookingCreated,
       conversionDateTime: formatConversionDateTime(new Date()),
-      conversionValue: conversionValue ?? 0,
+      conversionValue: conversionValue ? Number((conversionValue * BOOKING_CREATED_VALUE_RATE).toFixed(2)) : 0,
       currencyCode: "EUR",
       userData,
     });
