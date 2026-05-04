@@ -3,7 +3,6 @@
 import { Camera, CheckCircle2, MapPin, ShieldCheck, Star } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Link } from "@/i18n/navigation";
-import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 
 const PRIMARY_DESTINATIONS = [
   "Lisbon",
@@ -151,10 +150,6 @@ export function SocialProofStrip({
                 </div>
               </div>
             </Link>
-          </div>
-
-          <div className="mt-6 flex justify-center">
-            <GoogleReviewsBadge variant="full" />
           </div>
         </div>
       </div>

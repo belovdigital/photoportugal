@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 import { ConciergeQuickStart } from "@/components/concierge/ConciergeQuickStart";
+import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 
 export interface HeroFeaturedPhotographer {
   slug: string;
@@ -415,6 +416,15 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
           column on the left, fades to nothing past it. */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-full max-w-[820px] bg-gradient-to-r from-gray-950/85 via-gray-950/55 to-transparent" />
 
+      {!locationContext && (
+        <div className="absolute right-4 top-4 z-10 hidden lg:block xl:right-8 xl:top-6">
+          <GoogleReviewsBadge
+            variant="compact"
+            className="border-white/20 bg-white/90 shadow-lg shadow-black/10 backdrop-blur-md"
+          />
+        </div>
+      )}
+
       {/* Background slideshow arrows — desktop only. Mobile shows a single
           static photo (see above) and any carousel UI is hidden completely. */}
       {isDesktop && totalPhotos > 1 && (
@@ -614,6 +624,14 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
               ),
             })}
           </p>
+          {!locationContext && (
+            <div className="mt-3 lg:hidden">
+              <GoogleReviewsBadge
+                variant="compact"
+                className="border-white/20 bg-white/90 shadow-lg shadow-black/10"
+              />
+            </div>
+          )}
         </div>
       </div>
     </section>
