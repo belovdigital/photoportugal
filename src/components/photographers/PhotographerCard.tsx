@@ -40,7 +40,7 @@ export function PhotographerCard({
 
   return (
     <div
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
+      className="group relative isolate flex h-full flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
       onClick={() => trackViewPhotographer(photographer.slug, normalizeName(photographer.name))}
     >
       {/* Cover with carousel + lightbox launcher (own button areas) */}
@@ -53,19 +53,19 @@ export function PhotographerCard({
           height="h-56"
           altPrefix={t("coverAlt", { name: "" }).replace(/\s*$/, "")}
         />
-        <div className="absolute left-3 top-3 z-30">
+        <div className="absolute left-3 top-3 z-10">
           <WishlistButton photographerId={photographer.id} size="sm" />
         </div>
         {photographer.is_founding ? (
-          <span className="pointer-events-none absolute right-3 top-3 z-30 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow">
+          <span className="pointer-events-none absolute right-3 top-3 z-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-bold text-white shadow">
             {t("founding")}
           </span>
         ) : photographer.is_featured ? (
-          <span className="pointer-events-none absolute right-3 top-3 z-30 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900">
+          <span className="pointer-events-none absolute right-3 top-3 z-10 rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-yellow-900">
             {t("featured")}
           </span>
         ) : null}
-        <div className="absolute -bottom-6 left-6 z-20">
+        <div className="absolute -bottom-6 left-6 z-10">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-primary-100 text-xl font-bold text-primary-600 shadow-md overflow-hidden">
             {photographer.avatar_url ? (
               <OptimizedImage src={photographer.avatar_url} alt={normalizeName(photographer.name)} width={200} className="h-full w-full" />

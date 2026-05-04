@@ -148,6 +148,8 @@
     "conciergeAriaLabel": "AI Concierge — find your photographer",
     "findMePhotographer": "Help Me Choose",
     "findPhotographers": "Find Photographers",
+    "photoMap": "Portugal Photo Map",
+    "photoMapDesc": "Browse regions, islands and cities visually",
     "allDestinations": "All Destinations",
     "dashboard": "Dashboard",
     "myProfile": "My Profile",
@@ -1220,6 +1222,9 @@
   "locations": {
     "title": "Best Places to Photograph in Portugal",
     "subtitle": "From Lisbon's cobblestone streets to the Algarve's golden cliffs — {count}+ of the best places to photograph in Portugal, hand-picked for vacation photoshoots, couples, families and solo travelers.",
+    "mapMetaTitle": "Portugal Photo Map — Explore Photoshoot Locations",
+    "mapMetaDescription": "Explore Portugal's photoshoot regions, cities and islands on an interactive map. Find available photographers in Lisbon, Porto, Algarve, Madeira, the Azores and more.",
+    "mapOgAlt": "Interactive Portugal photo map with photoshoot locations",
     "detail": {
       "viewPhotographers": "View Photographers in {location}",
       "photographerAvailable": "{count} hand-picked photographer",

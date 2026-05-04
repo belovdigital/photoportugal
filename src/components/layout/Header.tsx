@@ -412,6 +412,13 @@ export function Header() {
                         <p className="text-xs text-gray-400">{t("megaBrowseDesc")}</p>
                       </div>
                     </Link>
+                    <Link href="/locations" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                      <MapPin className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("photoMap")}</p>
+                        <p className="text-xs text-gray-400">{t("photoMapDesc")}</p>
+                      </div>
+                    </Link>
                     <Link href="/find-photographer" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
                       <Heart className="h-[18px] w-[18px] shrink-0 text-accent-600 transition group-hover:text-accent-700" strokeWidth={1.5} />
                       <div>
@@ -657,7 +664,7 @@ export function Header() {
             <div className="flex flex-col gap-1">
               <MobileNavLink href="/photographers" label={t("findPhotographers")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/find-photographer" label={t("getMatched")} onClick={() => setMobileOpen(false)} />
-              <MobileNavLink href="/locations" label={t("allDestinations")} onClick={() => setMobileOpen(false)} />
+              <MobileNavLink href="/locations" label={t("photoMap")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/how-it-works" label={t("howItWorks")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/faq" label={t("faq")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/contact" label={t("contactUs")} onClick={() => setMobileOpen(false)} />

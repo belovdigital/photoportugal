@@ -11,7 +11,6 @@ import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getHomepageReviews } from "@/lib/reviews-data";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { localizeShootType } from "@/lib/shoot-type-labels";
-import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { LocationExplorer, type LocationExplorerPhotographer } from "@/components/locations/LocationExplorer";
 import { LOCATION_EXPLORER_REGIONS } from "@/lib/location-explorer-data";
 import { getCompatibleCoverageNodeSlugs } from "@/lib/location-hierarchy";
@@ -145,17 +144,36 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("locations");
+  const title = t("mapMetaTitle");
+  const description = t("mapMetaDescription");
+  const alternates = localeAlternates("/locations", locale);
+  const image = locationImage("lisbon", "hero");
+
   return {
-    title: `${portugalCoverageStats.displayPlacesLabel} ${t("title")}`,
-    description: t("subtitle", { count: portugalCoverageStats.displayPlaces }),
-    alternates: localeAlternates("/locations", locale),
-    openGraph: { title: `${portugalCoverageStats.displayPlacesLabel} ${t("title")}`, description: t("subtitle", { count: portugalCoverageStats.displayPlaces }), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/locations` },
+    title,
+    description,
+    alternates,
+    openGraph: {
+      title,
+      description,
+      url: alternates.canonical,
+      siteName: "Photo Portugal",
+      type: "website",
+      images: image ? [{ url: image, width: 1600, height: 900, alt: t("mapOgAlt") }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
   };
 }
 
 export default async function LocationsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const t = await getTranslations("locations");
   const tc = await getTranslations("common");
 
   // ─── Portugal-wide stats for the hero chip row ───────────────────────
@@ -228,23 +246,70 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
   const tt = T[(locale as keyof typeof T)] ?? T.en;
 
   // ─── JSON-LD ─────────────────────────────────────────────────────────
+  const canonicalUrl = localeAlternates("/locations", locale).canonical;
+  const pageTitle = t("mapMetaTitle");
+  const pageDescription = t("mapMetaDescription");
   const itemListJsonLd = {
-    "@context": "https://schema.org",
     "@type": "ItemList",
+    "@id": `${canonicalUrl}#destinations`,
+    name: pageTitle,
     numberOfItems: locations.length,
     itemListElement: locations.map((loc, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `https://photoportugal.com/locations/${loc.slug}`,
+      url: localeAlternates(`/locations/${loc.slug}`, locale).canonical,
       name: loc.name,
     })),
+  };
+  const pageJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${canonicalUrl}#webpage`,
+        url: canonicalUrl,
+        name: pageTitle,
+        description: pageDescription,
+        inLanguage: locale,
+        isPartOf: {
+          "@type": "WebSite",
+          "@id": "https://photoportugal.com/#website",
+          name: "Photo Portugal",
+          url: "https://photoportugal.com",
+        },
+        primaryImageOfPage: {
+          "@type": "ImageObject",
+          url: locationImage("lisbon", "hero"),
+        },
+        mainEntity: { "@id": `${canonicalUrl}#destinations` },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${canonicalUrl}#breadcrumbs`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Photo Portugal",
+            item: "https://photoportugal.com",
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: pageTitle,
+            item: canonicalUrl,
+          },
+        ],
+      },
+      itemListJsonLd,
+    ],
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }}
       />
       <LocationExplorer
         locale={locale}

@@ -148,6 +148,8 @@
     "conciergeAriaLabel": "Concierge IA — trouvez votre photographe",
     "findMePhotographer": "Trouvez-moi un photographe",
     "findPhotographers": "Trouver un photographe",
+    "photoMap": "Carte photo du Portugal",
+    "photoMapDesc": "Explorez régions, îles et villes visuellement",
     "allDestinations": "Toutes les destinations",
     "dashboard": "Tableau de bord",
     "myProfile": "Mon profil",
@@ -1529,6 +1531,9 @@
   "locations": {
     "title": "Meilleurs endroits où photographier au Portugal",
     "subtitle": "Des rues pavées de Lisbonne aux falaises dorées de l'Algarve — {count}+ des meilleurs endroits où photographier au Portugal, sélectionnés pour les séances de vacances, couples, familles et voyageurs solos.",
+    "mapMetaTitle": "Carte photo du Portugal — Explorer les lieux de séance",
+    "mapMetaDescription": "Explorez les régions, villes et îles du Portugal sur une carte interactive. Trouvez des photographes disponibles à Lisbonne, Porto, Algarve, Madère, aux Açores et plus encore.",
+    "mapOgAlt": "Carte photo interactive du Portugal avec lieux de séance",
     "detail": {
       "viewPhotographers": "Voir les photographes à {location}",
       "photographerAvailable": "{count} photographe trié sur le volet",

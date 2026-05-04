@@ -375,7 +375,7 @@ export function PhotographerCatalog({
       </div>
 
       {/* Mobile sticky filter bar (< sm only) */}
-      <div className="sticky top-16 z-20 -mx-4 mt-3 border-b border-warm-200 bg-warm-50/95 px-4 py-2 backdrop-blur sm:hidden">
+      <div className="sticky top-16 z-40 -mx-4 mt-3 border-b border-warm-200 bg-warm-50/95 px-4 py-2 backdrop-blur sm:hidden">
         {/* Mobile search input — full-width row above chips when active */}
         {(searchOpen || searchQuery) && (
           <div className="mb-2 flex items-center gap-2 rounded-full border border-primary-300 bg-white px-3.5 py-2">
@@ -729,10 +729,7 @@ export function PhotographerCatalog({
 
             {searchOpen && (
               <>
-                {/* z-40/50 so the dropdown lands above card badges below.
-                    Cards' Founding/Verified pills sit at z-20, so the
-                    previous z-10/20 for backdrop+panel let those badges
-                    bleed through the dropdown. */}
+                {/* z-40/50 so the dropdown lands above photographer cards below. */}
                 <div className="fixed inset-0 z-40" onClick={() => setSearchOpen(false)} />
                 <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-xl border border-warm-200 bg-white p-4 shadow-lg">
                   <div className="flex items-center gap-2.5 rounded-lg border border-gray-200 px-3.5 py-2.5 focus-within:border-primary-400">

@@ -148,6 +148,8 @@
     "conciergeAriaLabel": "KI-Concierge — finden Sie Ihren Fotografen",
     "findMePhotographer": "Hilf mir bei der Auswahl",
     "findPhotographers": "Fotografen finden",
+    "photoMap": "Portugal-Fotokarte",
+    "photoMapDesc": "Regionen, Inseln und Städte visuell entdecken",
     "allDestinations": "Alle Reiseziele",
     "dashboard": "Dashboard",
     "myProfile": "Mein Profil",
@@ -1220,6 +1222,9 @@
   "locations": {
     "title": "Die besten Orte zum Fotografieren in Portugal",
     "subtitle": "Von Lissabons Kopfsteinpflasterstraßen bis zu den goldenen Klippen der Algarve — {count}+ der besten Orte zum Fotografieren in Portugal, handverlesen für Urlaubs-Fotoshootings, Paare, Familien und Solo-Reisende.",
+    "mapMetaTitle": "Portugal-Fotokarte — Fotoshooting-Orte entdecken",
+    "mapMetaDescription": "Entdecken Sie Portugals Fotoshooting-Regionen, Städte und Inseln auf einer interaktiven Karte. Finden Sie verfügbare Fotografen in Lissabon, Porto, Algarve, Madeira, den Azoren und mehr.",
+    "mapOgAlt": "Interaktive Portugal-Fotokarte mit Fotoshooting-Orten",
     "detail": {
       "viewPhotographers": "Fotografen in {location} ansehen",
       "photographerAvailable": "{count} handverlesener Fotograf",
