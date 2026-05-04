@@ -433,7 +433,8 @@
       "paymentNote": "El pago se procesa de forma segura después de que el fotógrafo confirme su reserva.",
       "exactGroupSize": "Tamaño exacto del grupo",
       "exactGroupSizeHint": "Para 9+ personas, introduzca el número real para que el fotógrafo pueda planificar y calcular el precio correctamente.",
-      "enterExactGroupSize": "Introduzca el tamaño exacto del grupo para grupos grandes."
+      "enterExactGroupSize": "Introduzca el tamaño exacto del grupo para grupos grandes.",
+      "timeUnavailableHint": "Ese horario está bloqueado por el calendario del fotógrafo o por otra reserva."
     },
     "time": {
       "flexible": "Soy flexible",
@@ -442,7 +443,8 @@
       "midday": "Mediodía (11h-14h)",
       "afternoon": "Tarde (14h-17h)",
       "goldenHour": "Hora dorada (17h-19h)",
-      "sunset": "Atardecer (19h-21h)"
+      "sunset": "Atardecer (19h-21h)",
+      "unavailable": "no disponible"
     },
     "groupSizes": {
       "solo": "Solo (1 persona)",
@@ -3066,6 +3068,14 @@
     "minLeadTime9d": "9 días",
     "minLeadTime10d": "10 días",
     "minLeadTime14d": "14 días",
+    "calendarBufferLabel": "Pausa entre eventos",
+    "calendarBufferDesc": "Proteja este tiempo antes y después de eventos del calendario y reservas de Photo Portugal.",
+    "calendarBufferNone": "Sin pausa",
+    "calendarBuffer30m": "30 minutos",
+    "calendarBuffer1h": "1 hora",
+    "calendarBuffer90m": "1,5 horas",
+    "calendarBuffer2h": "2 horas",
+    "calendarBuffer3h": "3 horas",
     "telegramNotifications": "Notificaciones Telegram",
     "telegramDesc": "Reciba notificaciones instantáneas en su app Telegram",
     "telegramNotConnected": "Conecte su cuenta Telegram para recibir notificaciones instantáneas sobre nuevas reservas, mensajes, pagos y más.",

@@ -4,6 +4,12 @@ import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification } from "@/lib/email";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
 import { bookingGroupSizeEstimateColumnExists } from "@/lib/booking-group-size-fields";
+import {
+  getBufferedBusyWindows,
+  getPhotographerCalendarBufferMinutes,
+  hasAvailableBookingStart,
+  lisbonLocalMinutesToUtc,
+} from "@/lib/booking-availability";
 
 // Create a booking request
 export async function POST(req: NextRequest) {
@@ -75,15 +81,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "This photographer is not available on the selected date. Please choose a different date or check \"I'm flexible with dates\"." }, { status: 400 });
       }
 
-      // External calendar conflict (Google/iCal sync). Build the shoot
-      // window from shoot_date + shoot_time + the package duration when
-      // available — fall back to a whole-day [00:00, 24:00) window if the
-      // photographer didn't set a time. This is the same data the booking
-      // confirmation email shows, so any "busy" event in the photographer's
-      // synced calendar that overlaps blocks the booking.
+      // Calendar/booking conflict. Build an availability window from the
+      // preferred time bucket and package duration, then check whether at
+      // least one concrete start time still fits after applying the
+      // photographer's buffer around external calendar events and existing
+      // Photo Portugal bookings.
       try {
-        const { hasBusyOverlap } = await import("@/lib/calendar-sync");
-
         // Pull duration from the chosen package (if any) so the window we
         // check matches the actual shoot length. Without a package we
         // assume 2h (most common shoot length).
@@ -96,27 +99,14 @@ export async function POST(req: NextRequest) {
           if (pkgDur?.duration_minutes) durationMin = pkgDur.duration_minutes;
         }
 
-        let startUtc: Date;
-        let endUtc: Date;
-        const timeMatch = typeof shoot_time === "string" ? shoot_time.match(/^(\d{2}):(\d{2})/) : null;
-        if (timeMatch) {
-          // Treat shoot_date + shoot_time as Lisbon-local — that's the
-          // booking display convention. Constructed as UTC then offset by
-          // -1h (WET) / -2h (WEST). For simplicity we use the date in
-          // Lisbon's offset on that date via the Intl API.
-          const localIso = `${shoot_date}T${timeMatch[1]}:${timeMatch[2]}:00`;
-          // Best-effort: construct in local server TZ and trust that the
-          // server runs in UTC (which it does on this box).
-          startUtc = new Date(`${localIso}+00:00`);
-          endUtc = new Date(startUtc.getTime() + durationMin * 60 * 1000);
-        } else {
-          startUtc = new Date(`${shoot_date}T00:00:00Z`);
-          endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
-        }
+        const bufferMinutes = await getPhotographerCalendarBufferMinutes(photographer_id);
+        const rangeStart = lisbonLocalMinutesToUtc(shoot_date, 0);
+        const rangeEnd = lisbonLocalMinutesToUtc(shoot_date, 24 * 60 + durationMin + bufferMinutes);
+        const busyWindows = await getBufferedBusyWindows(photographer_id, rangeStart, rangeEnd, bufferMinutes);
 
-        if (await hasBusyOverlap(photographer_id, startUtc, endUtc)) {
+        if (!hasAvailableBookingStart(shoot_date, shoot_time, durationMin, busyWindows)) {
           return NextResponse.json({
-            error: "The photographer is busy at the requested time according to their personal calendar. Please pick another date or time.",
+            error: "The photographer is busy around the requested time. Please pick another date or time.",
             code: "calendar_conflict",
           }, { status: 400 });
         }

@@ -13,6 +13,7 @@ import { AuthModal } from "@/components/ui/AuthModal";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { normalizeName } from "@/lib/format-name";
+import { type BusyWindow, hasAvailableBookingStart } from "@/lib/booking-time-windows";
 
 interface Package {
   id: string;
@@ -75,6 +76,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [flexibleDateFrom, setFlexibleDateFrom] = useState("");
   const [flexibleDateTo, setFlexibleDateTo] = useState("");
   const [unavailableRanges, setUnavailableRanges] = useState<UnavailableRange[]>([]);
+  const [busyWindows, setBusyWindows] = useState<BusyWindow[]>([]);
   const [groupSize, setGroupSize] = useState("2");
   const [largeGroupSize, setLargeGroupSize] = useState("");
   const [occasion, setOccasion] = useState("");
@@ -112,10 +114,17 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             if (locationOptions?.length > 0) {
               setSelectedLocation(locationOptions[0].slug);
             }
-            // Fetch photographer unavailability
-            fetch(`/api/availability?photographer_id=${data.id}`)
+            // Fetch photographer unavailability + buffered busy windows.
+            fetch(`/api/availability?photographer_id=${data.id}&include_slots=1`)
               .then((r) => r.json())
-              .then((ranges) => setUnavailableRanges(ranges))
+              .then((availability) => {
+                if (Array.isArray(availability)) {
+                  setUnavailableRanges(availability);
+                  return;
+                }
+                setUnavailableRanges(availability.ranges || []);
+                setBusyWindows(availability.busy_windows || []);
+              })
               .catch(() => {});
           }
           setLoading(false);
@@ -242,6 +251,30 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       } catch {}
     }
   }, [status, photographer]);
+
+  const selectedPackageObj = photographer?.packages.find((p) => p.id === selectedPackage) || null;
+  const selectedDurationMinutes = selectedPackageObj?.duration_minutes || 120;
+  const timeOptions = [
+    { value: "flexible", label: t("time.flexible") },
+    { value: "sunrise", label: t("time.sunrise") },
+    { value: "morning", label: t("time.morning") },
+    { value: "midday", label: t("time.midday") },
+    { value: "afternoon", label: t("time.afternoon") },
+    { value: "golden_hour", label: t("time.goldenHour") },
+    { value: "sunset", label: t("time.sunset") },
+  ];
+
+  function isTimeOptionUnavailable(value: string) {
+    if (!shootDate || flexibleDate || busyWindows.length === 0) return false;
+    return !hasAvailableBookingStart(shootDate, value, selectedDurationMinutes, busyWindows);
+  }
+
+  useEffect(() => {
+    if (!shootDate || flexibleDate || !shootTime || !isTimeOptionUnavailable(shootTime)) return;
+    const nextAvailable = timeOptions.find((option) => !isTimeOptionUnavailable(option.value));
+    if (nextAvailable) setShootTime(nextAvailable.value);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shootDate, flexibleDate, shootTime, selectedDurationMinutes, busyWindows]);
 
   if (loading) {
     return (
@@ -530,14 +563,18 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                   onChange={(e) => setShootTime(e.target.value)}
                   className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
                 >
-                  <option value="flexible">{t("time.flexible")}</option>
-                  <option value="sunrise">{t("time.sunrise")}</option>
-                  <option value="morning">{t("time.morning")}</option>
-                  <option value="midday">{t("time.midday")}</option>
-                  <option value="afternoon">{t("time.afternoon")}</option>
-                  <option value="golden_hour">{t("time.goldenHour")}</option>
-                  <option value="sunset">{t("time.sunset")}</option>
+                  {timeOptions.map((option) => {
+                    const unavailable = isTimeOptionUnavailable(option.value);
+                    return (
+                      <option key={option.value} value={option.value} disabled={unavailable}>
+                        {option.label}{unavailable ? ` · ${t("time.unavailable")}` : ""}
+                      </option>
+                    );
+                  })}
                 </select>
+                {shootDate && isTimeOptionUnavailable(shootTime) && (
+                  <p className="mt-1 text-xs text-amber-600">{t("form.timeUnavailableHint")}</p>
+                )}
               </div>
             </div>
           )}

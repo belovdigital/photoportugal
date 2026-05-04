@@ -62,6 +62,10 @@ CREATE TABLE photographer_profiles (
   -- than today + min_lead_time_hours and the API rejects creation. 0 = no
   -- restriction (default). Photographers set this in dashboard/settings.
   min_lead_time_hours INTEGER NOT NULL DEFAULT 0,
+  -- Protected pause before and after synced calendar events and Photo
+  -- Portugal bookings. Used to avoid back-to-back sessions and travel-time
+  -- conflicts. Photographers set this in dashboard/availability.
+  calendar_buffer_minutes INTEGER NOT NULL DEFAULT 60 CHECK (calendar_buffer_minutes >= 0 AND calendar_buffer_minutes <= 1440),
   hourly_rate INTEGER, -- in EUR (whole euros)
   currency VARCHAR(3) DEFAULT 'EUR',
   experience_years INTEGER DEFAULT 0,

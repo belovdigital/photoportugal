@@ -1,29 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
+import {
+  getBufferedBusyWindows,
+  getPhotographerCalendarBufferMinutes,
+  lisbonLocalMinutesToUtc,
+} from "@/lib/booking-availability";
 
 // GET — fetch unavailability ranges for a photographer
 // ?photographer_id=xxx (public) or own (authenticated photographer)
 export async function GET(req: NextRequest) {
   const photographerId = req.nextUrl.searchParams.get("photographer_id");
+  const includeSlots = req.nextUrl.searchParams.get("include_slots") === "1";
 
   if (photographerId) {
-    // Public: get active unavailability for a photographer.
-    //
-    // Two sources are merged:
-    //   1. Manual blocks the photographer set themselves
-    //      (photographer_unavailability — date ranges).
-    //   2. Busy slots synced from their connected Google/Apple calendars
-    //      (calendar_busy_slots — timestamp ranges). We collapse those to
-    //      whole-day blocks: if a busy event hits any time between 06:00
-    //      and 23:00 Lisbon time on a given date, that date is blocked.
-    //      Pure-overnight events (e.g. someone marked their sleep schedule)
-    //      don't count.
-    //
-    // The 06:00-23:00 window is intentionally generous — most real shoots
-    // happen 09:00-19:00, but we don't want to assume; better to block a
-    // day with a 06:30 dentist appointment than to surprise the client
-    // with a `calendar_conflict` error at booking time.
+    // Public: manual unavailable date ranges. New booking clients can ask
+    // for include_slots=1 to also get exact buffered busy windows from
+    // synced calendars and existing Photo Portugal bookings.
     const manual = await query<{ id: string; date_from: string; date_to: string; reason: string | null }>(
       `SELECT id, date_from::text, date_to::text, reason
        FROM photographer_unavailability
@@ -31,38 +24,25 @@ export async function GET(req: NextRequest) {
        ORDER BY date_from ASC`,
       [photographerId]
     );
-    // Only block a day in the public calendar if there's a substantial
-    // busy event on it — anything < 4 hours is treated as "morning chore"
-    // and the day stays selectable. The booking-time `hasBusyOverlap`
-    // check is still time-precise, so picking the exact conflict window
-    // is rejected at submit; this just keeps the date picker from
-    // greying out a whole Saturday for a 30-min coffee.
-    const synced = await query<{ blocked_date: string }>(
-      `SELECT DISTINCT to_char(d, 'YYYY-MM-DD') AS blocked_date
-         FROM calendar_busy_slots cbs,
-              LATERAL generate_series(
-                (cbs.starts_at AT TIME ZONE 'Europe/Lisbon')::date,
-                (cbs.ends_at   AT TIME ZONE 'Europe/Lisbon')::date,
-                '1 day'::interval
-              ) AS d
-        WHERE cbs.photographer_id = $1
-          AND cbs.ends_at >= NOW()
-          AND EXTRACT(EPOCH FROM (cbs.ends_at - cbs.starts_at)) >= 3 * 3600
-          AND EXTRACT(HOUR FROM (cbs.starts_at AT TIME ZONE 'Europe/Lisbon')) < 23
-          AND EXTRACT(HOUR FROM (cbs.ends_at   AT TIME ZONE 'Europe/Lisbon')) >= 6
-        ORDER BY blocked_date ASC`,
-      [photographerId]
-    );
-    const syncedRanges = synced.map((r, i) => ({
-      // Sentinel id so client code can tell synced rows apart from manual
-      // ones if it ever wants to (e.g. show a different tooltip). Manual
-      // rows are real UUIDs.
-      id: `synced-${i}`,
-      date_from: r.blocked_date,
-      date_to: r.blocked_date,
-      reason: null,
-    }));
-    return NextResponse.json([...manual, ...syncedRanges]);
+    if (includeSlots) {
+      const today = new Date().toISOString().split("T")[0];
+      const from = req.nextUrl.searchParams.get("from") || today;
+      const to = req.nextUrl.searchParams.get("to") || new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0];
+      const bufferMinutes = await getPhotographerCalendarBufferMinutes(photographerId);
+      const rangeStart = lisbonLocalMinutesToUtc(from, 0);
+      const rangeEnd = lisbonLocalMinutesToUtc(to, 24 * 60);
+      const busyWindows = await getBufferedBusyWindows(photographerId, rangeStart, rangeEnd, bufferMinutes);
+      return NextResponse.json({
+        ranges: manual,
+        busy_windows: busyWindows,
+        calendar_buffer_minutes: bufferMinutes,
+      });
+    }
+
+    // Legacy response for old clients: date ranges only. We no longer turn
+    // synced calendar events into whole unavailable days; booking-time checks
+    // still reject conflicts using exact busy windows plus buffer.
+    return NextResponse.json(manual);
   }
 
   // Authenticated: get own ranges

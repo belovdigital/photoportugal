@@ -3,8 +3,19 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
+import {
+  getBufferedBusyWindows,
+  getPhotographerCalendarBufferMinutes,
+  hasAvailableBookingStart,
+  lisbonLocalMinutesToUtc,
+} from "@/lib/booking-availability";
 
 const BASE_URL = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+
+function toDateString(value: unknown) {
+  if (value instanceof Date) return value.toISOString().split("T")[0];
+  return String(value || "").split("T")[0];
+}
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await authFromRequest(req);
@@ -17,15 +28,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Get booking with both parties' info
   const booking = await queryOne<{
     id: string; status: string; client_id: string; photographer_id: string;
-    shoot_date: string | null; proposed_date: string | null; proposed_by: string | null;
+    shoot_date: string | null; shoot_time: string | null; proposed_date: string | null; proposed_by: string | null;
+    duration_minutes: number | null;
     client_name: string; client_email: string;
     photographer_name: string; photographer_email: string; photographer_user_id: string;
   }>(
     `SELECT b.id, b.status, b.client_id, b.photographer_id,
-            b.shoot_date, b.proposed_date, b.proposed_by,
+            b.shoot_date, b.shoot_time, b.proposed_date, b.proposed_by,
+            COALESCE(p.duration_minutes, 120) AS duration_minutes,
             cu.name as client_name, cu.email as client_email,
             pu.name as photographer_name, pu.email as photographer_email, pp.user_id as photographer_user_id
      FROM bookings b
+     LEFT JOIN packages p ON p.id = b.package_id
      JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users pu ON pu.id = pp.user_id
@@ -34,21 +48,44 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   );
 
   if (!booking) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+  const currentBooking = booking;
 
   // Block date changes only for cancelled/completed/delivered bookings
-  if (["cancelled", "completed", "delivered"].includes(booking.status)) {
+  if (["cancelled", "completed", "delivered"].includes(currentBooking.status)) {
     return NextResponse.json({ error: "Cannot change date for this booking" }, { status: 400 });
   }
 
   // Determine who is making the request
-  const isPhotographer = userId === booking.photographer_user_id;
-  const isClient = userId === booking.client_id;
+  const isPhotographer = userId === currentBooking.photographer_user_id;
+  const isClient = userId === currentBooking.client_id;
   if (!isPhotographer && !isClient) return NextResponse.json({ error: "Not your booking" }, { status: 403 });
+
+  async function ensureBufferedAvailability(date: string, time: string | null | undefined) {
+    const durationMin = currentBooking.duration_minutes || 120;
+    const bufferMinutes = await getPhotographerCalendarBufferMinutes(currentBooking.photographer_id);
+    const rangeStart = lisbonLocalMinutesToUtc(date, 0);
+    const rangeEnd = lisbonLocalMinutesToUtc(date, 24 * 60 + durationMin + bufferMinutes);
+    const busyWindows = await getBufferedBusyWindows(
+      currentBooking.photographer_id,
+      rangeStart,
+      rangeEnd,
+      bufferMinutes,
+      currentBooking.id
+    );
+    return hasAvailableBookingStart(date, time, durationMin, busyWindows);
+  }
 
   if (action === "propose") {
     if (!proposed_date) return NextResponse.json({ error: "Date required" }, { status: 400 });
 
     const proposedBy = isPhotographer ? "photographer" : "client";
+    const nextTime = proposed_time || booking.shoot_time || "flexible";
+    if (!(await ensureBufferedAvailability(proposed_date, nextTime))) {
+      return NextResponse.json({
+        error: "The photographer is busy around the proposed time. Please pick another date or time.",
+        code: "calendar_conflict",
+      }, { status: 400 });
+    }
 
     await queryOne(
       `UPDATE bookings SET proposed_date = $1, proposed_by = $2, date_note = $3, proposed_time = $5, updated_at = NOW() WHERE id = $4 RETURNING id`,
@@ -137,6 +174,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const proposalData = await queryOne<{ proposed_time: string | null }>(
       "SELECT proposed_time FROM bookings WHERE id = $1", [bookingId]
     );
+    if (!(await ensureBufferedAvailability(toDateString(booking.proposed_date), proposalData?.proposed_time || booking.shoot_time || "flexible"))) {
+      return NextResponse.json({
+        error: "The photographer is busy around the proposed time. Please pick another date or time.",
+        code: "calendar_conflict",
+      }, { status: 400 });
+    }
 
     await queryOne(
       `UPDATE bookings SET shoot_date = proposed_date, shoot_time = COALESCE(proposed_time, shoot_time), proposed_date = NULL, proposed_by = NULL, date_note = NULL, proposed_time = NULL, updated_at = NOW() WHERE id = $1 RETURNING id`,
@@ -147,8 +190,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const recipientEmail = isPhotographer ? booking.client_email : booking.photographer_email;
     const recipientName = isPhotographer ? booking.client_name : booking.photographer_name;
     const accepterName = isPhotographer ? booking.photographer_name : booking.client_name;
-    const pdRaw = booking.proposed_date as unknown;
-    const pdStr = pdRaw instanceof Date ? pdRaw.toISOString().split("T")[0] : String(booking.proposed_date).split("T")[0];
+    const pdStr = toDateString(booking.proposed_date);
     const formattedDate = new Date(pdStr + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
     const acceptedTimeDisplay = proposalData?.proposed_time ? ` at ${proposalData.proposed_time}` : "";
 

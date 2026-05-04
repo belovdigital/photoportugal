@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
  *   * deliveries — completed bookings whose delivery is due in this
  *     window (shoot_date + package.delivery_days), still un-shared.
  *   * blockedDates — union of manual unavailability ranges and synced
- *     calendar_busy_slots (collapsed to whole-day strings using the
- *     same 06:00-23:00 Lisbon window as the public availability API,
- *     so the photographer's view matches what clients see).
+ *     calendar_busy_slots collapsed to day markers for the small dashboard
+ *     calendar. Synced markers are informational; booking-time checks use
+ *     exact busy windows plus the photographer's buffer.
  */
 export async function GET(req: NextRequest) {
   const user = await authFromRequest(req);
@@ -95,8 +95,9 @@ export async function GET(req: NextRequest) {
     [profile.id, from, to]
   );
 
-  // Same 4-hour threshold as the public availability endpoint, so what
-  // the photographer sees here matches what clients see on /book.
+  // Informational day markers for synced calendars. The public booking flow
+  // no longer blocks a whole day because of a long event; it checks exact
+  // busy windows plus the photographer's configured buffer.
   const syncedBlocks = await query<{ blocked_date: string }>(
     `SELECT DISTINCT to_char(d, 'YYYY-MM-DD') AS blocked_date
        FROM calendar_busy_slots cbs,
@@ -107,7 +108,6 @@ export async function GET(req: NextRequest) {
             ) AS d
       WHERE cbs.photographer_id = $1
         AND cbs.ends_at >= NOW()
-        AND EXTRACT(EPOCH FROM (cbs.ends_at - cbs.starts_at)) >= 3 * 3600
         AND EXTRACT(HOUR FROM (cbs.starts_at AT TIME ZONE 'Europe/Lisbon')) < 23
         AND EXTRACT(HOUR FROM (cbs.ends_at   AT TIME ZONE 'Europe/Lisbon')) >= 6
         AND d::date >= $2::date

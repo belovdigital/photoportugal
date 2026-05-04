@@ -1384,7 +1384,8 @@
       "paymentNote": "Payment is processed securely after the photographer confirms your booking.",
       "exactGroupSize": "Exact group size",
       "exactGroupSizeHint": "For 9+ people, enter the real number so your photographer can price and plan correctly.",
-      "enterExactGroupSize": "Please enter the exact group size for larger groups."
+      "enterExactGroupSize": "Please enter the exact group size for larger groups.",
+      "timeUnavailableHint": "That time is blocked by the photographer's calendar or another booking."
     },
     "time": {
       "flexible": "I'm flexible",
@@ -1393,7 +1394,8 @@
       "midday": "Midday (11 AM-2 PM)",
       "afternoon": "Afternoon (2-5 PM)",
       "goldenHour": "Golden Hour (5-7 PM)",
-      "sunset": "Sunset (7-9 PM)"
+      "sunset": "Sunset (7-9 PM)",
+      "unavailable": "unavailable"
     },
     "groupSizes": {
       "solo": "Solo (1 person)",
@@ -2910,6 +2912,14 @@
     "minLeadTime9d": "9 days",
     "minLeadTime10d": "10 days",
     "minLeadTime14d": "14 days",
+    "calendarBufferLabel": "Pause between events",
+    "calendarBufferDesc": "Protect this much time before and after calendar events and Photo Portugal bookings.",
+    "calendarBufferNone": "No pause",
+    "calendarBuffer30m": "30 minutes",
+    "calendarBuffer1h": "1 hour",
+    "calendarBuffer90m": "1.5 hours",
+    "calendarBuffer2h": "2 hours",
+    "calendarBuffer3h": "3 hours",
     "telegramNotifications": "Telegram Notifications",
     "telegramDesc": "Receive instant notifications in your Telegram app",
     "telegramNotConnected": "Connect your Telegram account to receive instant notifications about new bookings, messages, payments, and more.",

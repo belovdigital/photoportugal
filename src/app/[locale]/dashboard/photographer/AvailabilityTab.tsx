@@ -45,6 +45,7 @@ export function AvailabilityTab() {
   // moved here so all "when can clients reach me" controls live in
   // one place. Loaded lazily; defaults to 0 (no restriction).
   const [minLeadTimeHours, setMinLeadTimeHours] = useState<number>(0);
+  const [calendarBufferMinutes, setCalendarBufferMinutes] = useState<number>(60);
   const [leadTimeLoaded, setLeadTimeLoaded] = useState(false);
   const [savingLeadTime, setSavingLeadTime] = useState(false);
   const [leadTimeMessage, setLeadTimeMessage] = useState("");
@@ -54,6 +55,7 @@ export function AvailabilityTab() {
       .then((r) => r.json())
       .then((data) => {
         setMinLeadTimeHours(data.minLeadTimeHours ?? 0);
+        setCalendarBufferMinutes(data.calendarBufferMinutes ?? 60);
         setLeadTimeLoaded(true);
       })
       .catch(() => setLeadTimeLoaded(true));
@@ -68,6 +70,28 @@ export function AvailabilityTab() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ minLeadTimeHours: hours }),
+      });
+      if (res.ok) {
+        setLeadTimeMessage(tSet("settingsSaved"));
+        setTimeout(() => setLeadTimeMessage(""), 2000);
+      } else {
+        setLeadTimeMessage(tSet("failedToSave"));
+      }
+    } catch {
+      setLeadTimeMessage(tSet("failedToSave"));
+    }
+    setSavingLeadTime(false);
+  }
+
+  async function saveCalendarBuffer(minutes: number) {
+    setSavingLeadTime(true);
+    setCalendarBufferMinutes(minutes);
+    setLeadTimeMessage("");
+    try {
+      const res = await fetch("/api/dashboard/booking-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ calendarBufferMinutes: minutes }),
       });
       if (res.ok) {
         setLeadTimeMessage(tSet("settingsSaved"));
@@ -176,6 +200,26 @@ export function AvailabilityTab() {
             <span className="text-xs text-emerald-600">{leadTimeMessage}</span>
           )}
         </div>
+        <label htmlFor="calendar-buffer" className="mt-5 block text-sm font-medium text-gray-900">
+          {tSet("calendarBufferLabel")}
+        </label>
+        <p className="mt-0.5 text-xs text-gray-400">{tSet("calendarBufferDesc")}</p>
+        <div className="mt-2">
+          <select
+            id="calendar-buffer"
+            value={calendarBufferMinutes}
+            onChange={(e) => saveCalendarBuffer(parseInt(e.target.value, 10))}
+            disabled={!leadTimeLoaded || savingLeadTime}
+            className="w-full max-w-sm rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400 disabled:opacity-50"
+          >
+            <option value={0}>{tSet("calendarBufferNone")}</option>
+            <option value={30}>{tSet("calendarBuffer30m")}</option>
+            <option value={60}>{tSet("calendarBuffer1h")}</option>
+            <option value={90}>{tSet("calendarBuffer90m")}</option>
+            <option value={120}>{tSet("calendarBuffer2h")}</option>
+            <option value={180}>{tSet("calendarBuffer3h")}</option>
+          </select>
+        </div>
       </div>
 
       {/* Connect external calendars (Google / Apple). Lives here because
@@ -185,7 +229,7 @@ export function AvailabilityTab() {
       <div className="mt-6 rounded-xl border border-warm-200 bg-white p-5">
         <h3 className="text-sm font-semibold text-gray-900">Connect my calendars</h3>
         <p className="mt-1 text-xs text-gray-400">
-          Auto-block days that are already busy on your Google or Apple Calendar.
+          Auto-block busy times from your Google or Apple Calendar.
           Only busy time ranges are read — never event titles, attendees, or any other details.
         </p>
         <div className="mt-4">
