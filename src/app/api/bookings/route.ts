@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification } from "@/lib/email";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
+import { bookingGroupSizeEstimateColumnExists } from "@/lib/booking-group-size-fields";
 
 // Create a booking request
 export async function POST(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
   const userId = user.id;
 
   try {
-    const { photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, utm_source, utm_medium, utm_campaign, utm_term, gclid } = await req.json();
+    const { photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, group_size_is_estimate, occasion, message, utm_source, utm_medium, utm_campaign, utm_term, gclid } = await req.json();
 
     if (!photographer_id) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
@@ -149,12 +150,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const booking = await queryOne<{ id: string }>(
-      `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term, gclid)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', $14, $15, $16, $17, $18)
-       RETURNING id`,
-      [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, group_size || 2, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null]
-    );
+    const normalizedGroupSize = Math.max(1, Math.min(99, Number(group_size) || 2));
+    const hasGroupSizeEstimateColumn = await bookingGroupSizeEstimateColumnExists();
+    const booking = hasGroupSizeEstimateColumn
+      ? await queryOne<{ id: string }>(
+          `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, group_size_is_estimate, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term, gclid)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'pending', $15, $16, $17, $18, $19)
+           RETURNING id`,
+          [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, normalizedGroupSize, !!group_size_is_estimate, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null]
+        )
+      : await queryOne<{ id: string }>(
+          `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term, gclid)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', $14, $15, $16, $17, $18)
+           RETURNING id`,
+          [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, normalizedGroupSize, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null]
+        );
 
     // Post the client's booking message to the chat as the first real message —
     // gives the photographer something concrete to react to and starts the

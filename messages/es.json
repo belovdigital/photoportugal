@@ -430,7 +430,10 @@
       "messagePlaceholderNamed": "Cuéntale a {name} lo que tienes en mente — lugares especiales, estilo, cualquier detalle que deba saber…",
       "submit": "Enviar solicitud",
       "submitting": "Enviando...",
-      "paymentNote": "El pago se procesa de forma segura después de que el fotógrafo confirme su reserva."
+      "paymentNote": "El pago se procesa de forma segura después de que el fotógrafo confirme su reserva.",
+      "exactGroupSize": "Tamaño exacto del grupo",
+      "exactGroupSizeHint": "Para 9+ personas, introduzca el número real para que el fotógrafo pueda planificar y calcular el precio correctamente.",
+      "enterExactGroupSize": "Introduzca el tamaño exacto del grupo para grupos grandes."
     },
     "time": {
       "flexible": "Soy flexible",
@@ -446,7 +449,7 @@
       "couple": "Pareja (2 personas)",
       "small": "Grupo pequeño (3-4)",
       "group": "Grupo (5-8)",
-      "large": "Grupo grande (9+)"
+      "large": "Grupo más grande (9+)"
     },
     "occasions": {
       "select": "Seleccione la ocasión",

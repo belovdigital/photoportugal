@@ -19,6 +19,7 @@ export interface AdminBooking {
   location_slug: string | null;
   occasion: string | null;
   group_size: number | null;
+  group_size_is_estimate: boolean;
   shoot_time: string | null;
   package_name: string | null;
   package_duration: number | null;
@@ -63,6 +64,11 @@ function formatStripeAmount(cents: number | null, currency: string | null) {
 
 function codeToFlag(code: string): string {
   return code.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+
+function formatGroupSize(count: number | null, isEstimate: boolean) {
+  if (!count || count <= 1) return null;
+  return `${count}${isEstimate ? "+" : ""} people`;
 }
 
 const PAGE_SIZE = 50;
@@ -314,7 +320,7 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                     {b.group_size && b.group_size > 1 && (
                       <div>
                         <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Group</label>
-                        <p className="mt-1 text-sm text-gray-700">{b.group_size} people</p>
+                        <p className="mt-1 text-sm text-gray-700">{formatGroupSize(b.group_size, b.group_size_is_estimate)}</p>
                       </div>
                     )}
                     <div>

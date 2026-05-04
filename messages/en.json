@@ -1381,7 +1381,10 @@
       "messagePlaceholderNamed": "Tell {name} what you're hoping for — special spots, mood, anything they should know…",
       "submit": "Send Booking Request",
       "submitting": "Sending request...",
-      "paymentNote": "Payment is processed securely after the photographer confirms your booking."
+      "paymentNote": "Payment is processed securely after the photographer confirms your booking.",
+      "exactGroupSize": "Exact group size",
+      "exactGroupSizeHint": "For 9+ people, enter the real number so your photographer can price and plan correctly.",
+      "enterExactGroupSize": "Please enter the exact group size for larger groups."
     },
     "time": {
       "flexible": "I'm flexible",
@@ -1397,7 +1400,7 @@
       "couple": "Couple (2 people)",
       "small": "Small group (3-4)",
       "group": "Group (5-8)",
-      "large": "Large group (9+)"
+      "large": "Larger group (9+)"
     },
     "occasions": {
       "select": "Select occasion",

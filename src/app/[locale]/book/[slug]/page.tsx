@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter, Link } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
@@ -55,9 +55,8 @@ interface Photographer {
 }
 
 export default function BookPage({ params }: { params: Promise<{ slug: string }> }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const t = useTranslations("book");
   const tc = useTranslations("common");
   const locale = useLocale();
@@ -76,6 +75,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [flexibleDateTo, setFlexibleDateTo] = useState("");
   const [unavailableRanges, setUnavailableRanges] = useState<UnavailableRange[]>([]);
   const [groupSize, setGroupSize] = useState("2");
+  const [largeGroupSize, setLargeGroupSize] = useState("");
   const [occasion, setOccasion] = useState("");
   const [locationDetail, setLocationDetail] = useState("");
   const [message, setMessage] = useState("");
@@ -123,7 +123,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           setLoading(false);
         });
     });
-  }, [params]);
+  }, [params, searchParams, t]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -137,6 +137,13 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       setError(t("form.selectDateRange"));
       return;
     }
+    if (groupSize === "larger") {
+      const exactGroupSize = Number(largeGroupSize);
+      if (!Number.isFinite(exactGroupSize) || exactGroupSize < 9 || exactGroupSize > 99) {
+        setError(t("form.enterExactGroupSize"));
+        return;
+      }
+    }
 
     // If not logged in, save form data and show auth modal
     if (status !== "authenticated") {
@@ -145,7 +152,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         sessionStorage.setItem("booking_form", JSON.stringify({
           selectedPackage, selectedLocation, shootDate, shootTime,
           flexibleDate, flexibleDateFrom, flexibleDateTo,
-          groupSize, occasion, locationDetail, message,
+          groupSize, largeGroupSize, occasion, locationDetail, message,
         }));
       } catch {}
       setShowAuthModal(true);
@@ -169,7 +176,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         shoot_time: shootTime || null,
         flexible_date_from: flexibleDate ? flexibleDateFrom : null,
         flexible_date_to: flexibleDate ? flexibleDateTo : null,
-        group_size: parseInt(groupSize) || 2,
+        group_size: groupSize === "larger" ? parseInt(largeGroupSize) || 0 : parseInt(groupSize) || 2,
+        group_size_is_estimate: false,
         occasion: occasion || null,
         message,
         ...attribution,
@@ -213,7 +221,16 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           if (data.flexibleDate) setFlexibleDate(data.flexibleDate);
           if (data.flexibleDateFrom) setFlexibleDateFrom(data.flexibleDateFrom);
           if (data.flexibleDateTo) setFlexibleDateTo(data.flexibleDateTo);
-          if (data.groupSize) setGroupSize(data.groupSize);
+          if (data.groupSize) {
+            const restoredGroupSize = String(data.groupSize);
+            if (restoredGroupSize === "larger" || Number(restoredGroupSize) > 8) {
+              setGroupSize("larger");
+              setLargeGroupSize(data.largeGroupSize || (Number(restoredGroupSize) > 8 ? restoredGroupSize : ""));
+            } else {
+              setGroupSize(restoredGroupSize);
+            }
+          }
+          if (data.largeGroupSize) setLargeGroupSize(data.largeGroupSize);
           if (data.occasion) setOccasion(data.occasion);
           if (data.locationDetail) setLocationDetail(data.locationDetail);
           if (data.message) setMessage(data.message);
@@ -572,10 +589,31 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             >
               <option value="1">{t("groupSizes.solo")}</option>
               <option value="2">{t("groupSizes.couple")}</option>
-              <option value="3">{t("groupSizes.small")}</option>
-              <option value="5">{t("groupSizes.group")}</option>
-              <option value="9">{t("groupSizes.large")}</option>
+              <option value="3">3 {tc("people")}</option>
+              <option value="4">4 {tc("people")}</option>
+              <option value="5">5 {tc("people")}</option>
+              <option value="6">6 {tc("people")}</option>
+              <option value="7">7 {tc("people")}</option>
+              <option value="8">8 {tc("people")}</option>
+              <option value="larger">{t("groupSizes.large")}</option>
             </select>
+            {groupSize === "larger" && (
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-gray-500">{t("form.exactGroupSize")}</label>
+                <input
+                  type="number"
+                  min={9}
+                  max={99}
+                  inputMode="numeric"
+                  value={largeGroupSize}
+                  onChange={(e) => setLargeGroupSize(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
+                  placeholder="18"
+                  required
+                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-400">{t("form.exactGroupSizeHint")}</p>
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">{t("form.occasion")}</label>

@@ -2,6 +2,160 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 
+function escapeHtml(value: string | null | undefined): string {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+async function notifyClientAboutPackageOffer({
+  bookingId,
+  clientId,
+  photographerId,
+  packageId,
+  packageName,
+  price,
+  durationMinutes,
+  numPhotos,
+  photographerSlug,
+  isCustom,
+  description,
+}: {
+  bookingId: string;
+  clientId: string;
+  photographerId: string;
+  packageId: string;
+  packageName: string;
+  price: number;
+  durationMinutes: number;
+  numPhotos: number;
+  photographerSlug: string;
+  isCustom: boolean;
+  description?: string | null;
+}) {
+  const [client, photographer] = await Promise.all([
+    queryOne<{ email: string; name: string; locale: string | null }>(
+      "SELECT email, name, locale FROM users WHERE id = $1",
+      [clientId]
+    ),
+    queryOne<{ name: string }>(
+      `SELECT u.name
+       FROM photographer_profiles pp
+       JOIN users u ON u.id = pp.user_id
+       WHERE pp.id = $1`,
+      [photographerId]
+    ),
+  ]);
+
+  if (!client?.email || !photographerSlug) return;
+
+  const prefs = await queryOne<{ email_messages: boolean }>(
+    "SELECT email_messages FROM notification_preferences WHERE user_id = $1",
+    [clientId]
+  );
+  if (prefs?.email_messages === false) return;
+
+  const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
+  const { normalizeLocale, pickT, localizedUrl, formatPrice } = await import("@/lib/email-locale");
+
+  const locale = normalizeLocale(client.locale);
+  const photographerName = photographer?.name || "your photographer";
+  const firstName = client.name.split(" ")[0] || "there";
+  const priceText = formatPrice(price, locale);
+  const bookingUrl = localizedUrl(`/book/${photographerSlug}?package=${encodeURIComponent(packageId)}`, locale);
+  const messagesUrl = localizedUrl("/dashboard/messages", locale);
+  const durationLabel = durationMinutes >= 60 && durationMinutes % 60 === 0
+    ? `${durationMinutes / 60}h`
+    : `${durationMinutes} min`;
+
+  const T = pickT({
+    en: {
+      subject: isCustom ? `${photographerName} sent you a custom photoshoot proposal` : `${photographerName} sent you a photoshoot package`,
+      h2: isCustom ? "Custom proposal sent" : "Package sent",
+      greeting: `Hi ${firstName},`,
+      intro: isCustom
+        ? `<strong>${escapeHtml(photographerName)}</strong> created a custom photoshoot proposal for you.`
+        : `<strong>${escapeHtml(photographerName)}</strong> shared a photoshoot package with you.`,
+      details: "Package details:",
+      book: "Book this package",
+      messages: "Open messages",
+    },
+    pt: {
+      subject: isCustom ? `${photographerName} enviou-lhe uma proposta personalizada` : `${photographerName} enviou-lhe um pacote fotográfico`,
+      h2: isCustom ? "Proposta personalizada enviada" : "Pacote enviado",
+      greeting: `Olá ${firstName},`,
+      intro: isCustom
+        ? `<strong>${escapeHtml(photographerName)}</strong> criou uma proposta fotográfica personalizada para si.`
+        : `<strong>${escapeHtml(photographerName)}</strong> partilhou consigo um pacote fotográfico.`,
+      details: "Detalhes do pacote:",
+      book: "Reservar este pacote",
+      messages: "Abrir mensagens",
+    },
+    de: {
+      subject: isCustom ? `${photographerName} hat Ihnen ein individuelles Fotoshooting-Angebot gesendet` : `${photographerName} hat Ihnen ein Fotoshooting-Paket gesendet`,
+      h2: isCustom ? "Individuelles Angebot gesendet" : "Paket gesendet",
+      greeting: `Hallo ${firstName},`,
+      intro: isCustom
+        ? `<strong>${escapeHtml(photographerName)}</strong> hat ein individuelles Fotoshooting-Angebot für Sie erstellt.`
+        : `<strong>${escapeHtml(photographerName)}</strong> hat Ihnen ein Fotoshooting-Paket gesendet.`,
+      details: "Paketdetails:",
+      book: "Dieses Paket buchen",
+      messages: "Nachrichten öffnen",
+    },
+    es: {
+      subject: isCustom ? `${photographerName} le envió una propuesta personalizada` : `${photographerName} le envió un paquete de sesión`,
+      h2: isCustom ? "Propuesta personalizada enviada" : "Paquete enviado",
+      greeting: `Hola ${firstName},`,
+      intro: isCustom
+        ? `<strong>${escapeHtml(photographerName)}</strong> creó una propuesta de sesión personalizada para usted.`
+        : `<strong>${escapeHtml(photographerName)}</strong> compartió un paquete de sesión con usted.`,
+      details: "Detalles del paquete:",
+      book: "Reservar este paquete",
+      messages: "Abrir mensajes",
+    },
+    fr: {
+      subject: isCustom ? `${photographerName} vous a envoyé une proposition personnalisée` : `${photographerName} vous a envoyé un forfait photo`,
+      h2: isCustom ? "Proposition personnalisée envoyée" : "Forfait envoyé",
+      greeting: `Bonjour ${firstName},`,
+      intro: isCustom
+        ? `<strong>${escapeHtml(photographerName)}</strong> a créé une proposition de séance photo personnalisée pour vous.`
+        : `<strong>${escapeHtml(photographerName)}</strong> vous a partagé un forfait photo.`,
+      details: "Détails du forfait :",
+      book: "Réserver ce forfait",
+      messages: "Ouvrir les messages",
+    },
+  }, locale);
+
+  const descriptionHtml = description
+    ? `<p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#6B6055;font-style:italic;">"${escapeHtml(description)}"</p>`
+    : "";
+
+  await sendEmail(
+    client.email,
+    T.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.intro}</p>
+      <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9B8E82;">${T.details}</p>
+        <p style="margin:0;font-size:17px;font-weight:700;color:#1F1F1F;">${escapeHtml(packageName)}</p>
+        ${descriptionHtml}
+        <p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#4A4A4A;">${durationLabel} · ${numPhotos} photos · <strong>${priceText}</strong></p>
+      </div>
+      ${emailButton(bookingUrl, T.book, "#16A34A")}
+      ${emailButton(messagesUrl, T.messages)}
+    `, locale)
+  );
+
+  try {
+    const { notifyUser } = await import("@/lib/realtime");
+    notifyUser(clientId, "package_offer", { bookingId, packageId, isCustom });
+  } catch {}
+}
+
 export async function POST(req: NextRequest) {
   const user = await authFromRequest(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -109,6 +263,19 @@ export async function POST(req: NextRequest) {
       console.error("[share-package] telegram error:", err);
     }
   })().catch(() => {});
+
+  notifyClientAboutPackageOffer({
+    bookingId: booking_id,
+    clientId: booking.client_id,
+    photographerId: booking.photographer_id,
+    packageId: pkg.id,
+    packageName: pkg.name,
+    price: Number(pkg.price),
+    durationMinutes: Number(pkg.duration_minutes),
+    numPhotos: Number(pkg.num_photos),
+    photographerSlug: profile?.slug || "",
+    isCustom: false,
+  }).catch((err) => console.error("[share-package] client email error:", err));
 
   return NextResponse.json({
     success: true,
@@ -308,6 +475,20 @@ export async function PUT(req: NextRequest) {
       console.error("[share-package custom] telegram error:", err);
     }
   })().catch(() => {});
+
+  notifyClientAboutPackageOffer({
+    bookingId,
+    clientId: booking.client_id,
+    photographerId: booking.photographer_id,
+    packageId: pkg.id,
+    packageName: name,
+    price: Math.round(price),
+    durationMinutes: Math.round(durationMinutes),
+    numPhotos: Math.round(numPhotos),
+    photographerSlug: profile?.slug || "",
+    isCustom: true,
+    description,
+  }).catch((err) => console.error("[share-package custom] client email error:", err));
 
   return NextResponse.json({
     success: true,

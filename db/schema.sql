@@ -210,6 +210,7 @@ CREATE TABLE bookings (
   total_price INTEGER, -- in EUR (whole euros)
   payment_status payment_status DEFAULT 'pending',
   group_size INTEGER,
+  group_size_is_estimate BOOLEAN DEFAULT FALSE,
   occasion VARCHAR(100),
   stripe_payment_intent_id VARCHAR(255),
   service_fee NUMERIC,

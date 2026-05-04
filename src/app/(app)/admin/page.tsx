@@ -17,6 +17,7 @@ import { AdminMatchRequestsTab } from "./AdminMatchRequestsTab";
 import { isBelowMinimum } from "@/lib/package-pricing";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { bookingStripePaymentSelect } from "@/lib/booking-stripe-payment-fields";
+import { bookingGroupSizeEstimateSelect } from "@/lib/booking-group-size-fields";
 
 export const dynamic = "force-dynamic";
 
@@ -170,13 +171,14 @@ export default async function AdminPage() {
   );
 
   const stripePaymentSelect = await bookingStripePaymentSelect("b");
+  const groupSizeEstimateSelect = await bookingGroupSizeEstimateSelect("b");
 
   const bookings = await query<{
     id: string; client_name: string; photographer_name: string; status: string;
     client_id: string; photographer_slug: string;
     shoot_date: string | null; total_price: number | null; created_at: string; payment_status: string | null;
     message: string | null; location_slug: string | null; occasion: string | null;
-    group_size: number | null; shoot_time: string | null; package_name: string | null;
+    group_size: number | null; group_size_is_estimate: boolean; shoot_time: string | null; package_name: string | null;
     package_duration: number | null; service_fee: number | null; payout_amount: number | null;
     stripe_amount_subtotal_cents: number | null; stripe_amount_paid_cents: number | null;
     stripe_amount_discount_cents: number | null; stripe_currency: string | null;
@@ -190,7 +192,7 @@ export default async function AdminPage() {
   }>(
     `SELECT b.id, b.client_id, cu.name as client_name, pu.name as photographer_name, pp.slug as photographer_slug,
             b.status, b.shoot_date, b.total_price, b.created_at, b.confirmed_at, b.payment_status,
-            b.message, b.location_slug, b.occasion, b.group_size, b.shoot_time,
+            b.message, b.location_slug, b.occasion, b.group_size, ${groupSizeEstimateSelect}, b.shoot_time,
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,
             ${stripePaymentSelect},
             b.flexible_date_from, b.flexible_date_to, b.date_note,

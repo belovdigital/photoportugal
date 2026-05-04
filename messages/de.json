@@ -1381,7 +1381,10 @@
       "messagePlaceholderNamed": "Sagen Sie {name}, was Sie sich vorstellen — besondere Orte, Stimmung, alles Wichtige…",
       "submit": "Buchungsanfrage senden",
       "submitting": "Anfrage wird gesendet...",
-      "paymentNote": "Die Zahlung wird sicher abgewickelt, nachdem der Fotograf Ihre Buchung bestätigt hat."
+      "paymentNote": "Die Zahlung wird sicher abgewickelt, nachdem der Fotograf Ihre Buchung bestätigt hat.",
+      "exactGroupSize": "Exakte Gruppengröße",
+      "exactGroupSizeHint": "Geben Sie bei 9+ Personen die tatsächliche Zahl ein, damit der Fotograf korrekt planen und kalkulieren kann.",
+      "enterExactGroupSize": "Bitte geben Sie die exakte Gruppengröße für größere Gruppen ein."
     },
     "time": {
       "flexible": "Ich bin flexibel",
@@ -1397,7 +1400,7 @@
       "couple": "Paar (2 Personen)",
       "small": "Kleine Gruppe (3-4)",
       "group": "Gruppe (5-8)",
-      "large": "Große Gruppe (9+)"
+      "large": "Größere Gruppe (9+)"
     },
     "occasions": {
       "select": "Anlass auswählen",

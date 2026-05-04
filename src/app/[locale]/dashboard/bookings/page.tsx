@@ -13,6 +13,7 @@ import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist"
 import { BookingJourney } from "./BookingJourney";
 import { normalizeName } from "@/lib/format-name";
 import { bookingStripePaymentSelect } from "@/lib/booking-stripe-payment-fields";
+import { bookingGroupSizeEstimateSelect } from "@/lib/booking-group-size-fields";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,12 @@ function formatStripeAmount(cents: number | null, currency: string | null) {
   if (typeof cents !== "number") return null;
   const symbol = (currency || "eur").toLowerCase() === "eur" ? "€" : `${(currency || "").toUpperCase()} `;
   return `${symbol}${(cents / 100).toFixed(2)}`;
+}
+
+function formatGroupSizeLabel(count: number | null, isEstimate: boolean, peopleLabel: (count: number) => string) {
+  if (!count || count <= 1) return null;
+  const label = peopleLabel(count);
+  return isEstimate ? label.replace(String(count), `${count}+`) : label;
 }
 
 export default async function BookingsPage() {
@@ -58,6 +65,7 @@ export default async function BookingsPage() {
     proposed_time: string | null;
     date_note: string | null;
     group_size: number | null;
+    group_size_is_estimate: boolean;
     occasion: string | null;
     total_price: number | null;
     service_fee: number | null;
@@ -87,6 +95,7 @@ export default async function BookingsPage() {
     has_photographer_message: boolean;
   }[] = [];
   const stripePaymentSelect = await bookingStripePaymentSelect("b");
+  const groupSizeEstimateSelect = await bookingGroupSizeEstimateSelect("b");
 
   try {
     if (isPhotographer) {
@@ -94,7 +103,7 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount,
+                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount,
                   ${stripePaymentSelect},
                   b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
@@ -129,7 +138,7 @@ export default async function BookingsPage() {
     } else {
       bookings = await query(
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, b.occasion, b.total_price, b.service_fee, b.payout_amount,
+                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount,
                 ${stripePaymentSelect},
                 b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
@@ -325,7 +334,9 @@ export default async function BookingsPage() {
                 {booking.group_size && booking.group_size > 1 && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("groupLabel") || "Group"}</p>
-                    <p className="text-sm font-medium text-gray-800">{t("people", { count: booking.group_size })}</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {formatGroupSizeLabel(booking.group_size, booking.group_size_is_estimate, (count) => t("people", { count }))}
+                    </p>
                   </div>
                 )}
                 <div className="rounded-lg bg-warm-50 px-3 py-2">
