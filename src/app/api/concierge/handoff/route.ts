@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { queryOne } from "@/lib/db";
+import { query, queryOne } from "@/lib/db";
+import { computeLeadScore } from "@/lib/concierge/lead-score";
 
 export const runtime = "nodejs";
 
@@ -51,42 +52,101 @@ export async function POST(req: NextRequest) {
     const ctx = await queryOne<{
       messages: { role: string; content: string; action?: { type?: string; data?: { matches?: { slug: string }[] } } | null }[];
       utm_source: string | null; utm_term: string | null; country: string | null;
-      phone: string | null;
+      phone: string | null; gclid: string | null; outcome: string | null;
       matched_photographer_ids: string[] | null;
+      inquiry_booking_ids: string[] | null;
+      created_at: string; updated_at: string;
     }>(
-      "SELECT messages, utm_source, utm_term, country, phone, matched_photographer_ids FROM concierge_chats WHERE id = $1",
+      `SELECT messages, utm_source, utm_term, country, phone, gclid, outcome,
+              matched_photographer_ids, inquiry_booking_ids,
+              created_at, updated_at
+         FROM concierge_chats WHERE id = $1`,
       [chat_id]
     ).catch(() => null);
     const userTurns = (ctx?.messages || [])
       .filter((m) => m.role === "user")
       .map((m) => (m.content || "").replace(/\s*\(slug:[a-z0-9-]+\)\s*$/i, ""));
-    const transcript = userTurns.slice(-3).map((t) => `  • <i>"${t.length > 150 ? t.slice(0, 150) + "…" : t}"</i>`).join("\n");
+    const transcript = userTurns.slice(-3).map((t) => `  • <i>"${escapeHtml(t.length > 160 ? t.slice(0, 160) + "…" : t)}"</i>`).join("\n");
     const sourceParts = [
       ctx?.utm_source ? `utm: ${ctx.utm_source}` : null,
       ctx?.utm_term ? `kw: "${ctx.utm_term}"` : null,
       ctx?.country ? `country: ${ctx.country}` : null,
     ].filter(Boolean).join(" · ");
 
-    const header = manual
-      ? `🙋 <b>Concierge: visitor clicked "Ask a human"</b>`
-      : `👤 <b>Concierge handoff — AI couldn't match</b> 🆘`;
+    // Lead heat
+    const ls = ctx ? computeLeadScore({
+      email: email || null,
+      phone: ctx.phone,
+      gclid: ctx.gclid,
+      utm_source: ctx.utm_source,
+      outcome: ctx.outcome,
+      matched_photographer_ids: ctx.matched_photographer_ids,
+      inquiry_booking_ids: ctx.inquiry_booking_ids,
+      messages: ctx.messages || [],
+      created_at: ctx.created_at,
+      updated_at: ctx.updated_at,
+    }) : null;
+    const heatBadge = ls
+      ? (ls.heat === "hot" ? `🔥 HOT ${ls.score}` : ls.heat === "warm" ? `🟡 WARM ${ls.score}` : `🔵 ${ls.score}`)
+      : null;
 
-    await sendTelegram(
-      `${header}\n\n` +
-      (email ? `<b>Email:</b> ${email}\n` : "<b>Email:</b> <i>not given</i>\n") +
-      (ctx?.phone ? `<b>Phone:</b> <code>${ctx.phone}</code>\n` : "") +
-      (first_name ? `<b>Name:</b> ${first_name}\n` : "") +
-      (location_slug ? `<b>Location:</b> ${location_slug}\n` : "") +
-      (shoot_type ? `<b>Shoot type:</b> ${shoot_type}\n` : "") +
-      (summary ? `\n<b>${manual ? "Note" : "AI summary"}:</b>\n<i>${summary}</i>\n` : "") +
-      (transcript ? `\n<b>What they said:</b>\n${transcript}\n` : "") +
-      (sourceParts ? `\n<b>Source:</b> ${sourceParts}\n` : "") +
-      `\n<a href="https://photoportugal.com/admin?tab=concierge&chat=${chat_id}">Open in admin</a>`,
-      "concierge"
-    ).catch(() => {});
+    // Resolve photographer UUIDs → names + clickable slugs (for the
+    // "matches shown earlier" context line so admin can jump straight
+    // to a profile when replying via WhatsApp).
+    let photogLines = "";
+    const ids = (ctx?.matched_photographer_ids || []).slice(0, 4);
+    if (ids.length > 0) {
+      const rows = await query<{ id: string; slug: string; name: string }>(
+        `SELECT pp.id, pp.slug, u.name FROM photographer_profiles pp
+           JOIN users u ON u.id = pp.user_id
+          WHERE pp.id = ANY($1::uuid[])`,
+        [ids]
+      ).catch(() => [] as { id: string; slug: string; name: string }[]);
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      const items = ids
+        .map((id) => byId.get(id))
+        .filter(Boolean)
+        .map((p) => `  • <b>${escapeHtml(p!.name)}</b> (<a href="https://photoportugal.com/photographers/${p!.slug}">${escapeHtml(p!.slug)}</a>)`);
+      if (items.length > 0) photogLines = `<b>Photographers shown:</b>\n${items.join("\n")}`;
+    }
+
+    // Clickable phone (wa.me) when we have one
+    let phoneLine = "";
+    if (ctx?.phone) {
+      const digits = ctx.phone.replace(/\D/g, "");
+      phoneLine = digits.length >= 6
+        ? `<b>WhatsApp:</b> <a href="https://wa.me/${digits}?text=${encodeURIComponent("Hi! This is Photo Portugal — about your photoshoot inquiry.")}">📱 ${escapeHtml(ctx.phone)}</a>`
+        : `<b>Phone:</b> <code>${escapeHtml(ctx.phone)}</code>`;
+    }
+
+    const headerText = manual
+      ? `🙋 <b>Concierge: visitor wants to talk to a human</b>`
+      : `👤 <b>Concierge handoff — AI couldn't match</b> 🆘`;
+    const header = heatBadge ? `${headerText} · ${heatBadge}` : headerText;
+
+    const lines: (string | null)[] = [
+      header,
+      "",
+      email ? `<b>Email:</b> ${escapeHtml(email)}` : null,
+      phoneLine || null,
+      first_name ? `<b>Name:</b> ${escapeHtml(first_name)}` : null,
+      location_slug ? `<b>Location:</b> ${escapeHtml(location_slug)}` : null,
+      shoot_type ? `<b>Shoot type:</b> ${escapeHtml(shoot_type)}` : null,
+      summary ? `\n<b>${manual ? "Note" : "AI summary"}:</b>\n<i>${escapeHtml(summary)}</i>` : null,
+      transcript ? `\n<b>What they said:</b>\n${transcript}` : null,
+      photogLines ? `\n${photogLines}` : null,
+      sourceParts ? `\n<b>Source:</b> ${escapeHtml(sourceParts)}` : null,
+      "",
+      `<a href="https://photoportugal.com/admin?tab=concierge&chat=${chat_id}">Open in admin →</a>`,
+    ];
+    await sendTelegram(lines.filter((l) => l !== null).join("\n"), "concierge").catch(() => {});
   } catch (err) {
     console.error("[concierge/handoff] telegram error:", err);
   }
 
   return NextResponse.json({ ok: true, match_request_id: matchReqId });
+}
+
+function escapeHtml(s: string): string {
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

@@ -8,6 +8,7 @@ import { computeBadges } from "@/lib/concierge/match-badges";
 import { pageContextToPromptString, type PageContext } from "@/lib/concierge/page-context";
 import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock } from "@/lib/concierge/candidate-ranker";
 import { checkPhotographersAvailability } from "@/lib/concierge/availability-check";
+import { computeLeadScore } from "@/lib/concierge/lead-score";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -618,17 +619,57 @@ async function notifyConciergeAdmins(opts: {
   pageContextStr: string | null;
 }): Promise<void> {
   const { sendTelegram } = await import("@/lib/telegram");
-  const lines: string[] = [];
 
-  if (opts.action.type === "human_handoff") {
-    lines.push("🆘 <b>Concierge: human handoff requested</b>");
-  } else if (opts.action.type === "show_matches") {
-    lines.push("⭐ <b>Concierge: matches shown</b>");
+  // Pull current chat row so we have phone (might have been captured via
+  // a separate WA flow), outcome, traffic source, recency — needed for
+  // a real lead-heat score in the Telegram message.
+  let phone: string | null = null;
+  let leadHeatBadge: string | null = null;
+  if (opts.chatId) {
+    const row = await queryOne<{
+      phone: string | null; gclid: string | null; utm_source: string | null;
+      outcome: string | null; matched_photographer_ids: string[] | null;
+      inquiry_booking_ids: string[] | null;
+      created_at: string; updated_at: string;
+    }>(
+      `SELECT phone, gclid, utm_source, outcome, matched_photographer_ids,
+              inquiry_booking_ids, created_at, updated_at
+         FROM concierge_chats WHERE id = $1`,
+      [opts.chatId]
+    ).catch(() => null);
+    if (row) {
+      phone = row.phone;
+      const ls = computeLeadScore({
+        email: opts.email || null,
+        phone: row.phone,
+        gclid: row.gclid,
+        utm_source: row.utm_source,
+        outcome: row.outcome,
+        matched_photographer_ids: row.matched_photographer_ids,
+        inquiry_booking_ids: row.inquiry_booking_ids,
+        messages: opts.messages || [],
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      });
+      leadHeatBadge = ls.heat === "hot" ? `🔥 HOT ${ls.score}` : ls.heat === "warm" ? `🟡 WARM ${ls.score}` : `🔵 ${ls.score}`;
+    }
   }
 
+  const lines: string[] = [];
+  const headerText = opts.action.type === "human_handoff"
+    ? "🆘 <b>Concierge: human handoff requested</b>"
+    : "⭐ <b>Concierge: matches shown</b>";
+  lines.push(leadHeatBadge ? `${headerText} · ${leadHeatBadge}` : headerText);
+
   const meta: string[] = [];
-  if (opts.first_name) meta.push(`👤 ${opts.first_name}`);
-  if (opts.email) meta.push(`✉️ ${opts.email}`);
+  if (opts.first_name) meta.push(`👤 ${escapeHtml(opts.first_name)}`);
+  if (opts.email) meta.push(`✉️ ${escapeHtml(opts.email)}`);
+  if (phone) {
+    const digits = phone.replace(/\D/g, "");
+    meta.push(digits.length >= 6
+      ? `<a href="https://wa.me/${digits}?text=${encodeURIComponent("Hi! This is Photo Portugal — about your photoshoot inquiry.")}">📱 ${escapeHtml(phone)}</a>`
+      : `📱 ${escapeHtml(phone)}`);
+  }
   if (opts.detectedLang) meta.push(`🌐 ${opts.detectedLang}`);
   if (opts.visitorId) meta.push(`<code>${opts.visitorId.slice(0, 8)}</code>`);
   if (meta.length) lines.push(meta.join("  ·  "));
@@ -652,7 +693,7 @@ async function notifyConciergeAdmins(opts: {
       for (const m of matches) {
         const p = opts.photographers.find((x) => x.slug === m.slug);
         const name = p?.name || m.slug;
-        lines.push(`• <b>${escapeHtml(name)}</b> (<code>${m.slug}</code>)`);
+        lines.push(`• <b>${escapeHtml(name)}</b> (<a href="https://photoportugal.com/photographers/${m.slug}">${escapeHtml(m.slug)}</a>)`);
         if (m.reasoning) lines.push(`  <i>${escapeHtml(m.reasoning.slice(0, 220))}</i>`);
       }
     }
