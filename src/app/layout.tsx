@@ -65,6 +65,39 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body className="flex min-h-screen flex-col font-sans">
+        {/* Recover from blue-green chunk-mismatch errors. After a deploy
+            the visitor's stale HTML may reference chunks (e.g.
+            `/_next/static/chunks/<hash>.js`) that no longer exist on
+            disk because the new build has different content-hashes.
+            Without this, the page silently breaks with
+            ChunkLoadError + "Cannot read properties of null (parentNode)".
+            We listen for chunk-load errors, and on first hit we force
+            a reload. SessionStorage flag prevents an infinite loop if
+            the chunk is genuinely missing (corrupt deploy). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                if (typeof window === "undefined") return;
+                function isChunkErr(e){
+                  var m = (e && (e.message || (e.reason && e.reason.message))) || "";
+                  return /ChunkLoadError|Loading chunk|Failed to load chunk|Loading CSS chunk/.test(m);
+                }
+                function tryReload(e){
+                  if (!isChunkErr(e)) return;
+                  try {
+                    if (sessionStorage.getItem("chunk_reload_at")) return;
+                    sessionStorage.setItem("chunk_reload_at", String(Date.now()));
+                    setTimeout(function(){ try { sessionStorage.removeItem("chunk_reload_at"); } catch(_){} }, 60000);
+                  } catch(_){}
+                  location.reload();
+                }
+                window.addEventListener("error", tryReload, true);
+                window.addEventListener("unhandledrejection", tryReload);
+              })();
+            `,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
