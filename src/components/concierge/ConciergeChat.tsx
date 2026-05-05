@@ -220,6 +220,11 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const [contactError, setContactError] = useState(false);
   const hasContact = (emailValue && emailValue.includes("@")) || (phoneValue && phoneValue.replace(/\D/g, "").length >= 6);
+  // Proactive nudge — once per session, ~90s after matches are shown if
+  // the visitor hasn't given email/phone, the bot asks softly. Without
+  // this, current data shows ~0% email capture: visitors browse the
+  // matches and bounce, leaving us no way to follow up.
+  const proactiveNudgeFiredRef = useRef(false);
   // The "shy nudge": after 5s of inactivity on an empty conversation,
   // Lens (the bot) sends a warm intro + 3 example-prompt chips. Visitors
   // often hesitate to type because the chat feels formal — the nudge
@@ -286,8 +291,9 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
     }
     if (lastSentInitialRef.current === pending) return;
     lastSentInitialRef.current = pending;
+    const chip = drawer.initialChip;
     drawer.consumeInitialMessage();
-    void send(pending);
+    void send(pending, chip ? { sourceChip: chip } : undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, drawer.initialMessage]);
 
@@ -373,6 +379,28 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
+  // Proactive email/WhatsApp nudge — fires once 90s after matches were
+  // shown if the visitor hasn't given contact AND isn't already in the
+  // middle of an in-chat ask. The bot pushes an assistant message and
+  // surfaces the contact form below (reuses pendingContact mechanism).
+  useEffect(() => {
+    if (!matchesShown) return;
+    if (hasContact) return;
+    if (pendingContact !== null) return;
+    if (proactiveNudgeFiredRef.current) return;
+    const timer = setTimeout(() => {
+      // Re-check at fire time — visitor may have given contact in the
+      // meantime, in which case skip silently.
+      if (proactiveNudgeFiredRef.current) return;
+      proactiveNudgeFiredRef.current = true;
+      setMessages((prev) => [...prev, { role: "assistant" as const, content: t("proactiveEmailNudge") }]);
+      setPendingContact("email_matches");
+      setContactError(false);
+    }, 90_000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchesShown, hasContact, pendingContact]);
+
   // Smart scroll — only inside the chat window, never the page.
   // - When user sends → scroll user message into view at bottom
   // - When assistant replies → scroll to TOP of that assistant message
@@ -394,7 +422,7 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
     });
   }, [messages]);
 
-  async function send(text: string) {
+  async function send(text: string, opts?: { sourceChip?: string }) {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
 
@@ -420,6 +448,9 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
           source: source || "page",
           page_context: pageContext,
           page_context_obj: pageContextObj,
+          // Verbatim chip the visitor clicked (only on first turn, before
+          // chatId exists). Server saves it on INSERT for analytics.
+          source_chip: !chatId && opts?.sourceChip ? opts.sourceChip : undefined,
         }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);

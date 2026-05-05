@@ -125,6 +125,20 @@ export async function GET(req: NextRequest) {
      ORDER BY count DESC LIMIT 10`
   ).catch(() => []);
 
+  // Top chips — which Lens pre-prompt chips actually convert to chats
+  // and matches. Lets us prune dead chips and amplify the high-converting
+  // ones over time. Conversion = matched / used.
+  const topChips = await query<{ chip: string; used: number; matched: number }>(
+    `SELECT source_chip AS chip,
+            COUNT(*)::int AS used,
+            COUNT(*) FILTER (WHERE outcome IN ('matched','show_matches'))::int AS matched
+       FROM concierge_chats
+      WHERE source_chip IS NOT NULL
+        AND created_at > NOW() - INTERVAL '90 days'
+      GROUP BY source_chip
+      ORDER BY used DESC LIMIT 10`
+  ).catch(() => []);
+
   // Hot lead count for the filter bar
   const hotCount = scored.filter((c) => c.lead_heat === "hot").length;
 
@@ -136,6 +150,7 @@ export async function GET(req: NextRequest) {
       by_source: [],
       top_locations: [],
       top_photographers: topPhotogs,
+      top_chips: topChips,
       hot_leads: hotCount,
     } : null,
   });

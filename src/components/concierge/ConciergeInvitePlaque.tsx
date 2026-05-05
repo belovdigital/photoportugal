@@ -39,10 +39,10 @@ export function ConciergeInvitePlaque({
   const drawer = useConciergeDrawer();
   const [text, setText] = useState("");
 
-  function handleSend(message: string) {
+  function handleSend(message: string, fromChip = false) {
     const trimmed = message.trim();
     if (!trimmed) return;
-    drawer.openWith(trimmed);
+    drawer.openWith(trimmed, fromChip ? { chip: trimmed } : undefined);
     setText("");
   }
 
@@ -73,7 +73,7 @@ export function ConciergeInvitePlaque({
             <button
               key={i}
               type="button"
-              onClick={() => handleSend(chip)}
+              onClick={() => handleSend(chip, true)}
               className={chipCls}
             >
               {chip}

@@ -52,6 +52,7 @@ interface ConciergeStats {
   by_source: { source: string; count: number }[];
   top_locations: { slug: string; count: number }[];
   top_photographers: { name: string; slug: string; count: number }[];
+  top_chips?: { chip: string; used: number; matched: number }[];
 }
 
 const langFlag = (l: string | null) => l === "ru" ? "🇷🇺" : l === "pt" ? "🇵🇹" : l === "de" ? "🇩🇪" : l === "es" ? "🇪🇸" : l === "fr" ? "🇫🇷" : l === "en" ? "🇬🇧" : "🌐";
@@ -146,6 +147,41 @@ export function AdminConciergeTab() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Lens chip conversion — which pre-prompt chips on the homepage /
+          location pages actually start chats AND lead to matches. Used
+          and matched columns shown side-by-side so dead chips show up
+          as low conversion to prune later. */}
+      {stats?.top_chips && stats.top_chips.length > 0 && (
+        <div className="mb-6 rounded-xl border border-warm-200 bg-white p-4">
+          <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500">Top Lens chips (last 90d)</h3>
+          <div className="mt-2 overflow-hidden rounded-lg ring-1 ring-warm-200">
+            <table className="w-full text-xs">
+              <thead className="bg-warm-50">
+                <tr>
+                  <th className="px-3 py-1.5 text-left font-semibold text-gray-600">Chip</th>
+                  <th className="px-3 py-1.5 text-right font-semibold text-gray-600">Used</th>
+                  <th className="px-3 py-1.5 text-right font-semibold text-gray-600">Matched</th>
+                  <th className="px-3 py-1.5 text-right font-semibold text-gray-600">Conv.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.top_chips.slice(0, 8).map((c) => {
+                  const conv = c.used > 0 ? Math.round((100 * c.matched) / c.used) : 0;
+                  return (
+                    <tr key={c.chip} className="border-t border-warm-100">
+                      <td className="px-3 py-1.5 text-gray-900">{c.chip}</td>
+                      <td className="px-3 py-1.5 text-right text-gray-700">{c.used}</td>
+                      <td className="px-3 py-1.5 text-right text-gray-700">{c.matched}</td>
+                      <td className={`px-3 py-1.5 text-right font-semibold ${conv >= 50 ? "text-emerald-700" : conv >= 25 ? "text-amber-700" : "text-gray-500"}`}>{conv}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

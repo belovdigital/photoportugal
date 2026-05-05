@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const { chat_id, visitor_id, messages, email, first_name, language, source, page_context, page_context_obj } = body as {
+  const { chat_id, visitor_id, messages, email, first_name, language, source, page_context, page_context_obj, source_chip } = body as {
     chat_id?: string;
     visitor_id?: string;
     messages: IncomingMessage[];
@@ -170,6 +170,9 @@ export async function POST(req: NextRequest) {
     page_context?: string;
     /** Structured page context from the drawer — preferred over page_context. */
     page_context_obj?: PageContext;
+    /** Verbatim chip text if the chat started via a chip click (analytics).
+     *  Only meaningful on chat creation; ignored on subsequent turns. */
+    source_chip?: string;
   };
 
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -553,8 +556,8 @@ export async function POST(req: NextRequest) {
       }
     }
     const created = await queryOne<{ id: string }>(
-      `INSERT INTO concierge_chats (visitor_id, user_id, email, first_name, messages, matched_photographer_ids, outcome, language, total_tokens, total_cost_usd, utm_source, utm_medium, utm_campaign, utm_term, gclid, source, page_context)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`,
+      `INSERT INTO concierge_chats (visitor_id, user_id, email, first_name, messages, matched_photographer_ids, outcome, language, total_tokens, total_cost_usd, utm_source, utm_medium, utm_campaign, utm_term, gclid, source, page_context, source_chip)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`,
       [
         visitor_id || null,
         userId,
@@ -569,6 +572,7 @@ export async function POST(req: NextRequest) {
         utm.source, utm.medium, utm.campaign, utm.term, utm.gclid,
         source || "page",
         page_context || null,
+        typeof source_chip === "string" && source_chip.trim() ? source_chip.trim().slice(0, 200) : null,
       ]
     ).catch((e) => { console.error("[concierge] insert error:", e); return null; });
     chatId = created?.id;

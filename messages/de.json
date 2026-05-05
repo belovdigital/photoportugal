@@ -3305,6 +3305,7 @@
     "askHumanDone": "Erhalten — unser Team meldet sich in Kürze.",
     "contactPromptAskHuman": "Gerne — wie lautet Ihre E-Mail oder WhatsApp-Nummer? Ich gebe sie zusammen mit unserem Chat an unser Team weiter.",
     "contactPromptEmailMatches": "Klar! Wie lautet Ihre E-Mail? (Oder teilen Sie Ihre WhatsApp-Nummer und wir senden die Treffer dorthin.)",
+    "proactiveEmailNudge": "Soll ich diese Treffer an Ihre E-Mail oder WhatsApp senden, damit Sie sie gespeichert haben? Dann müssen Sie später nicht zurückscrollen.",
     "contactInputPlaceholder": "E-Mail oder WhatsApp-Nummer",
     "contactSubmit": "Senden",
     "contactSavedAskHuman": "Erhalten — unser Team meldet sich unter {contact} in Kürze. 🙌",

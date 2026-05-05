@@ -641,6 +641,7 @@
     "askHumanDone": "Recibido — nuestro equipo se pondrá en contacto pronto.",
     "contactPromptAskHuman": "Claro — ¿cuál es tu email o número de WhatsApp? Lo paso a nuestro equipo junto con esta conversación.",
     "contactPromptEmailMatches": "¡Claro! ¿Cuál es tu email? (O comparte tu WhatsApp y te enviamos las coincidencias por allí.)",
+    "proactiveEmailNudge": "¿Quieres que te envíe estas opciones por email o WhatsApp para guardarlas? Así no tendrás que volver a buscarlas.",
     "contactInputPlaceholder": "Email o número de WhatsApp",
     "contactSubmit": "Enviar",
     "contactSavedAskHuman": "Recibido — nuestro equipo te contacta en {contact} en breve. 🙌",

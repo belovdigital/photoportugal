@@ -13,12 +13,16 @@ interface DrawerContextValue {
   /** Open the drawer AND seed the chat with a user message (auto-sent on
    *  first mount of the chat). Used by location/landing pages so visitors
    *  can type "couples shoot in Sintra next week" into a quick form and
-   *  drop straight into a conversation with the AI. */
-  openWith: (message: string) => void;
+   *  drop straight into a conversation with the AI. The optional
+   *  `meta.chip` records which pre-prompt chip the visitor clicked, for
+   *  conversion-rate analytics on which chips actually convert. */
+  openWith: (message: string, meta?: { chip?: string }) => void;
   /** Pending message to inject as a user message when the chat mounts.
    *  Cleared by `consumeInitialMessage` after the chat reads it so a
    *  subsequent open doesn't replay the same message. */
   initialMessage?: string;
+  /** Verbatim chip text if openWith was invoked from a chip click. */
+  initialChip?: string;
   consumeInitialMessage: () => void;
 }
 
@@ -28,13 +32,14 @@ const DrawerContext = createContext<DrawerContextValue | null>(null);
 // so the Header doesn't crash and trigger the error boundary.
 export function useConciergeDrawer(): DrawerContextValue {
   const ctx = useContext(DrawerContext);
-  if (!ctx) return { open: false, setOpen: () => {}, toggle: () => {}, openWith: () => {}, consumeInitialMessage: () => {} };
+  if (!ctx) return { open: false, setOpen: () => {}, toggle: () => {}, openWith: () => {}, consumeInitialMessage: () => {} } as DrawerContextValue;
   return ctx;
 }
 
 export function ConciergeDrawerProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
+  const [initialChip, setInitialChip] = useState<string | undefined>(undefined);
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations("concierge");
@@ -88,12 +93,14 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
   // Open the drawer with a pending user message that the chat will auto-send
   // on mount. Full integration with ConciergeChat is parked — for now this
   // just opens the drawer and stores the message for a later wiring pass.
-  const openWith = useCallback((message: string) => {
+  const openWith = useCallback((message: string, meta?: { chip?: string }) => {
     setInitialMessage(message);
+    setInitialChip(meta?.chip);
     setOpen(true);
   }, []);
   const consumeInitialMessage = useCallback(() => {
     setInitialMessage(undefined);
+    setInitialChip(undefined);
   }, []);
 
   // Structured page context — drives the context-aware first message in
@@ -106,7 +113,7 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
   );
 
   return (
-    <DrawerContext.Provider value={{ open, setOpen, toggle, openWith, initialMessage, consumeInitialMessage }}>
+    <DrawerContext.Provider value={{ open, setOpen, toggle, openWith, initialMessage, initialChip, consumeInitialMessage }}>
       {children}
       {/* Drawer mounts only when open + not already on /concierge page */}
       {open && !onConciergePage && (

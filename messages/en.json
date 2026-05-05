@@ -3299,6 +3299,7 @@
     "askHumanDone": "Got it — our team will reach out shortly.",
     "contactPromptAskHuman": "Of course — what's your email or WhatsApp number? I'll pass it to our team along with our chat.",
     "contactPromptEmailMatches": "Sure! What's your email? (Or share your WhatsApp number and we'll send the matches there.)",
+    "proactiveEmailNudge": "Want me to send these matches to your email or WhatsApp so they're saved? That way you won't have to scroll back to find them later.",
     "contactInputPlaceholder": "Email or WhatsApp number",
     "contactSubmit": "Send",
     "contactSavedAskHuman": "Got it — our team will reach you at {contact} shortly. 🙌",
