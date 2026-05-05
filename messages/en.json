@@ -3210,7 +3210,8 @@
     "trustSecure": "Secure payment",
     "trustRefund": "Money-back guarantee",
     "openingMessage": "Hi! I'm your Smart Concierge for Photo Portugal. Tell me where you'll be and the occasion — I'll match you with the right photographers instantly. ✨",
-    "conciergeBadge": "Photo Portugal Concierge",
+    "conciergeBadge": "Lens · Photo Portugal",
+    "assistantTagline": "AI assistant · usually replies in seconds",
     "nudge": {
       "label": "Lens, your AI concierge",
       "body": "Hey 👋 Don't be shy — I'm **Lens**, the Photo Portugal AI. Speak any language, write however feels natural — formal, casual, broken English, doesn't matter. Your message stays between us, no humans reading. I know every photographer on the platform, the best spots in each city, and what makes a shoot memorable. Tell me about your trip and I'll find your match instantly.",

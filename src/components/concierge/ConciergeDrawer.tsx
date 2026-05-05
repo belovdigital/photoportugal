@@ -131,14 +131,18 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.847.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
                   </svg>
                 </span>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold leading-tight text-gray-900">{t("conciergeBadge")}</span>
-                  <span className="flex items-center gap-1 text-[11px] text-emerald-700">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-semibold leading-tight text-gray-900">{t("conciergeBadge")}</span>
+                  <span className="flex flex-wrap items-center gap-x-1 gap-y-0 text-[11px] leading-tight">
+                    <span className="flex items-center gap-1 text-emerald-700">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      </span>
+                      {t("online")}
                     </span>
-                    {t("online")}
+                    <span className="text-gray-400" aria-hidden>·</span>
+                    <span className="truncate text-gray-500">{t("assistantTagline")}</span>
                   </span>
                 </div>
               </div>

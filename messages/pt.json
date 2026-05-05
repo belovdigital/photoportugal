@@ -3216,7 +3216,8 @@
     "trustSecure": "Pagamento seguro",
     "trustRefund": "Garantia de devolução",
     "openingMessage": "Olá! Sou o seu Smart Concierge da Photo Portugal. Diga-me onde vai estar e a ocasião — encontro-lhe os fotógrafos certos imediatamente. ✨",
-    "conciergeBadge": "Concierge Photo Portugal",
+    "conciergeBadge": "Lens · Photo Portugal",
+    "assistantTagline": "Assistente IA · responde em segundos",
     "nudge": {
       "label": "Lens, o seu concierge IA",
       "body": "Olá 👋 Não tenha vergonha — sou o **Lens**, a IA da Photo Portugal. Fale qualquer idioma, escreva como for natural — formal, informal, inglês imperfeito, tanto faz. A sua mensagem fica entre nós, ninguém humano a ler. Conheço cada fotógrafo na plataforma, os melhores locais em cada cidade e o que torna uma sessão inesquecível. Conte-me sobre a sua viagem e encontro o match imediatamente.",
