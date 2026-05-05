@@ -7,6 +7,7 @@ import { buildSystemPrompt } from "@/lib/concierge/system-prompt";
 import { computeBadges } from "@/lib/concierge/match-badges";
 import { pageContextToPromptString, type PageContext } from "@/lib/concierge/page-context";
 import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock } from "@/lib/concierge/candidate-ranker";
+import { checkPhotographersAvailability } from "@/lib/concierge/availability-check";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,6 +68,10 @@ const tools = [
             },
           },
           reply_text: { type: "string", description: "Friendly intro line to display above the cards, e.g. 'Based on what you said, here are 3 great matches:'" },
+          target_date: {
+            type: "string",
+            description: "Optional. If the visitor mentioned a specific shoot date in the conversation, return it as ISO YYYY-MM-DD. Skip if no date was said or the visitor is still flexible. Examples: 'next Friday' → resolve to that Friday's ISO date based on today's date in the system message; 'June 15' → '2026-06-15' (use the visitor's likely year); '15/06/2026' → '2026-06-15'. Don't invent a date if they didn't say one.",
+          },
         },
         required: ["matches", "reply_text"],
       },
@@ -254,11 +259,47 @@ export async function POST(req: NextRequest) {
     systemPrompt += `\n\n## Already shown in this conversation\nDo NOT suggest these photographers again unless the user explicitly asks for them by name: ${Array.from(shownSlugs).join(", ")}\nIf the user asks for "more matches" / "different photographers" / "send more", rotate to UNUSED photographers from the list. Don't repeat.`;
   }
   systemPrompt += `\n\n## Diversity reminder\nWhen multiple photographers fit the criteria, vary your picks across requests — don't always default to top-rated. Lesser-known photographers covering the right city deserve visibility too.`;
+  // Today's date — needed so the AI can resolve relative timeframes like
+  // "next Friday" or "in two weeks" into an ISO target_date for the
+  // availability check on show_matches.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  systemPrompt += `\n\n## Today's date\n${todayIso}\n\nUse this when resolving relative dates the visitor mentions (e.g. "next month", "in 2 weeks", "this Saturday"). When the visitor mentions ANY date or timeframe AND you're calling show_matches, include the resolved ISO date in target_date so the server can check the photographers' calendars and surface availability.`;
   // Structured context (drawer) takes precedence; legacy page_context string
   // is still accepted as a fallback from the /concierge page.
-  const resolvedPageContext = page_context_obj
+  let resolvedPageContext = page_context_obj
     ? pageContextToPromptString(page_context_obj)
     : page_context || null;
+
+  // C4: when on a photographer profile, the AI needs to know WHO. Without
+  // this, "compare with similar" or "tell me about their style" answers
+  // are generic. Resolve the photographer server-side from the slug and
+  // append their key facts to the page-context block so the model can
+  // reference them by name and reason about peers.
+  let viewedPhotographer: typeof photographers[number] | null = null;
+  if (
+    page_context_obj &&
+    (page_context_obj.type === "photographer_profile" || page_context_obj.type === "booking_flow") &&
+    page_context_obj.photographerSlug
+  ) {
+    viewedPhotographer = photographers.find((p) => p.slug === page_context_obj.photographerSlug) || null;
+    if (viewedPhotographer && resolvedPageContext) {
+      const v = viewedPhotographer;
+      const locs = (v.locations || []).slice(0, 4).join(", ") || "Portugal";
+      const types = (v.shoot_types || []).slice(0, 4).join(", ") || "general";
+      const langs = (v.languages || []).slice(0, 4).join(", ") || "EN";
+      const reviews = Number(v.review_count) > 0
+        ? `${Number(v.rating).toFixed(1)}★ (${v.review_count} reviews)`
+        : "no reviews yet";
+      const price = v.min_price ? `from €${v.min_price}` : "price tbd";
+      const tier = [
+        v.is_featured ? "FEATURED" : null,
+        v.is_verified ? "VERIFIED" : null,
+        v.is_founding ? "FOUNDING" : null,
+      ].filter(Boolean).join(", ") || "standard";
+      resolvedPageContext += `\n\n## About this photographer\nName: ${v.name}\nSlug: ${v.slug}\nCovers: ${locs}\nSpecialties: ${types}\nLanguages: ${langs}\nReviews: ${reviews}\nPricing: ${price}\nTier: ${tier}\n\nWhen the visitor says "they", "this photographer", "their style", "are they available" — they mean ${v.name}. If they ask for "similar", "alternatives", "compare with others" — call show_matches with 2-3 PEERS who cover the same area but are NOT ${v.name}. If they ask about availability for a specific date, you only have date-availability for matches you call show_matches on (the system will check ${v.name} too if you include them). Do NOT include ${v.name} in show_matches when the visitor explicitly asks for alternatives.`;
+    }
+  }
+
   if (resolvedPageContext) {
     systemPrompt += `\n\n## Current page context\n${resolvedPageContext}\n\nIMPORTANT: any facts implied by the page context (location, occasion, photographer being viewed) should be treated as already confirmed by the user — do NOT re-ask. If location AND occasion are both implied, go straight to show_matches without a clarifying question. The user's explicit messages override the page context if they contradict it.\n\nDo not mention the URL itself in your reply.`;
   }
@@ -270,11 +311,22 @@ export async function POST(req: NextRequest) {
   // toward the deterministic top-12 to avoid stylistic-only picks that
   // miss coverage / rating / tier signals.
   const intent = resolveIntent({ pageContext: page_context_obj || null, messages });
+  // On a photographer profile with no other location signal yet, use
+  // the photographer's primary coverage slug so peer ranking targets
+  // their area (visitor implicitly cares about this region).
+  if (!intent.locationSlug && viewedPhotographer && (viewedPhotographer.locations || [])[0]) {
+    intent.locationSlug = viewedPhotographer.locations![0];
+    intent.locationConfident = true;
+  }
+  // Exclude the currently-viewed photographer from peer ranking so
+  // "compare with similar" returns alternatives, not them.
+  const rankerExcludes = new Set(shownSlugs);
+  if (viewedPhotographer) rankerExcludes.add(viewedPhotographer.slug);
   const topCandidates = rankTopCandidates({
     photographers,
     intent,
     topN: 12,
-    excludeSlugs: shownSlugs,
+    excludeSlugs: rankerExcludes,
   });
   const topBlock = formatTopCandidatesBlock(topCandidates, intent);
   if (topBlock) systemPrompt += topBlock;
@@ -349,15 +401,31 @@ export async function POST(req: NextRequest) {
         // style_label. Each match gets up to 2 badges (best_match,
         // fastest_responder, most_reviews, best_value, featured).
         const badgesById = computeBadges(reasoned);
+
+        // Availability check: if the AI extracted a target_date from the
+        // conversation, query each photographer's calendar so the card
+        // can render "Available May 18" / "Busy May 18" instead of
+        // making the visitor click through to discover the conflict.
+        let availabilityById: Map<string, { date: string; available: boolean; label: string }> = new Map();
+        const targetDate = typeof args.target_date === "string" ? args.target_date : null;
+        if (targetDate && /^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+          try {
+            availabilityById = await checkPhotographersAvailability(reasoned.map((m) => m.id), targetDate);
+          } catch (err) {
+            console.error("[concierge] availability check error:", err);
+          }
+        }
+
         const enriched = reasoned.map((m) => ({
           ...m,
           badges: badgesById.get(m.id) || [],
+          availability: availabilityById.get(m.id) || null,
         }));
 
         matchedPhotogIds = full.map((p) => p.id);
         action = {
           type: "show_matches",
-          data: { matches: enriched, reply_text: args.reply_text || "" },
+          data: { matches: enriched, reply_text: args.reply_text || "", target_date: targetDate },
         };
       } else if (tc.function.name === "show_locations") {
         // Hydrate location data for the cards. Use Unsplash CDN helper for

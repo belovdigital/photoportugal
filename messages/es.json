@@ -637,7 +637,20 @@
     "openWhatsappBtn": "Abrir WhatsApp",
     "askHumanCta": "Hablar con el equipo de Photo Portugal",
     "askHumanSending": "Enviando…",
-    "askHumanDone": "Recibido — nuestro equipo se pondrá en contacto pronto."
+    "askHumanDone": "Recibido — nuestro equipo se pondrá en contacto pronto.",
+    "compareToggle": "Comparar",
+    "compareSelected": "Seleccionado",
+    "compareCta": "Comparar {n}",
+    "compareClear": "Borrar",
+    "compareModalTitle": "Comparar fotógrafos",
+    "compareWhyMatch": "Por qué esta opción",
+    "compareStyle": "Estilo",
+    "compareRating": "Valoración",
+    "compareLocations": "Lugares",
+    "comparePrice": "Desde",
+    "compareAvailability": "Disponibilidad",
+    "compareLanguages": "Idiomas",
+    "compareNoData": "—"
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Portugal",

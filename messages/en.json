@@ -3295,7 +3295,20 @@
     "openWhatsappBtn": "Open WhatsApp",
     "askHumanCta": "Ask the Photo Portugal team",
     "askHumanSending": "Sending…",
-    "askHumanDone": "Got it — our team will reach out shortly."
+    "askHumanDone": "Got it — our team will reach out shortly.",
+    "compareToggle": "Compare",
+    "compareSelected": "Selected",
+    "compareCta": "Compare {n}",
+    "compareClear": "Clear",
+    "compareModalTitle": "Compare photographers",
+    "compareWhyMatch": "Why this match",
+    "compareStyle": "Style",
+    "compareRating": "Rating",
+    "compareLocations": "Locations",
+    "comparePrice": "From",
+    "compareAvailability": "Availability",
+    "compareLanguages": "Languages",
+    "compareNoData": "—"
   },
   "lp": {
     "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Portugal",

@@ -3301,7 +3301,20 @@
     "openWhatsappBtn": "WhatsApp öffnen",
     "askHumanCta": "Photo Portugal Team kontaktieren",
     "askHumanSending": "Wird gesendet…",
-    "askHumanDone": "Erhalten — unser Team meldet sich in Kürze."
+    "askHumanDone": "Erhalten — unser Team meldet sich in Kürze.",
+    "compareToggle": "Vergleichen",
+    "compareSelected": "Ausgewählt",
+    "compareCta": "{n} vergleichen",
+    "compareClear": "Zurücksetzen",
+    "compareModalTitle": "Fotografen vergleichen",
+    "compareWhyMatch": "Warum dieser Treffer",
+    "compareStyle": "Stil",
+    "compareRating": "Bewertung",
+    "compareLocations": "Orte",
+    "comparePrice": "Ab",
+    "compareAvailability": "Verfügbarkeit",
+    "compareLanguages": "Sprachen",
+    "compareNoData": "—"
   },
   "lp": {
     "metaTitleTyped": "{shootType}-Fotografen in {city} — Sofort buchen | Photo Portugal",

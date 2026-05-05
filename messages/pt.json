@@ -3301,7 +3301,20 @@
     "openWhatsappBtn": "Abrir WhatsApp",
     "askHumanCta": "Falar com a equipa Photo Portugal",
     "askHumanSending": "A enviar…",
-    "askHumanDone": "Recebido — a nossa equipa entra em contacto em breve."
+    "askHumanDone": "Recebido — a nossa equipa entra em contacto em breve.",
+    "compareToggle": "Comparar",
+    "compareSelected": "Selecionado",
+    "compareCta": "Comparar {n}",
+    "compareClear": "Limpar",
+    "compareModalTitle": "Comparar fotógrafos",
+    "compareWhyMatch": "Porquê esta escolha",
+    "compareStyle": "Estilo",
+    "compareRating": "Avaliação",
+    "compareLocations": "Locais",
+    "comparePrice": "Desde",
+    "compareAvailability": "Disponibilidade",
+    "compareLanguages": "Idiomas",
+    "compareNoData": "—"
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos de {shootType} em {city} — Reserve já | Photo Portugal",

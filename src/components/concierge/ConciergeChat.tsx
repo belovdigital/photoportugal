@@ -79,6 +79,9 @@ interface MatchPhotographer {
   style_label?: string;
   /** Server-computed badges (best_match, fastest_responder, etc.). Max 2. */
   badges?: MatchBadge[];
+  /** Date-availability check result if the visitor mentioned a date.
+   *  null when no date was extracted or check failed. */
+  availability?: { date: string; available: boolean; label: string } | null;
 }
 
 interface LocationOption {
@@ -176,6 +179,29 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   const [captureMode, setCaptureMode] = useState<CaptureMode>("choice");
   const [phoneValue, setPhoneValue] = useState("");
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
+  // Compare mode — visitor ticks 2-3 cards from a show_matches turn,
+  // we pop a side-by-side modal so they can decide between them
+  // without clicking through every profile separately.
+  const [compareSet, setCompareSet] = useState<Set<string>>(new Set());
+  const [compareOpen, setCompareOpen] = useState(false);
+  const allMatchesIndex = useMemo(() => {
+    const out: Record<string, MatchPhotographer> = {};
+    for (const m of messages) {
+      if (m.action?.type === "show_matches") {
+        for (const p of m.action.data.matches) out[p.slug] = p;
+      }
+    }
+    return out;
+  }, [messages]);
+  const compareList = Array.from(compareSet).map((slug) => allMatchesIndex[slug]).filter(Boolean);
+  function toggleCompare(slug: string) {
+    setCompareSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else if (next.size < 3) next.add(slug);
+      return next;
+    });
+  }
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   // The "shy nudge": after 5s of inactivity on an empty conversation,
@@ -532,6 +558,9 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                           p={p}
                           locale={locale}
                           chatContext={messages.filter(x => x.role === "user").slice(-3).map(x => x.content).join(" / ")}
+                          compareSelected={compareSet.has(p.slug)}
+                          onToggleCompare={() => toggleCompare(p.slug)}
+                          compareDisabled={!compareSet.has(p.slug) && compareSet.size >= 3}
                         />
                       </div>
                     ))}
@@ -668,6 +697,43 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
       {/* WhatsApp resume — appears after at least 2 user messages, hidden after click */}
       {messages.filter(m => m.role === "user").length >= 2 && (
         <WhatsAppResumeBar locale={locale} userMessages={messages.filter(m => m.role === "user").slice(-3).map(m => m.content)} />
+      )}
+
+      {/* Compare bar — shows when 2-3 cards are ticked. Floats above the
+          input so the visitor can act on it whether they're scrolling
+          through history or composing a new message. */}
+      {compareSet.size >= 2 && (
+        <div className="border-t border-warm-100 bg-primary-50 px-4 py-2 sm:px-6">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[12px] font-medium text-primary-900">
+              {compareSet.size} {t("compareSelected").toLowerCase()}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCompareSet(new Set())}
+                className="rounded-md px-2 py-1 text-[12px] font-medium text-gray-500 hover:bg-warm-100 hover:text-gray-700"
+              >
+                {t("compareClear")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCompareOpen(true)}
+                className="rounded-lg bg-primary-600 px-3 py-1.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-primary-700"
+              >
+                {t("compareCta", { n: compareSet.size })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {compareOpen && compareList.length >= 2 && (
+        <CompareModal
+          photographers={compareList}
+          locale={locale}
+          onClose={() => setCompareOpen(false)}
+        />
       )}
 
       {/* Persistent "Ask a human" — visible from the second user turn so
@@ -844,7 +910,7 @@ function WhatsAppResumeBar({ userMessages }: { locale: string; userMessages: str
   );
 }
 
-function PhotographerMatchCard({ p, locale, chatContext }: { p: MatchPhotographer; locale: string; chatContext: string }) {
+function PhotographerMatchCard({ p, locale, chatContext, compareSelected, onToggleCompare, compareDisabled }: { p: MatchPhotographer; locale: string; chatContext: string; compareSelected?: boolean; onToggleCompare?: () => void; compareDisabled?: boolean }) {
   const t = useTranslations("concierge");
   const firstName = p.name.split(" ")[0];
   const presence = presenceBadge(p.last_seen_at, t);
@@ -886,6 +952,26 @@ function PhotographerMatchCard({ p, locale, chatContext }: { p: MatchPhotographe
               {presence.label}
             </span>
           )}
+          {onToggleCompare && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (!compareDisabled || compareSelected) onToggleCompare(); }}
+              disabled={compareDisabled && !compareSelected}
+              aria-pressed={compareSelected}
+              className={`absolute right-2 top-2 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold shadow-sm backdrop-blur-sm ring-1 transition disabled:opacity-50 ${
+                compareSelected
+                  ? "bg-primary-600 text-white ring-primary-600"
+                  : "bg-white/90 text-gray-700 ring-warm-200 hover:bg-white"
+              }`}
+            >
+              <span aria-hidden className={`flex h-3.5 w-3.5 items-center justify-center rounded ${compareSelected ? "bg-white text-primary-600" : "border border-gray-400"}`}>
+                {compareSelected ? (
+                  <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                ) : null}
+              </span>
+              {compareSelected ? t("compareSelected") : t("compareToggle")}
+            </button>
+          )}
         </div>
       )}
       <div className="px-3 pt-2.5 pb-2">
@@ -906,8 +992,19 @@ function PhotographerMatchCard({ p, locale, chatContext }: { p: MatchPhotographe
             <span className="shrink-0 font-semibold text-gray-900">€{p.min_price}+</span>
           )}
         </div>
-        {(p.style_label || (p.badges && p.badges.length > 0)) && (
+        {(p.style_label || (p.badges && p.badges.length > 0) || p.availability) && (
           <div className="mt-2 flex flex-wrap gap-1">
+            {p.availability && (
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${
+                  p.availability.available
+                    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                    : "bg-rose-50 text-rose-700 ring-rose-200"
+                }`}
+              >
+                {p.availability.available ? "✓" : "⚠"} {p.availability.label}
+              </span>
+            )}
             {p.style_label && (
               <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 ring-1 ring-primary-100">
                 {p.style_label}
@@ -995,6 +1092,152 @@ function ResendMatchesButton({ chatId }: { chatId: string | null; locale: string
     >
       {state === "sending" ? t("emailSending") : t("emailMeThese")}
     </button>
+  );
+}
+
+function CompareModal({
+  photographers,
+  locale,
+  onClose,
+}: {
+  photographers: MatchPhotographer[];
+  locale: string;
+  onClose: () => void;
+}) {
+  const t = useTranslations("concierge");
+  const tc = useTranslations("common");
+
+  // Lock body scroll while open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 sm:items-center" onClick={onClose}>
+      <div
+        className="relative flex max-h-[92vh] w-full flex-col overflow-hidden bg-white shadow-2xl sm:max-w-4xl sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-warm-100 px-4 py-3 sm:px-6">
+          <h2 className="text-base font-bold text-gray-900">{t("compareModalTitle")}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-gray-500 hover:bg-warm-100 hover:text-gray-800"
+            aria-label={tc("dismiss")}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          <div className={`grid gap-3 ${photographers.length === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
+            {photographers.map((p) => (
+              <CompareColumn key={p.slug} p={p} locale={locale} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompareColumn({ p, locale }: { p: MatchPhotographer; locale: string }) {
+  const t = useTranslations("concierge");
+  const firstName = p.name.split(" ")[0];
+  const cover = p.cover_url || p.sample_portfolio_url || p.avatar_url;
+  const locs = p.locations.slice(0, 3).map((l) => l.charAt(0).toUpperCase() + l.slice(1).replace(/-/g, " ")).join(", ");
+  return (
+    <div className="flex flex-col overflow-hidden rounded-xl border border-warm-200 bg-white">
+      {cover && (
+        <div className="aspect-[5/4] w-full overflow-hidden bg-warm-100">
+          <OptimizedImage src={cover} alt={p.name} width={400} className="h-full w-full object-cover" />
+        </div>
+      )}
+      <div className="flex flex-1 flex-col gap-2 p-3 text-[12px]">
+        <div>
+          <p className="text-[14px] font-bold text-gray-900">{p.name}</p>
+          {p.review_count > 0 ? (
+            <p className="text-[12px] font-semibold text-gray-700">⭐ {p.rating.toFixed(1)} <span className="font-medium text-gray-500">({p.review_count})</span></p>
+          ) : (
+            <p className="text-[11px] font-medium text-amber-600">{t("newBadge")}</p>
+          )}
+        </div>
+
+        {p.availability && (
+          <span
+            className={`inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${
+              p.availability.available
+                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                : "bg-rose-50 text-rose-700 ring-rose-200"
+            }`}
+          >
+            {p.availability.available ? "✓" : "⚠"} {p.availability.label}
+          </span>
+        )}
+
+        {p.style_label && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("compareStyle")}</p>
+            <p className="text-gray-800">{p.style_label}</p>
+          </div>
+        )}
+
+        {p.badges && p.badges.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {p.badges.map((b) => (
+              <span key={b.type} className="inline-flex items-center rounded-full bg-warm-100 px-2 py-0.5 text-[10px] font-medium text-gray-700 ring-1 ring-warm-200">
+                {b.label}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("compareLocations")}</p>
+          <p className="text-gray-800">{locs || t("compareNoData")}</p>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("comparePrice")}</p>
+          <p className="text-gray-800">{p.min_price ? `€${p.min_price}+` : t("compareNoData")}</p>
+        </div>
+
+        {p.reasoning && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("compareWhyMatch")}</p>
+            <p className="leading-snug text-gray-700">{p.reasoning}</p>
+          </div>
+        )}
+
+        {p.sample_review?.text && (
+          <blockquote className="border-l-2 border-warm-200 pl-2 italic leading-snug text-gray-600">
+            &ldquo;{p.sample_review.text.slice(0, 120)}{p.sample_review.text.length > 120 ? "…" : ""}&rdquo;
+          </blockquote>
+        )}
+      </div>
+      <div className="flex items-stretch border-t border-warm-100">
+        <a
+          href={`/${locale}/photographers/${p.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 px-2 py-2 text-center text-[12px] font-medium text-gray-600 transition hover:bg-warm-50"
+        >
+          {t("viewProfile")}
+        </a>
+        <a
+          href={`/${locale}/book/${p.slug}?from=concierge`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 border-l border-warm-100 bg-primary-600 px-2 py-2 text-center text-[12px] font-semibold text-white transition hover:bg-primary-700"
+        >
+          {t("talkTo", { name: firstName })}
+        </a>
+      </div>
+    </div>
   );
 }
 
