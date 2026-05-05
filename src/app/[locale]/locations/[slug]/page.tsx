@@ -31,7 +31,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
-import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
+import { ConciergeInvitePlaque } from "@/components/concierge/ConciergeInvitePlaque";
 import { spotSlug, spotLocalized } from "@/lib/photo-spots-data";
 import { formatDuration } from "@/lib/package-pricing";
 import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
@@ -85,6 +85,7 @@ export default async function LocationPage({
 
   const t = await getTranslations("locations.detail");
   const tc = await getTranslations("common");
+  const tPlaque = await getTranslations("concierge.plaque");
 
   const location = getLocationBySlug(slug);
 
@@ -611,7 +612,7 @@ export default async function LocationPage({
 
       {/* Mobile-only sticky bottom CTA bar. Renders independently of the
           page flow (fixed position) and shows after the user has scrolled
-          past the hero so it doesn't compete with the hero's MatchQuickForm. */}
+          past the hero so it doesn't compete with the hero's plaque. */}
       <LocationStickyBookBar
         locationSlug={slug}
         locationName={localizedName}
@@ -649,11 +650,10 @@ export default async function LocationPage({
               </h1>
               <p className="mt-6 text-lg text-primary-100/90">{description}</p>
               <div className="mt-6 max-w-xl">
-                <MatchQuickForm
-                  presetLocation={location.slug}
-                  source={`location_${location.slug}`}
+                <ConciergeInvitePlaque
                   variant="dark"
-                  size="md"
+                  placeholder={tPlaque("locationPlaceholder", { location: localizedName })}
+                  chips={tPlaque.raw("locationChips") as string[]}
                 />
               </div>
             </div>

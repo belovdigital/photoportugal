@@ -13,7 +13,7 @@ import { useTranslations } from "next-intl";
  * Airbnb / Booking; on a paid-ad LP where each visit costs us, it's worth
  * the screen real estate.
  *
- * Hidden on desktop (`sm:hidden`) since the hero MatchQuickForm + scroll
+ * Hidden on desktop (`sm:hidden`) since the hero concierge plaque + scroll
  * cards already provide the same affordance up there. Hides itself when the
  * user scrolls back to within ~80px of the top so it doesn't block the
  * hero's own match form, and when they reach the page footer.

@@ -3308,7 +3308,21 @@
     "comparePrice": "From",
     "compareAvailability": "Availability",
     "compareLanguages": "Languages",
-    "compareNoData": "—"
+    "compareNoData": "—",
+    "plaque": {
+      "lensName": "Lens",
+      "tagline": "AI · usually replies in seconds",
+      "inputLabel": "Tell Lens about your photoshoot",
+      "send": "Ask",
+      "homepagePlaceholder": "e.g. couples shoot in Sintra next Saturday",
+      "homepageChips": ["Couples in Lisbon", "Proposal 💍", "Family in Algarve", "Help me choose"],
+      "locationPlaceholder": "e.g. couples shoot in {location} next Saturday",
+      "locationChips": ["Couples", "Family", "Proposal 💍", "Help me choose"],
+      "occasionPlaceholder": "e.g. {occasion} in Lisbon next month",
+      "occasionChips": ["Lisbon", "Algarve", "Sintra", "Help me choose"],
+      "comboPlaceholder": "e.g. {occasion} in {location}, late June, sunset",
+      "comboChips": ["Within a month", "2–3 months out", "Later this year", "Show me photographers"]
+    }
   },
   "lp": {
     "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Portugal",

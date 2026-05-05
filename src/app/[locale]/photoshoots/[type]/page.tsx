@@ -7,7 +7,7 @@ import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForShootType } from "@/lib/reviews-data";
 import { locations } from "@/lib/locations-data";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
+import { ConciergeInvitePlaque } from "@/components/concierge/ConciergeInvitePlaque";
 import { localeAlternates } from "@/lib/seo";
 import { queryOne, query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
@@ -85,6 +85,7 @@ export default async function ShootTypePage({
   const t = await getTranslations("shootTypesPage");
   const tc = await getTranslations("common");
   const tLoc = await getTranslations("locations.detail");
+  const tPlaque = await getTranslations("concierge.plaque");
 
   const shootType = getShootTypeBySlug(type);
   if (!shootType) notFound();
@@ -509,10 +510,10 @@ export default async function ShootTypePage({
             <h1 className="font-display text-4xl font-bold text-gray-900 sm:text-5xl">{stl.h1}</h1>
             <p className="mt-6 text-lg leading-relaxed text-gray-600">{stl.heroText}</p>
             <div className="mt-8 max-w-xl">
-              <MatchQuickForm
-                presetShootType={shootType.slug}
-                source={`photoshoot_${shootType.slug}`}
-                size="md"
+              <ConciergeInvitePlaque
+                variant="light"
+                placeholder={tPlaque("occasionPlaceholder", { occasion: stl.name.toLowerCase() })}
+                chips={tPlaque.raw("occasionChips") as string[]}
               />
             </div>
           </div>

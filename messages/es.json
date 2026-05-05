@@ -650,7 +650,21 @@
     "comparePrice": "Desde",
     "compareAvailability": "Disponibilidad",
     "compareLanguages": "Idiomas",
-    "compareNoData": "—"
+    "compareNoData": "—",
+    "plaque": {
+      "lensName": "Lens",
+      "tagline": "IA · responde en segundos",
+      "inputLabel": "Cuéntale a Lens sobre tu sesión",
+      "send": "Preguntar",
+      "homepagePlaceholder": "p. ej. sesión de pareja en Sintra el próximo sábado",
+      "homepageChips": ["Pareja en Lisboa", "Pedida 💍", "Familia en el Algarve", "Ayúdame a elegir"],
+      "locationPlaceholder": "p. ej. sesión de pareja en {location} el próximo sábado",
+      "locationChips": ["Pareja", "Familia", "Pedida 💍", "Ayúdame a elegir"],
+      "occasionPlaceholder": "p. ej. {occasion} en Lisboa el próximo mes",
+      "occasionChips": ["Lisboa", "Algarve", "Sintra", "Ayúdame a elegir"],
+      "comboPlaceholder": "p. ej. {occasion} en {location}, finales de junio, atardecer",
+      "comboChips": ["En un mes", "En 2–3 meses", "Más adelante este año", "Mostrar fotógrafos"]
+    }
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Portugal",

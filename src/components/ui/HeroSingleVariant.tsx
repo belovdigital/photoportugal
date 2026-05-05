@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
 import { ConciergeQuickStart } from "@/components/concierge/ConciergeQuickStart";
+import { ConciergeInvitePlaque } from "@/components/concierge/ConciergeInvitePlaque";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 
 export interface HeroFeaturedPhotographer {
@@ -70,6 +70,7 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
   const t = useTranslations("heroSingle");
   const tLoc = useTranslations("heroSingle.location");
   const tLocQuickStart = useTranslations("locations.detail.quickStart");
+  const tPlaque = useTranslations("concierge.plaque");
 
   const [photoIdx, setPhotoIdx] = useState(0);
   const [arrowsTouched, setArrowsTouched] = useState(false);
@@ -592,13 +593,11 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
                 {tLocQuickStart("labelSubtitle", { location: locationContext.name })}
               </p>
             )}
-            {/* On location pages we ditch the email-capture form in favour
-                of a free-text input that drops the visitor's question
-                straight into the on-page AI concierge drawer. Lower
-                friction (no email handover) + immediate gratification
-                (bot replies in seconds). The homepage keeps the legacy
-                MatchQuickForm — it doesn't have a location preset and the
-                email path serves a different audience there. */}
+            {/* On location pages we drop the visitor's question straight
+                into the on-page concierge drawer. The homepage variant
+                shows the same idea but with pre-prompt chips so first-
+                time visitors who don't know what to type get a one-tap
+                path. Both routes lead to the same chat. */}
             {locationContext ? (
               <ConciergeQuickStart
                 placeholder={tLocQuickStart("placeholder", { location: locationContext.name })}
@@ -606,10 +605,10 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
                 locationName={locationContext.name}
               />
             ) : (
-              <MatchQuickForm
-                source="homepage_hero_b"
-                size="md"
+              <ConciergeInvitePlaque
                 variant="dark"
+                placeholder={tPlaque("homepagePlaceholder")}
+                chips={tPlaque.raw("homepageChips") as string[]}
               />
             )}
           </div>

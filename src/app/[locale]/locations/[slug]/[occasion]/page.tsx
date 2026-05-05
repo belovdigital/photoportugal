@@ -22,7 +22,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { ScarcityBanner } from "@/components/ui/ScarcityBanner";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getReviewsForLocation } from "@/lib/reviews-data";
-import { MatchQuickForm } from "@/components/ui/MatchQuickForm";
+import { ConciergeInvitePlaque } from "@/components/concierge/ConciergeInvitePlaque";
 import { formatDuration } from "@/lib/package-pricing";
 import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
@@ -400,6 +400,7 @@ export default async function OccasionPage({
 
   const t = await getTranslations("locations.detail");
   const tc = await getTranslations("common");
+  const tPlaque = await getTranslations("concierge.plaque");
   const tL = pickL(locale);
 
   // Resolve canonical-EN shoot type labels for SQL filtering. The DB stores
@@ -918,11 +919,10 @@ export default async function OccasionPage({
               </h1>
               <p className="mt-6 text-lg text-primary-100/90">{introCopy}</p>
               <div className="mt-6 max-w-xl">
-                <MatchQuickForm
-                  presetLocation={location.slug}
-                  source={`combo_${location.slug}_${occasion}`}
+                <ConciergeInvitePlaque
                   variant="dark"
-                  size="md"
+                  placeholder={tPlaque("comboPlaceholder", { occasion: occT.toLowerCase(), location: localizedName })}
+                  chips={tPlaque.raw("comboChips") as string[]}
                 />
               </div>
             </div>

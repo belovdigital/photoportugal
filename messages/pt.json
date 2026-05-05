@@ -3314,7 +3314,21 @@
     "comparePrice": "Desde",
     "compareAvailability": "Disponibilidade",
     "compareLanguages": "Idiomas",
-    "compareNoData": "—"
+    "compareNoData": "—",
+    "plaque": {
+      "lensName": "Lens",
+      "tagline": "IA · responde em segundos",
+      "inputLabel": "Conte ao Lens sobre a sua sessão",
+      "send": "Perguntar",
+      "homepagePlaceholder": "ex.: sessão de casal em Sintra no próximo sábado",
+      "homepageChips": ["Casal em Lisboa", "Pedido 💍", "Família no Algarve", "Ajudem-me a escolher"],
+      "locationPlaceholder": "ex.: sessão de casal em {location} no próximo sábado",
+      "locationChips": ["Casal", "Família", "Pedido 💍", "Ajudem-me a escolher"],
+      "occasionPlaceholder": "ex.: {occasion} em Lisboa no próximo mês",
+      "occasionChips": ["Lisboa", "Algarve", "Sintra", "Ajudem-me a escolher"],
+      "comboPlaceholder": "ex.: {occasion} em {location}, fim de junho, ao pôr-do-sol",
+      "comboChips": ["Dentro de um mês", "Daqui a 2–3 meses", "Mais tarde este ano", "Mostrar fotógrafos"]
+    }
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos de {shootType} em {city} — Reserve já | Photo Portugal",
