@@ -1,5 +1,10 @@
 # Photo Portugal
 
+> **🚨 Production now runs on Hetzner** — `178.105.16.131` (Falkenstein, DE), Ubuntu 24.04.
+> SSH alias: `hetzner-pp` (key: `~/.ssh/photoportugal_hetzner`).
+> Migrated from DigitalOcean Santa Clara on 2026-05-05. Old DO droplet (`146.190.166.142`) is firewalled off and PM2/nginx stopped — kept cold for ~1 week as rollback safety net before destruction.
+> Deploy workflow unchanged: rsync local → `/var/www/photoportugal-incoming/` → `bash /var/www/deploy.sh`. **Always exclude both `.env` AND `.env.local`** in rsync (a stray `.env.local` caused full prod outage during cutover — Next loads `.env.local` BEFORE `.env`).
+
 Professional photographer marketplace for tourists visiting Portugal. Find and book local photographers for vacation photoshoots across 23+ stunning locations.
 
 **Live:** [photoportugal.com](https://photoportugal.com)
@@ -10,7 +15,7 @@ Professional photographer marketplace for tourists visiting Portugal. Find and b
 - **Backend:** Next.js API routes, PostgreSQL 16
 - **Auth:** NextAuth.js v5 (Auth.js) — Google OAuth + Email/Password
 - **Real-time:** Server-Sent Events (SSE) for messaging
-- **Hosting:** DigitalOcean Droplet (2vCPU, 4GB), Nginx, PM2, Let's Encrypt SSL
+- **Hosting:** Hetzner Cloud (Falkenstein, DE) — 4 vCPU, 7.6 GB RAM, 150 GB. Nginx + PM2 + Let's Encrypt SSL. Cloudflare proxy in front.
 - **Images:** Unsplash CDN (location photos), local uploads (portfolio/avatars)
 - **DNS/CDN:** Cloudflare (optional, currently direct)
 

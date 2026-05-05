@@ -765,7 +765,7 @@ export default async function PhotographerProfilePage({
               )}
 
               {shootTypeChipItems.length > 0 && (
-                <div className="mt-2 border-t border-warm-200 pt-2">
+                <div className="mt-2">
                   <ExpandableChipList
                     items={shootTypeChipItems}
                     visibleCount={5}
