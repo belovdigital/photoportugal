@@ -159,7 +159,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
     );
   }
 
-  const inputCls = "mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200";
+  const inputCls = "mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm";
 
   return (
     <>
@@ -285,7 +285,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="max-w-[120px]">
             <label className="block text-sm font-medium text-gray-700">{t("groupSizeLabel")}</label>
-            <input type="number" min={1} max={20} value={groupSize} onChange={(e) => setGroupSize(Number(e.target.value))} className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+            <input type="number" min={1} max={20} value={groupSize} onChange={(e) => setGroupSize(Number(e.target.value))} className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">{t("budgetLabel")} *</label>

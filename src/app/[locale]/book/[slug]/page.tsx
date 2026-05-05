@@ -506,7 +506,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
+              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
             >
               {(photographer.coverage_locations?.length ? photographer.coverage_locations : photographer.locations).map((loc: { slug: string; name: string }) => (
                 <option key={loc.slug} value={loc.slug}>{loc.name}</option>
@@ -523,7 +523,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             value={locationDetail}
             onChange={(e) => setLocationDetail(e.target.value)}
             placeholder={t("form.locationDetailPlaceholder")}
-            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
+            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
           />
         </div>
 
@@ -562,7 +562,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 <select
                   value={shootTime}
                   onChange={(e) => setShootTime(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
+                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
                 >
                   {timeOptions.map((option) => {
                     const unavailable = isTimeOptionUnavailable(option.value);
@@ -625,7 +625,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <select
               value={groupSize}
               onChange={(e) => setGroupSize(e.target.value)}
-              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
+              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
             >
               <option value="1">{t("groupSizes.solo")}</option>
               <option value="2">{t("groupSizes.couple")}</option>
@@ -660,7 +660,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <select
               value={occasion}
               onChange={(e) => setOccasion(e.target.value)}
-              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
+              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
             >
               <option value="">{t("occasions.select")}</option>
               <option value="vacation">{t("occasions.vacation")}</option>
@@ -689,7 +689,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
             placeholder={t("form.messagePlaceholderNamed", { name: normalizeName(photographer.name) })}
-            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:border-primary-500"
+            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
           />
         </div>
 

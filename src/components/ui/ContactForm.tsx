@@ -79,7 +79,7 @@ export function ContactForm() {
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             required
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
           >
             <option value="">{t("topicPlaceholder")}</option>
             {TOPIC_KEYS.map((key) => (
@@ -97,7 +97,7 @@ export function ContactForm() {
             onChange={(e) => setName(e.target.value)}
             required
             placeholder={t("namePlaceholder")}
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
           />
         </div>
 
@@ -110,7 +110,7 @@ export function ContactForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder={t("emailPlaceholder")}
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
           />
         </div>
 
@@ -123,7 +123,7 @@ export function ContactForm() {
             required
             rows={5}
             placeholder={t("messagePlaceholder")}
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
           />
         </div>
 

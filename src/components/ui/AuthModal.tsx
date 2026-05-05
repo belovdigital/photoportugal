@@ -167,14 +167,14 @@ export function AuthModal({ open, onClose, onSuccess, callbackUrl = "/dashboard"
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder={t("signUp.firstNamePlaceholder")}
                 required
-                className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
               />
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder={t("signUp.lastNamePlaceholder")}
-                className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
               />
             </div>
           )}
@@ -184,7 +184,7 @@ export function AuthModal({ open, onClose, onSuccess, callbackUrl = "/dashboard"
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("signIn.emailLabel")}
             required
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-base text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
           />
           <div className="relative">
             <input
@@ -194,7 +194,7 @@ export function AuthModal({ open, onClose, onSuccess, callbackUrl = "/dashboard"
               placeholder={t("signIn.passwordLabel")}
               required
               minLength={mode === "signup" ? 8 : undefined}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 pr-10 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 pr-10 text-base text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
             />
             <button
               type="button"

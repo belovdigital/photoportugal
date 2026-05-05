@@ -183,7 +183,7 @@ function SignUpForm() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
                   placeholder={t("firstNamePlaceholder")}
                 />
               </div>
@@ -196,7 +196,7 @@ function SignUpForm() {
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
                   placeholder={t("lastNamePlaceholder")}
                 />
               </div>
@@ -211,7 +211,7 @@ function SignUpForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-base outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
                 placeholder={t("emailPlaceholder")}
               />
             </div>
@@ -227,7 +227,7 @@ function SignUpForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
-                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 pr-11 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                  className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 pr-11 text-base outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 md:text-sm"
                   placeholder={t("passwordPlaceholder")}
                 />
                 <button
