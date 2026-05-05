@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { cookies } from "next/headers";
 import { queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
@@ -17,9 +17,10 @@ async function isAdmin() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  // Accepts NextAuth session (web), mobile JWT, or admin cookie.
+  const user = await authFromRequest(req);
   const admin = await isAdmin();
-  if (!session?.user && !admin) {
+  if (!user && !admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify review exists and belongs to user (or admin); also need photographer_id for folder
-    const userId = session?.user ? (session.user as { id?: string }).id : null;
+    const userId = user?.id || null;
     const review = await queryOne<{ id: string; client_id: string | null; photographer_id: string }>(
       "SELECT id, client_id, photographer_id FROM reviews WHERE id = $1",
       [reviewId]

@@ -93,6 +93,10 @@ export async function PATCH(
     }
 
     const trimmedWelcome = typeof welcome_message === "string" ? welcome_message.trim() : "";
+    // TODO: drop the `!isMobileApiRequest` bypass once the photographer-app
+    // booking-confirm flow surfaces a welcome-message modal that sends
+    // `welcome_message` in the PATCH body. Without that change, removing the
+    // bypass breaks Confirm on mobile photographer side.
     if (status === "confirmed" && !isMobileApiRequest && trimmedWelcome.length < 30) {
       const previousPhotographerMessage = await queryOne<{ has_message: boolean }>(
         `SELECT EXISTS (

@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 
 export const runtime = "nodejs";
 
 // Archive ALL of the visitor's chats so /api/concierge/load no longer restores
 // any of them. Called when user clicks "Start over" — they want a clean slate.
+// Accepts both NextAuth session (web) and Bearer JWT (mobile).
 export async function POST(req: NextRequest) {
   const { chat_id, visitor_id } = await req.json().catch(() => ({}));
 
-  let userId: string | null = null;
-  try {
-    const session = await auth();
-    userId = (session?.user as { id?: string } | undefined)?.id || null;
-  } catch {}
+  const user = await authFromRequest(req);
+  const userId = user?.id || null;
 
   if (!chat_id && !visitor_id && !userId) {
     return NextResponse.json({ ok: true });

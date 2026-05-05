@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const userId = (session.user as { id?: string }).id;
+  // Accept both NextAuth (web) and Bearer JWT (mobile) — mobile booking flow
+  // calls this when payment_url isn't pre-created on the booking row.
+  const user = await authFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = user.id;
 
   try {
     const { booking_id, locale } = await req.json();

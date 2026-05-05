@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
@@ -8,8 +8,8 @@ const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await authFromRequest(req);
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify review belongs to user
-    const userId = (session.user as { id?: string }).id;
+    const userId = user.id;
     const review = await queryOne<{ id: string; client_id: string | null }>(
       "SELECT id, client_id FROM reviews WHERE id = $1",
       [reviewId]
