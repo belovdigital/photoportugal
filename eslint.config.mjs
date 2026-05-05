@@ -1,5 +1,22 @@
-import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
-import nextTypescript from "eslint-config-next/typescript";
+if (typeof globalThis.structuredClone !== "function") {
+  globalThis.structuredClone = (value) => {
+    if (value === null || typeof value !== "object") return value;
+    if (value instanceof Date) return new Date(value);
+    if (value instanceof RegExp) return new RegExp(value.source, value.flags);
+    if (Array.isArray(value)) return value.map((item) => globalThis.structuredClone(item));
+
+    const clone = {};
+    for (const key of Reflect.ownKeys(value)) {
+      clone[key] = globalThis.structuredClone(value[key]);
+    }
+    return clone;
+  };
+}
+
+const [{ default: nextCoreWebVitals }, { default: nextTypescript }] = await Promise.all([
+  import("eslint-config-next/core-web-vitals"),
+  import("eslint-config-next/typescript"),
+]);
 
 const generatedAndLocalFiles = [
   ".next/**",

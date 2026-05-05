@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, createContext, useContext, useCallback } from "react";
+import { useEffect, useState, createContext, useContext, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { ConciergeChat } from "./ConciergeChat";
+import { derivePageContext, type PageContext } from "@/lib/concierge/page-context";
 
 interface DrawerContextValue {
   open: boolean;
@@ -95,27 +96,14 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
     setInitialMessage(undefined);
   }, []);
 
-  // Compute page context to inform AI: route + key path segments
-  const pageContext = (() => {
-    if (typeof window === "undefined") return undefined;
-    const path = pathname || "/";
-    const stripped = path.replace(/^\/(pt|de)(?=\/|$)/, "") || "/";
-    if (stripped.startsWith("/photographers/") && stripped !== "/photographers") {
-      const slug = stripped.split("/")[2];
-      return slug ? `User is currently viewing photographer profile: ${slug}` : undefined;
-    }
-    if (stripped === "/photographers") return "User is browsing the photographers catalog";
-    if (stripped.startsWith("/locations/")) {
-      const slug = stripped.split("/")[2];
-      return slug ? `User is on location page: ${slug}` : undefined;
-    }
-    if (stripped.startsWith("/photoshoots/")) {
-      const slug = stripped.split("/")[2];
-      return slug ? `User is on shoot type page: ${slug}` : undefined;
-    }
-    if (stripped === "/") return "User is on homepage";
-    return undefined;
-  })();
+  // Structured page context — drives the context-aware first message in
+  // ConciergeChat AND informs the AI server-side. Recomputed when the
+  // route changes so reopening the drawer on a different page picks up
+  // the new context. Memoised for stable identity in props.
+  const pageContextObj = useMemo<PageContext>(
+    () => derivePageContext(pathname || "/"),
+    [pathname]
+  );
 
   return (
     <DrawerContext.Provider value={{ open, setOpen, toggle, openWith, initialMessage, consumeInitialMessage }}>
@@ -167,7 +155,7 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
             </header>
             {/* Chat fills the rest — embedded mode strips its own border/rounded so it sits flush */}
             <div className="flex flex-1 flex-col overflow-hidden bg-warm-50/30">
-              <ConciergeChat locale={locale} source="drawer" pageContext={pageContext} embedded />
+              <ConciergeChat locale={locale} source="drawer" pageContextObj={pageContextObj} embedded />
             </div>
           </aside>
         </>

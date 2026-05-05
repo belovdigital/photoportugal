@@ -52,6 +52,11 @@ function MarkdownText({ text }: { text: string }) {
   );
 }
 
+interface MatchBadge {
+  type: string;
+  label: string;
+}
+
 interface MatchPhotographer {
   id: string;
   slug: string;
@@ -70,6 +75,10 @@ interface MatchPhotographer {
   reasoning: string;
   last_seen_at?: string | null;
   sample_review?: { text: string; client_name: string | null } | null;
+  /** Optional 1-3 word AI-picked stylistic tag, e.g. "Cinematic style". */
+  style_label?: string;
+  /** Server-computed badges (best_match, fastest_responder, etc.). Max 2. */
+  badges?: MatchBadge[];
 }
 
 interface LocationOption {
@@ -99,31 +108,49 @@ interface Msg {
   nudgeChips?: string[];
 }
 
-export function ConciergeChat({ locale, source, pageContext, embedded }: { locale: string; source?: "page" | "drawer"; pageContext?: string; embedded?: boolean }) {
+export function ConciergeChat({ locale, source, pageContext, pageContextObj, embedded }: { locale: string; source?: "page" | "drawer"; pageContext?: string; pageContextObj?: import("@/lib/concierge/page-context").PageContext; embedded?: boolean }) {
   const t = useTranslations("concierge");
   const { data: session } = useSession();
   const search = useSearchParams();
 
-  // Tailor the opening message based on landing-page query params (set by ad campaigns
-  // and the /try-yourself handoff). Falls back to the generic greeting when no context.
-  const openingContent = useMemo(() => {
+  // Tailor the opening message. Priority:
+  //   1. Structured pageContextObj from the drawer → context-aware intro
+  //      with chips (handles location/occasion/photographer/booking pages)
+  //   2. Legacy URL search params (src/loc/type) — used by /concierge page
+  //      from ad campaigns + the /try-yourself handoff
+  //   3. Generic openingMessage
+  const initialOpening = useMemo<Msg>(() => {
+    if (pageContextObj) {
+      // Lazy import — pure function, no side effects
+      const { getIntroTemplate } = require("@/lib/concierge/intro-templates") as typeof import("@/lib/concierge/intro-templates");
+      const tpl = getIntroTemplate(pageContextObj);
+      if (tpl) {
+        return {
+          role: "assistant",
+          content: tpl.message,
+          isNudge: true,            // reuse the nudge chip-rendering UI
+          nudgeChips: tpl.chips,
+        };
+      }
+    }
     const src = search.get("src");
     const loc = search.get("loc");
     const type = search.get("type");
     const locName = loc ? humanizeSlug(loc) : null;
+    let content: string;
     if (src === "try-yourself" && locName) {
-      return t("openingTryYourself", { loc: locName });
+      content = t("openingTryYourself", { loc: locName });
+    } else if (locName && type) {
+      content = t("openingLocAndType", { loc: locName, type: type.replace(/-/g, " ") });
+    } else if (locName) {
+      content = t("openingLoc", { loc: locName });
+    } else {
+      content = t("openingMessage");
     }
-    if (locName && type) {
-      return t("openingLocAndType", { loc: locName, type: type.replace(/-/g, " ") });
-    }
-    if (locName) {
-      return t("openingLoc", { loc: locName });
-    }
-    return t("openingMessage");
-  }, [search, t]);
-  const initialOpening: Msg = { role: "assistant", content: openingContent };
+    return { role: "assistant", content };
+  }, [pageContextObj, search, t]);
   const [messages, setMessages] = useState<Msg[]>([initialOpening]);
+  void pageContext;
   void locale;
   // When the chat is opened via `openWith()` from the location-page hero
   // form, the drawer context carries the visitor's typed question. We pull
@@ -223,6 +250,13 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
     // point nudging an active conversation.
     if (messages.length > 1) return;
     if (initialUserMessageRef.current) return;
+    // If the initial opening already has chips (context-aware intro from a
+    // drawer page like /locations/madeira), skip the shy nudge — the user
+    // already has actionable buttons.
+    if (messages[0]?.isNudge && messages[0]?.nudgeChips && messages[0].nudgeChips.length > 0) {
+      nudgeFiredRef.current = true;
+      return;
+    }
     if (typeof window !== "undefined" && sessionStorage.getItem("concierge_nudged") === "1") {
       nudgeFiredRef.current = true;
       return;
@@ -322,6 +356,7 @@ export function ConciergeChat({ locale, source, pageContext, embedded }: { local
           language: navigator.language?.slice(0, 2) || "en",
           source: source || "page",
           page_context: pageContext,
+          page_context_obj: pageContextObj,
         }),
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
@@ -711,6 +746,33 @@ function PhotographerMatchCard({ p, locale, chatContext }: { p: MatchPhotographe
             <span className="shrink-0 font-semibold text-gray-900">€{p.min_price}+</span>
           )}
         </div>
+        {(p.style_label || (p.badges && p.badges.length > 0)) && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {p.style_label && (
+              <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 ring-1 ring-primary-100">
+                {p.style_label}
+              </span>
+            )}
+            {p.badges?.map((b) => (
+              <span
+                key={b.type}
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ${
+                  b.type === "best_match"
+                    ? "bg-amber-50 text-amber-800 ring-amber-200"
+                    : b.type === "fastest_responder"
+                    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                    : b.type === "most_reviews"
+                    ? "bg-sky-50 text-sky-700 ring-sky-200"
+                    : b.type === "best_value"
+                    ? "bg-rose-50 text-rose-700 ring-rose-200"
+                    : "bg-warm-100 text-gray-700 ring-warm-200"
+                }`}
+              >
+                {b.label}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <div className="flex items-stretch border-t border-warm-100">
         <a

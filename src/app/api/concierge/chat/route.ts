@@ -4,6 +4,8 @@ import { query, queryOne } from "@/lib/db";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { loadPhotographersForConcierge } from "@/lib/concierge/photographer-context";
 import { buildSystemPrompt } from "@/lib/concierge/system-prompt";
+import { computeBadges } from "@/lib/concierge/match-badges";
+import { pageContextToPromptString, type PageContext } from "@/lib/concierge/page-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,6 +60,7 @@ const tools = [
               properties: {
                 slug: { type: "string", description: "The photographer's slug from the list" },
                 reasoning: { type: "string", description: "1-2 sentences explaining why this photographer fits this specific visitor" },
+                style_label: { type: "string", description: "Optional 1-3 word stylistic tag for this match — pick from the photographer's actual specialty as it relates to the visitor's request. Examples: 'Cinematic style', 'Best for families', 'Sunset specialist', 'Local Sintra expert', 'Natural & candid', 'Editorial vibes'. Max 24 characters. Skip if you can't say something specific." },
               },
               required: ["slug", "reasoning"],
             },
@@ -139,7 +142,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const { chat_id, visitor_id, messages, email, first_name, language, source, page_context } = body as {
+  const { chat_id, visitor_id, messages, email, first_name, language, source, page_context, page_context_obj } = body as {
     chat_id?: string;
     visitor_id?: string;
     messages: IncomingMessage[];
@@ -147,7 +150,10 @@ export async function POST(req: NextRequest) {
     first_name?: string;
     language?: string;
     source?: "page" | "drawer";
+    /** Legacy free-form context string (still accepted from the /concierge page). */
     page_context?: string;
+    /** Structured page context from the drawer — preferred over page_context. */
+    page_context_obj?: PageContext;
   };
 
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -238,8 +244,13 @@ export async function POST(req: NextRequest) {
     systemPrompt += `\n\n## Already shown in this conversation\nDo NOT suggest these photographers again unless the user explicitly asks for them by name: ${Array.from(shownSlugs).join(", ")}\nIf the user asks for "more matches" / "different photographers" / "send more", rotate to UNUSED photographers from the list. Don't repeat.`;
   }
   systemPrompt += `\n\n## Diversity reminder\nWhen multiple photographers fit the criteria, vary your picks across requests — don't always default to top-rated. Lesser-known photographers covering the right city deserve visibility too.`;
-  if (page_context) {
-    systemPrompt += `\n\n## Current page context\n${page_context}\n\nUse this to make smart suggestions, but don't mention the URL itself in your reply.`;
+  // Structured context (drawer) takes precedence; legacy page_context string
+  // is still accepted as a fallback from the /concierge page.
+  const resolvedPageContext = page_context_obj
+    ? pageContextToPromptString(page_context_obj)
+    : page_context || null;
+  if (resolvedPageContext) {
+    systemPrompt += `\n\n## Current page context\n${resolvedPageContext}\n\nIMPORTANT: any facts implied by the page context (location, occasion, photographer being viewed) should be treated as already confirmed by the user — do NOT re-ask. If location AND occasion are both implied, go straight to show_matches without a clarifying question. The user's explicit messages override the page context if they contradict it.\n\nDo not mention the URL itself in your reply.`;
   }
   if (personaMemory) {
     systemPrompt += personaMemory;
@@ -283,14 +294,32 @@ export async function POST(req: NextRequest) {
       if (tc.function.name === "show_matches") {
         const slugs: string[] = (args.matches || []).map((m: { slug: string }) => m.slug);
         const full = photographers.filter((p) => slugs.includes(p.slug));
-        const reasoned = (args.matches || []).map((m: { slug: string; reasoning: string }) => {
-          const p = photographers.find((x) => x.slug === m.slug);
-          return p ? { ...p, reasoning: m.reasoning } : null;
-        }).filter(Boolean);
+        const reasoned = (args.matches || [])
+          .map((m: { slug: string; reasoning: string; style_label?: string }, idx: number) => {
+            const p = photographers.find((x) => x.slug === m.slug);
+            if (!p) return null;
+            return {
+              ...p,
+              reasoning: m.reasoning,
+              style_label: typeof m.style_label === "string" ? m.style_label.slice(0, 24) : undefined,
+              rank: idx,
+            };
+          })
+          .filter(Boolean) as (typeof photographers[number] & { reasoning: string; style_label?: string; rank: number })[];
+
+        // Server-side deterministic badges layered on top of the AI's
+        // style_label. Each match gets up to 2 badges (best_match,
+        // fastest_responder, most_reviews, best_value, featured).
+        const badgesById = computeBadges(reasoned);
+        const enriched = reasoned.map((m) => ({
+          ...m,
+          badges: badgesById.get(m.id) || [],
+        }));
+
         matchedPhotogIds = full.map((p) => p.id);
         action = {
           type: "show_matches",
-          data: { matches: reasoned, reply_text: args.reply_text || "" },
+          data: { matches: enriched, reply_text: args.reply_text || "" },
         };
       } else if (tc.function.name === "show_locations") {
         // Hydrate location data for the cards. Use Unsplash CDN helper for

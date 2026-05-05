@@ -531,7 +531,7 @@ export default async function PhotographerProfilePage({
             const photoUrls = (r.photos || []).map((p: { url: string }) => toAbsoluteUrl(p.url));
             return {
               "@type": "Review",
-              ...(r.client_name ? { author: { "@type": "Person", name: r.client_name } } : {}),
+              author: { "@type": "Person", name: r.client_name || "Verified traveler" },
               reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
               ...(body ? { reviewBody: body } : {}),
               ...(r.title ? { name: r.title } : {}),
