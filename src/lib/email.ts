@@ -2,10 +2,15 @@ import nodemailer from "nodemailer";
 import { queryOne } from "@/lib/db";
 import { formatShootDate } from "@/lib/format-shoot-date";
 
+// Default to 587 + STARTTLS — Hetzner blocks the implicit-TLS port 465
+// outbound by default (their anti-abuse policy), so we use the submission
+// port. `secure` is derived from the port: 465 → implicit TLS, anything
+// else → STARTTLS (which nodemailer auto-upgrades).
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.migadu.com",
-  port: parseInt(process.env.SMTP_PORT || "465"),
-  secure: true,
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465,
   auth: {
     user: process.env.SMTP_USER || "info@photoportugal.com",
     pass: process.env.SMTP_PASS || "",
