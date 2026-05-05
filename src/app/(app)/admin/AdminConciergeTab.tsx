@@ -207,13 +207,24 @@ function ConciergeRow({ chat, expanded, onToggle }: { chat: ConciergeChat; expan
   const preview = firstUser.length > 120 ? firstUser.slice(0, 120) + "…" : firstUser;
   const userMsgCount = chat.messages.filter((m) => m.role === "user").length;
   const matchedCount = (chat.matched_photographer_ids || []).length;
-  const heatBadge = chat.lead_heat === "hot" ? { cls: "bg-red-100 text-red-700", label: `🔥 Hot${chat.lead_score != null ? " " + chat.lead_score : ""}` }
-                    : chat.lead_heat === "warm" ? { cls: "bg-amber-100 text-amber-700", label: `Warm${chat.lead_score != null ? " " + chat.lead_score : ""}` }
+  // Lead score breakdown — built from the same heuristic as the
+  // ConciergePhotographer score: email/phone captured, ad source, depth,
+  // a real date/timeframe mentioned, recency. Tooltip on the badge so
+  // the admin knows what "Hot 80" actually means without diving into code.
+  const heatTooltip = `Lead score ${chat.lead_score ?? "?"}/100 — 80+ = hot, 45+ = warm. Built from contact captured, conversation depth, paid traffic, date mentioned, and recency.`;
+  const heatBadge = chat.lead_heat === "hot" ? { cls: "bg-red-100 text-red-700", label: `🔥 Hot${chat.lead_score != null ? " · " + chat.lead_score : ""}` }
+                    : chat.lead_heat === "warm" ? { cls: "bg-amber-100 text-amber-700", label: `Warm${chat.lead_score != null ? " · " + chat.lead_score : ""}` }
                     : null;
 
   return (
     <div id={`concierge-${chat.id}`} className={`rounded-xl border ${expanded ? "border-primary-300 shadow-sm" : "border-warm-200"} bg-white transition`}>
-      <button onClick={onToggle} className="flex w-full items-start gap-3 p-3 text-left">
+      <div
+        onClick={onToggle}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(); } }}
+        className="flex w-full cursor-pointer items-start gap-3 p-3 text-left"
+      >
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warm-100 text-base">
           {langFlag(chat.language)}
         </div>
@@ -230,7 +241,7 @@ function ConciergeRow({ chat, expanded, onToggle }: { chat: ConciergeChat; expan
             )}
             {chat.email && chat.phone && <span className="text-xs text-gray-500">📱 {chat.phone}</span>}
             {chat.first_name && <span className="text-xs text-gray-500">({chat.first_name})</span>}
-            {heatBadge && <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${heatBadge.cls}`}>{heatBadge.label}</span>}
+            {heatBadge && <span title={heatTooltip} className={`cursor-help rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${heatBadge.cls}`}>{heatBadge.label}</span>}
             {(chat.outcome === "human_handoff") && <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-700">Handoff</span>}
             {(chat.outcome === "matched" || chat.outcome === "show_matches") && <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-emerald-700">Matched</span>}
             {chat.outcome === "exploring_locations" && <span className="rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-sky-700">Locations</span>}
@@ -239,9 +250,30 @@ function ConciergeRow({ chat, expanded, onToggle }: { chat: ConciergeChat; expan
             {chat.country && <span className="text-[10px] text-gray-400">{chat.country}</span>}
           </div>
           <p className="mt-0.5 line-clamp-2 text-xs text-gray-500">{preview}</p>
-          <div className="mt-1 flex items-center gap-3 text-[10px] text-gray-400">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-gray-400">
             <span>{userMsgCount} msgs</span>
-            {matchedCount > 0 && <span>· {matchedCount} matches</span>}
+            {chat.matched_photographers && chat.matched_photographers.length > 0 ? (
+              <span className="flex items-center gap-1">
+                <span>·</span>
+                {chat.matched_photographers.slice(0, 4).map((p, i) => (
+                  <span key={p.id} className="flex items-center">
+                    {i > 0 && <span className="mr-1 text-gray-300">,</span>}
+                    <a
+                      href={`/photographers/${p.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-medium text-emerald-700 hover:underline"
+                      title={`Open ${p.name}'s profile in a new tab`}
+                    >
+                      {p.name.split(" ")[0]}
+                    </a>
+                  </span>
+                ))}
+              </span>
+            ) : matchedCount > 0 ? (
+              <span>· {matchedCount} matches</span>
+            ) : null}
             {chat.utm_term && <span>· kw: &ldquo;{chat.utm_term}&rdquo;</span>}
             <span>· ${parseFloat(chat.total_cost_usd || "0").toFixed(3)}</span>
           </div>
@@ -250,7 +282,7 @@ function ConciergeRow({ chat, expanded, onToggle }: { chat: ConciergeChat; expan
           <p className="text-[10px] text-gray-400">{formatRelativeTime(chat.created_at)}</p>
           <p className="mt-0.5 text-[10px] text-gray-300">{new Date(chat.created_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit" })}</p>
         </div>
-      </button>
+      </div>
 
       {expanded && (
         <div className="space-y-3 border-t border-warm-100 bg-warm-50/40 p-4">

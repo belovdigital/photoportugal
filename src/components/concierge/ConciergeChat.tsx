@@ -157,13 +157,15 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   void pageContext;
   void locale;
   // When the chat is opened via `openWith()` from the location-page hero
-  // form, the drawer context carries the visitor's typed question. We pull
-  // it once on mount and treat it like a normal user submission.
+  // form, the drawer context carries the visitor's typed question. We
+  // watch drawer.initialMessage in a useEffect (with a ref-based guard
+  // against React 18 strict-mode double-invocation) so a SECOND submit
+  // through the hero — while the drawer is already open — also fires.
+  // Previously this only worked once: on mount the ref was set from the
+  // pending message, but a later openWith() couldn't trigger a re-send
+  // because the deps didn't change.
   const drawer = useConciergeDrawer();
-  const initialUserMessageRef = useRef<string | null>(null);
-  if (initialUserMessageRef.current === null && drawer.initialMessage) {
-    initialUserMessageRef.current = drawer.initialMessage;
-  }
+  const lastSentInitialRef = useRef<string | null>(null);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [chatId, setChatId] = useState<string | null>(null);
@@ -204,6 +206,16 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   }
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  // In-chat contact prompt — when the visitor clicks "Ask a human" or
+  // "Email me these matches" without having shared an email/phone yet,
+  // the bot pushes an assistant message asking for a contact and we
+  // surface an inline form. After they submit, we save the contact via
+  // /api/concierge/email or /whatsapp and run the original intent.
+  type ContactIntent = "ask_human" | "email_matches";
+  const [pendingContact, setPendingContact] = useState<ContactIntent | null>(null);
+  const [contactInput, setContactInput] = useState("");
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+  const hasContact = (emailValue && emailValue.includes("@")) || (phoneValue && phoneValue.replace(/\D/g, "").length >= 6);
   // The "shy nudge": after 5s of inactivity on an empty conversation,
   // Lens (the bot) sends a warm intro + 3 example-prompt chips. Visitors
   // often hesitate to type because the chat feels formal — the nudge
@@ -255,18 +267,24 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   }, [session?.user]);
 
   // After hydration, if the drawer was opened via openWith(message),
-  // auto-submit the visitor's question as their first user turn. We
-  // consume the message from context so reopening the drawer later
-  // doesn't replay the same prompt.
+  // auto-submit the visitor's question as their first user turn. Re-fires
+  // every time drawer.initialMessage changes — covers both first mount
+  // (drawer opens with a pending message) AND subsequent submits through
+  // the hero plaque while the drawer is already open. Strict mode double-
+  // invoke is guarded by lastSentInitialRef.
   useEffect(() => {
     if (!hydrated) return;
-    const pending = initialUserMessageRef.current;
-    if (!pending) return;
-    initialUserMessageRef.current = null;
+    const pending = drawer.initialMessage;
+    if (!pending) {
+      lastSentInitialRef.current = null;
+      return;
+    }
+    if (lastSentInitialRef.current === pending) return;
+    lastSentInitialRef.current = pending;
     drawer.consumeInitialMessage();
     void send(pending);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated]);
+  }, [hydrated, drawer.initialMessage]);
 
   // "Lens" nudge — fires 5s after the visitor opens an empty conversation
   // and only if they haven't started typing. Cancels itself if they do.
@@ -284,7 +302,7 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
     // Bail if there's already real history (rehydrated from server) — no
     // point nudging an active conversation.
     if (messages.length > 1) return;
-    if (initialUserMessageRef.current) return;
+    if (drawer.initialMessage) return;
     // If the initial opening already has chips (context-aware intro from a
     // drawer page like /locations/madeira), skip the shy nudge — the user
     // already has actionable buttons.

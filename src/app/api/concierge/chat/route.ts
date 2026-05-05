@@ -256,7 +256,15 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(matches)) for (const x of matches) if (x.slug) shownSlugs.add(x.slug);
   }
   if (shownSlugs.size > 0) {
-    systemPrompt += `\n\n## Already shown in this conversation\nDo NOT suggest these photographers again unless the user explicitly asks for them by name: ${Array.from(shownSlugs).join(", ")}\nIf the user asks for "more matches" / "different photographers" / "send more", rotate to UNUSED photographers from the list. Don't repeat.`;
+    // Resolve slug → name so the LLM sees who it has already recommended.
+    // The OAI message stream strips action.data, so without this the model
+    // only reads "here are your matches:" and can forget who it picked,
+    // sometimes resetting the whole conversation when given garbage input.
+    const shownLabels = Array.from(shownSlugs).map((slug) => {
+      const p = photographers.find((x) => x.slug === slug);
+      return p ? `${p.name} (${slug})` : slug;
+    });
+    systemPrompt += `\n\n## Already shown in this conversation\nYou ALREADY recommended these photographers earlier in this same chat — treat them as common ground with the visitor: ${shownLabels.join(", ")}\nDo NOT suggest them again unless the visitor asks by name. If the visitor asks for "more matches" / "different ones" / "send more", rotate to UNUSED photographers. Don't repeat.\n\n## Conversation continuity (CRITICAL)\nThis is an ongoing conversation. The visitor has already engaged. NEVER restart with a fresh greeting like "Hi! I'll find you 3 photographers" — they already saw matches. If the visitor's last message is short or unclear, ask a SHORT clarifying question that builds on what you already know, do NOT reset.`;
   }
   systemPrompt += `\n\n## Diversity reminder\nWhen multiple photographers fit the criteria, vary your picks across requests — don't always default to top-rated. Lesser-known photographers covering the right city deserve visibility too.`;
   // Today's date — needed so the AI can resolve relative timeframes like
