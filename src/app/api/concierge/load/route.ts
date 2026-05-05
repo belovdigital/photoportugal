@@ -16,9 +16,10 @@ export async function GET(req: NextRequest) {
     messages: unknown;
     matched_photographer_ids: string[] | null;
     email: string | null;
+    phone: string | null;
     first_name: string | null;
   }>(
-    `SELECT id, messages, matched_photographer_ids, email, first_name
+    `SELECT id, messages, matched_photographer_ids, email, phone, first_name
      FROM concierge_chats
      WHERE (
        ($1::uuid IS NOT NULL AND user_id = $1::uuid)
@@ -38,6 +39,7 @@ export async function GET(req: NextRequest) {
       id: row.id,
       messages: row.messages || [],
       email: row.email,
+      phone: row.phone,
       first_name: row.first_name,
     },
   });

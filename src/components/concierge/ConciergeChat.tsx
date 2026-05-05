@@ -211,10 +211,14 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   // the bot pushes an assistant message asking for a contact and we
   // surface an inline form. After they submit, we save the contact via
   // /api/concierge/email or /whatsapp and run the original intent.
+  // Critical: the human handoff Telegram notification only fires AFTER
+  // contact is saved — admin shouldn't get pinged for visitors who never
+  // left a way to be reached.
   type ContactIntent = "ask_human" | "email_matches";
   const [pendingContact, setPendingContact] = useState<ContactIntent | null>(null);
   const [contactInput, setContactInput] = useState("");
   const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [contactError, setContactError] = useState(false);
   const hasContact = (emailValue && emailValue.includes("@")) || (phoneValue && phoneValue.replace(/\D/g, "").length >= 6);
   // The "shy nudge": after 5s of inactivity on an empty conversation,
   // Lens (the bot) sends a warm intro + 3 example-prompt chips. Visitors
@@ -255,7 +259,8 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
         if (data.chat && Array.isArray(data.chat.messages) && data.chat.messages.length > 0) {
           setChatId(data.chat.id);
           setMessages(data.chat.messages);
-          if (data.chat.email) setEmailCaptured(true);
+          if (data.chat.email) { setEmailValue(data.chat.email); setEmailCaptured(true); }
+          if (data.chat.phone) { setPhoneValue(data.chat.phone); setEmailCaptured(true); }
           const hasMatches = data.chat.messages.some((m: Msg) => m.action?.type === "show_matches");
           if (hasMatches) setMatchesShown(true);
         }
@@ -479,6 +484,121 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
     finally { setPhoneSubmitting(false); }
   }
 
+  // ---- In-chat contact prompt flow ----
+  // Both AskHumanBar and ResendMatchesButton route through these helpers:
+  // if we already have a contact (email or phone), the original action
+  // fires immediately. Otherwise the bot pushes an assistant message and
+  // surfaces the contact input form; the actual API call happens AFTER
+  // the visitor submits a contact, so admin Telegram and email-resend
+  // are never triggered without a way to reach the lead.
+  async function fireAskHuman(emailOverride: string | null, summary?: string) {
+    if (!chatId) return;
+    try {
+      await fetch("/api/concierge/handoff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, manual: true, email: emailOverride, summary: summary || undefined }),
+      });
+    } catch {}
+  }
+  async function fireResendMatches() {
+    if (!chatId) return;
+    try {
+      await fetch("/api/concierge/email/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId }),
+      });
+    } catch {}
+  }
+  function startAskHuman() {
+    if (!chatId) return;
+    if (hasContact) {
+      void fireAskHuman(emailValue || null);
+      setMessages((prev) => [...prev, { role: "assistant", content: t("askHumanDone") }]);
+      return;
+    }
+    setMessages((prev) => [...prev, { role: "assistant", content: t("contactPromptAskHuman") }]);
+    setPendingContact("ask_human");
+    setContactError(false);
+  }
+  function startEmailMatches() {
+    if (!chatId) return;
+    if (emailValue && emailValue.includes("@")) {
+      void fireResendMatches();
+      setMessages((prev) => [...prev, { role: "assistant", content: t("contactSavedEmailMatches", { contact: emailValue }) }]);
+      return;
+    }
+    // Phone-only visitor — ping admin via handoff so we WhatsApp the
+    // matches manually. Better than asking for email a second time.
+    if (phoneValue && phoneValue.replace(/\D/g, "").length >= 6) {
+      void fireAskHuman(null, "Visitor wants matches sent — phone given, no email. Send via WhatsApp.");
+      setMessages((prev) => [...prev, { role: "assistant", content: t("contactSavedEmailMatchesPhone", { contact: phoneValue }) }]);
+      return;
+    }
+    setMessages((prev) => [...prev, { role: "assistant", content: t("contactPromptEmailMatches") }]);
+    setPendingContact("email_matches");
+    setContactError(false);
+  }
+  async function submitInChatContact(e: React.FormEvent) {
+    e.preventDefault();
+    if (!chatId || contactSubmitting || !pendingContact) return;
+    const trimmed = contactInput.trim();
+    const isEmailLike = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+    const digits = trimmed.replace(/\D/g, "");
+    const isPhoneLike = !isEmailLike && digits.length >= 6;
+    if (!isEmailLike && !isPhoneLike) {
+      setContactError(true);
+      return;
+    }
+    setContactSubmitting(true);
+    setContactError(false);
+    try {
+      // Save contact first
+      if (isEmailLike) {
+        await fetch("/api/concierge/email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, email: trimmed }),
+        });
+        setEmailValue(trimmed);
+      } else {
+        await fetch("/api/concierge/whatsapp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, phone: trimmed }),
+        });
+        setPhoneValue(trimmed);
+      }
+      setEmailCaptured(true);
+
+      // Run the original intent now that we have a contact, then
+      // confirm to the visitor inline.
+      const intent = pendingContact;
+      const contactDisplay = isEmailLike ? trimmed : trimmed;
+      if (intent === "ask_human") {
+        await fireAskHuman(isEmailLike ? trimmed : null);
+        setMessages((prev) => [...prev, { role: "assistant", content: t("contactSavedAskHuman", { contact: contactDisplay }) }]);
+      } else if (intent === "email_matches") {
+        if (isEmailLike) {
+          await fireResendMatches();
+          setMessages((prev) => [...prev, { role: "assistant", content: t("contactSavedEmailMatches", { contact: contactDisplay }) }]);
+        } else {
+          // Phone given for "email me" — switch to WhatsApp delivery: notify
+          // admins via handoff so we can send matches manually via WA.
+          await fireAskHuman(null, "Visitor wants matches sent — phone given, no email. Send via WhatsApp.");
+          setMessages((prev) => [...prev, { role: "assistant", content: t("contactSavedEmailMatchesPhone", { contact: contactDisplay }) }]);
+        }
+      }
+      setPendingContact(null);
+      setContactInput("");
+    } catch {
+      setContactError(true);
+    } finally {
+      setContactSubmitting(false);
+    }
+  }
+
   return (
     <div className={`relative flex h-full flex-1 flex-col overflow-hidden border-warm-200 bg-white lg:h-full ${embedded ? "" : "sm:rounded-2xl sm:border sm:shadow-sm"}`}>
       {/* Start over — only show if user has sent at least one message */}
@@ -582,8 +702,8 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                         />
                       </div>
                     ))}
-                    {emailCaptured && i === messages.length - 1 && (
-                      <ResendMatchesButton chatId={chatId} locale={locale} />
+                    {i === messages.length - 1 && pendingContact === null && (
+                      <ResendMatchesButton onClick={startEmailMatches} disabled={contactSubmitting} />
                     )}
                   </div>
                 )}
@@ -627,7 +747,7 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
           Step 2 = the relevant input. Email path is unchanged; the
           WhatsApp path saves their phone and opens wa.me with a
           summary so they land in the chat ready to send. */}
-      {matchesShown && !emailCaptured && (
+      {matchesShown && !emailCaptured && pendingContact === null && (
         <div className="border-t border-warm-100 bg-primary-50/40 px-4 py-3 sm:px-6">
           {captureMode === "choice" && (
             <div>
@@ -755,11 +875,43 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
       )}
 
       {/* Persistent "Ask a human" — visible from the second user turn so
-          early-stage tyre-kickers don't get distracted, but everyone with
-          a real intent has a one-click escape to a real person. Sends the
-          full chat context to admins via Telegram regardless of email. */}
-      {chatId && messages.filter(m => m.role === "user").length >= 1 && (
-        <AskHumanBar chatId={chatId} email={emailCaptured ? emailValue : null} />
+          early-stage tyre-kickers don't get distracted. If we already
+          have email/phone, click fires handoff immediately. If not, the
+          bot asks for contact in-chat first; admin Telegram only fires
+          AFTER the visitor leaves a way to be reached. */}
+      {chatId && messages.filter(m => m.role === "user").length >= 1 && pendingContact === null && (
+        <AskHumanBar onClick={startAskHuman} disabled={contactSubmitting} />
+      )}
+
+      {/* Inline contact prompt form — rendered when pendingContact is
+          set. Lives above the input so it's the most-prominent next
+          action after the bot's question above. */}
+      {pendingContact && chatId && (
+        <div className="border-t border-warm-100 bg-warm-50/40 px-4 py-3 sm:px-6">
+          <form onSubmit={submitInChatContact} className="flex items-center gap-2">
+            <span className="text-base shrink-0" aria-hidden>{pendingContact === "email_matches" ? "💌" : "👋"}</span>
+            <input
+              type="text"
+              required
+              autoFocus
+              inputMode="email"
+              placeholder={t("contactInputPlaceholder")}
+              value={contactInput}
+              onChange={(e) => { setContactInput(e.target.value); if (contactError) setContactError(false); }}
+              className={`flex-1 min-w-0 rounded-lg border bg-white px-3 py-1.5 text-base sm:text-sm focus:outline-none focus:ring-1 ${contactError ? "border-rose-400 focus:border-rose-500 focus:ring-rose-400" : "border-warm-200 focus:border-primary-400 focus:ring-primary-400"}`}
+            />
+            <button
+              type="submit"
+              disabled={contactSubmitting || !contactInput.trim()}
+              className="shrink-0 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+            >
+              {contactSubmitting ? "…" : t("contactSubmit")}
+            </button>
+          </form>
+          {contactError && (
+            <p className="mt-1 text-[12px] text-rose-600">{t("contactInvalid")}</p>
+          )}
+        </div>
       )}
 
       {/* Input */}
@@ -849,41 +1001,20 @@ function presenceBadge(lastSeen: string | null | undefined, t: (key: string) => 
   return null;
 }
 
-function AskHumanBar({ chatId, email }: { chatId: string; email: string | null }) {
+function AskHumanBar({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
   const t = useTranslations("concierge");
-  const [state, setState] = useState<"idle" | "sending" | "done">("idle");
-  if (state === "done") {
-    return (
-      <div className="border-t border-warm-100 bg-emerald-50/60 px-4 py-1.5 text-center text-[12px] font-medium text-emerald-700 sm:px-6">
-        {t("askHumanDone")}
-      </div>
-    );
-  }
   return (
     <div className="border-t border-warm-100 bg-warm-50/40 px-4 py-1.5 sm:px-6">
       <button
         type="button"
-        disabled={state === "sending"}
-        onClick={async () => {
-          setState("sending");
-          try {
-            const res = await fetch("/api/concierge/handoff", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ chat_id: chatId, manual: true, email }),
-            });
-            if (res.ok) setState("done");
-            else setState("idle");
-          } catch {
-            setState("idle");
-          }
-        }}
+        disabled={disabled}
+        onClick={onClick}
         className="flex w-full items-center justify-center gap-2 rounded-md px-2 py-1 text-[12px] font-medium text-gray-500 transition hover:bg-warm-100 hover:text-primary-600 disabled:opacity-50"
       >
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
-        {state === "sending" ? t("askHumanSending") : t("askHumanCta")}
+        {t("askHumanCta")}
       </button>
     </div>
   );
@@ -1079,36 +1210,16 @@ function PhotographerMatchCard({ p, locale, chatContext, compareSelected, onTogg
   );
 }
 
-function ResendMatchesButton({ chatId }: { chatId: string | null; locale: string }) {
+function ResendMatchesButton({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
   const t = useTranslations("concierge");
-  const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
-
-  async function send() {
-    if (!chatId || state !== "idle") return;
-    setState("sending");
-    try {
-      const res = await fetch("/api/concierge/email/resend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId }),
-      });
-      setState(res.ok ? "sent" : "idle");
-    } catch {
-      setState("idle");
-    }
-  }
-
-  if (state === "sent") {
-    return <p className="mt-1 text-center text-xs text-emerald-700">{t("emailSent")}</p>;
-  }
-
   return (
     <button
-      onClick={send}
-      disabled={state === "sending"}
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
       className="mt-1 w-full rounded-lg border border-dashed border-warm-300 bg-warm-50 px-3 py-2 text-center text-xs font-medium text-gray-600 transition hover:bg-warm-100 hover:text-primary-700 disabled:opacity-50"
     >
-      {state === "sending" ? t("emailSending") : t("emailMeThese")}
+      {t("emailMeThese")}
     </button>
   );
 }
