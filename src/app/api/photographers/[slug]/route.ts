@@ -152,19 +152,43 @@ export async function GET(
       id: string; rating: number; title: string | null; text: string | null;
       title_original: string | null; text_original: string | null; source_locale: string | null;
       client_name: string | null; created_at: string;
+      video_url: string | null;
     }>(
       `SELECT r.id, r.rating,
               ${revTitleCol} as title,
               ${revTextCol} as text,
               r.title as title_original, r.text as text_original, r.source_locale,
               COALESCE(r.client_name_override, u.name) as client_name,
-              r.created_at
+              r.created_at,
+              r.video_url
        FROM reviews r
        LEFT JOIN users u ON u.id = r.client_id
        WHERE r.photographer_id = $1 AND COALESCE(r.is_approved, TRUE) = TRUE
        ORDER BY r.created_at DESC LIMIT 20`,
       [profile.id]
     );
+
+    // Attach review photos in a single follow-up query so the response
+    // doesn't N+1. Mobile renders a mini-gallery; web shows them in
+    // lightbox. Only public photos are exposed.
+    const reviewIds = reviews.map((r) => r.id);
+    type ReviewWithPhotos = typeof reviews[number] & { photos: string[] };
+    let reviewsWithPhotos: ReviewWithPhotos[] = reviews.map((r) => ({ ...r, photos: [] }));
+    if (reviewIds.length > 0) {
+      const photoRows = await query<{ review_id: string; url: string }>(
+        `SELECT review_id, url FROM review_photos
+          WHERE review_id = ANY($1::uuid[]) AND COALESCE(is_public, FALSE) = TRUE
+          ORDER BY created_at`,
+        [reviewIds]
+      );
+      const photosByReview = new Map<string, string[]>();
+      for (const row of photoRows) {
+        const existing = photosByReview.get(row.review_id) || [];
+        existing.push(row.url);
+        photosByReview.set(row.review_id, existing);
+      }
+      reviewsWithPhotos = reviews.map((r) => ({ ...r, photos: photosByReview.get(r.id) || [] }));
+    }
 
     // private + no-store so Cloudflare / any intermediary doesn't reuse
     // a per-user response (custom packages are viewer-scoped).
@@ -180,7 +204,7 @@ export async function GET(
       })),
       packages,
       portfolio,
-      reviews,
+      reviews: reviewsWithPhotos,
     }, {
       headers: { "Cache-Control": "private, no-store, must-revalidate" },
     });
