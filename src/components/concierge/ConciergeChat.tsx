@@ -110,6 +110,7 @@ interface Msg {
 
 export function ConciergeChat({ locale, source, pageContext, pageContextObj, embedded }: { locale: string; source?: "page" | "drawer"; pageContext?: string; pageContextObj?: import("@/lib/concierge/page-context").PageContext; embedded?: boolean }) {
   const t = useTranslations("concierge");
+  const tc = useTranslations("common");
   const { data: session } = useSession();
   const search = useSearchParams();
 
@@ -167,6 +168,14 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   const [emailCaptured, setEmailCaptured] = useState(false);
   const [emailValue, setEmailValue] = useState("");
   const [emailSubmitting, setEmailSubmitting] = useState(false);
+  // Post-match capture flow. After matches are shown the visitor picks
+  // a channel — Email (existing flow), WhatsApp (new), or skip. Email
+  // path is unchanged; WhatsApp captures phone, saves the lead, opens
+  // wa.me/<our-number> in a new tab.
+  type CaptureMode = "choice" | "email" | "whatsapp";
+  const [captureMode, setCaptureMode] = useState<CaptureMode>("choice");
+  const [phoneValue, setPhoneValue] = useState("");
+  const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   // The "shy nudge": after 5s of inactivity on an empty conversation,
@@ -352,7 +361,12 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
         body: JSON.stringify({
           chat_id: chatId,
           visitor_id: getVisitorId(),
-          messages: newMessages.map(({ role, content }) => ({ role, content })),
+          // Pass `action` along so the server can dedupe photographers
+          // already shown in this conversation and rotate to fresh ones
+          // when the visitor asks for "more". Without this, shownSlugs on
+          // the API side never accumulates across turns and "show me
+          // others" can return the same picks.
+          messages: newMessages.map(({ role, content, action }) => ({ role, content, action })),
           language: navigator.language?.slice(0, 2) || "en",
           source: source || "page",
           page_context: pageContext,
@@ -391,6 +405,34 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
       }
     } catch {}
     finally { setEmailSubmitting(false); }
+  }
+
+  async function submitWhatsapp(e: React.FormEvent) {
+    e.preventDefault();
+    if (!chatId || phoneSubmitting) return;
+    const cleaned = phoneValue.replace(/\D/g, "");
+    if (cleaned.length < 6) return;
+    setPhoneSubmitting(true);
+    try {
+      const res = await fetch("/api/concierge/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, phone: phoneValue.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Mark capture done and pop the wa.me link in a new tab so the
+        // visitor lands in WhatsApp with a pre-filled message they can
+        // send to us. The lead is already saved server-side at this point.
+        setEmailCaptured(true);
+        setShowSavedToast(true);
+        setTimeout(() => setShowSavedToast(false), 6000);
+        if (data.wa_url && typeof window !== "undefined") {
+          window.open(data.wa_url, "_blank", "noopener,noreferrer");
+        }
+      }
+    } catch {}
+    finally { setPhoneSubmitting(false); }
   }
 
   return (
@@ -448,7 +490,12 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                         : "bg-warm-100 text-gray-900"
                   }`}
                 >
-                  {m.role === "assistant" ? <MarkdownText text={m.content} /> : m.content}
+                  {m.role === "assistant"
+                    ? <MarkdownText text={m.content} />
+                    : /* Strip the "(slug:foo)" hint that LocationOptionCard
+                         appends so the AI gets a deterministic slug while
+                         the visitor only sees the human-readable name. */
+                      m.content.replace(/\s*\(slug:[a-z0-9-]+\)\s*$/i, "")}
                 </div>
                 {/* Example-prompt chips. Click → autofills input + auto-
                     submits as the visitor's first user message. Disabled
@@ -528,27 +575,87 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
         </div>
       </div>
 
-      {/* Email capture (only after first matches shown). Compact single-row UI. */}
+      {/* Post-match capture: visitor picks how they want to continue
+          (Email recap or WhatsApp handoff). Step 1 = choice buttons.
+          Step 2 = the relevant input. Email path is unchanged; the
+          WhatsApp path saves their phone and opens wa.me with a
+          summary so they land in the chat ready to send. */}
       {matchesShown && !emailCaptured && (
-        <div className="border-t border-warm-100 bg-primary-50/40 px-4 py-2 sm:px-6">
-          <form onSubmit={submitEmail} className="flex items-center gap-2">
-            <span className="text-base shrink-0" aria-hidden>💌</span>
-            <input
-              type="email"
-              required
-              placeholder={t("emailPlaceholder")}
-              value={emailValue}
-              onChange={(e) => setEmailValue(e.target.value)}
-              className="flex-1 min-w-0 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-base sm:text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-            />
-            <button
-              type="submit"
-              disabled={!emailValue.includes("@") || emailSubmitting}
-              className="shrink-0 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
-            >
-              {emailSubmitting ? "…" : t("saveBtn")}
-            </button>
-          </form>
+        <div className="border-t border-warm-100 bg-primary-50/40 px-4 py-3 sm:px-6">
+          {captureMode === "choice" && (
+            <div>
+              <p className="mb-2 text-[13px] font-medium text-gray-700">
+                {t("captureChoiceTitle")}
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => setCaptureMode("email")}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-primary-300 hover:bg-primary-50"
+                >
+                  <span aria-hidden>💌</span>{t("captureChoiceEmail")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCaptureMode("whatsapp")}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.88 11.92L4 20l4.18-1.1a7.93 7.93 0 003.86 1h.01c4.38 0 7.94-3.56 7.95-7.94a7.9 7.9 0 00-2.4-5.64zm-5.55 12.18h-.01a6.6 6.6 0 01-3.36-.92l-.24-.14-2.48.65.66-2.42-.16-.25a6.6 6.6 0 1112.21-3.5 6.6 6.6 0 01-6.62 6.58z"/></svg>
+                  {t("captureChoiceWhatsapp")}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {captureMode === "email" && (
+            <form onSubmit={submitEmail} className="flex items-center gap-2">
+              <button type="button" onClick={() => setCaptureMode("choice")} className="shrink-0 rounded-md p-1 text-gray-400 hover:text-gray-700" aria-label={tc("back")}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <span className="text-base shrink-0" aria-hidden>💌</span>
+              <input
+                type="email"
+                required
+                autoFocus
+                placeholder={t("emailPlaceholder")}
+                value={emailValue}
+                onChange={(e) => setEmailValue(e.target.value)}
+                className="flex-1 min-w-0 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-base sm:text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+              />
+              <button
+                type="submit"
+                disabled={!emailValue.includes("@") || emailSubmitting}
+                className="shrink-0 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+              >
+                {emailSubmitting ? "…" : t("saveBtn")}
+              </button>
+            </form>
+          )}
+
+          {captureMode === "whatsapp" && (
+            <form onSubmit={submitWhatsapp} className="flex items-center gap-2">
+              <button type="button" onClick={() => setCaptureMode("choice")} className="shrink-0 rounded-md p-1 text-gray-400 hover:text-gray-700" aria-label={tc("back")}>
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <span className="text-base shrink-0" aria-hidden>📱</span>
+              <input
+                type="tel"
+                required
+                autoFocus
+                placeholder={t("phonePlaceholder")}
+                value={phoneValue}
+                onChange={(e) => setPhoneValue(e.target.value)}
+                className="flex-1 min-w-0 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-base sm:text-sm focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              />
+              <button
+                type="submit"
+                disabled={phoneValue.replace(/\D/g, "").length < 6 || phoneSubmitting}
+                className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {phoneSubmitting ? "…" : t("openWhatsappBtn")}
+              </button>
+            </form>
+          )}
         </div>
       )}
 
@@ -561,6 +668,14 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
       {/* WhatsApp resume — appears after at least 2 user messages, hidden after click */}
       {messages.filter(m => m.role === "user").length >= 2 && (
         <WhatsAppResumeBar locale={locale} userMessages={messages.filter(m => m.role === "user").slice(-3).map(m => m.content)} />
+      )}
+
+      {/* Persistent "Ask a human" — visible from the second user turn so
+          early-stage tyre-kickers don't get distracted, but everyone with
+          a real intent has a one-click escape to a real person. Sends the
+          full chat context to admins via Telegram regardless of email. */}
+      {chatId && messages.filter(m => m.role === "user").length >= 1 && (
+        <AskHumanBar chatId={chatId} email={emailCaptured ? emailValue : null} />
       )}
 
       {/* Input */}
@@ -618,7 +733,12 @@ function LocationOptionCard({ loc, locale, disabled, onPick }: { loc: LocationOp
     <button
       type="button"
       disabled={disabled}
-      onClick={() => onPick(displayName)}
+      // Send "Display name (slug:foo)" — display name keeps the
+      // conversation natural in the user's language, the trailing
+      // (slug:...) hint locks the AI onto the correct coverage slug
+      // so e.g. "São Miguel" doesn't get matched to a generic Azores
+      // photographer when the visitor wanted that specific island.
+      onClick={() => onPick(`${displayName} (slug:${loc.slug})`)}
       className="group relative overflow-hidden rounded-xl border border-warm-200 bg-white text-left transition hover:border-primary-300 hover:shadow-md disabled:opacity-60"
     >
       {cover && (
@@ -643,6 +763,46 @@ function presenceBadge(lastSeen: string | null | undefined, t: (key: string) => 
   if (minsAgo < 60 * 24) return { color: "bg-amber-400", label: t("presenceActiveToday") };
   if (minsAgo < 60 * 24 * 7) return { color: "bg-amber-300", label: t("presenceActiveWeek") };
   return null;
+}
+
+function AskHumanBar({ chatId, email }: { chatId: string; email: string | null }) {
+  const t = useTranslations("concierge");
+  const [state, setState] = useState<"idle" | "sending" | "done">("idle");
+  if (state === "done") {
+    return (
+      <div className="border-t border-warm-100 bg-emerald-50/60 px-4 py-1.5 text-center text-[12px] font-medium text-emerald-700 sm:px-6">
+        {t("askHumanDone")}
+      </div>
+    );
+  }
+  return (
+    <div className="border-t border-warm-100 bg-warm-50/40 px-4 py-1.5 sm:px-6">
+      <button
+        type="button"
+        disabled={state === "sending"}
+        onClick={async () => {
+          setState("sending");
+          try {
+            const res = await fetch("/api/concierge/handoff", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ chat_id: chatId, manual: true, email }),
+            });
+            if (res.ok) setState("done");
+            else setState("idle");
+          } catch {
+            setState("idle");
+          }
+        }}
+        className="flex w-full items-center justify-center gap-2 rounded-md px-2 py-1 text-[12px] font-medium text-gray-500 transition hover:bg-warm-100 hover:text-primary-600 disabled:opacity-50"
+      >
+        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        {state === "sending" ? t("askHumanSending") : t("askHumanCta")}
+      </button>
+    </div>
+  );
 }
 
 function WhatsAppResumeBar({ userMessages }: { locale: string; userMessages: string[] }) {
@@ -772,6 +932,14 @@ function PhotographerMatchCard({ p, locale, chatContext }: { p: MatchPhotographe
               </span>
             ))}
           </div>
+        )}
+        {p.sample_review?.text && (
+          <blockquote className="mt-2 border-l-2 border-warm-200 pl-2 text-[12px] italic leading-snug text-gray-600">
+            &ldquo;{p.sample_review.text.slice(0, 140)}{p.sample_review.text.length > 140 ? "…" : ""}&rdquo;
+            {p.sample_review.client_name && (
+              <span className="ml-1 not-italic text-[11px] font-medium text-gray-400">— {p.sample_review.client_name}</span>
+            )}
+          </blockquote>
         )}
       </div>
       <div className="flex items-stretch border-t border-warm-100">

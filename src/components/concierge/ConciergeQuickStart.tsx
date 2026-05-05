@@ -46,14 +46,11 @@ export function ConciergeQuickStart({
     e.preventDefault();
     const trimmed = text.trim();
     if (!trimmed) return;
-    let messageText = trimmed;
-    if (locationName) {
-      const inLocation = new RegExp(`\\b${locationName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-      if (!inLocation.test(trimmed)) {
-        messageText = `${trimmed} in ${locationName}`;
-      }
-    }
-    drawer.openWith(messageText);
+    // Don't mutate the visitor's text — the location is already in
+    // pageContextObj passed by the drawer to ConciergeChat. Sending
+    // their original message verbatim keeps language/grammar/punctuation
+    // intact and avoids the "couples shoot in Madeira in Madeira" bug.
+    drawer.openWith(trimmed);
     setText("");
   }
 

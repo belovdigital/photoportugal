@@ -6,6 +6,7 @@ import { loadPhotographersForConcierge } from "@/lib/concierge/photographer-cont
 import { buildSystemPrompt } from "@/lib/concierge/system-prompt";
 import { computeBadges } from "@/lib/concierge/match-badges";
 import { pageContextToPromptString, type PageContext } from "@/lib/concierge/page-context";
+import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock } from "@/lib/concierge/candidate-ranker";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,13 +48,13 @@ const tools = [
     type: "function" as const,
     function: {
       name: "show_matches",
-      description: "Show 3 photographer matches to the user. ONLY call this once the visitor has CONFIRMED ONE specific location (not 'one of these three'). The confirmed location may be a public city/region OR a new coverage node such as Terceira, Pico, Faial, Sao Miguel, Lisbon Region, Algarve, Madeira, or an Azores island group. Match using photographers' locations=[...] coverage slugs. Never call this in the same turn as show_locations.",
+      description: "Show 1-3 photographer matches to the user. ONLY call this once the visitor has CONFIRMED ONE specific location (not 'one of these three'). The confirmed location may be a public city/region OR a new coverage node such as Terceira, Pico, Faial, Sao Miguel, Lisbon Region, Algarve, Madeira, or an Azores island group. Match using photographers' locations=[...] coverage slugs. Never call this in the same turn as show_locations. PREFER 3 matches when there are 3 strong fits, but send fewer if you'd otherwise be reaching — 1 perfect match is better than 3 with shoehorning. If you can only find 1, say so honestly in reply_text (e.g. \"I found one strong fit for São Jorge — let me know if you want to look at neighbouring islands too\").",
       parameters: {
         type: "object",
         properties: {
           matches: {
             type: "array",
-            minItems: 3,
+            minItems: 1,
             maxItems: 3,
             items: {
               type: "object",
@@ -91,6 +92,15 @@ const tools = [
 interface IncomingMessage {
   role: "user" | "assistant";
   content: string;
+  /** Action payload from previous assistant turns (show_matches /
+   *  show_locations / human_handoff). The client passes this back so the
+   *  server can dedupe photographers already shown and avoid suggesting
+   *  the same locations twice. The action is NOT forwarded to OpenAI —
+   *  only consumed by our own bookkeeping. */
+  action?: {
+    type?: string;
+    data?: { matches?: { slug: string }[]; locations?: { slug: string }[] };
+  } | null;
 }
 
 const coverageToPublicCardSlug: Record<string, string> = {
@@ -252,6 +262,22 @@ export async function POST(req: NextRequest) {
   if (resolvedPageContext) {
     systemPrompt += `\n\n## Current page context\n${resolvedPageContext}\n\nIMPORTANT: any facts implied by the page context (location, occasion, photographer being viewed) should be treated as already confirmed by the user — do NOT re-ask. If location AND occasion are both implied, go straight to show_matches without a clarifying question. The user's explicit messages override the page context if they contradict it.\n\nDo not mention the URL itself in your reply.`;
   }
+
+  // Server-side pre-ranking — when we can extract a clear intent (URL,
+  // slug-hint, or occasion keyword), pre-compute the strongest fits by
+  // hard criteria and inject as a "preferred pool" hint. The LLM still
+  // sees the full photographer list and can pick anyone, but we nudge
+  // toward the deterministic top-12 to avoid stylistic-only picks that
+  // miss coverage / rating / tier signals.
+  const intent = resolveIntent({ pageContext: page_context_obj || null, messages });
+  const topCandidates = rankTopCandidates({
+    photographers,
+    intent,
+    topN: 12,
+    excludeSlugs: shownSlugs,
+  });
+  const topBlock = formatTopCandidatesBlock(topCandidates, intent);
+  if (topBlock) systemPrompt += topBlock;
   if (personaMemory) {
     systemPrompt += personaMemory;
   }
@@ -286,6 +312,18 @@ export async function POST(req: NextRequest) {
   // Parse tool calls (matches or human handoff)
   let action: { type: string; data: Record<string, unknown> } | null = null;
   let matchedPhotogIds: string[] = [];
+
+  // Normalised outcome enum used in both INSERT and UPDATE so analytics
+  // group by the same values. Previously INSERT wrote tool names
+  // ("show_matches"/"show_locations") while UPDATE wrote
+  // "matched"/"human_handoff" — making chat-outcome reports unreliable.
+  function outcomeFor(a: typeof action): string | null {
+    if (!a) return null;
+    if (a.type === "show_matches") return "matched";
+    if (a.type === "show_locations") return "exploring_locations";
+    if (a.type === "human_handoff") return "human_handoff";
+    return a.type || null;
+  }
 
   if (msg.tool_calls && msg.tool_calls.length > 0) {
     const tc = msg.tool_calls[0];
@@ -392,7 +430,7 @@ export async function POST(req: NextRequest) {
         usage?.total_tokens || 0,
         costUsd,
         matchedPhotogIds,
-        action?.type === "human_handoff" ? "human_handoff" : action?.type === "show_matches" ? "matched" : null,
+        outcomeFor(action),
         chatId,
       ]
     ).catch((e) => { console.error("[concierge] update error:", e); return null; });
@@ -407,6 +445,36 @@ export async function POST(req: NextRequest) {
       term: req.cookies.get("utm_term")?.value || null,
       gclid: req.cookies.get("gclid")?.value || null,
     };
+    // Cookie-based UTM can be empty when the visitor opens the drawer
+    // many minutes after landing (some cookies expire, ad blockers, etc).
+    // If we have a gclid in cookies, look up the original ad_visits row
+    // for that click to recover utm_term/source/etc. Fills missing fields
+    // only — cookie values always win when both exist.
+    if (utm.gclid && (!utm.source || !utm.term)) {
+      try {
+        const original = await queryOne<{
+          utm_source: string | null;
+          utm_medium: string | null;
+          utm_campaign: string | null;
+          utm_term: string | null;
+        }>(
+          `SELECT utm_source, utm_medium, utm_campaign, utm_term
+             FROM ad_visits
+             WHERE gclid = $1
+             ORDER BY created_at ASC
+             LIMIT 1`,
+          [utm.gclid]
+        );
+        if (original) {
+          utm.source ??= original.utm_source;
+          utm.medium ??= original.utm_medium;
+          utm.campaign ??= original.utm_campaign;
+          utm.term ??= original.utm_term;
+        }
+      } catch (err) {
+        console.error("[concierge] ad_visits utm fallback error:", err);
+      }
+    }
     const created = await queryOne<{ id: string }>(
       `INSERT INTO concierge_chats (visitor_id, user_id, email, first_name, messages, matched_photographer_ids, outcome, language, total_tokens, total_cost_usd, utm_source, utm_medium, utm_campaign, utm_term, gclid, source, page_context)
        VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`,
@@ -417,7 +485,7 @@ export async function POST(req: NextRequest) {
         first_name || null,
         JSON.stringify(newChatMessages),
         matchedPhotogIds,
-        action?.type || null,
+        outcomeFor(action),
         language || null,
         usage?.total_tokens || 0,
         costUsd,
@@ -435,10 +503,99 @@ export async function POST(req: NextRequest) {
     ).catch(() => null);
   }
 
+  // Forward terminal-event chats to admins in Telegram (new "ИИ Консьерж"
+  // topic). Fires once the AI either shows matches OR escalates to a
+  // human; subsequent show_matches in the same chat are deduped via the
+  // shownSlugs heuristic — admin sees the freshest snapshot. Fire-and-
+  // forget so a Telegram outage never blocks the chat response.
+  if (action && (action.type === "show_matches" || action.type === "human_handoff")) {
+    void notifyConciergeAdmins({
+      chatId,
+      messages: newChatMessages,
+      action,
+      photographers,
+      email,
+      first_name,
+      detectedLang,
+      visitorId: visitor_id || null,
+      pageContextStr: resolvedPageContext,
+    }).catch((e) => console.error("[concierge] telegram notify error:", e));
+  }
+
   return NextResponse.json({
     chat_id: chatId,
     reply: replyText,
     action,
     usage: usage ? { tokens: usage.total_tokens, cost_usd: Number(costUsd.toFixed(4)) } : null,
   });
+}
+
+async function notifyConciergeAdmins(opts: {
+  chatId: string | undefined;
+  messages: { role: string; content: string; action?: { type?: string; data?: { matches?: { slug: string; reasoning?: string }[]; summary?: string } } | null }[];
+  action: { type: string; data: Record<string, unknown> };
+  photographers: { slug: string; name: string }[];
+  email?: string | null;
+  first_name?: string | null;
+  detectedLang: string;
+  visitorId: string | null;
+  pageContextStr: string | null;
+}): Promise<void> {
+  const { sendTelegram } = await import("@/lib/telegram");
+  const lines: string[] = [];
+
+  if (opts.action.type === "human_handoff") {
+    lines.push("🆘 <b>Concierge: human handoff requested</b>");
+  } else if (opts.action.type === "show_matches") {
+    lines.push("⭐ <b>Concierge: matches shown</b>");
+  }
+
+  const meta: string[] = [];
+  if (opts.first_name) meta.push(`👤 ${opts.first_name}`);
+  if (opts.email) meta.push(`✉️ ${opts.email}`);
+  if (opts.detectedLang) meta.push(`🌐 ${opts.detectedLang}`);
+  if (opts.visitorId) meta.push(`<code>${opts.visitorId.slice(0, 8)}</code>`);
+  if (meta.length) lines.push(meta.join("  ·  "));
+  if (opts.pageContextStr) lines.push(`<i>${opts.pageContextStr.replace(/<[^>]+>/g, "").slice(0, 200)}</i>`);
+
+  const userMsgs = opts.messages.filter((m) => m.role === "user").slice(-5);
+  if (userMsgs.length) {
+    lines.push("");
+    lines.push("<b>Last user messages:</b>");
+    for (const m of userMsgs) {
+      const text = (m.content || "").replace(/\s*\(slug:[a-z0-9-]+\)\s*$/i, "").slice(0, 200);
+      lines.push(`• ${escapeHtml(text)}`);
+    }
+  }
+
+  if (opts.action.type === "show_matches") {
+    const matches = (opts.action.data?.matches as { slug: string; reasoning?: string }[] | undefined) || [];
+    if (matches.length) {
+      lines.push("");
+      lines.push("<b>Recommended:</b>");
+      for (const m of matches) {
+        const p = opts.photographers.find((x) => x.slug === m.slug);
+        const name = p?.name || m.slug;
+        lines.push(`• <b>${escapeHtml(name)}</b> (<code>${m.slug}</code>)`);
+        if (m.reasoning) lines.push(`  <i>${escapeHtml(m.reasoning.slice(0, 220))}</i>`);
+      }
+    }
+  } else if (opts.action.type === "human_handoff") {
+    const summary = (opts.action.data?.summary as string | undefined) || "";
+    if (summary) {
+      lines.push("");
+      lines.push(`<b>Summary:</b> ${escapeHtml(summary)}`);
+    }
+  }
+
+  if (opts.chatId) {
+    lines.push("");
+    lines.push(`<a href="https://photoportugal.com/admin?tab=concierge&chat=${opts.chatId}">Open in admin →</a>`);
+  }
+
+  await sendTelegram(lines.join("\n"), "concierge");
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
+import { computeLeadScore } from "@/lib/concierge/lead-score";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,31 +20,78 @@ export async function GET(req: NextRequest) {
 
   const filter = req.nextUrl.searchParams.get("filter") || "all";
   const where: string[] = ["1=1"];
-  if (filter === "with_email") where.push("email IS NOT NULL");
-  if (filter === "matched") where.push("outcome = 'show_matches'");
+  if (filter === "with_email") where.push("(email IS NOT NULL OR phone IS NOT NULL)");
+  // After Phase A outcome normalisation we standardised on "matched" for
+  // show_matches; keep the legacy "show_matches" string as a fallback so
+  // older rows still match the filter.
+  if (filter === "matched") where.push("outcome IN ('matched', 'show_matches')");
   if (filter === "handoff") where.push("outcome = 'human_handoff'");
+  // "hot" is computed AFTER fetching (lead score is heuristic, not a
+  // column) — we just don't restrict here and post-filter by heat below.
+  const wantHot = filter === "hot";
 
   const chats = await query<{
     id: string; visitor_id: string | null; user_id: string | null;
-    email: string | null; first_name: string | null; outcome: string | null;
+    email: string | null; phone: string | null; first_name: string | null; outcome: string | null;
     language: string | null; source: string | null; page_context: string | null;
-    utm_source: string | null; utm_term: string | null; country: string | null;
+    utm_source: string | null; utm_term: string | null; gclid: string | null; country: string | null;
     total_tokens: number; total_cost_usd: string;
-    matched_photographer_ids: string[] | null; archived: boolean;
-    messages: unknown; created_at: string; updated_at: string;
+    matched_photographer_ids: string[] | null;
+    inquiry_booking_ids: string[] | null;
+    archived: boolean;
+    messages: { role: string; content: string; action?: { type?: string; data?: { matches?: { slug: string; reasoning?: string; style_label?: string }[]; locations?: { slug: string }[] } } | null }[];
+    created_at: string; updated_at: string;
     user_name: string | null; user_email: string | null;
   }>(
-    `SELECT c.id, c.visitor_id, c.user_id, c.email, c.first_name, c.outcome,
-            c.language, c.source, c.page_context, c.utm_source, c.utm_term, c.country,
+    `SELECT c.id, c.visitor_id, c.user_id, c.email, c.phone, c.first_name, c.outcome,
+            c.language, c.source, c.page_context, c.utm_source, c.utm_term, c.gclid, c.country,
             c.total_tokens, COALESCE(c.total_cost_usd, 0)::text AS total_cost_usd,
-            c.matched_photographer_ids, COALESCE(c.archived, FALSE) AS archived,
+            c.matched_photographer_ids, c.inquiry_booking_ids,
+            COALESCE(c.archived, FALSE) AS archived,
             c.messages, c.created_at, c.updated_at,
             u.name AS user_name, u.email AS user_email
      FROM concierge_chats c
      LEFT JOIN users u ON u.id = c.user_id
      WHERE ${where.join(" AND ")}
-     ORDER BY c.created_at DESC LIMIT 100`
+     ORDER BY c.created_at DESC LIMIT 200`
   ).catch(() => []);
+
+  // Resolve photographer names so the admin sees "Aleksandra (almare)"
+  // not just a UUID. Pull all photographers referenced once, build a map.
+  const allPhotogIds = Array.from(new Set(
+    chats.flatMap((c) => c.matched_photographer_ids || [])
+  ));
+  const photogRows = allPhotogIds.length
+    ? await query<{ id: string; slug: string; name: string }>(
+        `SELECT pp.id, pp.slug, u.name FROM photographer_profiles pp
+           JOIN users u ON u.id = pp.user_id
+          WHERE pp.id = ANY($1::uuid[])`,
+        [allPhotogIds]
+      ).catch(() => [])
+    : [];
+  const photogById = new Map(photogRows.map((p) => [p.id, p]));
+
+  // Score every chat and (optionally) filter to hot leads only.
+  const scored = chats.map((c) => {
+    const ls = computeLeadScore({
+      email: c.email,
+      phone: c.phone,
+      gclid: c.gclid,
+      utm_source: c.utm_source,
+      outcome: c.outcome,
+      matched_photographer_ids: c.matched_photographer_ids,
+      inquiry_booking_ids: c.inquiry_booking_ids,
+      messages: c.messages || [],
+      created_at: c.created_at,
+      updated_at: c.updated_at,
+    });
+    const matched_photographers = (c.matched_photographer_ids || [])
+      .map((id) => photogById.get(id))
+      .filter(Boolean)
+      .map((p) => ({ id: p!.id, slug: p!.slug, name: p!.name }));
+    return { ...c, lead_score: ls.score, lead_heat: ls.heat, matched_photographers };
+  });
+  const filteredChats = wantHot ? scored.filter((c) => c.lead_heat === "hot") : scored;
 
   // Stats — aggregate over the last 90 days for relevance
   const stats = await queryOne<{
@@ -77,16 +125,18 @@ export async function GET(req: NextRequest) {
      ORDER BY count DESC LIMIT 10`
   ).catch(() => []);
 
-  // Top locations from page_context (best effort: extract last word) — skip for v1
-  // We'll instead extract from messages in a separate query or accept manual review
+  // Hot lead count for the filter bar
+  const hotCount = scored.filter((c) => c.lead_heat === "hot").length;
+
   return NextResponse.json({
-    chats,
+    chats: filteredChats,
     stats: stats ? {
       ...stats,
       by_language: [],
       by_source: [],
       top_locations: [],
       top_photographers: topPhotogs,
+      hot_leads: hotCount,
     } : null,
   });
 }

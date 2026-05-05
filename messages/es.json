@@ -108,7 +108,8 @@
     "previousPhoto": "Foto anterior",
     "nextPhoto": "Foto siguiente",
     "browseAllPhotographers": "Ver todos los fotógrafos",
-    "photoViewer": "Visor de fotos"
+    "photoViewer": "Visor de fotos",
+    "back": "Atrás"
   },
   "nav": {
     "announcement": "Fotografía profesional de vacaciones",
@@ -628,7 +629,15 @@
     "online": "En línea",
     "openingLoc": "¡Hola! ¿Busca un fotógrafo en {loc}? Cuénteme sobre su sesión — ocasión, número de personas, estilo — y le emparejo con los 2–3 mejores fotógrafos de allí. ✨",
     "openingLocAndType": "¡Hola! Una sesión {type} en {loc} — buena elección. Cuénteme más (fecha, número de personas, estilo) y le emparejo con los 2–3 mejores fotógrafos de allí. ✨",
-    "openingTryYourself": "¿Le gustó la vista previa con IA en {loc}? Ahora busquemos un fotógrafo real. Cuénteme sobre la sesión — fecha, ocasión, número de personas — y le envío los 2–3 mejores. ✨"
+    "openingTryYourself": "¿Le gustó la vista previa con IA en {loc}? Ahora busquemos un fotógrafo real. Cuénteme sobre la sesión — fecha, ocasión, número de personas — y le envío los 2–3 mejores. ✨",
+    "captureChoiceTitle": "¿Cómo continuamos?",
+    "captureChoiceEmail": "Enviar por email",
+    "captureChoiceWhatsapp": "Continuar en WhatsApp",
+    "phonePlaceholder": "Su número de teléfono",
+    "openWhatsappBtn": "Abrir WhatsApp",
+    "askHumanCta": "Hablar con el equipo de Photo Portugal",
+    "askHumanSending": "Enviando…",
+    "askHumanDone": "Recibido — nuestro equipo se pondrá en contacto pronto."
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Portugal",

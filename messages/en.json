@@ -108,7 +108,8 @@
     "previousPhoto": "Previous photo",
     "nextPhoto": "Next photo",
     "browseAllPhotographers": "Browse all photographers",
-    "photoViewer": "Photo viewer"
+    "photoViewer": "Photo viewer",
+    "back": "Back"
   },
   "nav": {
     "announcement": "Professional vacation photography",
@@ -3286,7 +3287,15 @@
     "online": "Online",
     "openingLoc": "Hi! Looking for a photographer in {loc}? Tell me about your shoot — occasion, group size, style — and I'll match you with the 2–3 best photographers there. ✨",
     "openingLocAndType": "Hi! A {type} photoshoot in {loc} — great choice. Tell me a bit more (date, group size, vibe) and I'll match you with the 2–3 best photographers there. ✨",
-    "openingTryYourself": "Loved the AI preview at {loc}? Now let's match you with a real photographer there. Tell me about your shoot — date, occasion, group size — and I'll send you the 2–3 best matches. ✨"
+    "openingTryYourself": "Loved the AI preview at {loc}? Now let's match you with a real photographer there. Tell me about your shoot — date, occasion, group size — and I'll send you the 2–3 best matches. ✨",
+    "captureChoiceTitle": "How should we follow up?",
+    "captureChoiceEmail": "Send to email",
+    "captureChoiceWhatsapp": "Continue on WhatsApp",
+    "phonePlaceholder": "Your phone number",
+    "openWhatsappBtn": "Open WhatsApp",
+    "askHumanCta": "Ask the Photo Portugal team",
+    "askHumanSending": "Sending…",
+    "askHumanDone": "Got it — our team will reach out shortly."
   },
   "lp": {
     "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Portugal",

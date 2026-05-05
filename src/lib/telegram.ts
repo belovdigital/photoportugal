@@ -2,7 +2,7 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 // Forum topic thread IDs for PhotoPT Admins group
-export type TelegramTopic = "clients" | "match_requests" | "bookings" | "photographers" | "daily_digest" | "messages" | "alerts" | "stripe";
+export type TelegramTopic = "clients" | "match_requests" | "bookings" | "photographers" | "daily_digest" | "messages" | "alerts" | "stripe" | "concierge";
 
 const TOPIC_THREAD_IDS: Record<TelegramTopic, number> = {
   clients: 9,
@@ -13,6 +13,7 @@ const TOPIC_THREAD_IDS: Record<TelegramTopic, number> = {
   messages: 21,
   alerts: 220,
   stripe: 361,
+  concierge: 442,
 };
 
 function logTelegram(recipient: string, event: string, status: "sent" | "failed", error?: string) {
