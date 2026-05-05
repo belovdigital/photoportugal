@@ -1471,7 +1471,7 @@
     "matchPrompt": "Möchten Sie {firstName} oder jemand anderen? Wir matchen Sie",
     "browseAll": "Oder <link>alle {count} Fotografen durchsuchen</link> in ganz Portugal",
     "location": {
-      "availableChip": "{count} Fotografen in {location} verfügbar",
+      "availableChip": "Nur {count} Fotografen in {location} verfügbar — buchen Sie jetzt",
       "headline": "Fotoshooting buchen<br></br> in <location>{locationName}</location>",
       "fromPrice": "Ab €{price}",
       "reviews": "{count} Bewertungen",

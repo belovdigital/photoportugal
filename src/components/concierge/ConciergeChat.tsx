@@ -894,11 +894,14 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
               type="text"
               required
               autoFocus
-              inputMode="email"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              inputMode="text"
               placeholder={t("contactInputPlaceholder")}
               value={contactInput}
               onChange={(e) => { setContactInput(e.target.value); if (contactError) setContactError(false); }}
-              className={`flex-1 min-w-0 rounded-lg border bg-white px-3 py-1.5 text-base sm:text-sm focus:outline-none focus:ring-1 ${contactError ? "border-rose-400 focus:border-rose-500 focus:ring-rose-400" : "border-warm-200 focus:border-primary-400 focus:ring-primary-400"}`}
+              className={`flex-1 min-w-0 rounded-lg border bg-white px-3 py-2 text-base sm:py-1.5 sm:text-sm focus:outline-none focus:ring-1 ${contactError ? "border-rose-400 focus:border-rose-500 focus:ring-rose-400" : "border-warm-200 focus:border-primary-400 focus:ring-primary-400"}`}
             />
             <button
               type="submit"
@@ -1263,7 +1266,7 @@ function CompareModal({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
-          <div className={`grid gap-3 ${photographers.length === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
+          <div className={`grid gap-3 ${photographers.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
             {photographers.map((p) => (
               <CompareColumn key={p.slug} p={p} locale={locale} />
             ))}

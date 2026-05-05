@@ -54,8 +54,8 @@ export function ConciergeInvitePlaque({
     : "rounded-2xl border border-warm-200 bg-white p-4 shadow-md sm:p-5";
 
   const headerCls = isDark
-    ? "flex items-center gap-2 text-[12px] font-medium text-white/85"
-    : "flex items-center gap-2 text-[12px] font-medium text-gray-600";
+    ? "flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-white/85"
+    : "flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-medium text-gray-600";
 
   const lensDotCls = isDark
     ? "flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 text-[12px] shadow-sm ring-1 ring-white/30"

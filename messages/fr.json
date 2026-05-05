@@ -1719,7 +1719,7 @@
     "matchPrompt": "Vous voulez {firstName} ou quelqu'un d'autre ? Nous vous mettrons en relation",
     "browseAll": "Ou <link>parcourez tous les {count} photographes</link> à travers le Portugal",
     "location": {
-      "availableChip": "{count} photographes disponibles à {location}",
+      "availableChip": "Seulement {count} photographes disponibles à {location} — réservation ouverte",
       "headline": "Réservez une séance photo<br></br> à <location>{locationName}</location>",
       "fromPrice": "Dès €{price}",
       "reviews": "{count} avis",

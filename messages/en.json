@@ -1466,7 +1466,7 @@
     "matchPrompt": "Want {firstName} or someone else? We'll match you",
     "browseAll": "Or <link>browse all {count} photographers</link> across Portugal",
     "location": {
-      "availableChip": "{count} photographers available in {location}",
+      "availableChip": "Only {count} photographers available in {location} — booking now",
       "headline": "Book a Photoshoot<br></br> in <location>{locationName}</location>",
       "fromPrice": "From €{price}",
       "reviews": "{count} reviews",

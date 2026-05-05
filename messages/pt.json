@@ -1471,7 +1471,7 @@
     "matchPrompt": "Quer o {firstName} ou outro? Encontramos para si",
     "browseAll": "Ou <link>explorar os {count} fotógrafos</link> em Portugal",
     "location": {
-      "availableChip": "{count} fotógrafos disponíveis em {location}",
+      "availableChip": "Apenas {count} fotógrafos disponíveis em {location} — a aceitar reservas agora",
       "headline": "Reserve uma sessão fotográfica<br></br> em <location>{locationName}</location>",
       "fromPrice": "Desde €{price}",
       "reviews": "{count} avaliações",
