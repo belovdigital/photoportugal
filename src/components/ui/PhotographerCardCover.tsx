@@ -144,8 +144,8 @@ export function PhotographerCardCover({
               <img
                 src={url}
                 alt={altPrefix ? `${altPrefix} ${normalizeName(name)}` : `${normalizeName(name)} portfolio`}
-                loading={i === 0 ? "eager" : "lazy"}
-                decoding={i === 0 ? "sync" : "async"}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
                 style={{ objectPosition: i === 0 && coverPositionY != null ? `center ${coverPositionY}%` : "center" }}
               />
