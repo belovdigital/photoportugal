@@ -305,6 +305,86 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Critical reminders query: ${err}`);
   }
 
+  // === 1e. Blind booking — Telegram escalation to admins ===
+  // Blind bookings (status='confirmed' + photographer_id IS NULL +
+  // blind_booking=TRUE) need an admin to assign a photographer before
+  // auto_refund_at hits. Without nudges the deadline sneaks up. Fire
+  // at 12h-left, 6h-left, and 1h-left (T-12h / T-6h / T-1h). State is
+  // tracked via three new boolean columns on bookings so each
+  // threshold pings exactly once per booking.
+  try {
+    const escalations = [
+      { col: "blind_admin_nudge_12h_sent", interval: "12 hours", label: "12h", emoji: "🟡" },
+      { col: "blind_admin_nudge_6h_sent",  interval: "6 hours",  label: "6h",  emoji: "🟠" },
+      { col: "blind_admin_nudge_1h_sent",  interval: "1 hour",   label: "<1h", emoji: "🔴" },
+    ];
+    for (const stage of escalations) {
+      // Only fire if (a) booking is still unmatched, (b) auto_refund_at
+      // window includes this threshold, (c) this stage hasn't been
+      // sent for this booking yet. NB: the column existence check is
+      // wrapped so missing columns don't bring down the whole cron
+      // (this section can ship before the migration).
+      try {
+        const rows = await query<{
+          id: string;
+          total_price: number | null;
+          location_slug: string | null;
+          auto_refund_at: string | null;
+          client_name: string;
+        }>(
+          `SELECT b.id, b.total_price, b.location_slug, b.auto_refund_at::text, u.name AS client_name
+             FROM bookings b
+             JOIN users u ON u.id = b.client_id
+            WHERE b.status = 'confirmed'
+              AND b.photographer_id IS NULL
+              AND b.blind_booking = TRUE
+              AND b.auto_refund_at IS NOT NULL
+              AND b.auto_refund_at <= NOW() + INTERVAL '${stage.interval}'
+              AND b.auto_refund_at > NOW()
+              AND COALESCE(b.${stage.col}, FALSE) = FALSE
+            LIMIT 25`
+        );
+        for (const r of rows) {
+          try {
+            const minsLeft = r.auto_refund_at
+              ? Math.max(0, Math.round((new Date(r.auto_refund_at).getTime() - Date.now()) / 60_000))
+              : 0;
+            const hrsLeft = Math.floor(minsLeft / 60);
+            const remMins = minsLeft % 60;
+            const timeLeft = hrsLeft > 0 ? `${hrsLeft}h${remMins ? ` ${remMins}m` : ""}` : `${minsLeft}m`;
+            const priceLabel = r.total_price ? `€${Math.round(Number(r.total_price))}` : "(no price)";
+            import("@/lib/telegram").then(({ sendTelegram }) =>
+              sendTelegram(
+                `${stage.emoji} <b>Blind booking still unassigned — ${stage.label} left</b>\n` +
+                `Booking: <code>${r.id.slice(0, 8)}</code>\n` +
+                `Region: ${r.location_slug || "(unknown)"}\n` +
+                `Client: ${r.client_name}\n` +
+                `Amount: ${priceLabel}\n` +
+                `Time to auto-refund: <b>${timeLeft}</b>\n` +
+                `<a href="https://photoportugal.com/admin">Open admin → Bookings</a>`,
+                "bookings"
+              )
+            ).catch((err) => console.error("[cron/blind-escalation] telegram error:", err));
+
+            await queryOne(
+              `UPDATE bookings SET ${stage.col} = TRUE WHERE id = $1 RETURNING id`,
+              [r.id]
+            );
+          } catch (err) {
+            results.errors.push(`Blind escalation ${stage.label} for ${r.id}: ${err}`);
+          }
+        }
+      } catch (err: unknown) {
+        // Missing column → skip silently until the migration runs.
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/does not exist/i.test(msg)) continue;
+        results.errors.push(`Blind escalation ${stage.label} query: ${msg}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Blind escalations: ${err}`);
+  }
+
   // === 1d. Soft "ready to book?" nudge for concierge-sourced inquiries ===
   // Concierge brings visitors who message a photographer but never
   // proceed to checkout. The hard payment-reminder cascade (sections

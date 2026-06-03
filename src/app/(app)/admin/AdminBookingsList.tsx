@@ -8,8 +8,9 @@ export interface AdminBooking {
   id: string;
   client_id: string;
   client_name: string;
-  photographer_name: string;
-  photographer_slug: string;
+  // Both null on blind/Quick bookings until an admin assigns a photographer.
+  photographer_name: string | null;
+  photographer_slug: string | null;
   status: string;
   shoot_date: string | null;
   total_price: number | null;
@@ -44,6 +45,12 @@ export interface AdminBooking {
   photographer_phone: string | null;
   photographer_email: string | null;
   confirmed_at: string | null;
+  // Blind (Quick) booking — set when the visitor used Quick Booking
+  // (no AI, modal direct) or Concierge → offer_blind_booking. While
+  // photographer_id IS NULL the row needs admin assignment.
+  blind_booking?: boolean | null;
+  auto_refund_at?: string | null;
+  admin_notes?: string | null;
   // Gift card redemption — set when booking was paid via Photo Portugal
   // gift card (not Stripe). Payout is flat per tier (€210/€360).
   gift_card_id?: string | null;
@@ -146,7 +153,23 @@ function formatGroupSize(count: number | null, isEstimate: boolean) {
 
 const PAGE_SIZE = 50;
 
-export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
+export interface AdminPhotographerRosterRow {
+  id: string;
+  user_id: string;
+  name: string;
+  slug: string;
+  plan: string;
+  last_seen_at: string | null;
+  locations: string[];
+}
+
+export function AdminBookingsList({
+  bookings,
+  photographerRoster,
+}: {
+  bookings: AdminBooking[];
+  photographerRoster?: AdminPhotographerRosterRow[];
+}) {
   const [search, setSearch] = useState("");
   // "active" = everything except cancelled and delivery-accepted (the two
   // terminal states). Default so the list isn't cluttered with finalized
@@ -155,6 +178,10 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
   const [statusFilter, setStatusFilter] = useState<string>("active");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [assignDraft, setAssignDraft] = useState<Record<string, string>>({});
+  const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
+  const [submittingAssignId, setSubmittingAssignId] = useState<string | null>(null);
+  const roster = photographerRoster || [];
 
   const filtered = useMemo(() => {
     let result = bookings;
@@ -166,7 +193,7 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
-        (b) => b.client_name.toLowerCase().includes(q) || b.photographer_name.toLowerCase().includes(q) || b.id.includes(q)
+        (b) => b.client_name.toLowerCase().includes(q) || (b.photographer_name || "").toLowerCase().includes(q) || b.id.includes(q)
       );
     }
     // For the Delivered tab, sort by acceptance date (newest first) so admin
@@ -241,12 +268,20 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
           const daysPending = b.status === "pending"
             ? Math.floor((Date.now() - new Date(b.created_at).getTime()) / 86400000)
             : 0;
+          // Blind booking still waiting for an admin to pick a photographer.
+          // Highlight the row yellow + render the assign UI inline.
+          const isUnmatchedBlind = !!b.blind_booking && !b.photographer_name;
+          const autoRefundHoursLeft = b.auto_refund_at
+            ? Math.max(0, Math.round((new Date(b.auto_refund_at).getTime() - Date.now()) / 3_600_000))
+            : null;
 
           return (
             <div
               key={b.id}
               className={`rounded-xl border bg-white transition-shadow ${
-                b.status === "cancelled" ? "border-gray-200 opacity-60" : "border-warm-200"
+                b.status === "cancelled" ? "border-gray-200 opacity-60" :
+                isUnmatchedBlind ? "border-amber-400 bg-amber-50/60 ring-1 ring-amber-300" :
+                "border-warm-200"
               } ${isOpen ? "shadow-md" : "hover:shadow-sm"}`}
             >
               <div
@@ -309,17 +344,32 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                       {b.client_name}
                     </a>
                     <span className="mx-1.5 text-gray-300">&rarr;</span>
-                    <a
-                      href={`/photographers/${b.photographer_slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-sm text-gray-600 hover:text-primary-600 hover:underline"
-                    >
-                      {b.photographer_name}
-                    </a>
+                    {b.photographer_slug && b.photographer_name ? (
+                      <a
+                        href={`/photographers/${b.photographer_slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-sm text-gray-600 hover:text-primary-600 hover:underline"
+                      >
+                        {b.photographer_name}
+                      </a>
+                    ) : (
+                      <span className="text-sm font-semibold text-amber-700">
+                        ⚡ needs photographer
+                      </span>
+                    )}
                     {daysPending > 1 && (
                       <span className="ml-2 text-[10px] font-medium text-orange-500">{daysPending}d pending</span>
+                    )}
+                    {isUnmatchedBlind && autoRefundHoursLeft !== null && (
+                      <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        autoRefundHoursLeft <= 1 ? "bg-red-100 text-red-700" :
+                        autoRefundHoursLeft <= 6 ? "bg-amber-100 text-amber-800" :
+                        "bg-amber-50 text-amber-700 border border-amber-200"
+                      }`}>
+                        ⏳ {autoRefundHoursLeft}h to auto-refund
+                      </span>
                     )}
                   </div>
                   {b.shoot_date && (
@@ -332,8 +382,49 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
 
               {isOpen && (
                 <div className="border-t border-warm-100 px-3 py-3 sm:px-4 sm:py-4">
+                  {/* Blind booking — inline assign UI. Shown only when
+                      the booking has no photographer yet. After assign
+                      the booking flips into the normal "confirmed" UI
+                      so this whole block disappears. */}
+                  {isUnmatchedBlind && (
+                    <BlindAssignPanel
+                      booking={b}
+                      photographers={roster}
+                      selected={assignDraft[b.id] || ""}
+                      onSelect={(v) => setAssignDraft((prev) => ({ ...prev, [b.id]: v }))}
+                      notes={notesDraft[b.id] ?? (b.admin_notes || "")}
+                      onNotes={(v) => setNotesDraft((prev) => ({ ...prev, [b.id]: v }))}
+                      submitting={submittingAssignId === b.id}
+                      onAssign={async () => {
+                        const photographerId = assignDraft[b.id];
+                        if (!photographerId) return;
+                        setSubmittingAssignId(b.id);
+                        try {
+                          const res = await fetch("/api/admin/bookings", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              action: "assign_photographer",
+                              booking_id: b.id,
+                              photographer_id: photographerId,
+                              admin_notes: notesDraft[b.id] ?? null,
+                            }),
+                          });
+                          const data = await res.json().catch(() => ({}));
+                          if (!res.ok) {
+                            alert(`Assign failed: ${data?.error || res.status}`);
+                          } else {
+                            window.location.reload();
+                          }
+                        } catch (err) {
+                          alert(`Network error: ${err instanceof Error ? err.message : err}`);
+                        }
+                        setSubmittingAssignId(null);
+                      }}
+                    />
+                  )}
                   {/* Journey stepper */}
-                  {b.status !== "cancelled" && (
+                  {b.status !== "cancelled" && !isUnmatchedBlind && (
                     <AdminBookingJourney status={b.status} paymentStatus={b.payment_status} deliveryAccepted={!!b.delivery_accepted} />
                   )}
                   {b.status === "confirmed" && b.payment_status !== "paid" && (b.confirmed_at || b.created_at) && (
@@ -566,4 +657,110 @@ function AdminBookingJourney({ status, paymentStatus, deliveryAccepted }: { stat
       })}
     </div>
   );
+}
+
+// Inline assign UI for blind/Quick bookings still waiting for an admin
+// to pick a photographer. Dropdown ranks by region overlap with the
+// booking's location, then by last_seen_at so dormant accounts get
+// pushed down. Captures Stripe payment via PATCH on assign.
+function BlindAssignPanel({
+  booking,
+  photographers,
+  selected,
+  onSelect,
+  notes,
+  onNotes,
+  submitting,
+  onAssign,
+}: {
+  booking: AdminBooking;
+  photographers: AdminPhotographerRosterRow[];
+  selected: string;
+  onSelect: (id: string) => void;
+  notes: string;
+  onNotes: (v: string) => void;
+  submitting: boolean;
+  onAssign: () => void;
+}) {
+  // Slugs that map to the booking's location_slug parent region — used
+  // to bubble likely-fits to the top of the dropdown. Loose match; the
+  // exhaustive mapping lives in src/lib/blind-booking/pricing.ts.
+  const REGION_CHILDREN: Record<string, string[]> = {
+    "greater-lisbon": ["lisbon", "sintra", "cascais", "caparica", "ericeira", "almada", "setubal", "comporta", "sesimbra", "arrabida"],
+    "northern-portugal": ["porto", "braga", "guimaraes", "douro-valley", "douro", "aveiro", "geres"],
+    "central-portugal": ["coimbra", "nazare", "obidos", "tomar", "peniche"],
+    "alentejo": ["evora", "alentejo"],
+    "algarve": ["algarve", "lagos", "tavira", "portimao", "albufeira", "faro", "vilamoura"],
+    "madeira": ["madeira", "funchal"],
+    "azores": ["azores", "ponta-delgada", "sao-miguel", "santa-maria", "terceira", "graciosa", "sao-jorge", "pico", "faial", "flores", "corvo"],
+  };
+  const bookingRegion = booking.location_slug || "";
+  function matches(p: AdminPhotographerRosterRow): boolean {
+    if (!bookingRegion || p.locations.length === 0) return false;
+    if (p.locations.includes(bookingRegion)) return true;
+    const children = REGION_CHILDREN[bookingRegion] || [];
+    return p.locations.some((l) => children.includes(l));
+  }
+  const matchedPgs = photographers.filter(matches);
+  const otherPgs = photographers.filter((p) => !matches(p));
+
+  return (
+    <div className="mb-3 rounded-lg border border-amber-300 bg-white p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">
+          ⚡ Blind booking — assign a photographer
+        </p>
+        <span className="text-[11px] text-gray-500">
+          Capturing Stripe on assign · auto-refunds at 24h
+        </span>
+      </div>
+      <textarea
+        value={notes}
+        onChange={(e) => onNotes(e.target.value)}
+        placeholder="Admin notes — who you've contacted on WhatsApp, what they said…"
+        rows={2}
+        className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-xs mb-2"
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={selected}
+          onChange={(e) => onSelect(e.target.value)}
+          className="flex-1 min-w-[200px] rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm"
+        >
+          <option value="">
+            Assign to… ({matchedPgs.length} matches in {booking.location_slug || "any region"})
+          </option>
+          {matchedPgs.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} · {p.plan}{p.last_seen_at ? ` · last seen ${ageLabel(p.last_seen_at)} ago` : ""}
+            </option>
+          ))}
+          {otherPgs.length > 0 && (
+            <option disabled>───── all approved ─────</option>
+          )}
+          {otherPgs.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} · {p.plan}
+              {p.locations.length ? ` · ${p.locations.slice(0, 3).join(", ")}` : ""}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={onAssign}
+          disabled={!selected || submitting}
+          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+        >
+          {submitting ? "Assigning…" : "Assign & capture"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ageLabel(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const h = Math.floor(ms / 3_600_000);
+  if (h < 1) return `${Math.floor(ms / 60_000)}m`;
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
 }

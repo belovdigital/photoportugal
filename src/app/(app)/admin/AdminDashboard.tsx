@@ -5,7 +5,6 @@ import { AdminToastProvider } from "./AdminToast";
 import { AuditLog as AuditLogTab } from "./AuditLog";
 import AdminCalendarTab from "./AdminCalendarTab";
 import { AdminConciergeTab } from "./AdminConciergeTab";
-import { AdminUnmatchedBookingsTab } from "./AdminUnmatchedBookingsTab";
 // AdminPopupStats removed 2026-05-07 — feature retired. File kept for reference.
 import { RedirectsManager } from "./RedirectsManager";
 import { NotFoundManager } from "./NotFoundManager";
@@ -191,7 +190,6 @@ const tabGroups = [
     label: "Business",
     items: [
       { key: "bookings", label: "Bookings", icon: "calendar" },
-      { key: "unmatchedBookings", label: "Unmatched", icon: "search" },
       { key: "inquiries", label: "Inquiries", icon: "message" },
       { key: "matchRequests", label: "Match Requests", icon: "search" },
       { key: "concierge", label: "Concierge AI", icon: "sparkles" },
@@ -229,7 +227,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "unmatchedBookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -940,7 +938,6 @@ export function AdminDashboard({
           {activeTab === "clients" && clientsSection}
           {activeTab === "calendar" && <AdminCalendarTab />}
           {activeTab === "bookings" && bookingsSection}
-          {activeTab === "unmatchedBookings" && <AdminUnmatchedBookingsTab />}
           {activeTab === "inquiries" && inquiriesSection}
           {activeTab === "matchRequests" && matchRequestsSection}
           {activeTab === "concierge" && <AdminConciergeTab />}

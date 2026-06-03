@@ -199,6 +199,11 @@ export default async function AdminPage() {
     client_phone: string | null; client_email: string | null;
     photographer_phone: string | null; photographer_email: string | null;
     confirmed_at: string | null;
+    // Blind-booking fields. blind_booking=TRUE + photographer_name IS NULL =
+    // "Quick Booking authorised, waiting for admin assignment".
+    blind_booking: boolean | null;
+    auto_refund_at: string | null;
+    admin_notes: string | null;
     gift_card_id: string | null;
     gift_card_tier: "express" | "full" | null;
     // ── Attribution (admin-only) ──────────────────────────────
@@ -226,6 +231,7 @@ export default async function AdminPage() {
             (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,
             cu.phone as client_phone, cu.email as client_email,
             pu.phone as photographer_phone, pu.email as photographer_email,
+            b.blind_booking, b.auto_refund_at::text as auto_refund_at, b.admin_notes,
             b.gift_card_id,
             gc.tier::text as gift_card_tier,
             b.utm_source as booking_utm_source, b.utm_medium as booking_utm_medium,
@@ -238,8 +244,8 @@ export default async function AdminPage() {
             lens.match_count as concierge_match_count,
             lens.outcome as concierge_outcome
      FROM bookings b JOIN users cu ON cu.id = b.client_id
-     JOIN photographer_profiles pp ON pp.id = b.photographer_id
-     JOIN users pu ON pu.id = pp.user_id
+     LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
+     LEFT JOIN users pu ON pu.id = pp.user_id
      LEFT JOIN packages pk ON pk.id = b.package_id
      LEFT JOIN gift_cards gc ON gc.id = b.gift_card_id
      -- Earliest visitor session for this user — first-touch attribution.
@@ -271,6 +277,33 @@ export default async function AdminPage() {
      ) lens ON TRUE
      WHERE b.status != 'inquiry'
      ORDER BY b.created_at DESC LIMIT 200`
+  );
+
+  // Approved photographer roster — drives the assign-photographer
+  // dropdown on unmatched (blind) bookings inside AdminBookingsList.
+  const adminPhotographerRoster = await query<{
+    id: string;
+    user_id: string;
+    name: string;
+    slug: string;
+    plan: string;
+    last_seen_at: string | null;
+    locations: string[];
+  }>(
+    `SELECT pp.id, pp.user_id, u.name, pp.slug, pp.plan,
+            u.last_seen_at::text,
+            COALESCE(
+              (SELECT array_agg(location_slug ORDER BY location_slug)
+                 FROM photographer_locations
+                WHERE photographer_id = pp.id),
+              ARRAY[]::varchar[]
+            ) AS locations
+       FROM photographer_profiles pp
+       JOIN users u ON u.id = pp.user_id
+      WHERE pp.is_approved = TRUE
+        AND COALESCE(u.is_banned, FALSE) = FALSE
+        AND COALESCE(pp.is_test, FALSE) = FALSE
+      ORDER BY u.last_seen_at DESC NULLS LAST, u.name`
   );
 
   const inquiries = await query<{
@@ -442,7 +475,7 @@ export default async function AdminPage() {
   );
 
   const bookingsSection = (
-    <AdminBookingsList bookings={bookings} />
+    <AdminBookingsList bookings={bookings} photographerRoster={adminPhotographerRoster} />
   );
 
   const inquiriesSection = (
