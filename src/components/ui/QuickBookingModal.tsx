@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { LocationTreeSelect } from "@/components/ui/LocationTreeSelect";
 
@@ -136,16 +136,24 @@ function QuickBookingModalImpl({ onClose }: { onClose: () => void }) {
   const t = useTranslations("quickBooking");
   const locale = useLocale();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   // URL path takes priority over query param: a visitor on
   // /locations/madeira has clearly committed to Madeira, while a
   // photographers-page filter ?location=madeira is a softer signal.
+  // We read window.location.search at mount time (not useSearchParams)
+  // because PhotographerCatalog updates URL via window.history.replace
+  // State, which doesn't bubble up through useSearchParams.
   const detected = useMemo(() => {
     const fromPath = detectFromPath(pathname);
     if (fromPath.slug) return fromPath;
-    const fromQuery = searchParams.get("location");
-    return fromQuery ? { slug: fromQuery, occasion: fromPath.occasion } : fromPath;
-  }, [pathname, searchParams]);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("location");
+      // Catalog encodes multi-select as "a,b,c" — take the first slug.
+      const fromQuery = raw ? raw.split(",")[0]?.trim() : null;
+      if (fromQuery) return { slug: fromQuery, occasion: fromPath.occasion };
+    }
+    return fromPath;
+  }, [pathname]);
   const [region, setRegion] = useState<string>(detected.slug || "greater-lisbon");
   const [occasion, setOccasion] = useState<string>(normalizeOccasion(detected.occasion));
   const [duration, setDuration] = useState<60 | 120 | 180>(60);
