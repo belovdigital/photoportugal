@@ -6,6 +6,7 @@ import { locations, getLocationBySlug, getNearbyLocations, locationFaqs, locFiel
 import { localizeShootType } from "@/lib/shoot-type-labels";
 import { photoSpots, getSpotsWithMediaForCity } from "@/lib/photo-spots-data";
 import { CityMap, type CityMapPin } from "@/components/ui/CityMap";
+import { BlindBookingCTA } from "@/components/ui/BlindBookingCTA";
 import { getLocationServices, serviceDescription } from "@/lib/location-services-data";
 import { locationImage, unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 
@@ -823,6 +824,34 @@ export default async function LocationPage({
             </p>
             <div className="mt-6">
               <ScarcityBanner count={photographerCount} locationName={location.name} locale={locale} />
+            </div>
+            {/* Blind booking CTA — region-aware. Visitor arrived here
+                via SEO for a specific location; offering "we'll book
+                one for you in {location}" is a much sharper pitch than
+                generic "talk to concierge". */}
+            <div className="mt-6 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-amber-50 to-white p-4 sm:flex sm:items-center sm:justify-between sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-sm">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.847.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{t("blindBookingHeadlineLocation", { location: location.name })}</p>
+                  <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">{t("blindBookingSubline")}</p>
+                </div>
+              </div>
+              <BlindBookingCTA
+                message={`Book a photo session for me in ${location.name} — I want you to pick the photographer.`}
+                ctaName="blind_booking"
+                location={`location_${location.slug}`}
+                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700 sm:mt-0 sm:w-auto"
+              >
+                {t("blindBookingCtaLocation", { location: location.name })}
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </BlindBookingCTA>
             </div>
             {/* Switched from <PhotographerCard> to <PhotographerCardCompact>
                 so this page can render inline package CTAs (top 2 packages

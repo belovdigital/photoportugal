@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Link } from "@/i18n/navigation";
 import { TrackedCTALink } from "@/components/ui/TrackedCTALink";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
+import { BlindBookingCTA } from "@/components/ui/BlindBookingCTA";
 import { locations } from "@/lib/locations-data";
 import { resolveImageUrl } from "@/lib/image-url";
 import { PortfolioMosaic, type MosaicPhoto } from "@/components/ui/PortfolioMosaic";
@@ -729,6 +730,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               {t("cta.findMePhotographer")}
             </TrackedConciergeTrigger>
           </div>
+          <p className="mt-4 text-center text-sm text-white/70">
+            {t("cta.blindBookingSubline")}{" "}
+            <BlindBookingCTA
+              message="Book a photo session for me — I want you to pick the photographer."
+              ctaName="blind_booking"
+              location="homepage_footer_sublink"
+              className="underline decoration-amber-300 decoration-2 underline-offset-4 transition hover:text-amber-200"
+            >
+              {t("cta.blindBookingLink")}
+            </BlindBookingCTA>
+          </p>
         </div>
       </section>
     </>
