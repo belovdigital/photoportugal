@@ -175,12 +175,18 @@ export function ConciergeDrawerProvider({ children }: { children: React.ReactNod
   );
 }
 
-// Standalone trigger button (for use in Header)
-type ConciergeTriggerProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onClick" | "type">;
-export function ConciergeTrigger({ children, ...rest }: ConciergeTriggerProps) {
+// Standalone trigger button (for use in Header).
+// Allows a caller-provided onClick that runs BEFORE drawer toggle, so
+// analytics/tracking can fire without preventing the drawer from opening.
+type ConciergeTriggerProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type">;
+export function ConciergeTrigger({ children, onClick, ...rest }: ConciergeTriggerProps) {
   const { toggle } = useConciergeDrawer();
   return (
-    <button onClick={toggle} type="button" {...rest}>
+    <button
+      {...rest}
+      type="button"
+      onClick={(e) => { onClick?.(e); toggle(); }}
+    >
       {children}
     </button>
   );

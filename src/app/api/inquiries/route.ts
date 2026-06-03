@@ -33,10 +33,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 });
     }
 
-    // Check if there's already an inquiry/booking between these two
+    // Check if there's already a booking of ANY status between these two —
+    // conversation list is conversation-scoped (see /api/messages/
+    // conversations), so even cancelled/completed bookings should re-use
+    // their existing thread instead of spawning a parallel inquiry row.
+    // Previously this filter was `('inquiry','pending','confirmed')`,
+    // which silently created parallel inquiries after a shoot completed
+    // — confusing both sides.
     const existing = await queryOne<{ id: string }>(
       `SELECT b.id FROM bookings b
-       WHERE b.client_id = $1 AND b.photographer_id = $2 AND b.status IN ('inquiry', 'pending', 'confirmed')
+       WHERE b.client_id = $1 AND b.photographer_id = $2
        ORDER BY b.created_at DESC LIMIT 1`,
       [userId, photographer_id]
     );
@@ -55,16 +61,47 @@ export async function POST(req: NextRequest) {
       bookingId = booking!.id;
     }
 
-    // If existing conversation, just return booking_id (no duplicate greeting)
-    if (!isNewInquiry) {
-      return NextResponse.json({ booking_id: bookingId, existing: true });
-    }
-
-    // Send the message (only for new inquiries)
+    // Insert the typed message regardless of whether this is a new
+    // inquiry or a follow-up on an existing thread. Previously the
+    // existing-thread branch returned early here, silently dropping
+    // whatever the visitor typed — so they thought they had sent a
+    // message that never landed in chat.
     await queryOne(
       "INSERT INTO messages (booking_id, sender_id, text) VALUES ($1, $2, $3) RETURNING id",
       [bookingId, userId, message.trim()]
     );
+
+    // Concierge attribution: if this inquiry came from a concierge
+    // recommendation, stamp message_started_at on the matching rec event
+    // AND backfill bookings.concierge_chat_id so the Stripe webhook can
+    // later hop straight to the chat without re-running this join.
+    // Fire-and-forget — telemetry must never block the inquiry path.
+    const userIdForAttribution = userId;
+    const photographerIdForAttribution = photographer_id;
+    const bookingIdForAttribution = bookingId;
+    void (async () => {
+      try {
+        const recent = await queryOne<{ id: string }>(
+          `SELECT cc.id FROM concierge_chats cc
+             JOIN concierge_recommendation_events r ON r.chat_id = cc.id
+            WHERE cc.user_id = $1
+              AND r.photographer_id = $2
+              AND r.shown_at >= NOW() - INTERVAL '14 days'
+            ORDER BY r.shown_at DESC LIMIT 1`,
+          [userIdForAttribution, photographerIdForAttribution]
+        );
+        if (recent?.id) {
+          const { markMessageStarted } = await import("@/lib/concierge/recommendation-events");
+          await markMessageStarted(recent.id, photographerIdForAttribution);
+          await queryOne(
+            "UPDATE bookings SET concierge_chat_id = COALESCE(concierge_chat_id, $1) WHERE id = $2 RETURNING id",
+            [recent.id, bookingIdForAttribution]
+          ).catch(() => null);
+        }
+      } catch (err) {
+        console.error("[inquiries] concierge attribution failed:", err);
+      }
+    })();
 
     // Get sender and recipient info
     const sender = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);

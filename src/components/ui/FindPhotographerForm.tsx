@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -55,6 +55,13 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
   const tb = useTranslations("book");
   type BookTranslationKey = Parameters<typeof tb>[0];
   const searchParams = useSearchParams();
+  // SSR-safe current URL — render-time `window.location.href` falls back to
+  // the static "/find-photographer" on the server, which strips form-state
+  // query params (location, shoot type, date). After auth the user lands on
+  // a bare page instead of the filtered view they were on.
+  const pathname = usePathname();
+  const searchString = searchParams.toString();
+  const currentUrl = searchString ? `${pathname}?${searchString}` : pathname;
 
   const [firstName, setFirstName] = useState(defaultName.split(" ")[0] || "");
   const [lastName, setLastName] = useState(defaultName.split(" ").slice(1).join(" ") || "");
@@ -167,7 +174,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
       open={showAuthModal}
       onClose={() => { setShowAuthModal(false); pendingSubmit.current = false; }}
       onSuccess={() => {}}
-      callbackUrl={typeof window !== "undefined" ? window.location.href : "/find-photographer"}
+      callbackUrl={currentUrl}
       title={t("signInToSubmit")}
       subtitle={t("signInToSubmitDesc")}
       prefillFirstName={firstName}

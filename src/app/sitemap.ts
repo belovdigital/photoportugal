@@ -16,7 +16,12 @@ const HREFLANGS: Record<(typeof LOCALES)[number], string[]> = {
   es: ["es-ES"],
   fr: ["fr-FR"],
 };
-const CONTENT_LAST_MODIFIED = new Date("2026-05-03T00:00:00.000Z");
+// Default lastModified for static SEO pages whose source is hand-edited
+// (homepage, about, how-it-works, for-photographers/*). Bump this when
+// you do a meaningful content refresh; Google uses it to decide whether
+// to recrawl. For dynamic content (photographers, blog posts, locations)
+// we override below from the actual DB updated_at timestamps.
+const STATIC_CONTENT_LAST_MODIFIED = new Date("2026-05-13T00:00:00.000Z");
 
 function urlFor(path: string, locale: string): string {
   const safeLocale = LOCALES.includes(locale as (typeof LOCALES)[number])
@@ -40,7 +45,31 @@ function localized(path: string, opts: Omit<MetadataRoute.Sitemap[0], "url">): M
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const contentLastModified = CONTENT_LAST_MODIFIED;
+  // Freshness signal for catalog-style pages (locations/photoshoots/photographers
+  // index) — they're derived from the photographers table. Whenever a
+  // photographer updates their profile, the catalog they appear on is
+  // effectively updated too. We use the latest profile update as the
+  // sitemap lastModified so Google picks up real freshness, not the
+  // hardcoded constant.
+  let catalogLastModified = STATIC_CONTENT_LAST_MODIFIED;
+  try {
+    const r = await query<{ ts: string }>(
+      "SELECT MAX(updated_at)::text AS ts FROM photographer_profiles WHERE is_approved = TRUE"
+    );
+    if (r[0]?.ts) catalogLastModified = new Date(r[0].ts);
+  } catch {}
+
+  // Same idea for /blog/category/X — latest post date among posts in
+  // that category. Fallback to static.
+  let blogLastModified = STATIC_CONTENT_LAST_MODIFIED;
+  try {
+    const r = await query<{ ts: string }>(
+      "SELECT MAX(updated_at)::text AS ts FROM blog_posts WHERE is_published = TRUE"
+    );
+    if (r[0]?.ts) blogLastModified = new Date(r[0].ts);
+  } catch {}
+
+  const contentLastModified = STATIC_CONTENT_LAST_MODIFIED;
 
   const staticPages = [
     { path: "", changeFrequency: "weekly" as const, priority: 1 },
@@ -55,28 +84,79 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/for-photographers/join", changeFrequency: "daily" as const, priority: 0.9 },
     { path: "/photoshoots", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/blog", changeFrequency: "weekly" as const, priority: 0.8 },
-    { path: "/find-photographer", changeFrequency: "weekly" as const, priority: 0.8 },
+    { path: "/concierge", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/contact", changeFrequency: "monthly" as const, priority: 0.4 },
     { path: "/support", changeFrequency: "monthly" as const, priority: 0.5 },
+    { path: "/gift-cards", changeFrequency: "monthly" as const, priority: 0.7 },
   ].flatMap((p) => localized(p.path, { lastModified: contentLastModified, changeFrequency: p.changeFrequency, priority: p.priority }));
 
   const locationPages = locations.flatMap((loc) =>
-    localized(`/locations/${loc.slug}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.9 })
+    localized(`/locations/${loc.slug}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.9 })
   );
 
-  // Occasion sub-pages — public location pages × 7 occasions.
-  // These are the primary paid-ad sitelink targets, so priority is high
-  // (matches /locations/[slug]) and changefreq is weekly to reflect the
-  // dynamic photographer/portfolio pulls that refresh on every render.
-  const occasions = ["proposal", "honeymoon", "couples", "family", "solo", "engagement", "elopement"];
+  // Occasion sub-pages — public location × occasion cross-product, but only
+  // for pairs that ACTUALLY have at least one approved photographer covering
+  // that location AND offering that shoot type. Prevents thin-content pages
+  // (a /locations/coimbra/kids-birthday page with zero photographers offers
+  // nothing to Google and looks like doorway content). Auto-updates: as
+  // soon as a photographer adds the shoot type to a covered location, the
+  // sitemap (revalidate=3600s) picks the new pair up.
+  //
+  // Keep `occasions` aligned with the OCCASIONS map in
+  // /locations/[slug]/[occasion]/page.tsx. Each slug also needs a
+  // matching entry in shootTypes so we can resolve its photographer-side
+  // label set (Solo → ["Solo Travel","Solo Portrait"], Birthday → ["Birthday"]).
+  const occasions = [
+    "proposal", "honeymoon", "couples", "family", "solo",
+    "engagement", "elopement", "kids-birthday", "studio-portrait",
+  ];
+  // Resolve each occasion slug → the labels photographers store in
+  // photographer_profiles.shoot_types[]. Default is [name] when not overridden.
+  const occasionLabelsBySlug = new Map<string, string[]>();
+  for (const occ of occasions) {
+    const st = shootTypes.find((s) => s.slug === occ);
+    if (st) occasionLabelsBySlug.set(occ, st.photographerShootTypeNames || [st.name]);
+  }
+  // One query, one pass — get every (location, occasion) pair that has
+  // approved coverage. Cheap and avoids the dumb 33×9 cartesian.
+  let coveredPairs: Set<string> = new Set();
+  try {
+    const allLabels = Array.from(new Set(Array.from(occasionLabelsBySlug.values()).flat()));
+    if (allLabels.length > 0) {
+      const rows = await query<{ location_slug: string; shoot_label: string }>(
+        `SELECT DISTINCT pl.location_slug, label AS shoot_label
+           FROM photographer_profiles pp
+           JOIN photographer_locations pl ON pl.photographer_id = pp.id
+           JOIN users u ON u.id = pp.user_id,
+                LATERAL UNNEST(pp.shoot_types) AS label
+          WHERE pp.is_approved = TRUE
+            AND COALESCE(u.is_banned, FALSE) = FALSE
+            AND label = ANY($1::text[])`,
+        [allLabels]
+      );
+      for (const r of rows) {
+        for (const [slug, labels] of occasionLabelsBySlug) {
+          if (labels.includes(r.shoot_label)) {
+            coveredPairs.add(`${r.location_slug}|${slug}`);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[sitemap] Failed to resolve occasion coverage, falling back to full cartesian:", err);
+    // Fallback: emit the full cartesian rather than skipping the section.
+    for (const loc of locations) for (const occ of occasions) coveredPairs.add(`${loc.slug}|${occ}`);
+  }
   const occasionPages = locations.flatMap((loc) =>
-    occasions.flatMap((occ) =>
-      localized(`/locations/${loc.slug}/${occ}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.85 })
-    )
+    occasions
+      .filter((occ) => coveredPairs.has(`${loc.slug}|${occ}`))
+      .flatMap((occ) =>
+        localized(`/locations/${loc.slug}/${occ}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.85 })
+      )
   );
 
   const shootTypePages = shootTypes.flatMap((type) =>
-    localized(`/photoshoots/${type.slug}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.8 })
+    localized(`/photoshoots/${type.slug}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.8 })
   );
 
   // Spot pages: /spots/[city]/[spot]
@@ -102,6 +182,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] Failed to load photographer pages:", err);
   }
 
+  // Per-package landing pages — high SEO value (long-tail
+  // "{package name} {photographer} {city}" queries). Only public
+  // packages from approved photographers, with a slug.
+  let packagePages: MetadataRoute.Sitemap = [];
+  try {
+    const dbPackages = await query<{ photographer_slug: string; package_slug: string; updated_at: string }>(
+      `SELECT pp.slug as photographer_slug, pk.slug as package_slug, pp.updated_at
+       FROM packages pk
+       JOIN photographer_profiles pp ON pp.id = pk.photographer_id
+       WHERE pk.is_public = TRUE AND pk.custom_for_user_id IS NULL AND pk.slug IS NOT NULL
+         AND pp.is_approved = TRUE`
+    );
+    packagePages = dbPackages.flatMap((p) =>
+      localized(`/photographers/${p.photographer_slug}/${p.package_slug}`, {
+        lastModified: p.updated_at ? new Date(p.updated_at) : STATIC_CONTENT_LAST_MODIFIED,
+        changeFrequency: "weekly",
+        priority: 0.7,
+      })
+    );
+  } catch (err) {
+    console.error("[sitemap] Failed to load package pages:", err);
+  }
+
   let blogPages: MetadataRoute.Sitemap = [];
   try {
     const blogPosts = await query<{ slug: string; published_at: string; locale: string | null }>(
@@ -124,7 +227,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // /photographers/location/[slug] — clean URL filtered catalogs
   const photographerLocationPages = locations.flatMap((loc) =>
-    localized(`/photographers/location/${loc.slug}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.85 })
+    localized(`/photographers/location/${loc.slug}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.85 })
   );
 
   const blogCategories = [
@@ -132,8 +235,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "family", "planning", "proposals", "solo", "comparisons",
   ];
   const blogCategoryPages = blogCategories.flatMap((cat) =>
-    localized(`/blog/category/${cat}`, { lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.7 })
+    localized(`/blog/category/${cat}`, { lastModified: blogLastModified, changeFrequency: "weekly", priority: 0.7 })
   );
 
-  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...spotPages, ...photographerLocationPages, ...photographerPages, ...blogPages, ...blogCategoryPages];
+  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...spotPages, ...photographerLocationPages, ...photographerPages, ...packagePages, ...blogPages, ...blogCategoryPages];
 }

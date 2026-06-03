@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
 import { ConciergeQuickStart } from "@/components/concierge/ConciergeQuickStart";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
 import { getHomepageReviews } from "@/lib/reviews-data";
@@ -382,12 +383,13 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
             {tt.finalCtaSub}
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/find-photographer"
+            <TrackedConciergeTrigger
+              ctaName="get_matched"
+              location="photoshoots_index_cta"
               className="inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white transition hover:bg-primary-700"
             >
               {tt.findCta}
-            </Link>
+            </TrackedConciergeTrigger>
             <Link
               href="/photographers"
               className="inline-flex rounded-xl border border-gray-700 bg-gray-800 px-8 py-4 text-base font-semibold text-white transition hover:bg-gray-700"

@@ -44,6 +44,7 @@
     "mostPopular": "Más popular",
     "reviews": "reseñas",
     "review": "reseña",
+    "newOnPhotoPortugal": "Nuevo en Photo Portugal",
     "photos": "fotos",
     "min": "min",
     "perMonth": "/mes",
@@ -122,6 +123,7 @@
     "allTypes": "Todos los tipos →",
     "photographers": "Fotógrafos",
     "ourPhotographers": "Nuestros fotógrafos",
+    "giftCards": "Tarjetas regalo",
     "explore": "Explorar",
     "megaForTravelers": "Para viajeros",
     "megaForPhotographers": "Para fotógrafos",
@@ -164,7 +166,7 @@
     "accountMenu": "Menú de la cuenta",
     "closeMenu": "Cerrar menú",
     "openMenu": "Abrir menú",
-    "getMatched": "Encuentre su fotógrafo — gratis",
+    "getMatched": "Encontrar match",
     "contactUs": "Contáctenos",
     "shootTypes": {
       "couples": "Parejas",
@@ -207,6 +209,9 @@
     "shootTypes": "Tipos de sesión",
     "viewAllShootTypes": "Ver todos los tipos",
     "popularSearches": "Búsquedas populares",
+    "partners": "Socios de confianza",
+    "partnerBikeTagline": "Rutas en bicicleta de varios días por Portugal",
+    "partnerWalkingTagline": "Senderismo y rutas a pie por Portugal",
     "inWord": "en",
     "photographersIn": "Fotógrafos en {location}",
     "viewAllLocations": "Ver los {count} lugares",
@@ -233,6 +238,60 @@
     "soon": "Pronto",
     "appStoreAlt": "Descargar en App Store",
     "googlePlayAlt": "Disponible en Google Play"
+  },
+  "giftCardsPage": {
+    "h1": "Regala una sesión Photo Portugal",
+    "subtitle": "Regala una sesión fotográfica en Portugal. El destinatario elige el fotógrafo, la fecha y el lugar — tu regalo lo cubre todo.",
+    "chooseTier": "Elige un nivel",
+    "mostPopular": "Más popular",
+    "tierExpress": "Express",
+    "tierExpressDuration": "1 hora",
+    "tierExpressPhotos": "30 fotos editadas",
+    "tierFull": "Completa",
+    "tierFullDuration": "2 horas",
+    "tierFullPhotos": "60 fotos editadas",
+    "perkLocations1": "1 ubicación",
+    "perkLocations2": "2 ubicaciones",
+    "perkDelivery": "Entrega en 7 días",
+    "perkOutfitChange": "Incluye un cambio de look",
+    "perkRecipientPicks": "El destinatario elige cualquier fotógrafo participante",
+    "perkValid": "Válida 12 meses desde la compra",
+    "recipientHeading": "Datos del destinatario",
+    "recipientName": "Nombre",
+    "recipientNamePlaceholder": "Maria Silva",
+    "recipientEmail": "Email",
+    "recipientPhone": "Teléfono (opcional, para SMS)",
+    "recipientPhonePlaceholder": "+351 912 345 678",
+    "recipientPhoneHint": "Enviaremos un SMS breve para que no se pierda el email.",
+    "personalMessage": "Mensaje personal (opcional)",
+    "personalMessagePlaceholder": "¡Feliz cumpleaños! Disfruta de la sesión en Lisboa ✨",
+    "buyerHeading": "Tus datos",
+    "buyerName": "Tu nombre (aparece en la tarjeta)",
+    "buyerNamePlaceholder": "Alex",
+    "buyerEmail": "Tu email (recibo)",
+    "buyerEmailPlaceholder": "tu@ejemplo.com",
+    "submit": "Pagar €{price} →",
+    "submitting": "Redirigiendo al pago…",
+    "secureNote": "Pago seguro con Stripe. El destinatario solo se notifica tras el pago confirmado.",
+    "errRecipientName": "El nombre del destinatario es obligatorio",
+    "errRecipientEmail": "Se requiere un email válido del destinatario",
+    "errBuyerName": "Tu nombre es obligatorio",
+    "errBuyerEmail": "Tu email es obligatorio",
+    "errCheckout": "No se pudo iniciar el pago",
+    "errNetwork": "Error de red — inténtalo de nuevo",
+    "howItWorks": "Cómo funciona",
+    "step1": "Elige un nivel e introduce los datos del destinatario — nombre, email y opcionalmente teléfono para SMS.",
+    "step2": "Paga con tarjeta, Apple Pay o Google Pay vía Stripe.",
+    "step3": "El destinatario recibe un email bonito (y SMS si añadiste su número) con un enlace mágico para canjear la tarjeta.",
+    "step4": "Explora nuestros fotógrafos en cualquier ciudad, elige al que más le guste y reserva — totalmente cubierto por tu regalo.",
+    "fineprint": "Las tarjetas son válidas durante 12 meses desde la compra. Después caducan. Si un fotógrafo cancela tras la reserva del destinatario, la tarjeta se restaura automáticamente con +30 días adicionales.",
+    "successProcessing": "Casi listo…",
+    "successDelivered": "¡Tarjeta regalo entregada!",
+    "successProcessingBody": "Estamos procesando tu pago. En cuanto se confirme, {recipientName} recibirá un email en {recipientEmail} con el regalo de {buyerName}.",
+    "successDeliveredBody": "{recipientName} ha recibido un email en {recipientEmail} con el regalo de {buyerName}. Puede canjearlo en cualquier momento durante los próximos 12 meses.",
+    "successGenericBody": "Tu tarjeta regalo está en camino. El destinatario recibirá un email en breve.",
+    "successBackHome": "Volver al inicio",
+    "successSendAnother": "Enviar otra tarjeta regalo"
   },
   "home": {
     "trustBadge": "Confianza de {count}+ viajeros satisfechos",
@@ -322,6 +381,17 @@
       "browsePhotographers": "Explorar fotógrafos",
       "findMePhotographer": "Ayúdenme a elegir",
       "joinAsPhotographer": "Unirse como fotógrafo"
+    },
+    "giftPromo": {
+      "badge": "Regala la experiencia",
+      "title": "Regala una sesión de fotos en Portugal",
+      "subtitle": "Sorprende a alguien con una sesión profesional — eligen fotógrafo, fecha y lugar. Válido durante 12 meses.",
+      "cta": "Ver tarjetas regalo",
+      "tierExpress": "Express €290",
+      "tierFull": "Completa €490",
+      "perk1": "Válido durante 12 meses",
+      "perk2": "El destinatario elige al fotógrafo",
+      "perk3": "Entregado al instante por email"
     }
   },
   "heroSearch": {
@@ -433,11 +503,31 @@
       "messagePlaceholderNamed": "Cuéntale a {name} lo que tienes en mente — lugares especiales, estilo, cualquier detalle que deba saber…",
       "submit": "Enviar solicitud",
       "submitting": "Enviando...",
+      "payAndBook": "Pagar y reservar",
+      "proposalHint": "El fotógrafo ya aprobó este paquete — el pago confirma la reserva.",
       "paymentNote": "El pago se procesa de forma segura después de que el fotógrafo confirme su reserva.",
       "exactGroupSize": "Tamaño exacto del grupo",
       "exactGroupSizeHint": "Para 9+ personas, introduzca el número real para que el fotógrafo pueda planificar y calcular el precio correctamente.",
       "enterExactGroupSize": "Introduzca el tamaño exacto del grupo para grupos grandes.",
-      "timeUnavailableHint": "Ese horario está bloqueado por el calendario del fotógrafo o por otra reserva."
+      "timeUnavailableHint": "Ese horario está bloqueado por el calendario del fotógrafo o por otra reserva.",
+      "morePackages": "Más paquetes ({count})",
+      "hideOtherPackages": "Ocultar otros paquetes",
+      "phone": "Número de teléfono",
+      "phoneHint": "Solo lo usamos para contactarte sobre esta reserva — nunca se comparte.",
+      "phoneRequired": "Introduce un número de teléfono válido",
+      "giftToggle": "Esta reserva es un regalo",
+      "giftToggleHint": "Sorprenda a alguien con una sesión. Usted paga, la persona se presenta.",
+      "giftRecipientName": "Nombre del destinatario",
+      "giftRecipientEmail": "Email del destinatario",
+      "giftRecipientPhone": "WhatsApp del destinatario",
+      "giftRecipientPhoneHint": "Usado por el fotógrafo solo para coordinación el día — oculto hasta la fecha de revelación.",
+      "giftRevealWhen": "¿Cuándo se lo decimos?",
+      "giftRevealNow": "Enviar ahora una tarjeta de regalo",
+      "giftRevealBefore": "Sorpresa — avisar",
+      "giftRevealDaysBefore": "días antes de la sesión",
+      "giftRecipientNameRequired": "El nombre del destinatario es obligatorio",
+      "giftRecipientEmailRequired": "Se requiere un email válido del destinatario",
+      "giftRecipientPhoneRequired": "El número de WhatsApp del destinatario es obligatorio"
     },
     "time": {
       "flexible": "Soy flexible",
@@ -475,7 +565,8 @@
     "summary": {
       "serviceFee": "Tarifa de servicio ({rate}%)",
       "total": "Total",
-      "pickPackagePrompt": "Elija un paquete arriba para ver el total."
+      "pickPackagePrompt": "Elija un paquete arriba para ver el total.",
+      "largeGroupSurcharge": "Recargo grupo grande ({rate}%)"
     },
     "socialProof": {
       "recentBookings": "{count, plural, one {# persona ha reservado a {name} en los últimos 30 días} other {# personas han reservado a {name} en los últimos 30 días}}"
@@ -667,14 +758,36 @@
       "inputLabel": "Cuéntale a Lens sobre tu sesión",
       "send": "Preguntar",
       "homepagePlaceholder": "p. ej. sesión de pareja en Sintra el próximo sábado",
-      "homepageChips": ["Pareja en Lisboa", "Pedida 💍", "Familia en el Algarve", "Ayúdame a elegir"],
+      "homepageChips": [
+        "Pareja en Lisboa",
+        "Pedida 💍",
+        "Familia en el Algarve",
+        "Ayúdame a elegir"
+      ],
       "locationPlaceholder": "p. ej. sesión de pareja en {location} el próximo sábado",
-      "locationChips": ["Pareja", "Familia", "Pedida 💍", "Ayúdame a elegir"],
+      "locationChips": [
+        "Pareja",
+        "Familia",
+        "Pedida 💍",
+        "Ayúdame a elegir"
+      ],
       "occasionPlaceholder": "p. ej. {occasion} en Lisboa el próximo mes",
-      "occasionChips": ["Lisboa", "Algarve", "Sintra", "Ayúdame a elegir"],
+      "occasionChips": [
+        "Lisboa",
+        "Algarve",
+        "Sintra",
+        "Ayúdame a elegir"
+      ],
       "comboPlaceholder": "p. ej. {occasion} en {location}, finales de junio, atardecer",
-      "comboChips": ["En un mes", "En 2–3 meses", "Más adelante este año", "Mostrar fotógrafos"]
-    }
+      "comboChips": [
+        "En un mes",
+        "En 2–3 meses",
+        "Más adelante este año",
+        "Mostrar fotógrafos"
+      ]
+    },
+    "handoffPromptPhone": "Comparte tu WhatsApp o email y el equipo te responderá en unas horas.",
+    "handoffContactPlaceholder": "WhatsApp o email"
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Portugal",
@@ -1084,6 +1197,10 @@
       "interested": "¿Interesado?",
       "sendMessageAvailability": "Envíe un mensaje para hablar de disponibilidad y reservar su sesión.",
       "sendMessagePricing": "Envíe un mensaje para hablar de paquetes, precios y disponibilidad.",
+      "requestCustomPackage": "¿Necesita algo diferente?",
+      "requestCustomPackageBlurb": "Pida un paquete personalizado — otra duración, más lugares, una ocasión específica. La mayoría de los fotógrafos pueden montar algo a su medida.",
+      "requestCustomPackageCta": "Enviar mensaje",
+      "requestCustomPackageOpenChat": "Abrir el chat",
       "perHour": "/hora",
       "portfolio": "Portafolio",
       "coverageWide": "Cubre toda la región de {region}",
@@ -1104,7 +1221,8 @@
       "hideDetails": "Ocultar detalles",
       "viewDetails": "Ver detalles",
       "bookThisPackage": "Reservar este paquete",
-      "fullyBookedUntil": "Completo hasta el {date}"
+      "fullyBookedUntil": "Completo hasta el {date}",
+      "viewFullDetails": "Detalles completos →"
     },
     "portfolioGallery": {
       "title": "Portafolio",
@@ -1161,7 +1279,7 @@
       "chooseYourPhotographerHeading": "Elija su fotógrafo",
       "chooseYourPhotographerSub": "O elija usted mismo — todos los fotógrafos de {location} debajo están disponibles, con sus paquetes y valoraciones.",
       "packagesHeading": "Paquetes fotográficos en {location}",
-      "packagesSub": "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Se añade una tarifa de servicio del 10% al pagar.",
+      "packagesSub": "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Se añade una tarifa de servicio del 12,5% al pagar.",
       "packagePopular": "Popular",
       "packageMinutesAbbr": "min",
       "packagePhotos": "fotos",
@@ -1253,17 +1371,18 @@
   "heroSingle": {
     "coverAlt": "{name} — fotógrafo en {location}",
     "availableChip": "Disponible esta semana en {location}",
+    "siteAvailableChip": "{count, plural, =1 {# fotógrafo disponible} other {# fotógrafos disponibles}} para reservar en todo Portugal",
     "headline": "Conozca a <name>{firstName}</name>,<br></br> su fotógrafo en {location}",
     "viewProfile": "Ver perfil",
-    "reviewsCount": "({count} reseñas)",
+    "reviewsCount": "({count, plural, =1 {# reseña} other {# reseñas}})",
     "shootsCompleted": "<strong>{count}</strong> sesiones realizadas",
     "matchPrompt": "¿Quiere a {firstName} u otra persona? Le ponemos en contacto",
     "browseAll": "O <link>explore los {count} fotógrafos</link> en todo Portugal",
     "location": {
-      "availableChip": "Solo {count} fotógrafos disponibles en {location} — aceptando reservas ahora",
+      "availableChip": "{count, plural, =1 {# fotógrafo disponible} other {# fotógrafos disponibles}} en {location}",
       "headline": "Reserve una sesión fotográfica<br></br> en <location>{locationName}</location>",
       "fromPrice": "Desde €{price}",
-      "reviews": "{count} reseñas",
+      "reviews": "{count, plural, =1 {# reseña} other {# reseñas}}",
       "byPhotographer": "Con {name}",
       "matchPrompt": "Match con fotógrafo por IA — al instante"
     }
@@ -1377,7 +1496,8 @@
     "description": "Lo sentimos, no hemos encontrado la página que busca. Puede que se haya movido o no exista.",
     "goHome": "Ir al inicio",
     "browsePhotographers": "Explorar fotógrafos",
-    "exploreLocations": "Explorar lugares"
+    "exploreLocations": "Explorar lugares",
+    "didYouMean": "¿Quiso decir?"
   },
   "error": {
     "code": "500",
@@ -1502,7 +1622,7 @@
     "questions": {
       "howDoesItWork": {
         "question": "¿Cómo funciona Photo Portugal?",
-        "answer": "Tiene dos formas de reservar: <a href=\"/photographers\">explorar fotógrafos usted mismo</a> — vea portafolios, lea reseñas verificadas y reserve directamente. O use nuestro <a href=\"/find-photographer\">servicio de matching gratuito</a> — indíquenos sus preferencias y seleccionaremos 2-3 fotógrafos para usted. En ambos casos, los pagos son seguros y sus fotos se entregan en una galería privada. Más información en nuestra página <a href=\"/how-it-works\">Cómo funciona</a>."
+        "answer": "Tiene dos formas de reservar: <a href=\"/photographers\">explorar fotógrafos usted mismo</a> — vea portafolios, lea reseñas verificadas y reserve directamente. O use nuestro <a href=\"/concierge\">servicio de matching gratuito</a> — indíquenos sus preferencias y seleccionaremos 2-3 fotógrafos para usted. En ambos casos, los pagos son seguros y sus fotos se entregan en una galería privada. Más información en nuestra página <a href=\"/how-it-works\">Cómo funciona</a>."
       },
       "cost": {
         "question": "¿Cuánto cuesta una sesión de fotos?",
@@ -1510,11 +1630,11 @@
       },
       "howToBook": {
         "question": "¿Cómo reservo un fotógrafo?",
-        "answer": "Puede <a href=\"/photographers\">explorar fotógrafos usted mismo</a> — elija el que le guste, seleccione un paquete, fecha y hora, y envíe una solicitud de reserva. O use nuestro <a href=\"/find-photographer\">matching gratuito</a> — indique sus preferencias y le enviaremos 2-3 opciones seleccionadas a mano. En ambos casos, el fotógrafo confirma en 24 horas y su pago queda retenido de forma segura hasta la entrega."
+        "answer": "Puede <a href=\"/photographers\">explorar fotógrafos usted mismo</a> — elija el que le guste, seleccione un paquete, fecha y hora, y envíe una solicitud de reserva. O use nuestro <a href=\"/concierge\">matching gratuito</a> — indique sus preferencias y le enviaremos 2-3 opciones seleccionadas a mano. En ambos casos, el fotógrafo confirma en 24 horas y su pago queda retenido de forma segura hasta la entrega."
       },
       "conciergeMatching": {
         "question": "¿Y si no sé qué fotógrafo elegir?",
-        "answer": "Use nuestro <a href=\"/find-photographer\">servicio de matching gratuito</a>. Indique su lugar, fechas, tamaño del grupo y presupuesto — nuestro equipo hablará con los fotógrafos, comprobará disponibilidad y le enviará 2-3 opciones seleccionadas a mano perfectas para su sesión. Simplemente elige su favorito y reserva. Es totalmente gratis y sin compromiso."
+        "answer": "Use nuestro <a href=\"/concierge\">servicio de matching gratuito</a>. Indique su lugar, fechas, tamaño del grupo y presupuesto — nuestro equipo hablará con los fotógrafos, comprobará disponibilidad y le enviará 2-3 opciones seleccionadas a mano perfectas para su sesión. Simplemente elige su favorito y reserva. Es totalmente gratis y sin compromiso."
       },
       "paymentSecure": {
         "question": "¿Cómo funciona el pago? ¿Es seguro?",
@@ -1566,7 +1686,7 @@
       },
       "photographerPlans": {
         "question": "¿Cuáles son los planes para fotógrafos?",
-        "answer": "Ofrecemos tres planes: Free (20% de comisión, 1 lugar), Pro a 29 €/mes (15% de comisión, 5 lugares) y Premium a 59 €/mes (10% de comisión, todos los lugares, URL personalizada, soporte prioritario). Todos los planes incluyen hasta 100 fotos de portafolio. Visite nuestra <a href=\"/for-photographers/pricing\">página de precios</a> para una comparación completa."
+        "answer": "Ofrecemos tres planes: Free (20% de comisión, 1 lugar), Pro a 29 €/mes (15% de comisión, 5 lugares) y Premium a 59 €/mes (10% de comisión, todos los lugares, URL personalizada, soporte prioritario). Todos los planes incluyen hasta 500 fotos de portafolio. Visite nuestra <a href=\"/for-photographers/pricing\">página de precios</a> para una comparación completa."
       },
       "earlyBird": {
         "question": "¿Qué es el programa Early Bird?",
@@ -1606,7 +1726,7 @@
         "name": "Free",
         "description": "Empiece y pruebe la plataforma",
         "features": {
-          "portfolioPhotos": "Hasta 100 fotos de portafolio",
+          "portfolioPhotos": "Hasta 500 fotos de portafolio",
           "locations": "1 lugar",
           "searchVisibility": "Visibilidad de búsqueda básica",
           "commission": "Comisión de plataforma del {rate}%",
@@ -1618,7 +1738,7 @@
         "name": "Pro",
         "description": "Para fotógrafos listos para hacer crecer su negocio",
         "features": {
-          "portfolioPhotos": "Hasta 100 fotos de portafolio",
+          "portfolioPhotos": "Hasta 500 fotos de portafolio",
           "locations": "5 lugares",
           "searchRanking": "Posicionamiento prioritario",
           "analytics": "Análisis de perfil",
@@ -1631,7 +1751,7 @@
         "name": "Premium",
         "description": "Visibilidad máxima y comisión más baja",
         "features": {
-          "portfolioPhotos": "Hasta 100 fotos de portafolio",
+          "portfolioPhotos": "Hasta 500 fotos de portafolio",
           "locations": "Todos los lugares",
           "searchRanking": "Primer puesto",
           "analytics": "Panel de análisis completo",
@@ -1970,7 +2090,7 @@
   },
   "privacy": {
     "title": "Política de privacidad",
-    "lastUpdated": "Última actualización: 19 de marzo de 2026",
+    "lastUpdated": "Última actualización: 13 de mayo de 2026",
     "metaDescription": "Política de privacidad de Photo Portugal — cómo recopilamos, usamos y protegemos sus datos personales.",
     "sections": {
       "informationWeCollect": {
@@ -2020,8 +2140,9 @@
         "processors": {
           "stripe": "<strong>Stripe</strong> — procesamiento de pagos. Stripe recibe sus datos de facturación para procesar transacciones de forma segura.",
           "google": "<strong>Google</strong> — autenticación OAuth e inicio de sesión. Google recibe su token de autenticación al iniciar sesión con Google.",
-          "digitalocean": "<strong>DigitalOcean</strong> — hosting cloud e infraestructura. Sus datos se almacenan en servidores de DigitalOcean.",
-          "twilio": "<strong>Twilio</strong> — notificaciones SMS para actualizaciones de reserva y verificación. Su número se comparte con Twilio cuando las notificaciones SMS están activadas."
+          "twilio": "<strong>Twilio</strong> — notificaciones SMS para actualizaciones de reserva y verificación. Su número se comparte con Twilio cuando las notificaciones SMS están activadas.",
+          "hetzner": "<strong>Hetzner Online GmbH</strong> — hosting cloud e infraestructura (con sede en la UE). Sus datos se almacenan en servidores Hetzner en Alemania.",
+          "cloudflare": "<strong>Cloudflare, Inc.</strong> — red de distribución de contenido (CDN) y almacenamiento de objetos (R2) para fotos del portafolio, entregas de galería y avatares."
         },
         "legalRequirements": "<strong>Requisitos legales:</strong> si lo requiere la ley, regulación, proceso legal o solicitud gubernamental ejecutable, o para proteger los derechos, propiedad o seguridad de Photo Portugal, nuestros usuarios o el público."
       },
@@ -2116,7 +2237,7 @@
   },
   "terms": {
     "title": "Términos de servicio",
-    "lastUpdated": "Última actualización: 31 de marzo de 2026",
+    "lastUpdated": "Última actualización: 13 de mayo de 2026",
     "metaDescription": "Términos de servicio de Photo Portugal — reservas, pagos, cancelaciones, reembolsos y reglas de la plataforma.",
     "sections": {
       "overview": {
@@ -2322,7 +2443,9 @@
       "upload_delivery": {
         "title": "Subir entrega para {name}",
         "subtitle": "Sesión completa — entregue las fotos"
-      }
+      },
+      "dismiss": "Descartar",
+      "dismissTitle": "Descartar — reaparece si hay nueva actividad"
     },
     "revisions": {
       "title": "Revisiones de perfil requeridas",
@@ -2363,12 +2486,14 @@
     "activeSubscription": "Suscripción activa",
     "upgrade": "Mejorar",
     "sidebarOverview": "Visión general",
+    "sidebarGettingStarted": "Empezar aquí",
     "sidebarBookings": "Reservas",
     "sidebarMatchRequests": "Mis matches",
     "sidebarMessages": "Mensajes",
     "sidebarProfile": "Perfil",
     "sidebarPortfolio": "Portafolio",
     "sidebarPackages": "Paquetes",
+    "sidebarGiftCards": "Tarjetas regalo",
     "sidebarAvailability": "Disponibilidad",
     "sidebarCalendarSync": "Sincronización calendario",
     "sidebarSubscriptions": "Suscripciones",
@@ -2588,6 +2713,10 @@
     "first50": "Primeros 50",
     "foundingPlanFree": "Su plan {plan} es gratis para siempre como fotógrafo fundador.",
     "earlyBirdPlanFree": "Su plan {plan} es gratis hasta {date}. Después, podrá elegir cualquier plan.",
+    "approvalRequiredTitle": "Aprobación necesaria",
+    "blockedPendingApproval": "Los planes de pago, Verified y Featured estarán disponibles una vez que un administrador apruebe su perfil. Complete su checklist de onboarding y lo revisaremos.",
+    "blockedSuspended": "Su cuenta está suspendida actualmente. Contacte con soporte antes de adquirir funciones de pago.",
+    "availableAfterApproval": "Disponible tras la aprobación",
     "perMonth": "/mes",
     "activeEarlyBird": "Activo (Early Bird)",
     "currentPlan": "Plan actual",
@@ -2643,6 +2772,8 @@
     "failedSendCode": "Error al enviar el código",
     "invalidCode": "Código inválido",
     "verificationFailed": "Verificación fallida",
+    "checkoutError": "No se pudo iniciar el pago. Inténtalo de nuevo — si el problema persiste, contacta con soporte.",
+    "portalError": "No se pudo abrir el portal de facturación. Inténtalo de nuevo — si el problema persiste, contacta con soporte.",
     "featuredPlacement": "Posición destacada",
     "featuredPlacementPrice": "19 €/mes — Visibilidad prioritaria",
     "activeFeatured": "Activo — Posición destacada",
@@ -2664,10 +2795,10 @@
     "planFree": "Free",
     "planPro": "Pro",
     "planPremium": "Premium",
-    "feat10Photos": "Hasta 100 fotos de portafolio",
-    "feat30Photos": "Hasta 100 fotos de portafolio",
-    "feat100Photos": "Hasta 100 fotos de portafolio",
-    "featUnlimitedPhotos": "Hasta 100 fotos de portafolio",
+    "feat10Photos": "Hasta 500 fotos de portafolio",
+    "feat30Photos": "Hasta 500 fotos de portafolio",
+    "feat100Photos": "Hasta 500 fotos de portafolio",
+    "featUnlimitedPhotos": "Hasta 500 fotos de portafolio",
     "feat1Location": "1 lugar",
     "feat5Locations": "5 lugares",
     "featAllLocations": "Todos los lugares",
@@ -2719,6 +2850,10 @@
       "payments": {
         "title": "Pagos y protección",
         "description": "Cómo funciona la custodia, tarifas, reembolsos y disputas"
+      },
+      "gifts": {
+        "title": "Regalos",
+        "description": "Tarjetas regalo, reservar como regalo y el flujo de sorpresa"
       },
       "general": {
         "title": "General",
@@ -2779,7 +2914,7 @@
         },
         "subscriptionPlans": {
           "question": "¿Qué planes de suscripción están disponibles?",
-          "answer": "Ofrecemos tres planes:\n\n**Free** — Sin tarifa mensual, 20% de comisión por reserva. Listado básico con 1 lugar.\n\n**Pro** — 15% de comisión. 5 lugares, 10 paquetes, panel de análisis y soporte prioritario.\n\n**Premium** — 10% de comisión. Todos los lugares, paquetes ilimitados, URL personalizada, análisis completo y opciones de posición destacada.\n\nTodos los planes incluyen hasta 100 fotos de portafolio, procesamiento de pagos Stripe, mensajería con clientes y acceso al sistema de reservas. Visite nuestra página de precios para los precios actuales."
+          "answer": "Ofrecemos tres planes:\n\n**Free** — Sin tarifa mensual, 20% de comisión por reserva. Listado básico con 1 lugar.\n\n**Pro** — 15% de comisión. 5 lugares, 10 paquetes, panel de análisis y soporte prioritario.\n\n**Premium** — 10% de comisión. Todos los lugares, paquetes ilimitados, URL personalizada, análisis completo y opciones de posición destacada.\n\nTodos los planes incluyen hasta 500 fotos de portafolio, procesamiento de pagos Stripe, mensajería con clientes y acceso al sistema de reservas. Visite nuestra página de precios para los precios actuales."
         },
         "getPaid": {
           "question": "¿Cómo y cuándo cobro?",
@@ -2825,7 +2960,7 @@
         },
         "serviceFees": {
           "question": "¿Cuáles son las tarifas de servicio?",
-          "answer": "**Para clientes:** Se añade una tarifa de servicio del 10% sobre el precio del paquete. Por ejemplo, un paquete de 300 € cuesta 330 € total. Esta tarifa cubre el procesamiento de pagos, mantenimiento de la plataforma y soporte al cliente.\n\n**Para fotógrafos:** Se deduce una comisión de cada reserva según su plan:\n• Plan Free — 20% de comisión\n• Plan Pro — 15% de comisión\n• Plan Premium — 10% de comisión\n\nNo hay tarifas ocultas. Todas las tarifas se muestran de forma transparente antes de cualquier transacción."
+          "answer": "**Para clientes:** Se añade una tarifa de servicio del 12,5% sobre el precio del paquete. Por ejemplo, un paquete de 300 € cuesta 337,50 € total. Esta tarifa cubre el procesamiento de pagos, mantenimiento de la plataforma y soporte al cliente.\n\n**Para fotógrafos:** Se deduce una comisión de cada reserva según su plan:\n• Plan Free — 20% de comisión\n• Plan Pro — 15% de comisión\n• Plan Premium — 10% de comisión\n\nNo hay tarifas ocultas. Todas las tarifas se muestran de forma transparente antes de cualquier transacción."
         },
         "refundPolicy": {
           "question": "¿Cuál es la política de reembolso?",
@@ -2849,6 +2984,32 @@
           "question": "¿Cómo contacto con soporte?",
           "answer": "Puede contactar con nuestro equipo de soporte a través de:\n\n• **Correo:** info@photoportugal.com\n• **Panel:** Los fotógrafos pueden enviar tickets de soporte directamente desde su panel\n• **Página de contacto:** Visite nuestra página de contacto para enviarnos un mensaje\n\nNuestro objetivo es responder a todas las consultas en 24 horas en días laborables."
         }
+      },
+      "gifts": {
+        "howToBuy": {
+          "question": "¿Cómo compro una tarjeta regalo?",
+          "answer": "Visite nuestra **[página de tarjetas regalo](/gift-cards)** y elija un nivel:\n\n• **Express — €290:** sesión de 1 hora, 30 fotos editadas, 1 ubicación\n• **Completa — €490:** sesión de 2 horas, 60 fotos editadas, hasta 2 ubicaciones, un cambio de look\n\nIntroduzca el nombre y email del destinatario (opcionalmente su teléfono para un SMS), añada un mensaje personal y pague con tarjeta, Apple Pay o Google Pay vía Stripe. Ambos niveles se entregan 7 días después de la sesión y son válidos durante 12 meses desde la compra."
+        },
+        "howToRedeem": {
+          "question": "¿Cómo canjea el destinatario el regalo?",
+          "answer": "Al comprar una tarjeta regalo, el destinatario recibe automáticamente un email (y SMS si añadió su número) con un enlace mágico para canjearla.\n\n1. Hace clic en el enlace → llega a una página de bienvenida personal → inicia sesión (o crea una cuenta con un clic — sin contraseña)\n2. La tarjeta regalo queda asociada a su cuenta\n3. Explora nuestros fotógrafos en cualquier ciudad, elige el que más le gusta y reserva\n4. En el checkout la tarjeta cubre todo el precio — sin paso de pago\n\nSi prefiere entregársela en persona, el email también muestra el código de la tarjeta (GIFT-XXXX-XXXX) — puede introducirlo manualmente en la página de canje."
+        },
+        "validity": {
+          "question": "¿Cuál es la validez de una tarjeta regalo?",
+          "answer": "**12 meses desde la fecha de compra.** Después el regalo expira y no puede canjearse.\n\nSi un fotógrafo cancela la reserva después de canjear la tarjeta, la tarjeta se restaura automáticamente y la validez se amplía 30 días, dando al destinatario tiempo de elegir otro fotógrafo sin prisas."
+        },
+        "chooseAnyPhotographer": {
+          "question": "¿Puede el destinatario elegir cualquier fotógrafo?",
+          "answer": "Sí — la tarjeta regalo funciona con cualquier fotógrafo **participante** de Photo Portugal en todo Portugal. El destinatario explora el catálogo completo en modo regalo y reserva como una sesión normal. Los fotógrafos participan por defecto; unos pocos prefieren no participar y simplemente quedan ocultos del catálogo de regalos.\n\nLibertad total para el destinatario: cualquier fotógrafo, en cualquier parte de Portugal, en la fecha que funcione para ambos."
+        },
+        "bookAsGift": {
+          "question": "¿Puedo hacer una reserva normal como regalo?",
+          "answer": "Sí — además de las tarjetas regalo, también puede reservar un fotógrafo/paquete **específico** para alguien y dejar que entreguemos la sorpresa.\n\nAl reservar, active **\"Esta reserva es un regalo\"** e introduzca el nombre y email del destinatario. Usted paga; ellos aparecen. También puede elegir cuándo revelarlo: enviar una tarjeta regalo ahora, o sorprenderles N días antes de la sesión (esperamos hasta entonces).\n\nLa mejor opción si ya sabe qué fotógrafo les encantaría. La página de tarjetas regalo es la mejor opción si prefiere dejarles elegir."
+        },
+        "surpriseTiming": {
+          "question": "¿Puedo controlar cuándo descubre el destinatario la sorpresa?",
+          "answer": "Sí — al activar **\"Esta reserva es un regalo\"** en el checkout, elige el momento de la revelación:\n\n• **Enviar tarjeta regalo ahora** — reciben el email inmediatamente, descubren el regalo y empiezan a anticiparlo\n• **Sorpresa — avisarles N días antes** — mantenemos el secreto hasta los días elegidos antes de la sesión, y luego enviamos un bonito email de revelación\n\nHasta la fecha de revelación, el teléfono del destinatario (si se proporcionó) también queda oculto al fotógrafo, para que no revele la sorpresa accidentalmente. Tras la revelación, la coordinación del día se desarrolla normalmente."
+        }
       }
     },
     "cta": {
@@ -2864,7 +3025,7 @@
     "client": "Cliente:",
     "package": "Paquete:",
     "dropPhotos": "Suelta fotos o vídeos aquí, o haz clic para examinar",
-    "photoFormats": "Fotos: JPEG, PNG, WebP, HEIC hasta 50MB · Vídeos: MP4, MOV, WebM hasta 500MB",
+    "photoFormats": "Fotos: JPEG, PNG, WebP, HEIC hasta 100MB · Vídeos: MP4, MOV, WebM hasta 500MB",
     "uploading": "Subiendo...",
     "photoCount": "{count} foto",
     "photoCountPlural": "{count} fotos",
@@ -2981,7 +3142,21 @@
     "hide": "Ocultar",
     "changeDateAndTime": "Cambiar fecha y hora",
     "proposeDateAndTime": "Proponer fecha y hora",
-    "timeFlexible": "Hora flexible"
+    "timeFlexible": "Hora flexible",
+    "changeShort": "Cambiar",
+    "modalSubtitle": "{name} será notificado para aceptar o proponer otra fecha.",
+    "sendForApproval": "Enviar para aprobación",
+    "sending": "Enviando…",
+    "pickADate": "Selecciona una fecha",
+    "submitFailed": "No se pudo enviar la propuesta",
+    "dateProposalLabel": "Propuesta de fecha",
+    "proposedBy": "{name} propuso:",
+    "acceptDate": "Aceptar esta fecha",
+    "proposeDifferent": "Proponer otra",
+    "accepting": "Aceptando…",
+    "acceptedShort": "Aceptada",
+    "waitingShort": "Esperando a {name}",
+    "notScheduledYet": "Aún sin agendar (flexible)"
   },
   "bookingActions": {
     "convertToBooking": "Aceptar consulta",
@@ -3037,6 +3212,31 @@
     "loadingMessages": "Cargando...",
     "noMessages": "Aún no hay mensajes. ¡Salude!",
     "typePlaceholder": "Escriba un mensaje...",
+    "translateTo": "Traducir a",
+    "translatedDraftHint": "Borrador traducido — revísalo antes de enviarlo.",
+    "undoTranslate": "Deshacer",
+    "translateError": "Falló la traducción — vuelve a intentarlo.",
+    "intentLabel": "El cliente quiere",
+    "intentLoading": "Leyendo la conversación...",
+    "chipAskOccasion": "Preguntar ocasión",
+    "chipAskOccasionText": "¿Qué tipo de sesión buscas? (pareja, familia, boda, etc.)",
+    "chipAskDate": "Preguntar fecha",
+    "chipAskDateText": "¿Qué fecha tienes en mente para la sesión?",
+    "chipAskGroup": "Tamaño del grupo",
+    "chipAskGroupText": "¿Cuántas personas estarán en la sesión?",
+    "chipAskLocation": "Preguntar lugar",
+    "chipAskLocationText": "¿Qué lugar te viene mejor?",
+    "chipSendPackage": "📦 Enviar paquete",
+    "aiChipsLabel": "Sugerencias IA",
+    "aiChipsLoading": "Preparando sugerencias...",
+    "aiChipsMiss": "Ninguna sirve",
+    "polishTitle": "Elige una versión pulida",
+    "polishShort": "Pulir",
+    "polishError": "No se pudo pulir — inténtalo de nuevo.",
+    "toneWarm": "Cálido",
+    "toneProfessional": "Profesional",
+    "suggestionsHide": "Ocultar sugerencias IA",
+    "suggestionsShow": "Mostrar sugerencias IA",
     "yesterday": "Ayer",
     "signInPrompt": "Iniciar sesión",
     "viewGallery": "Ver galería",
@@ -3050,9 +3250,16 @@
     "leaveReviewCta": "Dejar reseña",
     "packageLabel": "Paquete",
     "bookNow": "Reservar ahora",
+    "bookingCardFomo": "La fecha solo se bloquea en el calendario tras el pago — otro cliente todavía podría reservar el mismo día primero.",
     "tapToOpen": "Pulse para abrir",
     "failedToSend": "Error al enviar",
     "retry": "Reintentar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "editedShort": "editado",
+    "messageDeleted": "Mensaje eliminado",
     "sendPhoto": "Enviar foto",
     "sharePackage": "Compartir paquete",
     "shareAPackage": "Compartir un paquete",
@@ -3082,7 +3289,8 @@
     "customProposalPriceRequired": "Introduzca un precio válido.",
     "customProposalDurationRequired": "Introduzca una duración válida en minutos.",
     "customProposalPhotosRequired": "Introduzca el número de fotos.",
-    "customProposalBadge": "Propuesta personalizada"
+    "customProposalBadge": "Propuesta personalizada",
+    "backToChats": "Volver a chats"
   },
   "settings": {
     "title": "Configuración",
@@ -3194,6 +3402,9 @@
     "refunded": "Reembolsada",
     "unpaid": "Sin pagar",
     "accepted": "Aceptada",
+    "slotNotLockedUntilPaid": "Plaza no bloqueada hasta el pago",
+    "slotNotLockedTitle": "Su plaza aún no está bloqueada en el calendario",
+    "slotLocksExplain": "Solo las reservas pagadas bloquean una fecha en nuestro calendario. Hasta que se confirme su pago, otro cliente que pague primero por la misma fecha podría llevársela.",
     "message": "Mensaje",
     "payNow": "Pagar ahora",
     "viewPhotos": "Ver fotos",
@@ -3357,7 +3568,8 @@
     "serviceFee": "(incl. {fee} € tarifa de servicio)",
     "paymentFailed": "Pago fallido",
     "paymentFailedRetry": "Pago fallido. Por favor inténtelo de nuevo.",
-    "securePayment": "Pago seguro"
+    "securePayment": "Pago seguro",
+    "slotLocksOnPayment": "La plaza solo se bloquea tras el pago"
   },
   "onboarding": {
     "completeYourProfile": "Complete su perfil",
@@ -3390,7 +3602,8 @@
       "addPhoneNumberTip": "Requerido para notificaciones SMS de reserva"
     },
     "client": {
-      "addProfilePhoto": "Añadir foto de perfil",
+      "addProfilePhoto": "Añade una foto real de tu cara",
+      "addProfilePhotoTip": "Importante: tu fotógrafo necesita reconocerte el día de la sesión. Una foto clara de tu rostro le ayuda a encontrarte en el lugar.",
       "addPhoneNumber": "Añadir número de teléfono",
       "addPhoneNumberTip": "Para que su fotógrafo pueda contactar con usted sobre la sesión",
       "findPhotographer": "Encuentre su fotógrafo"
@@ -3558,5 +3771,31 @@
     "chatOpeningWithLoc": "¡Hola! Mientras se genera su foto IA, cuénteme sobre su sesión real en {loc} — ocasión, número de personas, estilo — y le emparejo con los 2–3 mejores fotógrafos. ✨",
     "chatError": "Algo salió mal. Inténtelo de nuevo.",
     "resultJustNow": "Justo ahora"
+  },
+  "packagePage": {
+    "mostPopular": "Más popular",
+    "byPhotographerInLocation": "con {photographer}{locText}",
+    "plusFee": "+ {rate}% de comisión",
+    "bookNow": "Reservar esta sesión",
+    "photos": "fotos",
+    "review": "opinión",
+    "reviews": "opiniones",
+    "deliveryDays": "Entrega en {days} días",
+    "aboutThisSession": "Sobre esta sesión",
+    "descFallback": "Una sesión de {duration} con {photographer}, con {photos} fotos editadas entregadas en {days} días.",
+    "groupOptimised": "Optimizado para grupos grandes (9+ personas)",
+    "groupOptimisedDesc": "Este paquete está pensado para familias y grupos grandes — el precio ya incluye el tiempo extra de coordinación y edición, sin recargo.",
+    "groupNote": "Las reservas de 9+ personas tienen un recargo del {pct}% para cubrir el tiempo extra de coordinación.",
+    "samplePortfolio": "Trabajos recientes de {photographer}",
+    "samplePortfolioDesc": "Una muestra del estilo de {photographer}. Tu entrega final se editará con el mismo cuidado.",
+    "reviewsHeading": "Lo que dicen los clientes de {photographer}",
+    "privateClient": "Viajero verificado",
+    "otherPackagesHeading": "Más sesiones con {photographer}",
+    "totalIncl": "Total incl. comisión",
+    "backToPhotographer": "Volver al perfil de {photographer}",
+    "noPaymentNow": "Sin pago ahora — pagas solo después de la confirmación",
+    "otherPackagesSubtitle": "Otras formas de trabajar con {photographer} — elige la que mejor encaje con tu historia.",
+    "viewDetails": "Ver detalles",
+    "from": "Desde"
   }
 }

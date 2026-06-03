@@ -26,6 +26,11 @@ export async function GET(req: NextRequest) {
       );
       if (!profile) return NextResponse.json([]);
 
+      // Conversation-scoped: last message + unread count are per
+      // (client_id, photographer_id) pair, not per-booking. The booking_id
+      // returned is the LATEST booking with this client (kept so the chat
+      // route still has a context to open under, even though messages
+      // themselves are pair-scoped).
       conversations = await query(
         `SELECT DISTINCT ON (u.id)
           b.id as booking_id,
@@ -33,26 +38,25 @@ export async function GET(req: NextRequest) {
           u.avatar_url as other_avatar,
           u.id as other_user_id,
           u.last_seen_at as other_last_seen_at,
+          u.locale as other_locale,
           'client' as other_role,
           NULL as other_slug,
           b.status as booking_status,
           p.name as package_name,
           COALESCE(
-            (SELECT text FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1),
-            CASE WHEN (SELECT media_url FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) IS NOT NULL THEN '📷 Photo' ELSE NULL END
+            (SELECT text FROM messages WHERE client_id = u.id AND photographer_id = $2 ORDER BY created_at DESC LIMIT 1),
+            CASE WHEN (SELECT media_url FROM messages WHERE client_id = u.id AND photographer_id = $2 ORDER BY created_at DESC LIMIT 1) IS NOT NULL THEN '📷 Photo' ELSE NULL END
           ) as last_message,
-          (SELECT media_url FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) as last_message_media_url,
-          (SELECT created_at FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) as last_message_at,
-          (SELECT COUNT(*) FROM messages WHERE booking_id IN (SELECT id FROM bookings WHERE client_id = u.id AND photographer_id = $2) AND sender_id != $1 AND read_at IS NULL)::int as unread_count
+          (SELECT deleted_at IS NOT NULL FROM messages WHERE client_id = u.id AND photographer_id = $2 ORDER BY created_at DESC LIMIT 1) as last_message_deleted,
+          (SELECT media_url FROM messages WHERE client_id = u.id AND photographer_id = $2 ORDER BY created_at DESC LIMIT 1) as last_message_media_url,
+          (SELECT created_at FROM messages WHERE client_id = u.id AND photographer_id = $2 ORDER BY created_at DESC LIMIT 1) as last_message_at,
+          (SELECT COUNT(*) FROM messages WHERE client_id = u.id AND photographer_id = $2 AND sender_id != $1 AND read_at IS NULL)::int as unread_count
         FROM bookings b
         JOIN users u ON u.id = b.client_id
         LEFT JOIN packages p ON p.id = b.package_id
         WHERE b.photographer_id = $2
-          AND (EXISTS (SELECT 1 FROM messages WHERE booking_id = b.id) OR b.status IN ('inquiry','pending','confirmed'))
-        ORDER BY u.id, COALESCE(
-          (SELECT created_at FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1),
-          b.created_at
-        ) DESC`,
+          AND (EXISTS (SELECT 1 FROM messages WHERE client_id = u.id AND photographer_id = $2) OR b.status IN ('inquiry','pending','confirmed'))
+        ORDER BY u.id, b.created_at DESC`,
         [userId, profile.id]
       );
       // Re-sort by last message time (DISTINCT ON requires ORDER BY on the distinct column first)
@@ -67,27 +71,26 @@ export async function GET(req: NextRequest) {
           u.avatar_url as other_avatar,
           u.id as other_user_id,
           u.last_seen_at as other_last_seen_at,
+          u.locale as other_locale,
           'photographer' as other_role,
           pp.slug as other_slug,
           b.status as booking_status,
           p.name as package_name,
           COALESCE(
-            (SELECT text FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1),
-            CASE WHEN (SELECT media_url FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) IS NOT NULL THEN '📷 Photo' ELSE NULL END
+            (SELECT text FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id ORDER BY created_at DESC LIMIT 1),
+            CASE WHEN (SELECT media_url FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id ORDER BY created_at DESC LIMIT 1) IS NOT NULL THEN '📷 Photo' ELSE NULL END
           ) as last_message,
-          (SELECT media_url FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) as last_message_media_url,
-          (SELECT created_at FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) as last_message_at,
-          (SELECT COUNT(*) FROM messages WHERE booking_id IN (SELECT id FROM bookings WHERE client_id = $1 AND photographer_id = b.photographer_id) AND sender_id != $1 AND read_at IS NULL)::int as unread_count
+          (SELECT deleted_at IS NOT NULL FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id ORDER BY created_at DESC LIMIT 1) as last_message_deleted,
+          (SELECT media_url FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id ORDER BY created_at DESC LIMIT 1) as last_message_media_url,
+          (SELECT created_at FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id ORDER BY created_at DESC LIMIT 1) as last_message_at,
+          (SELECT COUNT(*) FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id AND sender_id != $1 AND read_at IS NULL)::int as unread_count
         FROM bookings b
         JOIN photographer_profiles pp ON pp.id = b.photographer_id
         JOIN users u ON u.id = pp.user_id
         LEFT JOIN packages p ON p.id = b.package_id
         WHERE b.client_id = $1
-          AND (EXISTS (SELECT 1 FROM messages WHERE booking_id = b.id) OR b.status IN ('inquiry','pending','confirmed'))
-        ORDER BY pp.user_id, COALESCE(
-          (SELECT created_at FROM messages WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1),
-          b.created_at
-        ) DESC`,
+          AND (EXISTS (SELECT 1 FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id) OR b.status IN ('inquiry','pending','confirmed'))
+        ORDER BY pp.user_id, b.created_at DESC`,
         [userId]
       );
       (conversations as Array<Record<string, unknown>>).sort((a, b) =>

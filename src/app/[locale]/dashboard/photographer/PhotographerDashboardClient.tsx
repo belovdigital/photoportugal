@@ -87,6 +87,7 @@ interface Package {
   price: number;
   is_popular: boolean;
   is_public: boolean;
+  is_group_package?: boolean;
   delivery_days: number;
   features: string[];
 }
@@ -210,6 +211,7 @@ export function PhotographerDashboardClient({
   const [pkgPrice, setPkgPrice] = useState("");
   const [pkgPopular, setPkgPopular] = useState(false);
   const [pkgPublic, setPkgPublic] = useState(true);
+  const [pkgIsGroup, setPkgIsGroup] = useState(false);
   const [pkgFeatures, setPkgFeatures] = useState<string[]>([]);
   const [pkgDeliveryDays, setPkgDeliveryDays] = useState("7");
 
@@ -416,6 +418,7 @@ export function PhotographerDashboardClient({
     setUploadingPortfolio(true);
     const total = fileArr.length;
     const progress = { total, done: 0, failed: 0 };
+    const failedMessages: string[] = [];
     setUploadProgress({ ...progress });
 
     // Process in parallel batches of 3
@@ -476,12 +479,13 @@ export function PhotographerDashboardClient({
               setLocalItems((prev) => prev.filter((it) => it.id !== tempId));
               URL.revokeObjectURL(previewUrl);
               progress.failed++;
-              showMessage(err?.error || t("uploadFailed"));
+              failedMessages.push(err?.error || t("uploadFailed"));
             }
           } catch {
             setLocalItems((prev) => prev.filter((it) => it.id !== tempId));
             URL.revokeObjectURL(previewUrl);
             progress.failed++;
+            failedMessages.push(t("uploadFailed"));
           }
           setUploadProgress({ ...progress });
         })
@@ -492,7 +496,8 @@ export function PhotographerDashboardClient({
     if (progress.failed === 0) {
       showMessage(progress.done !== 1 ? t("photosUploadedPlural", { count: progress.done }) : t("photosUploaded", { count: progress.done }));
     } else {
-      showMessage(t("uploadedAndFailed", { done: progress.done, failed: progress.failed }));
+      const firstFailure = failedMessages.find(Boolean);
+      showMessage(firstFailure || t("uploadedAndFailed", { done: progress.done, failed: progress.failed }));
     }
     setTimeout(() => setUploadProgress(null), 2000);
   }
@@ -631,6 +636,7 @@ export function PhotographerDashboardClient({
     setPkgPrice("");
     setPkgPopular(false);
     setPkgPublic(true);
+    setPkgIsGroup(false);
     setPkgFeatures([]);
     setPkgDeliveryDays("7");
     setShowPackageForm(true);
@@ -645,6 +651,7 @@ export function PhotographerDashboardClient({
     setPkgPrice(pkg.price.toString());
     setPkgPopular(pkg.is_popular);
     setPkgPublic(pkg.is_public !== false);
+    setPkgIsGroup(!!pkg.is_group_package);
     setPkgFeatures(pkg.features || []);
     setPkgDeliveryDays((pkg.delivery_days || 7).toString());
     setShowPackageForm(true);
@@ -672,6 +679,7 @@ export function PhotographerDashboardClient({
       price: priceVal,
       is_popular: pkgPopular,
       is_public: pkgPublic,
+      is_group_package: pkgIsGroup,
       features: pkgFeatures.filter((f) => f.trim()),
       delivery_days: parseInt(pkgDeliveryDays) || 7,
     };
@@ -1337,6 +1345,7 @@ export function PhotographerDashboardClient({
                 pkgDeliveryDays={pkgDeliveryDays} setPkgDeliveryDays={setPkgDeliveryDays}
                 pkgPopular={pkgPopular} setPkgPopular={setPkgPopular}
                 pkgPublic={pkgPublic} setPkgPublic={setPkgPublic}
+                pkgIsGroup={pkgIsGroup} setPkgIsGroup={setPkgIsGroup}
                 pkgFeatures={pkgFeatures} setPkgFeatures={setPkgFeatures}
                 saving={saving}
                 isEdit={false}
@@ -1373,6 +1382,7 @@ export function PhotographerDashboardClient({
                         pkgDeliveryDays={pkgDeliveryDays} setPkgDeliveryDays={setPkgDeliveryDays}
                         pkgPopular={pkgPopular} setPkgPopular={setPkgPopular}
                         pkgPublic={pkgPublic} setPkgPublic={setPkgPublic}
+                        pkgIsGroup={pkgIsGroup} setPkgIsGroup={setPkgIsGroup}
                         pkgFeatures={pkgFeatures} setPkgFeatures={setPkgFeatures}
                         saving={saving}
                         isEdit={true}
@@ -1436,6 +1446,7 @@ function PackageFormInline({
   title, pkgName, setPkgName, pkgDesc, setPkgDesc, pkgDuration, setPkgDuration,
   pkgPhotos, setPkgPhotos, pkgPrice, setPkgPrice, pkgDeliveryDays, setPkgDeliveryDays,
   pkgPopular, setPkgPopular, pkgPublic, setPkgPublic,
+  pkgIsGroup, setPkgIsGroup,
   pkgFeatures, setPkgFeatures,
   saving, isEdit, onSubmit, onCancel, t, locale, className = "",
 }: {
@@ -1448,6 +1459,7 @@ function PackageFormInline({
   pkgDeliveryDays: string; setPkgDeliveryDays: (v: string) => void;
   pkgPopular: boolean; setPkgPopular: (v: boolean) => void;
   pkgPublic: boolean; setPkgPublic: (v: boolean) => void;
+  pkgIsGroup: boolean; setPkgIsGroup: (v: boolean) => void;
   pkgFeatures: string[]; setPkgFeatures: (v: string[]) => void;
   saving: boolean; isEdit: boolean;
   onSubmit: (e: React.FormEvent) => void;
@@ -1576,6 +1588,19 @@ function PackageFormInline({
           <button type="button" role="switch" aria-checked={pkgPublic} onClick={() => setPkgPublic(!pkgPublic)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${pkgPublic ? "bg-primary-600" : "bg-gray-200"}`}>
             <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${pkgPublic ? "translate-x-[22px]" : "translate-x-[2px]"} mt-[2px]`} />
+          </button>
+        </div>
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-gray-200 bg-warm-50 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900">For groups of 9+ people</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Toggle on if this package is already designed and priced for large groups (9 people or more).
+              When on, the platform’s automatic <strong>+50% large-group surcharge</strong> will <strong>not</strong> be applied — clients booking with 9+ people pay the package price as-is.
+            </p>
+          </div>
+          <button type="button" role="switch" aria-checked={pkgIsGroup} onClick={() => setPkgIsGroup(!pkgIsGroup)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${pkgIsGroup ? "bg-primary-600" : "bg-gray-200"}`}>
+            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${pkgIsGroup ? "translate-x-[22px]" : "translate-x-[2px]"} mt-[2px]`} />
           </button>
         </div>
       </div>

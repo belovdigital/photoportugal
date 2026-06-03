@@ -59,13 +59,18 @@ const ROTATION_MS = 5000;
  * hydration (which there used to be when we re-rolled client-side). Photo
  * rotation is client-side because it has no SEO/SSR meaning.
  */
-export function HeroSingleVariant({ photographer, locationContext, totalPhotographers }: {
+export function HeroSingleVariant({ photographer, locationContext, totalPhotographers, showSiteChip }: {
   photographer: HeroFeaturedPhotographer;
   locationContext?: HeroLocationContext;
   /** Real count of approved photographers used in the "browse all N" link
    *  at the bottom of the overlay. Required so we never show "30+" when the
    *  actual roster has grown — the "+" looked sloppy and stale. */
   totalPhotographers?: number;
+  /** Homepage variant: show "{count} photographers across Portugal" in the
+   *  availability chip instead of the photographer's location. Without it
+   *  the chip reads as a location-level claim ("Available this week in
+   *  Algarve") even though the page features the whole site. */
+  showSiteChip?: boolean;
 }) {
   const t = useTranslations("heroSingle");
   const tLoc = useTranslations("heroSingle.location");
@@ -466,7 +471,9 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
             </span>
             {locationContext
               ? tLoc("availableChip", { count: locationContext.photographerCount, location: locationContext.name })
-              : t("availableChip", { location: photographer.location_name })}
+              : showSiteChip && totalPhotographers
+                ? t("siteAvailableChip", { count: totalPhotographers })
+                : t("availableChip", { location: photographer.location_name })}
           </div>
 
           {/* On location pages this IS the page's canonical heading

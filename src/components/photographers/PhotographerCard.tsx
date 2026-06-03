@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { PhotographerProfile } from "@/types";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useSession } from "next-auth/react";
-import { trackViewPhotographer } from "@/lib/analytics";
+import { trackViewPhotographer, trackCTAClick } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
@@ -15,18 +15,23 @@ import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
 export function PhotographerCard({
   photographer,
   quote,
+  giftMode = null,
 }: {
   photographer: PhotographerProfile;
   quote?: { text: string; client_name: string | null };
+  giftMode?: { tier: "express" | "full"; tierLabel: string } | null;
 }) {
   const { data: session } = useSession();
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const t = useTranslations("photographers.card");
   const tc = useTranslations("common");
   const locale = useLocale();
-  const minPrice = photographer.packages?.length > 0
+  // In gift-mode hide all per-photographer pricing — the recipient already
+  // knows their tier and price; showing "from €X" creates the wrong
+  // expectation (they don't pay anything).
+  const minPrice = giftMode ? null : (photographer.packages?.length > 0
     ? Math.min(...photographer.packages.map(p => p.price))
-    : null;
+    : null);
 
   // Build the carousel: cover first, then up to 4 portfolio photos. Dedupe so
   // the same image isn't shown twice when the photographer's cover is already
@@ -104,8 +109,10 @@ export function PhotographerCard({
           )}
         </div>
 
-        {/* Rating — only show if has reviews */}
-        {photographer.review_count > 0 && (
+        {/* Rating row — or "New" pill when no reviews yet. Showing
+            something in this slot keeps the card balanced and avoids
+            reading as "low quality" by absence. */}
+        {photographer.review_count > 0 ? (
         <div className="mt-3 flex items-center gap-2">
           <div className="flex gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -126,6 +133,12 @@ export function PhotographerCard({
             ({photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")})
           </span>
         </div>
+        ) : (
+          <div className="mt-3">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+              ✨ {tc("newOnPhotoPortugal")}
+            </span>
+          </div>
         )}
 
         {quote && quote.text && (
@@ -158,7 +171,11 @@ export function PhotographerCard({
       {/* Price & actions — outside main Link to avoid nested <a> */}
       <div className="flex items-center justify-between border-t border-warm-100 mx-6 py-4">
         <div>
-          {minPrice ? (
+          {giftMode ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 text-primary-700 px-3 py-1 text-xs font-semibold">
+              🎁 {giftMode.tierLabel} covered
+            </span>
+          ) : minPrice ? (
             <>
               <span className="text-sm text-gray-400">{t("from")} </span>
               <span className="text-lg font-bold text-gray-900">
@@ -173,6 +190,7 @@ export function PhotographerCard({
           {!isPhotographer && (
             <Link
               href={`/photographers/${photographer.slug}#message`}
+              onClick={() => trackCTAClick("message_photographer", "photographer_card")}
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
               title={t("messagePhotographer", { name: normalizeName(photographer.name) })}
             >
@@ -183,6 +201,7 @@ export function PhotographerCard({
           )}
           <Link
             href={`/photographers/${photographer.slug}`}
+            onClick={() => trackCTAClick("view_profile", "photographer_card")}
             className="flex h-10 items-center rounded-lg bg-primary-50 px-3 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white whitespace-nowrap"
           >
             {t("viewProfile")}

@@ -22,8 +22,6 @@ export interface MatchBadge {
 interface MatchInput extends ConciergePhotographer {
   /** AI ordering — first slug = best_match. */
   rank: number;
-  /** Optional: avg response time in minutes if available in your data. */
-  avg_response_minutes?: number | null;
 }
 
 const LABELS: Record<BadgeType, string> = {

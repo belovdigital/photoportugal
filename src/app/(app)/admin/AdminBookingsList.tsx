@@ -44,6 +44,79 @@ export interface AdminBooking {
   photographer_phone: string | null;
   photographer_email: string | null;
   confirmed_at: string | null;
+  // Gift card redemption — set when booking was paid via Photo Portugal
+  // gift card (not Stripe). Payout is flat per tier (€210/€360).
+  gift_card_id?: string | null;
+  gift_card_tier?: "express" | "full" | null;
+  // Attribution — only rendered in admin, never exposed to client/photographer
+  booking_utm_source?: string | null;
+  booking_utm_medium?: string | null;
+  booking_utm_campaign?: string | null;
+  booking_utm_term?: string | null;
+  booking_gclid?: string | null;
+  first_utm_source?: string | null;
+  first_utm_medium?: string | null;
+  first_utm_campaign?: string | null;
+  first_utm_term?: string | null;
+  first_gclid?: string | null;
+  first_referrer?: string | null;
+  first_landing_page?: string | null;
+  first_session_at?: string | null;
+  concierge_first_msg?: string | null;
+  concierge_match_count?: number | null;
+  concierge_outcome?: string | null;
+}
+
+// Derive a human-readable source label from attribution signals. We rank
+// in this order: ads (gclid) → utm_source → organic-referrer → direct.
+// First-touch (visitor_sessions) wins over booking-touch since most
+// bookings happen without UTM params on the final click.
+function deriveSource(b: AdminBooking): {
+  channel: string;
+  emoji: string;
+  detail: string | null;
+  isAd: boolean;
+} {
+  const gclid = b.booking_gclid || b.first_gclid;
+  const utmSource = b.booking_utm_source || b.first_utm_source;
+  const utmMedium = b.booking_utm_medium || b.first_utm_medium;
+  const utmTerm = b.booking_utm_term || b.first_utm_term;
+  const utmCampaign = b.booking_utm_campaign || b.first_utm_campaign;
+  const referrer = b.first_referrer;
+
+  if (gclid) {
+    return {
+      channel: "Google Ads",
+      emoji: "🎯",
+      detail: [utmCampaign, utmTerm ? `kw "${utmTerm}"` : null].filter(Boolean).join(" · ") || null,
+      isAd: true,
+    };
+  }
+  if (utmSource) {
+    const pretty = utmSource.toLowerCase();
+    if (pretty === "facebook" || pretty === "fb" || pretty === "instagram" || pretty === "ig") {
+      return { channel: `Meta Ads (${pretty})`, emoji: "📣", detail: [utmCampaign, utmTerm].filter(Boolean).join(" · ") || null, isAd: true };
+    }
+    return {
+      channel: `${utmSource}${utmMedium ? ` / ${utmMedium}` : ""}`,
+      emoji: utmMedium === "cpc" || utmMedium === "ads" ? "🎯" : "🔗",
+      detail: utmTerm ? `kw "${utmTerm}"` : utmCampaign || null,
+      isAd: utmMedium === "cpc" || utmMedium === "ads",
+    };
+  }
+  if (referrer) {
+    try {
+      const host = new URL(referrer).hostname.replace(/^www\./, "");
+      // Anything from google/bing/etc — organic search.
+      if (/^(google|bing|duckduckgo|yandex|seznam)\./.test(host)) {
+        return { channel: `Organic (${host})`, emoji: "🌱", detail: null, isAd: false };
+      }
+      return { channel: `Referral (${host})`, emoji: "🌐", detail: null, isAd: false };
+    } catch {
+      return { channel: "Referral", emoji: "🌐", detail: referrer.slice(0, 60), isAd: false };
+    }
+  }
+  return { channel: "Direct", emoji: "🔗", detail: null, isAd: false };
 }
 
 const TIME_LABELS: Record<string, string> = {
@@ -185,24 +258,31 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
               >
                 {/* Row 1: status left, price right */}
                 <div className="flex items-center justify-between mb-1">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                    b.status === "cancelled" ? "bg-gray-100 text-gray-500" :
-                    b.delivery_accepted ? "bg-green-100 text-green-700" :
-                    b.status === "delivered" ? "bg-purple-100 text-purple-700" :
-                    b.status === "completed" ? "bg-blue-100 text-blue-700" :
-                    b.payment_status === "paid" && b.status === "confirmed" ? "bg-green-100 text-green-700" :
-                    b.status === "confirmed" ? "bg-yellow-100 text-yellow-700" :
-                    "bg-yellow-100 text-yellow-700"
-                  }`}>
-                    {b.status === "cancelled" ? "cancelled" :
-                     b.delivery_accepted ? "✓ accepted" :
-                     b.status === "delivered" ? "awaiting review" :
-                     b.status === "completed" ? "awaiting photos" :
-                     b.payment_status === "paid" && b.status === "confirmed" ? "paid · awaiting session" :
-                     b.status === "confirmed" ? "awaiting payment" :
-                     b.status === "pending" ? "awaiting confirmation" :
-                     b.status}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      b.status === "cancelled" ? "bg-gray-100 text-gray-500" :
+                      b.delivery_accepted ? "bg-green-100 text-green-700" :
+                      b.status === "delivered" ? "bg-purple-100 text-purple-700" :
+                      b.status === "completed" ? "bg-blue-100 text-blue-700" :
+                      b.payment_status === "paid" && b.status === "confirmed" ? "bg-green-100 text-green-700" :
+                      b.status === "confirmed" ? "bg-yellow-100 text-yellow-700" :
+                      "bg-yellow-100 text-yellow-700"
+                    }`}>
+                      {b.status === "cancelled" ? "cancelled" :
+                       b.delivery_accepted ? "✓ accepted" :
+                       b.status === "delivered" ? "awaiting review" :
+                       b.status === "completed" ? "awaiting photos" :
+                       b.payment_status === "paid" && b.status === "confirmed" ? "paid · awaiting session" :
+                       b.status === "confirmed" ? "awaiting payment" :
+                       b.status === "pending" ? "awaiting confirmation" :
+                       b.status}
+                    </span>
+                    {b.gift_card_id && (
+                      <span className="rounded-full bg-pink-100 px-2 py-0.5 text-[10px] font-semibold text-pink-700">
+                        🎁 Gift {b.gift_card_tier === "express" ? "· Express" : b.gift_card_tier === "full" ? "· Full" : ""}
+                      </span>
+                    )}
+                  </div>
                   {b.status === "confirmed" && b.payment_status !== "paid" && (b.confirmed_at || b.created_at) && (
                     <AdminPaymentCountdown confirmedAt={b.confirmed_at || b.created_at} inline />
                   )}
@@ -364,6 +444,41 @@ export function AdminBookingsList({ bookings }: { bookings: AdminBooking[] }) {
                       <p className="text-sm text-gray-700 italic">&ldquo;{b.message}&rdquo;</p>
                     </div>
                   )}
+
+                  {/* Attribution — where the client came from + first
+                      thing they searched/asked. Admin-only; never shown
+                      to photographer or client. */}
+                  {(() => {
+                    const src = deriveSource(b);
+                    const landing = b.first_landing_page;
+                    const concierge = b.concierge_first_msg?.trim();
+                    return (
+                      <div className={`mt-3 rounded-lg border p-3 ${src.isAd ? "border-amber-200 bg-amber-50" : "border-warm-200 bg-warm-50"}`}>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1">Source</p>
+                        <p className="text-sm text-gray-800 leading-relaxed">
+                          <span className="mr-1">{src.emoji}</span>
+                          <span className="font-semibold">{src.channel}</span>
+                          {src.detail && <span className="text-gray-600"> · {src.detail}</span>}
+                          {landing && (
+                            <span className="text-gray-500"> → <code className="bg-white px-1.5 py-0.5 rounded text-[12px] border border-gray-200">{landing.length > 60 ? landing.slice(0, 60) + "…" : landing}</code></span>
+                          )}
+                        </p>
+                        {concierge && (
+                          <p className="mt-1.5 text-sm text-gray-700">
+                            <span className="mr-1">💬</span>
+                            <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Lens:</span>{" "}
+                            <span className="italic">&ldquo;{concierge.length > 140 ? concierge.slice(0, 140) + "…" : concierge}&rdquo;</span>
+                            {typeof b.concierge_match_count === "number" && b.concierge_match_count > 0 && (
+                              <span className="text-gray-500"> · {b.concierge_match_count} match{b.concierge_match_count === 1 ? "" : "es"}</span>
+                            )}
+                            {b.concierge_outcome && (
+                              <span className="text-gray-500"> · {b.concierge_outcome}</span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Actions */}
                   <div className="mt-4 flex items-center border-t border-warm-100 pt-3">

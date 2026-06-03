@@ -75,9 +75,8 @@ export function DashboardMobileNav({ initialRole }: { initialRole?: string }) {
   const tabs = role === "photographer" ? PHOTOGRAPHER_TABS : CLIENT_TABS;
   const more = role === "photographer" ? PHOTOGRAPHER_MORE : CLIENT_MORE;
 
-  // Hide on messages chat detail page (conflicts with sticky send bar)
-  const isChatDetail = /\/dashboard\/messages\/[^/]+/.test(pathname);
-  if (isChatDetail) return null;
+  // Bottom nav stays visible everywhere — including the chat detail page,
+  // since the send bar now sits ABOVE the nav (not on top of it).
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard" || pathname.endsWith("/dashboard");

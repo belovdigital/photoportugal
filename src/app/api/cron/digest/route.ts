@@ -87,6 +87,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ skipped: true, reason: "no activity" });
     }
 
+    // Idempotency guard — Cloudflare's edge can retry our origin on 504
+    // (the GSC fetch above sometimes pushes us past CF's 100s limit) which
+    // ends up running the digest twice and double-sending Telegram + email.
+    // Check notification_logs for today's marker; bail if already sent.
+    const alreadySent = await queryOne<{ id: string }>(
+      `SELECT id FROM notification_logs
+        WHERE channel = 'telegram'
+          AND recipient = 'admin:daily_digest'
+          AND event LIKE '📊 Daily Digest%'
+          AND status = 'sent'
+          AND created_at::date = CURRENT_DATE
+        LIMIT 1`
+    ).catch(() => null);
+    if (alreadySent) {
+      console.log("[cron/digest] already sent today — skipping duplicate");
+      return NextResponse.json({ skipped: true, reason: "already sent today" });
+    }
+
     // Build email
     const newBookingsHtml = bookings.length > 0
       ? bookings.map(b =>

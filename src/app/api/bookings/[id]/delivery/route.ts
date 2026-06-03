@@ -11,9 +11,9 @@ import { sendSMS } from "@/lib/sms";
 import { uploadToS3, deleteFromS3, getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per delivery photo (high-res)
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB per delivery photo (high-res RAW exports)
 const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB per delivery video (h264 at ~5-10MB/s)
-const MAX_DELIVERY_PHOTOS = 200; // max items per delivery (photos + videos combined)
+const MAX_DELIVERY_PHOTOS = 500; // max items per delivery (photos + videos combined) — raised from 200 after Isa hit it generously delivering 222 photos for an Essential package
 const MAX_DELIVERY_VIDEOS = 10; // hard cap on videos to keep total ZIP / storage in check
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
@@ -160,10 +160,11 @@ export async function POST(
       await queryOne(
         `UPDATE bookings
            SET status = 'delivered',
-               delivery_token = $1, delivery_password = $2, delivery_expires_at = $3,
-               delivery_title = $4, delivery_message = $5
-         WHERE id = $6 RETURNING id`,
-        [token, hashedPassword, expiresAt.toISOString(), title, message, id]
+               delivery_token = $1, delivery_password = $2, delivery_password_plain = $3,
+               delivery_expires_at = $4,
+               delivery_title = $5, delivery_message = $6
+         WHERE id = $7 RETURNING id`,
+        [token, hashedPassword, password, expiresAt.toISOString(), title, message, id]
       );
 
       const deliveryUrl = `${BASE_URL}/delivery/${token}`;
@@ -267,12 +268,13 @@ export async function POST(
         }
         // Push to client — tap → booking detail (delivery card lives there)
         if (deliveryDetails?.client_id) {
+          const photogFirst = (deliveryDetails.photographer_name || "").split(" ")[0] || "Your photographer";
           import("@/lib/push").then(m =>
             m.sendPushNotification(
               deliveryDetails.client_id,
-              "Your photos are ready! 📸",
-              `${deliveryDetails.photographer_name} delivered your gallery.`,
-              { type: "booking", bookingId: id }
+              `📸 ${photogFirst} delivered your photos`,
+              "Your gallery is ready — tap to view.",
+              { type: "booking", bookingId: id, channelId: "bookings", categoryId: "DELIVERY" }
             )
           ).catch(err => console.error("[delivery] push error:", err));
           import("@/lib/realtime").then((m) =>
@@ -392,6 +394,17 @@ export async function POST(
       return `PhotoPortugal_${sanitizedPhotographer}_${bookingShort}_${padded}.${ext}`;
     }
 
+    // Per-file processing errors (S3 outage, sharp OOM, DB hiccup, etc.)
+    // are collected here so we can:
+    //   1. log them with full file context (name, size, kind) — makes it
+    //      possible to grep logs when a photographer says "uploads kept
+    //      failing" and we need to know why
+    //   2. tell the client which specific files failed so the UI shows the
+    //      real reason, not the generic "(likely too large)" guess
+    //   3. ping admin (email + telegram) so we hear about it without
+    //      waiting for the photographer to complain
+    const processingErrors: { filename: string; size: number; kind: "image" | "video"; reason: string }[] = [];
+
     const uploaded = [];
     for (const file of files) {
       const kind = classify(file);
@@ -409,6 +422,12 @@ export async function POST(
       const ext = rawExt;
       const filename = `${crypto.randomUUID()}.${ext}`;
       const downloadName = prettyDownloadName(sortOrder + 1, ext);
+
+      // Wrap the WHOLE per-file pipeline (buffer read → S3 upload →
+      // preview generation → DB insert) so one bad file doesn't kill
+      // the whole batch. arrayBuffer() itself can throw for corrupt
+      // FormData blobs, so it's inside the try.
+      try {
       const buffer = Buffer.from(await file.arrayBuffer());
 
       // Upload original to R2
@@ -458,8 +477,14 @@ export async function POST(
         continue;
       }
 
-      // image branch — generate watermarked preview as before
+      // image branch — generate watermarked preview as before, PLUS a
+      // clean 1200px thumbnail (no watermark) used by the gallery grid
+      // after delivery is accepted. Without the clean thumb we'd either
+      // (a) ship watermarked thumbnails to paying clients post-accept,
+      // or (b) the previous "fall back to original" behaviour that
+      // dragged 89×15MB into mobile Safari and OOM'd the page.
       let previewUrl: string | null = null;
+      let cleanThumbUrl: string | null = null;
       try {
         const previewFilename = `preview_${crypto.randomUUID()}.jpg`;
         const watermarkPath = path.join(process.cwd(), "public", "icon-512.png");
@@ -468,6 +493,19 @@ export async function POST(
           .resize({ width: 1200, withoutEnlargement: true })
           .jpeg({ quality: 60 })
           .toBuffer({ resolveWithObject: true });
+
+        // Upload the CLEAN 1200px buffer FIRST, before we composite the
+        // watermark on top of it. Same pixels we already computed —
+        // zero extra Sharp work, just one additional S3 PUT. Wrapped in
+        // its own try so a failed clean-thumb upload doesn't poison
+        // the (more important) watermarked preview path below.
+        try {
+          const thumbKey = `delivery/${id}/thumb_${crypto.randomUUID()}.jpg`;
+          await uploadToS3(thumbKey, previewBuffer, "image/jpeg");
+          cleanThumbUrl = `s3://${thumbKey}`;
+        } catch (thumbErr) {
+          console.error("[delivery] clean thumb upload error:", thumbErr);
+        }
 
         const previewWidth = previewInfo.width || 1200;
         const previewHeight = previewInfo.height || 800;
@@ -496,13 +534,57 @@ export async function POST(
       }
 
       const item = await queryOne<{ id: string }>(
-        `INSERT INTO delivery_photos (booking_id, url, preview_url, filename, file_size, sort_order, media_type)
-         VALUES ($1, $2, $3, $4, $5, $6, 'image') RETURNING id`,
-        [id, url, previewUrl, downloadName, file.size, sortOrder++]
+        `INSERT INTO delivery_photos (booking_id, url, preview_url, thumbnail_url, filename, file_size, sort_order, media_type)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'image') RETURNING id`,
+        [id, url, previewUrl, cleanThumbUrl, downloadName, file.size, sortOrder++]
       );
 
       const publicUrl = isS3Path(url) ? await getPresignedUrl(s3KeyFromPath(url), 3600) : url;
       uploaded.push({ id: item?.id, url: publicUrl, filename: downloadName, file_size: file.size, media_type: "image" });
+      } catch (perFileErr) {
+        // Per-file processing failure (S3, sharp, DB). Log with full
+        // context so we can diagnose without the photographer having to
+        // re-create the failure. Push to processingErrors and continue
+        // — the rest of the batch should still go through.
+        const reason = perFileErr instanceof Error ? perFileErr.message : String(perFileErr);
+        console.error(`[delivery] per-file upload error: file="${file.name}" size=${file.size} kind=${kind} booking=${id} reason="${reason}"`, perFileErr);
+        processingErrors.push({ filename: file.name, size: file.size, kind, reason });
+        rejectedFiles.push(`"${file.name}" — upload failed (${reason.slice(0, 100)})`);
+      }
+    }
+
+    // If anything failed at the per-file processing level (not just
+    // size/MIME), surface it to admin so we hear about it without
+    // waiting for the photographer to complain. Skipping when the only
+    // failures are clean size/MIME rejections — those are user error,
+    // not server error.
+    if (processingErrors.length > 0) {
+      import("@/lib/email").then(async ({ sendEmail, getAdminEmail }) => {
+        const adminEmail = await getAdminEmail();
+        const photographer = booking.photographer_name || "(unknown)";
+        const lines = processingErrors.map((e) =>
+          `<li><code>${e.filename}</code> — ${(e.size / 1024 / 1024).toFixed(1)}MB ${e.kind}: ${e.reason.replace(/[<>]/g, "")}</li>`
+        ).join("");
+        sendEmail(
+          adminEmail,
+          `[delivery upload] ${processingErrors.length} file(s) failed for ${photographer}`,
+          `<div style="font-family: sans-serif; max-width: 600px;">
+            <h2>Delivery upload — per-file failures</h2>
+            <p><strong>Photographer:</strong> ${photographer}</p>
+            <p><strong>Booking:</strong> <code>${id}</code></p>
+            <p><strong>Outcome:</strong> ${uploaded.length} uploaded, ${processingErrors.length} failed</p>
+            <ul>${lines}</ul>
+            <p><a href="https://photoportugal.com/admin">Open admin →</a></p>
+          </div>`
+        ).catch((e) => console.error("[delivery] admin email error:", e));
+      }).catch((e) => console.error("[delivery] admin email import error:", e));
+      import("@/lib/telegram").then(({ sendTelegram }) => {
+        const head = `⚠️ <b>Delivery upload failures</b>\n\n${booking.photographer_name || "(unknown)"} — ${processingErrors.length} file(s) failed, ${uploaded.length} ok`;
+        const detail = processingErrors.slice(0, 5).map((e) =>
+          `• <code>${e.filename}</code> (${(e.size / 1024 / 1024).toFixed(1)}MB): ${e.reason.replace(/[<>]/g, "").slice(0, 80)}`
+        ).join("\n");
+        sendTelegram(`${head}\n\n${detail}`, "alerts");
+      }).catch((e) => console.error("[delivery] telegram error:", e));
     }
 
     return NextResponse.json({
@@ -514,6 +596,25 @@ export async function POST(
   } catch (error) {
     console.error("[delivery] upload error:", error);
     try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/bookings/:id/delivery", method: req.method, statusCode: 500 }); } catch {}
+    // Top-level catch — fires when the WHOLE request failed (formData
+    // parse, auth, DB connection blip etc.). Also alert admin so we
+    // notice these silent infrastructure failures.
+    try {
+      const { sendEmail, getAdminEmail } = await import("@/lib/email");
+      const adminEmail = await getAdminEmail();
+      const msg = error instanceof Error ? error.message : String(error);
+      sendEmail(
+        adminEmail,
+        `[delivery upload] Hard 500 on booking ${id}`,
+        `<div style="font-family: sans-serif; max-width: 600px;">
+          <h2>Delivery upload — hard failure</h2>
+          <p><strong>Booking:</strong> <code>${id}</code></p>
+          <p><strong>Error:</strong> ${msg.replace(/[<>]/g, "")}</p>
+          <p>Photographer's whole upload batch was rejected. Check the photoportugal-blue logs for context.</p>
+          <p><a href="https://photoportugal.com/admin">Open admin →</a></p>
+        </div>`
+      ).catch(() => {});
+    } catch {}
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

@@ -26,6 +26,10 @@ export async function GET(req: NextRequest) {
   // older rows still match the filter.
   if (filter === "matched") where.push("outcome IN ('matched', 'show_matches')");
   if (filter === "handoff") where.push("outcome = 'human_handoff'");
+  // Archive tab shows ONLY archived rows; every other filter excludes them
+  // so the default list isn't polluted with old/dismissed chats.
+  if (filter === "archived") where.push("COALESCE(archived, FALSE) = TRUE");
+  else where.push("COALESCE(archived, FALSE) = FALSE");
   // "hot" is computed AFTER fetching (lead score is heuristic, not a
   // column) — we just don't restrict here and post-filter by heat below.
   const wantHot = filter === "hot";
@@ -125,6 +129,24 @@ export async function GET(req: NextRequest) {
      ORDER BY count DESC LIMIT 10`
   ).catch(() => []);
 
+  // Top spots — which photo-spot pages Lens has surfaced via show_spots.
+  // Same lookback (90 days) as topPhotogs/topChips. Drives a small block
+  // in the admin so we can see whether the spots tool is being used at all
+  // and which spots Lens actually recommends. Pulled from the messages
+  // JSONB column so it works without a dedicated tracking table.
+  const topSpots = await query<{ city: string; slug: string; count: number }>(
+    `SELECT (sp->>'city') AS city,
+            (sp->>'slug') AS slug,
+            COUNT(*)::int AS count
+       FROM concierge_chats c,
+            jsonb_array_elements(c.messages) AS m,
+            jsonb_array_elements(COALESCE(m->'action'->'data'->'spots', '[]'::jsonb)) AS sp
+      WHERE c.created_at > NOW() - INTERVAL '90 days'
+        AND m->'action'->>'type' = 'show_spots'
+      GROUP BY (sp->>'city'), (sp->>'slug')
+      ORDER BY count DESC LIMIT 10`
+  ).catch(() => []);
+
   // Top chips — which Lens pre-prompt chips actually convert to chats
   // and matches. Lets us prune dead chips and amplify the high-converting
   // ones over time. Conversion = matched / used.
@@ -139,8 +161,16 @@ export async function GET(req: NextRequest) {
       ORDER BY used DESC LIMIT 10`
   ).catch(() => []);
 
-  // Hot lead count for the filter bar
-  const hotCount = scored.filter((c) => c.lead_heat === "hot").length;
+  // Hot lead count for the filter bar — only counts non-archived chats so
+  // the badge reflects what you'd see in the default list.
+  const hotCount = filter === "archived"
+    ? 0
+    : scored.filter((c) => c.lead_heat === "hot").length;
+
+  // Total archived count across all time — drives the "Archived (N)" tab label.
+  const archivedRow = await queryOne<{ n: number }>(
+    `SELECT COUNT(*)::int AS n FROM concierge_chats WHERE COALESCE(archived, FALSE) = TRUE`
+  ).catch(() => null);
 
   return NextResponse.json({
     chats: filteredChats,
@@ -150,8 +180,10 @@ export async function GET(req: NextRequest) {
       by_source: [],
       top_locations: [],
       top_photographers: topPhotogs,
+      top_spots: topSpots,
       top_chips: topChips,
       hot_leads: hotCount,
+      archived_count: archivedRow?.n ?? 0,
     } : null,
   });
 }

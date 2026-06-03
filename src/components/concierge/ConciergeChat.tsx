@@ -52,6 +52,35 @@ function MarkdownText({ text }: { text: string }) {
   );
 }
 
+function readStoredAttribution() {
+  const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "gclid"] as const;
+  const out: Partial<Record<(typeof keys)[number], string>> = {};
+  for (const key of keys) {
+    try {
+      const direct = new URLSearchParams(window.location.search).get(key);
+      if (direct) {
+        out[key] = direct;
+        continue;
+      }
+      const sessionValue = sessionStorage.getItem(key);
+      if (sessionValue) {
+        out[key] = sessionValue;
+        continue;
+      }
+      const raw = localStorage.getItem(`pp_${key}`);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as { v?: string; ts?: number };
+      if (!parsed.v) continue;
+      const ageMs = Date.now() - Number(parsed.ts || 0);
+      if (Number.isFinite(ageMs) && ageMs > 90 * 864e5) continue;
+      out[key] = parsed.v;
+    } catch {}
+  }
+  if (out.gclid && !out.utm_source) out.utm_source = "google";
+  if (out.gclid && !out.utm_medium) out.utm_medium = "cpc";
+  return out;
+}
+
 interface MatchBadge {
   type: string;
   label: string;
@@ -96,9 +125,23 @@ interface LocationOption {
   reason: string;
 }
 
+interface SpotOption {
+  city: string;
+  slug: string;
+  name: string;
+  name_pt?: string;
+  name_de?: string;
+  name_es?: string;
+  name_fr?: string;
+  description: string;
+  cover_image?: string | null;
+  reason: string;
+}
+
 type Action =
   | { type: "show_matches"; data: { matches: MatchPhotographer[]; reply_text: string } }
   | { type: "show_locations"; data: { locations: LocationOption[]; reply_text: string } }
+  | { type: "show_spots"; data: { spots: SpotOption[]; reply_text: string } }
   | { type: "human_handoff"; data: { reason: string; summary: string } };
 
 interface Msg {
@@ -379,24 +422,27 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
-  // Proactive email/WhatsApp nudge — fires once 90s after matches were
-  // shown if the visitor hasn't given contact AND isn't already in the
-  // middle of an in-chat ask. The bot pushes an assistant message and
-  // surfaces the contact form below (reuses pendingContact mechanism).
+  // Auto-surface the email-capture form 2.5s after matches render —
+  // shortened from a 90s nudge with a fresh assistant message, because
+  // (a) visitors usually leave the tab well before 90s, killing the
+  // single highest-leverage capture moment (over 30 days we sat at
+  // 2 / 117 email capture — see memory note on concierge conversion),
+  // and (b) the LLM now offers the email itself in the same turn as
+  // show_matches (see "Email capture after show_matches" in the system
+  // prompt), so injecting a second proactive message would double up
+  // and feel pushy. The form just appears under the matches so the
+  // visitor's email submission lines up with the LLM's offer.
   useEffect(() => {
     if (!matchesShown) return;
     if (hasContact) return;
     if (pendingContact !== null) return;
     if (proactiveNudgeFiredRef.current) return;
     const timer = setTimeout(() => {
-      // Re-check at fire time — visitor may have given contact in the
-      // meantime, in which case skip silently.
       if (proactiveNudgeFiredRef.current) return;
       proactiveNudgeFiredRef.current = true;
-      setMessages((prev) => [...prev, { role: "assistant" as const, content: t("proactiveEmailNudge") }]);
       setPendingContact("email_matches");
       setContactError(false);
-    }, 90_000);
+    }, 2_500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchesShown, hasContact, pendingContact]);
@@ -448,6 +494,7 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
           source: source || "page",
           page_context: pageContext,
           page_context_obj: pageContextObj,
+          attribution: readStoredAttribution(),
           // Verbatim chip the visitor clicked (only on first turn, before
           // chatId exists). Server saves it on INSERT for analytics.
           source_chip: !chatId && opts?.sourceChip ? opts.sourceChip : undefined,
@@ -459,6 +506,15 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
       const action = data.action || null;
       setMessages([...newMessages, { role: "assistant" as const, content: data.reply || "", action }]);
       if (action?.type === "show_matches") setMatchesShown(true);
+      // Sync contact captured by AI's request_human_match tool back to
+      // parent state so `hasContact` flips immediately and the redundant
+      // HumanHandoffBox form below the assistant bubble doesn't render.
+      if (action?.type === "human_handoff") {
+        const ce = (action.data as { contact_email?: string } | undefined)?.contact_email;
+        const cp = (action.data as { contact_phone?: string } | undefined)?.contact_phone;
+        if (ce && ce.includes("@") && !emailValue) setEmailValue(ce);
+        if (cp && cp.replace(/\D/g, "").length >= 8 && !phoneValue) setPhoneValue(cp);
+      }
     } catch (err) {
       console.error(err);
       setMessages([...newMessages, { role: "assistant" as const, content: t("errorRetry"), action: null }]);
@@ -676,22 +732,29 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                     {t("nudge.label")}
                   </div>
                 )}
-                <div
-                  className={`inline-block rounded-2xl px-3.5 py-2 text-[13.5px] leading-relaxed ${
-                    m.role === "user"
-                      ? "bg-primary-600 text-white"
-                      : m.isNudge
-                        ? "bg-amber-50 text-gray-900 ring-1 ring-amber-200"
-                        : "bg-warm-100 text-gray-900"
-                  }`}
-                >
-                  {m.role === "assistant"
-                    ? <MarkdownText text={m.content} />
-                    : /* Strip the "(slug:foo)" hint that LocationOptionCard
-                         appends so the AI gets a deterministic slug while
-                         the visitor only sees the human-readable name. */
-                      m.content.replace(/\s*\(slug:[a-z0-9-]+\)\s*$/i, "")}
-                </div>
+                {/* Skip empty assistant bubbles — happens when the AI
+                    fires a tool call (handoff / matches / locations) but
+                    returns no text. The action card below carries all
+                    the visible meaning; an empty grey bubble next to it
+                    just looks broken. */}
+                {(m.role === "user" || (m.content && m.content.trim())) && (
+                  <div
+                    className={`inline-block rounded-2xl px-3.5 py-2 text-[13.5px] leading-relaxed ${
+                      m.role === "user"
+                        ? "bg-primary-600 text-white"
+                        : m.isNudge
+                          ? "bg-amber-50 text-gray-900 ring-1 ring-amber-200"
+                          : "bg-warm-100 text-gray-900"
+                    }`}
+                  >
+                    {m.role === "assistant"
+                      ? <MarkdownText text={m.content} />
+                      : /* Strip the "(slug:foo)" hint that LocationOptionCard
+                           appends so the AI gets a deterministic slug while
+                           the visitor only sees the human-readable name. */
+                        m.content.replace(/\s*\(slug:[a-z0-9-]+\)\s*$/i, "")}
+                  </div>
+                )}
                 {/* Example-prompt chips. Click → autofills input + auto-
                     submits as the visitor's first user message. Disabled
                     once anything else has been sent. */}
@@ -726,7 +789,11 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                         <PhotographerMatchCard
                           p={p}
                           locale={locale}
-                          chatContext={messages.filter(x => x.role === "user").slice(-3).map(x => x.content).join(" / ")}
+                          chatId={chatId}
+                          // Strip the "(slug:foo)" hint that LocationOptionCard appends to
+                          // user replies — those hints are AI-routing metadata, not something
+                          // that should appear in a booking comment shown to the photographer.
+                          chatContext={messages.filter(x => x.role === "user").slice(-3).map(x => x.content.replace(/\s*\(slug:[a-z0-9-]+\)\s*/gi, " ").trim()).filter(Boolean).join(" / ")}
                           compareSelected={compareSet.has(p.slug)}
                           onToggleCompare={() => toggleCompare(p.slug)}
                           compareDisabled={!compareSet.has(p.slug) && compareSet.size >= 3}
@@ -753,8 +820,21 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                   </div>
                 )}
 
+                {m.action?.type === "show_spots" && (
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {m.action.data.spots.map((sp) => (
+                      <SpotOptionCard key={`${sp.city}-${sp.slug}`} sp={sp} locale={locale} />
+                    ))}
+                  </div>
+                )}
+
                 {m.action?.type === "human_handoff" && (
-                  <HumanHandoffBox chatId={chatId} locale={locale} summary={m.action.data.summary} />
+                  <HumanHandoffBox
+                    chatId={chatId}
+                    locale={locale}
+                    summary={m.action.data.summary}
+                    hasContact={!!hasContact}
+                  />
                 )}
               </div>
             </div>
@@ -991,6 +1071,51 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
   );
 }
 
+function SpotOptionCard({ sp, locale }: { sp: SpotOption; locale: string }) {
+  const displayName =
+    (locale === "pt" && sp.name_pt) ||
+    (locale === "de" && sp.name_de) ||
+    (locale === "es" && sp.name_es) ||
+    (locale === "fr" && sp.name_fr) ||
+    sp.name;
+  // Spots open the dedicated spot page — unlike LocationOptionCard which
+  // feeds the slug back into the chat. Spots are deeper destinations: the
+  // visitor wants to read about the place + see photographers there.
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
+  const href = `${localePrefix}/spots/${sp.city}/${sp.slug}`;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative overflow-hidden rounded-xl border border-warm-200 bg-white text-left transition hover:border-primary-300 hover:shadow-md"
+    >
+      {sp.cover_image ? (
+        <div className="aspect-[16/9] w-full overflow-hidden bg-warm-100">
+          <OptimizedImage src={sp.cover_image} alt={displayName} width={400} className="h-full w-full transition group-hover:scale-[1.02]" />
+        </div>
+      ) : (
+        <div className="flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-primary-50 to-warm-100 text-primary-300">
+          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+          </svg>
+        </div>
+      )}
+      <div className="p-3">
+        <p className="text-sm font-bold text-gray-900">{displayName}</p>
+        <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-gray-600">{sp.reason}</p>
+        <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-primary-600">
+          Open spot
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </span>
+      </div>
+    </a>
+  );
+}
+
 function LocationOptionCard({ loc, locale, disabled, onPick }: { loc: LocationOption; locale: string; disabled: boolean; onPick: (name: string) => void }) {
   const displayName =
     (locale === "pt" && loc.name_pt) ||
@@ -1093,7 +1218,27 @@ function WhatsAppResumeBar({ userMessages }: { locale: string; userMessages: str
   );
 }
 
-function PhotographerMatchCard({ p, locale, chatContext, compareSelected, onToggleCompare, compareDisabled }: { p: MatchPhotographer; locale: string; chatContext: string; compareSelected?: boolean; onToggleCompare?: () => void; compareDisabled?: boolean }) {
+function PhotographerMatchCard({ p, locale, chatContext, chatId, compareSelected, onToggleCompare, compareDisabled }: { p: MatchPhotographer; locale: string; chatContext: string; chatId: string | null; compareSelected?: boolean; onToggleCompare?: () => void; compareDisabled?: boolean }) {
+  // Fire-and-forget click beacon — drives the click_through funnel
+  // metric on concierge_recommendation_events. Uses sendBeacon when
+  // available so it survives navigation away from the page.
+  const trackClick = () => {
+    if (!chatId || !p.id) return;
+    try {
+      const body = JSON.stringify({ chat_id: chatId, photographer_id: p.id });
+      if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+        const blob = new Blob([body], { type: "application/json" });
+        navigator.sendBeacon("/api/concierge/recommendation-click", blob);
+        return;
+      }
+      fetch("/api/concierge/recommendation-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+        keepalive: true,
+      }).catch(() => {});
+    } catch {}
+  };
   const t = useTranslations("concierge");
   const firstName = p.name.split(" ")[0];
   const presence = presenceBadge(p.last_seen_at, t);
@@ -1227,6 +1372,7 @@ function PhotographerMatchCard({ p, locale, chatContext, compareSelected, onTogg
           href={`/${locale}/photographers/${p.slug}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={trackClick}
           className="flex-1 px-3 py-2 text-center text-[13px] font-medium text-gray-600 transition hover:bg-warm-50"
         >
           {t("viewProfile")}
@@ -1235,6 +1381,7 @@ function PhotographerMatchCard({ p, locale, chatContext, compareSelected, onTogg
           href={bookHref}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={trackClick}
           className="flex-1 border-l border-warm-100 bg-primary-600 px-3 py-2 text-center text-[13px] font-semibold text-white transition hover:bg-primary-700"
         >
           {t("talkTo", { name: firstName })}
@@ -1404,22 +1551,41 @@ function CompareColumn({ p, locale }: { p: MatchPhotographer; locale: string }) 
   );
 }
 
-function HumanHandoffBox({ chatId, summary }: { chatId: string | null; locale: string; summary: string }) {
+// Compact contact-capture card that appears under an AI handoff message.
+// Single input — accepts a WhatsApp / phone number OR an email. We
+// auto-detect which one the visitor typed. Layout stacks vertically so
+// it fits the chat sidebar width without overflow.
+//
+// `hasContact` lets the parent skip rendering this entirely when the AI
+// already captured contact info on a previous turn (most common case
+// now that the prompt forces it). Card only shows as a fallback.
+function HumanHandoffBox({ chatId, summary, hasContact }: { chatId: string | null; locale: string; summary: string; hasContact?: boolean }) {
   const t = useTranslations("concierge");
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  if (hasContact) return null; // AI captured it already
+
+  const trimmed = contact.trim();
+  const looksLikeEmail = trimmed.includes("@") && trimmed.includes(".");
+  const digits = trimmed.replace(/\D/g, "");
+  const looksLikePhone = !looksLikeEmail && digits.length >= 6;
+  const valid = looksLikeEmail || looksLikePhone;
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!chatId || !email.includes("@")) return;
+    if (!chatId || !valid) return;
     setSubmitting(true);
     try {
       const res = await fetch("/api/concierge/handoff", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, email, first_name: name, summary }),
+        body: JSON.stringify({
+          chat_id: chatId,
+          summary,
+          ...(looksLikeEmail ? { email: trimmed } : { phone: trimmed }),
+        }),
       });
       if (res.ok) setSubmitted(true);
     } catch {}
@@ -1435,32 +1601,25 @@ function HumanHandoffBox({ chatId, summary }: { chatId: string | null; locale: s
   }
 
   return (
-    <form onSubmit={submit} className="mt-3 space-y-2 rounded-xl border border-warm-200 bg-warm-50 p-4">
-      <p className="text-sm text-gray-700">{t("handoffPrompt")}</p>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <input
-          type="text"
-          placeholder={t("handoffNamePlaceholder")}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-base sm:text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-        />
-        <input
-          type="email"
-          required
-          placeholder={t("handoffEmailPlaceholder")}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 rounded-lg border border-warm-200 bg-white px-3 py-1.5 text-base sm:text-sm focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
-        />
-        <button
-          type="submit"
-          disabled={!email.includes("@") || submitting}
-          className="rounded-lg bg-primary-600 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
-        >
-          {submitting ? t("handoffSendingBtn") : t("handoffSubmitBtn")}
-        </button>
-      </div>
+    <form onSubmit={submit} className="mt-3 space-y-2.5 rounded-xl border border-warm-200 bg-warm-50 p-4">
+      <p className="text-sm text-gray-700">{t("handoffPromptPhone") || t("handoffPrompt")}</p>
+      <input
+        type="tel"
+        inputMode="tel"
+        autoComplete="tel"
+        required
+        placeholder={t("handoffContactPlaceholder") || "WhatsApp number or email"}
+        value={contact}
+        onChange={(e) => setContact(e.target.value)}
+        className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-base focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+      />
+      <button
+        type="submit"
+        disabled={!valid || submitting}
+        className="w-full rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+      >
+        {submitting ? t("handoffSendingBtn") : t("handoffSubmitBtn")}
+      </button>
     </form>
   );
 }

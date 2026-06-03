@@ -55,108 +55,212 @@ interface StripeWebhookEvent {
   data: { object: Record<string, unknown> };
 }
 
-function summariseStripeEvent(event: StripeWebhookEvent): string {
+// Resolves a Stripe customer ID into a human label like
+// "Jose Santos (magicdreams@outlook.pt)". Returns null silently if we can't
+// find the photographer — the alert still goes out, just without a name.
+async function resolveCustomerLabel(customerId: string | undefined): Promise<string | null> {
+  if (!customerId) return null;
+  try {
+    const row = await queryOne<{ name: string | null; email: string | null; slug: string | null }>(
+      `SELECT u.name, u.email, pp.slug
+         FROM users u
+         LEFT JOIN photographer_profiles pp ON pp.user_id = u.id
+        WHERE u.stripe_customer_id = $1
+        LIMIT 1`,
+      [customerId]
+    );
+    if (!row) return null;
+    const name = String(row.name || "").replace(/[<>]/g, "");
+    const email = String(row.email || "").replace(/[<>]/g, "");
+    const slug = row.slug ? `/${row.slug}` : "";
+    if (name && email) return `${name} (${email})${slug}`;
+    if (name) return `${name}${slug}`;
+    if (email) return email + slug;
+    return null;
+  } catch { return null; }
+}
+
+// Pulls a friendly subscription-type label ("Verified", "Featured", "Pro
+// plan") out of a Stripe subscription by reading its metadata. Falls back
+// to the raw price ID only if metadata wasn't set.
+async function resolveSubscriptionLabel(subscriptionId: string | undefined): Promise<string | null> {
+  if (!subscriptionId) return null;
+  try {
+    const sub = await requireStripe().subscriptions.retrieve(subscriptionId);
+    const md = (sub.metadata || {}) as Record<string, string>;
+    if (md.type === "verified") return "✔️ Verified";
+    if (md.type === "featured") return "⭐ Featured";
+    if (md.plan) return `Plan: ${md.plan}`;
+    const item = sub.items?.data?.[0];
+    return item?.price?.nickname || item?.price?.id || null;
+  } catch { return null; }
+}
+
+async function summariseStripeEvent(event: StripeWebhookEvent): Promise<string> {
   const obj = (event.data?.object || {}) as Record<string, unknown>;
+
+  // Russian-flavoured human-readable headlines instead of the raw event types.
+  // Each branch returns a tuple [headline, ...detailLines]. Goal: glance at
+  // the chat and instantly know what happened without parsing IDs. Booking
+  // ID is the only ID we keep (last 8 chars) — it's how we cross-reference
+  // with the bookings tab in admin if something looks off.
   const lines: string[] = [];
 
-  // Pick a human-friendly headline emoji per event family.
-  const emojiMap: Record<string, string> = {
-    "payment_intent.succeeded": "💳",
-    "payment_intent.payment_failed": "❌",
-    "charge.refunded": "↩️",
-    "charge.dispute.created": "⚠️",
-    "checkout.session.completed": "🛒",
-    "customer.subscription.created": "🆕",
-    "customer.subscription.updated": "🔄",
-    "customer.subscription.deleted": "🚪",
-    "invoice.payment_succeeded": "📄",
-    "invoice.payment_failed": "📄❌",
-    "transfer.created": "💸",
-    "transfer.reversed": "↪️",
-    "transfer.failed": "🚫",
-    "payout.created": "🏦",
-    "payout.paid": "✅",
-    "payout.failed": "🚫",
-    "account.updated": "👤",
-    "review.opened": "🔍",
-    "radar.early_fraud_warning.created": "🚨",
-  };
-  const emoji = emojiMap[event.type] || "📌";
-  lines.push(`${emoji} <b>${event.type}</b>`);
+  const meta = (obj.metadata as Record<string, string>) || {};
+  const bookingTail = meta.booking_id ? meta.booking_id.slice(0, 8) : null;
+  const customerId = (obj.customer as string | undefined) || undefined;
+  const customerLabel = await resolveCustomerLabel(customerId);
 
-  // Event-type-specific detail row.
   switch (event.type) {
-    case "payment_intent.succeeded":
+    case "payment_intent.succeeded": {
+      // Gift card sales get their own (more informative) admin alert
+      // from gift-card-fulfillment — suppress the generic firehose
+      // line for them to avoid double-pinging. Caller filters empty
+      // headlines and skips the Telegram post entirely.
+      if (meta.gift_card_id) return "";
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      lines.push(`💸 <b>Бабки на базе!</b> Прилетело ${amt}.`);
+      if (customerLabel) lines.push(`От: ${customerLabel}`);
+      if (bookingTail) lines.push(`Букинг: <code>${bookingTail}</code>`);
+      break;
+    }
     case "payment_intent.payment_failed": {
-      const amount = obj.amount as number | undefined;
-      const currency = obj.currency as string | undefined;
-      const meta = (obj.metadata as Record<string, string>) || {};
-      lines.push(`Amount: ${fmtAmount(amount, currency)}`);
-      if (meta.booking_id) lines.push(`Booking: ${meta.booking_id.slice(0, 8)}`);
-      if (event.type === "payment_intent.payment_failed" && obj.last_payment_error) {
-        const err = obj.last_payment_error as { message?: string };
-        if (err.message) lines.push(`Reason: ${String(err.message).slice(0, 200)}`);
-      }
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      const err = obj.last_payment_error as { message?: string } | undefined;
+      lines.push(`❌ <b>Не прошла оплата</b> на ${amt}. У клиента беда с картой.`);
+      if (err?.message) lines.push(`<i>${String(err.message).slice(0, 180)}</i>`);
+      if (bookingTail) lines.push(`Букинг: <code>${bookingTail}</code>`);
       break;
     }
     case "charge.refunded": {
-      lines.push(`Amount refunded: ${fmtAmount(obj.amount_refunded as number, obj.currency as string)}`);
-      const meta = (obj.metadata as Record<string, string>) || {};
-      if (meta.booking_id) lines.push(`Booking: ${meta.booking_id.slice(0, 8)}`);
+      const amt = fmtAmount(obj.amount_refunded as number, obj.currency as string);
+      lines.push(`↩️ <b>Вернули</b> клиенту ${amt}.`);
+      if (bookingTail) lines.push(`Букинг: <code>${bookingTail}</code>`);
       break;
     }
     case "charge.dispute.created": {
-      lines.push(`Disputed: ${fmtAmount(obj.amount as number, obj.currency as string)}`);
-      if (obj.reason) lines.push(`Reason: ${String(obj.reason)}`);
-      lines.push(`⚠️ Respond before evidence due date in Stripe dashboard.`);
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      lines.push(`🚨 <b>ЧАРДЖБЭК!</b> Клиент оспорил ${amt}.`);
+      if (obj.reason) lines.push(`Причина: ${String(obj.reason)}`);
+      lines.push(`⏰ Срочно отвечать в Stripe до дедлайна, иначе деньги уйдут.`);
       break;
     }
     case "checkout.session.completed": {
-      const meta = (obj.metadata as Record<string, string>) || {};
+      const total = fmtAmount(obj.amount_total as number, obj.currency as string);
       const mode = obj.mode as string | undefined;
-      lines.push(`Mode: ${mode || "?"}`);
-      lines.push(`Total: ${fmtAmount(obj.amount_total as number, obj.currency as string)}`);
-      if (meta.type) lines.push(`Type: ${meta.type}`);
-      if (meta.booking_id) lines.push(`Booking: ${meta.booking_id.slice(0, 8)}`);
-      break;
-    }
-    case "customer.subscription.created":
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted": {
-      const items = (obj.items as { data?: Array<{ price?: { id?: string; nickname?: string } }> } | undefined)?.data || [];
-      const status = obj.status as string | undefined;
-      lines.push(`Status: ${status || "?"}`);
-      const priceLabels = items
-        .map((it) => it.price?.nickname || it.price?.id)
-        .filter(Boolean);
-      if (priceLabels.length) lines.push(`Products: ${priceLabels.join(", ")}`);
-      break;
-    }
-    case "invoice.payment_succeeded":
-    case "invoice.payment_failed": {
-      lines.push(`Amount: ${fmtAmount(obj.amount_due as number, obj.currency as string)}`);
-      if (obj.billing_reason) lines.push(`Reason: ${String(obj.billing_reason)}`);
-      break;
-    }
-    case "transfer.created":
-    case "transfer.reversed":
-    case "transfer.failed": {
-      const meta = (obj.metadata as Record<string, string>) || {};
-      lines.push(`Amount: ${fmtAmount(obj.amount as number, obj.currency as string)}`);
-      lines.push(`Destination: ${String(obj.destination || "?")}`);
-      if (meta.booking_id) lines.push(`Booking: ${meta.booking_id.slice(0, 8)}`);
-      if (meta.type) lines.push(`Type: ${meta.type}`);
-      break;
-    }
-    case "payout.created":
-    case "payout.paid":
-    case "payout.failed": {
-      lines.push(`Amount: ${fmtAmount(obj.amount as number, obj.currency as string)}`);
-      lines.push(`Method: ${String(obj.method || "?")}`);
-      if (event.account) lines.push(`Connect acct: ${event.account}`);
-      if (event.type === "payout.failed" && obj.failure_message) {
-        lines.push(`Reason: ${String(obj.failure_message).slice(0, 200)}`);
+      if (mode === "subscription") {
+        // Pull the type label off the subscription so the alert says
+        // "Verified" / "Featured" / "Pro plan" instead of a vague headline.
+        const subId = obj.subscription as string | undefined;
+        const subLabel = await resolveSubscriptionLabel(subId);
+        const what = subLabel || "подписку";
+        lines.push(`🛒 <b>Оформляют ${what}</b> за ${total}.`);
+      } else if (meta.type === "verified" || meta.type === "featured") {
+        lines.push(`🛒 <b>Фотограф купил ${meta.type === "verified" ? "галочку Verified" : "Featured"}</b> за ${total}. 🎉`);
+      } else {
+        lines.push(`🛒 <b>Клиент дошёл до checkout</b> на ${total}. Сейчас прилетит payment_intent.`);
       }
+      if (customerLabel) lines.push(`Кто: ${customerLabel}`);
+      if (meta.type && mode !== "subscription") lines.push(`Тип: ${meta.type}`);
+      if (bookingTail) lines.push(`Букинг: <code>${bookingTail}</code>`);
+      break;
+    }
+    case "customer.subscription.created": {
+      // Prefer metadata.type (set by /api/stripe/{verified,featured,subscription})
+      // — that's the human label. Price nickname / id is the fallback.
+      const subMd = (obj.metadata as Record<string, string>) || {};
+      let what: string;
+      if (subMd.type === "verified") what = "✔️ Verified";
+      else if (subMd.type === "featured") what = "⭐ Featured";
+      else if (subMd.plan) what = `Plan: ${subMd.plan}`;
+      else {
+        const items = (obj.items as { data?: Array<{ price?: { id?: string; nickname?: string } }> } | undefined)?.data || [];
+        what = items.map((it) => it.price?.nickname || it.price?.id).filter(Boolean).join(", ") || "?";
+      }
+      lines.push(`🆕 <b>Новый подписчик: ${what}</b>`);
+      if (customerLabel) lines.push(`Кто: ${customerLabel}`);
+      break;
+    }
+    case "customer.subscription.updated": {
+      const subMd = (obj.metadata as Record<string, string>) || {};
+      let what: string;
+      if (subMd.type === "verified") what = "✔️ Verified";
+      else if (subMd.type === "featured") what = "⭐ Featured";
+      else if (subMd.plan) what = `Plan: ${subMd.plan}`;
+      else {
+        const items = (obj.items as { data?: Array<{ price?: { id?: string; nickname?: string } }> } | undefined)?.data || [];
+        what = items.map((it) => it.price?.nickname || it.price?.id).filter(Boolean).join(", ") || "?";
+      }
+      const status = obj.status as string | undefined;
+      const cancelAtEnd = obj.cancel_at_period_end === true;
+      if (cancelAtEnd) lines.push(`🚪 <b>Отменили на конец периода:</b> ${what}`);
+      else lines.push(`🔄 <b>Подписка обновлена:</b> ${what}. Статус: ${status}.`);
+      if (customerLabel) lines.push(`Кто: ${customerLabel}`);
+      break;
+    }
+    case "customer.subscription.deleted": {
+      const subMd = (obj.metadata as Record<string, string>) || {};
+      const what = subMd.type === "verified" ? "✔️ Verified"
+        : subMd.type === "featured" ? "⭐ Featured"
+        : subMd.plan ? `Plan: ${subMd.plan}` : "подписка";
+      lines.push(`👋 <b>${what} — закончилась.</b> Кто-то слился.`);
+      if (customerLabel) lines.push(`Кто: ${customerLabel}`);
+      break;
+    }
+    case "invoice.payment_succeeded": {
+      const amt = fmtAmount(obj.amount_paid as number || obj.amount_due as number, obj.currency as string);
+      const reason = obj.billing_reason as string | undefined;
+      const subLabel = await resolveSubscriptionLabel(obj.subscription as string | undefined);
+      const what = subLabel ? ` за ${subLabel}` : "";
+      if (reason === "subscription_cycle") lines.push(`📅 <b>Списалось${what}:</b> ${amt}`);
+      else if (reason === "subscription_create") lines.push(`📅 <b>Первый счёт оплачен${what}:</b> ${amt}`);
+      else lines.push(`📄 <b>Инвойс оплачен${what}:</b> ${amt}`);
+      if (customerLabel) lines.push(`Кто: ${customerLabel}`);
+      break;
+    }
+    case "invoice.payment_failed": {
+      const amt = fmtAmount(obj.amount_due as number, obj.currency as string);
+      const subLabel = await resolveSubscriptionLabel(obj.subscription as string | undefined);
+      const what = subLabel ? ` (${subLabel})` : "";
+      lines.push(`📅❌ <b>Списание не прошло${what}:</b> ${amt}`);
+      if (customerLabel) lines.push(`Кто: ${customerLabel}`);
+      lines.push(`Пнуть фотографа обновить карту.`);
+      break;
+    }
+    case "transfer.created": {
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      lines.push(`💸 <b>Отправили фотографу</b> ${amt}.`);
+      if (bookingTail) lines.push(`Букинг: <code>${bookingTail}</code>`);
+      break;
+    }
+    case "transfer.reversed": {
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      lines.push(`↪️ <b>Вернули перевод</b> на ${amt} обратно на платформу.`);
+      if (bookingTail) lines.push(`Букинг: <code>${bookingTail}</code>`);
+      break;
+    }
+    case "transfer.failed": {
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      lines.push(`🚫 <b>Перевод фотографу зафейлился</b> на ${amt}. Глянь его Stripe-аккаунт.`);
+      if (bookingTail) lines.push(`Букинг: <code>${bookingTail}</code>`);
+      break;
+    }
+    case "payout.created": {
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      lines.push(`🏦 <b>Stripe готовит выплату фотографу</b>: ${amt}. Скоро должно упасть на карту.`);
+      break;
+    }
+    case "payout.paid": {
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      lines.push(`✅ <b>Фотограф получил деньги!</b> ${amt} на карте/счёте.`);
+      break;
+    }
+    case "payout.failed": {
+      const amt = fmtAmount(obj.amount as number, obj.currency as string);
+      const reason = obj.failure_message as string | undefined;
+      lines.push(`🚫 <b>Payout фотографу не прошёл</b>: ${amt}.`);
+      if (reason) lines.push(`<i>${String(reason).slice(0, 180)}</i>`);
+      lines.push(`Сказать фотографу проверить банковские реквизиты.`);
       break;
     }
     case "account.updated": {
@@ -164,35 +268,47 @@ function summariseStripeEvent(event: StripeWebhookEvent): string {
       const payouts = obj.payouts_enabled as boolean | undefined;
       const submitted = obj.details_submitted as boolean | undefined;
       const requirements = obj.requirements as { disabled_reason?: string | null; currently_due?: string[] } | undefined;
-      lines.push(`Acct: ${event.account || obj.id || "?"}`);
-      lines.push(`details_submitted: ${submitted}, charges: ${charges}, payouts: ${payouts}`);
-      if (requirements?.disabled_reason) lines.push(`Disabled: ${requirements.disabled_reason}`);
-      if (requirements?.currently_due?.length) {
-        lines.push(`Pending: ${requirements.currently_due.slice(0, 5).join(", ")}${requirements.currently_due.length > 5 ? "…" : ""}`);
+      if (submitted && charges && payouts) {
+        lines.push(`👤✅ <b>Фотограф закончил Stripe-онбординг</b> — может получать деньги.`);
+      } else if (requirements?.disabled_reason) {
+        lines.push(`👤⚠️ <b>Stripe заблокировал фотографа.</b> Причина: ${requirements.disabled_reason}`);
+        if (requirements.currently_due?.length) {
+          lines.push(`Не хватает: ${requirements.currently_due.slice(0, 5).join(", ")}`);
+        }
+      } else {
+        lines.push(`👤 <b>Фотограф что-то поменял в Stripe-аккаунте.</b>`);
+        lines.push(`Charges: ${charges ? "✅" : "❌"} · Payouts: ${payouts ? "✅" : "❌"} · Submitted: ${submitted ? "✅" : "❌"}`);
       }
       break;
     }
     case "review.opened": {
-      lines.push(`Reason: ${String(obj.reason || "?")}`);
-      if (obj.charge) lines.push(`Charge: ${String(obj.charge)}`);
+      lines.push(`🔍 <b>Stripe открыл review</b> по транзакции.`);
+      if (obj.reason) lines.push(`Причина: ${String(obj.reason)}`);
+      lines.push(`Глянь в Stripe dashboard, возможно нужны действия.`);
       break;
     }
     case "radar.early_fraud_warning.created": {
-      lines.push(`Type: ${String(obj.fraud_type || "?")}`);
-      if (obj.charge) lines.push(`Charge: ${String(obj.charge)}`);
-      lines.push(`⚠️ Bank flagged a charge as likely fraudulent. Refund or contest.`);
+      lines.push(`🚨 <b>БАНК ПОДОЗРЕВАЕТ МОШЕННИЧЕСТВО</b> по платежу.`);
+      if (obj.fraud_type) lines.push(`Тип: ${String(obj.fraud_type)}`);
+      lines.push(`Срочно: вернуть деньги клиенту или собирать доказательства, иначе будет чарджбэк.`);
       break;
     }
+    default:
+      // Fallback for any new event we haven't customised yet.
+      lines.push(`📌 <b>${event.type}</b>`);
+      break;
   }
 
-  // Footer with id + Stripe dashboard deeplink for one-tap inspection.
-  if (event.id) lines.push(`Event: ${event.id}`);
   return lines.join("\n");
 }
 
 async function forwardStripeEventToTelegram(event: StripeWebhookEvent): Promise<void> {
   if (!STRIPE_EVENTS_TO_FORWARD.has(event.type)) return;
-  const summary = summariseStripeEvent(event);
+  const summary = await summariseStripeEvent(event);
+  // Skip empty summaries — summariseStripeEvent uses "" as a sentinel
+  // for "this event has its own dedicated alert path, don't double-post"
+  // (e.g. gift card payment success).
+  if (!summary.trim()) return;
   await sendTelegram(summary, "stripe");
 }
 
@@ -300,8 +416,81 @@ export async function POST(req: NextRequest) {
         const checkoutSession = event.data.object;
         const bookingId = checkoutSession.metadata?.booking_id;
         const checkoutType = checkoutSession.metadata?.type;
+        const meta = (checkoutSession.metadata || {}) as Record<string, string>;
 
-        if (checkoutType === "verified") {
+        if (meta.source === "makealbum" && meta.pp_checkout_id) {
+          // MakeAlbum album purchase — record payment + fire signed webhook
+          // back to MakeAlbum so they can start production. We don't bail
+          // on missing fields here; the outbound webhook helper will log
+          // a structured error against the row.
+          const { deliverMakeAlbumWebhook } = await import("@/lib/makealbum/webhook");
+          // Stripe Checkout sessions surface a few extra keys not in our
+          // local Session type; cast through unknown so we can read the
+          // shipping + customer details collected during the hosted flow.
+          const csAny = checkoutSession as unknown as {
+            shipping_details?: { name?: string; address?: { line1?: string; line2?: string; city?: string; postal_code?: string; country?: string; state?: string } } | null;
+            customer_details?: { email?: string; phone?: string } | null;
+          };
+          const ship = csAny.shipping_details || {};
+          const customer = csAny.customer_details || {};
+          const paymentIntentId = (typeof checkoutSession.payment_intent === "string"
+            ? checkoutSession.payment_intent
+            : (checkoutSession.payment_intent as { id?: string } | null)?.id) || "";
+
+          await queryOne(
+            `UPDATE makealbum_orders
+                SET status                  = 'paid',
+                    paid_at                 = NOW(),
+                    stripe_payment_intent_id = $2,
+                    shipping_address        = $3::jsonb
+              WHERE id = $1
+              RETURNING id`,
+            [
+              meta.pp_checkout_id,
+              paymentIntentId,
+              JSON.stringify({
+                name: ship.name || "",
+                line1: ship.address?.line1 || "",
+                line2: ship.address?.line2 || "",
+                city: ship.address?.city || "",
+                postalCode: ship.address?.postal_code || "",
+                countryCode: ship.address?.country || "",
+                state: ship.address?.state || "",
+                phone: customer.phone || "",
+                email: customer.email || "",
+              }),
+            ],
+          ).catch((e) => console.error("[webhook] makealbum row update failed:", e));
+
+          // Outbound delivery is fire-and-log; we don't block the Stripe
+          // webhook on MakeAlbum's responsiveness.
+          deliverMakeAlbumWebhook(
+            meta.webhook_url,
+            {
+              event: "album.paid",
+              orderId: meta.makealbum_order_id,
+              albumId: meta.makealbum_album_id,
+              checkoutId: meta.pp_checkout_id,
+              paymentId: paymentIntentId,
+              amountCents: Number(checkoutSession.amount_total ?? 0),
+              currency: ((checkoutSession.currency as string) || "eur").toUpperCase(),
+              shippingAddress: {
+                name: ship.name || "",
+                line1: ship.address?.line1 || "",
+                line2: ship.address?.line2 || "",
+                city: ship.address?.city || "",
+                postalCode: ship.address?.postal_code || "",
+                countryCode: ship.address?.country || "",
+                state: ship.address?.state || "",
+                phone: customer.phone || "",
+                email: customer.email || "",
+              },
+            },
+            meta.pp_checkout_id,
+          ).catch((e) => console.error("[webhook] makealbum delivery error:", e));
+
+          console.log(`[webhook] MakeAlbum album paid: ${meta.pp_checkout_id} (order=${meta.makealbum_order_id})`);
+        } else if (checkoutType === "verified") {
           // Verified badge payment completed — activate badge
           const photographerId = checkoutSession.metadata?.photographer_id;
           if (photographerId) {
@@ -348,6 +537,26 @@ export async function POST(req: NextRequest) {
           }
           console.log(`[webhook] Checkout completed for booking ${bookingId}, PI: ${checkoutSession.payment_intent}`);
 
+          // Concierge attribution: stamp paid_at on rec events for the
+          // chat that surfaced this photographer. Uses the already-
+          // persisted bookings.concierge_chat_id link (written by
+          // bookings/route.ts and the inquiries attribution patch).
+          // Fire-and-forget — telemetry must not block the user flow.
+          void (async () => {
+            try {
+              const row = await queryOne<{ concierge_chat_id: string | null; photographer_id: string }>(
+                "SELECT concierge_chat_id, photographer_id FROM bookings WHERE id = $1",
+                [bookingId]
+              );
+              if (row?.concierge_chat_id && row.photographer_id) {
+                const { markPaidFromConcierge } = await import("@/lib/concierge/recommendation-events");
+                await markPaidFromConcierge(row.concierge_chat_id, row.photographer_id);
+              }
+            } catch (err) {
+              console.error("[webhook] concierge paid_at attribution failed:", err);
+            }
+          })();
+
           // Add system message to chat
           try {
             const bookingForMsg = await queryOne<{ client_id: string; client_name: string; client_phone: string | null; total_price: number }>(
@@ -378,12 +587,11 @@ export async function POST(req: NextRequest) {
             );
             if (gclidBooking?.gclid) {
               const conversionValue = paymentAmountFromStripe(paymentSummary.amountTotal, gclidBooking.total_price);
-              import("@/lib/google-ads-conversions").then(({ uploadPaymentCompletedConversion }) => {
-                uploadPaymentCompletedConversion(gclidBooking.gclid!, conversionValue, {
-                  email: gclidBooking.client_email,
-                  phone: gclidBooking.client_phone,
-                });
-              }).catch((err) => console.error("[webhook] gads conversion upload error:", err));
+              const { uploadPaymentCompletedConversion } = await import("@/lib/google-ads-conversions");
+              await uploadPaymentCompletedConversion(gclidBooking.gclid, conversionValue, {
+                email: gclidBooking.client_email,
+                phone: gclidBooking.client_phone,
+              }, `booking:${bookingId}:paid`);
             }
           } catch (gadsErr) {
             console.error("[webhook] gads conversion lookup error:", gadsErr);
@@ -491,12 +699,13 @@ export async function POST(req: NextRequest) {
                 // Push to photographer — fires regardless of phone, lets
                 // photographers without SMS prefs still hear about money.
                 if (photographerUser?.id) {
+                  const clientFirst = (bookingInfo.client_name || "").split(" ")[0] || "A client";
                   import("@/lib/push").then(m =>
                     m.sendPushNotification(
                       photographerUser.id,
-                      "Payment received",
-                      `${displayPaidAmount} from ${bookingInfo.client_name}`,
-                      { type: "booking", bookingId: bookingId || "" }
+                      `💰 ${displayPaidAmount} received from ${clientFirst}`,
+                      "Booking is confirmed — tap to view.",
+                      { type: "booking", bookingId: bookingId || "", channelId: "payments", categoryId: "PAYMENT" }
                     )
                   ).catch(err => console.error("[webhook] payment push error:", err));
                   import("@/lib/realtime").then((m) =>
@@ -515,12 +724,13 @@ export async function POST(req: NextRequest) {
                   [bookingId]
                 );
                 if (clientUser?.id) {
+                  const photogFirst = (bookingInfo.photographer_name || "").split(" ")[0] || "your photographer";
                   import("@/lib/push").then(m =>
                     m.sendPushNotification(
                       clientUser.id,
-                      "Booking confirmed",
-                      `Payment received. Your session with ${bookingInfo.photographer_name} is booked!`,
-                      { type: "booking", bookingId: bookingId || "" }
+                      `✅ Your booking with ${photogFirst} is confirmed`,
+                      "Payment received. Tap to view details.",
+                      { type: "booking", bookingId: bookingId || "", channelId: "bookings", categoryId: "BOOKING" }
                     )
                   ).catch(err => console.error("[webhook] client payment push error:", err));
                   import("@/lib/realtime").then((m) =>
@@ -557,6 +767,7 @@ export async function POST(req: NextRequest) {
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object;
         const bookingId = paymentIntent.metadata?.booking_id;
+        const giftCardId = paymentIntent.metadata?.gift_card_id;
 
         if (bookingId) {
           // Update by booking_id (payment intent may or may not be pre-linked)
@@ -566,12 +777,25 @@ export async function POST(req: NextRequest) {
           );
           console.log(`[webhook] Payment succeeded for booking ${bookingId}`);
         }
+
+        // Gift card purchase: create dormant recipient user, set
+        // status='sent', fire the magic-link email + SMS nudge. Idempotent
+        // — re-running the webhook on a 'sent' or 'claimed' card is a no-op.
+        if (giftCardId) {
+          try {
+            const { handleGiftCardPaymentSuccess } = await import("@/lib/gift-card-fulfillment");
+            await handleGiftCardPaymentSuccess(giftCardId, paymentIntent.id);
+          } catch (err) {
+            console.error("[webhook] gift card fulfillment error:", err);
+          }
+        }
         break;
       }
 
       case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object;
         const bookingId = paymentIntent.metadata?.booking_id;
+        const giftCardId = paymentIntent.metadata?.gift_card_id;
 
         if (bookingId) {
           await queryOne(
@@ -595,6 +819,30 @@ export async function POST(req: NextRequest) {
             }
           } catch (err) {
             console.error("[webhook] payment failed notification error:", err);
+          }
+        }
+
+        // Gift-card purchase failed → mark as 'refunded' and alert admin.
+        // The buyer's success page will show "We couldn't process your card —
+        // please try again". The dormant user (if created) stays clean
+        // until next attempt. Money was never captured.
+        if (giftCardId) {
+          await queryOne(
+            "UPDATE gift_cards SET status = 'refunded' WHERE id = $1 AND status = 'purchased' RETURNING id",
+            [giftCardId]
+          ).catch((e) => console.error("[webhook] gift_card mark refunded:", e));
+          try {
+            const card = await queryOne<{ code: string; buyer_email: string; buyer_name: string; recipient_email: string; tier: string }>(
+              "SELECT code, buyer_email, buyer_name, recipient_email, tier::text as tier FROM gift_cards WHERE id = $1",
+              [giftCardId]
+            );
+            const { sendTelegram } = await import("@/lib/telegram");
+            if (card) sendTelegram(
+              `❌ <b>Gift card payment failed</b>\n\n<b>From:</b> ${card.buyer_name} (${card.buyer_email})\n<b>To:</b> ${card.recipient_email}\n<b>Tier:</b> ${card.tier} · <b>Code:</b> <code>${card.code}</code>`,
+              "stripe"
+            ).catch(() => {});
+          } catch (err) {
+            console.error("[webhook] gift_card payment-failed alert error:", err);
           }
         }
         break;

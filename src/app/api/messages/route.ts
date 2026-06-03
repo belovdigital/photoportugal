@@ -37,28 +37,34 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
 
-    // Load messages from ALL bookings between these two users (merged conversation)
+    // Load all messages in the conversation (client_id + photographer_id pair).
+    // The legacy "WHERE booking_id IN (...)" subquery is replaced by a
+    // direct lookup on the new conversation-scoped columns.
+    const photographerIdRow = await queryOne<{ photographer_id: string }>(
+      "SELECT photographer_id FROM bookings WHERE id = $1",
+      [bookingId]
+    );
+    const photographerId = photographerIdRow?.photographer_id;
+
     const messages = await query(
       `SELECT m.id, m.text, m.media_url, m.sender_id, m.created_at, m.read_at,
+              m.edited_at, m.deleted_at,
+              m.detected_language, m.translated_text, m.translated_to_lang,
               u.name as sender_name, u.avatar_url as sender_avatar,
               COALESCE(m.is_system, FALSE) as is_system
        FROM messages m
        JOIN users u ON u.id = m.sender_id
-       WHERE m.booking_id IN (
-         SELECT b2.id FROM bookings b2
-         WHERE b2.client_id = $2 AND b2.photographer_id = (SELECT photographer_id FROM bookings WHERE id = $1)
-       )
+       WHERE m.client_id = $1 AND m.photographer_id = $2
        ORDER BY m.created_at ASC`,
-      [bookingId, booking.client_id]
+      [booking.client_id, photographerId]
     );
 
-    // Mark messages as read across all bookings between these users
+    // Mark messages as read across the entire conversation
     await query(
-      `UPDATE messages SET read_at = NOW() WHERE booking_id IN (
-         SELECT b2.id FROM bookings b2
-         WHERE b2.client_id = $2 AND b2.photographer_id = (SELECT photographer_id FROM bookings WHERE id = $1)
-       ) AND sender_id != $3 AND read_at IS NULL`,
-      [bookingId, booking.client_id, userId]
+      `UPDATE messages SET read_at = NOW()
+        WHERE client_id = $1 AND photographer_id = $2
+          AND sender_id != $3 AND read_at IS NULL`,
+      [booking.client_id, photographerId, userId]
     );
 
     return NextResponse.json(messages);
@@ -102,12 +108,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Verify user is part of this booking
-    const booking = await queryOne<{ client_id: string; photographer_user_id: string; status: string }>(
-      `SELECT b.client_id, u.id as photographer_user_id, b.status
+    // Resolve booking + conversation key (client_id, photographer_id).
+    // Messages are conversation-scoped — booking_id is just the context
+    // the user was viewing when they hit send. The pair drives all
+    // subsequent reads/notifications.
+    const booking = await queryOne<{
+      client_id: string;
+      photographer_user_id: string;
+      status: string;
+      payment_status: string | null;
+      photographer_id: string;
+      photographer_slug: string | null;
+      photographer_name: string;
+      client_name: string;
+    }>(
+      `SELECT b.client_id, u.id as photographer_user_id, b.status, b.payment_status,
+              b.photographer_id, pp.slug as photographer_slug,
+              u.name as photographer_name,
+              cu.name as client_name
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
        JOIN users u ON u.id = pp.user_id
+       LEFT JOIN users cu ON cu.id = b.client_id
        WHERE b.id = $1`,
       [booking_id]
     );
@@ -140,12 +162,39 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const message = await queryOne(
-      `INSERT INTO messages (booking_id, sender_id, text, media_url)
-       VALUES ($1, $2, $3, $4)
+    const message = await queryOne<{ id: string; created_at: string; media_url: string | null }>(
+      `INSERT INTO messages (booking_id, sender_id, text, media_url, client_id, photographer_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id, created_at, media_url`,
-      [booking_id, userId, text?.trim() || null, media_url || null]
+      [booking_id, userId, text?.trim() || null, media_url || null, booking.client_id, booking.photographer_id]
     );
+
+    // Fire-and-forget: translate the message into the recipient's UI locale
+    // (en/pt). Skips short / system / BOOKING_CARD payloads. Failure is
+    // silent — original `text` is always rendered as fallback.
+    if (text?.trim() && message) {
+      const msgId = (message as any).id as string;
+      void (async () => {
+        try {
+          const { translateMessageRow, getRecipientLocale } = await import("@/lib/chat-translate");
+          const recipientLocale = await getRecipientLocale(userId, booking.client_id, booking.photographer_id);
+          if (!recipientLocale) return;
+          await translateMessageRow({
+            message_id: msgId,
+            text: text!.trim(),
+            is_system: false,
+            recipient_locale: recipientLocale,
+          });
+          // Tell live clients the row got updated so they can re-fetch.
+          await queryOne(
+            "SELECT pg_notify('message_updated', $1)",
+            [JSON.stringify({ booking_id, message_id: msgId, client_id: booking.client_id, photographer_id: booking.photographer_id })]
+          );
+        } catch (err) {
+          console.error("[messages] translate fire-and-forget error:", err);
+        }
+      })();
+    }
 
     // Insert system warning if photographer shared social media
     if (contactWarning && text?.trim()) {
@@ -156,6 +205,53 @@ export async function POST(req: NextRequest) {
            VALUES ($1, $2, $3, TRUE)`,
           [booking_id, userId, "⚠️ Reminder: Please keep all communication on Photo Portugal. Sharing social media handles or directing clients off-platform is against our terms and may result in account suspension."]
         );
+      }
+    }
+
+    // Admin Telegram alert: photographer shared phone/email/messaging-app
+    // mention BEFORE the booking was paid → likely trying to bypass the
+    // platform fee. We only flag photographer → client side; client may
+    // legitimately share their own contact.
+    if (
+      text?.trim() &&
+      userId === booking.photographer_user_id &&
+      booking.payment_status !== "paid"
+    ) {
+      const isInternalLink = /photoportugal\.com/i.test(text);
+      if (!isInternalLink) {
+        const contactType = detectContactInfo(text);
+        // Only alert on real contact-share signals — not URLs (photographer
+        // may share a portfolio link) or generic social handles (handled
+        // separately by detectSocialPlatform earlier).
+        if (
+          contactType === "email address" ||
+          contactType === "phone number" ||
+          contactType === "messaging app reference"
+        ) {
+          try {
+            const { sendTelegram } = await import("@/lib/telegram");
+            const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const preview = text.trim().length > 280 ? text.trim().slice(0, 280) + "…" : text.trim();
+            const profileLink = booking.photographer_slug
+              ? `https://photoportugal.com/photographers/${booking.photographer_slug}`
+              : null;
+            const lines = [
+              `🚨 <b>Possible off-platform attempt</b> — photographer shared <b>${esc(contactType)}</b> BEFORE payment`,
+              ``,
+              `<b>Photographer:</b> ${esc(booking.photographer_name)}${profileLink ? ` (<a href="${profileLink}">profile</a>)` : ""}`,
+              `<b>Client:</b> ${esc(booking.client_name || "—")}`,
+              `<b>Booking status:</b> ${esc(booking.status)} · <b>payment:</b> ${esc(booking.payment_status || "unpaid")}`,
+              ``,
+              `<b>Message:</b>`,
+              `<i>"${esc(preview)}"</i>`,
+              ``,
+              `<a href="https://photoportugal.com/admin?tab=bookings&booking=${booking_id}">Open booking in admin →</a>`,
+            ];
+            sendTelegram(lines.join("\n"), "alerts").catch(() => {});
+          } catch (alertErr) {
+            console.error("[messages] off-platform alert error:", alertErr);
+          }
+        }
       }
     }
 
@@ -219,24 +315,48 @@ export async function POST(req: NextRequest) {
             [recipient.email]
           );
           if (!isOnline && !recentEmail) {
-            sendNewMessageNotification(recipient.email, recipient.name, sender.name);
-            // Log for throttling
-            try {
-              const { logNotification } = await import("@/lib/notification-log");
-              logNotification("email", recipient.email, `New messages from ${sender.name}`, "sent");
-            } catch {}
+            // Queue with a 3-min delay; the cron worker re-checks before
+            // delivery and silently cancels if the recipient already
+            // read / replied / came online. No more "I got an email
+            // about a message I already responded to 30 sec ago".
+            const { enqueueNewMessageNotif } = await import("@/lib/notification-queue");
+            await enqueueNewMessageNotif({
+              recipientId,
+              recipient: recipient.email,
+              messageId: message!.id,
+              bookingId: booking_id,
+              channel: "email",
+              subject: `New message from ${sender.name} — Photo Portugal`,
+              body: `You've got a new message from ${sender.name} about your Photo Portugal booking.`,
+            });
           }
         }
       }
 
-      // Push notification to recipient
-      const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "Someone";
+      // Push notification to recipient. Title = sender name (so the lock
+      // screen shows "💬 Maria" the way iMessage/WhatsApp do, not a generic
+      // "New Message"). Body = the message content itself, no "Maria:"
+      // prefix needed because the name is already the title. threadId
+      // groups multiple messages from the same conversation on iOS.
+      const senderRow = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
+      const senderName = senderRow?.name?.split(" ")[0] || "Someone";
+      const pushBody = text?.trim()
+        ? text.trim().slice(0, 140)
+        : media_url
+          ? "📷 sent a photo"
+          : "sent a message";
       import("@/lib/push").then(m =>
         m.sendPushNotification(
           recipientId,
-          "New Message",
-          `${senderName}: ${text?.trim().slice(0, 50) || "sent a photo"}`,
-          { type: "message", bookingId: booking_id }
+          `💬 ${senderName}`,
+          pushBody,
+          {
+            type: "message",
+            bookingId: booking_id,
+            threadId: `chat:${booking.client_id}:${booking.photographer_id}`,
+            channelId: "messages",
+            categoryId: "MESSAGE",
+          }
         )
       ).catch((err) => console.error("[messages] push notification error:", err));
       // Real-time conversation list refresh on the recipient's other
@@ -265,33 +385,34 @@ export async function POST(req: NextRequest) {
         } catch {}
       }
 
-      // Throttled WhatsApp/SMS for pending bookings (max once per 10 min per recipient)
-      if (booking.status === "pending") {
-        try {
-          const recipientInfo = await queryOne<{ phone: string | null; last_message_sms_at: string | null }>(
-            "SELECT phone, last_message_sms_at FROM users WHERE id = $1", [recipientId]
-          );
-          if (recipientInfo?.phone) {
-            const lastSms = recipientInfo.last_message_sms_at ? new Date(recipientInfo.last_message_sms_at).getTime() : 0;
-            const tenMinAgo = Date.now() - 10 * 60 * 1000;
-            if (lastSms < tenMinAgo) {
-              const { sendSMS } = await import("@/lib/sms");
-              const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
-              const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "Someone";
-              const rLocale = await getUserLocaleById(recipientId);
-              const smsBody = pickT({
-                en: `Photo Portugal: New message from ${senderName}. Open your dashboard to reply: https://photoportugal.com/dashboard/messages`,
-                pt: `Photo Portugal: Nova mensagem de ${senderName}. Abra o seu painel para responder: https://photoportugal.com/dashboard/messages`,
-                de: `Photo Portugal: Neue Nachricht von ${senderName}. Öffnen Sie Ihr Dashboard, um zu antworten: https://photoportugal.com/dashboard/messages`,
-                fr: `Photo Portugal : Nouveau message de ${senderName}. Ouvrez votre tableau de bord pour répondre : https://photoportugal.com/dashboard/messages`,
-              }, rLocale);
-              sendSMS(recipientInfo.phone, smsBody);
-              await queryOne("UPDATE users SET last_message_sms_at = NOW() WHERE id = $1", [recipientId]);
-            }
-          }
-        } catch (smsErr) {
-          console.error("[messages] throttled SMS error:", smsErr);
+      // SMS — go through the delayed queue (3-min hold, cancelled if
+      // recipient reads / replies / is online / has the app installed).
+      try {
+        const recipientInfo = await queryOne<{ phone: string | null }>(
+          "SELECT phone FROM users WHERE id = $1", [recipientId]
+        );
+        if (recipientInfo?.phone) {
+          const { enqueueNewMessageNotif } = await import("@/lib/notification-queue");
+          const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+          const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "Someone";
+          const rLocale = await getUserLocaleById(recipientId);
+          const smsBody = pickT({
+            en: `Photo Portugal: New message from ${senderName}. Reply: https://photoportugal.com/dashboard/messages`,
+            pt: `Photo Portugal: Nova mensagem de ${senderName}. Responda: https://photoportugal.com/dashboard/messages`,
+            de: `Photo Portugal: Neue Nachricht von ${senderName}. Antworten: https://photoportugal.com/dashboard/messages`,
+            fr: `Photo Portugal : Nouveau message de ${senderName}. Répondre : https://photoportugal.com/dashboard/messages`,
+          }, rLocale);
+          await enqueueNewMessageNotif({
+            recipientId,
+            recipient: recipientInfo.phone,
+            messageId: message!.id,
+            bookingId: booking_id,
+            channel: "sms",
+            body: smsBody,
+          });
         }
+      } catch (smsErr) {
+        console.error("[messages] enqueue SMS error:", smsErr);
       }
     } catch {}
 

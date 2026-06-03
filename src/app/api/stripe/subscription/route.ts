@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
+import { ensurePhotographerCanPurchase } from "@/lib/photographer-purchase-guard";
 
 const PRICE_IDS: Record<string, string> = {
   pro: process.env.STRIPE_PRO_PRICE_ID || "price_1TC1VTGU0seq3XOV7ztETK3Z",
@@ -19,10 +20,13 @@ export async function POST(req: NextRequest) {
   const lp = locale && locale !== "en" && ["pt","de","es","fr"].includes(locale) ? `/${locale}` : "";
 
   try {
-    const profile = await queryOne<{ id: string; stripe_account_id: string | null }>(
-      "SELECT pp.id, pp.stripe_account_id FROM photographer_profiles pp WHERE pp.user_id = $1", [userId]
-    );
-    if (!profile) return NextResponse.json({ error: "Not a photographer" }, { status: 400 });
+    // Gate: only approved + non-banned photographers may subscribe. A
+    // pre-approval purchase puts a Pro/Premium plan on a private profile
+    // that isn't visible in the marketplace — both useless for the
+    // photographer and a refund headache for us.
+    const gate = await ensurePhotographerCanPurchase(userId);
+    if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+    const profile = gate.profile;
 
     const user = await queryOne<{ email: string; stripe_customer_id: string | null }>(
       "SELECT email, stripe_customer_id FROM users WHERE id = $1", [userId]

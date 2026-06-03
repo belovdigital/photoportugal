@@ -17,6 +17,8 @@ interface UseWebSocketOptions {
   bookingId: string | null;
   token: string | null;
   onMessage?: (msg: WSMessage) => void;
+  onMessageEdited?: (data: { message_id: string; text: string; edited_at: string }) => void;
+  onMessageDeleted?: (data: { message_id: string; deleted_at: string }) => void;
   onTyping?: (userId: string, userName: string) => void;
   onRead?: (userId: string, timestamp: string) => void;
   onOnline?: (users: { userId: string; userName: string }[]) => void;
@@ -27,6 +29,8 @@ export function useWebSocket({
   bookingId,
   token,
   onMessage,
+  onMessageEdited,
+  onMessageDeleted,
   onTyping,
   onRead,
   onOnline,
@@ -43,11 +47,15 @@ export function useWebSocket({
 
   // Use refs for callbacks to avoid reconnecting on every render
   const onMessageRef = useRef(onMessage);
+  const onMessageEditedRef = useRef(onMessageEdited);
+  const onMessageDeletedRef = useRef(onMessageDeleted);
   const onTypingRef = useRef(onTyping);
   const onReadRef = useRef(onRead);
   const onOnlineRef = useRef(onOnline);
   const onStatusChangeRef = useRef(onStatusChange);
   onMessageRef.current = onMessage;
+  onMessageEditedRef.current = onMessageEdited;
+  onMessageDeletedRef.current = onMessageDeleted;
   onTypingRef.current = onTyping;
   onReadRef.current = onRead;
   onOnlineRef.current = onOnline;
@@ -92,6 +100,19 @@ export function useWebSocket({
         switch (data.type) {
           case "message":
             onMessageRef.current?.(data.message);
+            break;
+          case "message_edited":
+            onMessageEditedRef.current?.({
+              message_id: data.message_id,
+              text: data.text,
+              edited_at: data.edited_at,
+            });
+            break;
+          case "message_deleted":
+            onMessageDeletedRef.current?.({
+              message_id: data.message_id,
+              deleted_at: data.deleted_at,
+            });
             break;
           case "typing":
             onTypingRef.current?.(data.user_id, data.user_name);

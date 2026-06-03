@@ -174,9 +174,9 @@ export async function PATCH(req: NextRequest) {
               import("@/lib/push").then(m =>
                 m.sendPushNotification(
                   photographerPhone.user_id,
-                  "Profile approved! 🎉",
+                  "🎉 Your profile is live!",
                   "Clients can now find and book you on Photo Portugal.",
-                  { type: "profile_approved" }
+                  { type: "profile_approved", channelId: "default", categoryId: "ACCOUNT" }
                 )
               ).catch(err => console.error("[admin] approval push error:", err));
               import("@/lib/realtime").then((m) =>
@@ -257,6 +257,24 @@ export async function PATCH(req: NextRequest) {
           }
         }
       }
+    }
+
+    // First-time approval → ping IndexNow for the photographer's URLs so
+    // Bing/Yandex pick them up in minutes instead of days.
+    if (updates.is_approved === true && !wasAlreadyApproved) {
+      try {
+        const slug = await queryOne<{ slug: string }>(
+          "SELECT slug FROM photographer_profiles WHERE id = $1", [id]
+        );
+        if (slug?.slug) {
+          const { pingIndexNow } = await import("@/lib/indexnow");
+          pingIndexNow([
+            `https://photoportugal.com/photographers/${slug.slug}`,
+            `https://photoportugal.com/photographers`,
+            `https://photoportugal.com/`,
+          ]).catch(() => {});
+        }
+      } catch {}
     }
 
     return NextResponse.json({ success: true });

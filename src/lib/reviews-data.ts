@@ -64,7 +64,22 @@ function baseSelect(locale?: string): string {
     pp.slug as photographer_slug,
     pu.avatar_url as photographer_avatar,
     (SELECT rp.url FROM review_photos rp WHERE rp.review_id = r.id AND rp.is_public = TRUE ORDER BY rp.created_at LIMIT 1) as photo_url,
-    COALESCE(r.client_country_override, (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at ASC LIMIT 1)) as client_country
+    COALESCE(
+      r.client_country_override,
+      -- Most recent non-PT session is the best signal for "home country".
+      -- Clients are mostly tourists — their first PT session = on the
+      -- way to / in Portugal, but their home flag is what we want to
+      -- display on the review.
+      (SELECT vs.country FROM visitor_sessions vs
+         WHERE vs.user_id = r.client_id
+           AND vs.country IS NOT NULL
+           AND vs.country != 'PT'
+         ORDER BY vs.started_at DESC LIMIT 1),
+      -- Fallback for real Portuguese locals — they only ever browse from PT.
+      (SELECT vs.country FROM visitor_sessions vs
+         WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL
+         ORDER BY vs.started_at ASC LIMIT 1)
+    ) as client_country
   `;
 }
 

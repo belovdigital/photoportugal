@@ -35,7 +35,15 @@ export interface LocationMasonryPhoto {
  * keeps the visitor on the location LP they were exploring while letting
  * them dig into a specific photographer alongside.
  */
-export function LocationPhotosMasonry({ photos }: { photos: LocationMasonryPhoto[] }) {
+export function LocationPhotosMasonry({ photos, title, subtitle }: {
+  photos: LocationMasonryPhoto[];
+  /** Optional override for the section heading. Default is the i18n
+   *  "Real photos shot here" used on /locations pages — but on /spots/...
+   *  the photos are city-wide portfolio not necessarily shot at the spot,
+   *  so the spot page passes a more honest title here. */
+  title?: string;
+  subtitle?: string;
+}) {
   const t = useTranslations("locations.detail");
 
   if (photos.length === 0) return null;
@@ -48,10 +56,10 @@ export function LocationPhotosMasonry({ photos }: { photos: LocationMasonryPhoto
         <div className="mb-6 sm:mb-10 flex items-end justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-              {t("realPhotos.title")}
+              {title || t("realPhotos.title")}
             </h2>
             <p className="mt-1 text-sm text-gray-500 sm:mt-2 sm:text-base">
-              {t("realPhotos.subtitle")}
+              {subtitle || t("realPhotos.subtitle")}
             </p>
           </div>
         </div>

@@ -228,10 +228,8 @@ function PositionDistribution({ dist }: { dist: NonNullable<AnalyticsData["posit
 
 const ANALYTICS_TABS = [
   { key: "overview", label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-  { key: "behavior", label: "Behavior", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
   { key: "clarity", label: "Clarity", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" },
   { key: "visitors", label: "Visitors", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
-  { key: "traffic", label: "Traffic", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
   { key: "seo", label: "SEO", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
   { key: "ads", label: "Ads", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
   { key: "funnel", label: "Funnel", icon: "M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" },
@@ -433,58 +431,64 @@ interface OverviewData {
   heatmap: { dow: number; hour: number; count: number }[];
 }
 
-// Sessions heatmap: weekday × hour. Darker = more sessions.
-// Use the 90th percentile as the color scale max so rare spikes don't wash out the rest of the grid.
-function HeatmapChart({ data }: { data: { dow: number; hour: number; count: number }[] }) {
-  const matrix: Record<string, number> = {};
-  for (const d of data) matrix[`${d.dow}-${d.hour}`] = d.count;
-  const counts = data.map(d => d.count).filter(c => c > 0).sort((a, b) => a - b);
-  if (counts.length === 0) return <p className="text-xs text-gray-400">No data</p>;
-  const p90Index = Math.floor(counts.length * 0.9);
-  const colorMax = Math.max(1, counts[p90Index] || counts[counts.length - 1]);
-  // Display Monday first (ISO week order). dow values come from JS getDay(): 0=Sun..6=Sat.
-  const days: Array<{ label: string; dow: number }> = [
-    { label: "Mon", dow: 1 },
-    { label: "Tue", dow: 2 },
-    { label: "Wed", dow: 3 },
-    { label: "Thu", dow: 4 },
-    { label: "Fri", dow: 5 },
-    { label: "Sat", dow: 6 },
-    { label: "Sun", dow: 0 },
-  ];
+// Plain-text summary of weekday/hour traffic. Picks the busiest weekday
+// and groups peak hours into morning/afternoon/evening so the admin can
+// read it at a glance instead of squinting at a heatmap.
+function TrafficRhythm({ data }: { data: { dow: number; hour: number; count: number }[] }) {
+  if (!data || data.length === 0) return <p className="text-xs text-gray-400">No data</p>;
+
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayTotals = new Map<number, number>();
+  const hourTotals = new Map<number, number>();
+  let total = 0;
+  for (const d of data) {
+    dayTotals.set(d.dow, (dayTotals.get(d.dow) || 0) + d.count);
+    hourTotals.set(d.hour, (hourTotals.get(d.hour) || 0) + d.count);
+    total += d.count;
+  }
+  if (total === 0) return <p className="text-xs text-gray-400">No data</p>;
+
+  const sortedDays = [...dayTotals.entries()].sort((a, b) => b[1] - a[1]);
+  const sortedHours = [...hourTotals.entries()].sort((a, b) => b[1] - a[1]);
+  const topDays = sortedDays.slice(0, 3);
+  const topHours = sortedHours.slice(0, 3).sort((a, b) => a[0] - b[0]);
+
+  const slot = (h: number) =>
+    h < 6 ? "night" : h < 12 ? "morning" : h < 18 ? "afternoon" : "evening";
+  const slotCounts: Record<string, number> = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+  for (const d of data) slotCounts[slot(d.hour)] += d.count;
+  const peakSlot = Object.entries(slotCounts).sort((a, b) => b[1] - a[1])[0];
+
+  const fmtHour = (h: number) => `${h.toString().padStart(2, "0")}:00`;
+  const pct = (n: number) => Math.round((n / total) * 100);
+
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="inline-block min-w-full">
-        {/* Hour header */}
-        <div className="flex">
-          <div className="w-10 shrink-0" />
-          {Array.from({ length: 24 }).map((_, h) => (
-            <div key={h} className="flex-1 min-w-[14px] text-center text-[9px] text-gray-400">
-              {h % 3 === 0 ? h : ""}
-            </div>
-          ))}
-        </div>
-        {/* Rows */}
-        {days.map(({ label: day, dow }) => (
-          <div key={dow} className="flex items-center">
-            <div className="w-10 shrink-0 text-[10px] font-medium text-gray-500 pr-2 text-right">{day}</div>
-            {Array.from({ length: 24 }).map((_, h) => {
-              const count = matrix[`${dow}-${h}`] || 0;
-              // Cap intensity at 1 — anything above p90 stays at max opacity instead of spiking.
-              const intensity = Math.min(1, count / colorMax);
-              const bg = count === 0 ? "#F3EDE6" : `rgba(201, 69, 54, ${0.15 + intensity * 0.75})`;
-              return (
-                <div
-                  key={h}
-                  className="flex-1 min-w-[14px] aspect-square rounded-sm m-[1px]"
-                  style={{ backgroundColor: bg }}
-                  title={`${day} ${h.toString().padStart(2, "0")}:00 — ${count} sessions`}
-                />
-              );
-            })}
-          </div>
+    <div className="space-y-2 text-sm text-gray-700">
+      <p>
+        <span className="text-gray-400">Busiest days:</span>{" "}
+        {topDays.map(([dow, count], i) => (
+          <span key={dow}>
+            <span className="font-semibold text-gray-900">{dayLabels[dow]}</span>
+            <span className="text-gray-400"> ({pct(count)}%)</span>
+            {i < topDays.length - 1 ? ", " : ""}
+          </span>
         ))}
-      </div>
+      </p>
+      <p>
+        <span className="text-gray-400">Peak hours:</span>{" "}
+        {topHours.map(([h, count], i) => (
+          <span key={h}>
+            <span className="font-semibold text-gray-900">{fmtHour(h)}</span>
+            <span className="text-gray-400"> ({pct(count)}%)</span>
+            {i < topHours.length - 1 ? ", " : ""}
+          </span>
+        ))}
+      </p>
+      <p>
+        <span className="text-gray-400">Most activity in the</span>{" "}
+        <span className="font-semibold text-gray-900">{peakSlot[0]}</span>
+        <span className="text-gray-400"> ({pct(peakSlot[1])}% of sessions)</span>
+      </p>
     </div>
   );
 }
@@ -640,11 +644,11 @@ function OverviewTab({ period, customFrom, customTo }: { period: string; customF
         ))}
       </div>
 
-      {/* Heatmap: when visitors come (weekday × hour) */}
+      {/* Traffic rhythm: short text summary of busiest days/hours */}
       {data.heatmap && data.heatmap.length > 0 && (
         <div className="rounded-xl border border-warm-200 bg-white p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">When do visitors come? <span className="font-normal text-gray-400">(sessions by weekday × hour)</span></h3>
-          <HeatmapChart data={data.heatmap} />
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">When visitors come</h3>
+          <TrafficRhythm data={data.heatmap} />
         </div>
       )}
     </div>
@@ -692,7 +696,16 @@ function ClarityTab({ period }: { period: string }) {
   useEffect(() => {
     setLoading(true);
     fetch(`/api/admin/clarity?period=${period}`)
-      .then(async r => { if (!r.ok) throw new Error((await r.json()).error || "Failed"); return r.json(); })
+      .then(async r => {
+        // Defensive parse: route always returns JSON, but if nginx/Cloudflare
+        // serves an HTML error page mid-deploy we don't want a cryptic
+        // "Unexpected token '<'" message.
+        const ct = r.headers.get("content-type") || "";
+        const isJson = ct.includes("application/json");
+        const body = isJson ? await r.json().catch(() => ({})) : { error: `Server returned ${r.status} (${ct || "no content-type"})` };
+        if (!r.ok) throw new Error(body.error || `Request failed (${r.status})`);
+        return body;
+      })
       .then(d => { setData(d); setError(""); setLoading(false); })
       .catch(e => { setError(e.message); setLoading(false); });
   }, [period]);
@@ -702,6 +715,14 @@ function ClarityTab({ period }: { period: string }) {
     <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
       <p className="font-semibold">Clarity API error</p>
       <p className="mt-1 text-xs">{error}</p>
+      <a
+        href="https://clarity.microsoft.com/projects/view/we7hzvxpom"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 inline-block rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100"
+      >
+        Open Clarity dashboard →
+      </a>
     </div>
   );
   if (!data) return null;
@@ -828,109 +849,6 @@ function ClarityTab({ period }: { period: string }) {
   );
 }
 
-interface BehaviorData {
-  flows: { sequence: string; count: number }[];
-  landingPages: { page: string; sessions: number; bounced: number; bounceRate: number }[];
-  dropOff: { fromPage: string; toPage: string; count: number }[];
-}
-
-function BehaviorTab({ period, customFrom, customTo }: { period: string; customFrom: string; customTo: string }) {
-  const [data, setData] = useState<BehaviorData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    const qs = new URLSearchParams({ period });
-    if (period === "custom" && customFrom && customTo) { qs.set("from", customFrom); qs.set("to", customTo); }
-    fetch(`/api/admin/behavior?${qs.toString()}`)
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [period, customFrom, customTo]);
-
-  if (loading) return <p className="text-sm text-gray-400">Loading behavior…</p>;
-  if (!data) return <p className="text-sm text-gray-400">No data</p>;
-
-  return (
-    <div className="space-y-5">
-      {/* Top user flows */}
-      <div className="rounded-xl border border-warm-200 bg-white p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Top User Flows <span className="font-normal text-gray-400">(most common page sequences)</span></h3>
-        {data.flows.length === 0 ? (
-          <p className="text-xs text-gray-400">Not enough data</p>
-        ) : (
-          <div className="space-y-2">
-            {data.flows.map((f, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg bg-warm-50 px-3 py-2">
-                <span className="text-[10px] font-bold text-gray-400">#{i + 1}</span>
-                <div className="flex-1 min-w-0 text-xs text-gray-700 truncate" title={f.sequence}>
-                  {f.sequence.split(" → ").map((page, idx, arr) => (
-                    <span key={idx}>
-                      <span className="font-mono">{page}</span>
-                      {idx < arr.length - 1 && <span className="mx-1 text-gray-400">→</span>}
-                    </span>
-                  ))}
-                </div>
-                <span className="shrink-0 text-xs font-semibold text-gray-900">{f.count} sessions</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Landing pages with bounce rate */}
-      <div className="rounded-xl border border-warm-200 bg-white p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Landing Pages & Bounce Rate</h3>
-        <div className="overflow-auto max-h-96">
-          <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-warm-50 border-b border-warm-200">
-              <tr>
-                <th className="px-3 py-2 text-left font-medium text-gray-500">Page</th>
-                <th className="px-3 py-2 text-right font-medium text-gray-500">Sessions</th>
-                <th className="px-3 py-2 text-right font-medium text-gray-500">Bounced</th>
-                <th className="px-3 py-2 text-right font-medium text-gray-500">Bounce Rate</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-warm-100">
-              {data.landingPages.map(p => (
-                <tr key={p.page}>
-                  <td className="px-3 py-2 font-mono text-gray-900 truncate max-w-md">{p.page}</td>
-                  <td className="px-3 py-2 text-right text-gray-700">{p.sessions}</td>
-                  <td className="px-3 py-2 text-right text-gray-500">{p.bounced}</td>
-                  <td className={`px-3 py-2 text-right font-semibold ${p.bounceRate >= 70 ? "text-red-600" : p.bounceRate >= 50 ? "text-amber-600" : "text-green-600"}`}>
-                    {p.bounceRate}%
-                  </td>
-                </tr>
-              ))}
-              {data.landingPages.length === 0 && (
-                <tr><td colSpan={4} className="px-3 py-4 text-center text-gray-400">No data</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Top drop-off transitions */}
-      <div className="rounded-xl border border-warm-200 bg-white p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Drop-off Points <span className="font-normal text-gray-400">(pages where users leave the site after)</span></h3>
-        {data.dropOff.length === 0 ? (
-          <p className="text-xs text-gray-400">Not enough data</p>
-        ) : (
-          <div className="space-y-2">
-            {data.dropOff.map((d, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg bg-warm-50 px-3 py-2">
-                <span className="text-xs font-mono text-gray-700 truncate flex-1" title={d.fromPage}>{d.fromPage}</span>
-                <span className="shrink-0 text-xs text-gray-400">→ exit</span>
-                <span className="shrink-0 text-xs font-semibold text-red-600">{d.count} sessions</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // Convert any ISO 3166-1 alpha-2 code to emoji flag
 function codeToFlag(code: string): string {
   if (!code || code.length !== 2) return "🏳️";
@@ -949,10 +867,7 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
   const [vLoading, setVLoading] = useState(true);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [sessionLimit, setSessionLimit] = useState(30);
-  // Default to the "ads" tab: paid traffic is the highest-value cohort
-  // to inspect first when checking who's actually landing from Google
-  // Ads sitelinks. "All" stays one tap away.
-  const [roleFilter, setRoleFilter] = useState("ads");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [countryFilter, setCountryFilter] = useState("all");
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [period, setPeriod] = useState<PeriodKey>("30d");
@@ -1083,8 +998,8 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
           <h3 className="text-sm font-semibold text-gray-700 mb-2">Recent Visitors</h3>
           <div className="flex flex-wrap items-center gap-1.5">
             {[
-              { key: "ads", label: "Ads", icon: "💸" },
               { key: "all", label: "All", icon: "👥" },
+              { key: "ads", label: "Ads", icon: "💸" },
               { key: "client", label: "Clients", icon: "🧳" },
               { key: "photographer", label: "Photographers", icon: "📸" },
               { key: "guest", label: "Guests", icon: "👻" },
@@ -1324,7 +1239,6 @@ export function AnalyticsDashboard() {
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const queriesSort = useSortable<{ query: string; clicks: number; impressions: number; ctr: number; position: number }>("clicks", "desc");
-  const pagesSort = useSortable<{ path: string; views: number; users: number }>("views", "desc");
 
   useEffect(() => {
     setLoading(true);
@@ -1412,9 +1326,6 @@ export function AnalyticsDashboard() {
         </>
       )}
 
-      {/* === BEHAVIOR TAB === */}
-      {activeTab === "behavior" && <BehaviorTab period={period} customFrom={customFrom} customTo={customTo} />}
-
       {/* === CLARITY TAB === */}
       {activeTab === "clarity" && <ClarityTab period={period} />}
 
@@ -1439,87 +1350,6 @@ export function AnalyticsDashboard() {
       {/* Errors */}
       {data.ga4Error && <p className="text-xs text-red-500">{data.ga4Error}</p>}
       {data.gscError && <p className="text-xs text-red-500">{data.gscError}</p>}
-
-      {/* === TRAFFIC TAB === */}
-      {activeTab === "traffic" && ga4 && (
-        <>
-          <h3 className="text-lg font-bold text-gray-900">Website Traffic (30 days)</h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-            {[
-              { label: "Users", value: ga4.users, prev: ga4.usersPrev },
-              { label: "Sessions", value: ga4.sessions, prev: ga4.sessionsPrev },
-              { label: "Pageviews", value: ga4.pageviews, prev: ga4.pageviewsPrev },
-              { label: "Avg Duration", value: `${Math.floor(ga4.avgSessionDuration / 60)}m ${ga4.avgSessionDuration % 60}s`, prev: 0 },
-              { label: "Bounce Rate", value: `${ga4.bounceRate}%`, prev: 0 },
-            ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-warm-200 bg-white p-2.5 sm:p-4 text-center">
-                <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-                <p className="text-xs text-gray-500">{s.label}</p>
-                {typeof s.prev === "number" && s.prev > 0 && (
-                  <Change current={typeof s.value === "number" ? s.value : 0} previous={s.prev} />
-                )}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Traffic Sources (in Traffic tab) */}
-      {activeTab === "traffic" && data.trafficSources && data.trafficSources.length > 0 && (
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Traffic Sources</h3>
-            <div className="mt-3 space-y-2">
-              {data.trafficSources.map((s) => (
-                <div key={s.channel} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-4 py-2.5">
-                  <span className="text-sm font-medium text-gray-700">{s.channel}</span>
-                  <span className="text-sm text-gray-500">{s.sessions} sessions</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          {data.topCountries && data.topCountries.length > 0 && (
-            <div>
-              <h3 className="text-lg font-bold text-gray-900">Top Countries</h3>
-              <div className="mt-3 space-y-2">
-                {data.topCountries.map((c) => (
-                  <div key={c.country} className="flex items-center justify-between rounded-lg bg-white border border-warm-200 px-4 py-2.5">
-                    <span className="text-sm font-medium text-gray-700">{c.country}</span>
-                    <span className="text-sm text-gray-500">{c.users} users</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Top Pages (in Traffic tab) */}
-      {activeTab === "traffic" && data.topPages && data.topPages.length > 0 && (
-        <>
-          <h3 className="text-lg font-bold text-gray-900">Top Pages (GA4)</h3>
-          <div className="overflow-auto max-h-[500px] rounded-xl border border-warm-200 bg-white">
-            <table className="w-full text-xs sm:text-sm">
-              <thead className="border-b border-warm-200 bg-warm-50 sticky top-0 z-10">
-                <tr>
-                  <SortTh label="Page" col="path" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} />
-                  <SortTh label="Views" col="views" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} right />
-                  <SortTh label="Users" col="users" sort={pagesSort.sort as { key: string; dir: SortDir }} toggle={pagesSort.toggle as (k: string) => void} right />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-warm-100">
-                {pagesSort.sorted(data.topPages).map((p) => (
-                  <tr key={p.path}>
-                    <td className="px-4 py-2.5 font-medium text-gray-900 max-w-xs truncate">{p.path}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{p.views}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500">{p.users}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
 
       {/* === SEO TAB === */}
       {/* GSC Overview */}

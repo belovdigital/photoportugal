@@ -18,12 +18,28 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Strip console.log / .info / .debug from production bundles. Keeps
+  // .error and .warn so real failures still surface in the user's
+  // DevTools (useful when triaging issue reports). The removeConsole
+  // option only runs for production builds; `next dev` keeps everything.
+  compiler: {
+    removeConsole: {
+      exclude: ["error", "warn"],
+    },
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
         hostname: "images.unsplash.com",
+      },
+      {
+        // Curated CC-licensed photos for /spots/[city]/[spot] hero +
+        // gallery come from Wikimedia Commons. Required so next/image can
+        // serve them through our optimisation pipeline.
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
       },
     ],
   },
@@ -43,6 +59,39 @@ const nextConfig: NextConfig = {
       { source: "/es/lp/:city", destination: "/es/lugares/:city", permanent: true },
       { source: "/fr/lp", destination: "/fr", permanent: true },
       { source: "/fr/lp/:city", destination: "/fr/lieux/:city", permanent: true },
+      // Legacy aliases that the codebase already redirects via Next's
+      // redirect() runtime helper (which returns 307). Repeating them
+      // here gives Google a 308 instead, which consolidates link equity
+      // faster.
+      { source: "/join", destination: "/for-photographers/join", permanent: true },
+      { source: "/help-center", destination: "/support", permanent: true },
+      { source: "/how-we-select", destination: "/for-photographers/how-we-select", permanent: true },
+      { source: "/pt/join", destination: "/pt/for-photographers/join", permanent: true },
+      { source: "/pt/help-center", destination: "/pt/support", permanent: true },
+      { source: "/pt/how-we-select", destination: "/pt/for-photographers/how-we-select", permanent: true },
+      { source: "/de/join", destination: "/de/for-photographers/join", permanent: true },
+      { source: "/de/help-center", destination: "/de/support", permanent: true },
+      { source: "/de/how-we-select", destination: "/de/for-photographers/how-we-select", permanent: true },
+      { source: "/es/join", destination: "/es/for-photographers/join", permanent: true },
+      { source: "/es/help-center", destination: "/es/support", permanent: true },
+      { source: "/es/how-we-select", destination: "/es/for-photographers/how-we-select", permanent: true },
+      { source: "/fr/join", destination: "/fr/for-photographers/join", permanent: true },
+      { source: "/fr/help-center", destination: "/fr/support", permanent: true },
+      { source: "/fr/how-we-select", destination: "/fr/for-photographers/how-we-select", permanent: true },
+      // Retired pages — manual matching flow killed in favour of AI
+      // Concierge. Any inbound link (Google cache, old blog post, ad
+      // copy) lands at /concierge instead. EN paths + every localized
+      // alias we historically served.
+      { source: "/find-photographer", destination: "/concierge", permanent: true },
+      { source: "/choose-booking-type", destination: "/concierge", permanent: true },
+      { source: "/pt/find-photographer", destination: "/pt/concierge", permanent: true },
+      { source: "/pt/choose-booking-type", destination: "/pt/concierge", permanent: true },
+      { source: "/de/fotografen-finden", destination: "/de/concierge", permanent: true },
+      { source: "/de/choose-booking-type", destination: "/de/concierge", permanent: true },
+      { source: "/es/encontrar-fotografo", destination: "/es/concierge", permanent: true },
+      { source: "/es/choose-booking-type", destination: "/es/concierge", permanent: true },
+      { source: "/fr/trouver-photographe", destination: "/fr/concierge", permanent: true },
+      { source: "/fr/choose-booking-type", destination: "/fr/concierge", permanent: true },
     ];
   },
   async headers() {

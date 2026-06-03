@@ -40,12 +40,18 @@ const FADE_MS = 500;
 /** Hook: auto-rotates a small visible window over a larger photo pool.
  * Each cell runs its OWN setTimeout chain at a random interval in
  * [ROTATE_MIN_MS, ROTATE_MAX_MS] — so cells swap independently and the
- * mosaic appears to twinkle rather than tick to a global beat. */
-function useRotatingVisible(photos: MosaicPhoto[], visibleCount: number, hovering: boolean) {
+ * mosaic appears to twinkle rather than tick to a global beat.
+ *
+ * `paused` is the OR of every reason rotation should stop: pointer is
+ * hovering (so the user can read a label without it disappearing) AND/OR
+ * the mosaic isn't in the viewport (so we don't burn timer/render budget
+ * during fast scrolls — that's the main cause of scroll jank on these
+ * pages, since every swap kicks off a 500ms cross-fade animation). */
+function useRotatingVisible(photos: MosaicPhoto[], visibleCount: number, paused: boolean) {
   const [visible, setVisible] = useState<MosaicPhoto[]>(() => photos.slice(0, visibleCount));
   const poolRef = useRef<MosaicPhoto[]>(photos.slice(visibleCount));
   useEffect(() => {
-    if (hovering || photos.length <= visibleCount) return;
+    if (paused || photos.length <= visibleCount) return;
     const timers: number[] = [];
     let cancelled = false;
 
@@ -76,18 +82,48 @@ function useRotatingVisible(photos: MosaicPhoto[], visibleCount: number, hoverin
       cancelled = true;
       timers.forEach((t) => window.clearTimeout(t));
     };
-  }, [hovering, photos, visibleCount]);
+  }, [paused, photos, visibleCount]);
   return visible;
+}
+
+/** Pause rotation when the mosaic is mostly offscreen — fast scrolls
+ * stop generating swap+fade work and the page stays smooth. Threshold
+ * 0.3 matches the user-visible heuristic: anything less than 30% in view
+ * is "not the focus right now". */
+function useInViewport(ref: React.RefObject<HTMLDivElement | null>, threshold = 0.3) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      // SSR / unsupported browsers: assume in-view so rotation still runs
+      // (avoids a permanently-frozen mosaic on legacy clients).
+      setInView(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (e) setInView(e.intersectionRatio >= threshold);
+      },
+      { threshold: [0, threshold, 1] }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [ref, threshold]);
+  return inView;
 }
 
 export function PortfolioMosaic({ photos }: { photos: MosaicPhoto[] }) {
   const [hovering, setHovering] = useState(false);
-  const visible = useRotatingVisible(photos, VISIBLE_CELLS, hovering);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useInViewport(ref);
+  const visible = useRotatingVisible(photos, VISIBLE_CELLS, hovering || !inView);
 
   if (visible.length === 0) return null;
 
   return (
     <div
+      ref={ref}
       className="relative hidden lg:block h-full"
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
@@ -118,13 +154,16 @@ export function PortfolioMosaicQuad({ photos, className = "" }: {
   className?: string;
 }) {
   const [hovering, setHovering] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useInViewport(ref);
   // 3 cells: one large (2×2) plus two smaller (1×1 each), filling a 3×2 grid.
-  const visible = useRotatingVisible(photos, 3, hovering);
+  const visible = useRotatingVisible(photos, 3, hovering || !inView);
 
   if (visible.length === 0) return null;
 
   return (
     <div
+      ref={ref}
       className={`relative hidden lg:block h-full ${className}`}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}

@@ -23,7 +23,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const userId = user.id;
   const { id: bookingId } = await params;
-  const { action, proposed_date, proposed_time, date_note } = await req.json();
+  const { action, proposed_date: proposed_date_raw, proposed_date_coords, proposed_time, date_note } = await req.json();
+
+  // Reconcile string vs raw click coords from the DatePicker. If the
+  // two disagree, trust the coords and rebuild the string — protects
+  // against the "I picked June but the booking says July" class of bug
+  // where state-corruption between picker and submit shifts the date.
+  // Logs the mismatch loudly so we can find the root cause.
+  let proposed_date: string | null = null;
+  {
+    const raw = typeof proposed_date_raw === "string" ? proposed_date_raw : (proposed_date_raw == null ? null : String(proposed_date_raw));
+    const c = proposed_date_coords as { year?: unknown; month?: unknown; day?: unknown } | null;
+    if (c && typeof c.year === "number" && typeof c.month === "number" && typeof c.day === "number") {
+      const rebuilt = `${c.year}-${String(c.month).padStart(2, "0")}-${String(c.day).padStart(2, "0")}`;
+      if (raw && raw !== rebuilt) {
+        console.error(`[propose-date] date MISMATCH: string="${raw}" coords=${JSON.stringify(c)} → using coords ("${rebuilt}"). booking=${bookingId} user=${userId}`);
+      }
+      proposed_date = rebuilt;
+    } else {
+      proposed_date = raw;
+    }
+  }
 
   // Get booking with both parties' info
   const booking = await queryOne<{
@@ -92,6 +112,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       [proposed_date, proposedBy, date_note || null, bookingId, proposed_time || null]
     );
 
+    // Insert a system message into the booking chat — the chat
+    // renderer recognises the `DATE_PROPOSAL:{json}` prefix and shows
+    // a rich card with Accept / Propose Different actions, so the
+    // negotiation lives inside the conversation, not buried in email.
+    let proposalMessageId: string | null = null;
+    try {
+      const proposalPayload = {
+        proposed_date,
+        proposed_time: proposed_time || null,
+        proposed_by: proposedBy,
+        sender_name: isPhotographer ? booking.photographer_name : booking.client_name,
+        date_note: date_note || null,
+      };
+      const senderUserId = isPhotographer ? booking.photographer_user_id : booking.client_id;
+      const inserted = await queryOne<{ id: string }>(
+        `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE) RETURNING id`,
+        [bookingId, senderUserId, `DATE_PROPOSAL:${JSON.stringify(proposalPayload)}`]
+      );
+      proposalMessageId = inserted?.id || null;
+    } catch (chatErr) {
+      console.error("[propose-date] chat message error:", chatErr);
+    }
+
     // Notify the other party
     const recipientEmail = isPhotographer ? booking.client_email : booking.photographer_email;
     const recipientName = isPhotographer ? booking.client_name : booking.photographer_name;
@@ -116,22 +159,40 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       </div>`
     ).catch(console.error);
 
-    // SMS to the other party.
-    // NOTE: This SMS is intentionally NOT idempotent — each date proposal is a distinct
-    // user action, so sending one SMS per proposal is correct behavior.
+    // Push notification to the other party — fires immediately. Cheap,
+    // non-intrusive, and lets the photographer's mobile app pop a card
+    // they can act on without leaving the chat.
+    const recipientUserId = isPhotographer ? booking.client_id : booking.photographer_user_id;
     try {
-      const recipientUserId = isPhotographer ? booking.client_id : booking.photographer_user_id;
+      const { sendPushNotification } = await import("@/lib/push");
+      sendPushNotification(
+        recipientUserId,
+        `📅 ${(senderName || "").split(" ")[0] || "Someone"} proposed a new date`,
+        `${formattedDate}${timeDisplay}`.trim() || "Tap to view details.",
+        { type: "date_proposal", bookingId, channelId: "bookings", categoryId: "BOOKING" }
+      ).catch(() => {});
+    } catch (pushErr) {
+      console.error("[propose-date] push error:", pushErr);
+    }
+
+    // SMS — goes through the delayed queue (3-min hold, cancelled if
+    // the recipient reads the chat / replies / is online / has the
+    // mobile app installed). We anchor it to the system message we
+    // just inserted so the cancel-on-read check looks at the right
+    // row in `messages`.
+    try {
       const recipientPhone = await queryOne<{ phone: string | null }>(
         "SELECT phone FROM users WHERE id = $1",
         [recipientUserId]
       );
-      if (recipientPhone?.phone) {
+      if (recipientPhone?.phone && proposalMessageId) {
         const smsPrefs = await queryOne<{ sms_bookings: boolean }>(
           "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
           [recipientUserId]
         );
         if (smsPrefs?.sms_bookings !== false) {
           const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
+          const { enqueueNewMessageNotif } = await import("@/lib/notification-queue");
           const rLocale = await getUserLocaleById(recipientUserId);
           const smsBody = pickT({
             en: `Photo Portugal: ${senderName} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`,
@@ -139,10 +200,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             de: `Photo Portugal: ${senderName} hat ein neues Datum (${formattedDate}${timeDisplay}) für Ihr Fotoshooting vorgeschlagen. Melden Sie sich an, um zu antworten.`,
             fr: `Photo Portugal : ${senderName} a proposé une nouvelle date (${formattedDate}${timeDisplay}) pour votre séance photo. Connectez-vous pour répondre.`,
           }, rLocale);
-          sendSMS(
-            recipientPhone.phone,
-            smsBody
-          ).catch(err => console.error("[sms] error:", err));
+          await enqueueNewMessageNotif({
+            recipientId: recipientUserId,
+            recipient: recipientPhone.phone,
+            messageId: proposalMessageId,
+            bookingId,
+            channel: "sms",
+            body: smsBody,
+          });
         }
       }
     } catch (smsErr) {
@@ -174,11 +239,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const proposalData = await queryOne<{ proposed_time: string | null }>(
       "SELECT proposed_time FROM bookings WHERE id = $1", [bookingId]
     );
-    if (!(await ensureBufferedAvailability(toDateString(booking.proposed_date), proposalData?.proposed_time || booking.shoot_time || "flexible"))) {
-      return NextResponse.json({
-        error: "The photographer is busy around the proposed time. Please pick another date or time.",
-        code: "calendar_conflict",
-      }, { status: 400 });
+    // Calendar guard on accept — only when CLIENT was the proposer.
+    // If the PHOTOGRAPHER proposed the date, they implicitly committed
+    // to it, and a later Google-Calendar sync that pulls in a personal
+    // event must NOT silently block the client from accepting their
+    // own proposal (the previous behaviour, which caused Dan ↔ Kristina
+    // to see "Accept date" do nothing — busy slot got synced between
+    // propose and accept). If the photographer is actually busy now,
+    // it's on them to propose a different date.
+    if (booking.proposed_by === "client") {
+      if (!(await ensureBufferedAvailability(toDateString(booking.proposed_date), proposalData?.proposed_time || booking.shoot_time || "flexible"))) {
+        return NextResponse.json({
+          error: "The photographer is busy around the proposed time. Please pick another date or time.",
+          code: "calendar_conflict",
+        }, { status: 400 });
+      }
     }
 
     await queryOne(

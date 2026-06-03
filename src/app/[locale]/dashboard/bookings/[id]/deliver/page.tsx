@@ -25,12 +25,15 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
     shoot_date: string | null;
     status: string;
     delivery_token: string | null;
+    delivery_password: string | null;
+    delivery_password_plain: string | null;
     delivery_accepted: boolean;
     delivery_title: string | null;
     delivery_message: string | null;
   }>(
     `SELECT b.id, u.id as photographer_user_id, cu.name as client_name,
             p.name as package_name, b.shoot_date, b.status, b.delivery_token,
+            b.delivery_password, b.delivery_password_plain,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
             b.delivery_title, b.delivery_message
      FROM bookings b
@@ -110,6 +113,7 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
         clientAccepted={booking.delivery_accepted}
         hasOpenDispute={hasOpenDispute}
         deliveryToken={booking.delivery_token}
+        deliveryPassword={booking.delivery_password_plain}
         initialTitle={booking.delivery_title}
         initialMessage={booking.delivery_message}
       />

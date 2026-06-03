@@ -65,35 +65,36 @@ export function DeliveryPageClient({
   const [acceptError, setAcceptError] = useState("");
   const { modal, confirm } = useConfirmModal();
 
-  // Auto-login with URL param, cached password, or admin bypass.
-  // `?admin=1` POSTs without a password — the verify endpoint accepts
-  // it when the admin_token cookie is present, so non-admins can't
-  // exploit the URL flag.
+  // Auto-login with URL param, cached password, admin bypass, OR a
+  // signed-in session for the booking's gift recipient. Gift recipients
+  // never see a password — they got here from /dashboard/bookings, and
+  // the verify endpoint accepts an empty body when the session user
+  // matches gift_recipient_user_id.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlPw = params.get("pw");
     const adminBypass = params.get("admin") === "1";
     const cached = urlPw || sessionStorage.getItem(`delivery_pw_${token}`);
     if (urlPw) sessionStorage.setItem(`delivery_pw_${token}`, urlPw);
-    if (cached || adminBypass) {
-      fetch(`/api/delivery/${token}/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: cached || "" }),
+    // Always try once — verify will succeed for admins and signed-in
+    // gift recipients even with an empty password. If it fails, we fall
+    // back to the password prompt.
+    fetch(`/api/delivery/${token}/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: cached || "" }),
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setGallery(data);
+          if (data.delivery_accepted) setAccepted(true);
+        }
+        setAutoLoading(false);
       })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data) {
-            setGallery(data);
-            if (data.delivery_accepted) setAccepted(true);
-          }
-          setAutoLoading(false);
-        })
-        .catch(() => setAutoLoading(false));
-    } else {
-      setAutoLoading(false);
-    }
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+      .catch(() => setAutoLoading(false));
+    void adminBypass; // legacy flag kept for compat; bypass is server-side
+  }, [token]);
 
   // Poll for ZIP readiness after accept
   useEffect(() => {

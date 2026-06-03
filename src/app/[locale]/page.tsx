@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { Link } from "@/i18n/navigation";
+import { TrackedCTALink } from "@/components/ui/TrackedCTALink";
+import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
 import { locations } from "@/lib/locations-data";
 import { resolveImageUrl } from "@/lib/image-url";
 import { PortfolioMosaic, type MosaicPhoto } from "@/components/ui/PortfolioMosaic";
@@ -310,7 +312,40 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               COALESCE(pp.rating, 0)::text as rating,
               COALESCE(pp.review_count, 0) as review_count,
               COALESCE(pp.session_count, 0) as session_count,
-              (SELECT loc_row.location_slug FROM photographer_locations loc_row WHERE loc_row.photographer_id = pp.id LIMIT 1) as location_slug,
+              -- Pick the photographer's "headline" city: prefer anchor
+              -- cities with known search demand (Lisbon, Porto, Sintra,
+              -- Cascais, Algarve, Madeira, Azores, Douro Valley, Lagos,
+              -- Comporta) over satellite slugs (caparica, almada,
+              -- sesimbra, etc.) so the hero copy reads "in Lisbon" rather
+              -- than "in Costa da Caparica" for a Lisbon-area shooter.
+              -- Fallback: lowest slug alphabetically if none of the
+              -- anchors match — keeps the result deterministic.
+              (SELECT loc_row.location_slug FROM photographer_locations loc_row
+                WHERE loc_row.photographer_id = pp.id
+                ORDER BY (CASE loc_row.location_slug
+                  WHEN 'lisbon' THEN 0
+                  WHEN 'porto' THEN 1
+                  WHEN 'sintra' THEN 2
+                  WHEN 'cascais' THEN 3
+                  WHEN 'algarve' THEN 4
+                  WHEN 'madeira' THEN 5
+                  WHEN 'azores' THEN 6
+                  WHEN 'douro-valley' THEN 7
+                  WHEN 'lagos' THEN 8
+                  WHEN 'comporta' THEN 9
+                  WHEN 'evora' THEN 10
+                  WHEN 'aveiro' THEN 11
+                  WHEN 'braga' THEN 12
+                  WHEN 'guimaraes' THEN 13
+                  WHEN 'coimbra' THEN 14
+                  WHEN 'nazare' THEN 15
+                  WHEN 'obidos' THEN 16
+                  WHEN 'tavira' THEN 17
+                  WHEN 'funchal' THEN 18
+                  WHEN 'ponta-delgada' THEN 19
+                  ELSE 100
+                END), loc_row.location_slug
+                LIMIT 1) as location_slug,
               ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 12) as portfolio_urls
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
@@ -430,6 +465,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <HeroSingleVariant
           photographer={heroPhotographer}
           totalPhotographers={totalPhotographers}
+          showSiteChip
         />
       )}
 
@@ -497,19 +533,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               {/* CTAs: send to catalog or how-it-works. Match form lives in
                   the hero above — duplicating it here would just confuse. */}
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link
+                <TrackedCTALink
+                  ctaName="browse_photographers"
+                  location="homepage_hero"
                   href="/photographers"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700"
                 >
                   {t("valuePropBrowseAll")}
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
-                </Link>
-                <Link
+                </TrackedCTALink>
+                <TrackedCTALink
+                  ctaName="how_it_works"
+                  location="homepage_hero"
                   href="/how-it-works"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-warm-300 bg-white px-6 py-3.5 text-base font-semibold text-gray-800 transition hover:border-primary-300 hover:bg-warm-50"
                 >
                   {t("valuePropHowItWorks")}
-                </Link>
+                </TrackedCTALink>
               </div>
 
               {/* Social proof row */}
@@ -556,6 +596,74 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {/* ===== HOW IT WORKS ===== */}
       <HowItWorksSection />
+
+      {/* ===== GIFT CARDS PROMO ===== */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50">
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 8 L24 16 L32 16 L26 22 L28 30 L20 26 L12 30 L14 22 L8 16 L16 16 Z' fill='%23000'/%3E%3C/svg%3E\")" }} />
+        <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div>
+              <span className="inline-block rounded-full bg-pink-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-pink-700">
+                🎁 {t("giftPromo.badge")}
+              </span>
+              <h2 className="mt-4 font-display text-3xl font-bold leading-tight text-gray-900 sm:text-4xl lg:text-[2.75rem]">
+                {t("giftPromo.title")}
+              </h2>
+              <p className="mt-4 max-w-lg text-lg leading-relaxed text-gray-600">
+                {t("giftPromo.subtitle")}
+              </p>
+              <ul className="mt-6 space-y-2.5">
+                {(["perk1", "perk2", "perk3"] as const).map((k) => (
+                  <li key={k} className="flex items-start gap-2.5 text-sm text-gray-700">
+                    <svg className="mt-0.5 h-5 w-5 shrink-0 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{t(`giftPromo.${k}`)}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8">
+                <TrackedCTALink
+                  ctaName="gift_cards"
+                  location="homepage_gift_promo"
+                  href="/gift-cards"
+                  className="inline-flex items-center gap-2 rounded-xl bg-pink-600 px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-pink-600/25 transition hover:bg-pink-700"
+                >
+                  {t("giftPromo.cta")}
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </TrackedCTALink>
+              </div>
+            </div>
+
+            {/* Right: stylised gift card mockup */}
+            <div className="relative mx-auto w-full max-w-md">
+              <div className="absolute inset-0 -translate-x-3 translate-y-3 rotate-[-3deg] rounded-3xl bg-gradient-to-br from-amber-200 to-pink-200 opacity-60" />
+              <div className="relative rotate-[2deg] overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500 via-rose-500 to-amber-500 p-7 shadow-2xl">
+                <div className="flex items-start justify-between text-white">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-widest opacity-90">Photo Portugal</p>
+                    <p className="mt-0.5 text-[11px] uppercase tracking-wider opacity-75">Gift Card</p>
+                  </div>
+                  <span className="text-3xl">🎁</span>
+                </div>
+                <div className="mt-10 space-y-1.5 text-white">
+                  <div className="flex items-center justify-between rounded-lg bg-white/15 px-3 py-2 backdrop-blur-sm">
+                    <span className="text-sm font-semibold">{t("giftPromo.tierExpress")}</span>
+                    <span className="text-xs opacity-80">1 hour</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-white/15 px-3 py-2 backdrop-blur-sm">
+                    <span className="text-sm font-semibold">{t("giftPromo.tierFull")}</span>
+                    <span className="text-xs opacity-80">2 hours</span>
+                  </div>
+                </div>
+                <p className="mt-6 text-[10px] uppercase tracking-widest text-white/70">Valid 12 months · Portugal-wide</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ===== SHOOT TYPES ===== */}
       <ShootTypesSection />
@@ -605,18 +713,21 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             {t("cta.subtitle")}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/choose-booking-type"
+            <TrackedCTALink
+              ctaName="browse_photographers"
+              location="homepage_footer_cta"
+              href="/photographers"
               className="rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg transition hover:bg-primary-700"
             >
               {t("cta.browsePhotographers")}
-            </Link>
-            <Link
-              href="/find-photographer"
+            </TrackedCTALink>
+            <TrackedConciergeTrigger
+              ctaName="get_matched"
+              location="homepage_footer_cta"
               className="rounded-xl border-2 border-white/20 px-8 py-4 text-base font-semibold text-white transition hover:border-white/40 hover:bg-white/5"
             >
               {t("cta.findMePhotographer")}
-            </Link>
+            </TrackedConciergeTrigger>
           </div>
         </div>
       </section>

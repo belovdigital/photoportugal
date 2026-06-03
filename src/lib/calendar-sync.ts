@@ -290,6 +290,10 @@ async function fetchGoogleBusySlots(connection: ConnectionRow): Promise<BusySlot
   // it'll appear in both chunks. Keying by `${cal}@${start}` collapses
   // those into one slot.
   const seen = new Set<string>();
+  // Calendars Google reports as gone (notFound) — these were deleted or
+  // unshared after the photographer ticked them. Drop them from the
+  // selection so future syncs don't keep spamming logs.
+  const notFoundIds = new Set<string>();
 
   for (const chunk of chunks) {
     const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
@@ -315,7 +319,11 @@ async function fetchGoogleBusySlots(connection: ConnectionRow): Promise<BusySlot
     for (const calId of resolvedIds) {
       const cal = data.calendars[calId];
       if (cal?.errors?.length) {
-        console.warn(`[calendar-sync] freeBusy error for ${calId}:`, cal.errors);
+        if (cal.errors.some((e) => e.reason === "notFound")) {
+          notFoundIds.add(calId);
+        } else {
+          console.warn(`[calendar-sync] freeBusy error for ${calId}:`, cal.errors);
+        }
         continue;
       }
       if (!cal?.busy) continue;
@@ -331,6 +339,26 @@ async function fetchGoogleBusySlots(connection: ConnectionRow): Promise<BusySlot
       }
     }
   }
+
+  if (notFoundIds.size > 0) {
+    const toDrop = Array.from(notFoundIds);
+    console.warn(`[calendar-sync] dropping ${toDrop.length} missing calendar(s) from connection ${connection.id}:`, toDrop);
+    try {
+      await query(
+        `UPDATE calendar_connections
+           SET selected_calendar_ids = (
+             SELECT COALESCE(array_agg(c), '{}')
+             FROM unnest(selected_calendar_ids) c
+             WHERE c <> ALL($2::text[])
+           )
+         WHERE id = $1`,
+        [connection.id, toDrop]
+      );
+    } catch (err) {
+      console.error("[calendar-sync] failed to prune missing calendars:", err);
+    }
+  }
+
   return slots;
 }
 

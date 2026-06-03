@@ -13,7 +13,7 @@ import crypto from "crypto";
 export const dynamic = "force-dynamic";
 
 const MAX_VIDEO_SIZE = 500 * 1024 * 1024;
-const MAX_DELIVERY_PHOTOS = 200;
+const MAX_DELIVERY_PHOTOS = 500;
 const MAX_DELIVERY_VIDEOS = 10;
 
 /**

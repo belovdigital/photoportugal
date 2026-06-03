@@ -23,6 +23,11 @@ export interface ConciergePhotographer {
   cover_position_y: number | null;
   last_seen_at: string | null;
   sample_review: { text: string; client_name: string | null } | null;
+  // Newcomer-boost + speed signals — added May 2026 so the ranker can
+  // surface fresh photographers and reward responsive ones.
+  session_count: number;
+  avg_response_minutes: number | null;
+  created_days_ago: number;
 }
 
 let cache: { rows: ConciergePhotographer[]; fetchedAt: number } | null = null;
@@ -40,6 +45,9 @@ export async function loadPhotographersForConcierge(): Promise<ConciergePhotogra
     portfolio_thumbs: string[] | null;
     last_seen_at: string | null;
     review_text: string | null; review_client_name: string | null;
+    session_count: number;
+    avg_response_minutes: number | null;
+    created_days_ago: number;
   }>(
     `SELECT
        pp.id,
@@ -51,6 +59,9 @@ export async function loadPhotographersForConcierge(): Promise<ConciergePhotogra
        COALESCE(pp.is_featured, FALSE) AS is_featured,
        COALESCE(pp.is_verified, FALSE) AS is_verified,
        COALESCE(pp.is_founding, FALSE) AS is_founding,
+       COALESCE(pp.session_count, 0) AS session_count,
+       pp.avg_response_minutes,
+       EXTRACT(DAY FROM NOW() - pp.created_at)::int AS created_days_ago,
        ARRAY(SELECT location_slug FROM photographer_locations WHERE photographer_id = pp.id) AS locations,
        COALESCE(pp.shoot_types, '{}') AS shoot_types,
        COALESCE(pp.languages, '{}') AS languages,
@@ -94,6 +105,9 @@ export async function loadPhotographersForConcierge(): Promise<ConciergePhotogra
     portfolio_thumbs: r.portfolio_thumbs || [],
     last_seen_at: r.last_seen_at,
     sample_review: r.review_text ? { text: r.review_text, client_name: r.review_client_name } : null,
+    session_count: r.session_count || 0,
+    avg_response_minutes: r.avg_response_minutes,
+    created_days_ago: r.created_days_ago || 0,
   }));
 
   cache = { rows: photographers, fetchedAt: Date.now() };

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // Server-side mirrors of the limits enforced in the main /delivery POST. We
 // duplicate them here rather than import to keep this endpoint self-contained.
 const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB
-const MAX_DELIVERY_PHOTOS = 200;
+const MAX_DELIVERY_PHOTOS = 500;
 const MAX_DELIVERY_VIDEOS = 10;
 const ALLOWED_VID_EXT = ["mp4", "mov", "webm", "m4v"];
 

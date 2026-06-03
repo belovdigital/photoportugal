@@ -35,7 +35,21 @@ export async function PATCH(
   if (body.rating !== undefined) { sets.push(`rating = $${paramIdx++}`); vals.push(body.rating); }
   if (body.title !== undefined) { sets.push(`title = $${paramIdx++}`); vals.push(body.title || null); }
   if (body.text !== undefined) { sets.push(`text = $${paramIdx++}`); vals.push(body.text || null); }
-  if (body.is_approved !== undefined) { sets.push(`is_approved = $${paramIdx++}`); vals.push(body.is_approved); }
+  if (body.is_approved !== undefined) {
+    sets.push(`is_approved = $${paramIdx++}`); vals.push(body.is_approved);
+    // Approving clears any prior reject — moving back into the active pool.
+    if (body.is_approved === true) sets.push(`rejected_at = NULL`);
+  }
+  if (body.rejected !== undefined) {
+    // Reject: explicit "decided no". Keeps the row for audit but drops
+    // out of the pending queue. Also flips is_approved=FALSE so the
+    // photographer's public profile never surfaces it.
+    if (body.rejected === true) {
+      sets.push(`rejected_at = NOW()`, `is_approved = FALSE`);
+    } else {
+      sets.push(`rejected_at = NULL`);
+    }
+  }
   if (body.client_name !== undefined) { sets.push(`client_name_override = $${paramIdx++}`); vals.push((body.client_name || "").trim() || null); }
   if (body.client_country !== undefined) { sets.push(`client_country_override = $${paramIdx++}`); vals.push((body.client_country || "").trim().toUpperCase().slice(0, 2) || null); }
 
@@ -85,9 +99,9 @@ export async function PATCH(
         import("@/lib/push").then(m =>
           m.sendPushNotification(
             reviewDetails.photographer_user_id,
-            `New ${reviewDetails.rating}-star review ${stars}`,
-            `${reviewDetails.client_name} left you a review.`,
-            { type: "review", slug: reviewDetails.slug }
+            `${stars} ${(reviewDetails.client_name || "").split(" ")[0] || "A client"} left you a review`,
+            "Tap to read it on your profile.",
+            { type: "review", slug: reviewDetails.slug, channelId: "default", categoryId: "REVIEW" }
           )
         ).catch(err => console.error("[reviews] push error:", err));
         import("@/lib/realtime").then((m) =>
@@ -119,23 +133,17 @@ export async function PATCH(
       );
       if (client?.email) {
         const firstName = client.name?.split(" ")[0] || "";
-        await sendEmail(
-          client.email,
-          `Your ${percentOff}% off code is here`,
-          `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #C94536;">Thank you for the ${review.video_url ? "video " : ""}review${firstName ? `, ${firstName}` : ""}!</h2>
-            <p>${review.video_url ? "Video reviews are gold — they help travelers feel confident about booking." : "Reviews like yours help travelers find the right photographer."} Really, thank you.</p>
-            <p>As promised, here's your <strong>${percentOff}% off code</strong> for any future booking on Photo Portugal:</p>
-            <div style="background: #FFF8E1; border: 2px dashed #FFCA28; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
-              <div style="font-size: 11px; color: #888; letter-spacing: 1px; text-transform: uppercase;">Your code</div>
-              <div style="font-size: 28px; font-weight: 800; letter-spacing: 2px; color: #333; margin-top: 6px; font-family: monospace;">${reward.code}</div>
-              <div style="font-size: 12px; color: #666; margin-top: 8px;">Valid for 12 months · One use</div>
-            </div>
-            <p>Apply it at checkout when you book your next session.</p>
-            <p><a href="https://photoportugal.com" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: bold;">Browse photographers</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
-          </div>`
-        );
+        const { getUserLocaleById } = await import("@/lib/email-locale");
+        const { buildReviewThankYouEmail } = await import("@/lib/review-thank-you-email");
+        const locale = await getUserLocaleById(review.client_id);
+        const email = buildReviewThankYouEmail({
+          locale,
+          firstName,
+          code: reward.code,
+          percentOff,
+          isVideoReview: !!review.video_url,
+        });
+        await sendEmail(client.email, email.subject, email.html);
       }
     } catch (err) {
       console.error("[reviews] failed to backfill review reward:", err);

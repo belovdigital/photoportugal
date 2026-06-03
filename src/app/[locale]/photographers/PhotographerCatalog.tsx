@@ -6,7 +6,8 @@ import { Link } from "@/i18n/navigation";
 import { localizeShootType } from "@/lib/shoot-type-labels";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
-import { trackSearch } from "@/lib/analytics";
+import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
+import { trackSearch, trackCTAClick } from "@/lib/analytics";
 import {
   LocationTreeOptions,
   getLocationTreeLabel,
@@ -60,6 +61,10 @@ interface Props {
   shootTypes: string[];
   initialLocation?: string;
   initialShootType?: string;
+  // Non-null when the viewer is a gift-card recipient. Hides prices,
+  // adds a "Use your gift" CTA on every card, and forces the booking
+  // flow into gift-redemption mode when they pick a photographer.
+  giftMode?: { tier: "express" | "full"; tierLabel: string } | null;
 }
 
 type SortKey = "featured" | "rating" | "reviews" | "newest" | "fastest";
@@ -126,6 +131,7 @@ export function PhotographerCatalog({
   shootTypes,
   initialLocation,
   initialShootType,
+  giftMode = null,
 }: Props) {
   const t = useTranslations("photographers");
   const locale = useLocale();
@@ -490,7 +496,7 @@ export function PhotographerCatalog({
           <p className="mt-1 text-sm text-gray-400">{t("trustLine")}</p>
         </div>
 
-        <Link href="/find-photographer" className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/70 px-5 py-4 shadow-lg backdrop-blur-xl transition hover:shadow-xl hover:bg-white/90 lg:w-1/2 lg:shrink-0">
+        <ConciergeTrigger onClick={() => trackCTAClick("get_matched", "catalog_top_concierge_card")} className="flex items-center gap-3 rounded-2xl border border-white/60 bg-white/70 px-5 py-4 shadow-lg backdrop-blur-xl transition hover:shadow-xl hover:bg-white/90 lg:w-1/2 lg:shrink-0 text-left">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 shadow-md">
             <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -502,7 +508,7 @@ export function PhotographerCatalog({
             <TeamOnlineIndicator />
           </div>
           <svg className="h-4 w-4 shrink-0 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-        </Link>
+        </ConciergeTrigger>
       </div>
 
       {/* Seasonal urgency — April to September */}
@@ -769,11 +775,11 @@ export function PhotographerCatalog({
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((photographer, idx) => (
           <Fragment key={photographer.id}>
-            <PhotographerCard photographer={photographer} quote={quotes[photographer.id]} />
+            <PhotographerCard photographer={photographer} quote={quotes[photographer.id]} giftMode={giftMode} />
             {idx === 2 && filtered.length > 3 && (
-              <Link
-                href="/find-photographer"
-                className="flex items-center gap-3 rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 to-accent-50 p-5 shadow-sm transition hover:shadow-md sm:hidden"
+              <ConciergeTrigger
+                onClick={() => trackCTAClick("get_matched", "catalog_inline_card")}
+                className="flex items-center gap-3 rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 to-accent-50 p-5 shadow-sm transition hover:shadow-md sm:hidden text-left w-full"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 shadow-md">
                   <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -788,13 +794,13 @@ export function PhotographerCatalog({
                 <svg className="h-4 w-4 shrink-0 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
-              </Link>
+              </ConciergeTrigger>
             )}
           </Fragment>
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {filtered.length === 0 && !giftMode && (
         <div className="mt-16 flex flex-col items-center text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warm-100">
             <svg className="h-8 w-8 text-warm-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -811,6 +817,33 @@ export function PhotographerCatalog({
           >
             {t("filters.clearAllFilters")}
           </button>
+        </div>
+      )}
+
+      {/* Gift-mode empty state — recipient's filters returned 0 participating
+          photographers. Send them straight to support with all context
+          pre-filled so the team can manually match them. */}
+      {filtered.length === 0 && giftMode && (
+        <div className="mt-16 flex flex-col items-center text-center">
+          <div className="text-5xl mb-4">🤔</div>
+          <h3 className="text-lg font-semibold text-gray-900">No photographers match your filters</h3>
+          <p className="mt-2 max-w-sm text-sm text-gray-500">
+            We couldn&rsquo;t find a photographer accepting your <strong>{giftMode.tierLabel}</strong> gift with these filters. Try a different city or shoot type — or email us and we&rsquo;ll personally find someone for you.
+          </p>
+          <div className="mt-6 flex gap-3 flex-wrap justify-center">
+            <button
+              onClick={() => { setLocationFilters([]); setShootTypeFilters([]); setLanguageFilter(""); }}
+              className="rounded-lg bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200"
+            >
+              Reset filters
+            </button>
+            <a
+              href={`mailto:info@photoportugal.com?subject=Gift card support — ${giftMode.tierLabel} tier&body=Hi, I have a Photo Portugal ${giftMode.tierLabel} gift card and can't find a photographer matching my filters. Can you help?`}
+              className="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
+            >
+              Email support
+            </a>
+          </div>
         </div>
       )}
 

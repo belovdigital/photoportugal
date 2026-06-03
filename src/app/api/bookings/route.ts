@@ -21,11 +21,72 @@ export async function POST(req: NextRequest) {
   const userId = user.id;
 
   try {
-    const { photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, group_size_is_estimate, occasion, message, utm_source, utm_medium, utm_campaign, utm_term, gclid } = await req.json();
+    const { photographer_id, package_id, location_slug, location_detail, shoot_date: shoot_date_raw, shoot_date_coords, shoot_time, flexible_date_from: flexible_date_from_raw, flexible_date_from_coords, flexible_date_to: flexible_date_to_raw, flexible_date_to_coords, group_size, group_size_is_estimate, occasion, message, client_phone, utm_source, utm_medium, utm_campaign, utm_term, gclid,
+      // Gift booking fields (all optional; require is_gift=true to take effect)
+      is_gift, gift_recipient_name, gift_recipient_email, gift_recipient_phone,
+      gift_reveal_mode, gift_reveal_days_before,
+      // Gift-card redemption: when true and the client is in gift mode
+      // (users.active_gift_card_id), this booking is paid for by the
+      // gift card — no Stripe charge, fixed photographer payout.
+      gift_card_redemption,
+      // Fast-track: when client clicked "Book Now" on a BOOKING_CARD
+      // sent by the photographer in chat, we skip the manual photographer-
+      // confirm step. The photographer already committed by sending the
+      // card. proposal_message_id is the chat message id of that card;
+      // server validates it against the message + package and only then
+      // sets status='confirmed' so the next API call (stripe/checkout)
+      // works directly.
+      proposal_message_id,
+    } = await req.json();
+
+    // ─── Bulletproof date reconciliation ──────────────────────────────
+    // The DatePicker sends both a YYYY-MM-DD string AND the raw click
+    // coordinates (year + 1-indexed month + day). If they disagree —
+    // which has happened in production with the symptom "client picked
+    // June but the booking says July" — we trust the coordinates as
+    // ground truth and rebuild the string from them. The mismatch gets
+    // logged loudly so we can find the root cause. The booking still
+    // succeeds (rather than failing in front of a paying customer).
+    function reconcileDate(raw: unknown, coords: unknown, fieldName: string): string | null {
+      const rawStr = typeof raw === "string" ? raw : (raw == null ? null : String(raw));
+      const c = coords as { year?: unknown; month?: unknown; day?: unknown } | null;
+      if (!c || typeof c.year !== "number" || typeof c.month !== "number" || typeof c.day !== "number") {
+        return rawStr; // No coords (legacy clients) — accept string as-is.
+      }
+      const rebuilt = `${c.year}-${String(c.month).padStart(2, "0")}-${String(c.day).padStart(2, "0")}`;
+      if (rawStr && rawStr !== "flexible" && rawStr !== rebuilt) {
+        console.error(`[bookings] date MISMATCH in ${fieldName}: string="${rawStr}" coords=${JSON.stringify(c)} → using coords ("${rebuilt}"). user=${userId} photographer=${photographer_id}`);
+        return rebuilt;
+      }
+      return rawStr;
+    }
+
+    const shoot_date = shoot_date_raw === "flexible"
+      ? "flexible"
+      : reconcileDate(shoot_date_raw, shoot_date_coords, "shoot_date");
+    const flexible_date_from = reconcileDate(flexible_date_from_raw, flexible_date_from_coords, "flexible_date_from");
+    const flexible_date_to = reconcileDate(flexible_date_to_raw, flexible_date_to_coords, "flexible_date_to");
 
     if (!photographer_id) {
       return NextResponse.json({ error: "Photographer is required" }, { status: 400 });
     }
+
+    // Diagnostic: repeated client reports of "I picked June but the
+    // booking says July." Server path is a clean string passthrough, so
+    // log the raw shoot_date we receive — next repro we can confirm
+    // whether the browser sent the wrong string or whether the picker
+    // displays one thing but submits another.
+    console.log(`[bookings] received shoot_date="${shoot_date}" flexible_from="${flexible_date_from || ""}" flexible_to="${flexible_date_to || ""}" user=${userId} photographer=${photographer_id}`);
+
+    // Phone is required at the platform boundary — keeps a fallback channel
+    // when email lands in spam. Strip non-digits to count length.
+    const phoneDigits = typeof client_phone === "string" ? client_phone.replace(/[^\d]/g, "") : "";
+    if (phoneDigits.length < 6) {
+      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+    }
+    // Persist to user's profile so they don't have to re-enter on the
+    // next booking. Always overwrite — they just confirmed it's current.
+    await queryOne("UPDATE users SET phone = $1 WHERE id = $2 RETURNING id", [client_phone.trim(), userId]).catch(() => {});
 
     // Verify photographer exists and is approved. Pull min_lead_time_hours
     // here too so we can validate the shoot date in a single roundtrip.
@@ -102,7 +163,9 @@ export async function POST(req: NextRequest) {
         const bufferMinutes = await getPhotographerCalendarBufferMinutes(photographer_id);
         const rangeStart = lisbonLocalMinutesToUtc(shoot_date, 0);
         const rangeEnd = lisbonLocalMinutesToUtc(shoot_date, 24 * 60 + durationMin + bufferMinutes);
-        const busyWindows = await getBufferedBusyWindows(photographer_id, rangeStart, rangeEnd, bufferMinutes);
+        // Exclude the booker's own existing bookings — they shouldn't be
+        // blocked by their own pending hold on the same photographer/date.
+        const busyWindows = await getBufferedBusyWindows(photographer_id, rangeStart, rangeEnd, bufferMinutes, undefined, userId);
 
         if (!hasAvailableBookingStart(shoot_date, shoot_time, durationMin, busyWindows)) {
           return NextResponse.json({
@@ -123,10 +186,12 @@ export async function POST(req: NextRequest) {
     // only be booked by the user it was sent to. This stops a different
     // client from booking another client's negotiated price by guessing
     // the package_id.
+    const normalizedGroupSize = Math.max(1, Math.min(99, Number(group_size) || 2));
+
     let totalPrice = null;
     if (package_id) {
-      const pkg = await queryOne<{ price: number; custom_for_user_id: string | null }>(
-        "SELECT price, custom_for_user_id FROM packages WHERE id = $1 AND photographer_id = $2",
+      const pkg = await queryOne<{ price: number; custom_for_user_id: string | null; is_group_package: boolean }>(
+        "SELECT price, custom_for_user_id, COALESCE(is_group_package, FALSE) as is_group_package FROM packages WHERE id = $1 AND photographer_id = $2",
         [package_id, photographer_id]
       );
       if (pkg) {
@@ -136,25 +201,307 @@ export async function POST(req: NextRequest) {
             code: "custom_proposal_mismatch",
           }, { status: 403 });
         }
-        totalPrice = pkg.price;
+        // Apply large-group surcharge unless the package itself is
+        // explicitly priced for groups (e.g. "Large Group Comporta",
+        // "Big Family Photoshoot") — those already factor in the extra
+        // work, double-charging would surprise both sides.
+        const { largeGroupMultiplier } = await import("@/lib/stripe");
+        const mult = pkg.is_group_package ? 1 : largeGroupMultiplier(normalizedGroupSize);
+        totalPrice = Math.round(Number(pkg.price) * mult * 100) / 100;
       }
     }
 
-    const normalizedGroupSize = Math.max(1, Math.min(99, Number(group_size) || 2));
+    // ─── Gift-card redemption ──────────────────────────────────────────
+    // When the booking is paid for by a gift card we override the price
+    // and payout to the tier-fixed numbers, bypass Stripe entirely, and
+    // mark the card as 'redeemed'. Validation:
+    //   - viewer has users.active_gift_card_id set
+    //   - card.status = 'claimed'
+    //   - card not expired
+    //   - the chosen package belongs to this photographer AND has
+    //     tier = card.tier (i.e. they picked the right standard package
+    //     for their gift — UI enforces this but verify server-side too)
+    //   - photographer.accepts_gift_cards = TRUE
+    let giftCardForRedemption: { id: string; tier: string; amount: number; photographer_payout: number } | null = null;
+    if (gift_card_redemption === true) {
+      const viewer = await queryOne<{ active_gift_card_id: string | null }>(
+        "SELECT active_gift_card_id FROM users WHERE id = $1",
+        [userId]
+      );
+      if (!viewer?.active_gift_card_id) {
+        return NextResponse.json({ error: "No active gift card on this account." }, { status: 400 });
+      }
+      const card = await queryOne<{ id: string; tier: string; status: string; expires_at: string; amount: number; photographer_payout: number }>(
+        "SELECT id, tier, status, expires_at, amount, photographer_payout FROM gift_cards WHERE id = $1",
+        [viewer.active_gift_card_id]
+      );
+      if (!card) {
+        return NextResponse.json({ error: "Gift card not found." }, { status: 400 });
+      }
+      if (card.status !== "claimed") {
+        return NextResponse.json({ error: "This gift card is not redeemable." }, { status: 400 });
+      }
+      if (new Date(card.expires_at) < new Date()) {
+        return NextResponse.json({ error: "This gift card has expired." }, { status: 400 });
+      }
+      const tierPkg = await queryOne<{ id: string; tier: string }>(
+        "SELECT id, tier::text as tier FROM packages WHERE id = $1 AND photographer_id = $2",
+        [package_id, photographer_id]
+      );
+      if (!tierPkg || tierPkg.tier !== card.tier) {
+        return NextResponse.json({ error: "Selected package doesn't match your gift card tier." }, { status: 400 });
+      }
+      const photographerOptIn = await queryOne<{ accepts_gift_cards: boolean | null }>(
+        "SELECT accepts_gift_cards FROM photographer_profiles WHERE id = $1",
+        [photographer_id]
+      );
+      if (photographerOptIn?.accepts_gift_cards === false) {
+        return NextResponse.json({ error: "This photographer does not currently accept gift cards." }, { status: 400 });
+      }
+
+      giftCardForRedemption = card;
+      // Lock to the tier-fixed numbers regardless of what the client sent.
+      totalPrice = Number(card.amount);
+    }
+
+    // ─── Gift booking validation ───────────────────────────────────────
+    // Three new pieces: recipient identity (name + email + WhatsApp),
+    // when to surface it (gift_reveal_at), and a backing user row for the
+    // recipient (created dormant if no user exists yet).
+    const isGift = !!is_gift;
+    let giftRecipientUserId: string | null = null;
+    let giftRevealAt: Date | null = null;
+
+    if (isGift) {
+      const recipName = typeof gift_recipient_name === "string" ? gift_recipient_name.trim() : "";
+      const recipEmailRaw = typeof gift_recipient_email === "string" ? gift_recipient_email.trim().toLowerCase() : "";
+      const recipPhoneRaw = typeof gift_recipient_phone === "string" ? gift_recipient_phone.trim() : "";
+
+      if (!recipName) {
+        return NextResponse.json({ error: "Recipient name is required for a gift booking" }, { status: 400 });
+      }
+      if (!recipEmailRaw || !recipEmailRaw.includes("@") || !recipEmailRaw.includes(".")) {
+        return NextResponse.json({ error: "Recipient email is required for a gift booking" }, { status: 400 });
+      }
+      const recipPhoneDigits = recipPhoneRaw.replace(/[^\d]/g, "");
+      if (recipPhoneDigits.length < 6) {
+        return NextResponse.json({ error: "Recipient WhatsApp number is required for a gift booking" }, { status: 400 });
+      }
+
+      // Buyer can't gift to themselves (would conflate roles).
+      const buyer = await queryOne<{ email: string }>("SELECT email FROM users WHERE id = $1", [userId]);
+      if (buyer && buyer.email.toLowerCase() === recipEmailRaw) {
+        return NextResponse.json({ error: "Recipient email matches your own — enter the gift recipient's email." }, { status: 400 });
+      }
+
+      // Find existing user or create a dormant one. Either way we end up
+      // with a user row whose email exactly matches what the buyer typed,
+      // so the /gift/claim flow can lock the email field readonly.
+      const existing = await queryOne<{ id: string }>(
+        "SELECT id FROM users WHERE LOWER(email) = $1",
+        [recipEmailRaw]
+      );
+      if (existing) {
+        giftRecipientUserId = existing.id;
+      } else {
+        const firstName = recipName.split(" ")[0];
+        const lastName = recipName.split(" ").slice(1).join(" ");
+        // Inherit buyer's locale so the reveal email is in their language.
+        const buyerLocale = await queryOne<{ locale: string | null }>(
+          "SELECT locale FROM users WHERE id = $1",
+          [userId]
+        );
+        const dormantLocale = buyerLocale?.locale || "en";
+        const created = await queryOne<{ id: string }>(
+          `INSERT INTO users (email, name, first_name, last_name, role, locale, email_verified, password_hash)
+           VALUES ($1, $2, $3, $4, 'client', $5, FALSE, NULL)
+           RETURNING id`,
+          [recipEmailRaw, recipName, firstName, lastName, dormantLocale]
+        );
+        giftRecipientUserId = created?.id || null;
+        if (giftRecipientUserId) {
+          // Default notification prefs so reveal email isn't blocked by
+          // missing row (other code defaults to enabled when no row exists,
+          // but explicit is safer).
+          await queryOne(
+            "INSERT INTO notification_preferences (user_id) VALUES ($1) ON CONFLICT DO NOTHING",
+            [giftRecipientUserId]
+          );
+        }
+      }
+
+      // Reveal scheduling. "immediate" = send the gift card right now.
+      // "days_before" = N days before shoot_date (clamp 1..60). For flexible
+      // bookings we can't compute a real date, so we fall back to immediate.
+      const mode = gift_reveal_mode === "days_before" ? "days_before" : "immediate";
+      if (mode === "immediate" || isFlexible || !shoot_date) {
+        giftRevealAt = new Date();
+      } else {
+        const n = Math.max(1, Math.min(60, Number(gift_reveal_days_before) || 3));
+        const reveal = new Date(`${shoot_date}T09:00:00Z`);
+        reveal.setUTCDate(reveal.getUTCDate() - n);
+        // If that lands in the past (shoot is sooner than N days), reveal now.
+        giftRevealAt = reveal.getTime() < Date.now() ? new Date() : reveal;
+      }
+    }
+
+    // ─── Fast-track validation ─────────────────────────────────────────
+    // Only valid when EVERY check passes — fail open to the regular
+    // pending-confirm flow on any mismatch so spoofed URLs never bypass
+    // the photographer's agreement. The booking goes straight to
+    // status='confirmed' (skipping the inquiry/pending step) so the
+    // client gets a "Pay now" button immediately. Stripe checkout
+    // session is created in a separate follow-up call from the client.
+    let fastTrack = false;
+    if (proposal_message_id && typeof proposal_message_id === "string") {
+      try {
+        const msg = await queryOne<{
+          id: string; text: string; sender_id: string; client_id: string | null;
+          photographer_id: string | null; created_at: string;
+        }>(
+          `SELECT id, text, sender_id, client_id, photographer_id, created_at
+             FROM messages WHERE id = $1`,
+          [proposal_message_id]
+        );
+        const checks: string[] = [];
+        if (!msg) checks.push("not found");
+        else {
+          if (!msg.text || !msg.text.startsWith("BOOKING_CARD:")) checks.push("not a booking card");
+          if (msg.client_id !== userId) checks.push("not your conversation");
+          if (msg.photographer_id !== photographer_id) checks.push("photographer mismatch");
+          if (Date.now() - new Date(msg.created_at).getTime() > 90 * 24 * 3600 * 1000) {
+            checks.push("proposal older than 90 days");
+          }
+          // Sender must be the photographer (a client can't fast-track
+          // their own message). photographer_profiles.user_id is the
+          // sender we expect.
+          if (checks.length === 0) {
+            const pp = await queryOne<{ user_id: string }>(
+              "SELECT user_id FROM photographer_profiles WHERE id = $1",
+              [photographer_id]
+            );
+            if (!pp || pp.user_id !== msg.sender_id) checks.push("sender is not the photographer");
+          }
+          // The BOOKING_CARD's package_id must match the URL's package_id —
+          // otherwise the client manipulated the request to fast-track a
+          // different package than the photographer offered.
+          if (checks.length === 0) {
+            try {
+              const payload = JSON.parse(msg.text.slice("BOOKING_CARD:".length));
+              if (!payload.package_id || payload.package_id !== package_id) {
+                checks.push("package_id mismatch");
+              }
+            } catch {
+              checks.push("malformed booking card payload");
+            }
+          }
+        }
+        if (checks.length === 0) {
+          fastTrack = true;
+        } else {
+          console.warn(`[bookings] fast-track rejected: ${checks.join(", ")} (msg=${proposal_message_id} user=${userId} photographer=${photographer_id} package=${package_id})`);
+        }
+      } catch (err) {
+        console.error("[bookings] fast-track validation error:", err);
+      }
+    }
+    const initialStatus = fastTrack ? "confirmed" : "pending";
+
     const hasGroupSizeEstimateColumn = await bookingGroupSizeEstimateColumnExists();
+    const giftCols = ", is_gift, gift_recipient_name, gift_recipient_email, gift_recipient_phone, gift_recipient_user_id, gift_reveal_at";
+    const giftVals = isGift
+      ? [isGift, gift_recipient_name.trim(), gift_recipient_email.trim().toLowerCase(), gift_recipient_phone.trim(), giftRecipientUserId, giftRevealAt]
+      : [false, null, null, null, null, null];
+
+    // Gift-card columns: link the card and pre-pay the booking when it's
+    // a redemption. Payout is locked to the tier-fixed amount, service fee
+    // is zero (recipient doesn't pay anything), payment_status is 'paid'
+    // so reminders and Stripe checkout don't fire for this booking.
+    const gcCols = giftCardForRedemption
+      ? ", gift_card_id, service_fee, payout_amount, platform_fee, payment_status"
+      : "";
+    const gcExtraParams = giftCardForRedemption
+      ? [giftCardForRedemption.id, 0, Number(giftCardForRedemption.photographer_payout), 0, "paid"]
+      : [];
+    // Build placeholder string $26..$30 (after gift fields finished at $25/$24).
+    const baseCount = hasGroupSizeEstimateColumn ? 25 : 24;
+    const gcPlaceholders = giftCardForRedemption
+      ? ", " + Array.from({ length: 5 }, (_, i) => `$${baseCount + 1 + i}`).join(", ")
+      : "";
+
+    // status is one of two safe literals we own (initialStatus is set
+    // above based on fastTrack), so interpolating is fine — keeps the
+    // dynamic placeholder count untouched and avoids the giftCols /
+    // gcCols off-by-one trap.
     const booking = hasGroupSizeEstimateColumn
       ? await queryOne<{ id: string }>(
-          `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, group_size_is_estimate, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term, gclid)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'pending', $15, $16, $17, $18, $19)
+          `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, group_size_is_estimate, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term, gclid${giftCols}${gcCols})
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, '${initialStatus}', $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25${gcPlaceholders})
            RETURNING id`,
-          [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, normalizedGroupSize, !!group_size_is_estimate, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null]
+          [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, normalizedGroupSize, !!group_size_is_estimate, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null, ...giftVals, ...gcExtraParams]
         )
       : await queryOne<{ id: string }>(
-          `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term, gclid)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'pending', $14, $15, $16, $17, $18)
+          `INSERT INTO bookings (client_id, photographer_id, package_id, location_slug, location_detail, shoot_date, shoot_time, flexible_date_from, flexible_date_to, group_size, occasion, message, total_price, status, utm_source, utm_medium, utm_campaign, utm_term, gclid${giftCols}${gcCols})
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, '${initialStatus}', $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24${gcPlaceholders})
            RETURNING id`,
-          [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, normalizedGroupSize, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null]
+          [userId, photographer_id, package_id || null, location_slug || null, location_detail?.trim() || null, isFlexible ? null : shoot_date, (shoot_time && shoot_time !== "flexible") ? shoot_time : null, isFlexible ? (flexible_date_from || null) : null, isFlexible ? (flexible_date_to || null) : null, normalizedGroupSize, occasion || null, message || null, totalPrice, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null, ...giftVals, ...gcExtraParams]
         );
+
+    // Attribute the booking back to a concierge recommendation, if one
+    // exists. We find the most recent concierge chat from this user that
+    // surfaced this photographer, then mark every recommendation event
+    // for that (chat, photographer) pair as having led to a booking.
+    // Best-effort — if the lookup fails or finds nothing the booking
+    // still succeeds; this is purely funnel telemetry.
+    if (booking?.id) {
+      void (async () => {
+        try {
+          const { queryOne } = await import("@/lib/db");
+          const recent = await queryOne<{ id: string }>(
+            `SELECT cc.id FROM concierge_chats cc
+               JOIN concierge_recommendation_events r ON r.chat_id = cc.id
+              WHERE cc.user_id = $1
+                AND r.photographer_id = $2
+                AND r.shown_at >= NOW() - INTERVAL '14 days'
+              ORDER BY r.shown_at DESC LIMIT 1`,
+            [userId, photographer_id]
+          );
+          if (recent?.id) {
+            // Persist the link directly on the booking so the
+            // photographer notification path can read it without an
+            // expensive backwards join.
+            await queryOne(
+              "UPDATE bookings SET concierge_chat_id = $1 WHERE id = $2 RETURNING id",
+              [recent.id, booking.id]
+            ).catch(() => null);
+            const { markBookingFromConcierge } = await import("@/lib/concierge/recommendation-events");
+            await markBookingFromConcierge(recent.id, photographer_id);
+          }
+        } catch (err) {
+          console.error("[bookings] concierge attribution failed:", err);
+        }
+      })();
+    }
+
+    // Finalize gift-card redemption: mark card as 'redeemed', link
+    // booking_id, clear the user's active_gift_card_id so they're no
+    // longer in gift-mode. Atomic so a parallel race can't redeem twice.
+    if (giftCardForRedemption && booking?.id) {
+      const claimed = await queryOne<{ id: string }>(
+        `UPDATE gift_cards SET status = 'redeemed', redeemed_at = NOW(), booking_id = $1
+          WHERE id = $2 AND status = 'claimed' RETURNING id`,
+        [booking.id, giftCardForRedemption.id]
+      );
+      if (!claimed) {
+        // Card was redeemed concurrently — undo the booking insert.
+        await queryOne("DELETE FROM bookings WHERE id = $1 RETURNING id", [booking.id]).catch(() => null);
+        return NextResponse.json({ error: "Gift card was redeemed elsewhere just now. Please try again." }, { status: 409 });
+      }
+      await queryOne(
+        "UPDATE users SET active_gift_card_id = NULL WHERE id = $1 AND active_gift_card_id = $2 RETURNING id",
+        [userId, giftCardForRedemption.id]
+      ).catch(() => null);
+    }
 
     // Post the client's booking message to the chat as the first real message —
     // gives the photographer something concrete to react to and starts the
@@ -181,7 +528,7 @@ export async function POST(req: NextRequest) {
         uploadBookingCreatedConversion(gclid, totalPrice ? Number(totalPrice) : 0, {
           email: clientUser?.email,
           phone: clientUser?.phone,
-        });
+        }, `booking:${booking.id}:created`);
       }).catch((err) => console.error("[bookings] gads conversion upload error:", err));
     }
 
@@ -216,7 +563,9 @@ export async function POST(req: NextRequest) {
           photographerInfo.display_name,
           clientInfo.name,
           pkgInfo?.name || null,
-          dateDisplay
+          dateDisplay,
+          null,
+          booking?.id || null
         );
       }
 
@@ -279,12 +628,19 @@ export async function POST(req: NextRequest) {
 
       // Push notification to photographer
       if (photographerInfo && clientInfo) {
+        const clientFirst = (clientInfo!.name || "").split(" ")[0] || "A client";
+        const bookingBody = [pkgInfo?.name, dateDisplay, location_slug].filter(Boolean).join(" · ") || "Tap to view details";
         import("@/lib/push").then(m =>
           m.sendPushNotification(
             photographerInfo!.user_id,
-            "New Booking Request",
-            `${clientInfo!.name} wants to book a session`,
-            { type: "booking", bookingId: booking?.id || "" }
+            `📅 Booking request from ${clientFirst}`,
+            bookingBody,
+            {
+              type: "booking",
+              bookingId: booking?.id || "",
+              channelId: "bookings",
+              categoryId: "BOOKING",
+            }
           )
         ).catch((err) => console.error("[bookings] push notification error:", err));
         // Real-time bookings-list refresh on photographer's other
@@ -306,7 +662,7 @@ export async function POST(req: NextRequest) {
       }
     } catch {}
 
-    return NextResponse.json({ success: true, booking_id: booking?.id });
+    return NextResponse.json({ success: true, booking_id: booking?.id, fast_track: fastTrack });
   } catch (error) {
     console.error("[bookings] create error:", error);
     try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/bookings", method: req.method, statusCode: 500 }); } catch {}
@@ -350,15 +706,24 @@ export async function GET(req: NextRequest) {
         [profile.id]
       );
     } else {
+      // Bookings where the user is either the buyer (client_id) or the
+      // gift recipient. The viewer_role column lets the UI render
+      // "Booking" vs "Gift you sent" vs "Gift for you" without an extra
+      // query.
       bookings = await query(
         `SELECT b.*, u.name as photographer_name, pp.slug as photographer_slug,
                 u.avatar_url as photographer_avatar,
-                p.name as package_name, p.duration_minutes, p.num_photos
+                p.name as package_name, p.duration_minutes, p.num_photos,
+                CASE
+                  WHEN b.client_id = $1 AND b.is_gift = TRUE THEN 'gift_buyer'
+                  WHEN b.gift_recipient_user_id = $1 THEN 'gift_recipient'
+                  ELSE 'client'
+                END as viewer_role
          FROM bookings b
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users u ON u.id = pp.user_id
          LEFT JOIN packages p ON p.id = b.package_id
-         WHERE b.client_id = $1 AND b.status != 'inquiry'
+         WHERE (b.client_id = $1 OR b.gift_recipient_user_id = $1) AND b.status != 'inquiry'
          ORDER BY b.created_at DESC`,
         [userId]
       );

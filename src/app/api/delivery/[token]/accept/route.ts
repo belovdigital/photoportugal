@@ -4,6 +4,7 @@ import { queryOne, withTransaction } from "@/lib/db";
 import { requireStripe, calculatePayment } from "@/lib/stripe";
 import { sendDeliveryAcceptedToPhotographer, sendDeliveryAcceptedToClient } from "@/lib/email";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
+import { auth } from "@/lib/auth";
 import crypto from "crypto";
 
 // POST: Accept delivery — verify password, mark accepted, trigger payout
@@ -14,35 +15,35 @@ export async function POST(
   const { token } = await params;
   const { password } = await req.json();
 
-  if (!password) {
-    return NextResponse.json({ error: "Password required" }, { status: 400 });
-  }
-
   // Find the booking by delivery token
   const booking = await queryOne<{
     id: string;
+    gift_recipient_user_id: string | null;
     delivery_password: string;
     delivery_expires_at: string;
     delivery_accepted: boolean;
     payment_status: string;
     stripe_payment_intent_id: string | null;
+    gift_card_id: string | null;
     total_price: number | null;
     payout_amount: number | null;
     payout_transferred: boolean;
     photographer_stripe_id: string | null;
     photographer_stripe_ready: boolean;
     photographer_plan: string;
+    photographer_user_id: string;
     photographer_email: string;
     photographer_name: string;
     client_email: string;
     client_name: string;
   }>(
-    `SELECT b.id, b.delivery_password, b.delivery_expires_at,
-            b.delivery_accepted, b.payment_status, b.stripe_payment_intent_id,
+    `SELECT b.id, b.gift_recipient_user_id, b.delivery_password, b.delivery_expires_at,
+            b.delivery_accepted, b.payment_status, b.stripe_payment_intent_id, b.gift_card_id,
             b.total_price, b.payout_amount, b.payout_transferred,
             pp.stripe_account_id as photographer_stripe_id,
             pp.stripe_onboarding_complete as photographer_stripe_ready,
             pp.plan as photographer_plan,
+            pu.id as photographer_user_id,
             pu.email as photographer_email,
             pu.name as photographer_name,
             cu.email as client_email,
@@ -59,14 +60,27 @@ export async function POST(
     return NextResponse.json({ error: "Delivery not found" }, { status: 404 });
   }
 
-  // Verify password (bcrypt, with SHA256 fallback for old deliveries)
-  const { compare: bcryptCompare } = await import("bcryptjs");
-  const isBcrypt = booking.delivery_password.startsWith("$2");
-  const passwordMatch = isBcrypt
-    ? await bcryptCompare(password, booking.delivery_password)
-    : crypto.createHash("sha256").update(password).digest("hex") === booking.delivery_password;
-  if (!passwordMatch) {
-    return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+  // Gift recipient signed in via /gift/claim → /dashboard never sees the
+  // delivery password. Skip the password check when the session user
+  // matches the booking's gift_recipient_user_id.
+  const session = await auth();
+  const sessionUserId = (session?.user as { id?: string } | undefined)?.id || null;
+  const isGiftRecipientSignedIn = sessionUserId
+    && booking.gift_recipient_user_id
+    && booking.gift_recipient_user_id === sessionUserId;
+
+  if (!isGiftRecipientSignedIn) {
+    if (!password) {
+      return NextResponse.json({ error: "Password required" }, { status: 400 });
+    }
+    const { compare: bcryptCompare } = await import("bcryptjs");
+    const isBcrypt = booking.delivery_password.startsWith("$2");
+    const passwordMatch = isBcrypt
+      ? await bcryptCompare(password, booking.delivery_password)
+      : crypto.createHash("sha256").update(password).digest("hex") === booking.delivery_password;
+    if (!passwordMatch) {
+      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+    }
   }
 
   // Check if already accepted (early check before transaction)
@@ -110,13 +124,19 @@ export async function POST(
   }
 
   // Trigger payout if payment was made and not already transferred.
-  // CRITICAL: also require stripe_payment_intent_id to be set — without
-  // it there's no client charge backing this payout, and stripe.transfers
+  // Two valid funding sources:
+  //   1. Regular booking — Stripe PaymentIntent (charge captured at
+  //      booking confirmation), so stripe_payment_intent_id is set.
+  //   2. Gift-card redemption — buyer already paid on the gift card
+  //      purchase, money sits on our platform balance. No PI on this
+  //      booking, but gift_card_id is set. `stripe.transfers.create`
+  //      works either way (with or without a transfer_group).
   // .create would pull the money straight out of the platform balance
   // (real loss). A "paid" flag without a PI means the row was either
   // hand-edited, partially-recovered from a webhook failure, or test
   // data; in any case we should NOT be transferring to the photographer.
-  if (booking.payment_status === "paid" && booking.stripe_payment_intent_id && !booking.payout_transferred && booking.photographer_stripe_id) {
+  const hasValidFunding = !!booking.stripe_payment_intent_id || !!booking.gift_card_id;
+  if (booking.payment_status === "paid" && hasValidFunding && !booking.payout_transferred && booking.photographer_stripe_id) {
     // Check if photographer completed Stripe onboarding
     if (!booking.photographer_stripe_ready) {
       console.log(`[delivery/accept] Photographer Stripe not ready for booking ${booking.id}, skipping payout`);
@@ -189,6 +209,16 @@ export async function POST(
 
             payoutSuccess = true;
 
+            // Admin Telegram: transfer fired (Stripe `transfer.created`
+            // webhook is unreliable — events aren't subscribed in the
+            // Dashboard, so notify directly from here).
+            import("@/lib/telegram").then(({ sendTelegram }) => {
+              sendTelegram(
+                `💸 <b>Отправили фотографу</b> €${payoutAmount!.toFixed(2)}\n${booking.photographer_name} · ${booking.client_name}\nБукинг: <code>${booking.id.slice(-8)}</code>`,
+                "stripe"
+              );
+            }).catch(() => {});
+
             // Send payout email to photographer
             sendDeliveryAcceptedToPhotographer(
               booking.photographer_email,
@@ -248,6 +278,28 @@ export async function POST(
         )
       ).catch((err) => console.error("[delivery/accept] telegram photographer error:", err));
     }
+  } catch {}
+
+  // Mobile push to photographer \u2014 the moment they care about most (money
+  // is on the way). Title includes the amount when we have it so the
+  // lock-screen banner is unambiguous.
+  try {
+    const clientFirst = (booking.client_name || "").split(" ")[0] || "Client";
+    const payoutAmt = booking.payout_amount ? Number(booking.payout_amount) : null;
+    const title = payoutAmt
+      ? `\ud83d\udcb0 \u20ac${payoutAmt.toFixed(0)} from ${clientFirst} \u2014 payout on its way`
+      : `\u2705 ${clientFirst} accepted your delivery`;
+    const body = payoutAmt
+      ? "Tap to view booking details."
+      : "Payment will land once your Stripe setup is complete.";
+    import("@/lib/push").then((m) =>
+      m.sendPushNotification(
+        booking.photographer_user_id,
+        title,
+        body,
+        { type: "booking", bookingId: booking.id, channelId: "payments", categoryId: "PAYMENT" }
+      )
+    ).catch((err) => console.error("[delivery/accept] push error:", err));
   } catch {}
 
   // Pre-build ZIP in background (non-blocking)

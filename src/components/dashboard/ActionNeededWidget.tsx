@@ -1,4 +1,7 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { PhotographerTask, TaskUrgency } from "@/lib/photographer-tasks";
 
@@ -26,15 +29,37 @@ function formatDeadline(deadlineISO: string, locale: string): string {
   return d.toLocaleDateString(lang, { day: "numeric", month: "short" });
 }
 
-export async function ActionNeededWidget({
-  tasks,
-  locale,
-}: {
-  tasks: PhotographerTask[];
-  locale: string;
-}) {
+export function ActionNeededWidget({ tasks: initialTasks }: { tasks: PhotographerTask[] }) {
+  const t = useTranslations("dashboard.actionNeeded");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  // Local mirror so a dismissed task disappears immediately without a
+  // full server roundtrip. Server already persists the dismissal.
+  const [tasks, setTasks] = useState<PhotographerTask[]>(initialTasks);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function dismiss(task: PhotographerTask) {
+    if (busy) return;
+    setBusy(task.id);
+    // Optimistic remove. If the request fails we re-insert below so
+    // the photographer doesn't end up with a silently-undismissed task.
+    const prevTasks = tasks;
+    setTasks((curr) => curr.filter((x) => x.id !== task.id));
+    try {
+      const res = await fetch("/api/photographer/dismiss-task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task_key: task.id, state_snapshot: task.deadline || null }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch {
+      setTasks(prevTasks);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   if (tasks.length === 0) return null;
-  const t = await getTranslations("dashboard.actionNeeded");
 
   return (
     <div className="rounded-2xl border border-warm-200 bg-white p-5 shadow-sm">
@@ -50,25 +75,39 @@ export async function ActionNeededWidget({
           const style = URGENCY_STYLE[task.urgency];
           return (
             <li key={task.id} className="py-3 first:pt-0 last:pb-0">
-              <Link href={task.href} className="group flex items-start gap-3">
-                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 group-hover:text-primary-700">
-                    {t(`${task.type}.title`, { name: task.clientName || "" })}
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray-500">
-                    {t(`${task.type}.subtitle`)}
-                  </p>
-                </div>
-                {task.deadline && (
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.pill} ${style.pillText}`}>
-                    {formatDeadline(task.deadline, locale)}
-                  </span>
-                )}
-                <svg className="mt-1 h-4 w-4 shrink-0 text-gray-300 group-hover:text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
+              <div className="flex items-start gap-3">
+                <Link href={task.href} className="group flex flex-1 items-start gap-3">
+                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${style.dot}`} aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 group-hover:text-primary-700">
+                      {t(`${task.type}.title`, { name: task.clientName || "" })}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {t(`${task.type}.subtitle`)}
+                    </p>
+                  </div>
+                  {task.deadline && (
+                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.pill} ${style.pillText}`}>
+                      {formatDeadline(task.deadline, locale)}
+                    </span>
+                  )}
+                  <svg className="mt-1 h-4 w-4 shrink-0 text-gray-300 group-hover:text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => dismiss(task)}
+                  disabled={busy === task.id}
+                  aria-label={t("dismiss") || tCommon("dismiss") || "Dismiss"}
+                  title={t("dismissTitle") || "Dismiss — re-appears if new activity"}
+                  className="mt-1 shrink-0 rounded-full p-1 text-gray-300 transition hover:bg-warm-100 hover:text-gray-600 disabled:opacity-50"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </li>
           );
         })}

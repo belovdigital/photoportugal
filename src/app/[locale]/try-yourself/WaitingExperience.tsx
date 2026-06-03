@@ -24,6 +24,35 @@ interface MatchedPhotographer {
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
+function readStoredAttribution() {
+  const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "gclid"] as const;
+  const out: Partial<Record<(typeof keys)[number], string>> = {};
+  for (const key of keys) {
+    try {
+      const direct = new URLSearchParams(window.location.search).get(key);
+      if (direct) {
+        out[key] = direct;
+        continue;
+      }
+      const sessionValue = sessionStorage.getItem(key);
+      if (sessionValue) {
+        out[key] = sessionValue;
+        continue;
+      }
+      const raw = localStorage.getItem(`pp_${key}`);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as { v?: string; ts?: number };
+      if (!parsed.v) continue;
+      const ageMs = Date.now() - Number(parsed.ts || 0);
+      if (Number.isFinite(ageMs) && ageMs > 90 * 864e5) continue;
+      out[key] = parsed.v;
+    } catch {}
+  }
+  if (out.gclid && !out.utm_source) out.utm_source = "google";
+  if (out.gclid && !out.utm_medium) out.utm_medium = "cpc";
+  return out;
+}
+
 const SWIPE_DECK_SIZE = 10;
 
 export function WaitingExperience({
@@ -111,6 +140,7 @@ export function WaitingExperience({
           messages: [...chatMsgs, userMsg].slice(-12),
           chat_id: chatId,
           page_context: `Visitor is on /try-yourself waiting for an AI preview at ${loc || "Portugal"}. They came from an ad. Treat this as a normal concierge chat — match them with photographers when ready.`,
+          attribution: readStoredAttribution(),
         }),
       });
       if (!r.ok) throw new Error("chat failed");

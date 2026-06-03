@@ -63,6 +63,11 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        {/* R2 CDN — serves every photographer cover + portfolio image.
+            Single biggest LCP source on photographer detail pages, so
+            preconnect saves ~150-300ms vs cold DNS+TLS. */}
+        <link rel="preconnect" href="https://files.photoportugal.com" />
+        <link rel="dns-prefetch" href="https://files.photoportugal.com" />
       </head>
       <body className="flex min-h-screen flex-col font-sans">
         {/* Recover from blue-green chunk-mismatch errors. After a deploy

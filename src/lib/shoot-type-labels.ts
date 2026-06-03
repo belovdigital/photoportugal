@@ -19,6 +19,7 @@ const LABELS: Record<string, Record<string, string>> = {
     "Kids Birthday": "Kids Birthday",
     "Studio Portrait": "Studio Portrait",
     "Content Creator": "Content Creator",
+    Fashion: "Fashion",
   },
   pt: {
     Couples: "Casais",
@@ -36,6 +37,7 @@ const LABELS: Record<string, Record<string, string>> = {
     "Kids Birthday": "Festa de Aniversário Infantil",
     "Studio Portrait": "Retrato em Estúdio",
     "Content Creator": "Criador de Conteúdo",
+    Fashion: "Moda",
   },
   de: {
     Couples: "Paare",
@@ -53,6 +55,7 @@ const LABELS: Record<string, Record<string, string>> = {
     "Kids Birthday": "Kindergeburtstag",
     "Studio Portrait": "Studio-Porträt",
     "Content Creator": "Content Creator",
+    Fashion: "Mode",
   },
   es: {
     Couples: "Parejas",
@@ -70,6 +73,7 @@ const LABELS: Record<string, Record<string, string>> = {
     "Kids Birthday": "Cumpleaños infantil",
     "Studio Portrait": "Retrato en estudio",
     "Content Creator": "Creador de contenido",
+    Fashion: "Moda",
   },
   fr: {
     Couples: "Couples",
@@ -87,6 +91,7 @@ const LABELS: Record<string, Record<string, string>> = {
     "Kids Birthday": "Anniversaire enfant",
     "Studio Portrait": "Portrait en studio",
     "Content Creator": "Créateur de contenu",
+    Fashion: "Mode",
   },
 };
 

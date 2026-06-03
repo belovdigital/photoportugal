@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "eval:concierge": "node scripts/eval-concierge.mjs"
   },
   "author": "belovdigital",
   "license": "UNLICENSED",
@@ -65,9 +66,10 @@
     "typescript": "^5.9.3"
   },
   "browserslist": [
-    "last 2 Chrome versions",
-    "last 2 Firefox versions",
-    "last 2 Safari versions",
-    "last 2 Edge versions"
+    "Chrome >= 111",
+    "Firefox >= 128",
+    "Safari >= 16.4",
+    "iOS >= 16.4",
+    "Edge >= 111"
   ]
 }

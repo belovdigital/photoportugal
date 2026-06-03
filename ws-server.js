@@ -305,6 +305,7 @@ async function startListener() {
   const client = await listenPool.connect();
   await client.query("LISTEN new_message");
   await client.query("LISTEN user_event");
+  await client.query("LISTEN message_changed");
   client.on("notification", (msg) => {
     try {
       const data = JSON.parse(msg.payload);
@@ -320,6 +321,18 @@ async function startListener() {
             data: data.data || null,
           });
         }
+      } else if (msg.channel === "message_changed") {
+        // { booking_id, kind: 'edited'|'deleted', message_id, text?, edited_at?, deleted_at? }
+        const { booking_id, kind, message_id, text, edited_at, deleted_at } = data;
+        if (booking_id && message_id && (kind === "edited" || kind === "deleted")) {
+          broadcastToRoom(booking_id, {
+            type: kind === "edited" ? "message_edited" : "message_deleted",
+            message_id,
+            text: text ?? null,
+            edited_at: edited_at ?? null,
+            deleted_at: deleted_at ?? null,
+          });
+        }
       }
     } catch (err) {
       console.error("[ws] notification parse error:", msg.channel, err.message);
@@ -329,7 +342,7 @@ async function startListener() {
     console.error("[ws] pg listener error:", err.message);
     setTimeout(startListener, 3000);
   });
-  console.log(`[ws] Listening on new_message + user_event`);
+  console.log(`[ws] Listening on new_message + user_event + message_changed`);
 }
 
 startListener();

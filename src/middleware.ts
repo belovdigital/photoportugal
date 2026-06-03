@@ -12,7 +12,6 @@ const LOCALIZED_TO_EN: Record<"de" | "es" | "fr", Record<string, string>> = {
   de: {
     "/fotografen": "/photographers",
     "/orte": "/locations",
-    "/fotografen-finden": "/find-photographer",
     "/wie-es-funktioniert": "/how-it-works",
     "/ueber-uns": "/about",
     "/fotoshootings": "/photoshoots",
@@ -24,7 +23,6 @@ const LOCALIZED_TO_EN: Record<"de" | "es" | "fr", Record<string, string>> = {
   es: {
     "/fotografos": "/photographers",
     "/lugares": "/locations",
-    "/encontrar-fotografo": "/find-photographer",
     "/como-funciona": "/how-it-works",
     "/sobre-nosotros": "/about",
     "/sesiones-de-fotos": "/photoshoots",
@@ -36,7 +34,6 @@ const LOCALIZED_TO_EN: Record<"de" | "es" | "fr", Record<string, string>> = {
   fr: {
     "/photographes": "/photographers",
     "/lieux": "/locations",
-    "/trouver-photographe": "/find-photographer",
     "/comment-ca-marche": "/how-it-works",
     "/a-propos": "/about",
     "/seances-photo": "/photoshoots",
@@ -123,7 +120,13 @@ export default async function middleware(request: NextRequest) {
     if (request.nextUrl.search && !target.includes("?")) {
       target = target + request.nextUrl.search;
     }
-    return NextResponse.redirect(target, rule.status_code as 301 | 302 | 307 | 308);
+    // NextResponse.redirect needs an absolute URL or URL object. When the
+    // rule stores a relative path (`/foo/bar`), resolve it against the
+    // current request — passing a bare path crashes the middleware (500).
+    const absoluteTarget = /^https?:\/\//i.test(target)
+      ? target
+      : new URL(target, request.url);
+    return NextResponse.redirect(absoluteTarget, rule.status_code as 301 | 302 | 307 | 308);
   }
 
   // lens.pt is a redirect-only domain — anything without an explicit rule is
@@ -328,7 +331,6 @@ export default async function middleware(request: NextRequest) {
     fr: {
       "/photographers": "/photographes",
       "/locations": "/lieux",
-      "/find-photographer": "/trouver-photographe",
       "/how-it-works": "/comment-ca-marche",
       "/about": "/a-propos",
       "/photoshoots": "/seances-photo",
@@ -339,7 +341,6 @@ export default async function middleware(request: NextRequest) {
     es: {
       "/photographers": "/fotografos",
       "/locations": "/lugares",
-      "/find-photographer": "/encontrar-fotografo",
       "/how-it-works": "/como-funciona",
       "/about": "/sobre-nosotros",
       "/photoshoots": "/sesiones-de-fotos",
@@ -351,7 +352,6 @@ export default async function middleware(request: NextRequest) {
     de: {
       "/photographers": "/fotografen",
       "/locations": "/orte",
-      "/find-photographer": "/fotografen-finden",
       "/how-it-works": "/wie-es-funktioniert",
       "/about": "/ueber-uns",
       "/photoshoots": "/fotoshootings",
@@ -386,6 +386,6 @@ export const config = {
   // streaming for multipart/form-data uploads (delivery, portfolio). lens.pt's
   // /api surface is already 404'd at the nginx layer, so we don't need
   // middleware to also block it.
-  matcher: ["/((?!_next|uploads|api).*)"],
+  matcher: ["/((?!_next|uploads|api|.*\\.(?:txt|xml|ico|png|jpg|jpeg|svg|webp|gif|woff2?|map)).*)"],
   runtime: "nodejs",
 };

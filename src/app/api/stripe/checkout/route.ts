@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
-import { requireStripe, calculatePayment } from "@/lib/stripe";
+import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   // Accept both NextAuth (web) and Bearer JWT (mobile) — mobile booking flow
@@ -63,8 +63,8 @@ export async function POST(req: NextRequest) {
     console.log(`[stripe/checkout] Payment calc: package=${packageAmount}c, serviceFee=${Math.round(payment.serviceFee * 100)}c, total=${stripeAmount}c, plan=${booking.photographer_plan}`);
     if (stripeAmount <= packageAmount) {
       console.error(`[stripe/checkout] BUG: Stripe amount ${stripeAmount} should be > package ${packageAmount}. Force-fixing.`);
-      payment.totalClientPays = booking.total_price * 1.10;
-      payment.serviceFee = Math.round(booking.total_price * 0.10 * 100) / 100;
+      payment.totalClientPays = booking.total_price * (1 + SERVICE_FEE_RATE);
+      payment.serviceFee = Math.round(booking.total_price * SERVICE_FEE_RATE * 100) / 100;
     }
 
     // Get or create Stripe customer for the client
@@ -117,22 +117,50 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    const idempotencyKey = `checkout_${booking.id}`;
+    // Idempotency key must include amount so a price change (rate
+    // bump, custom proposal, package swap) rotates the key — otherwise
+    // Stripe rejects with StripeIdempotencyError "same key, different
+    // params". Reusing checkout_<bookingId> after we changed
+    // SERVICE_FEE_RATE 10→12.5% on 2026-05-12 broke every booking that
+    // had already attempted checkout once.
+    const amountCents = Math.round(payment.totalClientPays * 100);
+    const idempotencyKey = `checkout_${booking.id}_${amountCents}`;
+
+    const createCheckout = (key: string) =>
+      requireStripe().checkout.sessions.create(stripeSessionParams, { idempotencyKey: key });
 
     let checkoutSession;
     try {
-      checkoutSession = await requireStripe().checkout.sessions.create(stripeSessionParams, { idempotencyKey });
+      checkoutSession = await createCheckout(idempotencyKey);
     } catch (stripeError) {
-      console.warn("[stripe/checkout] first attempt failed, retrying in 1s:", stripeError);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      try {
-        checkoutSession = await requireStripe().checkout.sessions.create(stripeSessionParams, { idempotencyKey });
-      } catch (retryError) {
-        console.error("[stripe/checkout] retry also failed:", retryError);
-        return NextResponse.json(
-          { error: "Payment service temporarily unavailable. Please try again in a moment." },
-          { status: 503 }
-        );
+      // On idempotency conflict (legacy keys from before this fix), the
+      // safe move is a fresh salted key, not a retry of the same one.
+      const isIdempotencyConflict = (stripeError as { type?: string })?.type === "StripeIdempotencyError";
+      if (isIdempotencyConflict) {
+        const saltedKey = `${idempotencyKey}_${Date.now()}`;
+        console.warn("[stripe/checkout] idempotency conflict, retrying with salted key:", saltedKey);
+        try {
+          checkoutSession = await createCheckout(saltedKey);
+        } catch (retryError) {
+          console.error("[stripe/checkout] salted retry also failed:", retryError);
+          return NextResponse.json(
+            { error: "Payment service temporarily unavailable. Please try again in a moment." },
+            { status: 503 }
+          );
+        }
+      } else {
+        // Transient (network etc) — same-key retry is meaningful here.
+        console.warn("[stripe/checkout] first attempt failed, retrying in 1s:", stripeError);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        try {
+          checkoutSession = await createCheckout(idempotencyKey);
+        } catch (retryError) {
+          console.error("[stripe/checkout] retry also failed:", retryError);
+          return NextResponse.json(
+            { error: "Payment service temporarily unavailable. Please try again in a moment." },
+            { status: 503 }
+          );
+        }
       }
     }
 

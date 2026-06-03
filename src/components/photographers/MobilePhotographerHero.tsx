@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { lazy, Suspense } from "react";
+import { useTranslations } from "next-intl";
 import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge } from "@/components/ui/ActiveBadge";
 
@@ -60,6 +61,8 @@ export function MobilePhotographerHero({
     const next = Math.max(0, Math.min(total - 1, Math.round(el.scrollLeft / w)));
     if (next !== activeIdx) setActiveIdx(next);
   }
+
+  const t = useTranslations("common");
 
   return (
     <div className="relative bg-gray-900 lg:hidden">
@@ -128,12 +131,18 @@ export function MobilePhotographerHero({
           )}
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/90">
-          {reviewCount > 0 && (
+          {reviewCount > 0 ? (
             <a href="#reviews" className="pointer-events-auto inline-flex items-center gap-1">
               <span className="text-amber-400">⭐</span>
               <strong className="font-bold">{Number(rating).toFixed(1)}</strong>
               <span className="text-white/70">({reviewCount})</span>
             </a>
+          ) : (
+            // No reviews yet — show a "New" pill instead so the rating
+            // gap doesn't read as "low-quality photographer" to visitors.
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-200 ring-1 ring-emerald-400/40">
+              ✨ {t("newOnPhotoPortugal")}
+            </span>
           )}
           {primaryLocationName && (
             <span className="inline-flex min-w-0 max-w-[48vw] items-center gap-1 text-white/80">

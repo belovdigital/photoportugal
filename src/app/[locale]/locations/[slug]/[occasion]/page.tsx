@@ -149,6 +149,32 @@ const OCCASIONS: Record<string, OccasionEntry> = {
     descriptionFr: "Photographie intime d'elopement pour les couples qui choisissent de célébrer leur amour en privé dans l'un des plus beaux pays d'Europe.",
     emoji: "🌿",
   },
+  "kids-birthday": {
+    title: "Kids Birthday Photographer",
+    titlePt: "Fotógrafo de Aniversário Infantil",
+    titleDe: "Fotograf für Kindergeburtstage",
+    titleEs: "Fotógrafo de Cumpleaños Infantil",
+    titleFr: "Photographe d'anniversaire d'enfant",
+    description: "Patient, playful photographers who specialize in capturing real birthday joy — cake smashes, candle-blowing, sticky-fingered laughter, all of it.",
+    descriptionPt: "Fotógrafos pacientes e divertidos especializados em captar a verdadeira alegria dos aniversários — cake smashes, soprar velas, risos com dedos sujos, tudo.",
+    descriptionDe: "Geduldige, verspielte Fotografen, spezialisiert darauf, echte Geburtstagsfreude einzufangen — Cake Smashes, Kerzenausblasen, kuchenverschmiertes Lachen, alles.",
+    descriptionEs: "Fotógrafos pacientes y juguetones especializados en capturar la alegría real del cumpleaños — cake smashes, soplar las velas, risas con dedos pegajosos, todo.",
+    descriptionFr: "Photographes patients et joueurs spécialisés dans la capture de la vraie joie d'anniversaire — cake smashes, soufflage de bougies, rires aux doigts collants, tout cela.",
+    emoji: "🎂",
+  },
+  "studio-portrait": {
+    title: "Studio Portrait Photographer",
+    titlePt: "Fotógrafo de Retrato em Estúdio",
+    titleDe: "Studio-Porträtfotograf",
+    titleEs: "Fotógrafo de Retrato en Estudio",
+    titleFr: "Photographe de portrait en studio",
+    description: "Clean, controlled-light portraits in a professional studio — headshots, personal branding, and editorial sessions with expert lighting and direction.",
+    descriptionPt: "Retratos com luz controlada num estúdio profissional — headshots, personal branding e sessões editoriais com iluminação e direção especializadas.",
+    descriptionDe: "Sauber ausgeleuchtete Porträts in einem professionellen Studio — Headshots, Personal Branding und Editorial-Sessions mit fachkundiger Lichtführung und Regie.",
+    descriptionEs: "Retratos con luz controlada en un estudio profesional — headshots, personal branding y sesiones editoriales con iluminación y dirección expertas.",
+    descriptionFr: "Portraits à la lumière contrôlée dans un studio professionnel — headshots, personal branding et séances éditoriales avec éclairage et direction experts.",
+    emoji: "📸",
+  },
 };
 
 const localeKey: Record<string, "Pt" | "De" | "Es" | "Fr"> = {
@@ -195,6 +221,8 @@ const BOOKING_LABEL: Record<string, Record<string, string>> = {
   honeymoon: { en: "Honeymoon Photoshoot", pt: "Sessão de Lua de Mel", de: "Flitterwochen-Fotoshooting", es: "Sesión de Luna de Miel", fr: "Séance Lune de Miel" },
   solo: { en: "Solo Photoshoot", pt: "Sessão Solo", de: "Solo-Fotoshooting", es: "Sesión Solo", fr: "Séance Solo" },
   elopement: { en: "Elopement Photoshoot", pt: "Sessão de Elopement", de: "Elopement-Fotoshooting", es: "Sesión de Boda Íntima", fr: "Séance Elopement" },
+  "kids-birthday": { en: "Kids Birthday Photoshoot", pt: "Sessão de Aniversário Infantil", de: "Kindergeburtstag-Fotoshooting", es: "Sesión de Cumpleaños Infantil", fr: "Séance Anniversaire Enfant" },
+  "studio-portrait": { en: "Studio Portrait Session", pt: "Sessão de Retrato em Estúdio", de: "Studio-Porträt-Session", es: "Sesión de Retrato en Estudio", fr: "Séance Portrait en Studio" },
 };
 
 // ─── Page-local UI strings ──────────────────────────────────────────────
@@ -220,7 +248,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographer" : "photographers"} ready to shoot in ${loc}`,
     packagesHeading: (occ: string, loc: string) => `${occ} packages in ${loc}`,
-    packagesSub: "Pick a package, book it directly. Prices below cover the photographer's time and edited photos. A 10% platform service fee is added at checkout.",
+    packagesSub: "Pick a package, book it directly. Prices below cover the photographer's time and edited photos. A 12.5% platform service fee is added at checkout.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "photos",
@@ -249,7 +277,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo pronto" : "fotógrafos prontos"} para fotografar em ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Pacotes de ${occ.toLowerCase()} em ${loc}`,
-    packagesSub: "Escolha um pacote, reserve diretamente. Os preços cobrem o tempo do fotógrafo e as fotos editadas. Uma taxa de serviço de 10% é adicionada no pagamento.",
+    packagesSub: "Escolha um pacote, reserve diretamente. Os preços cobrem o tempo do fotógrafo e as fotos editadas. Uma taxa de serviço de 12,5% é adicionada no pagamento.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "fotos",
@@ -278,7 +306,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "Fotograf bereit" : "Fotografen bereit"} für Shootings in ${loc}`,
     packagesHeading: (occ: string, loc: string) => `${occ}-Pakete in ${loc}`,
-    packagesSub: "Paket wählen, direkt buchen. Die Preise unten decken den Fotografen und die bearbeiteten Fotos ab. Beim Checkout wird eine 10% Servicegebühr hinzugefügt.",
+    packagesSub: "Paket wählen, direkt buchen. Die Preise unten decken den Fotografen und die bearbeiteten Fotos ab. Beim Checkout wird eine 12,5 % Servicegebühr hinzugefügt.",
     packagePopular: "Beliebt",
     packageMinutesAbbr: "Min.",
     packagePhotos: "Fotos",
@@ -307,7 +335,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo listo" : "fotógrafos listos"} para sesiones en ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Paquetes de ${occ.toLowerCase()} en ${loc}`,
-    packagesSub: "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Se añade una tarifa de servicio del 10% al pagar.",
+    packagesSub: "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Se añade una tarifa de servicio del 12,5% al pagar.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "fotos",
@@ -336,7 +364,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographe prêt" : "photographes prêts"} pour des séances à ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Forfaits ${occ.toLowerCase()} à ${loc}`,
-    packagesSub: "Choisissez un forfait, réservez directement. Les prix couvrent le photographe et les photos retouchées. Des frais de service de 10% sont ajoutés au paiement.",
+    packagesSub: "Choisissez un forfait, réservez directement. Les prix couvrent le photographe et les photos retouchées. Des frais de service de 12,5 % sont ajoutés au paiement.",
     packagePopular: "Populaire",
     packageMinutesAbbr: "min",
     packagePhotos: "photos",
@@ -746,13 +774,13 @@ export default async function OccasionPage({
   // photographer so two cards from the same shoot don't open on the
   // same first photo.
   const featuredPackages = await query<{
-    id: string; name: string; price: string; duration_minutes: number; num_photos: number;
+    id: string; slug: string | null; name: string; price: string; duration_minutes: number; num_photos: number;
     photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
     rating: number; review_count: number; is_popular: boolean;
     portfolio_thumbs: string[];
   }>(
     `WITH per_photographer AS (
-       SELECT pk.id, pk.name, pk.price::text AS price, pk.duration_minutes,
+       SELECT pk.id, pk.slug, pk.name, pk.price::text AS price, pk.duration_minutes,
               COALESCE(pk.num_photos, 0) as num_photos,
               pp.id as profile_id,
               pp.slug as photographer_slug, u.name as photographer_name,
@@ -775,7 +803,7 @@ export default async function OccasionPage({
           AND pk.is_public = TRUE
           AND ($2::text[] IS NULL OR pp.shoot_types && $2::text[])
      )
-     SELECT id, name, price, duration_minutes, num_photos,
+     SELECT id, slug, name, price, duration_minutes, num_photos,
             photographer_slug, photographer_name, photographer_avatar,
             rating, review_count, is_popular,
             COALESCE((
@@ -836,16 +864,30 @@ export default async function OccasionPage({
         url: `https://photoportugal.com/photographers?location=${slug}&shoot=${occasion}`,
       },
     } : {}),
-    ...(totalReviews > 0 && avgRating > 0 ? {
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: avgRating,
-        reviewCount: totalReviews,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    } : {}),
+    // aggregateRating omitted — Service is not in Google's review-snippet
+    // whitelist (GSC: "Invalid object type for field <parent_node>").
   };
+
+  // Star ratings on SERP via ProfessionalService (LocalBusiness subclass,
+  // whitelisted by Google for review snippets).
+  const jsonLdBusiness = totalReviews > 0 && avgRating > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "@id": `https://photoportugal.com/locations/${slug}/${occasion}#business`,
+    name: `Photo Portugal — ${occT} in ${localizedName}`,
+    url: `https://photoportugal.com/locations/${slug}/${occasion}`,
+    image: "https://photoportugal.com/og-image.png",
+    priceRange: "€€",
+    address: { "@type": "PostalAddress", addressLocality: localizedName, addressCountry: "PT" },
+    areaServed: { "@type": "City", name: localizedName },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: avgRating.toFixed(1),
+      reviewCount: String(totalReviews),
+      bestRating: "5",
+      worstRating: "1",
+    },
+  } : null;
 
   const jsonLdFaq = allFaqs.length > 0 ? {
     "@context": "https://schema.org",
@@ -857,21 +899,15 @@ export default async function OccasionPage({
     })),
   } : null;
 
-  const jsonLdBreadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: tL.home, item: "https://photoportugal.com/" },
-      { "@type": "ListItem", position: 2, name: tL.locations, item: "https://photoportugal.com/locations" },
-      { "@type": "ListItem", position: 3, name: localizedName, item: `https://photoportugal.com/locations/${slug}` },
-      { "@type": "ListItem", position: 4, name: occT, item: `https://photoportugal.com/locations/${slug}/${occasion}` },
-    ],
-  };
+  // BreadcrumbList JSON-LD is emitted by <Breadcrumbs> below; no
+  // inline duplicate needed.
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdService) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
+      {jsonLdBusiness && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBusiness) }} />
+      )}
       {jsonLdFaq && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
       )}

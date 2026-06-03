@@ -94,11 +94,19 @@ export async function GET(request: NextRequest) {
             );
           });
 
-          // Send notifications only if not already sent (verify-email sends for email signups)
+          // Photographer welcome + admin alert. Two cases:
+          //   1. admin_notified=FALSE — fresh email signup or edge case
+          //      where the OAuth callback didn't fire the client ping.
+          //      Send the full Photographer welcome + Telegram.
+          //   2. admin_notified=TRUE — the OAuth callback already pinged
+          //      Telegram with "New Client (Google)". Now that they've
+          //      flipped to photographer, send a smaller "Role changed"
+          //      heads-up to the photographers topic so admin sees it
+          //      with the right context.
+          sendWelcomeEmail(session.user.email!, session.user.name || "there", "photographer").catch((err) =>
+            console.error("[set-role] Failed to send photographer welcome email:", err)
+          );
           if (!user.admin_notified) {
-            sendWelcomeEmail(session.user.email!, session.user.name || "there", "photographer").catch((err) =>
-              console.error("[set-role] Failed to send photographer welcome email:", err)
-            );
             sendAdminNewPhotographerNotification(session.user.name || "Unknown", session.user.email!).catch((err) =>
               console.error("[set-role] Failed to send admin notification:", err)
             );
@@ -106,9 +114,18 @@ export async function GET(request: NextRequest) {
               sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`, "photographers");
             }).catch((err) => console.error("[set-role] telegram new photographer error:", err));
             query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch((err) => console.error("[set-role] admin_notified update error:", err));
+          } else {
+            // Was already pinged as Client during OAuth callback — just
+            // surface the role flip so admin doesn't have to cross-link.
+            import("@/lib/telegram").then(({ sendTelegram }) => {
+              sendTelegram(`🔁 <b>Role changed: Client → Photographer</b>\n\n<b>Name:</b> ${session.user!.name || "Unknown"}\n<b>Email:</b> ${session.user!.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`, "photographers");
+            }).catch((err) => console.error("[set-role] telegram role-change error:", err));
           }
         } else {
-          // Client
+          // Client — OAuth callback already fired the New Client telegram
+          // + welcome email immediately on signup. Only run the legacy
+          // path if for some reason that didn't happen (e.g. email
+          // signup that skipped verify-email before reaching set-role).
           if (!user.admin_notified) {
             sendWelcomeEmail(session.user.email!, session.user.name || "there", "client").catch((err) =>
               console.error("[set-role] Failed to send client welcome email:", err)

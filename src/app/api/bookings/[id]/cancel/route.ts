@@ -57,12 +57,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     client_email: string;
     shoot_date: string | null;
     total_price: string | null;
+    gift_card_id: string | null;
   }>(
     `SELECT b.id, b.status, b.payment_status, b.client_id, b.photographer_id,
             pu.id as photographer_user_id, pu.name as photographer_name,
             pu.email as photographer_email, pp.slug as photographer_slug,
             cu.name as client_name, cu.email as client_email,
-            b.shoot_date, b.total_price::text
+            b.shoot_date, b.total_price::text,
+            b.gift_card_id
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users pu ON pu.id = pp.user_id
@@ -81,7 +83,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const cancelledBy: "photographer" | "client" = isPhotographer ? "photographer" : "client";
 
   // State guards. Only unpaid + not-yet-cancelled bookings.
-  if (booking.payment_status === "paid") {
+  // Exception: a gift-card-redeemed booking is `payment_status='paid'` from
+  // creation (the card paid for it). Cancellation is still allowed because
+  // it doesn't trigger a refund — instead the card flips back to 'claimed'
+  // (handled below) and the recipient can pick another photographer.
+  if (booking.payment_status === "paid" && !booking.gift_card_id) {
     return NextResponse.json({
       error: "This booking is already paid — please request a refund or open a dispute instead.",
       code: "already_paid",
@@ -106,6 +112,69 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
      RETURNING id`,
     [cancelledBy, reason, id]
   );
+
+  // Cancel-restore for gift-card bookings: when the photographer cancels,
+  // restore the gift card to `claimed`, extend expiry +30 days (or back
+  // to original if it had already crossed), reattach active_gift_card_id
+  // on the recipient, and notify them by email so they can pick someone
+  // else. Client-side cancels (recipient changed mind) also restore the
+  // card so they aren't stuck.
+  if (booking.gift_card_id) {
+    try {
+      await queryOne(
+        `UPDATE gift_cards
+            SET status = 'claimed',
+                booking_id = NULL,
+                redeemed_at = NULL,
+                expires_at = GREATEST(expires_at, NOW() + INTERVAL '30 days')
+          WHERE id = $1 AND status = 'redeemed' RETURNING id`,
+        [booking.gift_card_id]
+      );
+      // Re-attach to recipient so the next browse session is gift-mode.
+      const recipUser = await queryOne<{ recipient_user_id: string | null }>(
+        "SELECT recipient_user_id FROM gift_cards WHERE id = $1",
+        [booking.gift_card_id]
+      );
+      if (recipUser?.recipient_user_id) {
+        await queryOne(
+          "UPDATE users SET active_gift_card_id = $1 WHERE id = $2 RETURNING id",
+          [booking.gift_card_id, recipUser.recipient_user_id]
+        );
+      }
+      // Best-effort restore email — different copy for photographer vs
+      // client cancel. When the recipient cancelled themselves they
+      // already know; we just acknowledge the gift is back. When the
+      // photographer cancelled, we explain + nudge them to pick another.
+      try {
+        const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
+        const { getUserLocaleById, pickT, normalizeLocale } = await import("@/lib/email-locale");
+        if (recipUser?.recipient_user_id && cancelledBy === "photographer") {
+          const loc = normalizeLocale(await getUserLocaleById(recipUser.recipient_user_id));
+          const firstName = booking.photographer_name.split(" ")[0] || booking.photographer_name;
+          const T = pickT({
+            en: { subject: `Your gift session is restored`, h2: `${booking.photographer_name} had to cancel`, body: `Sorry — ${firstName} had to cancel your gift session. Your gift card is back in your account with an extra 30 days to redeem. Pick another photographer below.`, cta: "Pick another photographer" },
+            pt: { subject: `A sua sessão de presente foi restaurada`, h2: `${booking.photographer_name} teve de cancelar`, body: `Lamentamos — ${firstName} teve de cancelar a sua sessão. O cartão-presente está de volta na sua conta com mais 30 dias para utilizar. Escolha outro fotógrafo.`, cta: "Escolher outro fotógrafo" },
+            de: { subject: `Ihre Geschenk-Session wurde wiederhergestellt`, h2: `${booking.photographer_name} musste absagen`, body: `Es tut uns leid — ${firstName} musste Ihre Session absagen. Ihre Geschenkkarte ist wieder in Ihrem Konto mit 30 zusätzlichen Tagen. Wählen Sie einen anderen Fotografen.`, cta: "Anderen Fotografen wählen" },
+            es: { subject: `Su sesión de regalo ha sido restaurada`, h2: `${booking.photographer_name} tuvo que cancelar`, body: `Lo sentimos — ${firstName} tuvo que cancelar su sesión. Su tarjeta de regalo está de nuevo en su cuenta con 30 días adicionales. Elija otro fotógrafo.`, cta: "Elegir otro fotógrafo" },
+            fr: { subject: `Votre séance cadeau est rétablie`, h2: `${booking.photographer_name} a dû annuler`, body: `Désolé — ${firstName} a dû annuler votre séance. Votre carte cadeau est de retour dans votre compte avec 30 jours supplémentaires. Choisissez un autre photographe.`, cta: "Choisir un autre photographe" },
+          }, loc);
+          const html = emailLayout(`
+            <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+            <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
+            ${emailButton("https://photoportugal.com/photographers", T.cta)}
+          `, loc);
+          await sendEmail(booking.client_email, T.subject, html);
+        }
+        // Client cancelled themselves — no restore email needed (they
+        // initiated the action and already know). active_gift_card_id
+        // and card status are still restored above so they can re-pick.
+      } catch (mailErr) {
+        console.error("[cancel] gift-card restore email error:", mailErr);
+      }
+    } catch (restoreErr) {
+      console.error("[cancel] gift-card restore error:", restoreErr);
+    }
+  }
 
   // System message in the existing chat — fire-and-forget. Chat lives
   // independently of the booking lifecycle (booking_id is now ON DELETE

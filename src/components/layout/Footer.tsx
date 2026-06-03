@@ -270,6 +270,55 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Partners — reciprocal link exchanges with vetted Portugal
+            travel sites. Featured here for both backlink value AND
+            because these are actual recommendations our clients ask
+            about (multi-day bike/walking trips around a photo session).
+            Keep this list short and curated — not a sponsor wall. */}
+        <div className="mt-8 border-t border-warm-200 pt-6">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-center">
+            {t("partners")}
+          </h3>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl mx-auto">
+            <a
+              href="https://topbiketoursportugal.com"
+              target="_blank"
+              rel="noopener"
+              className="group flex items-center gap-3 rounded-xl border border-warm-200 bg-warm-50 px-4 py-3 transition hover:border-primary-200 hover:bg-white"
+            >
+              <Image
+                src="/partners/topbiketours.svg"
+                alt="Top Bike Tours Portugal"
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0 object-contain"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 group-hover:text-primary-700">Top Bike Tours Portugal</p>
+                <p className="text-xs text-gray-500">{t("partnerBikeTagline")}</p>
+              </div>
+            </a>
+            <a
+              href="https://topwalkingtoursportugal.com"
+              target="_blank"
+              rel="noopener"
+              className="group flex items-center gap-3 rounded-xl border border-warm-200 bg-warm-50 px-4 py-3 transition hover:border-primary-200 hover:bg-white"
+            >
+              <Image
+                src="/partners/topwalkingtours.png"
+                alt="Top Walking Tours Portugal"
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0 object-contain rounded"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 group-hover:text-primary-700">Top Walking Tours Portugal</p>
+                <p className="text-xs text-gray-500">{t("partnerWalkingTagline")}</p>
+              </div>
+            </a>
+          </div>
+        </div>
+
         <div className="mt-8 border-t border-warm-200 pt-6">
           <div className="flex items-center justify-center gap-4">
             <a href="https://www.instagram.com/photoportugal_com" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-warm-100 text-gray-500 transition hover:bg-primary-100 hover:text-primary-600" aria-label="Instagram">
@@ -301,6 +350,17 @@ export function Footer() {
           </p>
           <p className="mt-0.5 text-center text-xs text-gray-400">
             {t("legalEntityVat")}
+          </p>
+          <p className="mt-3 text-center text-[11px] text-gray-300">
+            Made by{" "}
+            <a
+              href="https://belovdigital.agency"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-500 transition"
+            >
+              BLV Group
+            </a>
           </p>
         </div>
       </div>

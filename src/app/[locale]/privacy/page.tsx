@@ -80,7 +80,8 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <ul className="mt-2 list-disc pl-10 space-y-1">
             <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.stripe") }} />{" "}<a href="https://stripe.com/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Stripe Privacy Policy</a></li>
             <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.google") }} />{" "}<a href="https://policies.google.com/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a></li>
-            <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.digitalocean") }} />{" "}<a href="https://www.digitalocean.com/legal/privacy-policy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">DigitalOcean Privacy Policy</a></li>
+            <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.hetzner") }} />{" "}<a href="https://www.hetzner.com/legal/privacy-policy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Hetzner Privacy Policy</a></li>
+            <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.cloudflare") }} />{" "}<a href="https://www.cloudflare.com/privacypolicy/" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Cloudflare Privacy Policy</a></li>
             <li><span dangerouslySetInnerHTML={{ __html: t.raw("sections.informationSharing.processors.twilio") }} />{" "}<a href="https://www.twilio.com/legal/privacy" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">Twilio Privacy Policy</a></li>
           </ul>
           <ul className="mt-2 list-disc pl-6 space-y-1">

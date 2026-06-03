@@ -163,7 +163,7 @@ export function BookingJourney({
           ))}
         </div>
         {/* Action below stepper */}
-        {action && steps.some(s => s.isCurrent) && (
+        {action && (steps.some(s => s.isCurrent) || deliveryAccepted) && (
           <div className="mt-3">{action}</div>
         )}
       </div>
@@ -223,6 +223,9 @@ export function BookingJourney({
             </div>
           </div>
         ))}
+        {action && deliveryAccepted && !steps.some(s => s.isCurrent) && (
+          <div className="mt-1.5">{action}</div>
+        )}
       </div>
     </div>
   );

@@ -6,17 +6,24 @@ import { loadPhotographersForConcierge } from "@/lib/concierge/photographer-cont
 import { buildSystemPrompt } from "@/lib/concierge/system-prompt";
 import { computeBadges } from "@/lib/concierge/match-badges";
 import { pageContextToPromptString, type PageContext } from "@/lib/concierge/page-context";
-import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock } from "@/lib/concierge/candidate-ranker";
+import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock, extractStructuredSignals, type RankedCandidate } from "@/lib/concierge/candidate-ranker";
 import { checkPhotographersAvailability } from "@/lib/concierge/availability-check";
+import { classifyTrafficSegment, logRecommendations, type RecommendationSnapshot, type RecommendationStrategy } from "@/lib/concierge/recommendation-events";
 import { computeLeadScore } from "@/lib/concierge/lead-score";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// gpt-5.4-mini pricing per 1M tokens (April 2026)
-const COST_PER_1M_INPUT = 0.75;
-const COST_PER_1M_OUTPUT = 4.50;
-const MODEL = "gpt-5.4-mini";
+// gpt-5.4 (full, not mini) pricing per 1M tokens (April 2026). Concierge
+// is the platform's single biggest lead-quality lever — it's the first
+// human-ish conversation the visitor has with us. We want it strictly
+// better than chatting with a knowledgeable friend: better context
+// retention, deeper empathy, no rushing to recommendations, no drift
+// between turns. The 4x cost vs mini is worth it — a single saved lead
+// pays for thousands of chat round-trips.
+const COST_PER_1M_INPUT = 3.00;
+const COST_PER_1M_OUTPUT = 12.00;
+const MODEL = "gpt-5.4";
 
 const tools = [
   {
@@ -81,13 +88,44 @@ const tools = [
   {
     type: "function" as const,
     function: {
+      name: "show_spots",
+      description: "Render rich cards for specific photoshoot SPOTS (landmarks, beaches, viewpoints, neighborhoods) within Portuguese cities. Use when the visitor's intent points to specific places (e.g. 'fairytale castle', 'sea cave', 'tile-faced lanes'), or when they've just picked a city and you want to show standout shoot locations within it. Each card links to /spots/<city>/<slug> with photos, description, map, and photographers covering the area. Pass 1-4 spot pairs. Use ONLY slugs from the catalog in the system prompt — never invent. Don't combine with show_matches in the same turn; spots come first when location is broad, matches come when both location AND shoot-type are clear.",
+      parameters: {
+        type: "object",
+        properties: {
+          spots: {
+            type: "array",
+            minItems: 1,
+            maxItems: 4,
+            items: {
+              type: "object",
+              properties: {
+                city: { type: "string", description: "City slug as keyed in the spot catalog (e.g. 'sintra', 'lisbon', 'algarve')." },
+                slug: { type: "string", description: "Spot slug exactly as listed in the catalog (e.g. 'pena-palace', 'benagil-cave')." },
+                reason: { type: "string", description: "1 sentence on why this spot fits the visitor's intent — max 140 chars." },
+              },
+              required: ["city", "slug", "reason"],
+            },
+          },
+          reply_text: { type: "string", description: "Short intro line above the spot cards, e.g. 'Three Sintra spots that match a fairytale vibe:'" },
+        },
+        required: ["spots", "reply_text"],
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
       name: "request_human_match",
-      description: "Use this only as fallback when you genuinely cannot match (location with no photographers, weird request, etc). A human will follow up within 4h.",
+      description: "Use this only as fallback when you genuinely cannot match (location with no photographers, weird request, etc). A human will follow up within 4h. CRITICAL: BEFORE calling this tool, you MUST first ask the visitor for an email in a previous turn so our team can reach them. Pass that email in `contact_email`. If the visitor explicitly refuses to share contact info, you may still call this but set `contact_refused: true` so we know.",
       parameters: {
         type: "object",
         properties: {
           reason: { type: "string", description: "Why automated matching doesn't fit this case" },
           summary: { type: "string", description: "Short summary of what the visitor wants for the human to act on" },
+          contact_email: { type: "string", description: "Visitor's email if shared in conversation. Required unless contact_refused=true." },
+          contact_phone: { type: "string", description: "Optional. Visitor's phone (WhatsApp) if shared in conversation." },
+          contact_refused: { type: "boolean", description: "Set to true ONLY if the visitor explicitly refused to share contact info after you asked." },
         },
         required: ["reason", "summary"],
       },
@@ -129,10 +167,9 @@ const coverageToPublicCardSlug: Record<string, string> = {
   vilamoura: "algarve",
 };
 
-// Lightweight language detector based on script + characteristic words.
-// Returns ISO 639-1 code or null if uncertain. Doesn't pretend to be perfect —
-// just good enough to lock the AI into the right language.
-function detectLanguage(text: string): string | null {
+// Script-based fast path for non-Latin alphabets — these are unambiguous,
+// free, and don't need an LLM round-trip.
+function detectScriptLanguage(text: string): string | null {
   if (!text || text.trim().length < 2) return null;
   const s = text.trim();
   if (/[А-Яа-яЁё]/.test(s)) return "ru";
@@ -140,16 +177,35 @@ function detectLanguage(text: string): string | null {
   if (/[一-鿿]/.test(s)) return "zh";
   if (/[぀-ゟ゠-ヿ]/.test(s)) return "ja";
   if (/[؀-ۿ]/.test(s)) return "ar";
-  const lower = s.toLowerCase();
-  // Portuguese — distinctive cues
-  if (/\b(olá|obrigad[oa]|fotógrafo|fotografia|sessão|casamento|onde|estou|gostaria)\b/.test(lower) || /[ãõçáéíóúâêôà]/.test(lower)) return "pt";
-  // German — distinctive cues
-  if (/\b(hallo|guten|möchte|fotograf|hochzeit|wo|ich|bin|wir|für|sind|nach)\b/.test(lower) || /[äöüß]/.test(lower)) return "de";
-  // Spanish
-  if (/\b(hola|gracias|fotógrafo|boda|dónde|estoy|quiero|para)\b/.test(lower) || /[ñ¿¡]/.test(lower)) return "es";
-  // French
-  if (/\b(bonjour|merci|photographe|mariage|où|je|suis|nous|sommes)\b/.test(lower) || /[àâçéèêëîïôûüÿœæ]/.test(lower)) return "fr";
   return null;
+}
+
+// Ask OpenAI to classify the language. Falls back to `en` on any failure.
+// Cheap: ~50-100 input tokens, 2 output tokens. ~$0.0001 per call.
+async function detectLanguageViaAI(openai: OpenAI, text: string): Promise<string | null> {
+  if (!text || text.trim().length < 2) return null;
+  const scriptHit = detectScriptLanguage(text);
+  if (scriptHit) return scriptHit;
+  try {
+    const res = await openai.chat.completions.create({
+      model: MODEL,
+      temperature: 0,
+      max_completion_tokens: 4,
+      messages: [
+        {
+          role: "system",
+          content: "You are a language identification engine. Reply with the ISO 639-1 two-letter code of the user message — nothing else, no punctuation, no quotes. Examples: en, pt, de, es, fr, ru, it, nl. If you genuinely cannot tell, reply en.",
+        },
+        { role: "user", content: text.slice(0, 500) },
+      ],
+    });
+    const raw = (res.choices[0]?.message?.content || "").trim().toLowerCase();
+    const code = raw.match(/^[a-z]{2}$/)?.[0];
+    return code || null;
+  } catch (err) {
+    console.warn("[concierge] language detect via AI failed:", err);
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -157,8 +213,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "OpenAI not configured" }, { status: 500 });
   }
 
-  const body = await req.json().catch(() => ({}));
-  const { chat_id, visitor_id, messages, email, first_name, language, source, page_context, page_context_obj, source_chip } = body as {
+  // Anti-abuse rate limit. Each LLM call costs real money (gpt-4o-mini
+  // ~$0.005 per round-trip with our prompt size), so a bot loop could
+  // burn through OpenAI budget fast. Bucket per visitor_id when present
+  // (lets a single human keep typing), else fall back to IP. Generous
+  // enough that a human pasting + retrying doesn't hit it, tight enough
+  // that an attacker can't sustain meaningful spend.
+  const { checkRateLimit } = await import("@/lib/rate-limit");
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || req.headers.get("x-real-ip")
+    || "anonymous";
+  // Peek visitor_id early without re-parsing whole body twice.
+  const rawBody = await req.text();
+  let parsed: Record<string, unknown> = {};
+  try { parsed = JSON.parse(rawBody); } catch {}
+  const bucketKey = `concierge:${(parsed as { visitor_id?: string }).visitor_id || ip}`;
+  if (!checkRateLimit(bucketKey, 20, 60_000)) {
+    return NextResponse.json(
+      { error: "Too many requests. Slow down for a minute and try again." },
+      { status: 429 }
+    );
+  }
+  // Additional IP-level cap so a fleet of fake visitor_ids from one box
+  // can't bypass the per-visitor bucket.
+  if (!checkRateLimit(`concierge:ip:${ip}`, 60, 60_000)) {
+    return NextResponse.json(
+      { error: "Too many requests from this network." },
+      { status: 429 }
+    );
+  }
+
+  const body = parsed;
+  const { chat_id, visitor_id, messages, email, first_name, language, source, page_context, page_context_obj, source_chip, attribution } = body as {
     chat_id?: string;
     visitor_id?: string;
     messages: IncomingMessage[];
@@ -166,6 +252,13 @@ export async function POST(req: NextRequest) {
     first_name?: string;
     language?: string;
     source?: "page" | "drawer";
+    attribution?: {
+      utm_source?: string;
+      utm_medium?: string;
+      utm_campaign?: string;
+      utm_term?: string;
+      gclid?: string;
+    };
     /** Legacy free-form context string (still accepted from the /concierge page). */
     page_context?: string;
     /** Structured page context from the drawer — preferred over page_context. */
@@ -244,13 +337,46 @@ export async function POST(req: NextRequest) {
   }
 
   const photographers = await loadPhotographersForConcierge();
-  // Detect language from FIRST user message — much more reliable than navigator.language
-  // (visitor may be on /en page but writing in Russian).
-  const firstUserMsg = messages.find((m) => m.role === "user")?.content || "";
-  const detectedLang = detectLanguage(firstUserMsg) || language || "en";
+  // Detect language from BOTH the first user message AND the latest one.
+  // The first establishes a default; the latest catches mid-chat switches
+  // ("na verdade prefiro responder em português", or a sudden full PT
+  // sentence after EN turns). The previous logic locked detectedLang to
+  // the first message and ignored real explicit switch signals.
+  const userMsgs = messages.filter((m) => m.role === "user");
+  const firstUserMsg = userMsgs[0]?.content || "";
+  const latestUserMsg = userMsgs[userMsgs.length - 1]?.content || firstUserMsg;
+  const firstLang =
+    detectScriptLanguage(firstUserMsg)
+    || (await detectLanguageViaAI(openai, firstUserMsg))
+    || language
+    || "en";
+  // Re-detect on the LATEST message only when it's long enough to be
+  // confident (>= 6 words). Short replies ("ok", "yes") or one-word
+  // location tokens shouldn't flip language.
+  const latestWordCount = latestUserMsg.trim().split(/\s+/).length;
+  let latestLang: string | null = null;
+  if (latestUserMsg !== firstUserMsg && latestWordCount >= 6) {
+    latestLang =
+      detectScriptLanguage(latestUserMsg)
+      || (await detectLanguageViaAI(openai, latestUserMsg));
+  }
+  // Explicit switch detection — short messages like "in PT please",
+  // "responde em português" should override even at low word count.
+  const switchRegex = /\b(in|en|em|на|auf)\s+(english|inglés|inglês|englisch|anglais|portuguese|portugu[eê]s|português|portugiesisch|portugais|spanish|espa[ñn]ol|espanhol|spanisch|french|francés|francês|französisch|français|german|alem[aã]n|alem[aã]o|deutsch|allemand|russian|русск|russisch|russo|русский)\b|prefiro\s+responder|switch\s+to\s+(en|pt|es|fr|de|ru)|по[\s-]?русски\s*пожалуйста|auf\s+deutsch\s+bitte|en\s+espa[ñn]ol\s+por\s+favor|en\s+fran[çc]ais/i;
+  let explicitSwitchLang: string | null = null;
+  if (switchRegex.test(latestUserMsg)) {
+    // Use the script of the request itself as a strong signal, fall
+    // back to AI classification of the request.
+    explicitSwitchLang =
+      detectScriptLanguage(latestUserMsg)
+      || await detectLanguageViaAI(openai, latestUserMsg);
+  }
+  const detectedLang = explicitSwitchLang || latestLang || firstLang || "en";
   let systemPrompt = buildSystemPrompt(photographers, { language: detectedLang });
-  // Hard-prefix per turn — prevents the model from drifting back to English mid-conversation
-  systemPrompt += `\n\n## ACTIVE CONVERSATION LANGUAGE: ${detectedLang}\nEvery field you generate (reply_text, each match.reasoning, each location.reason) MUST be in this language. Do not switch.`;
+  // Per-turn language anchor. We say "stay in X unless visitor asks
+  // otherwise" instead of the old absolute "do not switch", because the
+  // detection above already gave us the latest-truth lang.
+  systemPrompt += `\n\n## ACTIVE CONVERSATION LANGUAGE: ${detectedLang}\nEvery field you generate (reply_text, each match.reasoning, each location.reason) MUST be in this language. If the visitor's LATEST message is in a different language or explicitly asks to switch, the detection above has already updated this value — just follow it. Open the reply with a 1-line acknowledgement in the new language ("Claro! Vou continuar em português" etc.) if this turn switched.`;
 
   // Track which photographers were already shown in this chat so we don't repeat
   // them if the user asks for "more matches" / "different ones".
@@ -271,11 +397,59 @@ export async function POST(req: NextRequest) {
     systemPrompt += `\n\n## Already shown in this conversation\nYou ALREADY recommended these photographers earlier in this same chat — treat them as common ground with the visitor: ${shownLabels.join(", ")}\nDo NOT suggest them again unless the visitor asks by name. If the visitor asks for "more matches" / "different ones" / "send more", rotate to UNUSED photographers. Don't repeat.\n\n## Conversation continuity (CRITICAL)\nThis is an ongoing conversation. The visitor has already engaged. NEVER restart with a fresh greeting like "Hi! I'll find you 3 photographers" — they already saw matches. If the visitor's last message is short or unclear, ask a SHORT clarifying question that builds on what you already know, do NOT reset.`;
   }
   systemPrompt += `\n\n## Diversity reminder\nWhen multiple photographers fit the criteria, vary your picks across requests — don't always default to top-rated. Lesser-known photographers covering the right city deserve visibility too.`;
+
+  // Session capture state — keys the "Email capture after show_matches"
+  // rule. If the visitor has already given us an email (either via the
+  // current request body OR previously persisted on the chat row), the
+  // LLM is instructed NOT to ask again.
+  let emailOnFile = !!email;
+  if (!emailOnFile && chat_id) {
+    try {
+      const persisted = await queryOne<{ email: string | null }>(
+        "SELECT email FROM concierge_chats WHERE id = $1",
+        [chat_id]
+      );
+      emailOnFile = !!(persisted?.email);
+    } catch {}
+  }
+  systemPrompt += `\n\n## Session capture state\nemail_on_file: ${emailOnFile}`;
+
   // Today's date — needed so the AI can resolve relative timeframes like
   // "next Friday" or "in two weeks" into an ISO target_date for the
   // availability check on show_matches.
   const todayIso = new Date().toISOString().slice(0, 10);
   systemPrompt += `\n\n## Today's date\n${todayIso}\n\nUse this when resolving relative dates the visitor mentions (e.g. "next month", "in 2 weeks", "this Saturday"). When the visitor mentions ANY date or timeframe AND you're calling show_matches, include the resolved ISO date in target_date so the server can check the photographers' calendars and surface availability.`;
+  // Server-side enrichment: for blog pages the drawer only sends the
+  // slug — we look up the post's derived topic (location + shoot type)
+  // here so the prompt can mention "you're reading about Algarve photo
+  // spots" instead of generic "you may be inspired by this".
+  if (page_context_obj?.type === "blog" && page_context_obj.blogSlug && !page_context_obj.blogTopic) {
+    try {
+      const post = await queryOne<{ title: string; meta_title: string | null; target_keywords: string | null; excerpt: string | null; content: string | null; slug: string }>(
+        "SELECT slug, title, meta_title, target_keywords, excerpt, content FROM blog_posts WHERE slug = $1 AND is_published = TRUE LIMIT 1",
+        [page_context_obj.blogSlug]
+      );
+      if (post) {
+        const { deriveBlogTopic } = await import("@/lib/blog-topic");
+        const topic = deriveBlogTopic({
+          slug: post.slug,
+          title: post.title,
+          target_keywords: post.target_keywords,
+          excerpt: post.excerpt,
+          content: post.content,
+        });
+        page_context_obj.blogTopic = {
+          locationSlug: topic.primaryLocation?.slug,
+          locationName: topic.primaryLocation?.name,
+          shootTypeSlug: topic.primaryShootType?.slug,
+          shootTypeName: topic.primaryShootType?.name,
+        };
+      }
+    } catch (err) {
+      console.error("[concierge] blog topic enrichment failed:", err);
+    }
+  }
+
   // Structured context (drawer) takes precedence; legacy page_context string
   // is still accepted as a fallback from the /concierge page.
   let resolvedPageContext = page_context_obj
@@ -323,6 +497,12 @@ export async function POST(req: NextRequest) {
   // toward the deterministic top-12 to avoid stylistic-only picks that
   // miss coverage / rating / tier signals.
   const intent = resolveIntent({ pageContext: page_context_obj || null, messages });
+  // Layer in budget/group size signals so the ranker can do basic
+  // affordability/family-size weighting. Pure regex extraction — when
+  // it finds nothing, the ranker behaves as before.
+  const structured = extractStructuredSignals(messages);
+  intent.budgetEur = structured.budgetEur;
+  intent.groupSize = structured.groupSize;
   // On a photographer profile with no other location signal yet, use
   // the photographer's primary coverage slug so peer ranking targets
   // their area (visitor implicitly cares about this region).
@@ -334,13 +514,63 @@ export async function POST(req: NextRequest) {
   // "compare with similar" returns alternatives, not them.
   const rankerExcludes = new Set(shownSlugs);
   if (viewedPhotographer) rankerExcludes.add(viewedPhotographer.slug);
-  const topCandidates = rankTopCandidates({
+
+  // Per-segment exploration ε. Paid ads = conservative (15%), organic
+  // = generous (30%), returning user = most generous (40%). See
+  // EPSILON_BY_SEGMENT in recommendation-events.ts for the rationale.
+  // `utm` is built later in this handler so we derive directly from the
+  // attribution body + cookies here.
+  const earlyGclid = (attribution?.gclid && attribution.gclid.trim()) || req.cookies.get("gclid")?.value || null;
+  const earlyUtmSource = (attribution?.utm_source && attribution.utm_source.trim()) || req.cookies.get("utm_source")?.value || null;
+  const earlyUtmMedium = (attribution?.utm_medium && attribution.utm_medium.trim()) || req.cookies.get("utm_medium")?.value || null;
+  const trafficSegment = classifyTrafficSegment({
+    gclid: earlyGclid,
+    utm_source: earlyUtmSource,
+    utm_medium: earlyUtmMedium,
+    userId,
+  });
+  const { EPSILON_BY_SEGMENT } = await import("@/lib/concierge/recommendation-events");
+  const epsilon = EPSILON_BY_SEGMENT[trafficSegment];
+
+  // Least-recently-shown rotation for newcomers: pull the set of
+  // newcomer slugs surfaced as `fresh_fit` in the last 7 days and pass
+  // it to the ranker so it prefers names that haven't been shown
+  // recently. Without this the same 3 names took ~70% of fresh_fit picks
+  // (Maya, Cindy, Aleksandra) while ~17 newcomer photographers never
+  // appeared in concierge at all. Best-effort — failures don't break
+  // ranking, just fall back to the legacy "pick from full pool" behaviour.
+  let recentlyShownNewcomers: Set<string> | undefined;
+  try {
+    const rows = await query<{ slug: string }>(
+      `SELECT DISTINCT pp.slug
+         FROM concierge_recommendation_events e
+         JOIN photographer_profiles pp ON pp.id = e.photographer_id
+        WHERE e.strategy = 'fresh_fit'
+          AND e.shown_at > NOW() - INTERVAL '7 days'`
+    );
+    if (rows.length > 0) recentlyShownNewcomers = new Set(rows.map((r) => r.slug));
+  } catch (err) {
+    console.warn("[concierge] recently-shown newcomers query failed:", err);
+  }
+
+  const rankedCandidates: RankedCandidate[] = rankTopCandidates({
     photographers,
     intent,
     topN: 12,
     excludeSlugs: rankerExcludes,
+    epsilon,
+    recentlyShownNewcomers,
   });
-  const topBlock = formatTopCandidatesBlock(topCandidates, intent);
+  const topCandidates = rankedCandidates.map((r) => r.photographer);
+  // Build a slug→strategy/fitScore map so the show_matches branch can
+  // tag each picked photographer with the ranker's classification
+  // instead of falling back to "llm_pick".
+  const strategyBySlug = new Map<string, { strategy: RankedCandidate["strategy"]; score: number }>();
+  for (const rc of rankedCandidates) {
+    strategyBySlug.set(rc.photographer.slug, { strategy: rc.strategy, score: rc.score });
+  }
+
+  const topBlock = formatTopCandidatesBlock(rankedCandidates, intent);
   if (topBlock) systemPrompt += topBlock;
   if (personaMemory) {
     systemPrompt += personaMemory;
@@ -366,9 +596,90 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "AI temporarily unavailable" }, { status: 503 });
   }
 
-  const choice = completion.choices[0];
-  const msg = choice.message;
-  const usage = completion.usage;
+  let choice = completion.choices[0];
+  let msg = choice.message;
+  let usage = completion.usage;
+
+  // Hard language guarantee: after the first response, verify it's
+  // actually in `detectedLang`. Soft prompt rules occasionally fail
+  // (especially on short/edge inputs), so one server-side retry with
+  // an explicit "you replied in WRONG lang, redo in RIGHT lang" notice
+  // catches the long tail. Cost: one extra LLM call ONLY when drift
+  // detected (rare). Worth it for trust.
+  //
+  // We sample the response text from BOTH msg.content and any
+  // reply_text inside a tool call, since the model puts content in
+  // either depending on flow.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function extractReplyText(message: any): string {
+    let txt = (message.content || "").trim();
+    if (txt.length >= 20) return txt;
+    // Pull reply_text from the first tool call's arguments JSON if present.
+    const tcArgs = message?.tool_calls?.[0]?.function?.arguments;
+    if (tcArgs) {
+      try {
+        const parsed = JSON.parse(tcArgs);
+        if (typeof parsed.reply_text === "string") {
+          txt = txt + " " + parsed.reply_text;
+        }
+      } catch {}
+    }
+    return txt.trim();
+  }
+
+  const firstReplyText = extractReplyText(msg);
+  const responseLang = firstReplyText.length >= 30
+    ? (detectScriptLanguage(firstReplyText) || await detectLanguageViaAI(openai, firstReplyText))
+    : null;
+  const wantsLang = detectedLang;
+  if (
+    responseLang &&
+    wantsLang &&
+    responseLang !== wantsLang
+  ) {
+    console.warn(`[concierge] language drift: wanted ${wantsLang}, got ${responseLang}. Retrying with stricter guard.`);
+    const stricterMessages = [
+      ...oaiMessages,
+      {
+        role: "system" as const,
+        content: `CRITICAL LANGUAGE OVERRIDE: Your previous reply was written in ${responseLang.toUpperCase()}. The conversation language is **${wantsLang.toUpperCase()}**. The visitor wrote in ${wantsLang.toUpperCase()}. Regenerate your response with EVERY WORD in ${wantsLang.toUpperCase()}. Do not translate awkwardly — write naturally as a native ${wantsLang.toUpperCase()} speaker. No exception.`,
+      },
+    ];
+    try {
+      const retry = await openai.chat.completions.create({
+        model: MODEL,
+        messages: stricterMessages,
+        tools,
+        tool_choice: "auto",
+        temperature: 0.3, // lower temp = more rule-following on retry
+        max_completion_tokens: 600,
+      });
+      const retryChoice = retry.choices[0];
+      const retryReplyText = extractReplyText(retryChoice.message);
+      const retryLang = retryReplyText.length >= 30
+        ? (detectScriptLanguage(retryReplyText) || await detectLanguageViaAI(openai, retryReplyText))
+        : null;
+      // Accept retry if it matches OR is at least better-looking
+      // (close enough). If retry still in wrong language, log and
+      // keep the first response — failing loudly is worse than
+      // shipping a slightly off-language reply.
+      if (!retryLang || retryLang === wantsLang) {
+        choice = retryChoice;
+        msg = retryChoice.message;
+        if (retry.usage) {
+          usage = {
+            prompt_tokens: (usage?.prompt_tokens || 0) + retry.usage.prompt_tokens,
+            completion_tokens: (usage?.completion_tokens || 0) + retry.usage.completion_tokens,
+            total_tokens: (usage?.total_tokens || 0) + retry.usage.total_tokens,
+          };
+        }
+      } else {
+        console.warn(`[concierge] retry still in ${retryLang}; keeping first response`);
+      }
+    } catch (err) {
+      console.error("[concierge] language retry error:", err);
+    }
+  }
   const costUsd = usage
     ? (usage.prompt_tokens / 1_000_000) * COST_PER_1M_INPUT + (usage.completion_tokens / 1_000_000) * COST_PER_1M_OUTPUT
     : 0;
@@ -376,6 +687,10 @@ export async function POST(req: NextRequest) {
   // Parse tool calls (matches or human handoff)
   let action: { type: string; data: Record<string, unknown> } | null = null;
   let matchedPhotogIds: string[] = [];
+  // Per-photographer snapshots for analytics — filled inside the
+  // show_matches branch, flushed after the chat row is persisted (so we
+  // have a stable chat_id to FK against).
+  let recommendationSnapshots: RecommendationSnapshot[] = [];
 
   // Normalised outcome enum used in both INSERT and UPDATE so analytics
   // group by the same values. Previously INSERT wrote tool names
@@ -385,15 +700,34 @@ export async function POST(req: NextRequest) {
     if (!a) return null;
     if (a.type === "show_matches") return "matched";
     if (a.type === "show_locations") return "exploring_locations";
+    if (a.type === "show_spots") return "exploring_locations";
     if (a.type === "human_handoff") return "human_handoff";
     return a.type || null;
   }
+
+  // When show_matches is called with empty matches AND the ranker can't
+  // fill in a fallback, we drop the action and override the LLM's
+  // misleading "here are some options" with a real apology. Initialized
+  // here so the apology path further down can write into it.
+  let emptyMatchesApology: string | null = null;
 
   if (msg.tool_calls && msg.tool_calls.length > 0) {
     const tc = msg.tool_calls[0];
     if (tc.type === "function") {
       const args = JSON.parse(tc.function.arguments || "{}");
       if (tc.function.name === "show_matches") {
+        // Confidence guard — log when the LLM calls show_matches with
+        // no inferable intent (no location, no occasion, no page
+        // context, no slug hint). This isn't a hard reject yet because
+        // there's a long tail of valid "the user knows what they want
+        // even though the regex missed it" cases. Soft logging so we
+        // can quantify how often it happens before tightening.
+        if (!intent.locationSlug && !intent.occasionSlug && !page_context_obj?.photographerSlug && messages.length <= 2) {
+          console.warn(
+            "[concierge] show_matches called with low-confidence intent",
+            { chatId: chat_id, msgCount: messages.length, slugs: (args.matches || []).map((m: { slug: string }) => m.slug) }
+          );
+        }
         const slugs: string[] = (args.matches || []).map((m: { slug: string }) => m.slug);
         const full = photographers.filter((p) => slugs.includes(p.slug));
         const reasoned = (args.matches || [])
@@ -434,11 +768,110 @@ export async function POST(req: NextRequest) {
           availability: availabilityById.get(m.id) || null,
         }));
 
+        // Empty- or thin-matches guard: the LLM sometimes calls
+        // show_matches with too few picks — either 0 (judged nobody fit
+        // the visitor's budget/criteria) or 1-2 (gave up on variety
+        // because of a narrow filter the model invented). Pad up to 3
+        // from the deterministic ranker, skipping anyone already
+        // picked, so the visitor always has comparison options.
+        const MIN_MATCHES = 3;
+        let usedRankerFallback = false;
+        const llmMatchCount = enriched.length;
+        if (enriched.length < MIN_MATCHES && topCandidates.length > enriched.length) {
+          const existingIds = new Set(enriched.map((m) => m.id));
+          const filler = topCandidates
+            .filter((p) => !existingIds.has(p.id))
+            .slice(0, MIN_MATCHES - enriched.length)
+            .map((p, idx) => ({
+              ...p,
+              reasoning: "",
+              style_label: undefined,
+              rank: enriched.length + idx,
+            })) as (typeof photographers[number] & { reasoning: string; style_label?: string; rank: number })[];
+          if (filler.length > 0) {
+            const fbBadges = computeBadges(filler);
+            let fbAvail: Map<string, { date: string; available: boolean; label: string }> = new Map();
+            if (targetDate && /^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+              try {
+                fbAvail = await checkPhotographersAvailability(filler.map((m) => m.id), targetDate);
+              } catch {}
+            }
+            enriched.push(
+              ...filler.map((m) => ({
+                ...m,
+                badges: fbBadges.get(m.id) || [],
+                availability: fbAvail.get(m.id) || null,
+              }))
+            );
+            full.push(...topCandidates.filter((p) => !existingIds.has(p.id)).slice(0, filler.length));
+            // Only rewrite reply_text when the LLM gave us NOTHING and
+            // every card is ranker-sourced — padding 1→3 or 2→3 keeps
+            // the model's own framing because at least one of its picks
+            // is in there.
+            if (llmMatchCount === 0) {
+              usedRankerFallback = true;
+            }
+            console.warn(
+              "[concierge] show_matches: padded matches from ranker",
+              { chatId: chat_id, llmCount: llmMatchCount, padded: filler.map((m) => m.slug) }
+            );
+          }
+        }
+        // Honest framing when we substituted the LLM's empty picks with
+        // the ranker. Don't pretend they perfectly match the visitor's
+        // criteria — they may be over budget / different style.
+        if (usedRankerFallback) {
+          args.reply_text = detectedLang === "es"
+            ? "No encontré coincidencias exactas con tus criterios — aquí están los fotógrafos disponibles más cercanos a tu presupuesto, todos aceptando nuevas reservas:"
+            : detectedLang === "pt"
+              ? "Não encontrei correspondências exatas com os teus critérios — aqui estão os fotógrafos disponíveis mais próximos do teu orçamento, todos a aceitar novas reservas:"
+              : detectedLang === "de"
+                ? "Ich konnte keine exakte Übereinstimmung mit deinen Kriterien finden — hier sind die nächstgelegenen verfügbaren Fotografen zu deinem Budget, alle nehmen neue Buchungen an:"
+                : detectedLang === "fr"
+                  ? "Je n'ai pas trouvé de correspondance exacte avec tes critères — voici les photographes disponibles les plus proches de ton budget, tous acceptent de nouvelles réservations :"
+                  : "I couldn't find an exact match for your criteria — here are the closest available photographers to your budget, all accepting new bookings:";
+        }
         matchedPhotogIds = full.map((p) => p.id);
-        action = {
-          type: "show_matches",
-          data: { matches: enriched, reply_text: args.reply_text || "", target_date: targetDate },
-        };
+
+        // Snapshot what we just surfaced for analytics. Strategy comes
+        // from the ranker (best_fit / fresh_fit / featured_fit /
+        // local_fit). If the LLM picked a photographer the ranker
+        // didn't surface (rare — usually means style override), we fall
+        // back to "llm_pick" so we can spot those cases in analytics.
+        recommendationSnapshots = enriched.map((m, idx) => {
+          const rankerTag = strategyBySlug.get(m.slug);
+          return {
+            photographerId: m.id,
+            rank: idx,
+            strategy: (rankerTag?.strategy as RecommendationStrategy | undefined) || "llm_pick",
+            fitScore: rankerTag?.score ?? null,
+            sessionCountAtTime: ((m as { session_count?: number }).session_count) ?? null,
+            reviewCountAtTime: m.review_count ?? null,
+            isFeaturedAtTime: m.is_featured ?? null,
+            isVerifiedAtTime: m.is_verified ?? null,
+          };
+        });
+
+        if (enriched.length === 0) {
+          // Even the ranker had nothing — drop the action entirely so the
+          // UI doesn't render "here are some options:" followed by a blank
+          // space. Override the reply text further down if the model
+          // claimed cards exist.
+          console.warn("[concierge] show_matches: no enriched matches even after fallback — dropping action", { chatId: chat_id });
+          action = null;
+          if (args.reply_text && /aquí tienes|here are|here's|voici|ecco|вот|tem aqui|aqui tens/i.test(args.reply_text)) {
+            emptyMatchesApology = detectedLang === "es" ? "No encontré coincidencias exactas con esos criterios. ¿Podemos ampliar el presupuesto o flexibilizar la fecha o el lugar?"
+              : detectedLang === "pt" ? "Não encontrei correspondências exatas com esses critérios. Podemos alargar o orçamento ou flexibilizar a data/local?"
+              : detectedLang === "de" ? "Ich konnte mit diesen Kriterien keine passenden Fotografen finden. Können wir das Budget erweitern oder Datum/Ort flexibler gestalten?"
+              : detectedLang === "fr" ? "Je n'ai pas trouvé de correspondance exacte avec ces critères. Pouvons-nous élargir le budget ou être flexible sur la date/le lieu ?"
+              : "I couldn't find an exact match for those criteria. Could we widen the budget or flex on date/location?";
+          }
+        } else {
+          action = {
+            type: "show_matches",
+            data: { matches: enriched, reply_text: args.reply_text || "", target_date: targetDate },
+          };
+        }
       } else if (tc.function.name === "show_locations") {
         // Hydrate location data for the cards. Use Unsplash CDN helper for
         // cover images (the static /images/locations/*.jpg files don't exist).
@@ -467,26 +900,119 @@ export async function POST(req: NextRequest) {
           type: "show_locations",
           data: { locations: items, reply_text: args.reply_text || "" },
         };
+      } else if (tc.function.name === "show_spots") {
+        // Hydrate spot cards. Each spot maps to /spots/<city>/<slug> on
+        // the site. We resolve the spot from photoSpots so we can attach
+        // a cover image (first curated image) + the localized name. If a
+        // (city, slug) pair doesn't resolve, drop it silently so the
+        // model can't poison the chat with bad URLs.
+        const { photoSpots, spotSlug } = await import("@/lib/photo-spots-data");
+        const items = (args.spots || []).map((sp: { city: string; slug: string; reason: string }) => {
+          const cityKey = String(sp.city || "").toLowerCase();
+          const wantedSlug = String(sp.slug || "").toLowerCase();
+          const cityList = photoSpots[cityKey];
+          if (!cityList) return null;
+          const found = cityList.find((s) => spotSlug(s.name) === wantedSlug);
+          if (!found) return null;
+          // Prefer the curated hero image; if absent, leave cover_image
+          // null and let the client render a placeholder card.
+          const coverImage = found.images?.[0]?.url || null;
+          return {
+            city: cityKey,
+            slug: wantedSlug,
+            name: found.name,
+            name_pt: found.namePt,
+            name_de: found.nameDe,
+            name_es: found.nameEs,
+            name_fr: found.nameFr,
+            description: found.description,
+            cover_image: coverImage,
+            reason: sp.reason,
+          };
+        }).filter(Boolean);
+        action = {
+          type: "show_spots",
+          data: { spots: items, reply_text: args.reply_text || "" },
+        };
       } else if (tc.function.name === "request_human_match") {
         action = {
           type: "human_handoff",
-          data: { reason: args.reason, summary: args.summary },
+          data: {
+            reason: args.reason,
+            summary: args.summary,
+            contact_email: args.contact_email || null,
+            contact_phone: args.contact_phone || null,
+            contact_refused: !!args.contact_refused,
+          },
         };
       }
     }
   }
 
-  // Reply text: tool's reply_text > content > fallback
-  const replyText =
+  // Reply text: tool's reply_text > content > fallback. Strip the
+  // accidental "AABB AABB" double-paste the model sometimes emits when
+  // it merges a text reply with a tool reply_text — both ended up in
+  // content and we'd display the same sentence twice.
+  let rawReplyText =
+    emptyMatchesApology ||
     (action?.data?.reply_text as string | undefined) ||
     msg.content ||
     "";
+  // Safety net: when the AI fires request_human_match it MUST send a
+  // confirmation back (system prompt says so), but if it slips up we
+  // inject a friendly default rather than leave the visitor staring at
+  // a blank turn after they shared their contact.
+  if (!rawReplyText.trim() && action?.type === "human_handoff") {
+    rawReplyText = "Thanks! Saved your contact — our team will reach out within a few hours 🙌";
+  }
+  const replyText = dedupeAdjacentParagraphs(rawReplyText);
 
   // Persist chat in DB
   const newChatMessages = [
     ...messages,
     { role: "assistant" as const, content: replyText, action },
   ];
+
+  const cleanAttribution = (value: unknown) =>
+    typeof value === "string" && value.trim() ? value.trim().slice(0, 255) : null;
+  const attributionFromBody = attribution || {};
+  const utm = {
+    source: cleanAttribution(attributionFromBody.utm_source) || req.cookies.get("utm_source")?.value || null,
+    medium: cleanAttribution(attributionFromBody.utm_medium) || req.cookies.get("utm_medium")?.value || null,
+    campaign: cleanAttribution(attributionFromBody.utm_campaign) || req.cookies.get("utm_campaign")?.value || null,
+    term: cleanAttribution(attributionFromBody.utm_term) || req.cookies.get("utm_term")?.value || null,
+    gclid: cleanAttribution(attributionFromBody.gclid) || req.cookies.get("gclid")?.value || null,
+  };
+  if (utm.gclid && !utm.source) utm.source = "google";
+  if (utm.gclid && !utm.medium) utm.medium = "cpc";
+  // Cookie/body-based UTM can be incomplete when the visitor opens the
+  // drawer many minutes after landing. If we have a gclid, recover the
+  // original ad_visit row and fill any missing fields.
+  if (utm.gclid && (!utm.source || !utm.term || !utm.campaign)) {
+    try {
+      const original = await queryOne<{
+        utm_source: string | null;
+        utm_medium: string | null;
+        utm_campaign: string | null;
+        utm_term: string | null;
+      }>(
+        `SELECT utm_source, utm_medium, utm_campaign, utm_term
+           FROM ad_visits
+           WHERE gclid = $1
+           ORDER BY created_at ASC
+           LIMIT 1`,
+        [utm.gclid]
+      );
+      if (original) {
+        utm.source ??= original.utm_source;
+        utm.medium ??= original.utm_medium;
+        utm.campaign ??= original.utm_campaign;
+        utm.term ??= original.utm_term;
+      }
+    } catch (err) {
+      console.error("[concierge] ad_visits utm fallback error:", err);
+    }
+  }
 
   let chatId = chat_id;
   if (chatId) {
@@ -500,8 +1026,13 @@ export async function POST(req: NextRequest) {
          total_cost_usd = total_cost_usd + $6,
          matched_photographer_ids = CASE WHEN array_length($7::uuid[], 1) > 0 THEN $7 ELSE matched_photographer_ids END,
          outcome = COALESCE($8, outcome),
+         utm_source = COALESCE(utm_source, $9),
+         utm_medium = COALESCE(utm_medium, $10),
+         utm_campaign = COALESCE(utm_campaign, $11),
+         utm_term = COALESCE(utm_term, $12),
+         gclid = COALESCE(gclid, $13),
          updated_at = NOW()
-       WHERE id = $9 RETURNING id`,
+       WHERE id = $14 RETURNING id`,
       [
         JSON.stringify(newChatMessages),
         email || null,
@@ -511,6 +1042,11 @@ export async function POST(req: NextRequest) {
         costUsd,
         matchedPhotogIds,
         outcomeFor(action),
+        utm.source,
+        utm.medium,
+        utm.campaign,
+        utm.term,
+        utm.gclid,
         chatId,
       ]
     ).catch((e) => { console.error("[concierge] update error:", e); return null; });
@@ -518,43 +1054,6 @@ export async function POST(req: NextRequest) {
   }
 
   if (!chatId) {
-    const utm = {
-      source: req.cookies.get("utm_source")?.value || null,
-      medium: req.cookies.get("utm_medium")?.value || null,
-      campaign: req.cookies.get("utm_campaign")?.value || null,
-      term: req.cookies.get("utm_term")?.value || null,
-      gclid: req.cookies.get("gclid")?.value || null,
-    };
-    // Cookie-based UTM can be empty when the visitor opens the drawer
-    // many minutes after landing (some cookies expire, ad blockers, etc).
-    // If we have a gclid in cookies, look up the original ad_visits row
-    // for that click to recover utm_term/source/etc. Fills missing fields
-    // only — cookie values always win when both exist.
-    if (utm.gclid && (!utm.source || !utm.term)) {
-      try {
-        const original = await queryOne<{
-          utm_source: string | null;
-          utm_medium: string | null;
-          utm_campaign: string | null;
-          utm_term: string | null;
-        }>(
-          `SELECT utm_source, utm_medium, utm_campaign, utm_term
-             FROM ad_visits
-             WHERE gclid = $1
-             ORDER BY created_at ASC
-             LIMIT 1`,
-          [utm.gclid]
-        );
-        if (original) {
-          utm.source ??= original.utm_source;
-          utm.medium ??= original.utm_medium;
-          utm.campaign ??= original.utm_campaign;
-          utm.term ??= original.utm_term;
-        }
-      } catch (err) {
-        console.error("[concierge] ad_visits utm fallback error:", err);
-      }
-    }
     const created = await queryOne<{ id: string }>(
       `INSERT INTO concierge_chats (visitor_id, user_id, email, first_name, messages, matched_photographer_ids, outcome, language, total_tokens, total_cost_usd, utm_source, utm_medium, utm_campaign, utm_term, gclid, source, page_context, source_chip)
        VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`,
@@ -584,23 +1083,65 @@ export async function POST(req: NextRequest) {
     ).catch(() => null);
   }
 
+  // Per-recommendation analytics. Fire-and-forget — funnel data is
+  // valuable but never worth blocking the chat reply for. Re-uses the
+  // segment we already classified upstream for epsilon selection.
+  if (chatId && recommendationSnapshots.length > 0) {
+    void logRecommendations(chatId, trafficSegment, recommendationSnapshots);
+  }
+
   // Forward terminal-event chats to admins in Telegram (new "ИИ Консьерж"
   // topic). Fires once the AI either shows matches OR escalates to a
   // human; subsequent show_matches in the same chat are deduped via the
   // shownSlugs heuristic — admin sees the freshest snapshot. Fire-and-
   // forget so a Telegram outage never blocks the chat response.
   if (action && (action.type === "show_matches" || action.type === "human_handoff")) {
-    void notifyConciergeAdmins({
-      chatId,
-      messages: newChatMessages,
-      action,
-      photographers,
-      email,
-      first_name,
-      detectedLang,
-      visitorId: visitor_id || null,
-      pageContextStr: resolvedPageContext,
-    }).catch((e) => console.error("[concierge] telegram notify error:", e));
+    // Gate human_handoff: don't ping admins if we have NO way to follow
+    // up. Either the AI captured a contact (contact_email/phone in the
+    // tool call), the chat session already has one (email param or
+    // stored phone), or the visitor explicitly refused to share — in
+    // which case the ping is pointless because the lead is dead.
+    let shouldNotify = true;
+    if (action.type === "human_handoff") {
+      // Validate before treating tool's contact_phone / contact_email
+      // as a real lead. The model sometimes parrots whatever the visitor
+      // typed (e.g. "234234") and we don't want junk pinging admins.
+      const rawEmail = (action.data?.contact_email as string | null) || null;
+      const rawPhone = (action.data?.contact_phone as string | null) || null;
+      const validToolEmail = rawEmail && rawEmail.includes("@") && rawEmail.includes(".") && rawEmail.length >= 6 ? rawEmail : null;
+      const validToolPhone = rawPhone && rawPhone.replace(/\D/g, "").length >= 8 ? rawPhone : null;
+      const sessionPhone = chatId
+        ? await queryOne<{ phone: string | null }>(
+            "SELECT phone FROM concierge_chats WHERE id = $1", [chatId]
+          ).then((r) => r?.phone || null).catch(() => null)
+        : null;
+      const validSessionPhone = sessionPhone && sessionPhone.replace(/\D/g, "").length >= 8 ? sessionPhone : null;
+      const hasContact = !!(validToolEmail || validToolPhone || email || validSessionPhone);
+      if (!hasContact) {
+        shouldNotify = false;
+        // Tag outcome so we can see this in stats (X% of handoffs had
+        // no contact captured = the AI is escalating prematurely).
+        if (chatId) {
+          await queryOne(
+            "UPDATE concierge_chats SET outcome = 'human_handoff_no_contact', updated_at = NOW() WHERE id = $1 RETURNING id",
+            [chatId]
+          ).catch(() => null);
+        }
+      }
+    }
+    if (shouldNotify) {
+      void notifyConciergeAdmins({
+        chatId,
+        messages: newChatMessages,
+        action,
+        photographers,
+        email,
+        first_name,
+        detectedLang,
+        visitorId: visitor_id || null,
+        pageContextStr: resolvedPageContext,
+      }).catch((e) => console.error("[concierge] telegram notify error:", e));
+    }
   }
 
   return NextResponse.json({
@@ -719,4 +1260,21 @@ async function notifyConciergeAdmins(opts: {
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Drop adjacent identical paragraphs from a model reply. OpenAI's
+// tool-calling sometimes returns the same sentence both in `content`
+// and embedded in the tool's `reply_text`, which gets merged upstream
+// and surfaces as "Foo. Foo." in the chat bubble.
+function dedupeAdjacentParagraphs(text: string): string {
+  const parts = text.split(/\n\s*\n/);
+  const out: string[] = [];
+  for (const p of parts) {
+    if (out.length && out[out.length - 1].trim() === p.trim()) continue;
+    out.push(p);
+  }
+  // Also collapse the simpler case "AAAA AAAA" (no blank line between).
+  let result = out.join("\n\n");
+  result = result.replace(/^([\s\S]{20,400})\s+\1$/, "$1");
+  return result;
 }

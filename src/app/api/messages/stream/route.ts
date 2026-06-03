@@ -23,8 +23,14 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const booking = await queryOne<{ client_id: string; photographer_user_id: string }>(
-    `SELECT b.client_id, u.id as photographer_user_id
+  // Resolve the conversation (client+photographer pair) once. The
+  // chat thread is conversation-scoped, NOT per-booking — messages
+  // sent under one booking_id appear in the shared thread for all
+  // bookings between the same pair. Without this fix, opening the
+  // chat under booking A and getting a reply that lands in booking B
+  // would NOT stream into the open chat.
+  const booking = await queryOne<{ client_id: string; photographer_id: string; photographer_user_id: string }>(
+    `SELECT b.client_id, b.photographer_id, u.id as photographer_user_id
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -47,21 +53,35 @@ export async function GET(req: NextRequest) {
 
       const interval = setInterval(async () => {
         try {
-          const newMessages = await query(
+          // Stream both new messages AND translation-completed updates.
+          // Translation arrives a second or two AFTER the row is inserted,
+          // so we poll on GREATEST(created_at, translated_at) and let the
+          // client merge by id.
+          const newMessages = await query<{ id: string; created_at: string; translated_at: string | null }>(
             `SELECT m.id, m.text, m.media_url, m.sender_id, m.created_at, m.read_at,
+                    m.detected_language, m.translated_text, m.translated_to_lang, m.translated_at,
                     u.name as sender_name, u.avatar_url as sender_avatar
              FROM messages m
              JOIN users u ON u.id = m.sender_id
-             WHERE m.booking_id = $1 AND m.created_at > $2
+             WHERE m.client_id = $1 AND m.photographer_id = $2
+               AND (m.created_at > $3 OR (m.translated_at IS NOT NULL AND m.translated_at > $3))
              ORDER BY m.created_at ASC`,
-            [bookingId, lastCheck]
+            [booking.client_id, booking.photographer_id, lastCheck]
           );
 
           if (newMessages.length > 0) {
-            lastCheck = (newMessages[newMessages.length - 1] as { created_at: string }).created_at;
+            // Advance the watermark to the latest update we just emitted.
+            const maxTs = newMessages.reduce((acc, m) => {
+              const c = new Date(m.created_at).getTime();
+              const t = m.translated_at ? new Date(m.translated_at).getTime() : 0;
+              return Math.max(acc, c, t);
+            }, new Date(lastCheck).getTime());
+            lastCheck = new Date(maxTs).toISOString();
             await query(
-              "UPDATE messages SET read_at = NOW() WHERE booking_id = $1 AND sender_id != $2 AND read_at IS NULL",
-              [bookingId, userId]
+              `UPDATE messages SET read_at = NOW()
+                WHERE client_id = $1 AND photographer_id = $2
+                  AND sender_id != $3 AND read_at IS NULL`,
+              [booking.client_id, booking.photographer_id, userId]
             );
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(newMessages)}\n\n`));
           }

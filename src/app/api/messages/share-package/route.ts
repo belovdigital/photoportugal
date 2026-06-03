@@ -179,13 +179,26 @@ export async function POST(req: NextRequest) {
   }
 
   // Get the package (must belong to this photographer)
-  const pkg = await queryOne<{ id: string; name: string; price: number; duration_minutes: number; num_photos: number }>(
-    "SELECT id, name, price, duration_minutes, num_photos FROM packages WHERE id = $1 AND photographer_id = $2",
+  const pkg = await queryOne<{ id: string; name: string; price: number; duration_minutes: number; num_photos: number; is_public: boolean; custom_for_user_id: string | null }>(
+    "SELECT id, name, price, duration_minutes, num_photos, is_public, custom_for_user_id FROM packages WHERE id = $1 AND photographer_id = $2",
     [package_id, booking.photographer_id]
   );
 
   if (!pkg) {
     return NextResponse.json({ error: "Package not found" }, { status: 404 });
+  }
+
+  // If photographer is sharing a private package (is_public=false), grant
+  // visibility to this client so /book/<slug>?package=<id> resolves to
+  // the actual package instead of falling back to a same-priced public
+  // one. Without this, "Book Now" on the chat card silently redirects
+  // to a different package (the API filters out is_public=false rows
+  // unless custom_for_user_id matches the viewer).
+  if (!pkg.is_public && !pkg.custom_for_user_id) {
+    await query(
+      "UPDATE packages SET custom_for_user_id = $1 WHERE id = $2",
+      [booking.client_id, pkg.id]
+    );
   }
 
   // Get photographer slug for the booking link

@@ -1,3 +1,21 @@
+/** A single curated image of the spot (Wikimedia / Unsplash / photographer
+ *  portfolio). Attribution is required because Wikimedia CC-BY-SA images
+ *  must show photographer credit + license to stay legal. */
+export interface SpotImage {
+  url: string;
+  attribution: string;
+  /** Where this image came from. Drives credit format and lets us later
+   *  prefer photographer images over public-domain ones once tagging is live. */
+  source: "wikimedia" | "unsplash" | "photographer";
+  /** Click-through for the credit (Wikimedia file page, photographer profile, etc.) */
+  source_url?: string;
+  alt?: string;
+  /** Image natural dims when known — drives masonry aspect ratios so layout
+   *  doesn't reflow when photos load. */
+  width?: number;
+  height?: number;
+}
+
 export interface PhotoSpot {
   name: string;
   description: string;
@@ -13,6 +31,14 @@ export interface PhotoSpot {
   /** French translations; when absent, EN fallback is used on /fr. */
   nameFr?: string;
   descriptionFr?: string;
+  /** Long-form description — 3–4 paragraphs covering what the place is, why
+   *  photographers love it, light/angle notes, practical tips. Falls back to
+   *  `description` when missing so old data still renders. */
+  long_description?: string;
+  long_description_pt?: string;
+  long_description_de?: string;
+  long_description_es?: string;
+  long_description_fr?: string;
   best_time?: string;
   best_timePt?: string;
   best_timeDe?: string;
@@ -27,6 +53,15 @@ export interface PhotoSpot {
    *  On a /locations/{city}/{occasion} page, spots with a matching tag
    *  bubble to the top of the list; untagged spots still render below. */
   tags?: string[];
+  /** Curated photos of the spot. First image is used as hero. Empty/missing
+   *  means the page falls back to the city cover. */
+  images?: SpotImage[];
+  /** Lat/lng for the spot — used by the map layer on /locations/[slug]
+   *  (planned) and by the directions deep-link in the sidebar. */
+  coordinates?: { lat: number; lng: number };
+  /** Postal address fragment — feeds the structured-data block + Google Maps
+   *  deep-link. Optional; falls back to "<spot>, <city>, Portugal". */
+  address?: string;
 }
 
 /** Stable rerank that pulls spots tagged with `occasion` to the front. */
@@ -48,7 +83,47 @@ export function spotSlug(name: string): string {
 }
 
 export function getSpot(citySlug: string, slug: string): PhotoSpot | undefined {
-  return (photoSpots[citySlug] || []).find((s) => spotSlug(s.name) === slug);
+  const found = (photoSpots[citySlug] || []).find((s) => spotSlug(s.name) === slug);
+  if (!found) return undefined;
+  // Merge in coordinates + images from SPOT_MEDIA when the spot itself
+  // doesn't carry them inline. Lets us add coords/photos for ~70 spots
+  // in one map literal instead of editing every entry in this file.
+  // Inline data wins so the 8 priority spots (Pena Palace, Quinta da
+  // Regaleira, Belém, Alfama, etc.) keep their hand-tuned image lists.
+  // Lazy-required so this module stays tree-shakeable for callers that
+  // only need the catalog (e.g. concierge system prompt builder).
+  const isMissingMedia = !found.coordinates || !found.images || found.images.length === 0;
+  if (!isMissingMedia) return found;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { SPOT_MEDIA } = require("./spot-media") as typeof import("./spot-media");
+  const key = `${citySlug}/${slug}`;
+  const media = SPOT_MEDIA[key];
+  if (!media) return found;
+  return {
+    ...found,
+    coordinates: found.coordinates ?? media.coordinates,
+    images: (found.images && found.images.length > 0) ? found.images : media.images,
+  };
+}
+
+/** Variant of getSpot that returns ALL spots in a city with media merged
+ *  in. Used by the /locations/[slug] CityMap so every spot gets a pin
+ *  even if its inline entry doesn't have coordinates yet. */
+export function getSpotsWithMediaForCity(citySlug: string): (PhotoSpot & { citySlug: string; spotSlug: string })[] {
+  const list = photoSpots[citySlug] || [];
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { SPOT_MEDIA } = require("./spot-media") as typeof import("./spot-media");
+  return list.map((s) => {
+    const sl = spotSlug(s.name);
+    const media = SPOT_MEDIA[`${citySlug}/${sl}`];
+    return {
+      ...s,
+      citySlug,
+      spotSlug: sl,
+      coordinates: s.coordinates ?? media?.coordinates,
+      images: (s.images && s.images.length > 0) ? s.images : media?.images,
+    };
+  });
 }
 
 /** Returns name/description in the requested locale, falling back to EN. */
@@ -59,9 +134,18 @@ export function spotLocalized(spot: PhotoSpot, locale: string) {
     const k = `${base}${suffix}` as keyof PhotoSpot;
     return (spot[k] as string | undefined) || (spot[base] as string | undefined);
   };
+  // long_description uses snake_case suffix (long_description_pt, not
+  // long_descriptionPt) since it landed later in the codebase — keep
+  // both naming conventions wired to the same lookup.
+  const longSuffixMap: Record<string, string> = { Pt: "_pt", De: "_de", Es: "_es", Fr: "_fr" };
+  const longKey = suffix ? `long_description${longSuffixMap[suffix]}` as keyof PhotoSpot : undefined;
+  const long_description = longKey
+    ? ((spot[longKey] as string | undefined) || spot.long_description)
+    : spot.long_description;
   return {
     name: pick("name") || spot.name,
     description: pick("description") || spot.description,
+    long_description,
     best_time: pick("best_time"),
     tips: pick("tips"),
   };
@@ -81,19 +165,43 @@ export const photoSpots: Record<string, PhotoSpot[]> = {
       descriptionPt: "O bairro mais antigo de Lisboa, com ruas estreitas de calçada, fachadas coloridas de azulejos e uma atmosfera autenticamente portuguesa.",
       descriptionDe: "Das älteste Viertel Lissabons mit engen Kopfsteinpflastergassen, farbenfrohen Azulejo-Fassaden und authentisch portugiesischer Atmosphäre.",
       descriptionEs: "El barrio más antiguo de Lisboa, con estrechas calles empedradas, fachadas coloridas de azulejos y un ambiente auténticamente portugués.",
-      descriptionFr: "Le plus ancien quartier de Lisbonne, avec ses ruelles pavées étroites, ses façades colorées d'azulejos et son atmosphère authentiquement portugaise." },
+      descriptionFr: "Le plus ancien quartier de Lisbonne, avec ses ruelles pavées étroites, ses façades colorées d'azulejos et son atmosphère authentiquement portugaise.",
+      long_description: "Alfama is what you came to Lisbon for — a labyrinth of narrow lanes, azulejo-tiled walls, fluttering laundry, and the smell of grilled sardines that survived the 1755 earthquake more or less intact. It's the city's oldest neighbourhood and its most photographed: every corner is a postcard, every staircase frames a different view of the Tagus.\n\nBest shooting strategy is movement, not destination. Have your photographer walk you through Beco do Carneiro, Largo das Portas do Sol (the iconic miradouro overlooking the river and São Vicente monastery), the steep stairs near Largo de Santo Estêvão, and the tiny Beco da Cardosa. Yellow Tram 28 passing on Rua das Escolas Gerais is a classic shot — wait for it rather than chase it. Wear something that pops against neutral stone — soft red, mustard, or denim — but flat shoes are non-negotiable on cobblestones.\n\nPractical: best light is early morning (7–9am, before tourist crowds) or late afternoon. Sunday mornings the Feira da Ladra flea market spills into the streets, adding texture but also more bystanders. Free to photograph everywhere; respect signage in private patios. Tram 28 fills up by 10am — for vintage-tram shots come at 8am to the Largo Martim Moniz starting point. The whole district is walkable but expect 200m of vertical climb across a 90-min session.",
+      coordinates: { lat: 38.7117, lng: -9.1304 },
+      images: [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Alfama%2C_Lisbon_%28DSC03367%29.jpg/1920px-Alfama%2C_Lisbon_%28DSC03367%29.jpg", attribution: "Matti Blume", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Alfama,_Lisbon_(DSC03367).jpg", alt: "Alfama narrow tile-faced street", width: 1920, height: 1285 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Alfama%2C_Lisbon_%28DSC03373%29.jpg/1920px-Alfama%2C_Lisbon_%28DSC03373%29.jpg", attribution: "Matti Blume", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Alfama,_Lisbon_(DSC03373).jpg", alt: "Alfama winding alley", width: 1920, height: 1285 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Lissabon_-_Alfama_-_Rua_da_Adica_-_1.jpg/1920px-Lissabon_-_Alfama_-_Rua_da_Adica_-_1.jpg", attribution: "Ingo Mehling", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Lissabon_-_Alfama_-_Rua_da_Adica_-_1.jpg", alt: "Rua da Adiça stairs in Alfama", width: 1168, height: 1920 },
+      ],
+    },
     { name: "Belem Tower", namePt: "Torre de Belém", nameDe: "Belém-Turm", nameEs: "Torre de Belém", nameFr: "Tour de Belém",
       description: "The iconic 16th-century riverside fortress and UNESCO World Heritage site, ideal for dramatic architectural backdrops.",
       descriptionPt: "A icónica fortaleza ribeirinha do século XVI, Património Mundial da UNESCO, ideal para cenários arquitetónicos dramáticos.",
       descriptionDe: "Die ikonische Festung am Tejo aus dem 16. Jahrhundert und UNESCO-Welterbe — ideal für eindrucksvolle architektonische Kulissen.",
       descriptionEs: "La icónica fortaleza ribereña del siglo XVI, Patrimonio de la Humanidad de la UNESCO, ideal para escenarios arquitectónicos dramáticos.",
-      descriptionFr: "L'emblématique forteresse du XVIe siècle au bord du fleuve, classée au patrimoine mondial de l'UNESCO — idéale pour des décors architecturaux saisissants." },
+      descriptionFr: "L'emblématique forteresse du XVIe siècle au bord du fleuve, classée au patrimoine mondial de l'UNESCO — idéale pour des décors architecturaux saisissants.",
+      long_description: "Belém Tower is the 16th-century departure point for Portugal's Age of Discovery — a Manueline fortress built into the Tagus river that watched explorers leave for India, Brazil, and the Far East. Today it's the silhouette every Lisbon postcard fights over, with carved sea-monsters, lacy stonework, and a riverside terrace that's been pulling photographers for over a century.\n\nThe shooting angle most people miss: the wide pedestrian path that runs east of the tower along the river. From there you get clean architectural backdrops without other tourists in frame, especially before 9am. The lawn directly south of the tower offers full-length compositions with the tower as backdrop. Sunset shots looking west are dramatic but the sun goes behind the tower — exposure-tricky, ideal for silhouettes. The tower itself glows softest gold around 30 minutes before sunset.\n\nPractical: free to photograph from outside (the lawns and riverside path are public). Interior visit €8 with a long queue 11am–3pm. Parking is a real headache — use the metro to Belém station (10-min walk) or bring an Uber. No drone shots — Tagus is restricted airspace and security is active. Combine with the nearby Jerónimos Monastery (5-min walk) for a 2-hour Belém district session covering both UNESCO sites.",
+      coordinates: { lat: 38.6916, lng: -9.2160 },
+      images: [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Lisbon_Torre_de_Bel%C3%A9m_BW_2018-10-03_16-33-21.jpg/1920px-Lisbon_Torre_de_Bel%C3%A9m_BW_2018-10-03_16-33-21.jpg", attribution: "Berthold Werner", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Lisbon_Torre_de_Bel%C3%A9m_BW_2018-10-03_16-33-21.jpg", alt: "Belém Tower from the south lawn", width: 1920, height: 1402 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Torre_Bel%C3%A9m_April_2009-4a.jpg/1920px-Torre_Bel%C3%A9m_April_2009-4a.jpg", attribution: "Alvesgaspar", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Torre_Bel%C3%A9m_April_2009-4a.jpg", alt: "Belém Tower riverside view", width: 1920, height: 1832 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Torre_de_Belem_-_Backside.jpg/1920px-Torre_de_Belem_-_Backside.jpg", attribution: "Ingo Mehling", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Torre_de_Belem_-_Backside.jpg", alt: "Belém Tower backside, vertical", width: 1342, height: 1920 },
+      ],
+    },
     { name: "LX Factory", namePt: "LX Factory", nameDe: "LX Factory", nameEs: "LX Factory", nameFr: "LX Factory",
       description: "A trendy creative hub in a converted industrial complex, offering street art, vibrant murals, and an urban-cool photoshoot aesthetic.",
       descriptionPt: "Um polo criativo num antigo complexo industrial reconvertido, com street art, murais vibrantes e uma estética urbana para sessões fotográficas.",
       descriptionDe: "Ein angesagter Kreativhub in einem umgebauten Industriekomplex mit Street-Art, lebendigen Wandbildern und urbanem Flair für Fotoshootings.",
       descriptionEs: "Un moderno polo creativo en un antiguo complejo industrial reconvertido, con arte urbano, murales vibrantes y una estética urbana ideal para sesiones fotográficas.",
-      descriptionFr: "Un pôle créatif tendance dans un ancien complexe industriel réhabilité, avec du street art, des fresques vibrantes et une esthétique urbaine pour les séances photo." },
+      descriptionFr: "Un pôle créatif tendance dans un ancien complexe industriel réhabilité, avec du street art, des fresques vibrantes et une esthétique urbaine pour les séances photo.",
+      long_description: "LX Factory was once a 19th-century textile complex; today it's Lisbon's coolest 23,000m² creative campus, packed with street art, independent shops, restaurants, the famous Ler Devagar bookshop with its bicycle-flying sculpture, and constantly-rotating murals. Located in Alcântara under the 25 de Abril Bridge, it's the polar opposite of Alfama — gritty, contemporary, unapologetically urban.\n\nIt's the spot for content creators, branding shoots, fashion editorials, and anyone who wants their Lisbon photos to look nothing like a tourist's. Key zones: the central Rua Rodrigues de Faria with its painted walls and outdoor seating; Ler Devagar (interior shoots possible if discreet — bookshop hours only); the rooftop terrace at Rio Maravilha for skyline backdrops with the bridge; the back industrial alley with rust, exposed brick, and graffiti murals that change quarterly. The look that works: streetwear, oversized blazers, bold accessories — stuff that competes visually rather than blending in.\n\nPractical: free entry, open daily but properly alive Friday evening through Sunday. Saturdays are crowded (street market) but most photogenic. Photography is generally fine but ask before shooting inside individual shops and at the Sunday brunch venues (private events common). Free street parking is impossible — Uber to the entrance or take tram 15E to Calvário. Combine with the nearby Tagus riverside walk and the LX Factory rooftop for sunset.",
+      coordinates: { lat: 38.7042, lng: -9.1791 },
+      images: [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/LX_Factory_Lisbon_%2843450749470%29.jpg/1920px-LX_Factory_Lisbon_%2843450749470%29.jpg", attribution: "TJ DeGroat", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:LX_Factory_Lisbon_(43450749470).jpg", alt: "LX Factory street with murals", width: 1440, height: 1920 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/LX_Factory_Lisbon_%2844543156954%29.jpg/1920px-LX_Factory_Lisbon_%2844543156954%29.jpg", attribution: "TJ DeGroat", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:LX_Factory_Lisbon_(44543156954).jpg", alt: "LX Factory courtyard", width: 1440, height: 1920 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/c/ca/LX_Factory_Lisbon_%2844543155954%29.jpg", attribution: "TJ DeGroat", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:LX_Factory_Lisbon_(44543155954).jpg", alt: "LX Factory wall art detail", width: 1655, height: 2594 },
+      ],
+    },
     { name: "Praca do Comercio", namePt: "Praça do Comércio", nameDe: "Praça do Comércio", nameEs: "Praça do Comércio", nameFr: "Praça do Comércio",
       description: "Lisbon's grand waterfront square with its striking yellow arcades and the Triumphal Arch — a wide-open, elegant setting for group and couple photos.",
       descriptionPt: "A grande praça ribeirinha de Lisboa, com os seus característicos arcos amarelos e o Arco da Rua Augusta — um cenário amplo e elegante para fotos de grupo e casal.",
@@ -107,7 +215,15 @@ export const photoSpots: Record<string, PhotoSpot[]> = {
       descriptionPt: "O colorido bairro ribeirinho classificado pela UNESCO, com casas empilhadas em cascata até ao Douro — o local mais icónico do Porto para sessões fotográficas.",
       descriptionDe: "Das farbenfrohe, von der UNESCO geschützte Flussufer-Viertel mit verschachtelten Häusern, die zum Douro hinabfallen — Portos ikonischste Fotoshooting-Kulisse.",
       descriptionEs: "El colorido barrio ribereño declarado Patrimonio de la UNESCO, con casas apiladas que descienden hasta el Duero — el lugar más icónico de Oporto para sesiones fotográficas.",
-      descriptionFr: "Le quartier coloré au bord du fleuve, classé à l'UNESCO, avec ses maisons étagées qui descendent jusqu'au Douro — le décor de séance photo le plus emblématique de Porto." },
+      descriptionFr: "Le quartier coloré au bord du fleuve, classé à l'UNESCO, avec ses maisons étagées qui descendent jusqu'au Douro — le décor de séance photo le plus emblématique de Porto.",
+      long_description: "Ribeira is what every Porto search-result photo shows — a tightly stacked mosaic of orange, ochre, and sunbleached-white houses tumbling down to the Douro waterfront, with the iron Dom Luís I bridge spanning above. UNESCO-listed since 1996, it's still very much a working neighbourhood: laundry hangs from balconies, locals fish off the quays, and the rabelo wine boats sway at the docks across the river.\n\nFor photoshoots the trick is composition variety in a small footprint. Cais da Ribeira (the main quay) gives you the wide bridge backdrop. Praça da Ribeira — the small square one block in — has the iconic painted facades and a 16th-century fountain that frames couple/family compositions perfectly. The narrow stairs of Escadas do Codeçal and Rua Fonte Taurina provide layered architectural depth. Cross the bridge to Vila Nova de Gaia for reverse shots looking back at Ribeira — late-afternoon golden hour is unbeatable from there. Wear neutrals or jewel tones; avoid orange or yellow which clash with the facades.\n\nPractical: pedestrian zone, free to photograph everywhere outside private cafés. Sunset light on the facades is famous and famously crowded — go an hour earlier or pick weekday mornings. Tram 1 from São Bento to the river costs €3.50 and is a sweet bonus shot. Combine with São Bento Station (5-min walk uphill) for a full Porto-historic-centre session.",
+      coordinates: { lat: 41.1407, lng: -8.6116 },
+      images: [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Cais_da_Ribeira%2C_Porto%2C_Portugal.jpg/1920px-Cais_da_Ribeira%2C_Porto%2C_Portugal.jpg", attribution: "Communeiro", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Cais_da_Ribeira,_Porto,_Portugal.jpg", alt: "Cais da Ribeira riverside facades, vertical", width: 1280, height: 1920 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Porto%27s_riverside_quarter%2C_known_as_the_Ribeira%2C_is_a_hub_for_tourists.jpg/1920px-Porto%27s_riverside_quarter%2C_known_as_the_Ribeira%2C_is_a_hub_for_tourists.jpg", attribution: "Peter K Burian", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Porto%27s_riverside_quarter,_known_as_the_Ribeira,_is_a_hub_for_tourists.jpg", alt: "Wide panorama of Ribeira waterfront", width: 1920, height: 955 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Tourists_enjoy_the_riverside_%28Ribeira%29_in_Porto.jpg/1920px-Tourists_enjoy_the_riverside_%28Ribeira%29_in_Porto.jpg", attribution: "Peter K Burian", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Tourists_enjoy_the_riverside_(Ribeira)_in_Porto.jpg", alt: "Ribeira riverside walkway", width: 1920, height: 1281 },
+      ],
+    },
     { name: "Dom Luis I Bridge", namePt: "Ponte Dom Luís I", nameDe: "Ponte Dom Luís I", nameEs: "Puente Don Luís I", nameFr: "Pont Dom Luís I",
       description: "The double-deck iron bridge offers dramatic framing with the Douro River and both sides of the city stretching below.",
       descriptionPt: "A ponte de ferro de dois tabuleiros oferece um enquadramento dramático com o rio Douro e ambas as margens da cidade em baixo.",
@@ -119,7 +235,15 @@ export const photoSpots: Record<string, PhotoSpot[]> = {
       descriptionPt: "Uma das livrarias mais bonitas do mundo, com um interior neogótico deslumbrante e a famosa escadaria vermelha.",
       descriptionDe: "Eine der schönsten Buchhandlungen der Welt mit beeindruckendem neogotischem Interieur und der berühmten purpurroten Treppe.",
       descriptionEs: "Una de las librerías más hermosas del mundo, con un impresionante interior neogótico y la famosa escalera carmesí.",
-      descriptionFr: "L'une des plus belles librairies du monde, avec un superbe intérieur néogothique et son célèbre escalier cramoisi." },
+      descriptionFr: "L'une des plus belles librairies du monde, avec un superbe intérieur néogothique et son célèbre escalier cramoisi.",
+      long_description: "Livraria Lello opened in 1906 and has been called the most beautiful bookshop on Earth — a hyperbolic claim that holds up the second you walk in. The neo-Gothic facade conceals a small two-storey interior dominated by a curving crimson wooden staircase, ornate plasterwork, and a stained-glass skylight that floods the space with diffused light. J.K. Rowling lived in Porto in the early 90s, and while she's denied direct inspiration for Hogwarts, the resemblance is hard to unsee.\n\nFor portraits the staircase is THE shot — but it's also the busiest 3 square meters in Portugal. Photographers who've worked here recommend the very first slot when doors open or the last hour before closing, when the line dies down. The upper landing offers a wide composition framing the whole staircase below; the bottom step looking up at the skylight gives a different magic. The stained-glass ceiling gives the entire interior a soft warm cast that's flattering on skin. Wear deep navy, emerald, burgundy, or black — anything mid-tone earthy fights the saturated red of the woodwork.\n\nPractical: requires a pre-booked time-slot ticket (€8, deductible from any book purchase) — without it you don't get in, period. Tickets sell out same-day in summer; book the night before via the official site. Photography is permitted but tripods and flash are banned; a fast lens (f/1.8 or wider) handles the dim interior. Allow 25 minutes inside max — staff are professionals at moving people along.",
+      coordinates: { lat: 41.1469, lng: -8.6147 },
+      images: [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Interior_view_of_Livraria_Lello_04.jpg/1920px-Interior_view_of_Livraria_Lello_04.jpg", attribution: "John Samuel", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Interior_view_of_Livraria_Lello_04.jpg", alt: "Livraria Lello interior — the red staircase", width: 1920, height: 1280 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Interior_view_of_Livraria_Lello_06.jpg/1920px-Interior_view_of_Livraria_Lello_06.jpg", attribution: "John Samuel", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Interior_view_of_Livraria_Lello_06.jpg", alt: "Livraria Lello upper landing", width: 1920, height: 1280 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Interior_view_of_Livraria_Lello_09.jpg/1920px-Interior_view_of_Livraria_Lello_09.jpg", attribution: "John Samuel", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Interior_view_of_Livraria_Lello_09.jpg", alt: "Livraria Lello stained-glass ceiling", width: 1920, height: 1280 },
+      ],
+    },
     { name: "Sao Bento Station", namePt: "Estação de São Bento", nameDe: "Bahnhof São Bento", nameEs: "Estación de São Bento", nameFr: "Gare de São Bento",
       description: "A railway station adorned with over 20,000 hand-painted azulejo tiles depicting Portuguese history — a unique indoor backdrop.",
       descriptionPt: "Uma estação ferroviária decorada com mais de 20 000 azulejos pintados à mão que retratam a história portuguesa — um cenário interior único.",
@@ -139,13 +263,29 @@ export const photoSpots: Record<string, PhotoSpot[]> = {
       descriptionPt: "Um castelo romântico em vermelho e amarelo vivos, no topo de uma colina enevoada, rodeado por jardins encantados — pura magia de conto de fadas.",
       descriptionDe: "Ein romantizistisches Schloss in leuchtendem Rot und Gelb auf einem nebligen Hügel, umgeben von verwunschenen Gärten — reine Märchenmagie.",
       descriptionEs: "Un castillo romántico en vivos tonos rojo y amarillo encaramado en una colina brumosa, rodeado de jardines encantados — pura magia de cuento de hadas.",
-      descriptionFr: "Un château romantique aux teintes rouges et jaunes éclatantes perché sur une colline brumeuse, entouré de jardins enchantés — une pure magie de conte de fées." },
+      descriptionFr: "Un château romantique aux teintes rouges et jaunes éclatantes perché sur une colline brumeuse, entouré de jardins enchantés — une pure magie de conte de fées.",
+      long_description: "Pena Palace sits atop the Sintra mountains as Portugal's most photographed castle — a riot of yellow, red, and lilac walls in the Romantic style that made 19th-century king Ferdinand II's architectural fantasy world-famous. The drive up winds through the misty Sintra-Cascais Natural Park, and as you round the final bend the palace appears like something out of a children's book.\n\nFor couples and family shoots, the colourful exterior walls are the obvious draw — soft early-morning light hits the yellow tower from the east, while late afternoon gives the red dome golden warmth. The ornate Triton Gateway and the upper terrace facing the gardens both work as compact photo zones with minimal tourist traffic. Inside, photography is restricted to the courtyards. Wear something that contrasts with the bold colours — soft creams, sage, or denim — saturated outfits compete with the architecture.\n\nPractical notes: tickets are €14 (gardens-only €7.50); expect crowds 11am–3pm. Photographers usually book the 8–9am slot when the gates open, or the final hour before sunset. The 3km hike up from Sintra village is doable but most clients prefer a taxi or pre-booked driver — €15 each way. Mist below 800m is common and unpredictable; if you see fog, embrace it — the moody shots are often the best.",
+      coordinates: { lat: 38.7876, lng: -9.3905 },
+      images: [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/7/74/Sintra_Portugal_Pal%C3%A1cio_da_Pena-01.jpg", attribution: "CEphoto, Uwe Aranas", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Sintra_Portugal_Pal%C3%A1cio_da_Pena-01.jpg", alt: "Pena Palace, Sintra — full façade", width: 3500, height: 2333 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Pena_Palace%2C_Sintra%2C_Portugal%2C_20250606_1031_9983.jpg/1920px-Pena_Palace%2C_Sintra%2C_Portugal%2C_20250606_1031_9983.jpg", attribution: "Jakub Hałun", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Pena_Palace%2C_Sintra%2C_Portugal%2C_20250606_1031_9983.jpg", alt: "Pena Palace yellow tower close-up", width: 1920, height: 1281 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Pena_Palace_Clocktower.jpg/1920px-Pena_Palace_Clocktower.jpg", attribution: "Marcelpb 12", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Pena_Palace_Clocktower.jpg", alt: "Pena Palace clocktower, vertical view", width: 1080, height: 1920 },
+      ],
+    },
     { name: "Quinta da Regaleira", namePt: "Quinta da Regaleira", nameDe: "Quinta da Regaleira", nameEs: "Quinta da Regaleira", nameFr: "Quinta da Regaleira",
       description: "Mystical estate with the famous Initiation Well, underground tunnels, grottoes, and lush gardens that feel like a fantasy world.",
       descriptionPt: "Uma propriedade mística com o famoso Poço Iniciático, túneis subterrâneos, grutas e jardins exuberantes que parecem saídos de um mundo de fantasia.",
       descriptionDe: "Ein mystisches Anwesen mit dem berühmten Initiationsbrunnen, unterirdischen Tunneln, Grotten und üppigen Gärten — wie aus einer Fantasywelt.",
       descriptionEs: "Una finca mística con el famoso Pozo Iniciático, túneles subterráneos, grutas y jardines exuberantes que parecen sacados de un mundo de fantasía.",
-      descriptionFr: "Un domaine mystique avec le célèbre Puits initiatique, des tunnels souterrains, des grottes et des jardins luxuriants dignes d'un monde de fantaisie." },
+      descriptionFr: "Un domaine mystique avec le célèbre Puits initiatique, des tunnels souterrains, des grottes et des jardins luxuriants dignes d'un monde de fantaisie.",
+      long_description: "Quinta da Regaleira is a 4-hectare neo-Manueline estate built between 1904 and 1910 by an eccentric Brazilian millionaire and his Italian architect — and it shows. The grounds hide a network of grottoes, lakes, towers, and the headline-grabbing Initiation Well: a 27m-deep inverted spiral staircase descending into the rock, originally used in Masonic rituals.\n\nFor photoshoots this is one of Portugal's richest single locations because variety is built in. The well delivers its iconic top-down spiral shot (need to arrive early or it's queue-only). The Patamar dos Deuses terrace and the chapel facade work as romantic backdrops with directional afternoon light. The grottoes and lakeside paths give a moody, fairytale-forest feel — bring a flash for the cave sections. Wear earth tones (rust, olive, deep green) — they harmonise with the moss and stonework rather than clash.\n\nPractical: ticket €13, opens 09:30. The well is the bottleneck — go straight there on entry, before tour groups arrive. Shoots after 11am have noticeably more people and limited control over the spiral shot. Allow 90 minutes for a proper session — the estate is bigger than it looks. Tripods are technically not allowed inside the well and grottoes; handheld + a fast lens works best. Combine with Pena Palace in the morning for a full Sintra day.",
+      coordinates: { lat: 38.7967, lng: -9.3961 },
+      images: [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Quinta_da_Regaleira_Initiation_Well_Top-Down_%2848680309187%29.jpg/1920px-Quinta_da_Regaleira_Initiation_Well_Top-Down_%2848680309187%29.jpg", attribution: "Ji Soo Song", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Quinta_da_Regaleira_Initiation_Well_Top-Down_(48680309187).jpg", alt: "Initiation Well — top-down spiral", width: 1920, height: 2532 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Quinta_da_Regaleira_Initiation_Well_Bottom-Up_%2848680367447%29.jpg/1920px-Quinta_da_Regaleira_Initiation_Well_Bottom-Up_%2848680367447%29.jpg", attribution: "Ji Soo Song", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Quinta_da_Regaleira_Initiation_Well_Bottom-Up_(48680367447).jpg", alt: "Initiation Well — view from bottom up", width: 1920, height: 2398 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Initiation_Well_in_Quinta_da_Regaleira_-_Sintra_%2816277476688%29.jpg", attribution: "Glyn Lowe", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Initiation_Well_in_Quinta_da_Regaleira_-_Sintra_(16277476688).jpg", alt: "Initiation Well moss-covered staircase", width: 1024, height: 684 },
+      ],
+    },
     { name: "National Palace", namePt: "Palácio Nacional de Sintra", nameDe: "Nationalpalast von Sintra", nameEs: "Palacio Nacional de Sintra", nameFr: "Palais national de Sintra",
       description: "The medieval royal palace in the heart of Sintra village, with its distinctive twin conical chimneys and ornate Moorish interiors.",
       descriptionPt: "O palácio real medieval no centro de Sintra, com as suas distintivas chaminés cónicas gémeas e interiores ornamentados de influência mourisca.",
@@ -160,7 +300,13 @@ export const photoSpots: Record<string, PhotoSpot[]> = {
       descriptionFr: "Un palais exotique du XIXe siècle aux influences mauresques, gothiques et indiennes, niché dans de romantiques jardins botaniques aux espèces rares." },
   ],
   algarve: [
-    { name: "Benagil Cave", namePt: "Gruta de Benagil", nameDe: "Benagil-Höhle", nameEs: "Cueva de Benagil", nameFr: "Grotte de Benagil",
+    { name: "Benagil Cave", namePt: "Gruta de Benagil", nameDe: "Benagil-Höhle", nameEs: "Cueva de Benagil", nameFr: "Grotte de Benagil", coordinates: { lat: 37.0894, lng: -8.4258 },
+      long_description: "Benagil Cave is the Algarve's signature image — a vast natural sea cave carved into the limestone cliffs near Lagoa, with two arched entrances open to the ocean and a perfect circular skylight overhead. Sunlight pours through the oculus onto the small sandy beach inside, creating the surreal cathedral effect that put this single cave on every Portugal travel feed.\n\nFor photoshoots this is logistically the hardest spot on Photo Portugal — and the most rewarding. You can't reach the interior on foot. Options: kayak (40-min paddle round-trip from Benagil beach, €25/person rental), SUP, organised boat tour (drops you for 5–10 minutes inside, €25–35), or swimming from the beach when sea conditions allow (technically risky, no longer encouraged). Most photographers do the kayak option — slower, but you control how long you stay, you can get out on the small inner beach, and the dawn light through the oculus is otherworldly. Wear what you'd swim in; everything will get wet.\n\nPractical: best season May–September, calm seas. Inside the cave the morning sun (8–10am) hits the inner beach directly through the oculus; midday the light is overhead and harsh; afternoon goes flat as the sun moves west. Book any kayak/boat at least 2 days ahead in summer. Bring waterproof bag for camera. Combine with the cliff-top Algar de Benagil viewpoint (small inland walk to a fence overlooking the oculus from above — different but also iconic). The closest base is Carvoeiro or Albufeira; Lagos is 40 minutes by car.",
+      images: [
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Benagil_Cave_%283%29.jpg/1920px-Benagil_Cave_%283%29.jpg", attribution: "Joseolgon", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Benagil_Cave_(3).jpg", alt: "Benagil Cave interior with sun through oculus", width: 1920, height: 1280 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Benagil_Cave_%288%29.jpg/1920px-Benagil_Cave_%288%29.jpg", attribution: "Joseolgon", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:Benagil_Cave_(8).jpg", alt: "Benagil Cave seen from the water", width: 1920, height: 1280 },
+        { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/004_Tourist_reading_information_signs_about_rockfall_danger_and_cave_swimming_danger_in_Benagil_Beach%2C_Algarve%2C_Portugal.jpg/1920px-004_Tourist_reading_information_signs_about_rockfall_danger_and_cave_swimming_danger_in_Benagil_Beach%2C_Algarve%2C_Portugal.jpg", attribution: "Marek Slusarczyk", source: "wikimedia", source_url: "https://commons.wikimedia.org/wiki/File:004_Tourist_reading_information_signs_about_rockfall_danger_and_cave_swimming_danger_in_Benagil_Beach,_Algarve,_Portugal.jpg", alt: "Benagil beach exterior", width: 1920, height: 1280 },
+      ],
       description: "A stunning sea cave with a natural skylight opening to the sky above a hidden beach — one of Portugal's most photographed natural wonders.",
       descriptionPt: "Uma deslumbrante gruta marinha com uma clarabóia natural que se abre para o céu sobre uma praia escondida — uma das maravilhas naturais mais fotografadas de Portugal.",
       descriptionDe: "Eine atemberaubende Meereshöhle mit einer natürlichen Öffnung zum Himmel über einem versteckten Strand — eines der meistfotografierten Naturwunder Portugals.",

@@ -167,8 +167,8 @@ Photo Portugal is an online marketplace that connects travelers visiting Portuga
 - A small service fee is added at checkout
 - Photographers can join free or subscribe to Pro/Premium plans for better visibility
 
-## Concierge Matching (free)
-Travelers can describe what they want (location, date, occasion, budget) at https://photoportugal.com/find-photographer and the Photo Portugal team hand-picks 2-3 photographers who fit, free of charge.
+## AI Concierge Matching (free)
+Travelers can describe what they want (location, date, occasion, budget) to our AI Concierge at https://photoportugal.com/concierge and get 2-3 hand-picked photographers who fit, instantly, free of charge.
 
 ## Location Coverage
 ${locationCoverageText}
@@ -199,7 +199,7 @@ ${locations.map((l) => `${l.name} (${l.slug})`).join(", ")}
 - Browse photographers: https://photoportugal.com/photographers
 - Browse locations: https://photoportugal.com/locations
 - Browse photoshoot types: https://photoportugal.com/photoshoots
-- Find a photographer (concierge): https://photoportugal.com/find-photographer
+- AI Concierge (find a photographer): https://photoportugal.com/concierge
 - How it works: https://photoportugal.com/how-it-works
 - Pricing (photographers): https://photoportugal.com/for-photographers/pricing
 - Blog: https://photoportugal.com/blog

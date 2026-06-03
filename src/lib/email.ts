@@ -20,6 +20,22 @@ const transporter = nodemailer.createTransport({
 const FROM = "Photo Portugal <info@photoportugal.com>";
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
+// Kate's personal-tone emails (e.g. social-permission ask after delivery)
+// send from ceo@photoportugal.com so replies come back to her directly.
+// Separate transporter because it authenticates against a different
+// mailbox than the platform's info@ account.
+const ceoTransporter = process.env.SMTP_CEO_PASS
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.migadu.com",
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: {
+        user: process.env.SMTP_CEO_USER || "ceo@photoportugal.com",
+        pass: process.env.SMTP_CEO_PASS,
+      },
+    })
+  : null;
+
 export async function getAdminEmail(): Promise<string> {
   try {
     const setting = await queryOne<{ value: string }>(
@@ -188,12 +204,76 @@ export async function sendBookingNotification(
   photographerName: string,
   clientName: string,
   packageName: string | null,
-  shootDate: string | null
+  shootDate: string | null,
+  conciergeChatId?: string | null,
+  bookingId?: string | null
 ) {
+  // The concierge_chat_id is written to bookings AFTER this email
+  // fires (the attribution lookup is fire-and-forget). To still
+  // include the concierge context, we re-query the booking by id
+  // after a short delay if we have a bookingId and no chatId yet —
+  // gives the attribution writer a chance to land first.
+  if (!conciergeChatId && bookingId) {
+    const { queryOne } = await import("@/lib/db");
+    // Two short attempts spaced 800ms apart. The attribution write
+    // typically lands within ~50-200ms; we wait a moment to give it
+    // room. If it never lands, we just send the plain notification.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const row = await queryOne<{ concierge_chat_id: string | null }>(
+        "SELECT concierge_chat_id FROM bookings WHERE id = $1",
+        [bookingId]
+      ).catch(() => null);
+      if (row?.concierge_chat_id) {
+        conciergeChatId = row.concierge_chat_id;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  }
   const { getUserLocaleByEmail, pickT, localizedUrl } = await import("@/lib/email-locale");
   const locale = await getUserLocaleByEmail(photographerEmail);
   shootDate = formatShootDate(shootDate, locale);
   const clientFirstName = clientName.split(" ")[0];
+
+  // Concierge attribution — when the booking came from a Lens chat, we
+  // surface what the visitor originally asked for so the photographer's
+  // first reply can be context-aware. A short, redacted excerpt; no
+  // attempt to summarise — the raw words are more useful for a human
+  // reading the email.
+  let conciergeBlockHtml = "";
+  if (conciergeChatId) {
+    try {
+      const { queryOne } = await import("@/lib/db");
+      const row = await queryOne<{ messages: Array<{ role: string; content: string }>; source_chip: string | null }>(
+        "SELECT messages, source_chip FROM concierge_chats WHERE id = $1",
+        [conciergeChatId]
+      );
+      if (row?.messages) {
+        const firstUserMsg = row.messages.find((m) => m.role === "user")?.content?.trim() || "";
+        if (firstUserMsg) {
+          const heading = pickT({
+            en: "From Lens (our AI Concierge) — the visitor's original ask:",
+            pt: "Do Lens (o nosso AI Concierge) — pedido original do visitante:",
+            de: "Von Lens (unser AI Concierge) — die ursprüngliche Anfrage:",
+            es: "De Lens (nuestro AI Concierge) — petición original del visitante:",
+            fr: "De Lens (notre AI Concierge) — demande initiale du visiteur :",
+          }, locale);
+          const safe = firstUserMsg.slice(0, 400).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          const chipLine = row.source_chip ? `<br /><span style="font-size:12px;color:#9aa1a8;">(Started via: ${row.source_chip.replace(/</g, "&lt;").replace(/>/g, "&gt;")})</span>` : "";
+          conciergeBlockHtml = `
+            <div style="margin:16px 0;padding:14px 16px;border-left:3px solid #C94536;background:#FAF7F2;border-radius:6px;">
+              <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#1F1F1F;">${heading}</p>
+              <p style="margin:0;font-size:14px;line-height:1.55;color:#4A4A4A;font-style:italic;">"${safe}"</p>
+              ${chipLine}
+            </div>
+          `;
+        }
+      }
+    } catch {
+      // Best-effort enrichment — if the lookup fails, just send the
+      // standard notification without the concierge context block.
+    }
+  }
 
   const T = pickT({
     en: { subject: `New booking request from ${clientFirstName}`, h2: "New Booking Request", greeting: `Hi ${photographerName},`, body: `<strong>${clientFirstName}</strong> has requested a photoshoot${packageName ? ` (${packageName})` : ""}${shootDate ? ` on ${shootDate}` : ""}.`, cta: "View Booking" },
@@ -210,6 +290,7 @@ export async function sendBookingNotification(
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
+      ${conciergeBlockHtml}
       ${emailButton(localizedUrl("/dashboard/bookings", locale, BASE_URL), T.cta)}
     `, locale)
   );
@@ -394,7 +475,7 @@ export async function sendBookingConfirmationWithPayment(
       payNow: (priceStr: string) => `Pay Now — ${priceStr}`,
       viewBooking: "View Booking",
       deadlineLabel: "⏰ Important — your slot is held for 24 hours.",
-      deadlineBody: `Payment guarantees your slot. ${photographerName} is holding this time for you, but if payment is not received within 24 hours, the booking will be automatically cancelled and the slot released to other clients.`,
+      deadlineBody: `Payment guarantees your slot. ${photographerName} is holding this time for you, but if payment is not received within 24 hours, the booking will be automatically cancelled and the slot released to other clients. Your slot only locks in once payment clears — until then another client paying first could take the date.`,
       tipLabel: "Tip:",
       tip: "We also recommend messaging your photographer to discuss meeting point, outfit ideas, and any special requests.",
       cta: "Open Messages",
@@ -409,7 +490,7 @@ export async function sendBookingConfirmationWithPayment(
       payNow: (priceStr: string) => `Pagar Agora — ${priceStr}`,
       viewBooking: "Ver Reserva",
       deadlineLabel: "⏰ Importante — o seu horário está reservado por 24 horas.",
-      deadlineBody: `O pagamento garante o seu horário. ${photographerName} está a reservar este tempo para si, mas se o pagamento não for recebido em 24 horas, a reserva será automaticamente cancelada e o horário libertado para outros clientes.`,
+      deadlineBody: `O pagamento garante o seu horário. ${photographerName} está a reservar este tempo para si, mas se o pagamento não for recebido em 24 horas, a reserva será automaticamente cancelada e o horário libertado para outros clientes. O seu lugar só fica reservado depois do pagamento — até lá, outro cliente que pagar primeiro pode levar essa data.`,
       tipLabel: "Dica:",
       tip: "Recomendamos também enviar uma mensagem ao seu fotógrafo para combinar o ponto de encontro, ideias de outfit e quaisquer pedidos especiais.",
       cta: "Abrir Mensagens",
@@ -424,7 +505,7 @@ export async function sendBookingConfirmationWithPayment(
       payNow: (priceStr: string) => `Jetzt bezahlen — ${priceStr}`,
       viewBooking: "Buchung anzeigen",
       deadlineLabel: "⏰ Wichtig — Ihr Termin ist 24 Stunden reserviert.",
-      deadlineBody: `Die Zahlung sichert Ihren Termin. ${photographerName} hält diese Zeit für Sie frei, aber wenn die Zahlung nicht innerhalb von 24 Stunden eingeht, wird die Buchung automatisch storniert und der Termin für andere Kunden freigegeben.`,
+      deadlineBody: `Die Zahlung sichert Ihren Termin. ${photographerName} hält diese Zeit für Sie frei, aber wenn die Zahlung nicht innerhalb von 24 Stunden eingeht, wird die Buchung automatisch storniert und der Termin für andere Kunden freigegeben. Ihr Slot wird erst nach erfolgter Zahlung gesperrt — bis dahin könnte ein anderer Kunde, der zuerst bezahlt, das Datum übernehmen.`,
       tipLabel: "Tipp:",
       tip: "Wir empfehlen, Ihrem Fotografen eine Nachricht zu senden, um Treffpunkt, Outfit-Ideen und Sonderwünsche zu besprechen.",
       cta: "Nachrichten öffnen",
@@ -439,7 +520,7 @@ export async function sendBookingConfirmationWithPayment(
       payNow: (priceStr: string) => `Payer maintenant — ${priceStr}`,
       viewBooking: "Voir la réservation",
       deadlineLabel: "⏰ Important — votre créneau est réservé pendant 24 heures.",
-      deadlineBody: `Le paiement garantit votre créneau. ${photographerName} réserve ce moment pour vous, mais si le paiement n'est pas reçu dans les 24 heures, la réservation sera automatiquement annulée et le créneau libéré pour d'autres clients.`,
+      deadlineBody: `Le paiement garantit votre créneau. ${photographerName} réserve ce moment pour vous, mais si le paiement n'est pas reçu dans les 24 heures, la réservation sera automatiquement annulée et le créneau libéré pour d'autres clients. Votre créneau n'est verrouillé qu'après le paiement — jusque-là, un autre client qui paie en premier pourrait prendre la date.`,
       tipLabel: "Astuce :",
       tip: "Nous recommandons aussi d'envoyer un message à votre photographe pour discuter du point de rencontre, des idées de tenue et de toute demande spéciale.",
       cta: "Ouvrir les messages",
@@ -454,7 +535,7 @@ export async function sendBookingConfirmationWithPayment(
       payNow: (priceStr: string) => `Pagar ahora — ${priceStr}`,
       viewBooking: "Ver reserva",
       deadlineLabel: "⏰ Importante — su horario está reservado por 24 horas.",
-      deadlineBody: `El pago garantiza su horario. ${photographerName} está reservando este tiempo para usted, pero si no se recibe el pago en 24 horas, la reserva se cancelará automáticamente y el horario quedará disponible para otros clientes.`,
+      deadlineBody: `El pago garantiza su horario. ${photographerName} está reservando este tiempo para usted, pero si no se recibe el pago en 24 horas, la reserva se cancelará automáticamente y el horario quedará disponible para otros clientes. Su plaza solo queda reservada una vez completado el pago — hasta entonces, otro cliente que pague antes podría llevarse la fecha.`,
       tipLabel: "Consejo:",
       tip: "Le recomendamos también enviar un mensaje a su fotógrafo para acordar el punto de encuentro, ideas de outfit y cualquier petición especial.",
       cta: "Abrir mensajes",
@@ -1282,6 +1363,7 @@ export async function sendPaymentReminderToClient(
       greeting: `Hi ${firstName},`,
       body1: `<strong>${photographerName}</strong> is holding your photoshoot slot, but we haven't received payment yet.`,
       body2: `Payment guarantees your slot. If we don't receive it within the next ~18 hours, your booking will be automatically cancelled and the slot released to other clients.`,
+      body3: `Slot still held — pay to lock it in before another client does. The calendar only blocks the date once your payment clears.`,
       payNow: `Pay Now — ${priceStr}`,
       viewBooking: "View Booking",
     },
@@ -1291,6 +1373,7 @@ export async function sendPaymentReminderToClient(
       greeting: `Olá ${firstName},`,
       body1: `<strong>${photographerName}</strong> está a reservar o seu horário, mas ainda não recebemos o pagamento.`,
       body2: `O pagamento garante o seu horário. Se não o recebermos nas próximas ~18 horas, a sua reserva será automaticamente cancelada e o horário libertado para outros clientes.`,
+      body3: `O horário ainda está reservado — pague para o garantir antes que outro cliente o faça. A data só fica bloqueada no calendário depois do pagamento confirmado.`,
       payNow: `Pagar agora — ${priceStr}`,
       viewBooking: "Ver reserva",
     },
@@ -1300,6 +1383,7 @@ export async function sendPaymentReminderToClient(
       greeting: `Hallo ${firstName},`,
       body1: `<strong>${photographerName}</strong> hält Ihren Termin frei, aber wir haben die Zahlung noch nicht erhalten.`,
       body2: `Die Zahlung sichert Ihren Termin. Wenn wir sie nicht innerhalb der nächsten ~18 Stunden erhalten, wird Ihre Buchung automatisch storniert und der Termin für andere Kunden freigegeben.`,
+      body3: `Der Termin ist weiterhin reserviert — bezahlen Sie jetzt, bevor ein anderer Kunde dies tut. Das Datum wird erst nach Zahlungseingang im Kalender gesperrt.`,
       payNow: `Jetzt bezahlen — ${priceStr}`,
       viewBooking: "Buchung anzeigen",
     },
@@ -1309,6 +1393,7 @@ export async function sendPaymentReminderToClient(
       greeting: `Hola ${firstName},`,
       body1: `<strong>${photographerName}</strong> está reservando su horario, pero aún no hemos recibido el pago.`,
       body2: `El pago garantiza su horario. Si no lo recibimos en las próximas ~18 horas, su reserva se cancelará automáticamente y el horario quedará disponible para otros clientes.`,
+      body3: `La plaza sigue reservada — pague para asegurarla antes de que otro cliente lo haga. La fecha solo se bloquea en el calendario cuando se confirma el pago.`,
       payNow: `Pagar ahora — ${priceStr}`,
       viewBooking: "Ver reserva",
     },
@@ -1318,6 +1403,7 @@ export async function sendPaymentReminderToClient(
       greeting: `Bonjour ${firstName},`,
       body1: `<strong>${photographerName}</strong> réserve votre créneau, mais nous n'avons pas encore reçu le paiement.`,
       body2: `Le paiement garantit votre créneau. Si nous ne le recevons pas dans les ~18 prochaines heures, votre réservation sera automatiquement annulée et le créneau libéré pour d'autres clients.`,
+      body3: `Le créneau est toujours réservé — payez pour le verrouiller avant qu'un autre client ne le fasse. La date n'est bloquée dans l'agenda qu'une fois le paiement confirmé.`,
       payNow: `Payer maintenant — ${priceStr}`,
       viewBooking: "Voir la réservation",
     },
@@ -1335,6 +1421,7 @@ export async function sendPaymentReminderToClient(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.greeting}</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body1}</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
+      <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#B45309;font-weight:600;">⏳ ${T.body3}</p>
       ${ctaSection}
     `, locale)
   );
@@ -1641,6 +1728,76 @@ export function renderTrustpilotFollowUpToPhotographer(
   };
 }
 
+/** Concierge "your matches" 24h follow-up. Sent to visitors who chatted
+ *  with Lens, got photographer matches, gave us their email, but never
+ *  came back. Recap of the same matches so they don't have to dig
+ *  through the chat. Cron: src/app/api/cron/reminders/route.ts §4d. */
+export function renderConciergeMatchesFollowUp(
+  firstName: string | null,
+  photographers: Array<{
+    name: string;
+    slug: string;
+    cover_url: string | null;
+    min_price: number | null;
+    top_locations: string[];
+  }>,
+  chatId: string,
+): { subject: string; html: string } {
+  const greet = (firstName || "").trim() || "there";
+  const conciergeUrl = `${BASE_URL}/concierge?chat=${encodeURIComponent(chatId)}`;
+  const cards = photographers.slice(0, 4).map((p) => {
+    const profileUrl = `${BASE_URL}/photographers/${p.slug}`;
+    const cover = p.cover_url
+      ? `<img src="${p.cover_url}" alt="" width="520" style="display:block;width:100%;max-width:520px;height:auto;border-radius:12px 12px 0 0;" />`
+      : "";
+    const loc = p.top_locations.slice(0, 2).join(" · ");
+    const price = p.min_price ? `From €${Math.round(p.min_price)}` : "";
+    return `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0;border:1px solid #F3EDE6;border-radius:12px;overflow:hidden;">
+        <tr><td>${cover}</td></tr>
+        <tr><td style="padding:14px 16px;">
+          <div style="font-size:16px;font-weight:700;color:#1F1F1F;">${p.name}</div>
+          <div style="margin-top:4px;font-size:13px;color:#6B6056;">${loc}${loc && price ? " · " : ""}${price}</div>
+          <div style="margin-top:12px;">
+            <a href="${profileUrl}" style="color:#C94536;font-weight:600;text-decoration:none;font-size:14px;">View profile →</a>
+          </div>
+        </td></tr>
+      </table>`;
+  }).join("");
+  return {
+    subject: "Your Photo Portugal matches",
+    html: emailLayout(`
+      <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">Hey ${greet}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Yesterday our concierge put together a shortlist for you. Here it is again so you don't have to dig through the chat — tap any photographer to see their full profile and book directly.</p>
+      ${cards}
+      ${emailButton(conciergeUrl, "Reopen your chat")}
+      <p style="margin:16px 0 0;font-size:13px;color:#9B8E82;line-height:1.5;">Prefer to talk to a real person? Just reply to this email — we read every one.</p>
+    `),
+  };
+}
+
+/** Soft "ready to book?" nudge for concierge-sourced inquiries that
+ *  haven't reached the checkout step within 24h. Different tone from
+ *  the firm payment-reminder cascade (which only kicks in once status
+ *  hits 'confirmed' and a payment URL exists). Cron: §1d. */
+export function renderReadyToBookNudge(
+  firstName: string | null,
+  photographerName: string,
+  threadUrl: string,
+): { subject: string; html: string } {
+  const greet = (firstName || "").trim() || "there";
+  return {
+    subject: `Still thinking about your shoot with ${photographerName}?`,
+    html: emailLayout(`
+      <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">Hey ${greet}</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">You started a chat with <strong>${photographerName}</strong> yesterday on Photo Portugal — looks like you didn't finish picking a date.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4A;">No rush, but if you're still up for it, jump back into the conversation and they can confirm availability + send you a quick booking link.</p>
+      ${emailButton(threadUrl, "Open the chat")}
+      <p style="margin:16px 0 0;font-size:13px;color:#9B8E82;line-height:1.5;">Questions? Just reply to this email.</p>
+    `),
+  };
+}
+
 // === Additional notifications ===
 
 export async function sendAdminBookingConfirmedNotification(
@@ -1827,4 +1984,51 @@ export async function sendReviewApprovedToPhotographer(
       ${emailButton(`${BASE_URL}/photographers/${profileSlug}#reviews`, "View on Your Profile")}
     `)
   );
+}
+
+// Kate's personal-tone ask sent ~48h after the client accepts delivery.
+// Always English (Kate's call). Sends from ceo@photoportugal.com so the
+// reply lands in her mailbox, not the shared support inbox.
+export async function sendSocialPermissionEmail(
+  to: string,
+  firstName: string,
+  photographerName: string,
+  location: string | null,
+) {
+  if (!ceoTransporter) {
+    console.log(`[email] SMTP_CEO_PASS not set, skipping social-permission email → ${to}`);
+    return;
+  }
+  const safeFirst = String(firstName || "there").replace(/[<>]/g, "");
+  const safePhotog = String(photographerName || "your photographer").replace(/[<>]/g, "");
+  const safeLoc = location ? String(location).replace(/[<>]/g, "") : null;
+  const locationPhrase = safeLoc ? ` in <strong>${safeLoc}</strong>` : "";
+
+  const body = `
+    <p style="margin:0 0 18px;font-size:16px;line-height:1.55;color:#1F1F1F;">Hi ${safeFirst},</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">It's Kate, founder of Photo Portugal. I hope you've been enjoying the photos from your session with <strong>${safePhotog}</strong>${locationPhrase} ✨</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">I'm writing personally because we'd love your permission to feature <strong>a few of your photos</strong> on Photo Portugal's social media (Instagram and our website).</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">We'd choose carefully — only the most natural, tasteful shots, nothing too personal or revealing. You'd see exactly which ones before anything goes live.</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">If that sounds OK, just reply <strong>"yes"</strong> to this email and we'll send you the candidate photos for approval. If not, no problem at all — just reply <strong>"no thanks"</strong> and that's the end of it.</p>
+    <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#2A2A2A;">Either way, thank you for choosing us — hearing that our photographers made your trip a little more memorable is honestly the best part of running this thing.</p>
+    <p style="margin:0;font-size:15px;line-height:1.55;color:#2A2A2A;">Warmly,</p>
+    <p style="margin:4px 0 2px;font-size:15px;line-height:1.4;color:#1F1F1F;font-weight:600;">Kate</p>
+    <p style="margin:0;font-size:13px;line-height:1.4;color:#9B8E82;">Founder · Photo Portugal</p>
+  `;
+
+  const subject = "Could we share one of your photos? 🌸";
+  try {
+    await ceoTransporter.sendMail({
+      from: "Kate Belova <ceo@photoportugal.com>",
+      to,
+      subject,
+      html: emailLayout(body, "en"),
+      replyTo: "ceo@photoportugal.com",
+    });
+    console.log(`[email] Sent social-permission → ${to}`);
+    import("@/lib/notification-log").then(m => m.logNotification("email", to, subject, "sent")).catch(() => {});
+  } catch (err) {
+    console.error(`[email] social-permission failed → ${to}`, err);
+    import("@/lib/notification-log").then(m => m.logNotification("email", to, subject, "failed", undefined, String(err))).catch(() => {});
+  }
 }

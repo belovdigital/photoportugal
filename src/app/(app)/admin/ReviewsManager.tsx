@@ -106,6 +106,7 @@ interface Review {
   photographer_slug: string;
   photographer_id?: string;
   is_approved: boolean;
+  rejected_at?: string | null;
 }
 
 export function ReviewsManager({ initialReviews, photographers }: { initialReviews: Review[]; photographers: { id: string; name: string }[] }) {
@@ -224,7 +225,36 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_approved: approve }),
     });
-    if (res.ok) setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, is_approved: approve } : r)));
+    if (res.ok) setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, is_approved: approve, rejected_at: approve ? null : r.rejected_at } : r)));
+  }
+
+  // Reject: mark as "decided no, do not surface". Distinct from Delete
+  // (which loses the row) and from Unpublish (which puts it back in
+  // pending). Useful for spam / off-topic / bot submissions you want to
+  // keep for audit but never publish.
+  async function handleReject(id: string) {
+    const ok = await confirm(
+      "Reject review",
+      "Mark this review as rejected? It stays in the database for audit but won't show in the pending queue and never goes live.",
+      { danger: true, confirmLabel: "Reject" }
+    );
+    if (!ok) return;
+    const res = await fetch(`/api/reviews/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rejected: true }),
+    });
+    if (res.ok) setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, is_approved: false, rejected_at: new Date().toISOString() } : r)));
+  }
+
+  // Un-reject: pulls the review back into the pending queue.
+  async function handleUnreject(id: string) {
+    const res = await fetch(`/api/reviews/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rejected: false }),
+    });
+    if (res.ok) setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, rejected_at: null } : r)));
   }
 
   function startEdit(r: Review) {
@@ -257,11 +287,20 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
   }
 
   const [showPending, setShowPending] = useState(false);
-  const pendingCount = reviews.filter((r) => !r.is_approved).length;
+  const [showRejected, setShowRejected] = useState(false);
+  // Pending = not approved AND not rejected. Rejected rows have a
+  // decision recorded already and shouldn't clutter the moderation
+  // queue; they live behind their own filter for audit/un-reject.
+  const pendingCount = reviews.filter((r) => !r.is_approved && !r.rejected_at).length;
+  const rejectedCount = reviews.filter((r) => !!r.rejected_at).length;
   const photographerNames = [...new Set(reviews.map((r) => r.photographer_name))].sort();
   const filtered = reviews
     .filter((r) => !filterPhotographer || r.photographer_name === filterPhotographer || r.photographer_id === filterPhotographer)
-    .filter((r) => !showPending || !r.is_approved);
+    .filter((r) => {
+      if (showRejected) return !!r.rejected_at;
+      if (showPending) return !r.is_approved && !r.rejected_at;
+      return !r.rejected_at; // default view hides rejected
+    });
 
   return (
     <div>
@@ -365,14 +404,22 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
             </select>
             {pendingCount > 0 && (
               <button
-                onClick={() => setShowPending(!showPending)}
+                onClick={() => { setShowPending(!showPending); setShowRejected(false); }}
                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${showPending ? "bg-yellow-500 text-white" : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"}`}
               >
                 Pending ({pendingCount})
               </button>
             )}
-            {(filterPhotographer || showPending) && (
-              <button onClick={() => { setFilterPhotographer(""); setShowPending(false); }} className="text-xs text-gray-400 hover:text-gray-600">Clear</button>
+            {rejectedCount > 0 && (
+              <button
+                onClick={() => { setShowRejected(!showRejected); setShowPending(false); }}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${showRejected ? "bg-gray-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              >
+                Rejected ({rejectedCount})
+              </button>
+            )}
+            {(filterPhotographer || showPending || showRejected) && (
+              <button onClick={() => { setFilterPhotographer(""); setShowPending(false); setShowRejected(false); }} className="text-xs text-gray-400 hover:text-gray-600">Clear</button>
             )}
           </div>
           <div className="overflow-x-auto rounded-xl border border-warm-200 bg-white">
@@ -457,8 +504,17 @@ export function ReviewsManager({ initialReviews, photographers }: { initialRevie
                   </td>
                   <td className="px-2 sm:px-4 py-2 sm:py-3">
                     <div className="flex flex-col items-end gap-1">
-                      {!r.is_approved ? (
-                        <button onClick={() => handleApprove(r.id, true)} className="rounded bg-green-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-green-600">Approve</button>
+                      {r.rejected_at ? (
+                        // Rejected — show Restore (un-reject) + Delete.
+                        // Hide Approve here so you don't accidentally
+                        // publish a deliberately-rejected entry without
+                        // going through the queue again.
+                        <button onClick={() => handleUnreject(r.id)} className="rounded bg-warm-100 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-warm-200">Restore to pending</button>
+                      ) : !r.is_approved ? (
+                        <>
+                          <button onClick={() => handleApprove(r.id, true)} className="rounded bg-green-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-green-600">Approve</button>
+                          <button onClick={() => handleReject(r.id)} className="text-[11px] text-amber-700 hover:text-amber-900">Reject</button>
+                        </>
                       ) : (
                         <button onClick={() => handleApprove(r.id, false)} className="text-[10px] text-gray-400 hover:text-yellow-600">Unpublish</button>
                       )}

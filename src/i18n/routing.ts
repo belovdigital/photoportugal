@@ -23,6 +23,18 @@ export const routing = defineRouting({
       es: "/fotografos/[slug]",
       fr: "/photographes/[slug]",
     },
+    // Filtered photographer catalog by location — keeps the literal "location"
+    // segment untranslated so middleware's slug-map redirect (`/photographers`
+    // → `/fotografen` only) stays consistent. Without this entry the sitemap
+    // emits `/de/photographers/location/X` which then 301s to the localized
+    // form, polluting Search Console with thousands of "Page with redirect".
+    "/photographers/location/[slug]": {
+      en: "/photographers/location/[slug]",
+      pt: "/photographers/location/[slug]",
+      de: "/fotografen/location/[slug]",
+      es: "/fotografos/location/[slug]",
+      fr: "/photographes/location/[slug]",
+    },
     "/locations": {
       en: "/locations",
       pt: "/locations",
@@ -43,13 +55,6 @@ export const routing = defineRouting({
       de: "/orte/[slug]/[occasion]",
       es: "/lugares/[slug]/[occasion]",
       fr: "/lieux/[slug]/[occasion]",
-    },
-    "/find-photographer": {
-      en: "/find-photographer",
-      pt: "/find-photographer",
-      de: "/fotografen-finden",
-      es: "/encontrar-fotografo",
-      fr: "/trouver-photographe",
     },
     "/how-it-works": {
       en: "/how-it-works",

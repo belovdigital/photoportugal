@@ -5,6 +5,7 @@ import { locations, locField } from "@/lib/locations-data";
 import { LocationCard } from "@/components/ui/LocationCard";
 import { localeAlternates } from "@/lib/seo";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
 import { locationImage, IMAGE_SIZES } from "@/lib/unsplash-images";
 import { queryOne, query } from "@/lib/db";
 import { ReviewsStrip } from "@/components/ui/ReviewsStrip";
@@ -311,6 +312,10 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(pageJsonLd) }}
       />
+      {/* Visually hidden h1 — the page is map-dominant and an inline
+          heading would compete with the explorer UI, but SEO needs one
+          unambiguous h1 to anchor the page topic. */}
+      <h1 className="sr-only">{pageTitle}</h1>
       <LocationExplorer
         locale={locale}
         mapboxToken={mapboxToken}
@@ -467,12 +472,13 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
             {tt.finalCtaSub}
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/find-photographer"
+            <TrackedConciergeTrigger
+              ctaName="get_matched"
+              location="locations_index_cta"
               className="inline-flex rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white transition hover:bg-primary-700"
             >
               {tt.findCta}
-            </Link>
+            </TrackedConciergeTrigger>
             <Link
               href="/photographers"
               className="inline-flex rounded-xl border border-gray-700 bg-gray-800 px-8 py-4 text-base font-semibold text-white transition hover:bg-gray-700"

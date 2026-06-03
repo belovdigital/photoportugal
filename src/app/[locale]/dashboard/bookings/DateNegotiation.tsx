@@ -48,6 +48,10 @@ export function DateNegotiation({
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const [note, setNote] = useState("");
+
+  // The "Change date" button is now a modal launched from <ChangeDateButton>
+  // inside the Date card. This component only renders the
+  // theyProposed / waitingForThem accept/decline panels.
   const [loading, setLoading] = useState(false);
 
   const myRole = isPhotographer ? "photographer" : "client";
@@ -193,21 +197,12 @@ export function DateNegotiation({
     );
   }
 
-  // Show current date if set
+  // Idle state: the prominent "Change date" CTA lives inside the Date
+  // card up top via <ChangeDateButton>. Here we only render the form
+  // when it's been opened from there (through a CustomEvent), so this
+  // section stays empty until the user actually wants to negotiate.
   return (
-    <div className="mt-2">
-      {shootDate && (
-        <p className="text-xs text-gray-500 mb-1">
-          {td("currentDate")}: <span className="font-medium text-gray-700">{formatDate(shootDate)}</span>
-        </p>
-      )}
-      <button
-        type="button"
-        onClick={() => setShowPropose(!showPropose)}
-        className="text-xs text-primary-600 hover:text-primary-700 font-medium"
-      >
-        {showPropose ? td("hide") : shootDate ? td("changeDateAndTime") : td("proposeDateAndTime")}
-      </button>
+    <div id={`dn-${bookingId}`} className="mt-2">
       {showPropose && proposeForm}
     </div>
   );

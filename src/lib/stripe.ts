@@ -2,7 +2,13 @@ import Stripe from "stripe";
 
 function getStripeClient(): Stripe | null {
   if (!process.env.STRIPE_SECRET_KEY) return null;
-  return new Stripe(process.env.STRIPE_SECRET_KEY);
+  // Pin to acacia. The SDK now defaults to "2026-02-25.clover" which
+  // rebranded `coupon` → `promotion` (and changed it from a string to
+  // a nested object) for `promotion_codes.create`. That broke
+  // createReviewRewardPromoCode and would silently break any other
+  // coupon/promo flow we haven't audited yet. Stay on acacia until we
+  // explicitly migrate every Stripe call to the new schema.
+  return new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-01-27.acacia" as Stripe.LatestApiVersion });
 }
 
 export const stripe = getStripeClient();
@@ -28,7 +34,16 @@ export const PLAN_PRICES: Record<string, number> = {
   premium: 59,
 };
 
-export const SERVICE_FEE_RATE = 0.10; // 10%
+export const SERVICE_FEE_RATE = 0.125; // 12.5%
+
+// Large-group surcharge: 9+ people pay an extra 50% on the package base
+// price. Applied before service fee. Smaller groups (≤8) pay the package
+// price as-is.
+export const LARGE_GROUP_THRESHOLD = 9;
+export const LARGE_GROUP_SURCHARGE_RATE = 0.5;
+export function largeGroupMultiplier(groupSize: number): number {
+  return groupSize >= LARGE_GROUP_THRESHOLD ? 1 + LARGE_GROUP_SURCHARGE_RATE : 1;
+}
 
 /**
  * Calculate payment breakdown

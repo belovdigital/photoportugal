@@ -228,7 +228,7 @@ export function VideoReviewRecorder({
       <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-xl overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
           <h2 className="font-bold text-gray-900">{t("title")}</h2>
-          <button onClick={() => onClose()} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+          <button onClick={() => onClose()} aria-label="Close" className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
         </div>
 
         <div className="p-5">

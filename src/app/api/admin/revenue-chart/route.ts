@@ -61,11 +61,20 @@ export async function GET(req: NextRequest) {
   const spanDays = Math.max(1, Math.ceil((toDate.getTime() - fromDate.getTime()) / 86400000));
   const bucket: Bucket = spanDays <= 90 ? "day" : spanDays <= 365 ? "week" : "month";
 
-  const rows = await query<{ bucket: string; turnover: string; revenue: string; count: string }>(
+  // Two separate revenue streams, both reported per bucket so the
+  // dashboard can chart them side-by-side:
+  //   service_fee — earned at payment_status='paid' (added on top of
+  //     package price, lands in our Stripe immediately).
+  //   platform_fee — earned at delivery_accepted=TRUE (deducted from
+  //     photographer's payout, released when client accepts delivery).
+  // `revenue` is kept as the sum for any consumer that still expects it.
+  const rows = await query<{ bucket: string; turnover: string; service_fee: string; platform_fee: string; revenue: string; count: string }>(
     `SELECT
         DATE_TRUNC($1, b.created_at)::date::text AS bucket,
         COALESCE(SUM(b.total_price), 0) AS turnover,
-        COALESCE(SUM(CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee + b.service_fee ELSE 0 END), 0) AS revenue,
+        COALESCE(SUM(b.service_fee), 0) AS service_fee,
+        COALESCE(SUM(CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee ELSE 0 END), 0) AS platform_fee,
+        COALESCE(SUM(b.service_fee) + SUM(CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee ELSE 0 END), 0) AS revenue,
         COUNT(*) AS count
        FROM bookings b
       WHERE b.payment_status = 'paid'
@@ -78,7 +87,7 @@ export async function GET(req: NextRequest) {
 
   // Fill missing buckets so the chart has contiguous bars.
   const byBucket = new Map(rows.map((r) => [r.bucket, r]));
-  const filled: { day: string; turnover: number; revenue: number; count: number }[] = [];
+  const filled: { day: string; turnover: number; service_fee: number; platform_fee: number; revenue: number; count: number }[] = [];
   const cursor = new Date(fromDate);
   cursor.setUTCHours(0, 0, 0, 0);
   if (bucket === "week") {
@@ -95,6 +104,8 @@ export async function GET(req: NextRequest) {
     filled.push({
       day: key,
       turnover: found ? Number(found.turnover) : 0,
+      service_fee: found ? Number(found.service_fee) : 0,
+      platform_fee: found ? Number(found.platform_fee) : 0,
       revenue: found ? Number(found.revenue) : 0,
       count: found ? Number(found.count) : 0,
     });

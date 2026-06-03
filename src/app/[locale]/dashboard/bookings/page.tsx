@@ -6,6 +6,7 @@ import { ReviewForm } from "@/components/ui/ReviewForm";
 import { PayButton } from "@/components/ui/PayButton";
 import { BookingStatusButtons } from "./BookingStatusButtons";
 import { DateNegotiation } from "./DateNegotiation";
+import { ChangeDateButton } from "./ChangeDateButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { PaymentTracker } from "./PaymentTracker";
 import PaymentCountdown from "./PaymentCountdown";
@@ -93,6 +94,15 @@ export default async function BookingsPage() {
     cancelled_by: string | null;
     cancelled_reason: string | null;
     has_photographer_message: boolean;
+    is_gift?: boolean;
+    gift_recipient_name?: string | null;
+    gift_recipient_phone_visible?: string | null;
+    gift_recipient_email_visible?: string | null;
+    gift_reveal_at?: string | null;
+    gift_reveal_sent_at?: string | null;
+    gift_card_id?: string | null;
+    gift_card_tier?: "express" | "full" | null;
+    viewer_role?: "client" | "gift_buyer" | "gift_recipient" | "photographer";
   }[] = [];
   const stripePaymentSelect = await bookingStripePaymentSelect("b");
   const groupSizeEstimateSelect = await bookingGroupSizeEstimateSelect("b");
@@ -109,6 +119,21 @@ export default async function BookingsPage() {
                   FALSE as has_review, b.delivery_token,
                   COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
                   b.delivery_expires_at,
+                  COALESCE(b.is_gift, FALSE) as is_gift,
+                  b.gift_recipient_name,
+                  -- Recipient WhatsApp/email surface ONLY after reveal — keeps the
+                  -- surprise intact when the buyer asked for a delayed reveal.
+                  CASE WHEN b.gift_reveal_sent_at IS NOT NULL THEN b.gift_recipient_phone END as gift_recipient_phone_visible,
+                  CASE WHEN b.gift_reveal_sent_at IS NOT NULL THEN b.gift_recipient_email END as gift_recipient_email_visible,
+                  b.gift_reveal_at,
+                  b.gift_reveal_sent_at,
+                  -- Gift card redemption (separate from gift-booking above).
+                  -- gift_card_id is set when the recipient redeemed a Photo
+                  -- Portugal gift card on this booking — payout is locked to
+                  -- the tier price and we render a "🎁 Gift Card" tag.
+                  b.gift_card_id,
+                  gc.tier::text as gift_card_tier,
+                  'photographer' as viewer_role,
                   NULL::text as delivery_chat_payload,
                   b.payment_url, b.updated_at, b.confirmed_at,
                   b.cancelled_at, b.cancelled_by, b.cancelled_reason,
@@ -125,6 +150,7 @@ export default async function BookingsPage() {
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            LEFT JOIN packages p ON p.id = b.package_id
+           LEFT JOIN gift_cards gc ON gc.id = b.gift_card_id
            -- Hide cancelled bookings older than 30 days from the
            -- main list (still visible in admin / DB). cancelled_at
            -- is set whenever status flips to 'cancelled'; legacy
@@ -136,6 +162,10 @@ export default async function BookingsPage() {
         );
       }
     } else {
+      // Buyer sees their bookings. Gift recipient sees the booking too
+      // (so they can accept delivery / leave review) — but ONLY after
+      // reveal time, otherwise we'd spoil the surprise by showing the
+      // booking in their dashboard before they got the gift email.
       bookings = await query(
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
                 p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount,
@@ -144,9 +174,15 @@ export default async function BookingsPage() {
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
                 COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
                 b.delivery_expires_at,
-                -- Latest DELIVERY:<count>:<url>:<password> chat payload, used to
-                -- recover the plaintext password (delivery_password is bcrypted)
-                -- and surface a one-click "See Your Photos" button on the card.
+                COALESCE(b.is_gift, FALSE) as is_gift,
+                b.gift_recipient_name,
+                b.gift_card_id,
+                gc.tier::text as gift_card_tier,
+                CASE
+                  WHEN b.client_id = $1 AND b.is_gift = TRUE THEN 'gift_buyer'
+                  WHEN b.gift_recipient_user_id = $1 THEN 'gift_recipient'
+                  ELSE 'client'
+                END as viewer_role,
                 (SELECT m.text FROM messages m
                   WHERE m.booking_id = b.id AND m.text LIKE 'DELIVERY:%'
                   ORDER BY m.created_at DESC LIMIT 1) as delivery_chat_payload,
@@ -157,7 +193,12 @@ export default async function BookingsPage() {
          JOIN photographer_profiles pp ON pp.id = b.photographer_id
          JOIN users u ON u.id = pp.user_id
          LEFT JOIN packages p ON p.id = b.package_id
-         WHERE b.client_id = $1 AND b.status != 'inquiry'
+         LEFT JOIN gift_cards gc ON gc.id = b.gift_card_id
+         WHERE (
+           b.client_id = $1
+           OR (b.gift_recipient_user_id = $1 AND b.gift_reveal_sent_at IS NOT NULL)
+         )
+           AND b.status != 'inquiry'
            AND NOT (b.status = 'cancelled' AND b.cancelled_at IS NOT NULL AND b.cancelled_at < NOW() - INTERVAL '30 days')
          ORDER BY b.created_at DESC`,
         [userId]
@@ -168,7 +209,7 @@ export default async function BookingsPage() {
   // Serialize Date objects to strings (node-postgres returns date columns as Date objects)
   for (const b of bookings) {
     const rec = b as Record<string, unknown>;
-    for (const key of ["shoot_date", "proposed_date", "flexible_date_from", "flexible_date_to", "created_at"]) {
+    for (const key of ["shoot_date", "proposed_date", "flexible_date_from", "flexible_date_to", "created_at", "gift_reveal_at", "gift_reveal_sent_at"]) {
       const val = rec[key];
       if (val && typeof val === "object" && "toISOString" in (val as object)) rec[key] = (val as Date).toISOString();
     }
@@ -185,7 +226,11 @@ export default async function BookingsPage() {
             role="client"
             userId={userId!}
             checks={{
-              avatar: !!user?.avatar_url,
+              // A Google-default avatar isn't really "their photo" — it's
+              // a generic profile pic the photographer can't use to
+               // recognize them. Only treat the step as done when the user
+              // has uploaded an avatar to our own storage (R2).
+              avatar: !!user?.avatar_url && user.avatar_url.includes("files.photoportugal.com"),
               cover: false,
               bio: false,
               portfolio: 0,
@@ -223,6 +268,42 @@ export default async function BookingsPage() {
                     {booking.package_name && (
                       <p className="text-sm text-gray-500">{booking.package_name}</p>
                     )}
+                    {/* Gift badge & framing — three audiences:
+                        - buyer of a gift: "🎁 Gift for X"
+                        - recipient: "🎁 Gift from someone"
+                        - photographer: just "🎁 Gift booking" (the
+                          recipient's identity may still be a surprise) */}
+                    {booking.is_gift && (
+                      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700">
+                        🎁 {booking.viewer_role === "gift_buyer"
+                          ? `Gift for ${booking.gift_recipient_name || "someone"}`
+                          : booking.viewer_role === "gift_recipient"
+                          ? `Gift from ${normalizeName(booking.other_name)}`
+                          : booking.viewer_role === "photographer"
+                          ? (booking.gift_reveal_sent_at
+                              ? `Gift booking — recipient: ${booking.gift_recipient_name || "—"}`
+                              : "Gift booking — recipient details after reveal")
+                          : "Gift booking"}
+                      </p>
+                    )}
+                    {/* Gift CARD redemption tag — separate from gift booking.
+                        A "Gift Card" booking is one where the client paid €0
+                        because they redeemed a Photo Portugal gift card.
+                        Photographer payout is the flat tier amount. */}
+                    {booking.gift_card_id && (
+                      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                        🎁 Gift Card ({booking.gift_card_tier === "express" ? "Express" : booking.gift_card_tier === "full" ? "Full" : "—"})
+                      </p>
+                    )}
+                    {/* Photographer-only: recipient contact line that
+                        appears after gift_reveal_sent_at. Hidden before
+                        so the photographer doesn't ping the recipient
+                        and ruin the surprise. */}
+                    {booking.is_gift && booking.viewer_role === "photographer" && booking.gift_recipient_phone_visible && (
+                      <p className="mt-1 text-[11px] text-gray-500">
+                        WhatsApp: <a href={`https://wa.me/${booking.gift_recipient_phone_visible.replace(/\D/g, "")}`} className="text-primary-600 hover:underline">{booking.gift_recipient_phone_visible}</a>
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -231,6 +312,9 @@ export default async function BookingsPage() {
                   )}
                   {booking.payment_status === "refunded" && (
                     <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">{t("refunded")}</span>
+                  )}
+                  {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && (
+                    <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">⏳ {t("slotNotLockedUntilPaid")}</span>
                   )}
                 </div>
               </div>
@@ -289,25 +373,35 @@ export default async function BookingsPage() {
                     {booking.shoot_time && (
                       <p className="text-xs text-gray-500">{TIME_LABEL_KEYS[booking.shoot_time] ? t(TIME_LABEL_KEYS[booking.shoot_time]) : booking.shoot_time}</p>
                     )}
+                    {/* Inline "Change" button — only when the booking is
+                        still in a state where rescheduling is allowed. */}
+                    {!["cancelled", "completed", "delivered"].includes(booking.status) && (
+                      <ChangeDateButton
+                        bookingId={booking.id}
+                        shootDate={booking.shoot_date}
+                        shootTime={booking.shoot_time}
+                        otherName={normalizeName(booking.other_name).split(" ")[0]}
+                      />
+                    )}
                   </div>
                 )}
                 {booking.total_price && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
                     <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price))}</p>
-                    {booking.stripe_amount_paid_cents !== null && (
+                    {booking.stripe_amount_paid_cents !== null && !isPhotographer && (
                       <p className="text-[10px] font-medium text-green-700">
                         Paid: {formatStripeAmount(booking.stripe_amount_paid_cents, booking.stripe_currency)}
                       </p>
                     )}
-                    {Number(booking.stripe_amount_discount_cents) > 0 && (
+                    {Number(booking.stripe_amount_discount_cents) > 0 && !isPhotographer && (
                       <p className="text-[10px] font-medium text-primary-600">
                         Discount: -{formatStripeAmount(booking.stripe_amount_discount_cents, booking.stripe_currency)}
                         {booking.stripe_promo_code ? ` · ${booking.stripe_promo_code}` : ""}
                       </p>
                     )}
-                    {isPhotographer && (Number(booking.service_fee) > 0 || Number(booking.payout_amount) > 0) && (
-                      <p className="text-[10px] text-gray-400">Fee: &euro;{Math.round(Number(booking.service_fee))} &middot; Payout: &euro;{Math.round(Number(booking.payout_amount))}</p>
+                    {isPhotographer && Number(booking.payout_amount) > 0 && (
+                      <p className="text-[10px] font-medium text-green-700">Payout: &euro;{Math.round(Number(booking.payout_amount))}</p>
                     )}
                   </div>
                 )}
@@ -356,10 +450,18 @@ export default async function BookingsPage() {
               )}
 
               {booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
-                <PaymentCountdown
-                  confirmedAt={booking.confirmed_at || booking.updated_at}
-                  viewerRole={isPhotographer ? "photographer" : "client"}
-                />
+                <>
+                  {!isPhotographer && (
+                    <div className="mt-3 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-3.5 py-2.5 text-sm">
+                      <p className="font-semibold text-amber-900">⏳ {t("slotNotLockedTitle")}</p>
+                      <p className="mt-0.5 text-xs text-amber-800 leading-relaxed">{t("slotLocksExplain")}</p>
+                    </div>
+                  )}
+                  <PaymentCountdown
+                    confirmedAt={booking.confirmed_at || booking.updated_at}
+                    viewerRole={isPhotographer ? "photographer" : "client"}
+                  />
+                </>
               )}
 
               {!["cancelled", "completed", "delivered"].includes(booking.status) && (

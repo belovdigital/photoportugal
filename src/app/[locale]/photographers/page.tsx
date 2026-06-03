@@ -8,6 +8,7 @@ import { query } from "@/lib/db";
 import { localeAlternates } from "@/lib/seo";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
+import { getActiveGiftCard } from "@/lib/gift-card-session";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 // Locales that have translation columns on photographer_profiles + packages.
 const TRANSLATABLE_LOCALES = new Set(["pt", "de", "es", "fr"]);
 
-async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[]> {
+async function getDbPhotographers(locale?: string, giftMode = false): Promise<PhotographerProfile[]> {
   try {
     const useLoc = locale && TRANSLATABLE_LOCALES.has(locale) ? locale : null;
     const taglineSql = useLoc ? `COALESCE(p.tagline_${useLoc}, p.tagline)` : "p.tagline";
@@ -65,6 +66,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.is_approved = TRUE
+         ${giftMode ? "AND COALESCE(p.accepts_gift_cards, TRUE) = TRUE" : ""}
        ORDER BY p.is_featured DESC, p.is_verified DESC, RANDOM()`
     );
 
@@ -181,7 +183,8 @@ export default async function PhotographersPage({
 
   const { location: initialLocation, shoot, shootType } = await searchParams;
   const initialShootType = shoot || shootType;
-  const dbPhotographers = await getDbPhotographers(locale);
+  const giftCard = await getActiveGiftCard();
+  const dbPhotographers = await getDbPhotographers(locale, !!giftCard);
   const quotes = await getOneLinerQuotesForPhotographers(dbPhotographers.map((p) => p.id), locale);
   const resolvedShootType = resolveShootType(initialShootType);
   const localePrefix = locale === "en" ? "" : `/${locale}`;
@@ -207,15 +210,18 @@ export default async function PhotographersPage({
 
   return (
     <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
+    {!giftCard && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />}
+    {/* GiftModeBanner is now rendered globally from /[locale]/layout.tsx
+        so it persists on every page — no inline banner needed here. */}
     <PhotographerCatalog
-      key={`${initialLocation || ""}_${resolvedShootType || ""}`}
+      key={`${initialLocation || ""}_${resolvedShootType || ""}_${giftCard?.id || ""}`}
       photographers={dbPhotographers}
       quotes={quotes}
       locations={locations}
       shootTypes={SHOOT_TYPES as unknown as string[]}
       initialLocation={initialLocation}
       initialShootType={resolvedShootType}
+      giftMode={giftCard ? { tier: giftCard.tier, tierLabel: giftCard.meta.label } : null}
     />
 
     {/* Browse by city — internal linking + SEO for /photographers/location/* */}

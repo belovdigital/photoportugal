@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Camera, MapPin } from "lucide-react";
 
-export function ChooseRoleClient() {
+export function ChooseRoleClient({ callbackUrl }: { callbackUrl?: string }) {
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
   const { update } = useSession();
@@ -20,7 +20,13 @@ export function ChooseRoleClient() {
       await update({ role });
       // Small delay to ensure cookie is written, then hard redirect
       await new Promise(r => setTimeout(r, 300));
-      window.location.href = role === "photographer" ? "/dashboard/photographer" : "/photographers";
+      // Honour callbackUrl if it's a safe internal path (e.g. the
+      // /dashboard/messages link they came from); otherwise role default.
+      const safeCb = callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+        ? callbackUrl
+        : null;
+      const dest = safeCb || (role === "photographer" ? "/dashboard/photographer" : "/photographers");
+      window.location.href = dest;
     } catch {
       setLoading(null);
     }

@@ -7,6 +7,7 @@ import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 import { getHomepageReviews } from "@/lib/reviews-data";
 import { queryOne } from "@/lib/db";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
+import { localeAlternates } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
+    alternates: localeAlternates("/concierge", locale),
   };
 }
 

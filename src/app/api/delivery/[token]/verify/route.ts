@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 import { verifyToken } from "@/app/api/admin/login/route";
+import { auth } from "@/lib/auth";
 
 // Admins (verified via the admin_token cookie) can pull any gallery
 // without a password — used by the Recent Visitors panel to inspect
@@ -33,14 +34,20 @@ export async function POST(
 
   const { password } = await req.json();
   const admin = await isAdmin();
+  // Pre-load session so the password-required gate below also recognises
+  // a signed-in gift recipient (whose session we'll re-confirm against
+  // the booking row right after fetching it).
+  const sessionEarly = await auth();
+  const sessionUserIdEarly = (sessionEarly?.user as { id?: string } | undefined)?.id || null;
 
-  if (!password && !admin) {
+  if (!password && !admin && !sessionUserIdEarly) {
     return NextResponse.json({ error: "Password required" }, { status: 400 });
   }
 
   const booking = await queryOne<{
     id: string;
     client_id: string;
+    gift_recipient_user_id: string | null;
     delivery_password: string;
     delivery_expires_at: string;
     photographer_name: string;
@@ -54,7 +61,7 @@ export async function POST(
     zip_ready: boolean;
     zip_size: number | null;
   }>(
-    `SELECT b.id, b.client_id, b.delivery_password, b.delivery_expires_at,
+    `SELECT b.id, b.client_id, b.gift_recipient_user_id, b.delivery_password, b.delivery_expires_at,
             u.name as photographer_name, u.avatar_url as photographer_avatar,
             pp.slug as photographer_slug, cu.name as client_name,
             b.shoot_date, b.location_slug,
@@ -78,8 +85,18 @@ export async function POST(
     return NextResponse.json({ error: "This gallery has expired" }, { status: 410 });
   }
 
-  // Check password unless caller is an admin (admin cookie bypass).
-  if (!admin) {
+  // Bypass the password if the caller is signed in as the booking's
+  // gift recipient — they reached this gallery from their dashboard,
+  // they own the booking, asking them to retype a password they never
+  // saw would be hostile UX.
+  const sessionUserId = sessionUserIdEarly;
+  const isGiftRecipientSignedIn = sessionUserId
+    && booking.gift_recipient_user_id
+    && booking.gift_recipient_user_id === sessionUserId;
+
+  // Check password unless caller is an admin (admin cookie bypass) or
+  // the signed-in gift recipient (booking-ownership bypass).
+  if (!admin && !isGiftRecipientSignedIn) {
     const { compare: bcryptCompare } = await import("bcryptjs");
     const isBcrypt = booking.delivery_password.startsWith("$2");
     const passwordMatch = isBcrypt
@@ -104,9 +121,15 @@ export async function POST(
     [booking.id]
   );
 
-  // If delivery not yet accepted, photos are watermarked previews; videos
-  // pass through (no preview track — gallery is password-protected anyway).
-  // S3-stored URLs get presigned for time-bounded access.
+  // Two URLs per photo:
+  //   - url:         the "best" version (after accept = original, before
+  //                  = watermarked preview). Used by lightbox + download.
+  //   - preview_url: ALWAYS the 1200px preview. Used by the gallery
+  //                  grid as the thumbnail — because before this fix
+  //                  we served originals (~15MB each, ×89 = 1.3GB) as
+  //                  grid thumbs and mobile Safari ran out of memory
+  //                  and silently failed to render any of them.
+  // Videos: thumbnail_url is the poster frame, url is the playable mp4.
   const photos = await Promise.all(rawPhotos.map(async (photo) => {
     const isVideo = photo.media_type === "video";
     const rawUrl = isVideo
@@ -114,6 +137,14 @@ export async function POST(
       : (isAccepted ? photo.url : (photo.preview_url || photo.url));
     let resolvedUrl = rawUrl;
     if (isS3Path(rawUrl)) resolvedUrl = await getPresignedUrl(s3KeyFromPath(rawUrl), 3600);
+
+    let resolvedPreview: string | null = null;
+    if (!isVideo && photo.preview_url) {
+      resolvedPreview = isS3Path(photo.preview_url)
+        ? await getPresignedUrl(s3KeyFromPath(photo.preview_url), 3600)
+        : photo.preview_url;
+    }
+
     let resolvedThumb: string | null = null;
     if (photo.thumbnail_url) {
       resolvedThumb = isS3Path(photo.thumbnail_url)
@@ -123,6 +154,7 @@ export async function POST(
     return {
       id: photo.id,
       url: resolvedUrl,
+      preview_url: resolvedPreview,
       thumbnail_url: resolvedThumb,
       filename: photo.filename,
       file_size: photo.file_size,

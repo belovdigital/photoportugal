@@ -5,8 +5,9 @@ import { AdminToastProvider } from "./AdminToast";
 import { AuditLog as AuditLogTab } from "./AuditLog";
 import AdminCalendarTab from "./AdminCalendarTab";
 import { AdminConciergeTab } from "./AdminConciergeTab";
-import { AdminPopupStats } from "./AdminPopupStats";
+// AdminPopupStats removed 2026-05-07 — feature retired. File kept for reference.
 import { RedirectsManager } from "./RedirectsManager";
+import { NotFoundManager } from "./NotFoundManager";
 
 function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "telegram"; title: string }) {
   const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; error_message?: string | null; from?: string; created_at: string; price?: string | null; direction?: string }[]>([]);
@@ -153,6 +154,8 @@ interface AdminStats {
   bookingsPending: number;
   bookingsConfirmed: number;
   bookingsCompleted: number;
+  bookingsPaid: number;
+  bookingsPaidThisMonth: number;
   turnover: number;
   turnoverThisMonth: number;
   revenue: number;
@@ -190,7 +193,6 @@ const tabGroups = [
       { key: "inquiries", label: "Inquiries", icon: "message" },
       { key: "matchRequests", label: "Match Requests", icon: "search" },
       { key: "concierge", label: "Concierge AI", icon: "sparkles" },
-      { key: "popupStats", label: "Exit Popup", icon: "chart" },
       { key: "disputes", label: "Disputes", icon: "flag" },
       { key: "reviews", label: "Reviews", icon: "star" },
     ],
@@ -207,8 +209,11 @@ const tabGroups = [
     items: [
       { key: "blog", label: "Blog", icon: "document" },
       { key: "promos", label: "Promo Codes", icon: "tag" },
+      { key: "giftCards", label: "Gift cards", icon: "gift" },
+      { key: "makealbum", label: "MakeAlbum", icon: "book" },
       { key: "locations", label: "Locations", icon: "map" },
       { key: "redirects", label: "Redirects", icon: "search" },
+      { key: "notFound", label: "404s", icon: "flag" },
     ],
   },
   {
@@ -222,7 +227,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "popupStats" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "locations" | "redirects" | "logs" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -257,6 +262,10 @@ function SidebarIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>;
     case "heart":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>;
+    case "gift":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>;
+    case "book":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
     case "settings":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
     case "sparkles":
@@ -279,8 +288,8 @@ function fmtDate(day: string, bucket: "day" | "week" | "month" = "day") {
 
 function BarChart({ title, subtitle, filled, field, color, bucket }: {
   title: string; subtitle: string;
-  filled: { day: string; turnover: number; revenue: number; count: number }[];
-  field: "turnover" | "revenue"; color: string;
+  filled: { day: string; turnover: number; service_fee: number; platform_fee: number; revenue: number; count: number }[];
+  field: "turnover" | "revenue" | "service_fee" | "platform_fee"; color: string;
   bucket: "day" | "week" | "month";
 }) {
   const max = Math.max(...filled.map(d => d[field]), 1);
@@ -383,7 +392,7 @@ function UpcomingEvents({ onNavigate }: { onNavigate: () => void }) {
 type RevenuePreset = "7" | "30" | "90" | "365" | "all" | "custom";
 
 function RevenueCharts() {
-  const [rows, setRows] = useState<{ day: string; turnover: number; revenue: number; count: number }[]>([]);
+  const [rows, setRows] = useState<{ day: string; turnover: number; service_fee: number; platform_fee: number; revenue: number; count: number }[]>([]);
   const [bucket, setBucket] = useState<"day" | "week" | "month">("day");
   const [preset, setPreset] = useState<RevenuePreset>("all");
   const [customFrom, setCustomFrom] = useState("");
@@ -410,7 +419,9 @@ function RevenueCharts() {
   }, [preset, customFrom, customTo]);
 
   const totalTurnover = rows.reduce((s, d) => s + d.turnover, 0);
-  const totalRevenue = rows.reduce((s, d) => s + d.revenue, 0);
+  const totalServiceFee = rows.reduce((s, d) => s + d.service_fee, 0);
+  const totalPlatformFee = rows.reduce((s, d) => s + d.platform_fee, 0);
+  const totalRevenue = totalServiceFee + totalPlatformFee;
   const paidBookings = rows.reduce((s, d) => s + d.count, 0);
 
   const presets: { key: RevenuePreset; label: string }[] = [
@@ -477,11 +488,30 @@ function RevenueCharts() {
             bucket={bucket}
           />
           <BarChart
-            title="Revenue (Commission)"
-            subtitle={totalRevenue > 0 ? `€${totalRevenue.toLocaleString()} earned` : "No completed payouts yet"}
-            filled={rows} field="revenue" color="bg-green-500 hover:bg-green-600"
+            title="Service fee (from clients)"
+            subtitle={
+              totalServiceFee > 0
+                ? `€${totalServiceFee.toLocaleString()} earned · 12.5% on top of every paid booking`
+                : "No paid bookings yet"
+            }
+            filled={rows} field="service_fee" color="bg-emerald-500 hover:bg-emerald-600"
             bucket={bucket}
           />
+          <BarChart
+            title="Platform commission (from photographers)"
+            subtitle={
+              totalPlatformFee > 0
+                ? `€${totalPlatformFee.toLocaleString()} released · 10–20% of package, paid out after delivery accepted`
+                : "No deliveries accepted yet"
+            }
+            filled={rows} field="platform_fee" color="bg-green-600 hover:bg-green-700"
+            bucket={bucket}
+          />
+          {totalRevenue > 0 && (
+            <p className="px-1 text-right text-xs text-gray-500">
+              Total revenue: <span className="font-semibold text-gray-700">€{totalRevenue.toLocaleString()}</span>
+            </p>
+          )}
         </>
       )}
     </div>
@@ -502,6 +532,8 @@ export function AdminDashboard({
   reviewsSection,
   blogSection,
   promosSection,
+  giftCardsSection,
+  makealbumSection,
   locationsSection,
   settingsSection,
 }: {
@@ -518,6 +550,8 @@ export function AdminDashboard({
   reviewsSection: ReactNode;
   blogSection: ReactNode;
   promosSection: ReactNode;
+  giftCardsSection: ReactNode;
+  makealbumSection: ReactNode;
   locationsSection: ReactNode;
   settingsSection: ReactNode;
 }) {
@@ -795,35 +829,32 @@ export function AdminDashboard({
           {activeTab === "analytics" && analyticsSection}
           {activeTab === "overview" && (
             <div>
-              {/* Key metrics — 2 rows */}
+              {/* Key metrics — what actually matters: money in, money flow, photographers */}
               <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
+                <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-3 sm:p-5">
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">Revenue</p>
+                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">&euro;{stats.revenue.toLocaleString()}</p>
+                  {stats.revenueThisMonth > 0 ? (
+                    <p className="mt-1 text-xs text-emerald-700">&euro;{stats.revenueThisMonth.toLocaleString()} this month</p>
+                  ) : (
+                    <p className="mt-1 text-xs text-gray-400">service fees + commissions earned</p>
+                  )}
+                </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Turnover</p>
                   <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">&euro;{stats.turnover.toLocaleString()}</p>
                   <p className="mt-1 text-xs text-gray-400">&euro;{stats.turnoverThisMonth.toLocaleString()} this month</p>
-                  {stats.revenue > 0 && (
-                    <p className="mt-0.5 text-xs text-green-600">Revenue: &euro;{stats.revenue.toLocaleString()}</p>
-                  )}
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Bookings</p>
-                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">{stats.bookingsTotal}</p>
-                  <div className="mt-1 flex gap-2 text-xs">
-                    {stats.bookingsPending > 0 && <span className="text-yellow-600">{stats.bookingsPending} pending</span>}
-                    {stats.bookingsConfirmed > 0 && <span className="text-blue-600">{stats.bookingsConfirmed} confirmed</span>}
-                    {stats.bookingsCompleted > 0 && <span className="text-green-600">{stats.bookingsCompleted} done</span>}
-                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">Paid bookings</p>
+                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">{stats.bookingsPaid}</p>
+                  <p className="mt-1 text-xs text-gray-400">{stats.bookingsPaidThisMonth} this month</p>
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Photographers</p>
                   <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">{stats.photographersApproved}</p>
                   {stats.photographersReady > 0 && <p className="mt-1 text-xs text-green-600">{stats.photographersReady} ready for approval</p>}
                   {stats.photographersPending > 0 && stats.photographersPending > stats.photographersReady && <p className="text-xs text-gray-400">{stats.photographersPending - stats.photographersReady} filling profile</p>}
-                </div>
-                <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">Clients</p>
-                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">{stats.clients}</p>
-                  <p className="mt-1 text-xs text-gray-400">{stats.reviews} reviews &middot; {stats.disputesOpen > 0 ? <span className="text-red-500">{stats.disputesOpen} disputes</span> : "0 disputes"}</p>
                 </div>
               </div>
 
@@ -910,14 +941,16 @@ export function AdminDashboard({
           {activeTab === "inquiries" && inquiriesSection}
           {activeTab === "matchRequests" && matchRequestsSection}
           {activeTab === "concierge" && <AdminConciergeTab />}
-          {activeTab === "popupStats" && <AdminPopupStats />}
           {activeTab === "visitors" && visitorsSection}
           {activeTab === "disputes" && disputesSection}
           {activeTab === "reviews" && reviewsSection}
           {activeTab === "blog" && blogSection}
           {activeTab === "promos" && promosSection}
+          {activeTab === "giftCards" && giftCardsSection}
+          {activeTab === "makealbum" && makealbumSection}
           {activeTab === "locations" && locationsSection}
           {activeTab === "redirects" && <RedirectsManager />}
+          {activeTab === "notFound" && <NotFoundManager />}
           {activeTab === "logs" && (
             <div>
               <div className="flex gap-1 overflow-x-auto mb-4 pb-1">

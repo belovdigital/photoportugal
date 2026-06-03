@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from "next-intl";
-import { SERVICE_FEE_RATE } from "@/lib/stripe";
+import { SERVICE_FEE_RATE, LARGE_GROUP_SURCHARGE_RATE, LARGE_GROUP_THRESHOLD } from "@/lib/stripe";
 import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
 import DatePicker, { UnavailableRange } from "@/components/ui/DatePicker";
 import { formatDuration } from "@/lib/package-pricing";
@@ -24,6 +24,7 @@ interface Package {
   num_photos: number;
   price: number;
   is_popular: boolean;
+  is_group_package?: boolean;
   preview_url?: string | null;
 }
 
@@ -59,6 +60,13 @@ interface Photographer {
 
 export default function BookPage({ params }: { params: Promise<{ slug: string }> }) {
   const searchParams = useSearchParams();
+  // SSR-safe current URL — render-time `window.location.href` falls back to
+  // "/dashboard" on the server, so on a deep link like
+  // /book/<slug>?package=<id>&proposal=<msg> the auth callback strips the
+  // photographer + selected package + proposal context.
+  const pathname = usePathname();
+  const _searchString = searchParams.toString();
+  const currentUrl = _searchString ? `${pathname}?${_searchString}` : pathname;
   const { status } = useSession();
   const t = useTranslations("book");
   const tc = useTranslations("common");
@@ -68,14 +76,33 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  // Gift redemption: ?gift=1 in the URL means the recipient came here
+  // from the gift-mode photographer profile. Forces tier-pricing and
+  // skips the Stripe step in handleSubmit.
+  const isGiftRedemption = searchParams.get("gift") === "1";
+  // Photographer-initiated fast-track: when the client arrives here via
+  // a BOOKING_CARD chat message ("Book Now" button), the URL carries
+  // ?proposal=<msg_id>. Server validates this against the actual chat
+  // message; if valid, the booking is created with status='confirmed'
+  // and we hop straight to Stripe checkout (no photographer-confirm
+  // round trip). UI text + button label switch to reflect that.
+  const proposalMessageId = searchParams.get("proposal") || null;
 
   const [selectedPackage, setSelectedPackage] = useState<string>("");
+  const [showAllPackages, setShowAllPackages] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string>("");
   const [shootDate, setShootDate] = useState("");
+  // Raw click coordinates from DatePicker (year, 1-indexed month, day).
+  // Carried separately so the server can verify the YYYY-MM-DD string
+  // matches the actual click position — catches any state corruption
+  // between picker and submit.
+  const [shootDateCoords, setShootDateCoords] = useState<{ year: number; month: number; day: number } | null>(null);
   const [shootTime, setShootTime] = useState("flexible");
   const [flexibleDate, setFlexibleDate] = useState(false);
   const [flexibleDateFrom, setFlexibleDateFrom] = useState("");
+  const [flexibleDateFromCoords, setFlexibleDateFromCoords] = useState<{ year: number; month: number; day: number } | null>(null);
   const [flexibleDateTo, setFlexibleDateTo] = useState("");
+  const [flexibleDateToCoords, setFlexibleDateToCoords] = useState<{ year: number; month: number; day: number } | null>(null);
   const [unavailableRanges, setUnavailableRanges] = useState<UnavailableRange[]>([]);
   const [busyWindows, setBusyWindows] = useState<BusyWindow[]>([]);
   const [groupSize, setGroupSize] = useState("2");
@@ -83,13 +110,22 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [occasion, setOccasion] = useState("");
   const [locationDetail, setLocationDetail] = useState("");
   const [message, setMessage] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  // Gift-booking state. Hidden behind a switcher; when on, the buyer
+  // enters the gift recipient's contact + chooses when we reveal it.
+  const [isGift, setIsGift] = useState(false);
+  const [giftRecipientName, setGiftRecipientName] = useState("");
+  const [giftRecipientEmail, setGiftRecipientEmail] = useState("");
+  const [giftRecipientPhone, setGiftRecipientPhone] = useState("");
+  const [giftRevealMode, setGiftRevealMode] = useState<"immediate" | "days_before">("immediate");
+  const [giftRevealDaysBefore, setGiftRevealDaysBefore] = useState("3");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const pendingSubmit = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     params.then(({ slug }) => {
-      fetch(`/api/photographers/${slug}`)
+      fetch(`/api/photographers/${slug}?locale=${locale}`)
         .then((r) => r.json())
         .then((data) => {
           if (data.error) {
@@ -116,6 +152,11 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               setSelectedLocation(locationOptions[0].slug);
             }
             // Fetch photographer unavailability + buffered busy windows.
+            // Guard against undefined/missing id (happens when the
+            // photographer payload is incomplete — backend returned 200
+            // but no id field), which would build the URL as
+            // "photographer_id=undefined" and 500 on the API.
+            if (!data.id) return;
             fetch(`/api/availability?photographer_id=${data.id}&include_slots=1`)
               .then((r) => r.json())
               .then((availability) => {
@@ -157,14 +198,36 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       }
     }
 
+    // Phone is required so we can reach the client if email goes to spam.
+    if (clientPhone.replace(/[^\d]/g, "").length < 6) {
+      setError(t("form.phoneRequired"));
+      return;
+    }
+
+    // Gift booking validation — same fields as backend rejects, surface
+    // friendlier errors here.
+    if (isGift) {
+      if (!giftRecipientName.trim()) { setError(t("form.giftRecipientNameRequired") || "Recipient name is required"); return; }
+      const em = giftRecipientEmail.trim().toLowerCase();
+      if (!em || !em.includes("@") || !em.includes(".")) { setError(t("form.giftRecipientEmailRequired") || "Recipient email is required"); return; }
+      if (giftRecipientPhone.replace(/[^\d]/g, "").length < 6) { setError(t("form.giftRecipientPhoneRequired") || "Recipient WhatsApp number is required"); return; }
+    }
+
     // If not logged in, save form data and show auth modal
     if (status !== "authenticated") {
       pendingSubmit.current = true;
       try {
         sessionStorage.setItem("booking_form", JSON.stringify({
           selectedPackage, selectedLocation, shootDate, shootTime,
+          // Picker click-coords have to ride along with the string so
+          // the bulletproof server check survives the Google OAuth
+          // round-trip. Without these, post-login submits get only the
+          // string and the server falls back to legacy trust mode.
+          shootDateCoords, flexibleDateFromCoords, flexibleDateToCoords,
           flexibleDate, flexibleDateFrom, flexibleDateTo,
-          groupSize, largeGroupSize, occasion, locationDetail, message,
+          groupSize, largeGroupSize, occasion, locationDetail, message, clientPhone,
+          isGift, giftRecipientName, giftRecipientEmail, giftRecipientPhone,
+          giftRevealMode, giftRevealDaysBefore,
         }));
       } catch {}
       setShowAuthModal(true);
@@ -185,26 +248,71 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         location_slug: selectedLocation || null,
         location_detail: locationDetail.trim() || null,
         shoot_date: flexibleDate ? "flexible" : shootDate,
+        // Raw click coordinates (year + 1-indexed month + day) from the
+        // DatePicker. Server reconstructs the YYYY-MM-DD from these and
+        // uses it as source of truth if it disagrees with the string —
+        // this is the bulletproof guard against any state-corruption
+        // bug that produces "I picked June but the booking says July".
+        shoot_date_coords: flexibleDate ? null : shootDateCoords,
         shoot_time: shootTime || null,
         flexible_date_from: flexibleDate ? flexibleDateFrom : null,
+        flexible_date_from_coords: flexibleDate ? flexibleDateFromCoords : null,
         flexible_date_to: flexibleDate ? flexibleDateTo : null,
+        flexible_date_to_coords: flexibleDate ? flexibleDateToCoords : null,
         group_size: groupSize === "larger" ? parseInt(largeGroupSize) || 0 : parseInt(groupSize) || 2,
         group_size_is_estimate: false,
         occasion: occasion || null,
         message,
+        client_phone: clientPhone.trim() || null,
+        is_gift: isGift,
+        gift_recipient_name: isGift ? giftRecipientName.trim() : null,
+        gift_recipient_email: isGift ? giftRecipientEmail.trim().toLowerCase() : null,
+        gift_recipient_phone: isGift ? giftRecipientPhone.trim() : null,
+        gift_reveal_mode: isGift ? giftRevealMode : null,
+        gift_reveal_days_before: isGift && giftRevealMode === "days_before" ? Number(giftRevealDaysBefore) || 3 : null,
+        gift_card_redemption: isGiftRedemption,
+        proposal_message_id: proposalMessageId,
         ...attribution,
       }),
     });
 
-    setSubmitting(false);
     if (res.ok) {
+      const data = await res.json();
       const pkg = photographer.packages.find((p) => p.id === selectedPackage);
       if (pkg) {
         trackStartBooking(photographer.slug, pkg.name, pkg.price);
         trackBookingSubmitted(photographer.slug, pkg.price);
       }
+      // Fast-track: photographer pre-confirmed via chat BOOKING_CARD,
+      // server flipped the booking straight to status='confirmed'. Hop
+      // to Stripe checkout immediately — no waiting on the photographer
+      // to re-confirm what they already proposed.
+      if (data.fast_track && data.booking_id) {
+        try {
+          const ck = await fetch("/api/stripe/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ booking_id: data.booking_id, locale }),
+          });
+          if (ck.ok) {
+            const ckData = await ck.json();
+            if (ckData.url) {
+              window.location.href = ckData.url;
+              return; // stays "submitting" until the redirect lands
+            }
+          }
+          // Checkout creation failed — fall back to the success page
+          // so the booking isn't lost. Photographer's dashboard will
+          // still see it as confirmed; payment link goes via email.
+          console.error("[book] fast-track checkout creation failed");
+        } catch (err) {
+          console.error("[book] fast-track checkout error:", err);
+        }
+      }
+      setSubmitting(false);
       setSuccess(true);
     } else {
+      setSubmitting(false);
       const data = await res.json();
       setError(data.error || t("failedToSend"));
     }
@@ -219,6 +327,14 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
       setTimeout(() => formRef.current?.requestSubmit(), 100);
       return;
     }
+    if (status === "authenticated") {
+      // Prefill phone from saved user profile so they don't retype it
+      // every booking. Only fills if the field is still empty (don't
+      // clobber sessionStorage-restored value).
+      fetch("/api/auth/me").then((r) => r.json()).then((d) => {
+        if (d?.phone) setClientPhone((prev) => prev || d.phone);
+      }).catch(() => {});
+    }
     if (status === "authenticated" && photographer) {
       // Came back from Google OAuth redirect — check for saved form data
       try {
@@ -229,10 +345,13 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           if (data.selectedPackage) setSelectedPackage(data.selectedPackage);
           if (data.selectedLocation) setSelectedLocation(data.selectedLocation);
           if (data.shootDate) setShootDate(data.shootDate);
+          if (data.shootDateCoords) setShootDateCoords(data.shootDateCoords);
           if (data.shootTime) setShootTime(data.shootTime);
           if (data.flexibleDate) setFlexibleDate(data.flexibleDate);
           if (data.flexibleDateFrom) setFlexibleDateFrom(data.flexibleDateFrom);
+          if (data.flexibleDateFromCoords) setFlexibleDateFromCoords(data.flexibleDateFromCoords);
           if (data.flexibleDateTo) setFlexibleDateTo(data.flexibleDateTo);
+          if (data.flexibleDateToCoords) setFlexibleDateToCoords(data.flexibleDateToCoords);
           if (data.groupSize) {
             const restoredGroupSize = String(data.groupSize);
             if (restoredGroupSize === "larger" || Number(restoredGroupSize) > 8) {
@@ -246,6 +365,13 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           if (data.occasion) setOccasion(data.occasion);
           if (data.locationDetail) setLocationDetail(data.locationDetail);
           if (data.message) setMessage(data.message);
+          if (data.clientPhone) setClientPhone(data.clientPhone);
+          if (typeof data.isGift === "boolean") setIsGift(data.isGift);
+          if (data.giftRecipientName) setGiftRecipientName(data.giftRecipientName);
+          if (data.giftRecipientEmail) setGiftRecipientEmail(data.giftRecipientEmail);
+          if (data.giftRecipientPhone) setGiftRecipientPhone(data.giftRecipientPhone);
+          if (data.giftRevealMode === "immediate" || data.giftRevealMode === "days_before") setGiftRevealMode(data.giftRevealMode);
+          if (data.giftRevealDaysBefore) setGiftRevealDaysBefore(String(data.giftRevealDaysBefore));
           // Auto-submit after state updates
           setTimeout(() => formRef.current?.requestSubmit(), 300);
         }
@@ -329,8 +455,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const sidebarReviews = (photographer.reviews || []).filter((r) => r.text && r.text.length > 40).slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:py-12">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr,320px]">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:py-12">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
         <div className="min-w-0">
       {/* Photographer header — avatar + name + rating + activity badge.
           Replaces the cold "Book {name}" h1. The avatar makes the
@@ -368,7 +494,6 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <ActiveBadge lastSeenAt={photographer.last_seen_at ?? null} />
             <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes ?? null} compact />
           </div>
-          <p className="mt-2 text-sm text-gray-500">{t("subtitle")}</p>
         </div>
       </div>
 
@@ -385,8 +510,8 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         </div>
       )}
 
-      {/* Trust box — green reassurance. Real icons, not flat ✓ marks. */}
-      <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+      {/* Trust box — mobile only (desktop has it in sticky sidebar). */}
+      <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 lg:hidden">
         <p className="text-sm font-semibold text-emerald-900">
           {t("trust.heading")}
         </p>
@@ -428,7 +553,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         onSuccess={() => {
           // session will update via useSession, triggering the useEffect above
         }}
-        callbackUrl={typeof window !== "undefined" ? window.location.href : "/dashboard"}
+        callbackUrl={currentUrl}
         title={t("signInToBook")}
         subtitle={t("needAccount")}
       />
@@ -439,92 +564,97 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             Beats a stack of plain radios for choosing between photographers
             who all bring different visual styles. "Most Popular" lives as
             an amber pill on the corner of the highlighted option. */}
-        {photographer.packages.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">{t("form.selectPackage")}</label>
-            <div className="space-y-3">
-              {photographer.packages.map((pkg) => (
-                <label
-                  key={pkg.id}
-                  className={`relative flex items-stretch overflow-hidden rounded-xl border-2 transition cursor-pointer ${
-                    selectedPackage === pkg.id
-                      ? "border-primary-500 bg-primary-50"
-                      : "border-gray-200 hover:border-gray-300 bg-white"
-                  }`}
-                >
-                  {pkg.preview_url && (
-                    <div className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28 bg-warm-100">
-                      <OptimizedImage
-                        src={pkg.preview_url}
-                        alt={pkg.name}
-                        width={400}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="flex flex-1 items-center justify-between gap-3 px-4 py-3.5">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <input
-                        type="radio"
-                        name="package"
-                        value={pkg.id}
-                        checked={selectedPackage === pkg.id}
-                        onChange={(e) => {
-                          setSelectedPackage(e.target.value);
-                          const url = new URL(window.location.href);
-                          url.searchParams.set("package", e.target.value);
-                          window.history.replaceState(null, "", url.toString());
-                        }}
-                        className="h-4 w-4 shrink-0 text-primary-600"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold text-gray-900">{pkg.name}</p>
-                          {pkg.is_popular && (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
-                              {tc("mostPopular")}
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-0.5 text-sm text-gray-500">
-                          {formatDuration(pkg.duration_minutes, locale)} &middot; {pkg.num_photos} {tc("photos")}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-lg font-bold text-gray-900 shrink-0">&euro;{Math.round(Number(pkg.price))}</span>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Location */}
-        {(photographer.coverage_locations?.length || photographer.locations.length) > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700">{t("form.preferredLocation")}</label>
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
+        {photographer.packages.length > 0 && (() => {
+          const selected = photographer.packages.find((p) => p.id === selectedPackage);
+          const others = photographer.packages.filter((p) => p.id !== selectedPackage);
+          const renderPkg = (pkg: typeof photographer.packages[number]) => (
+            <label
+              key={pkg.id}
+              className={`relative flex items-stretch overflow-hidden rounded-xl border-2 transition cursor-pointer ${
+                selectedPackage === pkg.id
+                  ? "border-primary-500 bg-primary-50"
+                  : "border-gray-200 hover:border-gray-300 bg-white"
+              }`}
             >
-              {(photographer.coverage_locations?.length ? photographer.coverage_locations : photographer.locations).map((loc: { slug: string; name: string }) => (
-                <option key={loc.slug} value={loc.slug}>{loc.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
+              <div className="flex flex-1 items-center justify-between gap-3 px-4 py-3.5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <input
+                    type="radio"
+                    name="package"
+                    value={pkg.id}
+                    checked={selectedPackage === pkg.id}
+                    onChange={(e) => {
+                      setSelectedPackage(e.target.value);
+                      setShowAllPackages(false);
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("package", e.target.value);
+                      window.history.replaceState(null, "", url.toString());
+                    }}
+                    className="h-4 w-4 shrink-0 text-primary-600"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-gray-900">{pkg.name}</p>
+                      {pkg.is_popular && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                          {tc("mostPopular")}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-sm text-gray-500">
+                      {formatDuration(pkg.duration_minutes, locale)} &middot; {pkg.num_photos} {tc("photos")}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-gray-900 shrink-0">&euro;{Math.round(Number(pkg.price))}</span>
+              </div>
+            </label>
+          );
+          return (
+            <div>
+              <div className="space-y-3">
+                {selected && renderPkg(selected)}
+                {showAllPackages && others.map(renderPkg)}
+                {others.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllPackages((v) => !v)}
+                    className="w-full rounded-xl border-2 border-dashed border-gray-200 px-4 py-3 text-sm font-medium text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                  >
+                    {showAllPackages ? `${t("form.hideOtherPackages")} ▴` : `${t("form.morePackages", { count: others.length })} ▾`}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
-        {/* Specific location / meeting point */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">{t("form.locationDetail")}</label>
-          <input
-            type="text"
-            value={locationDetail}
-            onChange={(e) => setLocationDetail(e.target.value)}
-            placeholder={t("form.locationDetailPlaceholder")}
-            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
-          />
+        {/* Location + meeting point */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {(photographer.coverage_locations?.length || photographer.locations.length) > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">{t("form.preferredLocation")}</label>
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
+              >
+                {(photographer.coverage_locations?.length ? photographer.coverage_locations : photographer.locations).map((loc: { slug: string; name: string }) => (
+                  <option key={loc.slug} value={loc.slug}>{loc.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">{t("form.locationDetail")}</label>
+            <input
+              type="text"
+              value={locationDetail}
+              onChange={(e) => setLocationDetail(e.target.value)}
+              placeholder={t("form.locationDetailPlaceholder")}
+              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
+            />
+          </div>
         </div>
 
         {/* Date & Time */}
@@ -534,7 +664,10 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               <DatePicker
                 label={t("form.preferredDate")}
                 value={shootDate}
-                onChange={setShootDate}
+                onChange={(v, coords) => {
+                  setShootDate(v);
+                  setShootDateCoords(coords || null);
+                }}
                 // Earliest selectable date = today + photographer's notice
                 // period (hours rounded up to whole days). 0h → today.
                 // Backend re-validates the same window on submit.
@@ -587,9 +720,12 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 setFlexibleDate(e.target.checked);
                 if (e.target.checked) {
                   setShootDate("");
+                  setShootDateCoords(null);
                 } else {
                   setFlexibleDateFrom("");
+                  setFlexibleDateFromCoords(null);
                   setFlexibleDateTo("");
+                  setFlexibleDateToCoords(null);
                 }
               }}
               className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -601,7 +737,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               <DatePicker
                 label={t("form.dateFrom")}
                 value={flexibleDateFrom}
-                onChange={setFlexibleDateFrom}
+                onChange={(v, coords) => { setFlexibleDateFrom(v); setFlexibleDateFromCoords(coords || null); }}
                 min={new Date().toISOString().split("T")[0]}
                 required
                 placeholder={t("form.selectDate")}
@@ -609,7 +745,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               <DatePicker
                 label={t("form.dateTo")}
                 value={flexibleDateTo}
-                onChange={setFlexibleDateTo}
+                onChange={(v, coords) => { setFlexibleDateTo(v); setFlexibleDateToCoords(coords || null); }}
                 min={flexibleDateFrom || new Date().toISOString().split("T")[0]}
                 required
                 placeholder={t("form.selectDate")}
@@ -679,6 +815,24 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           </div>
         </div>
 
+        {/* Phone — required so we can reach the client by SMS / WhatsApp
+            if email goes to spam. Prefilled from the user's saved phone
+            once they're authenticated. */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            {t("form.phone")}
+          </label>
+          <input
+            type="tel"
+            value={clientPhone}
+            onChange={(e) => setClientPhone(e.target.value)}
+            placeholder="+351 912 345 678"
+            required
+            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
+          />
+          <p className="mt-1 text-[11px] text-gray-400">{t("form.phoneHint")}</p>
+        </div>
+
         {/* Message */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -693,23 +847,182 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           />
         </div>
 
+        {/* Gift-card redemption banner — shown when the recipient came
+            here from a gift-mode profile. Replaces the regular price
+            summary with a clear "free for you" explanation. The gift
+            toggle below is hidden in this mode (you can't gift a gift). */}
+        {isGiftRedemption && (
+          <div className="rounded-xl border-2 border-primary-300 bg-gradient-to-br from-primary-50 to-rose-50 p-5">
+            <p className="text-sm font-bold text-primary-900 mb-1">
+              🎁 You&rsquo;re redeeming your gift session
+            </p>
+            <p className="text-sm text-gray-700">
+              Total to pay: <strong>€0</strong> — the entire session is covered by your gift card. Fill in the date, location, and any notes for {photographer && photographer.name.split(" ")[0]}, and submit.
+            </p>
+          </div>
+        )}
+
+        {/* Gift booking — switcher + recipient fields. The recipient gets
+            a magic-link email at the reveal time (now or N days before
+            shoot) to claim/access the booking. Their WhatsApp goes to the
+            photographer for day-of coordination.
+
+            Hidden during gift-card redemption — you can't gift a gift. */}
+        {!isGiftRedemption && (
+        <div className={`rounded-xl border ${isGift ? "border-primary-300 bg-primary-50/40" : "border-gray-200 bg-white"} p-5 transition`}>
+          <label className="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isGift}
+              onChange={(e) => setIsGift(e.target.checked)}
+              className="mt-0.5 h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            />
+            <span className="flex-1">
+              <span className="block font-semibold text-gray-900">
+                🎁 {t("form.giftToggle") || "This booking is a gift"}
+              </span>
+              <span className="block mt-0.5 text-xs text-gray-500">
+                {t("form.giftToggleHint") || "Surprise someone with a session. You pay, they show up."}
+              </span>
+            </span>
+          </label>
+
+          {isGift && (
+            <div className="mt-4 space-y-4 border-t border-primary-200 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium uppercase tracking-wider text-gray-500">
+                    {t("form.giftRecipientName") || "Recipient name"}
+                  </label>
+                  <input
+                    type="text"
+                    value={giftRecipientName}
+                    onChange={(e) => setGiftRecipientName(e.target.value)}
+                    placeholder="Maria Silva"
+                    required={isGift}
+                    className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium uppercase tracking-wider text-gray-500">
+                    {t("form.giftRecipientEmail") || "Recipient email"}
+                  </label>
+                  <input
+                    type="email"
+                    value={giftRecipientEmail}
+                    onChange={(e) => setGiftRecipientEmail(e.target.value)}
+                    placeholder="maria@example.com"
+                    required={isGift}
+                    className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium uppercase tracking-wider text-gray-500">
+                  {t("form.giftRecipientPhone") || "Recipient WhatsApp"}
+                </label>
+                <input
+                  type="tel"
+                  value={giftRecipientPhone}
+                  onChange={(e) => setGiftRecipientPhone(e.target.value)}
+                  placeholder="+351 912 345 678"
+                  required={isGift}
+                  className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
+                />
+                <p className="mt-1 text-[11px] text-gray-400">
+                  {t("form.giftRecipientPhoneHint") || "Used by the photographer for day-of coordination only — hidden until the reveal date."}
+                </p>
+              </div>
+
+              <div>
+                <p className="block text-xs font-medium uppercase tracking-wider text-gray-500 mb-2">
+                  {t("form.giftRevealWhen") || "When should we tell them?"}
+                </p>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-2 hover:border-primary-300">
+                    <input
+                      type="radio"
+                      name="giftRevealMode"
+                      checked={giftRevealMode === "immediate"}
+                      onChange={() => setGiftRevealMode("immediate")}
+                      className="mt-0.5 h-4 w-4 text-primary-600 focus:ring-primary-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      🎁 {t("form.giftRevealNow") || "Send them a gift card now"}
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-2 hover:border-primary-300">
+                    <input
+                      type="radio"
+                      name="giftRevealMode"
+                      checked={giftRevealMode === "days_before"}
+                      onChange={() => setGiftRevealMode("days_before")}
+                      className="mt-0.5 h-4 w-4 text-primary-600 focus:ring-primary-500"
+                    />
+                    <span className="text-sm text-gray-700 flex-1">
+                      ⏰ {t("form.giftRevealBefore") || "Surprise — tell them"}{" "}
+                      <input
+                        type="number"
+                        min={1}
+                        max={60}
+                        value={giftRevealDaysBefore}
+                        onChange={(e) => setGiftRevealDaysBefore(e.target.value)}
+                        disabled={giftRevealMode !== "days_before"}
+                        className="inline-block w-14 rounded border border-gray-300 px-2 py-0.5 text-sm text-center disabled:bg-gray-100"
+                      />{" "}
+                      {t("form.giftRevealDaysBefore") || "days before the shoot"}
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        )}
+
         {/* Summary — visible on mobile only; desktop has the sticky
-            summary card in the right sidebar instead. */}
-        {selectedPkg && (
+            summary card in the right sidebar instead. In gift-card-
+            redemption mode we render a fixed €0 summary instead of the
+            price-calc one so the buyer doesn't see conflicting totals. */}
+        {selectedPkg && isGiftRedemption && (
+          <div className="rounded-xl border border-primary-200 bg-primary-50 p-5 lg:hidden">
+            <p className="text-sm font-bold text-primary-900">🎁 Gift session</p>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className="text-sm text-gray-700">Total to pay</span>
+              <span className="text-xl font-bold text-gray-900">€0</span>
+            </div>
+            <p className="mt-2 text-xs text-gray-600">Your gift card covers the entire session.</p>
+          </div>
+        )}
+        {selectedPkg && !isGiftRedemption && (() => {
+          const effectiveGroup = groupSize === "larger" ? (parseInt(largeGroupSize) || 9) : (parseInt(groupSize) || 2);
+          const applySurcharge = !selectedPkg.is_group_package && effectiveGroup >= LARGE_GROUP_THRESHOLD;
+          const basePrice = Number(selectedPkg.price);
+          const surcharge = applySurcharge ? basePrice * LARGE_GROUP_SURCHARGE_RATE : 0;
+          const subtotal = basePrice + surcharge;
+          const fee = subtotal * SERVICE_FEE_RATE;
+          const total = subtotal + fee;
+          return (
           <div className="rounded-xl border border-warm-200 bg-white p-5 lg:hidden">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">{selectedPkg.name}</span>
-                <span className="text-gray-900">&euro;{Math.round(Number(selectedPkg.price))}</span>
+                <span className="text-gray-900">&euro;{Math.round(basePrice)}</span>
               </div>
+              {applySurcharge && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">{t("summary.largeGroupSurcharge", { rate: LARGE_GROUP_SURCHARGE_RATE * 100 })}</span>
+                  <span className="text-gray-900">&euro;{Math.round(surcharge)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">{t("summary.serviceFee", { rate: SERVICE_FEE_RATE * 100 })}</span>
-                <span className="text-gray-900">&euro;{Math.round(Number(selectedPkg.price) * SERVICE_FEE_RATE)}</span>
+                <span className="text-gray-900">&euro;{fee.toFixed(2)}</span>
               </div>
               <hr className="border-warm-200" />
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-gray-900">{t("summary.total")}</span>
-                <span className="text-xl font-bold text-gray-900">&euro;{Math.round(Number(selectedPkg.price) * (1 + SERVICE_FEE_RATE))}</span>
+                <span className="text-xl font-bold text-gray-900">&euro;{total.toFixed(2)}</span>
               </div>
             </div>
             <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2.5">
@@ -719,20 +1032,73 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               <p className="text-sm font-medium text-emerald-900">{t("form.paymentNote")}</p>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         <button
           type="submit"
           disabled={submitting}
           className="w-full rounded-xl bg-primary-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
         >
-          {submitting ? t("form.submitting") : t("form.submit")}
+          {submitting
+            ? t("form.submitting")
+            : proposalMessageId
+              ? (t("form.payAndBook") || "Pay & Book Now")
+              : t("form.submit")}
         </button>
+        {proposalMessageId && !submitting && (
+          <p className="mt-2 text-center text-xs text-gray-500">
+            {t("form.proposalHint") || "The photographer already approved this package — payment confirms the booking."}
+          </p>
+        )}
 
         <div className="mt-3 flex justify-center">
           <GoogleReviewsBadge variant="compact" />
         </div>
       </form>
+
+      {/* Reviews — moved out of the sidebar so they don't compete with
+          the booking summary. Sit under the form, full width of the
+          left column. */}
+      {sidebarReviews.length > 0 && (
+        <div className="mt-8 rounded-2xl border border-warm-200 bg-white p-5">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <svg key={i} className={`h-4 w-4 ${i < Math.round(photographer.rating || 5) ? "text-yellow-400" : "text-gray-200"}`} fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
+            </div>
+            <span className="text-sm font-semibold text-gray-900">{Number(photographer.rating || 5).toFixed(1)}</span>
+            {photographer.review_count ? (
+              <span className="text-xs text-gray-500">&middot; {photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")}</span>
+            ) : null}
+          </div>
+          <p className="mt-3 text-sm font-semibold text-gray-900">{tc("whatClientsSayAbout", { name: photographer.name })}</p>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sidebarReviews.map((r) => (
+              <div key={r.id} className="rounded-xl border border-warm-100 bg-warm-50/50 p-4">
+                {r.title && <p className="text-sm font-semibold text-gray-900">{r.title}</p>}
+                {r.text && (
+                  <p className="mt-1 text-sm text-gray-600 line-clamp-6">
+                    {r.text.length > 220 ? r.text.slice(0, 220).replace(/\s\S*$/, "") + "…" : r.text}
+                  </p>
+                )}
+                <p className={`mt-2 text-xs ${r.client_name ? "text-gray-500" : "text-gray-400 italic"}`}>
+                  — {r.client_name || tc("privateClient")}
+                </p>
+              </div>
+            ))}
+          </div>
+          <Link
+            href={`/photographers/${photographer.slug}#reviews`}
+            className="mt-4 block text-center text-xs font-medium text-primary-600 hover:underline"
+          >
+            {tc("seeAllReviews")} →
+          </Link>
+        </div>
+      )}
         </div>
 
         {/* Sidebar — sticky booking summary on top, reviews below.
@@ -740,6 +1106,40 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             what it costs while filling the form. Hidden on mobile (the
             inline form summary above the submit button covers it). */}
         <aside className="hidden lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-24 lg:self-start">
+          {/* Trust box — moved into sidebar so it stays in view while
+              the photographer fills the form. */}
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+            <p className="text-sm font-semibold text-emerald-900">
+              {t("trust.heading")}
+            </p>
+            <ul className="mt-2.5 grid grid-cols-1 gap-1.5 text-[13px] text-emerald-800">
+              <li className="flex items-start gap-2">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{t("trust.freeRequest")}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{t("trust.payAfterConfirm")}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12a9 9 0 0118 0m-9-9v3m0 12v3m9-9h-3M6 12H3" />
+                </svg>
+                <span>{t("trust.cancelAnytime")}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>{t("trust.stripeSecure")}</span>
+              </li>
+            </ul>
+          </div>
+
           {/* Booking summary card */}
           <div className="rounded-2xl border border-warm-200 bg-white p-5">
             <div className="flex items-center gap-3">
@@ -765,7 +1165,31 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               </div>
             </div>
 
-            {selectedPkg ? (
+            {selectedPkg && isGiftRedemption ? (
+              <>
+                <div className="mt-4 rounded-lg bg-primary-50 border border-primary-200 p-3 space-y-1">
+                  <p className="text-sm font-bold text-primary-900">🎁 Gift session</p>
+                  <p className="text-xs text-gray-500">
+                    {formatDuration(selectedPkg.duration_minutes, locale)}
+                    {selectedPkg.num_photos > 0 && ` · ${selectedPkg.num_photos} ${tc("photos")}`}
+                  </p>
+                </div>
+                <hr className="my-3 border-warm-200" />
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-semibold text-gray-900">{t("summary.total")}</span>
+                  <span className="text-xl font-bold text-gray-900">€0</span>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">Your gift card covers the entire session.</p>
+              </>
+            ) : selectedPkg ? (() => {
+              const effectiveGroup = groupSize === "larger" ? (parseInt(largeGroupSize) || 9) : (parseInt(groupSize) || 2);
+              const applySurcharge = !selectedPkg.is_group_package && effectiveGroup >= LARGE_GROUP_THRESHOLD;
+              const basePrice = Number(selectedPkg.price);
+              const surcharge = applySurcharge ? basePrice * LARGE_GROUP_SURCHARGE_RATE : 0;
+              const subtotal = basePrice + surcharge;
+              const fee = subtotal * SERVICE_FEE_RATE;
+              const total = subtotal + fee;
+              return (
               <>
                 <div className="mt-4 rounded-lg bg-warm-50 p-3 space-y-1">
                   <p className="text-sm font-semibold text-gray-900">{selectedPkg.name}</p>
@@ -777,17 +1201,23 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 <div className="mt-3 space-y-1.5 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">{selectedPkg.name}</span>
-                    <span className="text-gray-900">€{Math.round(Number(selectedPkg.price))}</span>
+                    <span className="text-gray-900">€{Math.round(basePrice)}</span>
                   </div>
+                  {applySurcharge && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">{t("summary.largeGroupSurcharge", { rate: LARGE_GROUP_SURCHARGE_RATE * 100 })}</span>
+                      <span className="text-gray-900">€{Math.round(surcharge)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">{t("summary.serviceFee", { rate: SERVICE_FEE_RATE * 100 })}</span>
-                    <span className="text-gray-900">€{Math.round(Number(selectedPkg.price) * SERVICE_FEE_RATE)}</span>
+                    <span className="text-gray-900">€{fee.toFixed(2)}</span>
                   </div>
                 </div>
                 <hr className="my-3 border-warm-200" />
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm font-semibold text-gray-900">{t("summary.total")}</span>
-                  <span className="text-xl font-bold text-gray-900">€{Math.round(Number(selectedPkg.price) * (1 + SERVICE_FEE_RATE))}</span>
+                  <span className="text-xl font-bold text-gray-900">€{total.toFixed(2)}</span>
                 </div>
                 <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-2">
                   <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -796,53 +1226,14 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                   <p className="text-[12px] font-medium text-emerald-900 leading-snug">{t("form.paymentNote")}</p>
                 </div>
               </>
-            ) : (
+              );
+            })() : (
               <p className="mt-4 text-xs text-gray-400 italic">
                 {t("summary.pickPackagePrompt")}
               </p>
             )}
           </div>
 
-          {/* Reviews block */}
-          {sidebarReviews.length > 0 && (
-            <div className="rounded-2xl border border-warm-200 bg-white p-5">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <svg key={i} className={`h-4 w-4 ${i < Math.round(photographer.rating || 5) ? "text-yellow-400" : "text-gray-200"}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <span className="text-sm font-semibold text-gray-900">{Number(photographer.rating || 5).toFixed(1)}</span>
-                {photographer.review_count ? (
-                  <span className="text-xs text-gray-500">&middot; {photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")}</span>
-                ) : null}
-              </div>
-              <p className="mt-3 text-sm font-semibold text-gray-900">{tc("whatClientsSayAbout", { name: photographer.name })}</p>
-              <div className="mt-4 space-y-4">
-                {sidebarReviews.map((r) => (
-                  <div key={r.id} className="border-t border-warm-100 pt-4 first:border-t-0 first:pt-0">
-                    {r.title && <p className="text-sm font-semibold text-gray-900">{r.title}</p>}
-                    {r.text && (
-                      <p className="mt-1 text-sm text-gray-600 line-clamp-5">
-                        {r.text.length > 200 ? r.text.slice(0, 200).replace(/\s\S*$/, "") + "…" : r.text}
-                      </p>
-                    )}
-                    <p className={`mt-2 text-xs ${r.client_name ? "text-gray-500" : "text-gray-400 italic"}`}>
-                      — {r.client_name || tc("privateClient")}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <Link
-                href={`/photographers/${photographer.slug}#reviews`}
-                className="mt-4 block text-center text-xs font-medium text-primary-600 hover:underline"
-              >
-                {tc("seeAllReviews")} →
-              </Link>
-            </div>
-          )}
         </aside>
       </div>
     </div>

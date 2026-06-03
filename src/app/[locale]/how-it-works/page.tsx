@@ -63,14 +63,14 @@ export default async function HowItWorksPage({
         position: 1,
         name: t("travelerSteps.browseCompare.title"),
         text: t("travelerSteps.browseCompare.text"),
-        url: "https://photoportugal.com/choose-booking-type",
+        url: "https://photoportugal.com/concierge",
       },
       {
         "@type": "HowToStep",
         position: 2,
         name: t("travelerSteps.bookInstantly.title"),
         text: t("travelerSteps.bookInstantly.text"),
-        url: "https://photoportugal.com/choose-booking-type",
+        url: "https://photoportugal.com/concierge",
       },
       {
         "@type": "HowToStep",

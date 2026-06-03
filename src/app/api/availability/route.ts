@@ -9,9 +9,19 @@ import {
 
 // GET — fetch unavailability ranges for a photographer
 // ?photographer_id=xxx (public) or own (authenticated photographer)
+// Cheap UUID shape check — guards against the literal string "undefined"
+// or other non-UUID values that the book page sends while the
+// photographer object is still loading. Without this, Postgres throws
+// "invalid input syntax for type uuid: 'undefined'" and the request 500s.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(req: NextRequest) {
   const photographerId = req.nextUrl.searchParams.get("photographer_id");
   const includeSlots = req.nextUrl.searchParams.get("include_slots") === "1";
+
+  if (photographerId && !UUID_RE.test(photographerId)) {
+    return NextResponse.json({ error: "Invalid photographer_id" }, { status: 400 });
+  }
 
   if (photographerId) {
     // Public: manual unavailable date ranges. New booking clients can ask
@@ -31,7 +41,12 @@ export async function GET(req: NextRequest) {
       const bufferMinutes = await getPhotographerCalendarBufferMinutes(photographerId);
       const rangeStart = lisbonLocalMinutesToUtc(from, 0);
       const rangeEnd = lisbonLocalMinutesToUtc(to, 24 * 60);
-      const busyWindows = await getBufferedBusyWindows(photographerId, rangeStart, rangeEnd, bufferMinutes);
+      // Best-effort viewer detection — if the request carries a session,
+      // exclude that viewer's own bookings from the busy windows so the
+      // date-picker doesn't lock them out of their own holds (see
+      // self-blocking case Teresa ↔ Maya 2026-06-01).
+      const viewer = await authFromRequest(req).catch(() => null);
+      const busyWindows = await getBufferedBusyWindows(photographerId, rangeStart, rangeEnd, bufferMinutes, undefined, viewer?.id);
       return NextResponse.json({
         ranges: manual,
         busy_windows: busyWindows,

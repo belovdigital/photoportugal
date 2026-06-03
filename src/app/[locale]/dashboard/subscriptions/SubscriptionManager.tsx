@@ -12,8 +12,9 @@ interface Plan {
   features: string[];
 }
 
-export function PlanCard({ plan, currentPlan, earlyBirdActive }: { plan: Plan; currentPlan: string; earlyBirdActive?: boolean }) {
+export function PlanCard({ plan, currentPlan, earlyBirdActive, purchaseBlockedReason }: { plan: Plan; currentPlan: string; earlyBirdActive?: boolean; purchaseBlockedReason?: string | null }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const t = useTranslations("subscriptions");
   const locale = useLocale();
 
@@ -24,37 +25,37 @@ export function PlanCard({ plan, currentPlan, earlyBirdActive }: { plan: Plan; c
   const isDowngrade = planIdx < currentIdx;
 
   async function handleAction() {
-    setLoading(true);
-    if (plan.key === "free") {
-      // Downgrade to free = open billing portal to cancel
+    setLoading(true); setError("");
+    const isFreeDowngrade = plan.key === "free";
+    const body = isFreeDowngrade
+      ? { action: "portal", locale }
+      : { action: "subscribe", plan: plan.key, locale };
+    const fallbackKey = isFreeDowngrade ? "portalError" : "checkoutError";
+    try {
+      const res = await fetch("/api/stripe/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) window.location.href = data.url;
+      else setError(data.error || t(fallbackKey));
+    } catch { setError(t(fallbackKey)); }
+    setLoading(false);
+  }
+
+  async function handleManage() {
+    setLoading(true); setError("");
+    try {
       const res = await fetch("/api/stripe/subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "portal", locale }),
       });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } else {
-      const res = await fetch("/api/stripe/subscription", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "subscribe", plan: plan.key, locale }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    }
-    setLoading(false);
-  }
-
-  async function handleManage() {
-    setLoading(true);
-    const res = await fetch("/api/stripe/subscription", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "portal", locale }),
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) window.location.href = data.url;
+      else setError(data.error || t("portalError"));
+    } catch { setError(t("portalError")); }
     setLoading(false);
   }
 
@@ -106,16 +107,29 @@ export function PlanCard({ plan, currentPlan, earlyBirdActive }: { plan: Plan; c
             {planIdx < planOrder.indexOf(currentPlan) ? t("includedInPlan") : ""}
           </p>
         ) : isUpgrade ? (
-          <button
-            onClick={handleAction}
-            disabled={loading}
-            className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 ${
-              plan.key === "premium" ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-lg" : "bg-primary-600 hover:bg-primary-700"
-            }`}
-          >
-            {loading ? t("redirecting") : t("upgradeTo", { plan: plan.name })}
-          </button>
+          purchaseBlockedReason ? (
+            <button
+              type="button"
+              disabled
+              title={purchaseBlockedReason}
+              className="w-full cursor-not-allowed rounded-xl bg-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-500"
+            >
+              {t("availableAfterApproval")}
+            </button>
+          ) : (
+            <button
+              onClick={handleAction}
+              disabled={loading}
+              className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 ${
+                plan.key === "premium" ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-lg" : "bg-primary-600 hover:bg-primary-700"
+              }`}
+            >
+              {loading ? t("redirecting") : t("upgradeTo", { plan: plan.name })}
+            </button>
+          )
         ) : isDowngrade ? (
+          // Downgrades stay enabled — a banned/unapproved photographer
+          // already on a paid plan should still be able to step down.
           <button
             onClick={handleAction}
             disabled={loading}
@@ -124,6 +138,11 @@ export function PlanCard({ plan, currentPlan, earlyBirdActive }: { plan: Plan; c
             {loading ? t("loading") : plan.key === "free" ? t("downgrade") : t("switchTo", { plan: plan.name })}
           </button>
         ) : null}
+        {error && (
+          <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );

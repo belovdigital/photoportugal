@@ -5,7 +5,7 @@ function getStatusMessage(status: string, photographerName: string, clientName: 
   const cName = clientName.split(" ")[0];
 
   const messages: Record<string, string> = {
-    confirmed: `📋 Booking confirmed by ${pName}. Payment link has been sent.`,
+    confirmed: `📋 Booking confirmed by ${pName}. Payment link has been sent.\n⏳ Slot is held but not locked — until payment clears, another client paying first could take the date.`,
     completed: `📸 Session marked as completed. ${pName} will upload photos soon.`,
     delivered: "📦 Photo previews have been uploaded and are ready for review.",
     cancelled: "❌ Booking has been cancelled.",

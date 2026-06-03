@@ -23,6 +23,7 @@ export function DeliveryUploadClient({
   clientAccepted,
   hasOpenDispute,
   deliveryToken: initialToken,
+  deliveryPassword: initialPassword,
   initialTitle,
   initialMessage,
 }: {
@@ -32,6 +33,7 @@ export function DeliveryUploadClient({
   clientAccepted: boolean;
   hasOpenDispute: boolean;
   deliveryToken: string | null;
+  deliveryPassword?: string | null;
   initialTitle?: string | null;
   initialMessage?: string | null;
 }) {
@@ -39,6 +41,12 @@ export function DeliveryUploadClient({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, failed: 0 });
   const [failedFiles, setFailedFiles] = useState<File[]>([]);
+  // Most recent server-side error reason picked off a failed upload
+  // response. Surfaces things like "Delivery limit reached (max 500
+  // items)" in the failed-files banner instead of the generic "didn't
+  // upload, retry" — which used to make the photographer retry forever
+  // against a hard limit they had no way to see.
+  const [lastUploadError, setLastUploadError] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const [delivered, setDelivered] = useState(initialDelivered);
 
@@ -59,7 +67,7 @@ export function DeliveryUploadClient({
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
-  const [galleryPassword, setGalleryPassword] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
+  const [galleryPassword, setGalleryPassword] = useState(() => initialPassword || String(Math.floor(1000 + Math.random() * 9000)));
   const [deliveryTitle, setDeliveryTitle] = useState(initialTitle || "");
   const [deliveryMessage, setDeliveryMessage] = useState(initialMessage || "");
   const [savingMessage, setSavingMessage] = useState(false);
@@ -191,7 +199,9 @@ export function DeliveryUploadClient({
       }),
     });
     if (!presignRes.ok) {
-      console.error("[delivery upload] presign failed:", await presignRes.text());
+      const body = await presignRes.text();
+      console.error("[delivery upload] presign failed:", body);
+      try { const data = JSON.parse(body); if (data?.error) setLastUploadError(String(data.error)); } catch {}
       return false;
     }
     const presign = await presignRes.json() as {
@@ -235,7 +245,9 @@ export function DeliveryUploadClient({
       }),
     });
     if (!finalizeRes.ok) {
-      console.error("[delivery upload] finalize failed:", await finalizeRes.text());
+      const body = await finalizeRes.text();
+      console.error("[delivery upload] finalize failed:", body);
+      try { const data = JSON.parse(body); if (data?.error) setLastUploadError(String(data.error)); } catch {}
       return false;
     }
     const data = await finalizeRes.json();
@@ -279,6 +291,14 @@ export function DeliveryUploadClient({
             }
           } catch {}
         }
+        // Non-2xx (or 2xx with no uploaded payload) — pull the server's
+        // error message off the body if there is one, so the failed-
+        // files banner can show a concrete reason ("Delivery limit
+        // reached (max 500 items)") instead of generic retry copy.
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (data?.error) setLastUploadError(String(data.error));
+        } catch {}
         resolve(false);
       };
       xhr.onerror = () => resolve(false);
@@ -316,6 +336,7 @@ export function DeliveryUploadClient({
       setUploading(true);
       setUploadPhase("uploading");
       setFailedFiles([]);
+      setLastUploadError(null);
       setUploadProgress({ current: 0, total: filtered.length, failed: 0 });
       setBytesProgress({ uploaded: 0, total: addedBytes });
     } else {
@@ -431,7 +452,10 @@ export function DeliveryUploadClient({
   }
 
   function copyLink() {
-    navigator.clipboard.writeText(deliveryUrl);
+    const text = galleryPassword
+      ? `${deliveryUrl}?pw=${encodeURIComponent(galleryPassword)}`
+      : deliveryUrl;
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -552,16 +576,32 @@ export function DeliveryUploadClient({
         </div>
       )}
 
-      {/* Failed uploads - retry */}
+      {/* Failed uploads - retry. Wording: previously we guessed "(likely
+          too large)" but server-side per-file errors include a real
+          reason now, so just say "didn't upload" — Retry usually fixes
+          transient failures (network blip, server hiccup, etc.) and if
+          it persists, admin has already been emailed with the per-file
+          reasons. */}
       {!uploading && failedFiles.length > 0 && (
         <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-amber-700">
-              {failedFiles.length} photo{failedFiles.length !== 1 ? "s" : ""} failed to upload (likely too large)
-            </p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-amber-800">
+                {failedFiles.length} photo{failedFiles.length !== 1 ? "s" : ""} didn't upload.
+              </p>
+              {lastUploadError ? (
+                <p className="mt-0.5 text-sm text-amber-700">
+                  Reason: <span className="font-semibold">{lastUploadError}</span>
+                </p>
+              ) : (
+                <p className="mt-0.5 text-sm text-amber-700">
+                  Try Retry. If it keeps failing, we've already been notified.
+                </p>
+              )}
+            </div>
             <button
               onClick={() => handleUpload(failedFiles)}
-              className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition"
+              className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 transition"
             >
               {t("retryUpload")}
             </button>
@@ -616,6 +656,11 @@ export function DeliveryUploadClient({
                   <p className="font-semibold text-accent-700 text-sm">{t("photosDelivered")}</p>
                   {canEdit && (
                     <p className="mt-0.5 text-xs text-accent-700/80">{t("canStillEditUntilAccepted")}</p>
+                  )}
+                  {initialPassword && (
+                    <p className="mt-1 text-xs text-accent-700/80">
+                      {t("galleryPassword")}: <span className="font-mono font-semibold text-accent-800">{initialPassword}</span>
+                    </p>
                   )}
                 </div>
                 {deliveryUrl && (

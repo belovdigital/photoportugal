@@ -9,6 +9,7 @@ import { unsplashUrl } from "@/lib/unsplash-images";
 import { locations } from "@/lib/locations-data";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { trackCTAClick } from "@/lib/analytics";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
@@ -119,9 +120,24 @@ export function Header() {
           {/* Desktop nav */}
           <div className="hidden items-center gap-1 lg:flex" ref={menuRef}>
             {/* Our Photographers — direct link */}
-            <Link href="/photographers" className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600">
+            <Link
+              href="/photographers"
+              onClick={() => trackCTAClick("our_photographers", "header_desktop")}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600"
+            >
               {t("ourPhotographers")}
             </Link>
+
+            {/* Gift Cards — hidden for photographers (they don't buy gifts for clients) */}
+            {!isPhotographer && (
+              <Link
+                href="/gift-cards"
+                onClick={() => trackCTAClick("gift_cards", "header_desktop")}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600"
+              >
+                🎁 {t("giftCards")}
+              </Link>
+            )}
 
             {/* Destinations dropdown */}
             <div className="relative">
@@ -220,11 +236,16 @@ export function Header() {
               </ConciergeTrigger>
             )}
 
-            {/* Book CTA — hide while loading to prevent flash */}
-            {!isLoading && !isPhotographer && (
-              <Link href="/choose-booking-type" className="hidden rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 sm:inline-flex">
-                {t("bookPhotoshoot")}
-              </Link>
+            {/* Primary CTA — opens the AI Concierge drawer. Replaced the
+                old /choose-booking-type → /find-photographer manual flow
+                when we shifted focus to AI matching. */}
+            {!isLoading && !isPhotographer && pathname !== "/concierge" && (
+              <ConciergeTrigger
+                onClick={() => trackCTAClick("get_matched", "header_desktop")}
+                className="hidden rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 sm:inline-flex"
+              >
+                {t("getMatched")}
+              </ConciergeTrigger>
             )}
 
             {isLoading ? (
@@ -405,7 +426,7 @@ export function Header() {
                 <div className="pr-8 border-r border-warm-200">
                   <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-primary-500">{t("megaForTravelers")}</p>
                   <div className="space-y-0.5">
-                    <Link href="/photographers" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                    <Link href="/photographers" onClick={() => { trackCTAClick("our_photographers", "header_mega"); setActiveMenu(null); }} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
                       <Search className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
                       <div>
                         <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("findPhotographers")}</p>
@@ -419,14 +440,14 @@ export function Header() {
                         <p className="text-xs text-gray-400">{t("photoMapDesc")}</p>
                       </div>
                     </Link>
-                    <Link href="/find-photographer" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                    <ConciergeTrigger onClick={() => { trackCTAClick("get_matched", "header_mega"); setActiveMenu(null); }} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50 w-full text-left">
                       <Heart className="h-[18px] w-[18px] shrink-0 text-accent-600 transition group-hover:text-accent-700" strokeWidth={1.5} />
                       <div>
                         <p className="text-sm font-semibold text-accent-700 group-hover:text-accent-800 transition">{t("findMePhotographer")}</p>
                         <p className="text-xs text-gray-500">{t("megaMatchDesc")}</p>
                       </div>
-                    </Link>
-                    <Link href="/how-it-works" onClick={() => setActiveMenu(null)} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                    </ConciergeTrigger>
+                    <Link href="/how-it-works" onClick={() => { trackCTAClick("how_it_works", "header_mega"); setActiveMenu(null); }} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
                       <Compass className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
                       <div>
                         <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("howItWorks")}</p>
@@ -662,8 +683,10 @@ export function Header() {
         {mobileOpen && (
           <div className="border-t border-warm-200 bg-white px-4 py-4 lg:hidden">
             <div className="flex flex-col gap-1">
-              <MobileNavLink href="/photographers" label={t("findPhotographers")} onClick={() => setMobileOpen(false)} />
-              <MobileNavLink href="/find-photographer" label={t("getMatched")} onClick={() => setMobileOpen(false)} />
+              <MobileNavLink href="/photographers" label={t("findPhotographers")} onClick={() => { trackCTAClick("our_photographers", "header_mobile"); setMobileOpen(false); }} />
+              {!isPhotographer && (
+                <MobileNavLink href="/gift-cards" label={`🎁 ${t("giftCards")}`} onClick={() => { trackCTAClick("gift_cards", "header_mobile"); setMobileOpen(false); }} />
+              )}
               <MobileNavLink href="/locations" label={t("photoMap")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/how-it-works" label={t("howItWorks")} onClick={() => setMobileOpen(false)} />
               <MobileNavLink href="/faq" label={t("faq")} onClick={() => setMobileOpen(false)} />
@@ -680,9 +703,12 @@ export function Header() {
                 </>
               ) : null}
               {!isPhotographer && (
-                <Link href="/choose-booking-type" onClick={() => setMobileOpen(false)} className="mt-2 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white">
-                  {t("bookPhotoshoot")}
-                </Link>
+                <ConciergeTrigger
+                  onClick={() => { trackCTAClick("get_matched", "header_mobile"); setMobileOpen(false); }}
+                  className="mt-2 w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white"
+                >
+                  {t("getMatched")}
+                </ConciergeTrigger>
               )}
             </div>
           </div>

@@ -69,7 +69,8 @@ export async function getBufferedBusyWindows(
   rangeStart: Date,
   rangeEnd: Date,
   bufferMinutes: number,
-  excludeBookingId?: string
+  excludeBookingId?: string,
+  excludeClientId?: string
 ): Promise<BusyWindow[]> {
   const calendarRows = await query<{ starts_at: string; ends_at: string }>(
     `SELECT to_char(starts_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS starts_at,
@@ -82,6 +83,19 @@ export async function getBufferedBusyWindows(
     [photographerId, addMinutes(rangeStart, -bufferMinutes), addMinutes(rangeEnd, bufferMinutes)]
   );
 
+  // Policy: only PAID bookings (or already-delivered shoots) block a
+  // slot from new clients. Unpaid pending/confirmed holds no longer
+  // squat on the calendar — they're soft commitments until money lands.
+  // Changed 2026-06-01 after Teresa ↔ Maya Rodrigues case: Teresa's
+  // own pending hold blocked her from re-booking the same date when
+  // they renegotiated price in chat, AND a stranger's never-accepted
+  // pending booking would have done the same. "First to pay wins" is
+  // simpler + matches photographer expectations.
+  //
+  // excludeBookingId and excludeClientId stay as belt-and-suspenders for
+  // edge cases (e.g. propose-date checks where we exclude the booking
+  // being modified, or future flows that want to skip a viewer's own
+  // paid history when checking availability).
   const bookingRows = await query<{
     id: string;
     shoot_date: string;
@@ -93,11 +107,12 @@ export async function getBufferedBusyWindows(
        LEFT JOIN packages p ON p.id = b.package_id
       WHERE b.photographer_id = $1
         AND b.shoot_date IS NOT NULL
-        AND b.status IN ('pending', 'confirmed', 'completed', 'delivered')
+        AND (b.payment_status = 'paid' OR b.status IN ('completed', 'delivered'))
         AND ($4::uuid IS NULL OR b.id <> $4::uuid)
+        AND ($6::uuid IS NULL OR b.client_id <> $6::uuid)
         AND b.shoot_date >= (($2::timestamptz AT TIME ZONE $5)::date - INTERVAL '1 day')::date
         AND b.shoot_date <= (($3::timestamptz AT TIME ZONE $5)::date + INTERVAL '1 day')::date`,
-    [photographerId, rangeStart, rangeEnd, excludeBookingId || null, LISBON_TZ]
+    [photographerId, rangeStart, rangeEnd, excludeBookingId || null, LISBON_TZ, excludeClientId || null]
   );
 
   const windows = [

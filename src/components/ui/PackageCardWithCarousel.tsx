@@ -6,6 +6,10 @@ import { getTranslations } from "next-intl/server";
 
 export interface PackageCardWithCarouselData {
   id: string;
+  /** Package slug — when present the card links to the per-package
+   *  landing page (`/photographers/<photog>/<package-slug>`). Falls
+   *  back to the booking flow if missing. */
+  slug?: string | null;
   name: string;
   price: number | string;
   duration_minutes: number;
@@ -87,7 +91,12 @@ export async function PackageCardWithCarousel({
       </div>
 
       <Link
-        href={`/book/${pkg.photographer_slug}?package=${pkg.id}`}
+        // CTA literally says "Book this package", so go straight to the
+        // booking flow instead of the per-package landing page. The landing
+        // page mostly duplicates info already visible on this card and
+        // adds a click for warm traffic. Cover image still links to the
+        // photographer profile for users who want details.
+        href={`/book/${pkg.photographer_slug}?package=${pkg.id}` as never}
         className="flex flex-1 flex-col p-4 pt-7"
       >
         <div className="min-w-0">

@@ -150,6 +150,7 @@ async function uploadClickConversion(params: {
   conversionDateTime: string;
   conversionValue?: number;
   currencyCode?: string;
+  orderId?: string;
   userData?: { email?: string | null; phone?: string | null };
 }) {
   const customer = await getCustomer();
@@ -163,6 +164,10 @@ async function uploadClickConversion(params: {
   if (params.conversionValue !== undefined && params.conversionValue !== null) {
     conversion.conversion_value = params.conversionValue;
     conversion.currency_code = params.currencyCode || "EUR";
+  }
+
+  if (params.orderId) {
+    conversion.order_id = params.orderId;
   }
 
   const userIdentifiers = buildUserIdentifiers(params.userData);
@@ -185,7 +190,8 @@ async function uploadClickConversion(params: {
 export async function uploadBookingCreatedConversion(
   gclid: string,
   conversionValue?: number,
-  userData?: { email?: string | null; phone?: string | null }
+  userData?: { email?: string | null; phone?: string | null },
+  orderId?: string
 ) {
   if (!gclid) return;
   if (!process.env.GOOGLE_ADS_DEVELOPER_TOKEN) {
@@ -206,11 +212,12 @@ export async function uploadBookingCreatedConversion(
       conversionDateTime: formatConversionDateTime(new Date()),
       conversionValue: conversionValue ? Number((conversionValue * BOOKING_CREATED_VALUE_RATE).toFixed(2)) : 0,
       currencyCode: "EUR",
+      orderId,
       userData,
     });
 
     const failure = result?.partial_failure_error ? decodePartialFailure(result.partial_failure_error) : "";
-    console.log("[google-ads-conversions] Booking Created uploaded gclid=" + gclid + " " + (failure ? `FAILURE: ${failure}` : "SUCCESS"));
+    console.log("[google-ads-conversions] Booking Created uploaded gclid=" + gclid + (orderId ? ` order_id=${orderId}` : "") + " " + (failure ? `FAILURE: ${failure}` : "SUCCESS"));
   } catch (error) {
     console.error("[google-ads-conversions] Failed to upload Booking Created conversion:", error);
   }
@@ -222,7 +229,8 @@ export async function uploadBookingCreatedConversion(
 export async function uploadPaymentCompletedConversion(
   gclid: string,
   conversionValue: number,
-  userData?: { email?: string | null; phone?: string | null }
+  userData?: { email?: string | null; phone?: string | null },
+  orderId?: string
 ) {
   if (!gclid) return;
   if (!process.env.GOOGLE_ADS_DEVELOPER_TOKEN) {
@@ -243,11 +251,12 @@ export async function uploadPaymentCompletedConversion(
       conversionDateTime: formatConversionDateTime(new Date()),
       conversionValue,
       currencyCode: "EUR",
+      orderId,
       userData,
     });
 
     const failure = result?.partial_failure_error ? decodePartialFailure(result.partial_failure_error) : "";
-    console.log("[google-ads-conversions] Payment Completed uploaded gclid=" + gclid + " value=" + conversionValue + " " + (failure ? `FAILURE: ${failure}` : "SUCCESS"));
+    console.log("[google-ads-conversions] Payment Completed uploaded gclid=" + gclid + " value=" + conversionValue + (orderId ? ` order_id=${orderId}` : "") + " " + (failure ? `FAILURE: ${failure}` : "SUCCESS"));
   } catch (error) {
     console.error("[google-ads-conversions] Failed to upload Payment Completed conversion:", error);
   }

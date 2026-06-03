@@ -656,57 +656,6 @@ export const locations: Location[] = [
       "Réservez un photographe à Aveiro, Portugal. Barques moliceiros colorées, architecture Art nouveau et séances à Costa Nova.",
   },
 
-  {
-    id: "geres",
-    slug: "geres",
-    name: "Peneda-Geres",
-    region: "Northern Portugal",
-    description:
-      "Portugal's only national park — wild mountains, waterfalls, and ancient granite villages.",
-    long_description:
-      "Peneda-Gerês is Portugal's sole national park and one of the last truly wild places in Western Europe. Granite mountain peaks, ancient oak forests, cascading waterfalls, and turquoise river pools create an epic natural landscape. The park is home to wild Garrano ponies, ancient Roman roads, and granite villages that seem frozen in time. Key photography spots include the dramatic Cascata do Tahiti waterfall, the emerald waters of the Caniçada Reservoir, and the ancient village of Lindoso with its hilltop castle and traditional espigueiros (granite granaries). For couples and families who love nature and adventure, Gerês offers the most dramatic wild scenery in Portugal.",
-    cover_image: "/images/locations/geres-cover.jpg",
-    gallery_images: [],
-    lat: 41.7213,
-    lng: -8.1558,
-    photographer_count: 0,
-    seo_title: "Photographer in Peneda-Gerês, Portugal | National Park Photoshoots",
-    seo_description:
-      "Book a photographer in Peneda-Gerês National Park, Portugal. Waterfalls, mountain lakes, and wild nature photoshoots.",
-    description_pt:
-      "O único parque nacional de Portugal — montanhas selvagens, cascatas e aldeias ancestrais de granito.",
-    long_description_pt:
-      "Peneda-Gerês é o único parque nacional de Portugal e um dos últimos lugares verdadeiramente selvagens da Europa Ocidental. Picos de montanha em granito, florestas ancestrais de carvalhos, cascatas e piscinas naturais de águas turquesa criam uma paisagem natural épica. O parque é lar dos garranos selvagens, antigas estradas romanas e aldeias de granito que parecem paradas no tempo. Os locais de fotografia mais procurados incluem a dramática Cascata do Tahiti, as águas esmeraldinas da Albufeira da Caniçada e a aldeia ancestral de Lindoso com o seu castelo no cimo da colina e os tradicionais espigueiros. Para casais e famílias que adoram natureza e aventura, Gerês oferece os cenários selvagens mais dramáticos de Portugal.",
-    seo_title_pt: "Fotógrafo em Peneda-Gerês, Portugal | Sessões no Parque Nacional",
-    seo_description_pt:
-      "Reserve um fotógrafo no Parque Nacional da Peneda-Gerês, Portugal. Sessões fotográficas em cascatas, lagos de montanha e natureza selvagem.",
-    name_de: "Peneda-Gerês",
-    name_pt: "Peneda-Gerês",
-    name_es: "Peneda-Gerês",
-    name_fr: "Peneda-Gerês",
-    description_de:
-      "Portugals einziger Nationalpark — wilde Berge, Wasserfälle und uralte Granitdörfer.",
-    long_description_de:
-      "Peneda-Gerês ist der einzige Nationalpark Portugals und einer der letzten wirklich wilden Orte Westeuropas. Granitgipfel, alte Eichenwälder, herabstürzende Wasserfälle und türkisfarbene Flussbecken bilden eine epische Naturkulisse. Im Park leben wilde Garrano-Ponys, alte Römerstraßen und Granitdörfer scheinen in der Zeit eingefroren. Zu den Highlights für Fotos zählen der dramatische Wasserfall Cascata do Tahiti, das smaragdfarbene Wasser des Caniçada-Stausees und das uralte Dorf Lindoso mit seiner Hügelburg und den traditionellen Espigueiros (Granitspeichern). Für Paare und Familien, die Natur und Abenteuer lieben, bietet Gerês die dramatischsten Wildlandschaften Portugals.",
-    seo_title_de: "Fotograf in Peneda-Gerês, Portugal | Fotoshootings im Nationalpark",
-    seo_description_de:
-      "Buchen Sie einen Fotografen im Nationalpark Peneda-Gerês, Portugal. Wasserfälle, Bergseen und Fotoshootings in wilder Natur.",
-    description_es:
-      "El único parque nacional de Portugal: montañas salvajes, cascadas y antiguos pueblos de granito.",
-    description_fr:
-      "L'unique parc national du Portugal — montagnes sauvages, cascades et villages anciens de granit.",
-    long_description_es:
-      "Peneda-Gerês es el único parque nacional de Portugal y uno de los últimos lugares verdaderamente salvajes de Europa Occidental. Picos montañosos de granito, antiguos bosques de robles, cascadas y piscinas naturales de aguas turquesas crean un paisaje natural épico. El parque alberga los garranos salvajes, antiguas calzadas romanas y aldeas de granito que parecen detenidas en el tiempo. Los lugares fotográficos más buscados incluyen la espectacular Cascada do Tahiti, las aguas esmeraldas del embalse de Caniçada y la antigua aldea de Lindoso con su castillo en la cima de la colina y los tradicionales espigueiros (graneros de granito). Para parejas y familias amantes de la naturaleza y la aventura, Gerês ofrece los escenarios salvajes más espectaculares de Portugal.",
-    long_description_fr:
-      "Peneda-Gerês est l'unique parc national du Portugal et l'un des derniers lieux véritablement sauvages d'Europe occidentale. Des sommets de granit, des forêts de chênes ancestrales, des cascades et des bassins naturels aux eaux turquoise composent un paysage épique. Le parc abrite les chevaux garranos sauvages, d'anciennes voies romaines et des villages de granit semblant figés dans le temps. Parmi les sites incontournables : la spectaculaire cascade de Tahiti, les eaux émeraude du réservoir de Caniçada et le village ancestral de Lindoso avec son château au sommet et ses espigueiros (greniers en granit) traditionnels. Pour les couples et familles amoureux de nature et d'aventure, Gerês offre les décors sauvages les plus spectaculaires du Portugal.",
-    seo_title_es: "Fotógrafo en Peneda-Gerês, Portugal | Sesiones en el parque nacional",
-    seo_description_es:
-      "Reserve un fotógrafo en el Parque Nacional Peneda-Gerês, Portugal. Sesiones en cascadas, lagos de montaña y naturaleza salvaje.",
-    seo_title_fr: "Photographe à Peneda-Gerês, Portugal | Séances dans le parc national",
-    seo_description_fr:
-      "Réservez un photographe au parc national de Peneda-Gerês, Portugal. Séances cascades, lacs de montagne et nature sauvage.",
-  },
-
   // Central Portugal
   {
     id: "tomar",
@@ -1672,7 +1621,7 @@ export const nearbyLocationsMap: Record<string, string[]> = {
   setubal: ["lisbon", "caparica", "comporta"],
   comporta: ["setubal", "caparica", "evora"],
   porto: ["douro-valley", "braga", "guimaraes", "aveiro"],
-  braga: ["porto", "guimaraes", "geres"],
+  braga: ["porto", "guimaraes"],
   guimaraes: ["porto", "braga"],
   "douro-valley": ["porto", "braga", "guimaraes"],
   aveiro: ["porto", "coimbra"],

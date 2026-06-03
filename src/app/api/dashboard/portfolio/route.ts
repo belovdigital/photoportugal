@@ -8,6 +8,11 @@ import sharp from "sharp";
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per portfolio photo
+const PORTFOLIO_LIMITS: Record<string, number> = {
+  free: 500,
+  pro: 500,
+  premium: 500,
+};
 
 // Client uses temp ids like "temp-1777..." for items mid-upload; those never
 // reach the DB so DELETE/PATCH against them must short-circuit instead of
@@ -71,8 +76,7 @@ export async function POST(req: NextRequest) {
     [profile.id]
   );
   const count = parseInt((items[0] as { count: string }).count);
-  const limits: Record<string, number> = { free: 100, pro: 100, premium: 100 };
-  const limit = limits[profile.plan] || 100;
+  const limit = PORTFOLIO_LIMITS[profile.plan] || PORTFOLIO_LIMITS.free;
 
   if (count >= limit) {
     return NextResponse.json(

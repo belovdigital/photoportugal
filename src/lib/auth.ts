@@ -85,11 +85,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             [email]
           );
 
+          // Upgrade Google's default 96-pixel avatar to 500-pixel so it
+          // doesn't look pixelated in chat/zoom.
+          const { normalizeAvatarUrl } = await import("@/lib/avatar-url");
+          const avatarUrl = normalizeAvatarUrl(user.image);
+
           if (existing) {
             if (existing.is_banned) return false;
             await query(
               "UPDATE users SET google_id = COALESCE(google_id, $1), avatar_url = COALESCE(avatar_url, $2), email_verified = TRUE WHERE email = $3",
-              [account.providerAccountId, user.image, email]
+              [account.providerAccountId, avatarUrl, email]
             );
           } else {
             const nameParts = (user.name || "").split(" ");
@@ -97,20 +102,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const lastName = nameParts.slice(1).join(" ") || "";
             await query(
               "INSERT INTO users (email, name, first_name, last_name, google_id, avatar_url, role, email_verified) VALUES ($1, $2, $3, $4, $5, $6, NULL, TRUE)",
-              [email, user.name, firstName, lastName, account.providerAccountId, user.image]
+              [email, user.name, firstName, lastName, account.providerAccountId, avatarUrl]
             );
-            // Send welcome email immediately (user is created as client by default).
-            // Admin notification is NOT sent here — it's sent from set-role endpoint
-            // after the user picks their role, to avoid duplicate notifications
-            // when someone registers as photographer (created as client first, then role changed).
-            // Create notification preferences
+            // Welcome email + admin notification fire IMMEDIATELY now (used
+            // to wait for set-role to avoid client→photographer dupes, but
+            // that delayed Telegram pings by hours/days when users dropped
+            // off the onboarding screen). The set-role endpoint now sends
+            // a SECOND "Role changed to Photographer" alert only when the
+            // user actually picks photographer — clients (95% case) stay
+            // with the single instant ping they get here.
             const newUser = await queryOne<{ id: string }>("SELECT id FROM users WHERE email = $1", [email]);
             if (newUser) {
               query("INSERT INTO notification_preferences (user_id) VALUES ($1) ON CONFLICT DO NOTHING", [newUser.id]).catch(() => {});
+              import("@/lib/email").then(({ sendWelcomeEmail, sendAdminNewClientNotification }) => {
+                sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
+                  console.error("[auth] Google welcome email error:", err)
+                );
+                sendAdminNewClientNotification(user.name || "Unknown", email).catch((err) =>
+                  console.error("[auth] Google admin email error:", err)
+                );
+              }).catch(() => {});
+              import("@/lib/telegram").then(({ sendTelegram }) => {
+                sendTelegram(`👤 <b>New Client (Google)</b>\n\n<b>Name:</b> ${user.name || "Unknown"}\n<b>Email:</b> ${email}`, "clients");
+              }).catch((err) => console.error("[auth] Google telegram error:", err));
+              query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [newUser.id]).catch(() => {});
             }
-            // Welcome email + admin notifications are sent from set-role endpoint
-            // after the user picks their role, to avoid duplicate notifications
-            // when someone registers as photographer (created as client first, then role changed).
           }
         } catch (error) {
           console.error("[auth] Google signIn DB error:", error);

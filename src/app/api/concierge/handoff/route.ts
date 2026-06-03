@@ -11,10 +11,11 @@ export const runtime = "nodejs";
 //      allowed handoff. We still notify admins on Telegram even without
 //      email; match_request row is only created when an email is given.
 export async function POST(req: NextRequest) {
-  const { chat_id, email, first_name, summary, location_slug, shoot_type, manual } =
+  const { chat_id, email, phone, first_name, summary, location_slug, shoot_type, manual } =
     (await req.json().catch(() => ({}))) as {
       chat_id?: string;
       email?: string;
+      phone?: string;
       first_name?: string;
       summary?: string;
       location_slug?: string;
@@ -23,6 +24,16 @@ export async function POST(req: NextRequest) {
       manual?: boolean;
     };
   if (!chat_id) return NextResponse.json({ error: "chat_id required" }, { status: 400 });
+
+  // Persist phone on the chat session up front so the gate below + the
+  // admin Telegram both see it. We use a separate UPDATE because the
+  // existing UPDATE further down only touches email/match_request_id.
+  if (phone && phone.trim()) {
+    await queryOne(
+      "UPDATE concierge_chats SET phone = $1, updated_at = NOW() WHERE id = $2 RETURNING id",
+      [phone.trim(), chat_id]
+    ).catch(() => null);
+  }
 
   let matchReqId: string | null = null;
   if (email) {
@@ -53,16 +64,30 @@ export async function POST(req: NextRequest) {
       messages: { role: string; content: string; action?: { type?: string; data?: { matches?: { slug: string }[] } } | null }[];
       utm_source: string | null; utm_term: string | null; country: string | null;
       phone: string | null; gclid: string | null; outcome: string | null;
+      email: string | null;
       matched_photographer_ids: string[] | null;
       inquiry_booking_ids: string[] | null;
       created_at: string; updated_at: string;
     }>(
-      `SELECT messages, utm_source, utm_term, country, phone, gclid, outcome,
+      `SELECT messages, utm_source, utm_term, country, phone, gclid, outcome, email,
               matched_photographer_ids, inquiry_booking_ids,
               created_at, updated_at
          FROM concierge_chats WHERE id = $1`,
       [chat_id]
     ).catch(() => null);
+
+    // Gate: skip Telegram if we have no contact (this endpoint is hit
+    // by the "Ask a human" button which may run before the visitor has
+    // shared email/phone). Mark outcome differently so we can see the
+    // ghost rate in stats.
+    const hasContact = !!(email || ctx?.email || ctx?.phone);
+    if (!hasContact) {
+      await queryOne(
+        "UPDATE concierge_chats SET outcome = 'human_handoff_no_contact', updated_at = NOW() WHERE id = $1 RETURNING id",
+        [chat_id]
+      ).catch(() => null);
+      return NextResponse.json({ ok: true, match_request_id: matchReqId, notified: false, reason: "no_contact" });
+    }
     const userTurns = (ctx?.messages || [])
       .filter((m) => m.role === "user")
       .map((m) => (m.content || "").replace(/\s*\(slug:[a-z0-9-]+\)\s*$/i, ""));

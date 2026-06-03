@@ -73,3 +73,43 @@ export function localeAlternates(path: string, locale: string) {
     languages,
   };
 }
+
+/**
+ * Same as localeAlternates but only emits hreflang entries for locales where
+ * the content actually exists (DB row present). Use this for content that is
+ * not uniformly translated across all 5 locales — e.g. blog posts authored in
+ * a single language. Emitting hreflang for a non-existent translation makes
+ * Google follow it and find a 308 redirect or a noindex fallback, which is a
+ * negative SEO signal: alternate URLs should be indexable on their own.
+ */
+export function localeAlternatesFiltered(
+  path: string,
+  locale: string,
+  availableLocales: readonly string[]
+) {
+  const safeLocale = LOCALES.includes(locale as Locale) ? locale as Locale : "en";
+  const available = new Set(availableLocales);
+  // Always include the current locale (it's the canonical for this page).
+  available.add(safeLocale);
+
+  const urls: Partial<Record<Locale, string>> = {};
+  for (const loc of LOCALES) {
+    if (available.has(loc)) urls[loc] = localizedUrl(path, loc);
+  }
+
+  const languages: Record<string, string> = {};
+  // x-default points at the EN version when available, otherwise current.
+  languages["x-default"] = urls.en ?? urls[safeLocale]!;
+  for (const loc of LOCALES) {
+    const url = urls[loc];
+    if (!url) continue;
+    for (const hreflang of HREFLANGS[loc]) {
+      languages[hreflang] = url;
+    }
+  }
+
+  return {
+    canonical: urls[safeLocale]!,
+    languages,
+  };
+}

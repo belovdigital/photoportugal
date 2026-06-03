@@ -9,6 +9,7 @@ import { formatDuration } from "@/lib/package-pricing";
 interface PackageProps {
   pkg: {
     id: string;
+    slug?: string | null;
     name: string;
     description: string | null;
     price: number;
@@ -19,6 +20,9 @@ interface PackageProps {
     features?: string[];
   };
   photographerSlug: string;
+  // When set, this card represents a gift-card redemption: hide price,
+  // show "Covered by your gift" badge, CTA reads "Book my gift session".
+  giftMode?: { tier: "express" | "full"; tierLabel: string } | null;
 }
 
 function formatDescription(desc: string) {
@@ -55,7 +59,7 @@ function formatDescription(desc: string) {
   return <p className="text-sm text-gray-500">{desc}</p>;
 }
 
-export function PackageCard({ pkg, photographerSlug }: PackageProps) {
+export function PackageCard({ pkg, photographerSlug, giftMode = null }: PackageProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: session, status } = useSession();
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
@@ -85,10 +89,18 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
         </span>
       )}
 
-      {/* Header: name + price on one line */}
+      {/* Header: name + price on one line. In gift-mode we swap price for
+          a "Covered by your gift" badge so the recipient knows it's free
+          to them. */}
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-base font-bold text-gray-900">{pkg.name}</h3>
-        <span className="shrink-0 text-2xl font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</span>
+        {giftMode ? (
+          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-primary-100 text-primary-700 px-3 py-1 text-xs font-semibold">
+            🎁 Covered
+          </span>
+        ) : (
+          <span className="shrink-0 text-2xl font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</span>
+        )}
       </div>
 
       {/* Key specs inline */}
@@ -151,21 +163,18 @@ export function PackageCard({ pkg, photographerSlug }: PackageProps) {
       )}
 
       {!isPhotographer && (
-        // Wrapped in a div so we can use `mt-auto` to push the button to
-        // the bottom (equalising CTA position across cards) WITHOUT
-        // having to mess with the button's own vertical padding. The
-        // `pt-4` here keeps the visual gap above the button consistent
-        // with what `mt-4` used to provide.
         <div className="mt-auto pt-4">
           <Link
-            href={`/book/${photographerSlug}?package=${pkg.id}`}
+            href={`/book/${photographerSlug}?package=${pkg.id}${giftMode ? "&gift=1" : ""}`}
             className={`block w-full rounded-xl px-4 py-2.5 text-center text-sm font-semibold transition ${
-              pkg.is_popular
+              giftMode
+                ? "bg-primary-600 text-white hover:bg-primary-700"
+                : pkg.is_popular
                 ? "bg-primary-600 text-white hover:bg-primary-700"
                 : "bg-gray-900 text-white hover:bg-gray-800"
             }`}
           >
-            {t("bookThisPackage")}
+            {giftMode ? `📸 Book my ${giftMode.tierLabel} gift session` : t("bookThisPackage")}
           </Link>
         </div>
       )}

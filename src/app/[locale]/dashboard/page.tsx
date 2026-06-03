@@ -124,11 +124,13 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     stripe_account_id: string | null; stripe_onboarding_complete: boolean;
     phone: string | null; created_at: string; revision_status: string | null;
     is_verified: boolean; is_featured: boolean; phone_verified: boolean; phone_number: string | null;
+    getting_started_seen_at: string | null;
   }>(
     `SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved,
             u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete,
             u.phone, pp.created_at, pp.revision_status,
-            pp.is_verified, pp.is_featured, pp.phone_verified, pp.phone_number
+            pp.is_verified, pp.is_featured, pp.phone_verified, pp.phone_number,
+            pp.getting_started_seen_at
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      WHERE pp.user_id = $1`,
@@ -141,6 +143,13 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
         <p className="text-gray-500">{t("noProfileFound")}</p>
       </div>
     );
+  }
+
+  // First dashboard load after approval — push the photographer through
+  // the getting-started guide. The guide marks itself as seen on render,
+  // so this redirect only fires once per photographer ever.
+  if (profile.is_approved && !profile.getting_started_seen_at) {
+    redirect("/dashboard/getting-started");
   }
 
   // Self-heal stale stripe_onboarding_complete by live-checking Stripe when the
@@ -251,7 +260,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
       {/* Action needed */}
       {tasks.length > 0 && (
         <div className="mt-6">
-          <ActionNeededWidget tasks={tasks} locale={locale} />
+          <ActionNeededWidget tasks={tasks} />
         </div>
       )}
 

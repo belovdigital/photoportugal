@@ -8,9 +8,20 @@ export interface UnavailableRange {
   date_to: string;
 }
 
+// Raw click coordinates carried alongside the formatted date string.
+// Used so the server can recompute the date from the click position
+// itself and verify nothing got shifted between the click and the
+// submit. `month` is 1-indexed (1=January) for zero ambiguity at the
+// network boundary.
+export interface DateClickCoords {
+  year: number;
+  month: number; // 1..12
+  day: number;   // 1..31
+}
+
 interface DatePickerProps {
   value: string; // YYYY-MM-DD
-  onChange: (value: string) => void;
+  onChange: (value: string, coords?: DateClickCoords) => void;
   min?: string; // YYYY-MM-DD
   max?: string; // YYYY-MM-DD
   label?: string;
@@ -30,8 +41,13 @@ const INTL_LOCALES: Record<string, string> = {
 
 function buildWeekdays(locale: string): string[] {
   // Build short weekday labels (Mon..Sun) for the active locale.
-  const fmt = new Intl.DateTimeFormat(INTL_LOCALES[locale] || locale, { weekday: "short" });
-  // 2024-01-01 is a Monday; iterate 7 days to get Mon..Sun.
+  // CRITICAL: format in UTC so the label matches the day passed to
+  // Date.UTC(). Without timeZone:"UTC" the formatter renders the
+  // UTC instant in the user's local TZ — for any user west of UTC
+  // (the Americas) that shifts every label backwards by a full day,
+  // and Mon..Sun silently becomes Sun..Sat.
+  const fmt = new Intl.DateTimeFormat(INTL_LOCALES[locale] || locale, { weekday: "short", timeZone: "UTC" });
+  // 2024-01-01 is a Monday in UTC; iterate 7 days to get Mon..Sun.
   const out: string[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(Date.UTC(2024, 0, 1 + i));
@@ -41,7 +57,15 @@ function buildWeekdays(locale: string): string[] {
 }
 
 function buildMonths(locale: string): string[] {
-  const fmt = new Intl.DateTimeFormat(INTL_LOCALES[locale] || locale, { month: "long" });
+  // CRITICAL: format in UTC. The MONTH_NAMES array is indexed by the
+  // 0-indexed month we pass to Date.UTC() — without timeZone:"UTC" the
+  // formatter shifts every name back by one month for users west of
+  // UTC, so MONTH_NAMES[5] ("June" by index) actually renders "May",
+  // and so on. The picker header then lies about which month is
+  // visible while viewMonth still produces formatDate(year, 6, day) ==
+  // "YYYY-07-DD" — the exact "clicked June, got July" report we kept
+  // seeing from US-based clients.
+  const fmt = new Intl.DateTimeFormat(INTL_LOCALES[locale] || locale, { month: "long", timeZone: "UTC" });
   const out: string[] = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date(Date.UTC(2024, i, 1));
@@ -157,7 +181,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
         <div className="absolute left-0 z-50 mt-2 w-[320px] max-w-[calc(100vw-2rem)] rounded-2xl border border-warm-200 bg-white p-4 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
           {/* Header */}
           <div className="mb-3 flex items-center justify-between">
-            <button type="button" onClick={prevMonth} className="rounded-lg p-1.5 text-gray-400 transition hover:bg-warm-100 hover:text-gray-600">
+            <button type="button" onClick={prevMonth} aria-label="Previous month" className="rounded-lg p-1.5 text-gray-400 transition hover:bg-warm-100 hover:text-gray-600">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
@@ -165,7 +189,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
             <span className="text-sm font-semibold text-gray-900">
               {MONTH_NAMES[viewMonth]} {viewYear}
             </span>
-            <button type="button" onClick={nextMonth} className="rounded-lg p-1.5 text-gray-400 transition hover:bg-warm-100 hover:text-gray-600">
+            <button type="button" onClick={nextMonth} aria-label="Next month" className="rounded-lg p-1.5 text-gray-400 transition hover:bg-warm-100 hover:text-gray-600">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
@@ -195,7 +219,14 @@ export default function DatePicker({ value, onChange, min, max, label, required,
                     type="button"
                     disabled={disabled || unavailable}
                     onClick={() => {
-                      onChange(dateStr);
+                      // Pass the raw click coordinates alongside the
+                      // formatted string. The server cross-checks the two
+                      // and refuses any booking where they disagree, so a
+                      // string-mangling bug anywhere between here and the
+                      // INSERT can no longer create a "wrong month"
+                      // booking silently. month is 1-indexed for the wire
+                      // format to remove all 0/1 ambiguity.
+                      onChange(dateStr, { year: viewYear, month: viewMonth + 1, day });
                       setOpen(false);
                     }}
                     className={`relative flex h-10 w-full items-center justify-center rounded-lg text-sm font-medium transition
@@ -227,7 +258,7 @@ export default function DatePicker({ value, onChange, min, max, label, required,
             <button
               type="button"
               onClick={() => {
-                onChange(todayStr);
+                onChange(todayStr, { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() });
                 setViewYear(today.getFullYear());
                 setViewMonth(today.getMonth());
                 setOpen(false);

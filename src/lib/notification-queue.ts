@@ -207,6 +207,133 @@ export async function queueNotification(opts: QueueOptions): Promise<QueueResult
   return { queued: true, immediate: false, skippedDuplicate: false };
 }
 
+// ── Delayed-with-cancel for new-message email/SMS ──────────────────
+//
+// Pattern: when a new chat message arrives, instead of firing
+// email/SMS immediately, we drop a row with event_kind='new_message'
+// and `send_after = NOW() + 3 min`. The processor below re-checks
+// before sending whether the recipient has read / replied / is online
+// / has the mobile app — and cancels if so. Telegram-style: silent
+// when the other side is engaged, loud only when they actually missed
+// it.
+//
+// Push notifications stay IMMEDIATE (firing in api/messages/route.ts)
+// — they're cheap, lightweight, and don't have the spam problem.
+
+const NEW_MESSAGE_DELAY_SEC = 3 * 60;
+const ONLINE_WINDOW_SEC = 60;
+
+interface EnqueueNewMessageOpts {
+  recipientId: string;
+  recipient: string;        // email or phone (matches the channel)
+  messageId: string;
+  bookingId: string;
+  channel: "email" | "sms";
+  body: string;
+  subject?: string;
+  delaySec?: number;
+}
+
+/**
+ * Enqueue a delayed new-message notification, coalescing duplicates.
+ * If there's already a pending row for the same (recipientId, channel,
+ * bookingId), we skip — the next message in the same chat just rides
+ * along with the existing one rather than triggering a second notif.
+ */
+export async function enqueueNewMessageNotif(opts: EnqueueNewMessageOpts): Promise<void> {
+  if (!opts.recipient) return;
+
+  const existing = await queryOne<{ id: string }>(
+    `SELECT id FROM notification_queue
+      WHERE status = 'pending'
+        AND event_kind = 'new_message'
+        AND recipient_id = $1
+        AND channel = $2
+        AND booking_id = $3
+      LIMIT 1`,
+    [opts.recipientId, opts.channel, opts.bookingId]
+  );
+  if (existing) return; // coalesce
+
+  const delay = opts.delaySec ?? NEW_MESSAGE_DELAY_SEC;
+  const sendAfter = new Date(Date.now() + delay * 1000).toISOString();
+  const dedupKey = `nm:${opts.messageId}:${opts.channel}`;
+  const tz = opts.channel === "sms" ? getTimezoneForPhone(opts.recipient) : "Europe/Lisbon";
+
+  await queryOne(
+    `INSERT INTO notification_queue
+       (recipient_id, recipient, message_id, booking_id, channel, event_kind,
+        subject, body, send_after, recipient_timezone, dedup_key, status)
+     VALUES ($1, $2, $3, $4, $5, 'new_message', $6, $7, $8, $9, $10, 'pending')
+     ON CONFLICT (dedup_key) DO NOTHING
+     RETURNING id`,
+    [
+      opts.recipientId,
+      opts.recipient,
+      opts.messageId,
+      opts.bookingId,
+      opts.channel,
+      opts.subject || "New message — Photo Portugal",
+      opts.body,
+      sendAfter,
+      tz,
+      dedupKey,
+    ]
+  );
+}
+
+/**
+ * Cancel-conditions check for a queued new-message notification.
+ * Returns a string reason to cancel, or null to proceed with delivery.
+ */
+async function shouldCancelNewMessage(row: {
+  id: string;
+  recipient_id: string | null;
+  message_id: string | null;
+  booking_id: string | null;
+  channel: string;
+}): Promise<string | null> {
+  if (!row.recipient_id || !row.message_id || !row.booking_id) return null;
+
+  const msg = await queryOne<{ read_at: string | null; created_at: string }>(
+    "SELECT read_at, created_at FROM messages WHERE id = $1",
+    [row.message_id]
+  );
+  if (!msg) return "missing_message";
+  if (msg.read_at) return "read";
+
+  // Recipient sent any message in this booking after the trigger arrived
+  // — they're already actively engaged, no notification needed.
+  const reply = await queryOne(
+    `SELECT id FROM messages
+      WHERE booking_id = $1 AND sender_id = $2 AND created_at > $3
+      LIMIT 1`,
+    [row.booking_id, row.recipient_id, msg.created_at]
+  );
+  if (reply) return "replied";
+
+  // Currently online (active session in last ONLINE_WINDOW_SEC).
+  const presence = await queryOne<{ last_seen_at: string | null }>(
+    "SELECT last_seen_at FROM users WHERE id = $1",
+    [row.recipient_id]
+  );
+  const lastSeen = presence?.last_seen_at ? new Date(presence.last_seen_at).getTime() : 0;
+  if (Date.now() - lastSeen < ONLINE_WINDOW_SEC * 1000) return "online";
+
+  // SMS-specific: skip if recipient has the mobile app installed (push
+  // already covered them; double-notifying with both push + SMS is the
+  // exact spam problem we're trying to fix).
+  if (row.channel === "sms") {
+    const tokenRow = await queryOne<{ push_token: string | null }>(
+      "SELECT push_token FROM users WHERE id = $1",
+      [row.recipient_id]
+    );
+    if (tokenRow?.push_token) return "has_app";
+  }
+
+  return null;
+}
+
 // ── Queue processor (called from cron) ─────────────────────────────
 
 const MAX_PER_RUN = 50;
@@ -221,8 +348,13 @@ export async function processNotificationQueue(): Promise<number> {
     body: string;
     dedup_key: string;
     attempts: number;
+    event_kind: string | null;
+    recipient_id: string | null;
+    message_id: string | null;
+    booking_id: string | null;
   }>(
-    `SELECT id, channel, recipient, subject, body, dedup_key, attempts
+    `SELECT id, channel, recipient, subject, body, dedup_key, attempts,
+            event_kind, recipient_id, message_id, booking_id
      FROM notification_queue
      WHERE status = 'pending' AND send_after <= NOW()
      ORDER BY send_after ASC
@@ -235,6 +367,28 @@ export async function processNotificationQueue(): Promise<number> {
 
   for (const item of pending) {
     try {
+      // For new-message notifs, re-check cancel conditions just before
+      // sending. If the recipient already saw the message / replied /
+      // is online / has the app — skip the email or SMS entirely.
+      if (item.event_kind === "new_message") {
+        const reason = await shouldCancelNewMessage({
+          id: item.id,
+          recipient_id: item.recipient_id,
+          message_id: item.message_id,
+          booking_id: item.booking_id,
+          channel: item.channel,
+        });
+        if (reason) {
+          await queryOne(
+            `UPDATE notification_queue
+                SET status = 'cancelled', cancel_reason = $2, sent_at = NOW()
+              WHERE id = $1 RETURNING id`,
+            [item.id, reason]
+          );
+          continue;
+        }
+      }
+
       if (item.channel === "sms") {
         await sendSMS(item.recipient, item.body);
       } else {

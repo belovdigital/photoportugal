@@ -40,8 +40,11 @@ export function PayButton({ bookingId, amount }: { bookingId: string; amount: nu
     setLoading(false);
   }
 
-  const serviceFee = Math.round(Number(amount) * SERVICE_FEE_RATE);
-  const total = Math.round(Number(amount) * (1 + SERVICE_FEE_RATE));
+  // Render with 2 decimals to match Stripe's display exactly. Earlier
+  // we Math.round'ed which produced "€248" while Stripe charged €247.50
+  // — confusing the client. Always show cents now.
+  const serviceFee = (Number(amount) * SERVICE_FEE_RATE).toFixed(2);
+  const total = (Number(amount) * (1 + SERVICE_FEE_RATE)).toFixed(2);
 
   return (
     <div className="flex items-center gap-2">
@@ -73,6 +76,7 @@ export function PayButton({ bookingId, amount }: { bookingId: string; amount: nu
           <StripeLogo className="h-[10px] w-auto text-gray-400" />
           {t("securePayment")}
         </span>
+        <span className="text-[10px] font-medium text-amber-600">⏳ {t("slotLocksOnPayment")}</span>
       </div>
       {error && <span className="text-xs text-red-500">{error}</span>}
     </div>

@@ -7,20 +7,9 @@ declare global {
   }
 }
 
-const ADS_ID = "AW-18043729532";
-
 function track(event: string, params?: Record<string, unknown>) {
   if (typeof window !== "undefined" && window.gtag) {
     window.gtag("event", event, params);
-  }
-}
-
-function trackAdsConversion(label: string, value?: number) {
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", "conversion", {
-      send_to: `${ADS_ID}/${label}`,
-      ...(value ? { value, currency: "EUR" } : {}),
-    });
   }
 }
 
@@ -62,24 +51,25 @@ export function trackStartBooking(photographerSlug: string, packageName: string,
   });
 }
 
-// Step 4: Booking submitted (with value for Google Ads optimization)
+// Step 4: Booking submitted. Google Ads optimization uses server-side
+// offline conversions with gclid; keep this browser event GA4-only to
+// avoid duplicate secondary Ads conversions.
 export function trackBookingSubmitted(photographerSlug: string, price: number) {
   track("begin_checkout", {
     currency: "EUR",
     value: price,
     items: [{ item_id: photographerSlug, price }],
   });
-  trackAdsConversion("eNkuCKKespMcEPzs9ZtD", Number(price));
 }
 
-// Step 5: Payment completed (with value for Google Ads optimization)
+// Step 5: Payment completed. Google Ads gets the authoritative paid
+// conversion from the Stripe webhook, where the final paid amount is known.
 export function trackPaymentCompleted(bookingId: string, amount: number) {
   track("purchase", {
     transaction_id: bookingId,
     currency: "EUR",
     value: amount,
   });
-  trackAdsConversion("nNt3CKWespMcEPzs9ZtD", Number(amount));
 }
 
 // Step 6: Delivery accepted
@@ -96,7 +86,6 @@ export function trackReviewSubmitted(photographerSlug: string, rating: number) {
 
 export function trackSignUp(method: string, role: string) {
   track("sign_up", { method, role });
-  if (role === "client") trackAdsConversion("eNkuCKKespMcEPzs9ZtD");
 }
 
 export function trackLocationView(slug: string) {

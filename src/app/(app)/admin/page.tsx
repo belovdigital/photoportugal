@@ -8,6 +8,8 @@ import { AdminBookingsList } from "./AdminBookingsList";
 import { AdminInquiriesList } from "./AdminBookingsTab";
 import { LocationsManager } from "./LocationsManager";
 import { PromoCodesManager } from "./PromoCodesManager";
+import { AdminGiftCardsTab, type AdminGiftCard } from "./AdminGiftCardsTab";
+import { AdminMakeAlbumTab, type AdminMakeAlbumOrder } from "./AdminMakeAlbumTab";
 import { BlogManager } from "./BlogManager";
 import { AdminDashboard } from "./AdminDashboard";
 import { DisputesManager } from "./DisputesManager";
@@ -53,6 +55,8 @@ export default async function AdminPage() {
     bookingsPending,
     bookingsConfirmed,
     bookingsCompleted,
+    bookingsPaid,
+    bookingsPaidThisMonth,
     revenue,
     revenueThisMonth,
     reviewCount,
@@ -69,13 +73,15 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'pending'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'confirmed'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status IN ('completed', 'delivered')"),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE payment_status = 'paid'"),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)"),
     queryOne<{ total: string }>("SELECT COALESCE(SUM(total_price), 0) as total FROM bookings WHERE payment_status = 'paid'"),
     queryOne<{ total: string }>("SELECT COALESCE(SUM(total_price), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM reviews"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM messages"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM match_requests WHERE status = 'new'").catch(() => null),
-    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM reviews WHERE COALESCE(is_approved, FALSE) = FALSE"),
+    queryOne<{ count: string }>("SELECT COUNT(*) as count FROM reviews WHERE COALESCE(is_approved, FALSE) = FALSE AND rejected_at IS NULL"),
   ]);
 
   // Platform settings
@@ -143,7 +149,7 @@ export default async function AdminPage() {
     checklist_complete: boolean;
     days_until_deactivation: number | null;
     has_avatar: boolean; has_cover: boolean; has_bio: boolean; portfolio_count: number;
-    package_count: number; location_count: number; stripe_ready: boolean; has_phone: boolean; phone: string | null;
+    package_count: number; location_count: number; locations: string | null; stripe_ready: boolean; has_phone: boolean; phone: string | null;
     revision_status: string | null;
   }>(
     `SELECT pp.id, u.id as user_id, u.name as display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
@@ -155,6 +161,8 @@ export default async function AdminPage() {
             (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id)::int as portfolio_count,
             (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id)::int as package_count,
             (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id)::int as location_count,
+            (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
+               FROM photographer_locations WHERE photographer_id = pp.id) as locations,
             (pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as stripe_ready,
             (u.phone IS NOT NULL) as has_phone, u.phone,
             (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
@@ -191,6 +199,22 @@ export default async function AdminPage() {
     client_phone: string | null; client_email: string | null;
     photographer_phone: string | null; photographer_email: string | null;
     confirmed_at: string | null;
+    gift_card_id: string | null;
+    gift_card_tier: "express" | "full" | null;
+    // ── Attribution (admin-only) ──────────────────────────────
+    // Best signals for "where did this customer come from + what did
+    // they want." Three layers, ranked by reliability:
+    //   1. Booking row's own utm_*/gclid — captured at booking submit.
+    //   2. Earliest visitor_session for this user — first-touch source.
+    //   3. Their latest Lens (concierge) chat — verbatim first question.
+    booking_utm_source: string | null; booking_utm_medium: string | null;
+    booking_utm_campaign: string | null; booking_utm_term: string | null; booking_gclid: string | null;
+    first_utm_source: string | null; first_utm_medium: string | null;
+    first_utm_campaign: string | null; first_utm_term: string | null; first_gclid: string | null;
+    first_referrer: string | null; first_landing_page: string | null;
+    first_session_at: string | null;
+    concierge_first_msg: string | null; concierge_match_count: number | null;
+    concierge_outcome: string | null;
   }>(
     `SELECT b.id, b.client_id, cu.name as client_name, pu.name as photographer_name, pp.slug as photographer_slug,
             b.status, b.shoot_date, b.total_price, b.created_at, b.confirmed_at, b.payment_status,
@@ -201,11 +225,50 @@ export default async function AdminPage() {
             b.delivery_accepted, b.delivery_accepted_at, b.location_detail,
             (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,
             cu.phone as client_phone, cu.email as client_email,
-            pu.phone as photographer_phone, pu.email as photographer_email
+            pu.phone as photographer_phone, pu.email as photographer_email,
+            b.gift_card_id,
+            gc.tier::text as gift_card_tier,
+            b.utm_source as booking_utm_source, b.utm_medium as booking_utm_medium,
+            b.utm_campaign as booking_utm_campaign, b.utm_term as booking_utm_term, b.gclid as booking_gclid,
+            first_sess.utm_source as first_utm_source, first_sess.utm_medium as first_utm_medium,
+            first_sess.utm_campaign as first_utm_campaign, first_sess.utm_term as first_utm_term,
+            first_sess.gclid as first_gclid, first_sess.referrer as first_referrer,
+            first_sess.landing_page as first_landing_page, first_sess.started_at::text as first_session_at,
+            lens.first_msg as concierge_first_msg,
+            lens.match_count as concierge_match_count,
+            lens.outcome as concierge_outcome
      FROM bookings b JOIN users cu ON cu.id = b.client_id
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users pu ON pu.id = pp.user_id
      LEFT JOIN packages pk ON pk.id = b.package_id
+     LEFT JOIN gift_cards gc ON gc.id = b.gift_card_id
+     -- Earliest visitor session for this user — first-touch attribution.
+     LEFT JOIN LATERAL (
+       SELECT vs.utm_source, vs.utm_medium, vs.utm_campaign, vs.utm_term,
+              vs.gclid, vs.referrer, vs.landing_page, vs.started_at
+       FROM visitor_sessions vs
+       WHERE vs.user_id = b.client_id
+       ORDER BY vs.started_at ASC
+       LIMIT 1
+     ) first_sess ON TRUE
+     -- Latest Lens (concierge) chat for this user — first user message
+     -- + how many photographers were matched. Best snapshot of what
+     -- they actually wanted in their own words.
+     LEFT JOIN LATERAL (
+       SELECT
+         -- WITH ORDINALITY preserves the array index so we grab the FIRST
+         -- user message in conversation order, not alphabetically.
+         (SELECT m.value->>'content'
+            FROM jsonb_array_elements(cc.messages) WITH ORDINALITY AS m(value, idx)
+           WHERE m.value->>'role' = 'user' AND length(m.value->>'content') > 0
+           ORDER BY m.idx LIMIT 1) as first_msg,
+         COALESCE(array_length(cc.matched_photographer_ids, 1), 0) as match_count,
+         cc.outcome
+       FROM concierge_chats cc
+       WHERE cc.user_id = b.client_id
+       ORDER BY cc.created_at DESC
+       LIMIT 1
+     ) lens ON TRUE
      WHERE b.status != 'inquiry'
      ORDER BY b.created_at DESC LIMIT 200`
   );
@@ -272,9 +335,10 @@ export default async function AdminPage() {
   // Reviews for admin moderation
   const allReviews = await query<{
     id: string; rating: number; title: string | null; text: string | null; video_url: string | null; created_at: string;
-    client_name: string; photographer_name: string; photographer_slug: string; is_approved: boolean;
+    client_name: string; photographer_name: string; photographer_slug: string; is_approved: boolean; rejected_at: string | null;
   }>(
     `SELECT r.id, r.rating, r.title, r.text, r.video_url, r.created_at, COALESCE(r.is_approved, true) as is_approved,
+            r.rejected_at::text as rejected_at,
             COALESCE(r.client_name_override, u.name, 'Manual review') as client_name,
             pu.name as photographer_name, pp.slug as photographer_slug, pp.id as photographer_id
      FROM reviews r
@@ -293,10 +357,15 @@ export default async function AdminPage() {
     bookingsPending: parseInt(bookingsPending?.count || "0"),
     bookingsConfirmed: parseInt(bookingsConfirmed?.count || "0"),
     bookingsCompleted: parseInt(bookingsCompleted?.count || "0"),
+    bookingsPaid: parseInt(bookingsPaid?.count || "0"),
+    bookingsPaidThisMonth: parseInt(bookingsPaidThisMonth?.count || "0"),
     turnover: parseFloat(revenue?.total || "0"),
     turnoverThisMonth: parseFloat(revenueThisMonth?.total || "0"),
-    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(platform_fee + service_fee), 0) as total FROM bookings WHERE payment_status = 'paid' AND delivery_accepted = TRUE").catch(() => null))?.total || "0"),
-    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(platform_fee + service_fee), 0) as total FROM bookings WHERE payment_status = 'paid' AND delivery_accepted = TRUE AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0"),
+    // Revenue = service_fee on every paid booking (locked at payment) +
+    // platform_fee on delivered+accepted bookings (released at payout).
+    // Same accounting as /api/admin/revenue-chart so the top KPI matches the chart total.
+    revenue: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid'").catch(() => null))?.total || "0"),
+    revenueThisMonth: parseFloat((await queryOne<{ total: string }>("SELECT COALESCE(SUM(service_fee) + SUM(CASE WHEN delivery_accepted = TRUE THEN platform_fee ELSE 0 END), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)").catch(() => null))?.total || "0"),
     reviews: parseInt(reviewCount?.count || "0"),
     messages: parseInt(messageCount?.count || "0"),
     blogPosts: parseInt(blogCount?.count || "0"),
@@ -326,12 +395,45 @@ export default async function AdminPage() {
     }
   }
 
+  // Booking aggregates per photographer — drives the leaderboard at the
+  // top of the Photographers tab. Counts only photographers who have at
+  // least one booking; "paid" = bookings with payment_status='paid'.
+  // Bookings from is_test_account=TRUE users are excluded so the founder's
+  // QA bookings don't inflate the numbers.
+  const photographerBookingStats = await query<{
+    photographer_id: string;
+    total_bookings: number;
+    paid_bookings: number;
+    cancelled_bookings: number;
+    total_revenue: number;
+    total_payout: number;
+    last_booking_at: string | null;
+    first_booking_at: string | null;
+  }>(
+    `SELECT b.photographer_id,
+            COUNT(*)::int as total_bookings,
+            COUNT(*) FILTER (WHERE b.payment_status = 'paid')::int as paid_bookings,
+            COUNT(*) FILTER (WHERE b.status = 'cancelled')::int as cancelled_bookings,
+            COALESCE(SUM(b.total_price) FILTER (WHERE b.payment_status = 'paid'), 0)::float as total_revenue,
+            COALESCE(SUM(b.payout_amount) FILTER (WHERE b.payment_status = 'paid'), 0)::float as total_payout,
+            MAX(b.created_at)::text as last_booking_at,
+            MIN(b.created_at)::text as first_booking_at
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+      WHERE COALESCE(cu.is_test_account, FALSE) = FALSE
+      GROUP BY b.photographer_id`
+  ).catch(() => []);
+
+  const statsByPhotographer: Record<string, typeof photographerBookingStats[number]> = {};
+  for (const s of photographerBookingStats) statsByPhotographer[s.photographer_id] = s;
+
   // Render sections as server components passed to client
   const photographersSection = (
     <AdminPhotographersList
       photographers={photographers}
       previewSecret={process.env.ADMIN_PREVIEW_SECRET || ""}
       belowMinPackages={belowMinByPhotographer}
+      bookingStatsByPhotographer={statsByPhotographer}
     />
   );
 
@@ -350,6 +452,56 @@ export default async function AdminPage() {
   const matchRequestsSection = (
     <AdminMatchRequestsTab requests={matchRequests} />
   );
+
+  // Gift cards — full list with admin actions (re-send, expire, refund).
+  const giftCards = await query<AdminGiftCard>(
+    `SELECT gc.id, gc.code, gc.tier::text as tier,
+            gc.amount::float as amount,
+            gc.photographer_payout::float as photographer_payout,
+            gc.status,
+            gc.buyer_name, gc.buyer_email,
+            gc.recipient_name, gc.recipient_email, gc.recipient_phone,
+            gc.recipient_user_id,
+            gc.personal_message,
+            gc.booking_id,
+            pu.name as photographer_name,
+            gc.created_at::text,
+            gc.sent_at::text,
+            gc.claimed_at::text,
+            gc.redeemed_at::text,
+            gc.expires_at::text
+       FROM gift_cards gc
+       LEFT JOIN bookings b ON b.id = gc.booking_id
+       LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       LEFT JOIN users pu ON pu.id = pp.user_id
+      ORDER BY gc.created_at DESC LIMIT 500`
+  ).catch(() => [] as AdminGiftCard[]);
+
+  const giftCardsSection = <AdminGiftCardsTab cards={giftCards} />;
+
+  // MakeAlbum orders — checkouts proxied through us from makealbum.co.
+  // Table may not exist on older deploys; coalesce to [] so the tab is
+  // simply empty rather than crashing the dashboard.
+  const makealbumOrders = await query<AdminMakeAlbumOrder>(
+    `SELECT id,
+            makealbum_order_id, makealbum_album_id,
+            title, page_count,
+            amount_cents, currency,
+            customer_email, customer_name,
+            webhook_url,
+            status,
+            stripe_session_id, stripe_payment_intent_id,
+            shipping_address,
+            webhook_delivered_at::text,
+            webhook_attempts, webhook_last_error,
+            created_at::text,
+            paid_at::text
+       FROM makealbum_orders
+      ORDER BY created_at DESC
+      LIMIT 500`
+  ).catch(() => [] as AdminMakeAlbumOrder[]);
+
+  const makealbumSection = <AdminMakeAlbumTab orders={makealbumOrders} />;
 
   const settingsSection = (
     <div className="space-y-6">
@@ -381,6 +533,8 @@ export default async function AdminPage() {
       reviewsSection={<ReviewsManager initialReviews={allReviews} photographers={photographers.map(p => ({ id: p.id, name: p.display_name }))} />}
       blogSection={<BlogManager />}
       promosSection={<PromoCodesManager />}
+      giftCardsSection={giftCardsSection}
+      makealbumSection={makealbumSection}
       locationsSection={<LocationsManager />}
       settingsSection={settingsSection}
     />

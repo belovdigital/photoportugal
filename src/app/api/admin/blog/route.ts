@@ -160,7 +160,15 @@ export async function POST(req: NextRequest) {
       [title, slug, excerpt, content, coverImageUrl, metaTitle, metaDescription, targetKeywords, author, isPublished, publishedAt, scheduledAt]
     );
 
-    if (isPublished) pingSitemap();
+    if (isPublished) {
+      pingSitemap();
+      import("@/lib/indexnow").then(({ pingIndexNow }) =>
+        pingIndexNow([
+          `https://photoportugal.com/blog/${slug}`,
+          `https://photoportugal.com/blog`,
+        ])
+      ).catch(() => {});
+    }
 
     return NextResponse.json({ success: true, id: post?.id });
   } catch (error) {
@@ -249,7 +257,15 @@ export async function PUT(req: NextRequest) {
       [title, slug, excerpt, content, coverImageUrl, metaTitle, metaDescription, targetKeywords, author, isPublished, publishedAt, scheduledAt, id]
     );
 
-    if (isPublished) pingSitemap();
+    if (isPublished) {
+      pingSitemap();
+      import("@/lib/indexnow").then(({ pingIndexNow }) =>
+        pingIndexNow([
+          `https://photoportugal.com/blog/${slug}`,
+          `https://photoportugal.com/blog`,
+        ])
+      ).catch(() => {});
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

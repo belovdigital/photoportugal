@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
-import { localeAlternates } from "@/lib/seo";
+import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
+import { localeAlternates, localeAlternatesFiltered } from "@/lib/seo";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { deriveBlogTopic } from "@/lib/blog-topic";
 import { fetchBlogConversionAssets } from "@/lib/blog-conversion-assets";
+import { CityMap, type CityMapPin } from "@/components/ui/CityMap";
+import { getSpotsWithMediaForCity } from "@/lib/photo-spots-data";
+import { getLocationBySlug } from "@/lib/locations-data";
 import {
   BlogHeroCarousel,
   BlogPhotoStrip,
@@ -107,10 +111,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
+  // hreflang must only point at locales where this exact slug is
+  // actually published, otherwise the alternate URL would 308-redirect
+  // back to the canonical (bad signal for Google). Query which locales
+  // host this slug live, then emit hreflang only for those.
+  const availableLocales = await query<{ locale: string }>(
+    "SELECT locale FROM blog_posts WHERE slug = $1 AND is_published = TRUE",
+    [post.slug]
+  ).then((rows) => rows.map((r) => r.locale)).catch(() => [locale]);
+
   return {
     title: pageTitle,
     description: pageDescription,
-    alternates: localeAlternates(`/blog/${post.slug}`, locale),
+    alternates: localeAlternatesFiltered(`/blog/${post.slug}`, locale, availableLocales),
     openGraph: {
       title: pageTitle,
       description: pageDescription,
@@ -450,14 +463,20 @@ export default async function BlogPostPage({ params }: PageProps) {
   );
 
   if (!post) {
-    // If not found in this locale, check fallback locale and redirect there
-    const otherLocale = locale === "en" ? "pt" : "en";
-    const otherPost = await queryOne<{ slug: string }>(
-      "SELECT slug FROM blog_posts WHERE slug = $1 AND is_published = TRUE AND locale = $2",
-      [slug, otherLocale]
+    // Slug exists in another locale? 301-redirect there. Earlier we re-sorted
+    // posts so each lives in exactly one locale, which created a long tail of
+    // /xx/blog/SLUG 404s in Search Console where xx is a locale that never
+    // had this post. Check ALL 5 locales (not just en/pt) and redirect to
+    // wherever the post actually lives.
+    const otherPost = await queryOne<{ locale: string }>(
+      `SELECT locale FROM blog_posts WHERE slug = $1 AND is_published = TRUE LIMIT 1`,
+      [slug]
     );
     if (otherPost) {
-      redirect(otherLocale === "en" ? `/blog/${slug}` : `/${otherLocale}/blog/${slug}`);
+      const target = otherPost.locale === "en" ? `/blog/${slug}` : `/${otherPost.locale}/blog/${slug}`;
+      // 301 not 307 — the wrong-locale URL is permanently the wrong place
+      // for this post. Search indexes need that signal to drop the URL.
+      permanentRedirect(target);
     }
     notFound();
   }
@@ -689,6 +708,36 @@ export default async function BlogPostPage({ params }: PageProps) {
     locale,
   });
 
+  // ── Optional interactive city map ───────────────────────────────────────
+  // For posts that are explicitly about "photo spots" / "photo locations"
+  // and whose primary location has curated photo spots, render the same
+  // 3D Mapbox view we use on /locations/[slug] right under the intro.
+  // Concrete win for SEO + UX: the post becomes "the guide" instead of
+  // "yet another listicle". Gate by target_keywords + spots existing so
+  // unrelated posts don't pick up a random map.
+  const wantsCityMap = primaryLocation && (
+    /\b(photo\s+spots?|photo\s+locations?|shooting\s+spots?|spots\s+para\s+fotos|melhores\s+spots?|spots?\s+de\s+foto|orte\s+für\s+foto|foto-?spots?|lugares\s+para\s+fotos|spots?\s+pour\s+les?\s+photos)\b/i
+      .test((post.target_keywords || "") + " " + post.title)
+  );
+  let cityMapPins: CityMapPin[] = [];
+  let cityCenter: { lat: number; lng: number } | null = null;
+  if (wantsCityMap && primaryLocation) {
+    const loc = getLocationBySlug(primaryLocation.slug);
+    cityCenter = loc ? { lat: loc.lat, lng: loc.lng } : null;
+    const spots = getSpotsWithMediaForCity(primaryLocation.slug);
+    cityMapPins = spots
+      .filter((s) => !!s.coordinates)
+      .map((s) => ({
+        city: primaryLocation.slug,
+        slug: s.spotSlug,
+        name: s.name,
+        coordinates: s.coordinates!,
+        thumbnailUrl: s.images?.[0]?.url,
+        description: s.description,
+      }));
+  }
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+
   // Split content by H2 markdown so we can inject carousels between sections.
   // Intro = everything before the first ##; sections = each ## block.
   const _allParts = post.content.split(/(?=^## )/m);
@@ -903,6 +952,26 @@ export default async function BlogPostPage({ params }: PageProps) {
           <div className="mt-8 text-base sm:text-lg">
             {renderContent(introContent)}
 
+            {/* Interactive photo-spot map — only rendered when the post
+                is explicitly about photo spots AND the primary location
+                has curated coordinates. Placed right after the intro so
+                the visitor sees WHERE everything is before reading. */}
+            {cityMapPins.length > 0 && cityCenter && mapboxToken && primaryLocation && (
+              <div className="my-8 overflow-hidden rounded-2xl border border-warm-200">
+                <div className="h-[420px] sm:h-[520px]">
+                  <CityMap
+                    pins={cityMapPins}
+                    cityCenter={cityCenter}
+                    mapboxToken={mapboxToken}
+                    localePrefix={locale === "en" ? "" : `/${locale}`}
+                  />
+                </div>
+                <p className="bg-warm-50 px-4 py-2 text-xs text-gray-500 text-center">
+                  {cityMapPins.length} photo spots in {primaryLocation.name} — click a pin to open the full guide
+                </p>
+              </div>
+            )}
+
             {/* After intro: cross-photographer photo strip — visual
                 statement that this isn't a generic blog, it's a working
                 marketplace. */}
@@ -988,12 +1057,13 @@ export default async function BlogPostPage({ params }: PageProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </Link>
-              <Link
-                href="/find-photographer"
+              <TrackedConciergeTrigger
+                ctaName="get_matched"
+                location="blog_post_cta"
                 className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition hover:border-primary-300 hover:shadow-md"
               >
                 {t("blogCta.getMatched")}
-              </Link>
+              </TrackedConciergeTrigger>
             </div>
           </div>
 

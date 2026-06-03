@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { StripeLogo } from "@/components/ui/StripeLogo";
+import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
 
 const STEP_KEYS = ["browse", "book", "enjoy", "receive"] as const;
 
@@ -94,7 +95,7 @@ export async function HowItWorksSection() {
                         </Link>
                       ),
                       concierge: (chunks) => (
-                        <Link href="/find-photographer" className="font-medium text-primary-600 underline decoration-primary-300 hover:text-primary-700">
+                        <Link href="/concierge" className="font-medium text-primary-600 underline decoration-primary-300 hover:text-primary-700">
                           {chunks}
                         </Link>
                       ),
@@ -114,15 +115,16 @@ export async function HowItWorksSection() {
         </div>
 
         <div className="mt-12 text-center">
-          <Link
-            href="/choose-booking-type"
+          <TrackedConciergeTrigger
+            ctaName="get_matched"
+            location="how_it_works_section"
             className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-primary-700 hover:shadow-xl"
           >
             {t("findYourPhotographer")}
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </Link>
+          </TrackedConciergeTrigger>
         </div>
 
         {/* Payment Protection Trust Block */}

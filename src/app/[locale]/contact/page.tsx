@@ -28,8 +28,36 @@ export default async function ContactPage({
   const t = await getTranslations("contact");
   const tc = await getTranslations("common");
 
+  // Organization + ContactPoint schema — tells Google who you can
+  // contact and how. Helps brand search ("photo portugal contact")
+  // surface the right entity card with the support email.
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Photo Portugal",
+    url: "https://photoportugal.com",
+    logo: "https://photoportugal.com/logo.svg",
+    email: "info@photoportugal.com",
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: "info@photoportugal.com",
+        availableLanguage: ["English", "Portuguese", "Spanish", "French", "German"],
+        areaServed: "PT",
+      },
+    ],
+    sameAs: [
+      "https://www.instagram.com/photoportugal",
+    ],
+  };
+
   return (
     <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+    />
     <Breadcrumbs
       items={[
         { name: tc("home"), href: "/" },

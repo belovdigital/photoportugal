@@ -90,6 +90,7 @@ function getClientSteps(
       label: t("client.addProfilePhoto"),
       href: "/dashboard/settings",
       complete: !!checks.avatar,
+      tip: t("client.addProfilePhotoTip"),
     },
     {
       label: t("client.addPhoneNumber"),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { DateProposalCard } from "./DateProposalCard";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
@@ -15,7 +16,8 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 
 // Render structured message payloads (BOOKING_CARD:, DELIVERY:) as readable
 // previews in the sidebar instead of the raw JSON string.
-function formatLastMessagePreview(text: string | null): string | null {
+function formatLastMessagePreview(text: string | null, deleted = false): string | null {
+  if (deleted) return "🗑 Message deleted";
   if (!text) return null;
   if (text.startsWith("BOOKING_CARD:")) {
     try {
@@ -34,6 +36,20 @@ function formatLastMessagePreview(text: string | null): string | null {
   if (text.startsWith("REVIEW_REQUEST:")) {
     return "⭐ How was your photoshoot?";
   }
+  if (text.startsWith("DATE_PROPOSAL:")) {
+    try {
+      const payload = JSON.parse(text.slice("DATE_PROPOSAL:".length));
+      // proposed_date is YYYY-MM-DD; render via UTC noon so timezones
+      // don't shift the displayed day.
+      const d = payload.proposed_date
+        ? new Date(payload.proposed_date + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+        : "";
+      const time = payload.proposed_time ? ` ${payload.proposed_time}` : "";
+      return d ? `📅 New date proposed: ${d}${time}` : "📅 New date proposed";
+    } catch {
+      return "📅 New date proposed";
+    }
+  }
   return text;
 }
 
@@ -44,8 +60,10 @@ interface Conversation {
   other_user_id: string;
   other_last_seen_at: string | null;
   other_role: "client" | "photographer";
+  other_locale: string | null;
   other_slug: string | null;
   last_message: string | null;
+  last_message_deleted?: boolean | null;
   last_message_at: string | null;
   unread_count: number;
   booking_status: string;
@@ -61,8 +79,13 @@ interface Message {
   sender_avatar: string | null;
   created_at: string;
   read_at: string | null;
+  edited_at?: string | null;
+  deleted_at?: string | null;
   failed?: boolean;
   is_system?: boolean;
+  detected_language?: string | null;
+  translated_text?: string | null;
+  translated_to_lang?: string | null;
 }
 
 type SSEStatus = "connected" | "reconnecting" | "disconnected";
@@ -106,6 +129,64 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
   useEffect(() => {
     setActiveChatRaw(initialChat);
   }, [initialChat]);
+
+  // Tag <body> while on the messages page so we can:
+  //   1. kill <main>'s pb-24
+  //   2. hide the global footer + app-cta-banner on mobile
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.classList.add("on-messages-page");
+    return () => document.body.classList.remove("on-messages-page");
+  }, []);
+
+  // When a chat is OPEN on mobile, the page becomes a fullscreen
+  // messenger: the global site header AND the dashboard bottom nav are
+  // both hidden, the chat's own header sits flush at the top, and the
+  // back arrow is the only navigation. Tag <body> so the layout's
+  // siblings can hide themselves via CSS without editing each.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (activeChat) {
+      document.body.classList.add("in-chat-detail");
+      return () => document.body.classList.remove("in-chat-detail");
+    }
+  }, [activeChat]);
+
+  // Make the layout viewport itself shrink when the on-screen keyboard
+  // opens (iOS 17+ Safari, modern Android). Without this, position:fixed
+  // elements stick to the FULL layout viewport and end up behind the
+  // keyboard — which then triggers a JS-driven dance with visualViewport
+  // that races Safari's auto-scroll-on-focus and produces the "every
+  // other tap the layout flies up" bug. With `interactive-widget=
+  // resizes-content`, dvh / bottom:0 / fixed positioning Just Work.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const existing = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+    const prev = existing?.getAttribute("content") || "";
+    // No viewport-fit=cover — we WANT iOS to respect safe areas so the
+    // chat header doesn't render under the notch. interactive-widget
+    // tells iOS 17+ Safari to shrink the layout viewport when the
+    // keyboard opens, which keeps the input visible without any JS.
+    const next = "width=device-width, initial-scale=1, interactive-widget=resizes-content";
+    if (existing) {
+      existing.setAttribute("content", next);
+    } else {
+      const m = document.createElement("meta");
+      m.name = "viewport";
+      m.content = next;
+      document.head.appendChild(m);
+    }
+    return () => {
+      if (existing) existing.setAttribute("content", prev);
+    };
+  }, []);
+
+  // We deliberately don't track keyboard height in JS anymore — the
+  // viewport meta `interactive-widget=resizes-content` (set above)
+  // makes the browser itself shrink the layout viewport when the
+  // keyboard opens, so `position:fixed; bottom:0` lands above the
+  // keyboard automatically. Manually adjusting bottom in JS on top of
+  // that just produces double offsets.
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -115,8 +196,61 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  // Edit/delete state for own messages (15-min window, blocked once read).
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState<string>("");
+  const [msgActionBusy, setMsgActionBusy] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showPackagePicker, setShowPackagePicker] = useState(false);
   const [shareablePackages, setShareablePackages] = useState<{ id: string; name: string; price: number; duration_minutes: number; num_photos: number }[]>([]);
+  // Outbound translation (Phase 2): photographer types in their own language,
+  // taps "Translate" → textarea is replaced with the translated draft. The
+  // original draft is kept in state so they can Undo if it looks wrong.
+  const [translateBusy, setTranslateBusy] = useState(false);
+  const [originalDraft, setOriginalDraft] = useState<string | null>(null);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+  // Booking-intent sidebar (Phase 3): LLM extracts what the client is asking
+  // for from the whole thread so the photographer doesn't have to scroll up.
+  interface IntentResult {
+    shoot_date: string | null;
+    location: string | null;
+    occasion: string | null;
+    group_size: number | null;
+    budget: string | null;
+    client_language: string | null;
+    preferred_package: string | null;
+    notes: string | null;
+  }
+  const [intent, setIntent] = useState<IntentResult | null>(null);
+  const [intentLoading, setIntentLoading] = useState(false);
+  // AI freeform reply chips (Phase 5).
+  interface FreeformChip { text: string }
+  const [aiChips, setAiChips] = useState<FreeformChip[] | null>(null);
+  const [aiChipsLoading, setAiChipsLoading] = useState(false);
+  // Polish-to-English (Phase 6).
+  const [polishBusy, setPolishBusy] = useState(false);
+  const [polishResult, setPolishResult] = useState<{ warm: string; professional: string } | null>(null);
+  const [polishError, setPolishError] = useState<string | null>(null);
+  // Avatar zoom — Cindy asked for this: photographers want to see what the
+  // client actually looks like before the shoot. Tap on chat header avatar
+  // → full-screen modal.
+  const [zoomedAvatar, setZoomedAvatar] = useState<{ src: string; name: string } | null>(null);
+  // Hide-suggestions toggle (mobile-first). When true the contextual chips
+  // and AI freeform suggestions stop rendering — the photographer keeps the
+  // tiny intent strip but the full reply panel collapses, giving them back
+  // the screen real estate. Persisted in localStorage so the choice sticks
+  // across reloads.
+  const [suggestionsHidden, setSuggestionsHidden] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("chat_suggestions_hidden") === "1";
+  });
+  function toggleSuggestionsHidden() {
+    setSuggestionsHidden((prev) => {
+      const next = !prev;
+      try { window.localStorage.setItem("chat_suggestions_hidden", next ? "1" : "0"); } catch {}
+      return next;
+    });
+  }
   const [loadingPackages, setLoadingPackages] = useState(false);
   // Custom-proposal sub-flow inside the package picker. When the
   // photographer clicks "+ Create custom proposal" the picker swaps to a
@@ -335,6 +469,16 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
     bookingId: activeChat,
     token: wsToken,
     onMessage: handleWSMessage,
+    onMessageEdited: ({ message_id, text, edited_at }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === message_id ? { ...m, text, edited_at } : m))
+      );
+    },
+    onMessageDeleted: ({ message_id, deleted_at }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === message_id ? { ...m, deleted_at } : m))
+      );
+    },
     onTyping: handleTyping,
     onRead: handleRead,
     onOnline: setOnlineUsers,
@@ -349,6 +493,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
     if (!activeChat) {
       setMessages([]);
       setSSEStatus("disconnected");
+      setIntent(null);
       return;
     }
 
@@ -361,6 +506,19 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
       setTimeout(() => scrollToBottom(true), 200);
       setTimeout(() => scrollToBottom(true), 500);
     });
+
+    // Kick off intent extraction in parallel — non-blocking, silent on
+    // failure. The endpoint caches per (conversation, last_message_id).
+    setIntent(null);
+    setIntentLoading(true);
+    fetch(`/api/chat/intent?booking_id=${activeChat}`)
+      .then((r) => r.json().catch(() => ({})))
+      .then((d) => setIntent(d?.result || null))
+      .catch(() => {})
+      .finally(() => setIntentLoading(false));
+
+    // AI freeform chips fetch lives in a separate effect that watches
+    // whether the photographer still owes a reply — see further below.
   }, [activeChat, scrollToBottom]);
 
   useEffect(() => {
@@ -396,12 +554,116 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
     return null;
   }
 
+  async function handleTranslateOutbound() {
+    const draft = newMessage.trim();
+    if (!draft || translateBusy) return;
+    if (!outboundTarget) return; // Both sides share a locale — nothing to do.
+    setTranslateBusy(true);
+    setTranslateError(null);
+    try {
+      const res = await fetch("/api/chat/translate-outbound", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: draft, target: outboundTarget }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.translated) {
+        setOriginalDraft(draft);
+        setNewMessage(data.translated);
+      } else {
+        setTranslateError(data.error || t("translateError") || "Translation failed");
+      }
+    } catch {
+      setTranslateError(t("translateError") || "Translation failed");
+    }
+    setTranslateBusy(false);
+  }
+  function handleUndoTranslate() {
+    if (originalDraft !== null) {
+      setNewMessage(originalDraft);
+      setOriginalDraft(null);
+    }
+  }
+  async function handlePolish() {
+    const draft = newMessage.trim();
+    if (!draft || polishBusy) return;
+    setPolishBusy(true);
+    setPolishError(null);
+    setPolishResult(null);
+    try {
+      const res = await fetch("/api/chat/polish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: draft }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.warm && data.professional) {
+        setPolishResult({ warm: data.warm, professional: data.professional });
+      } else {
+        setPolishError(data.error || t("polishError") || "Polish failed");
+      }
+    } catch {
+      setPolishError(t("polishError") || "Polish failed");
+    }
+    setPolishBusy(false);
+  }
+  function applyPolish(text: string) {
+    setOriginalDraft(newMessage);
+    setNewMessage(text);
+    setPolishResult(null);
+  }
+
+  // Contextual chips (Phase 4) — derived from AI-extracted intent +
+  // conversation state. We only suggest a chip when the corresponding
+  // intent field is empty (so we don't ask the same question twice).
+  // Chips are photographer-only (the client is the one being asked).
+  function applyChipPrefill(text: string) {
+    setNewMessage(text);
+    if (originalDraft !== null) setOriginalDraft(null);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+  function applyAiChip(text: string) {
+    // Log the positive signal (which chip got picked) before clearing.
+    if (aiChips) {
+      fetch("/api/chat/ai-chips-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_id: activeChat,
+          chips_offered: aiChips.map((c) => c.text),
+          chip_chosen: text,
+        }),
+      }).catch(() => {});
+    }
+    applyChipPrefill(text);
+    setAiChips(null);
+  }
+  async function reportAiChipMiss() {
+    // User indicated none of the AI suggestions fit. Log the full context
+    // so we can tune prompts/personality later. Silent, fire-and-forget.
+    try {
+      await fetch("/api/chat/ai-chips-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_id: activeChat,
+          chips_offered: aiChips?.map((c) => c.text) || [],
+        }),
+      });
+    } catch {}
+    setAiChips(null);
+  }
+
   // --- Send message ---
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     const text = newMessage.trim();
     const hasMedia = pendingFiles.length > 0;
     if (!activeChat || (!text && !hasMedia)) return;
+    // The pre-translation draft only made sense while the unedited
+    // translation was still on screen. Once we hit send, the draft is gone.
+    if (originalDraft !== null) setOriginalDraft(null);
+    if (translateError) setTranslateError(null);
 
     // Create temp messages — images first, then text
     const filesToSend = [...pendingFiles];
@@ -534,6 +796,78 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
       )
     );
     inputRef.current?.focus();
+  }
+
+  // --- Edit/delete eligibility (mirrors server-side gate) ---
+  function canModifyMessage(m: Message): boolean {
+    if (!m || m.sender_id !== userId) return false;
+    if (m.is_system) return false;
+    if (m.deleted_at) return false;
+    if (m.id.startsWith("temp-") || m.failed) return false;
+    // 15-minute window from creation
+    return Date.now() - new Date(m.created_at).getTime() <= 15 * 60 * 1000;
+  }
+
+  function startEditingMessage(m: Message) {
+    if (!canModifyMessage(m)) return;
+    setEditingMessageId(m.id);
+    setEditingText(m.text || "");
+    setOpenMenuId(null);
+  }
+
+  function cancelEditingMessage() {
+    setEditingMessageId(null);
+    setEditingText("");
+  }
+
+  async function submitMessageEdit() {
+    if (!editingMessageId) return;
+    const newText = editingText.trim();
+    if (!newText) return;
+    const id = editingMessageId;
+    setMsgActionBusy(id);
+    try {
+      const res = await fetch(`/api/messages/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: newText }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || "Failed to edit");
+        return;
+      }
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id ? { ...m, text: newText, edited_at: data.edited_at || new Date().toISOString() } : m
+        )
+      );
+      cancelEditingMessage();
+    } finally {
+      setMsgActionBusy(null);
+    }
+  }
+
+  async function deleteMessage(m: Message) {
+    if (!canModifyMessage(m)) return;
+    if (!confirm("Delete this message? The other person will see 'Message deleted'.")) return;
+    setMsgActionBusy(m.id);
+    setOpenMenuId(null);
+    try {
+      const res = await fetch(`/api/messages/${m.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || "Failed to delete");
+        return;
+      }
+      setMessages((prev) =>
+        prev.map((x) =>
+          x.id === m.id ? { ...x, deleted_at: new Date().toISOString() } : x
+        )
+      );
+    } finally {
+      setMsgActionBusy(null);
+    }
   }
 
   // --- Retry a failed message ---
@@ -704,6 +1038,40 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
   }
 
   const activeConvo = conversations.find((c) => c.booking_id === activeChat);
+  // True when the latest non-system message in the thread is from the
+  // OTHER party — meaning the photographer (current user) still owes a
+  // reply. We only show the reply-suggestion blocks in this state; if
+  // the photographer already wrote, the conversation has moved on.
+  const photographerWaitingForReply = (() => {
+    if (activeConvo?.other_role !== "client") return false;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.is_system) continue;
+      return m.sender_id !== userId;
+    }
+    return false;
+  })();
+  // Most recent CLIENT message id — when this changes, refetch AI chips
+  // (so suggestions track the latest thing the client said).
+  const lastClientMessageId = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.sender_id !== userId && !m.is_system) return m.id;
+    }
+    return null;
+  })();
+  // Direction we translate INTO = the other party's UI locale. If both
+  // sides have the same locale, translation is pointless — null hides the
+  // button entirely. Only EN/PT supported.
+  const outboundTarget: "en" | "pt" | null = (() => {
+    const other = (activeConvo?.other_locale || "").toLowerCase();
+    if (other !== "en" && other !== "pt") return null;
+    if (other === locale) return null;
+    return other === "pt" ? "pt" : "en";
+  })();
+  // Polish makes sense only when the recipient reads English — if they're
+  // PT-native, the photographer should be using Translate, not Polish.
+  const showPolishButton = activeConvo?.other_role === "client" && (activeConvo?.other_locale || "").toLowerCase() === "en";
   const otherOnline = activeConvo ? (
     onlineUsers.some((u) => u.userId === activeConvo.other_user_id) ||
     isRecentlyOnline(activeConvo.other_last_seen_at)
@@ -711,6 +1079,28 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
   const presenceLabel = activeConvo
     ? formatPresenceLabel(activeConvo.other_last_seen_at, otherOnline, t)
     : "";
+
+  // AI suggestion chips ONLY make sense when the photographer still owes
+  // a reply (latest message is from the client). When the photographer
+  // already wrote, we drop chips entirely — no fetch, no leftover state.
+  // Trigger refresh whenever the LAST CLIENT message id changes (new
+  // client message arrives) — the existing cache on the server is keyed
+  // by message id so repeated calls are cheap.
+  useEffect(() => {
+    if (!activeChat) return;
+    if (!photographerWaitingForReply || !lastClientMessageId) {
+      setAiChips(null);
+      setAiChipsLoading(false);
+      return;
+    }
+    setAiChips(null);
+    setAiChipsLoading(true);
+    fetch(`/api/chat/ai-chips?booking_id=${activeChat}`)
+      .then((r) => r.json().catch(() => ({})))
+      .then((d) => setAiChips(Array.isArray(d?.chips) && d.chips.length > 0 ? d.chips : null))
+      .catch(() => {})
+      .finally(() => setAiChipsLoading(false));
+  }, [activeChat, lastClientMessageId, photographerWaitingForReply]);
 
   if (authStatus === "loading")
     return (
@@ -740,11 +1130,53 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
 
   return (
     <>
-      <style>{`footer { display: none !important; } @media(min-width:640px){ .chat-container { height: calc(100dvh - 200px) !important; } }`}</style>
-    <div className="p-1 sm:p-3 overflow-hidden">
+      <style>{`
+        /* Mobile: drop <main>'s pb-24 (it would otherwise push 96px of
+           empty space below the chat) and hide the global footer (it's
+           not part of the messenger UI). Desktop keeps the original
+           layout so the sidebar + footer continue to render normally. */
+        @media (max-width: 639px) {
+          body.on-messages-page { overflow: hidden; }
+          body.on-messages-page main { padding-bottom: 0 !important; }
+          body.on-messages-page footer,
+          body.on-messages-page .app-cta-banner { display: none !important; }
+          /* Inside a chat detail on mobile: hide the global site header
+             and the dashboard bottom nav so the chat owns the screen.
+             The chat's own sticky header has the back arrow. */
+          body.in-chat-detail header.sticky { display: none !important; }
+          body.in-chat-detail nav.fixed.bottom-0 { display: none !important; }
+          /* Pin the chat-container to the visible viewport edge-to-edge
+             when chat detail is open. Using a real media query (instead
+             of Tailwind's max-sm: modifier) so we don't depend on the
+             generated CSS shipping that variant. */
+          body.in-chat-detail .chat-container {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            z-index: 30;
+          }
+        }
+        @media (min-width: 640px) {
+          .chat-container { height: calc(100dvh - 200px) !important; }
+        }
+      `}</style>
+    <div className="p-0 sm:p-3 sm:overflow-hidden" data-chat-root>
       <div
-        className="flex gap-0 sm:rounded-xl sm:border sm:border-warm-200 bg-white overflow-hidden chat-container"
-        style={{ height: "calc(100dvh - 120px)" }}
+        className="flex gap-0 overflow-hidden sm:rounded-xl sm:border sm:border-warm-200 bg-white chat-container"
+        // The mobile chat-detail "fix to viewport" rule lives in <style>
+        // above — driven by `body.in-chat-detail` so Tailwind's class
+        // generation can't accidentally drop the variant.
+        style={{
+          // Desktop / chat list: keep the heights we used to compute.
+          // Chat detail mobile: fixed inset:0 already sets bounds — no
+          // height needed, so we drop it on that breakpoint via the
+          // `chat-container` rule below.
+          height: activeChat ? undefined : "calc(100dvh - 64px)",
+        }}
       >
         {/* Conversations sidebar */}
         <div
@@ -812,7 +1244,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                       )}
                     </div>
                     <p className={`mt-0.5 text-xs leading-4 line-clamp-2 ${convo.unread_count > 0 ? "text-gray-600" : "text-gray-400"}`}>
-                      {formatLastMessagePreview(convo.last_message) || t("startConversation")}
+                      {formatLastMessagePreview(convo.last_message, !!convo.last_message_deleted) || t("startConversation")}
                     </p>
                   </div>
                 </button>
@@ -823,14 +1255,16 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
 
         {/* Chat */}
         <div
-          className={`flex flex-1 flex-col ${
+          className={`flex min-w-0 flex-1 flex-col overflow-x-hidden ${
             !activeChat ? "hidden sm:flex" : "flex"
           }`}
         >
           {activeChat && activeConvo ? (
             <>
-              {/* Header with connection status */}
-              <div className="flex items-center gap-2.5 border-b border-warm-100 px-4 py-3">
+              {/* Header — sticky at the top of the chat scroll column so
+                  it never scrolls out of view even when the keyboard
+                  shifts the viewport. */}
+              <div className="sticky top-0 z-10 flex items-center gap-2.5 border-b border-warm-100 bg-white px-4 py-3">
                 <button
                   onClick={() => setActiveChat(null)}
                   className="text-gray-400 hover:text-gray-600 sm:hidden"
@@ -849,13 +1283,17 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                     />
                   </svg>
                 </button>
-                {activeConvo.other_slug ? (
-                  <a href={`/photographers/${activeConvo.other_slug}`} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                    <Avatar src={activeConvo.other_avatar} fallback={activeConvo.other_name} size="md" />
-                  </a>
-                ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeConvo.other_avatar) setZoomedAvatar({ src: activeConvo.other_avatar, name: activeConvo.other_name });
+                  }}
+                  disabled={!activeConvo.other_avatar}
+                  className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-300 disabled:cursor-default"
+                  title={activeConvo.other_avatar ? (t("viewAvatar") || "View photo") : undefined}
+                >
                   <Avatar src={activeConvo.other_avatar} fallback={activeConvo.other_name} size="md" />
-                )}
+                </button>
                 <div className="min-w-0">
                   {activeConvo.other_slug ? (
                     <a href={`/photographers/${activeConvo.other_slug}`} target="_blank" rel="noopener noreferrer"
@@ -879,13 +1317,71 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                       </span>
                     </span>
                   )}
+                  {activeConvo?.other_role === "client" && (
+                    <button
+                      type="button"
+                      onClick={toggleSuggestionsHidden}
+                      title={suggestionsHidden
+                        ? (t("suggestionsShow") || "Show AI suggestions")
+                        : (t("suggestionsHide") || "Hide AI suggestions")}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full text-base transition ${
+                        suggestionsHidden
+                          ? "bg-warm-100 text-gray-400 hover:bg-warm-200"
+                          : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                      }`}
+                    >
+                      💡
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {/* Booking-intent strip — only for the photographer side, only
+                  when the LLM extracted at least one usable signal. The
+                  client doesn't need their own intent summarized back at
+                  them. Also: skip if a real booking exists — the booking
+                  already carries location/date/group structurally, and
+                  LLM-extracted hints just add noise (photographers were
+                  seeing "Lisbon" chips when the booking was for Porto). */}
+              {activeConvo?.other_role === "client"
+                && activeConvo?.booking_status === "inquiry"
+                && (intentLoading || intent) && (() => {
+                const chips: { icon: string; label: string }[] = [];
+                if (intent?.shoot_date) chips.push({ icon: "📅", label: intent.shoot_date });
+                if (intent?.location) chips.push({ icon: "📍", label: intent.location });
+                if (intent?.occasion) chips.push({ icon: "💑", label: intent.occasion.replace(/_/g, " ") });
+                if (intent?.group_size) chips.push({ icon: "👥", label: `${intent.group_size}` });
+                if (intent?.budget) chips.push({ icon: "💶", label: intent.budget });
+                if (intent?.preferred_package) chips.push({ icon: "📦", label: intent.preferred_package });
+                if (chips.length === 0 && !intentLoading) return null;
+                return (
+                  <div className="border-b border-warm-100 bg-amber-50/50 px-4 py-2 flex items-center gap-2 flex-wrap text-xs">
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                      {t("intentLabel") || "Client wants"}
+                    </span>
+                    {intentLoading ? (
+                      <span className="text-gray-400 italic">{t("intentLoading") || "Reading conversation..."}</span>
+                    ) : (
+                      <>
+                        {chips.map((c, i) => (
+                          <span key={i} className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 border border-amber-200 text-gray-700">
+                            <span>{c.icon}</span>
+                            <span className="font-medium">{c.label}</span>
+                          </span>
+                        ))}
+                        {intent?.notes && (
+                          <span className="text-gray-500 italic">— {intent.notes}</span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Messages */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto px-4 py-3"
+                className="min-w-0 flex-1 overflow-y-auto px-4 py-3"
                 style={{ overscrollBehavior: "contain" }}
               >
                 {loadingMessages ? (
@@ -929,6 +1425,24 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                             </div>
                           );
                         }
+                        // Date proposal card — Accept / Propose Different
+                        if (msg.text?.startsWith("DATE_PROPOSAL:")) {
+                          try {
+                            const payload = JSON.parse(msg.text.slice("DATE_PROPOSAL:".length));
+                            const viewerIsProposer = msg.sender_id === userId;
+                            return (
+                              <DateProposalCard
+                                key={msg.id}
+                                bookingId={activeChat!}
+                                payload={payload}
+                                viewerIsProposer={viewerIsProposer}
+                                otherName={(activeConvo?.other_name || "").split(" ")[0] || "them"}
+                              />
+                            );
+                          } catch {
+                            // fall through
+                          }
+                        }
                         // Package card shared by photographer
                         if (msg.text?.startsWith("BOOKING_CARD:")) {
                           try {
@@ -967,12 +1481,15 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                   </div>
                                   <p className="mt-2 text-xl font-bold text-gray-900">&euro;{Math.round(card.price)}</p>
                                   {card.slug && activeConvo?.other_role === "photographer" && (
-                                    <a href={`/book/${card.slug}?package=${card.package_id}`}
-                                      className={`mt-3 inline-block rounded-xl px-6 py-2.5 text-sm font-bold text-white transition ${
-                                        isCustom ? "bg-amber-600 hover:bg-amber-700" : "bg-primary-600 hover:bg-primary-700"
-                                      }`}>
-                                      {t("bookNow")}
-                                    </a>
+                                    <>
+                                      <p className="mt-2 text-[11px] font-medium text-amber-700">⏳ {t("bookingCardFomo")}</p>
+                                      <a href={`/book/${card.slug}?package=${card.package_id}&proposal=${msg.id}`}
+                                        className={`mt-3 inline-block rounded-xl px-6 py-2.5 text-sm font-bold text-white transition ${
+                                          isCustom ? "bg-amber-600 hover:bg-amber-700" : "bg-primary-600 hover:bg-primary-700"
+                                        }`}>
+                                        {t("bookNow")}
+                                      </a>
+                                    </>
                                   )}
                                 </div>
                               </div>
@@ -1041,14 +1558,92 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                         );
                       }
 
+                      // Tombstone for deleted messages — both parties see it.
+                      if (msg.deleted_at) {
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex ${isMe ? "justify-end" : "justify-start"} ${isLast ? "mb-2" : ""}`}
+                          >
+                            <div className="max-w-[70%]">
+                              <div className="inline-block rounded-2xl border border-dashed border-gray-300 px-3.5 py-2 text-[13px] italic text-gray-400">
+                                🗑 {t("messageDeleted") || "Message deleted"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Inline edit mode replaces the bubble with a textarea.
+                      if (editingMessageId === msg.id) {
+                        return (
+                          <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} ${isLast ? "mb-2" : ""}`}>
+                            <div className="w-full max-w-[80%]">
+                              <textarea
+                                value={editingText}
+                                onChange={(e) => setEditingText(e.target.value)}
+                                rows={Math.min(6, Math.max(2, editingText.split("\n").length))}
+                                autoFocus
+                                className="w-full rounded-2xl border border-primary-300 bg-white px-3 py-2 text-[15px] text-gray-900 outline-none focus:border-primary-500"
+                              />
+                              <div className="mt-1 flex justify-end gap-2 text-xs">
+                                <button
+                                  type="button"
+                                  onClick={cancelEditingMessage}
+                                  className="rounded-md px-3 py-1 text-gray-500 hover:bg-warm-100"
+                                  disabled={msgActionBusy === msg.id}
+                                >{t("cancel") || "Cancel"}</button>
+                                <button
+                                  type="button"
+                                  onClick={submitMessageEdit}
+                                  disabled={!editingText.trim() || msgActionBusy === msg.id}
+                                  className="rounded-md bg-primary-600 px-3 py-1 font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
+                                >{msgActionBusy === msg.id ? "…" : (t("save") || "Save")}</button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      const showActions = isMe && canModifyMessage(msg);
+
                       return (
                         <div
                           key={msg.id}
-                          className={`flex ${
+                          className={`group/msg flex ${
                             isMe ? "justify-end" : "justify-start"
                           } ${isLast ? "mb-2" : ""}`}
                         >
-                          <div className="max-w-[70%]">
+                          <div className="max-w-[70%] relative">
+                            {showActions && (
+                              <div className="absolute -top-1 right-0 z-10 hidden group-hover/msg:block">
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    aria-label="Message actions"
+                                    onClick={() => setOpenMenuId(openMenuId === msg.id ? null : msg.id)}
+                                    className="flex h-6 w-6 items-center justify-center rounded-full bg-white border border-warm-200 text-gray-500 shadow-sm hover:bg-warm-50"
+                                  >
+                                    <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" /></svg>
+                                  </button>
+                                  {openMenuId === msg.id && (
+                                    <div className="absolute right-0 top-7 z-20 w-32 overflow-hidden rounded-lg border border-warm-200 bg-white shadow-lg">
+                                      <button
+                                        type="button"
+                                        onClick={() => startEditingMessage(msg)}
+                                        className="block w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-warm-50"
+                                      >{t("edit") || "Edit"}</button>
+                                      <button
+                                        type="button"
+                                        onClick={() => deleteMessage(msg)}
+                                        disabled={msgActionBusy === msg.id}
+                                        className="block w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                      >{t("delete") || "Delete"}</button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                             <div
                               className={`inline-block rounded-2xl text-[15px] leading-relaxed ${
                                 msg.media_url && !msg.text
@@ -1123,6 +1718,21 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                       >{part.replace(/^https?:\/\//, "").slice(0, 50)}{part.replace(/^https?:\/\//, "").length > 50 ? "…" : ""}</a>
                                     ) : part
                                   )}
+                                  {msg.edited_at && (
+                                    <span className={`ml-1.5 text-[10px] italic ${isMe ? "text-white/70" : "text-gray-500"}`}>
+                                      ({t("editedShort") || "edited"})
+                                    </span>
+                                  )}
+                                </p>
+                              )}
+                              {msg.translated_text && (
+                                <p className={`mt-1.5 pt-1.5 border-t text-[13px] italic break-words whitespace-pre-wrap ${
+                                  isMe ? "border-white/25 text-white/75" : "border-warm-300/60 text-gray-500"
+                                }`}>
+                                  <span className={`mr-1 inline-block rounded px-1 text-[9px] font-bold uppercase tracking-wide not-italic ${
+                                    isMe ? "bg-white/15 text-white/80" : "bg-warm-200 text-gray-500"
+                                  }`}>{msg.translated_to_lang || "auto"}</span>
+                                  {msg.translated_text}
                                 </p>
                               )}
                             </div>
@@ -1194,17 +1804,163 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                   <span className="text-xs text-gray-400 shrink-0">{pendingFiles.length} {pendingFiles.length === 1 ? "photo" : "photos"}</span>
                 </div>
               )}
+              {/* Contextual quick-reply chips (Phase 4) — what the photographer
+                  should ask the client next, based on what the AI intent
+                  pass already extracted. Photographer-side only. We hide
+                  these whenever AI freeform chips (Phase 5) are available
+                  so the photographer isn't drowning in two strips of
+                  suggestions on a small screen. */}
+              {!suggestionsHidden && photographerWaitingForReply && intent && !aiChips && !aiChipsLoading && (() => {
+                const contextChips: { id: string; label: string; onClick: () => void }[] = [];
+                if (!intent.occasion) {
+                  contextChips.push({
+                    id: "ask_occasion",
+                    label: t("chipAskOccasion") || "Ask occasion",
+                    onClick: () => applyChipPrefill(t("chipAskOccasionText") || "What kind of shoot are you looking for? (couples, family, wedding, etc.)"),
+                  });
+                }
+                if (!intent.shoot_date) {
+                  contextChips.push({
+                    id: "ask_date",
+                    label: t("chipAskDate") || "Ask date",
+                    onClick: () => applyChipPrefill(t("chipAskDateText") || "What date are you considering for the shoot?"),
+                  });
+                }
+                if (!intent.group_size) {
+                  contextChips.push({
+                    id: "ask_group",
+                    label: t("chipAskGroup") || "Ask group size",
+                    onClick: () => applyChipPrefill(t("chipAskGroupText") || "How many people will be in the shoot?"),
+                  });
+                }
+                if (!intent.location) {
+                  contextChips.push({
+                    id: "ask_location",
+                    label: t("chipAskLocation") || "Ask location",
+                    onClick: () => applyChipPrefill(t("chipAskLocationText") || "Which location works best for you?"),
+                  });
+                }
+                if (intent.occasion && intent.location && !intent.preferred_package) {
+                  contextChips.push({
+                    id: "send_package",
+                    label: t("chipSendPackage") || "📦 Send package",
+                    onClick: () => setShowPackagePicker(true),
+                  });
+                }
+                const top = contextChips.slice(0, 4);
+                if (top.length === 0) return null;
+                return (
+                  <div className="border-t border-warm-100 bg-white px-3 py-2 flex items-center flex-wrap gap-1.5">
+                    {top.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={c.onClick}
+                        className="rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-[12px] font-medium text-primary-700 hover:bg-primary-100 transition"
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={toggleSuggestionsHidden}
+                      aria-label={t("suggestionsHide") || "Hide AI suggestions"}
+                      className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 text-base leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })()}
+              {/* AI freeform reply suggestions (Phase 5) */}
+              {!suggestionsHidden && photographerWaitingForReply && (aiChipsLoading || (aiChips && aiChips.length > 0)) && (
+                <div className="border-t border-warm-100 bg-gradient-to-b from-purple-50/40 to-white px-3 py-2">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-purple-700 shrink-0">
+                      {t("aiChipsLabel") || "AI suggestions"}
+                    </span>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {aiChips && aiChips.length > 0 && !aiChipsLoading && (
+                        <button
+                          type="button"
+                          onClick={reportAiChipMiss}
+                          className="text-[10px] text-gray-400 hover:text-gray-600 underline"
+                        >
+                          {t("aiChipsMiss") || "None of these fit"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={toggleSuggestionsHidden}
+                        aria-label={t("suggestionsHide") || "Hide AI suggestions"}
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 text-base leading-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                  {aiChipsLoading ? (
+                    <span className="text-[12px] text-gray-400 italic">
+                      {t("aiChipsLoading") || "Drafting suggestions..."}
+                    </span>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {aiChips!.map((c, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => applyAiChip(c.text)}
+                          className="text-left rounded-lg border border-purple-200 bg-white px-3 py-2 text-[13px] text-gray-700 hover:bg-purple-50 transition"
+                        >
+                          {c.text}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {(originalDraft !== null || translateError) && (
+                <div className="border-t border-warm-100 bg-warm-50/40 px-3 py-1.5 text-[11px] flex items-center justify-between gap-2">
+                  {translateError ? (
+                    <span className="text-red-600">{translateError}</span>
+                  ) : (
+                    <>
+                      <span className="text-gray-500 truncate">
+                        {t("translatedDraftHint") || "Translated draft — review before sending."}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleUndoTranslate}
+                        className="shrink-0 font-semibold text-primary-600 hover:text-primary-700"
+                      >
+                        {t("undoTranslate") || "Undo"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
               <form
                 onSubmit={handleSend}
-                className="flex items-center gap-2 border-t border-warm-100 px-3 py-2.5"
+                className="flex items-center gap-1 sm:gap-2 border-t border-warm-100 px-2 py-2 sm:px-3 sm:py-2.5"
               >
                 <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif,.pdf,.gif" multiple className="hidden" onChange={handleMediaSelect} />
+                {/* Mobile-only back-to-chats button. */}
+                <button
+                  type="button"
+                  onClick={() => setActiveChat(null)}
+                  aria-label={t("backToChats") || "Back to chats"}
+                  className="flex h-9 w-8 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-warm-100 hover:text-gray-700 sm:hidden"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
                 <div className="group relative">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingMedia}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 disabled:opacity-30 sm:h-8 sm:w-8"
+                    className="flex h-9 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 disabled:opacity-30 sm:h-8 sm:w-8"
                   >
                     {uploadingMedia ? (
                       <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="31.4" strokeLinecap="round" /></svg>
@@ -1221,7 +1977,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                     <button
                       type="button"
                       onClick={openPackagePicker}
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 sm:h-8 sm:w-8"
+                      className="flex h-9 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-warm-100 hover:text-gray-600 sm:h-8 sm:w-8"
                     >
                       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>
                     </button>
@@ -1371,6 +2127,13 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                   value={newMessage}
                   onChange={(e) => {
                     setNewMessage(e.target.value);
+                    // Once the user manually edits after a translate, the
+                    // pre-translation snapshot is stale — drop it so the
+                    // Undo button stops offering a misleading rollback.
+                    if (originalDraft !== null && e.target.value !== newMessage) {
+                      setOriginalDraft(null);
+                    }
+                    if (translateError) setTranslateError(null);
                     // Auto-resize textarea
                     const el = e.target;
                     el.style.height = "auto";
@@ -1389,9 +2152,54 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                     }
                   }}
                   placeholder={t("typePlaceholder")}
-                  className="flex-1 resize-none rounded-2xl border border-warm-200 bg-warm-50 px-4 py-2 text-base outline-none focus:border-primary-300 focus:bg-white"
+                  // min-w-0 is critical: by default flex children get
+                  // min-width:auto which lets long content push the parent
+                  // past the viewport. Without this the page grows
+                  // horizontally as the user types a long word.
+                  className="min-w-0 flex-1 resize-none rounded-2xl border border-warm-200 bg-warm-50 px-4 py-2 text-base outline-none focus:border-primary-300 focus:bg-white"
                   style={{ maxHeight: 120 }}
                 />
+                {outboundTarget && newMessage.trim() && (
+                  <button
+                    type="button"
+                    onClick={handleTranslateOutbound}
+                    disabled={translateBusy}
+                    title={`${t("translateTo") || "Translate to"} ${outboundTarget.toUpperCase()}`}
+                    className="flex h-10 shrink-0 items-center justify-center gap-1 rounded-full border border-warm-200 bg-white px-3 text-[11px] font-bold uppercase tracking-wide text-gray-600 hover:bg-warm-50 disabled:opacity-30 sm:h-8 sm:px-2.5"
+                  >
+                    {translateBusy ? (
+                      <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25" />
+                        <path d="M22 12a10 10 0 00-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                      </svg>
+                    ) : (
+                      <>
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9l4.5-9 4.5 9M7.5 3h9" />
+                        </svg>
+                        <span>{outboundTarget.toUpperCase()}</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                {showPolishButton && newMessage.trim() && (
+                  <button
+                    type="button"
+                    onClick={handlePolish}
+                    disabled={polishBusy}
+                    title={t("polishTitle") || "Polish my English"}
+                    className="flex h-10 shrink-0 items-center justify-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 text-[11px] font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-100 disabled:opacity-30 sm:h-8 sm:px-2.5"
+                  >
+                    {polishBusy ? (
+                      <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25" />
+                        <path d="M22 12a10 10 0 00-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                      </svg>
+                    ) : (
+                      <>✨ <span className="hidden sm:inline">{t("polishShort") || "Polish"}</span></>
+                    )}
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={sending || uploadingMedia || (!newMessage.trim() && pendingFiles.length === 0)}
@@ -1423,6 +2231,107 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
           )}
         </div>
       </div>
+
+      {/* Avatar zoom modal — tap on chat header avatar to see the other
+          person's photo at a meaningful size. We pick a square container
+          sized to viewport (capped at 700px), force the img to fill it
+          with object-cover, and request a larger source so the result
+          isn't pixelated. */}
+      {zoomedAvatar && (() => {
+        // If the avatar URL came from our CDN-ish thumbnail pipeline, swap
+        // any `?w=200` query for a larger size. Otherwise keep as-is.
+        let bigSrc = zoomedAvatar.src;
+        try {
+          const u = new URL(zoomedAvatar.src, "https://photoportugal.com");
+          if (u.searchParams.has("w")) {
+            u.searchParams.set("w", "800");
+            bigSrc = u.toString();
+          }
+        } catch { /* keep original */ }
+        return (
+          <div
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-4"
+            onClick={() => setZoomedAvatar(null)}
+          >
+            <button
+              type="button"
+              onClick={() => setZoomedAvatar(null)}
+              aria-label="Close"
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div
+              className="flex flex-col items-center gap-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="rounded-3xl overflow-hidden bg-warm-100 shadow-2xl"
+                style={{ width: "min(85vw, 85vh, 700px)", height: "min(85vw, 85vh, 700px)" }}
+              >
+                <img
+                  src={bigSrc}
+                  alt={zoomedAvatar.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <p className="text-white text-lg font-semibold">{zoomedAvatar.name}</p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Polish result modal — two tone variants for the photographer to choose. */}
+      {(polishResult || polishError) && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4"
+          onClick={() => { setPolishResult(null); setPolishError(null); }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden"
+          >
+            <div className="px-4 py-3 border-b border-warm-100 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-900">
+                ✨ {t("polishTitle") || "Pick a polished version"}
+              </h3>
+              <button
+                type="button"
+                onClick={() => { setPolishResult(null); setPolishError(null); }}
+                className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+              >×</button>
+            </div>
+            {polishError ? (
+              <div className="p-4 text-sm text-red-600">{polishError}</div>
+            ) : polishResult && (
+              <div className="p-3 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => applyPolish(polishResult.warm)}
+                  className="w-full text-left rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 transition px-3 py-2.5"
+                >
+                  <span className="block text-[10px] font-bold uppercase tracking-wide text-amber-700 mb-1">
+                    🤗 {t("toneWarm") || "Warm"}
+                  </span>
+                  <span className="block text-sm text-gray-800 whitespace-pre-wrap">{polishResult.warm}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPolish(polishResult.professional)}
+                  className="w-full text-left rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 transition px-3 py-2.5"
+                >
+                  <span className="block text-[10px] font-bold uppercase tracking-wide text-blue-700 mb-1">
+                    💼 {t("toneProfessional") || "Professional"}
+                  </span>
+                  <span className="block text-sm text-gray-800 whitespace-pre-wrap">{polishResult.professional}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Lightbox */}
       {lightboxIndex !== null && (() => {

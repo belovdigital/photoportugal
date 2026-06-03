@@ -364,13 +364,13 @@ export default async function ShootTypePage({
   // One package per photographer + hash-shuffled photo order — same
   // diversification logic as the location pages.
   const packages = await query<{
-    id: string; name: string; price: number; duration_minutes: number; num_photos: number;
+    id: string; slug: string | null; name: string; price: number; duration_minutes: number; num_photos: number;
     photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
     rating: number; review_count: number; is_popular: boolean;
     portfolio_thumbs: string[];
   }>(
     `WITH per_photographer AS (
-       SELECT pk.id, pk.name, pk.price, pk.duration_minutes, pk.num_photos,
+       SELECT pk.id, pk.slug, pk.name, pk.price, pk.duration_minutes, pk.num_photos,
               pp.id as profile_id,
               pp.slug as photographer_slug, u.name as photographer_name,
               u.avatar_url as photographer_avatar,
@@ -388,7 +388,7 @@ export default async function ShootTypePage({
           AND pk.is_public = TRUE
           AND pp.shoot_types && $1::text[]
      )
-     SELECT id, name, price, duration_minutes, num_photos,
+     SELECT id, slug, name, price, duration_minutes, num_photos,
             photographer_slug, photographer_name, photographer_avatar,
             rating, review_count, is_popular,
             COALESCE((
@@ -446,16 +446,34 @@ export default async function ShootTypePage({
         url: `https://photoportugal.com/photographers?shootType=${type}`,
       },
     } : {}),
-    ...(totalReviews > 0 && avgRating > 0 ? {
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: avgRating,
-        reviewCount: totalReviews,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    } : {}),
+    // aggregateRating intentionally omitted on Service nodes — Google's
+    // review-snippet whitelist excludes Service. GSC flagged "Invalid
+    // object type for field <parent_node>" 2026-04-30 → fixed 2026-05-09.
   };
+
+  // ProfessionalService = LocalBusiness subclass = whitelisted by Google
+  // for review snippets. We attach aggregateRating here so the page can
+  // earn star-rating SERP enhancement, while the Service node above keeps
+  // the semantic description intact (offers, areaServed, provider).
+  const jsonLdBusiness = totalReviews > 0 && avgRating > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "@id": `https://photoportugal.com/photoshoots/${type}#business`,
+    name: `Photo Portugal — ${stl.name}`,
+    url: `https://photoportugal.com/photoshoots/${type}`,
+    image: "https://photoportugal.com/og-image.png",
+    description: stl.metaDescription,
+    priceRange: "€€",
+    address: { "@type": "PostalAddress", addressLocality: "Lisbon", addressCountry: "PT" },
+    areaServed: { "@type": "Country", name: "Portugal" },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: avgRating.toFixed(1),
+      reviewCount: String(totalReviews),
+      bestRating: "5",
+      worstRating: "1",
+    },
+  } : null;
 
   const jsonLdFaq = stl.faqs.length > 0 ? {
     "@context": "https://schema.org",
@@ -467,20 +485,15 @@ export default async function ShootTypePage({
     })),
   } : null;
 
-  const jsonLdBreadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: tc("home"), item: "https://photoportugal.com/" },
-      { "@type": "ListItem", position: 2, name: tc("photoshoots"), item: "https://photoportugal.com/photoshoots" },
-      { "@type": "ListItem", position: 3, name: stl.name, item: `https://photoportugal.com/photoshoots/${type}` },
-    ],
-  };
+  // BreadcrumbList JSON-LD is emitted by <Breadcrumbs> below; no
+  // inline duplicate needed.
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdService) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
+      {jsonLdBusiness && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBusiness) }} />
+      )}
       {jsonLdFaq && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
       )}

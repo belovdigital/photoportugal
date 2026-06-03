@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { NotFoundClient } from "./NotFoundClient";
 
 export default function NotFound() {
   const t = useTranslations("notFound");
@@ -14,6 +15,12 @@ export default function NotFound() {
         <p className="mt-4 text-gray-500">
           {t("description")}
         </p>
+
+        {/* Logs the path + renders a "Did you mean?" suggestion when the
+            URL fuzzy-matches a known slug. Client-side so we can read
+            window.location reliably in Next 16. */}
+        <NotFoundClient />
+
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/"

@@ -3,7 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification, sendAdminBookingConfirmedNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
-import { requireStripe, calculatePayment } from "@/lib/stripe";
+import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
 
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
@@ -56,7 +56,6 @@ export async function PATCH(
 
   const { id } = await params;
   const userId = user.id;
-  const isMobileApiRequest = req.headers.get("authorization")?.startsWith("Bearer ") ?? false;
   const { status, welcome_message, reason } = await req.json();
   const trimmedReason = typeof reason === "string" ? reason.trim().slice(0, 500) : "";
 
@@ -93,11 +92,10 @@ export async function PATCH(
     }
 
     const trimmedWelcome = typeof welcome_message === "string" ? welcome_message.trim() : "";
-    // TODO: drop the `!isMobileApiRequest` bypass once the photographer-app
-    // booking-confirm flow surfaces a welcome-message modal that sends
-    // `welcome_message` in the PATCH body. Without that change, removing the
-    // bypass breaks Confirm on mobile photographer side.
-    if (status === "confirmed" && !isMobileApiRequest && trimmedWelcome.length < 30) {
+    // Welcome-message gate is now uniform across web + mobile. Mobile
+    // photographer-app surfaces WelcomeMessageModal before the PATCH lands,
+    // so an empty welcome here is a real client-side bug, not a UX gap.
+    if (status === "confirmed" && trimmedWelcome.length < 30) {
       const previousPhotographerMessage = await queryOne<{ has_message: boolean }>(
         `SELECT EXISTS (
            SELECT 1
@@ -235,18 +233,44 @@ export async function PATCH(
             });
           }
 
-          const paymentStatus = refundPercent === 100 ? "refunded" : refundPercent > 0 ? "partially_refunded" : "no_refund";
-          // Persist cancellation metadata (by/reason/at) so the booking
-          // card surfaces the reason on both sides + admin can audit.
+          // Map refund outcome to a valid payment_status enum value.
+          // 0% refund — payment stays with the photographer; leave
+          // payment_status untouched (i.e. still 'paid'). The
+          // cancellation is visible via bookings.status='cancelled' +
+          // cancelled_at/cancelled_by. The enum only carries 'refunded'
+          // and 'partially_refunded' for actual refund outcomes —
+          // there is no legitimate 'no_refund' value (this previously
+          // crashed the cancellation flow with an enum error).
           const cancellerCol = isClient ? "client" : "photographer";
-          await client.query(
-            `UPDATE bookings
-                SET status = 'cancelled', payment_status = $1,
-                    cancelled_at = NOW(), cancelled_by = $2,
-                    cancelled_reason = COALESCE(NULLIF($3, ''), cancelled_reason)
-              WHERE id = $4`,
-            [paymentStatus, cancellerCol, trimmedReason, id]
-          );
+          if (refundPercent === 100) {
+            await client.query(
+              `UPDATE bookings
+                  SET status = 'cancelled', payment_status = 'refunded',
+                      cancelled_at = NOW(), cancelled_by = $1,
+                      cancelled_reason = COALESCE(NULLIF($2, ''), cancelled_reason)
+                WHERE id = $3`,
+              [cancellerCol, trimmedReason, id]
+            );
+          } else if (refundPercent > 0) {
+            await client.query(
+              `UPDATE bookings
+                  SET status = 'cancelled', payment_status = 'partially_refunded',
+                      cancelled_at = NOW(), cancelled_by = $1,
+                      cancelled_reason = COALESCE(NULLIF($2, ''), cancelled_reason)
+                WHERE id = $3`,
+              [cancellerCol, trimmedReason, id]
+            );
+          } else {
+            await client.query(
+              `UPDATE bookings
+                  SET status = 'cancelled',
+                      cancelled_at = NOW(), cancelled_by = $1,
+                      cancelled_reason = COALESCE(NULLIF($2, ''), cancelled_reason)
+                WHERE id = $3`,
+              [cancellerCol, trimmedReason, id]
+            );
+          }
+          const paymentStatus = refundPercent === 100 ? "refunded" : refundPercent > 0 ? "partially_refunded" : "paid";
 
           return { info, refundPercent, totalPaid, refundAmount, paymentStatus };
         });
@@ -352,14 +376,15 @@ export async function PATCH(
               ? cancelInfo.client_name
               : cancelInfo.photographer_name;
             if (recipientId) {
+              const otherFirst = (otherName || "").split(" ")[0] || "The other party";
               import("@/lib/push").then(m =>
                 m.sendPushNotification(
                   recipientId,
-                  "Booking cancelled",
+                  `❌ ${otherFirst} cancelled the booking`,
                   refundPercent > 0
-                    ? `${otherName} cancelled. Refund €${refundAmount.toFixed(2)} processed.`
-                    : `${otherName} cancelled the booking.`,
-                  { type: "booking", bookingId: id }
+                    ? `Refund of €${refundAmount.toFixed(2)} processed.`
+                    : "Tap to view details.",
+                  { type: "booking", bookingId: id, channelId: "bookings", categoryId: "BOOKING" }
                 )
               ).catch(err => console.error("[bookings] cancel push error:", err));
               import("@/lib/realtime").then((m) =>
@@ -499,12 +524,13 @@ export async function PATCH(
               ? cancelInfo.photographer_user_id
               : cancelInfo.client_user_id;
             if (recipientId) {
+              const cancellerFirst = (cancellerName || "").split(" ")[0] || "The other party";
               import("@/lib/push").then(m =>
                 m.sendPushNotification(
                   recipientId,
-                  "Booking cancelled",
-                  `${cancellerName} cancelled the booking.`,
-                  { type: "booking", bookingId: id }
+                  `❌ ${cancellerFirst} cancelled the booking`,
+                  "Tap to view details.",
+                  { type: "booking", bookingId: id, channelId: "bookings", categoryId: "BOOKING" }
                 )
               ).catch(err => console.error("[bookings] unpaid cancel push error:", err));
               import("@/lib/realtime").then((m) =>
@@ -593,12 +619,14 @@ export async function PATCH(
           total_price: number | null; package_name: string | null;
           photographer_stripe_id: string | null; photographer_plan: string;
           stripe_customer_id: string | null;
+          gift_card_id: string | null;
         }>(
           `SELECT u.email as client_email, u.name as client_name, u.id as client_id,
                   u.stripe_customer_id,
                   pu.name as photographer_name, b.shoot_date, b.total_price,
                   p.name as package_name,
-                  pp.stripe_account_id as photographer_stripe_id, pp.plan as photographer_plan
+                  pp.stripe_account_id as photographer_stripe_id, pp.plan as photographer_plan,
+                  b.gift_card_id
            FROM bookings b
            JOIN users u ON u.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -612,8 +640,11 @@ export async function PATCH(
           let paymentUrl: string | null = null;
           let clientTotal: number | null = null;
 
-          // Create Stripe Checkout Session if there's a price and photographer has Stripe connected
-          if (bookingDetails.total_price && bookingDetails.photographer_stripe_id) {
+          // Create Stripe Checkout Session if there's a price and photographer has Stripe connected.
+          // Gift-card-redemption bookings are already paid via the gift card purchase — no Stripe
+          // session, no payment link in the confirm email, no overwriting the tier-fixed
+          // payout_amount/service_fee/platform_fee with calculatePayment values.
+          if (bookingDetails.total_price && bookingDetails.photographer_stripe_id && !bookingDetails.gift_card_id) {
             try {
               const stripeClient = requireStripe();
               const payment = calculatePayment(bookingDetails.total_price, bookingDetails.photographer_plan);
@@ -625,7 +656,7 @@ export async function PATCH(
               console.log(`[bookings] Payment calc: package=${packageAmount}c, serviceFee=${Math.round(payment.serviceFee * 100)}c, total=${stripeAmount}c, plan=${bookingDetails.photographer_plan}`);
               if (stripeAmount <= packageAmount) {
                 console.error(`[bookings] BUG: Stripe amount ${stripeAmount} should be > package ${packageAmount}. Recalculating...`);
-                clientTotal = bookingDetails.total_price * 1.10;
+                clientTotal = bookingDetails.total_price * (1 + SERVICE_FEE_RATE);
               }
 
               // Get or create Stripe customer
@@ -698,7 +729,14 @@ export async function PATCH(
               if (smsPrefs?.sms_bookings !== false) {
                 const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
                 const cLocale = await getUserLocaleById(bookingDetails.client_id);
-                const smsBody = pickT({
+                // Gift-card bookings: no "check dashboard for payment" copy
+                // — recipient already paid via the gift card.
+                const smsBody = bookingDetails.gift_card_id ? pickT({
+                  en: `Photo Portugal: ${bookingDetails.photographer_name} confirmed your gift session! See your dashboard.`,
+                  pt: `Photo Portugal: ${bookingDetails.photographer_name} confirmou a sua sessão de presente! Veja o seu painel.`,
+                  de: `Photo Portugal: ${bookingDetails.photographer_name} hat Ihre Geschenk-Session bestätigt! Im Dashboard sehen.`,
+                  fr: `Photo Portugal : ${bookingDetails.photographer_name} a confirmé votre séance cadeau ! Voir votre tableau de bord.`,
+                }, cLocale) : pickT({
                   en: `Photo Portugal: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`,
                   pt: `Photo Portugal: ${bookingDetails.photographer_name} confirmou a sua reserva! Veja o seu painel para os detalhes de pagamento.`,
                   de: `Photo Portugal: ${bookingDetails.photographer_name} hat Ihre Buchung bestätigt! Zahlungsdetails finden Sie in Ihrem Dashboard.`,
@@ -715,27 +753,57 @@ export async function PATCH(
           }
 
           // Push to client — booking accepted, includes payment CTA
-          import("@/lib/push").then(m =>
-            m.sendPushNotification(
-              bookingDetails.client_id,
-              "Booking confirmed!",
-              `${bookingDetails.photographer_name} confirmed your session. Tap to pay.`,
-              { type: "booking", bookingId: id }
-            )
-          ).catch(err => console.error("[bookings] confirm push error:", err));
+          {
+            const photogFirst = (bookingDetails.photographer_name || "").split(" ")[0] || "Your photographer";
+            import("@/lib/push").then(m =>
+              m.sendPushNotification(
+                bookingDetails.client_id,
+                `✅ ${photogFirst} confirmed your booking`,
+                "Tap to complete payment.",
+                { type: "booking", bookingId: id, channelId: "bookings", categoryId: "BOOKING" }
+              )
+            ).catch(err => console.error("[bookings] confirm push error:", err));
+          }
           import("@/lib/realtime").then((m) =>
             m.notifyUser(bookingDetails.client_id, "booking_changed", { bookingId: id, status: "confirmed" })
           );
 
-          // Send confirmation email with payment link (show fee-inclusive total)
-          sendBookingConfirmationWithPayment(
-            bookingDetails.client_email,
-            bookingDetails.client_name,
-            bookingDetails.photographer_name,
-            bookingDetails.shoot_date,
-            paymentUrl,
-            clientTotal ?? Number(bookingDetails.total_price)
-          );
+          // Confirmation email — branch on gift-card-redemption: the
+          // standard email pushes "pay now" CTA which is wrong for a
+          // gift session that's already paid via the card.
+          if (bookingDetails.gift_card_id) {
+            // Lightweight confirm email without payment link.
+            import("@/lib/email").then(async ({ sendEmail, emailLayout, emailButton }) => {
+              const { getUserLocaleById, pickT, normalizeLocale } = await import("@/lib/email-locale");
+              const loc = normalizeLocale(await getUserLocaleById(bookingDetails.client_id));
+              const T = pickT({
+                en: { subject: `${bookingDetails.photographer_name} confirmed your gift session`, h2: `Your gift session is confirmed`, body: `${bookingDetails.photographer_name} confirmed your photo session. Your gift card has already covered the price — no further payment needed. Check your dashboard for shoot details.`, cta: "Open your dashboard" },
+                pt: { subject: `${bookingDetails.photographer_name} confirmou a sua sessão de presente`, h2: `A sua sessão de presente está confirmada`, body: `${bookingDetails.photographer_name} confirmou a sua sessão fotográfica. O cartão-presente já cobriu o valor — não é necessário pagar mais nada. Veja os detalhes no seu painel.`, cta: "Abrir o painel" },
+                de: { subject: `${bookingDetails.photographer_name} hat Ihre Geschenk-Session bestätigt`, h2: `Ihre Geschenk-Session ist bestätigt`, body: `${bookingDetails.photographer_name} hat Ihre Fotosession bestätigt. Ihre Geschenkkarte hat den Preis bereits übernommen — keine weitere Zahlung erforderlich. Details im Dashboard.`, cta: "Dashboard öffnen" },
+                es: { subject: `${bookingDetails.photographer_name} confirmó su sesión de regalo`, h2: `Su sesión de regalo está confirmada`, body: `${bookingDetails.photographer_name} confirmó su sesión fotográfica. Su tarjeta de regalo ya cubrió el precio — no se requiere más pago. Detalles en su panel.`, cta: "Abrir el panel" },
+                fr: { subject: `${bookingDetails.photographer_name} a confirmé votre séance cadeau`, h2: `Votre séance cadeau est confirmée`, body: `${bookingDetails.photographer_name} a confirmé votre séance photo. Votre carte cadeau a déjà couvert le prix — aucun paiement supplémentaire requis. Détails dans votre tableau de bord.`, cta: "Ouvrir le tableau de bord" },
+              }, loc);
+              await sendEmail(
+                bookingDetails.client_email,
+                T.subject,
+                emailLayout(`
+                  <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
+                  <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
+                  ${emailButton("https://photoportugal.com/dashboard/bookings", T.cta)}
+                `, loc)
+              );
+            }).catch((err) => console.error("[bookings] gift-card confirm email error:", err));
+          } else {
+            // Send confirmation email with payment link (show fee-inclusive total)
+            sendBookingConfirmationWithPayment(
+              bookingDetails.client_email,
+              bookingDetails.client_name,
+              bookingDetails.photographer_name,
+              bookingDetails.shoot_date,
+              paymentUrl,
+              clientTotal ?? Number(bookingDetails.total_price)
+            );
+          }
 
           // Notify admins
           sendAdminBookingConfirmedNotification(

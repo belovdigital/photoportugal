@@ -9,7 +9,8 @@ import {
   renderShootReminderToPhotographer,
   renderDeliveryReminderToPhotographer,
   renderTrustpilotFollowUpToClient,
-  renderTrustpilotFollowUpToPhotographer,
+  renderConciergeMatchesFollowUp,
+  renderReadyToBookNudge,
   emailLayout,
   emailButton,
 } from "@/lib/email";
@@ -98,11 +99,11 @@ export async function GET(req: NextRequest) {
             const cLocale = await getUserLocaleById(booking.client_id);
             const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
             const smsBody = pickT({
-              en: `Photo Portugal: Your slot with ${booking.photographer_name}${priceStr} is held until payment. Auto-cancel in ~18h if unpaid: https://photoportugal.com/dashboard/bookings`,
-              pt: `Photo Portugal: O seu horário com ${booking.photographer_name}${priceStr} está reservado até ao pagamento. Cancelamento automático em ~18h: https://photoportugal.com/dashboard/bookings`,
-              de: `Photo Portugal: Ihr Termin mit ${booking.photographer_name}${priceStr} ist nur bis zur Zahlung reserviert. Auto-Storno in ~18h: https://photoportugal.com/dashboard/bookings`,
-              es: `Photo Portugal: Su sesión con ${booking.photographer_name}${priceStr} está reservada hasta el pago. Cancelación automática en ~18h: https://photoportugal.com/dashboard/bookings`,
-              fr: `Photo Portugal : Votre créneau avec ${booking.photographer_name}${priceStr} est réservé jusqu'au paiement. Annulation automatique dans ~18h : https://photoportugal.com/dashboard/bookings`,
+              en: `Photo Portugal: Your slot with ${booking.photographer_name}${priceStr} isn't locked yet — secure it now. Auto-cancel in ~18h if unpaid: https://photoportugal.com/dashboard/bookings`,
+              pt: `Photo Portugal: O seu horário com ${booking.photographer_name}${priceStr} ainda não está bloqueado — garanta-o agora. Cancelamento automático em ~18h: https://photoportugal.com/dashboard/bookings`,
+              de: `Photo Portugal: Ihr Termin mit ${booking.photographer_name}${priceStr} ist noch nicht gesperrt — jetzt sichern. Auto-Storno in ~18h: https://photoportugal.com/dashboard/bookings`,
+              es: `Photo Portugal: Su sesión con ${booking.photographer_name}${priceStr} aún no está bloqueada — asegúrela ahora. Cancelación automática en ~18h: https://photoportugal.com/dashboard/bookings`,
+              fr: `Photo Portugal : Votre créneau avec ${booking.photographer_name}${priceStr} n'est pas encore verrouillé — réservez-le maintenant. Annulation automatique dans ~18h : https://photoportugal.com/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -114,9 +115,9 @@ export async function GET(req: NextRequest) {
         import("@/lib/push").then(m =>
           m.sendPushNotification(
             booking.client_id,
-            "Payment reminder",
-            `Your booking with ${booking.photographer_name} is awaiting payment.`,
-            { type: "booking", bookingId: booking.id }
+            `💳 Slot not locked yet — ${(booking.photographer_name || "").split(" ")[0] || "your photographer"}`,
+            "Pay now to lock the date in the calendar before another client does.",
+            { type: "booking", bookingId: booking.id, channelId: "bookings", categoryId: "BOOKING" }
           )
         ).catch(err => console.error("[cron] payment reminder push error:", err));
         await queryOne(
@@ -166,11 +167,11 @@ export async function GET(req: NextRequest) {
         const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
         const firstName = booking.client_name.split(" ")[0];
         const T = pickT({
-          en: { subject: "Last chance — your booking will be cancelled in 6 hours", h2: "Your Booking Will Be Cancelled Soon", greet: `Hi ${firstName},`, body1: `Your photoshoot with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in 6 hours</strong> if payment is not received.`, body2: `${booking.photographer_name} is holding this time slot for you — don't miss out!`, cta: "Pay Now & Secure Your Booking", footer: "If you no longer wish to proceed, the booking will be cancelled automatically. No action needed." },
-          pt: { subject: "Última oportunidade — a sua reserva será cancelada em 6 horas", h2: "A sua reserva será cancelada em breve", greet: `Olá ${firstName},`, body1: `A sua sessão com <strong>${booking.photographer_name}</strong>${priceStr} será <strong>automaticamente cancelada em 6 horas</strong> se o pagamento não for recebido.`, body2: `${booking.photographer_name} está a reservar este horário para si — não perca esta oportunidade!`, cta: "Pagar agora e garantir a reserva", footer: "Se já não pretende avançar, a reserva será cancelada automaticamente. Nenhuma ação necessária." },
-          de: { subject: "Letzte Chance — Ihre Buchung wird in 6 Stunden storniert", h2: "Ihre Buchung wird bald storniert", greet: `Hallo ${firstName},`, body1: `Ihr Fotoshooting mit <strong>${booking.photographer_name}</strong>${priceStr} wird <strong>in 6 Stunden automatisch storniert</strong>, wenn keine Zahlung eingeht.`, body2: `${booking.photographer_name} hält diesen Termin für Sie frei — verpassen Sie ihn nicht!`, cta: "Jetzt bezahlen und Buchung sichern", footer: "Wenn Sie nicht mehr fortfahren möchten, wird die Buchung automatisch storniert. Keine Aktion erforderlich." },
-          es: { subject: "Última oportunidad — su reserva se cancelará en 6 horas", h2: "Su reserva se cancelará pronto", greet: `Hola ${firstName},`, body1: `Su sesión con <strong>${booking.photographer_name}</strong>${priceStr} se <strong>cancelará automáticamente en 6 horas</strong> si no se recibe el pago.`, body2: `${booking.photographer_name} está reservando este horario para usted — ¡no lo pierda!`, cta: "Pagar ahora y asegurar la reserva", footer: "Si ya no desea continuar, la reserva se cancelará automáticamente. No es necesario hacer nada." },
-          fr: { subject: "Dernière chance — votre réservation sera annulée dans 6 heures", h2: "Votre réservation sera bientôt annulée", greet: `Bonjour ${firstName},`, body1: `Votre séance photo avec <strong>${booking.photographer_name}</strong>${priceStr} sera <strong>automatiquement annulée dans 6 heures</strong> si le paiement n'est pas reçu.`, body2: `${booking.photographer_name} réserve ce créneau pour vous — ne le manquez pas !`, cta: "Payer maintenant et sécuriser la réservation", footer: "Si vous ne souhaitez plus continuer, la réservation sera annulée automatiquement. Aucune action requise." },
+          en: { subject: "Last chance — your booking will be cancelled in 6 hours", h2: "Your Booking Will Be Cancelled Soon", greet: `Hi ${firstName},`, body1: `Your photoshoot with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in 6 hours</strong> if payment is not received.`, body2: `${booking.photographer_name} is holding this time slot for you — don't miss out!`, fomo: `Reminder: your slot isn't locked in our calendar yet — only paid bookings are. Another client could still pay for this date first.`, cta: "Pay Now & Secure Your Booking", footer: "If you no longer wish to proceed, the booking will be cancelled automatically. No action needed." },
+          pt: { subject: "Última oportunidade — a sua reserva será cancelada em 6 horas", h2: "A sua reserva será cancelada em breve", greet: `Olá ${firstName},`, body1: `A sua sessão com <strong>${booking.photographer_name}</strong>${priceStr} será <strong>automaticamente cancelada em 6 horas</strong> se o pagamento não for recebido.`, body2: `${booking.photographer_name} está a reservar este horário para si — não perca esta oportunidade!`, fomo: `Lembrete: o seu horário ainda não está bloqueado no calendário — só as reservas pagas é que estão. Outro cliente ainda pode pagar primeiro por esta data.`, cta: "Pagar agora e garantir a reserva", footer: "Se já não pretende avançar, a reserva será cancelada automaticamente. Nenhuma ação necessária." },
+          de: { subject: "Letzte Chance — Ihre Buchung wird in 6 Stunden storniert", h2: "Ihre Buchung wird bald storniert", greet: `Hallo ${firstName},`, body1: `Ihr Fotoshooting mit <strong>${booking.photographer_name}</strong>${priceStr} wird <strong>in 6 Stunden automatisch storniert</strong>, wenn keine Zahlung eingeht.`, body2: `${booking.photographer_name} hält diesen Termin für Sie frei — verpassen Sie ihn nicht!`, fomo: `Hinweis: Ihr Termin ist noch nicht im Kalender gesperrt — nur bezahlte Buchungen sind es. Ein anderer Kunde könnte für dieses Datum noch zuerst bezahlen.`, cta: "Jetzt bezahlen und Buchung sichern", footer: "Wenn Sie nicht mehr fortfahren möchten, wird die Buchung automatisch storniert. Keine Aktion erforderlich." },
+          es: { subject: "Última oportunidad — su reserva se cancelará en 6 horas", h2: "Su reserva se cancelará pronto", greet: `Hola ${firstName},`, body1: `Su sesión con <strong>${booking.photographer_name}</strong>${priceStr} se <strong>cancelará automáticamente en 6 horas</strong> si no se recibe el pago.`, body2: `${booking.photographer_name} está reservando este horario para usted — ¡no lo pierda!`, fomo: `Recordatorio: su plaza aún no está bloqueada en el calendario — solo las reservas pagadas lo están. Otro cliente todavía podría pagar primero por esta fecha.`, cta: "Pagar ahora y asegurar la reserva", footer: "Si ya no desea continuar, la reserva se cancelará automáticamente. No es necesario hacer nada." },
+          fr: { subject: "Dernière chance — votre réservation sera annulée dans 6 heures", h2: "Votre réservation sera bientôt annulée", greet: `Bonjour ${firstName},`, body1: `Votre séance photo avec <strong>${booking.photographer_name}</strong>${priceStr} sera <strong>automatiquement annulée dans 6 heures</strong> si le paiement n'est pas reçu.`, body2: `${booking.photographer_name} réserve ce créneau pour vous — ne le manquez pas !`, fomo: `Rappel : votre créneau n'est pas encore bloqué dans le calendrier — seules les réservations payées le sont. Un autre client pourrait encore payer en premier pour cette date.`, cta: "Payer maintenant et sécuriser la réservation", footer: "Si vous ne souhaitez plus continuer, la réservation sera annulée automatiquement. Aucune action requise." },
         }, cLocale);
         await sendEmail(
           booking.client_email,
@@ -180,6 +181,7 @@ export async function GET(req: NextRequest) {
             <p>${T.greet}</p>
             <p>${T.body1}</p>
             <p>${T.body2}</p>
+            <p style="background: #FEF3C7; border-left: 4px solid #D97706; padding: 12px 14px; margin: 12px 0; color: #92400E; font-weight: 600; font-size: 14px;">⏳ ${T.fomo}</p>
             <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">${T.cta}</a></p>
             <p style="color: #999; font-size: 12px;">${T.footer}</p>
             <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
@@ -193,11 +195,11 @@ export async function GET(req: NextRequest) {
           );
           if (smsPrefs?.sms_bookings !== false) {
             const smsBody = pickT({
-              en: `Photo Portugal: Last chance! Your booking with ${booking.photographer_name} will be cancelled in 6 hours if not paid. Pay now: https://photoportugal.com/dashboard/bookings`,
-              pt: `Photo Portugal: Última oportunidade! A sua reserva com ${booking.photographer_name} será cancelada em 6 horas se não for paga. Pague agora: https://photoportugal.com/dashboard/bookings`,
-              de: `Photo Portugal: Letzte Chance! Ihre Buchung mit ${booking.photographer_name} wird in 6 Stunden storniert, wenn nicht bezahlt. Jetzt bezahlen: https://photoportugal.com/dashboard/bookings`,
-              es: `Photo Portugal: ¡Última oportunidad! Su reserva con ${booking.photographer_name} se cancelará en 6 horas si no se paga. Pague ahora: https://photoportugal.com/dashboard/bookings`,
-              fr: `Photo Portugal : Dernière chance ! Votre réservation avec ${booking.photographer_name} sera annulée dans 6 heures si non payée. Payez maintenant : https://photoportugal.com/dashboard/bookings`,
+              en: `Photo Portugal: Last chance! Booking with ${booking.photographer_name} auto-cancels in 6h if unpaid — slot isn't locked yet. Pay now: https://photoportugal.com/dashboard/bookings`,
+              pt: `Photo Portugal: Última oportunidade! Reserva com ${booking.photographer_name} cancela-se em 6h se não for paga — o horário ainda não está bloqueado. Pague: https://photoportugal.com/dashboard/bookings`,
+              de: `Photo Portugal: Letzte Chance! Buchung mit ${booking.photographer_name} storniert in 6h, wenn unbezahlt — Termin noch nicht gesperrt. Zahlen: https://photoportugal.com/dashboard/bookings`,
+              es: `Photo Portugal: ¡Última oportunidad! Reserva con ${booking.photographer_name} se cancela en 6h si no se paga — plaza no bloqueada aún. Pague: https://photoportugal.com/dashboard/bookings`,
+              fr: `Photo Portugal : Dernière chance ! Réservation avec ${booking.photographer_name} annulée dans 6h si non payée — créneau pas encore verrouillé. Payez : https://photoportugal.com/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -252,11 +254,11 @@ export async function GET(req: NextRequest) {
         const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
         const firstName = booking.client_name.split(" ")[0];
         const T = pickT({
-          en: { subject: "🚨 FINAL WARNING — 30 minutes left to pay", h2: "30 Minutes Left — Last Chance", greet: `Hi ${firstName},`, body1: `This is the FINAL warning. Your booking with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in approximately 30 minutes</strong>.`, body2: `Pay now or lose your slot — there will be no further warnings.`, cta: "Pay Now — Final Chance" },
-          pt: { subject: "🚨 AVISO FINAL — restam 30 minutos para pagar", h2: "30 Minutos Restantes — Última Oportunidade", greet: `Olá ${firstName},`, body1: `Este é o aviso FINAL. A sua reserva com <strong>${booking.photographer_name}</strong>${priceStr} será <strong>automaticamente cancelada em aproximadamente 30 minutos</strong>.`, body2: `Pague agora ou perca o seu horário — não haverá mais avisos.`, cta: "Pagar agora — Última oportunidade" },
-          de: { subject: "🚨 LETZTE WARNUNG — 30 Minuten zum Bezahlen", h2: "30 Minuten verbleibend — Letzte Chance", greet: `Hallo ${firstName},`, body1: `Dies ist die LETZTE Warnung. Ihre Buchung mit <strong>${booking.photographer_name}</strong>${priceStr} wird <strong>in etwa 30 Minuten automatisch storniert</strong>.`, body2: `Jetzt bezahlen oder den Termin verlieren — es wird keine weiteren Warnungen geben.`, cta: "Jetzt bezahlen — Letzte Chance" },
-          es: { subject: "🚨 AVISO FINAL — quedan 30 minutos para pagar", h2: "30 Minutos Restantes — Última Oportunidad", greet: `Hola ${firstName},`, body1: `Este es el aviso FINAL. Su reserva con <strong>${booking.photographer_name}</strong>${priceStr} se <strong>cancelará automáticamente en aproximadamente 30 minutos</strong>.`, body2: `Pague ahora o pierda su horario — no habrá más avisos.`, cta: "Pagar ahora — Última oportunidad" },
-          fr: { subject: "🚨 DERNIER AVERTISSEMENT — 30 minutes pour payer", h2: "30 Minutes Restantes — Dernière Chance", greet: `Bonjour ${firstName},`, body1: `Ceci est le DERNIER avertissement. Votre réservation avec <strong>${booking.photographer_name}</strong>${priceStr} sera <strong>automatiquement annulée dans environ 30 minutes</strong>.`, body2: `Payez maintenant ou perdez votre créneau — il n'y aura plus d'avertissement.`, cta: "Payer maintenant — Dernière chance" },
+          en: { subject: "🚨 FINAL WARNING — 30 minutes left to pay", h2: "30 Minutes Left — Last Chance", greet: `Hi ${firstName},`, body1: `This is the FINAL warning. Your booking with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in approximately 30 minutes</strong>.`, body2: `Pay now or lose your slot — there will be no further warnings.`, fomo: `Once your booking is cancelled the slot reopens to other clients — and the calendar only locks the date after payment clears.`, cta: "Pay Now — Final Chance" },
+          pt: { subject: "🚨 AVISO FINAL — restam 30 minutos para pagar", h2: "30 Minutos Restantes — Última Oportunidade", greet: `Olá ${firstName},`, body1: `Este é o aviso FINAL. A sua reserva com <strong>${booking.photographer_name}</strong>${priceStr} será <strong>automaticamente cancelada em aproximadamente 30 minutos</strong>.`, body2: `Pague agora ou perca o seu horário — não haverá mais avisos.`, fomo: `Assim que a reserva for cancelada, o horário fica disponível para outros clientes — e o calendário só bloqueia a data depois do pagamento confirmado.`, cta: "Pagar agora — Última oportunidade" },
+          de: { subject: "🚨 LETZTE WARNUNG — 30 Minuten zum Bezahlen", h2: "30 Minuten verbleibend — Letzte Chance", greet: `Hallo ${firstName},`, body1: `Dies ist die LETZTE Warnung. Ihre Buchung mit <strong>${booking.photographer_name}</strong>${priceStr} wird <strong>in etwa 30 Minuten automatisch storniert</strong>.`, body2: `Jetzt bezahlen oder den Termin verlieren — es wird keine weiteren Warnungen geben.`, fomo: `Sobald Ihre Buchung storniert ist, wird der Termin wieder für andere Kunden freigegeben — und der Kalender sperrt das Datum erst nach Zahlungseingang.`, cta: "Jetzt bezahlen — Letzte Chance" },
+          es: { subject: "🚨 AVISO FINAL — quedan 30 minutos para pagar", h2: "30 Minutos Restantes — Última Oportunidad", greet: `Hola ${firstName},`, body1: `Este es el aviso FINAL. Su reserva con <strong>${booking.photographer_name}</strong>${priceStr} se <strong>cancelará automáticamente en aproximadamente 30 minutos</strong>.`, body2: `Pague ahora o pierda su horario — no habrá más avisos.`, fomo: `En cuanto se cancele la reserva, el horario volverá a estar disponible para otros clientes — y el calendario solo bloquea la fecha tras confirmar el pago.`, cta: "Pagar ahora — Última oportunidad" },
+          fr: { subject: "🚨 DERNIER AVERTISSEMENT — 30 minutes pour payer", h2: "30 Minutes Restantes — Dernière Chance", greet: `Bonjour ${firstName},`, body1: `Ceci est le DERNIER avertissement. Votre réservation avec <strong>${booking.photographer_name}</strong>${priceStr} sera <strong>automatiquement annulée dans environ 30 minutes</strong>.`, body2: `Payez maintenant ou perdez votre créneau — il n'y aura plus d'avertissement.`, fomo: `Dès que votre réservation est annulée, le créneau redevient disponible pour d'autres clients — et l'agenda ne bloque la date qu'après confirmation du paiement.`, cta: "Payer maintenant — Dernière chance" },
         }, cLocale);
         await sendEmail(
           booking.client_email,
@@ -266,6 +268,7 @@ export async function GET(req: NextRequest) {
             <p>${T.greet}</p>
             <p style="font-size: 16px; line-height: 1.6;">${T.body1}</p>
             <p style="font-size: 15px; font-weight: bold; color: #DC2626;">${T.body2}</p>
+            <p style="background: #FEE2E2; border-left: 4px solid #DC2626; padding: 12px 14px; margin: 12px 0; color: #991B1B; font-weight: 600; font-size: 14px;">⏳ ${T.fomo}</p>
             <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #DC2626; color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 17px;">${T.cta}</a></p>
             <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
           </div>`
@@ -279,11 +282,11 @@ export async function GET(req: NextRequest) {
           );
           if (smsPrefs?.sms_bookings !== false) {
             const smsBody = pickT({
-              en: `🚨 Photo Portugal: FINAL WARNING — your booking with ${booking.photographer_name} will be cancelled in ~30 minutes if not paid. Pay NOW: https://photoportugal.com/dashboard/bookings`,
-              pt: `🚨 Photo Portugal: AVISO FINAL — a sua reserva com ${booking.photographer_name} será cancelada em ~30 min se não for paga. Pague JÁ: https://photoportugal.com/dashboard/bookings`,
-              de: `🚨 Photo Portugal: LETZTE WARNUNG — Ihre Buchung mit ${booking.photographer_name} wird in ~30 Min storniert, wenn nicht bezahlt. JETZT zahlen: https://photoportugal.com/dashboard/bookings`,
-              es: `🚨 Photo Portugal: AVISO FINAL — su reserva con ${booking.photographer_name} se cancelará en ~30 min si no se paga. Pague YA: https://photoportugal.com/dashboard/bookings`,
-              fr: `🚨 Photo Portugal : DERNIER AVERTISSEMENT — votre réservation avec ${booking.photographer_name} sera annulée dans ~30 min si non payée. Payez MAINTENANT : https://photoportugal.com/dashboard/bookings`,
+              en: `🚨 Photo Portugal: FINAL WARNING — booking with ${booking.photographer_name} auto-cancels in ~30 min if unpaid, and the slot reopens to other clients. Pay NOW: https://photoportugal.com/dashboard/bookings`,
+              pt: `🚨 Photo Portugal: AVISO FINAL — reserva com ${booking.photographer_name} cancela-se em ~30 min se não for paga, e o horário fica disponível a outros clientes. Pague JÁ: https://photoportugal.com/dashboard/bookings`,
+              de: `🚨 Photo Portugal: LETZTE WARNUNG — Buchung mit ${booking.photographer_name} storniert in ~30 Min, wenn unbezahlt, und der Termin wird für andere Kunden freigegeben. JETZT zahlen: https://photoportugal.com/dashboard/bookings`,
+              es: `🚨 Photo Portugal: AVISO FINAL — reserva con ${booking.photographer_name} se cancela en ~30 min si no se paga, y el horario vuelve a estar disponible. Pague YA: https://photoportugal.com/dashboard/bookings`,
+              fr: `🚨 Photo Portugal : DERNIER AVERTISSEMENT — réservation avec ${booking.photographer_name} annulée dans ~30 min si non payée, et le créneau redevient disponible. Payez MAINTENANT : https://photoportugal.com/dashboard/bookings`,
             }, cLocale);
             sendSMS(booking.client_phone, smsBody).catch(err => console.error("[cron] critical sms error:", err));
           }
@@ -300,6 +303,69 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Critical reminders query: ${err}`);
+  }
+
+  // === 1d. Soft "ready to book?" nudge for concierge-sourced inquiries ===
+  // Concierge brings visitors who message a photographer but never
+  // proceed to checkout. The hard payment-reminder cascade (sections
+  // 1a/1b/1bb) only fires once status='confirmed' AND a payment URL
+  // exists — neither applies to inquiry-stage bookings. This soft nudge
+  // pings the visitor 24-72h after they started an inquiry that came
+  // from a concierge match, offering to reopen the chat. One-shot per
+  // booking (gated by soft_followup_sent), concierge-sourced only
+  // (concierge_chat_id IS NOT NULL) so we don't spam raw inquiries.
+  let readyToBookNudges = 0;
+  try {
+    const dueInquiries = await query<{
+      id: string;
+      client_email: string;
+      client_name: string;
+      client_id: string;
+      photographer_name: string;
+      concierge_chat_id: string | null;
+    }>(
+      `SELECT b.id, cu.email as client_email, cu.name as client_name,
+              cu.id as client_id, pu.name as photographer_name,
+              b.concierge_chat_id
+         FROM bookings b
+         JOIN users cu ON cu.id = b.client_id
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+        WHERE b.status IN ('inquiry','pending')
+          AND b.payment_status IS DISTINCT FROM 'paid'
+          AND b.stripe_payment_intent_id IS NULL
+          AND b.created_at < NOW() - INTERVAL '24 hours'
+          AND b.created_at > NOW() - INTERVAL '72 hours'
+          AND COALESCE(b.soft_followup_sent, FALSE) = FALSE
+          AND b.concierge_chat_id IS NOT NULL
+        LIMIT 50`
+    );
+
+    for (const inq of dueInquiries) {
+      try {
+        // Stamp before send (mirrors §4d's pattern) so a queue blip
+        // can't double-send on the next 5-min tick.
+        await query(
+          "UPDATE bookings SET soft_followup_sent = TRUE WHERE id = $1",
+          [inq.id]
+        );
+        const threadUrl = `${process.env.AUTH_URL || "https://photoportugal.com"}/dashboard/messages/${inq.id}`;
+        const firstName = (inq.client_name || "").split(" ")[0] || null;
+        const rendered = renderReadyToBookNudge(firstName, inq.photographer_name, threadUrl);
+        await queueNotification({
+          channel: "email",
+          recipient: inq.client_email,
+          subject: rendered.subject,
+          body: rendered.html,
+          dedupKey: `ready_to_book_nudge:${inq.id}`,
+        });
+        readyToBookNudges++;
+      } catch (err) {
+        results.errors.push(`Ready-to-book nudge for booking ${inq.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Ready-to-book nudge query: ${err}`);
   }
 
   // === 1c. Auto-cancel unpaid bookings (24h after confirmation) ===
@@ -533,18 +599,20 @@ export async function GET(req: NextRequest) {
         // Push notifications to both parties — same dedup-by-update guard
         // as SMS (only fires once because we set shoot_reminder_sent below).
         if (smsInfo) {
+          const clientFirst = (booking.client_name || "").split(" ")[0] || "your client";
+          const photogFirst = (booking.photographer_name || "").split(" ")[0] || "your photographer";
           import("@/lib/push").then(m => Promise.all([
             m.sendPushNotification(
               smsInfo.photographer_user_id,
-              "Photoshoot tomorrow",
-              `You have a photoshoot with ${booking.client_name} tomorrow.`,
-              { type: "booking", bookingId: booking.id }
+              `📸 Tomorrow: shoot with ${clientFirst}`,
+              "Tap to review the booking details before tomorrow.",
+              { type: "booking", bookingId: booking.id, channelId: "bookings", categoryId: "BOOKING" }
             ),
             m.sendPushNotification(
               smsInfo.client_id,
-              "Photoshoot tomorrow",
-              `Your session with ${booking.photographer_name} is tomorrow!`,
-              { type: "booking", bookingId: booking.id }
+              `📸 Your shoot with ${photogFirst} is tomorrow!`,
+              "Tap to review the details.",
+              { type: "booking", bookingId: booking.id, channelId: "bookings", categoryId: "BOOKING" }
             ),
           ])).catch(err => console.error("[cron] shoot reminder push error:", err));
         }
@@ -870,7 +938,7 @@ export async function GET(req: NextRequest) {
        WHERE b.status = 'delivered'
          AND COALESCE(b.delivery_accepted, FALSE) = FALSE
          AND b.payment_status = 'paid'
-         AND b.stripe_payment_intent_id IS NOT NULL
+         AND (b.stripe_payment_intent_id IS NOT NULL OR b.gift_card_id IS NOT NULL)
          AND b.updated_at < NOW() - INTERVAL '14 days'`
     );
 
@@ -1046,7 +1114,7 @@ export async function GET(req: NextRequest) {
        JOIN users pu ON pu.id = pp.user_id
        WHERE b.delivery_accepted = TRUE
          AND b.payment_status = 'paid'
-         AND b.stripe_payment_intent_id IS NOT NULL
+         AND (b.stripe_payment_intent_id IS NOT NULL OR b.gift_card_id IS NOT NULL)
          AND COALESCE(b.payout_transferred, FALSE) = FALSE
          AND pp.stripe_account_id IS NOT NULL
          AND pp.stripe_onboarding_complete = TRUE
@@ -1139,6 +1207,53 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Review chat query: ${err}`);
+  }
+
+  // === 4b. Kate's social-permission email (48h after delivery accepted) ===
+  // Personal-tone ask from ceo@ inbox: "can we feature a few of your
+  // photos on Photo Portugal social?". Always English regardless of the
+  // client's UI locale (Kate's call). One-time per booking — guarded by
+  // bookings.social_permission_email_sent_at.
+  try {
+    const needsSocialPermissionEmail = await query<{
+      id: string; client_email: string | null; client_name: string;
+      photographer_name: string; location_slug: string | null;
+    }>(
+      `SELECT b.id, cu.email AS client_email, cu.name AS client_name,
+              pu.name AS photographer_name, b.location_slug
+       FROM bookings b
+       JOIN users cu ON cu.id = b.client_id
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       JOIN users pu ON pu.id = pp.user_id
+       WHERE b.delivery_accepted = TRUE
+         AND b.delivery_accepted_at < NOW() - INTERVAL '48 hours'
+         AND b.social_permission_email_sent_at IS NULL
+         AND cu.email IS NOT NULL`
+    );
+    const { sendSocialPermissionEmail } = await import("@/lib/email");
+    for (const booking of needsSocialPermissionEmail) {
+      try {
+        const firstName = (booking.client_name || "").split(" ")[0] || "there";
+        // Capitalize location slug for display ("comporta" → "Comporta").
+        const loc = booking.location_slug
+          ? booking.location_slug.charAt(0).toUpperCase() + booking.location_slug.slice(1).replace(/-/g, " ")
+          : null;
+        await sendSocialPermissionEmail(
+          booking.client_email!,
+          firstName,
+          booking.photographer_name,
+          loc,
+        );
+        await query(
+          "UPDATE bookings SET social_permission_email_sent_at = NOW() WHERE id = $1",
+          [booking.id]
+        );
+      } catch (err) {
+        results.errors.push(`Social-permission email for booking ${booking.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Social-permission email query: ${err}`);
   }
 
   // === 4a. Review reminder (1 day after delivery accepted, no review yet) ===
@@ -1272,28 +1387,21 @@ export async function GET(req: NextRequest) {
 
     for (const booking of recentlyAccepted) {
       try {
-        {
-          const rendered = renderTrustpilotFollowUpToClient(booking.client_name, booking.photographer_name);
-          await queueNotification({
-            channel: "email",
-            recipient: booking.client_email,
-            subject: rendered.subject,
-            body: rendered.html,
-            dedupKey: `trustpilot_email_client:${booking.id}`,
-            recipientPhone: booking.client_phone || undefined,
-          });
-        }
-        {
-          const rendered = renderTrustpilotFollowUpToPhotographer(booking.photographer_name);
-          await queueNotification({
-            channel: "email",
-            recipient: booking.photographer_email,
-            subject: rendered.subject,
-            body: rendered.html,
-            dedupKey: `trustpilot_email_photographer:${booking.id}`,
-            recipientPhone: booking.photographer_phone || undefined,
-          });
-        }
+        // Client-side Trustpilot follow-up only. Photographer-side send
+        // was removed 2026-06-01 — photographers were being asked to
+        // leave a review for every shoot they completed (4 emails over
+        // 4 weeks for an active photographer), which felt spammy. The
+        // client-side ask stays because it's the legitimate
+        // grow-our-Trustpilot-presence flow.
+        const rendered = renderTrustpilotFollowUpToClient(booking.client_name, booking.photographer_name);
+        await queueNotification({
+          channel: "email",
+          recipient: booking.client_email,
+          subject: rendered.subject,
+          body: rendered.html,
+          dedupKey: `trustpilot_email_client:${booking.id}`,
+          recipientPhone: booking.client_phone || undefined,
+        });
         await queryOne(
           "UPDATE bookings SET trustpilot_sent = TRUE WHERE id = $1 RETURNING id",
           [booking.id]
@@ -1305,6 +1413,103 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Trustpilot follow-ups query: ${err}`);
+  }
+
+  // === 4d. Concierge "your matches" follow-up email (24h after chat) ===
+  // Visitor chatted with Lens, got matches, gave email, never came back.
+  // Recap of the same matches as a one-off email so they don't lose the
+  // shortlist. Gated by concierge_chats.followups_sent ? 'matches_email'
+  // so the same chat never gets pinged twice. Backstop: even if no
+  // photographers resolve from the array, we stamp the flag anyway so
+  // the row stops appearing in this query forever.
+  let conciergeMatchesEmails = 0;
+  try {
+    const dueChats = await query<{
+      id: string;
+      email: string;
+      first_name: string | null;
+      matched_photographer_ids: string[];
+    }>(
+      `SELECT id, email, first_name, matched_photographer_ids
+         FROM concierge_chats
+        WHERE email IS NOT NULL
+          AND created_at < NOW() - INTERVAL '20 hours'
+          AND created_at > NOW() - INTERVAL '7 days'
+          AND outcome IN ('matched','show_matches')
+          AND NOT (followups_sent ? 'matches_email')
+          AND matched_photographer_ids IS NOT NULL
+          AND array_length(matched_photographer_ids, 1) > 0
+        LIMIT 50`
+    );
+
+    for (const chat of dueChats) {
+      try {
+        const ids = chat.matched_photographer_ids.slice(0, 4);
+        const rows = await query<{
+          id: string; slug: string; name: string; cover_url: string | null;
+          min_price: number | null; top_locations: string[] | null;
+        }>(
+          `SELECT pp.id, pp.slug, u.name, pp.cover_url,
+                  (SELECT MIN(price) FROM packages pk
+                     WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE)::float AS min_price,
+                  (SELECT array_agg(location_slug)
+                     FROM photographer_locations
+                    WHERE photographer_id = pp.id) AS top_locations
+             FROM photographer_profiles pp
+             JOIN users u ON u.id = pp.user_id
+            WHERE pp.id = ANY($1::uuid[])
+              AND pp.is_approved = TRUE`,
+          [ids]
+        );
+        // Preserve match order from the original recommendation — Postgres
+        // doesn't guarantee row order matches ANY($1::uuid[]) order.
+        const byId = new Map(rows.map((r) => [r.id, r]));
+        const sorted = ids
+          .map((id) => byId.get(id))
+          .filter((r): r is NonNullable<typeof r> => !!r);
+
+        if (sorted.length === 0) {
+          // No approved photographers left — stamp anyway so we don't
+          // keep querying this dead chat every minute.
+          await query(
+            `UPDATE concierge_chats SET followups_sent = followups_sent || '{"matches_email": true}'::jsonb WHERE id = $1`,
+            [chat.id]
+          );
+          continue;
+        }
+
+        // Stamp BEFORE send so a queue failure can't double-send on the
+        // next cron tick (matches /api/cron/concierge-followups pattern).
+        await query(
+          `UPDATE concierge_chats SET followups_sent = followups_sent || '{"matches_email": true}'::jsonb WHERE id = $1`,
+          [chat.id]
+        );
+
+        const rendered = renderConciergeMatchesFollowUp(
+          chat.first_name,
+          sorted.map((r) => ({
+            name: r.name,
+            slug: r.slug,
+            cover_url: r.cover_url,
+            min_price: r.min_price,
+            top_locations: r.top_locations || [],
+          })),
+          chat.id,
+        );
+        await queueNotification({
+          channel: "email",
+          recipient: chat.email,
+          subject: rendered.subject,
+          body: rendered.html,
+          dedupKey: `concierge_matches_email:${chat.id}`,
+        });
+        conciergeMatchesEmails++;
+      } catch (err) {
+        results.errors.push(`Concierge matches email for chat ${chat.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Concierge matches email query: ${err}`);
   }
 
   // === Early Bird tier expiration ===
@@ -2276,7 +2481,7 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Calendar sync: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed });
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, conciergeMatchesEmails, readyToBookNudges });
 
   return NextResponse.json({
     success: true,
@@ -2291,6 +2496,8 @@ export async function GET(req: NextRequest) {
     smsReviewReminders,
     abandonedBookingEmails,
     noBookingNudges,
+    conciergeMatchesEmails,
+    readyToBookNudges,
     newClientNotifications,
     unansweredReminders6h,
     unansweredReminders12h,

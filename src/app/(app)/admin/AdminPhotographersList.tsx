@@ -34,6 +34,7 @@ export interface AdminPhotographer {
   portfolio_count: number;
   package_count: number;
   location_count: number;
+  locations: string | null;
   stripe_ready: boolean;
   has_phone: boolean;
   phone: string | null;
@@ -116,10 +117,22 @@ export interface BelowMinPackage {
   price: number;
 }
 
-export function AdminPhotographersList({ photographers, previewSecret, belowMinPackages = {} }: {
+export interface PhotographerBookingStats {
+  photographer_id: string;
+  total_bookings: number;
+  paid_bookings: number;
+  cancelled_bookings: number;
+  total_revenue: number;
+  total_payout: number;
+  last_booking_at: string | null;
+  first_booking_at: string | null;
+}
+
+export function AdminPhotographersList({ photographers, previewSecret, belowMinPackages = {}, bookingStatsByPhotographer = {} }: {
   photographers: AdminPhotographer[];
   previewSecret: string;
   belowMinPackages?: Record<string, BelowMinPackage[]>;
+  bookingStatsByPhotographer?: Record<string, PhotographerBookingStats>;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -182,6 +195,10 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
 
   return (
     <div className="space-y-3">
+      {/* Leaderboard — ranks photographers by paid bookings. Only shown when
+          there is at least one photographer with bookings. */}
+      <Leaderboard photographers={photographers} stats={bookingStatsByPhotographer} />
+
       {/* Search */}
       <div className="relative">
         <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -552,6 +569,15 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                   <span>Joined {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                 </div>
 
+                {/* Locations list — admin needs to see WHICH cities the
+                    photographer covers without leaving the dashboard. */}
+                {p.locations && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    <span className="font-semibold text-gray-500">Locations:</span>{" "}
+                    {p.locations}
+                  </div>
+                )}
+
                 {/* Revisions */}
                 {(p.checklist_complete || p.revision_status) && (
                   <AdminRevisionForm photographerId={p.id} photographerName={normalizeName(p.display_name)} />
@@ -713,6 +739,147 @@ function FilterDropdown<T extends string>({
               <span className="text-[10px] text-gray-400">{counts[o.key] ?? 0}</span>
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Compact ranking of photographers by paid bookings + revenue. Sits at
+// the top of the Photographers tab; collapsed by default to keep the
+// page lean. Shows top 25 with quick scan info: bookings, revenue, plan,
+// rating, last booking. Click a row to scroll to the photographer below.
+function Leaderboard({
+  photographers,
+  stats,
+}: {
+  photographers: AdminPhotographer[];
+  stats: Record<string, PhotographerBookingStats>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  const ranked = useMemo(() => {
+    const rows = photographers
+      .map((p) => ({ photographer: p, stats: stats[p.id] }))
+      .filter((r) => r.stats && r.stats.paid_bookings > 0)
+      .sort((a, b) => {
+        // Primary: paid bookings desc. Tie-break: revenue desc.
+        if (b.stats!.paid_bookings !== a.stats!.paid_bookings) {
+          return b.stats!.paid_bookings - a.stats!.paid_bookings;
+        }
+        return b.stats!.total_revenue - a.stats!.total_revenue;
+      });
+    return rows;
+  }, [photographers, stats]);
+
+  if (ranked.length === 0) return null;
+
+  const totalPaid = ranked.reduce((s, r) => s + r.stats!.paid_bookings, 0);
+  const totalRevenue = ranked.reduce((s, r) => s + r.stats!.total_revenue, 0);
+  const visible = showAll ? ranked : ranked.slice(0, 25);
+
+  const fmtDate = (s: string | null) => {
+    if (!s) return "—";
+    const d = new Date(s);
+    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days === 0) return "today";
+    if (days === 1) return "yesterday";
+    if (days < 7) return `${days}d ago`;
+    if (days < 30) return `${Math.floor(days / 7)}w ago`;
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  };
+
+  return (
+    <div className="rounded-xl border border-warm-200 bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-xl">🏆</span>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Photographer leaderboard</p>
+            <p className="text-xs text-gray-500">
+              {ranked.length} photographer{ranked.length === 1 ? "" : "s"} with bookings · {totalPaid} paid · €{Math.round(totalRevenue).toLocaleString()} revenue
+            </p>
+          </div>
+        </div>
+        <svg
+          className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="border-t border-warm-100">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-warm-50">
+                <tr className="text-[11px] uppercase tracking-wider text-gray-500">
+                  <th className="px-3 py-2.5 text-left font-semibold">#</th>
+                  <th className="px-3 py-2.5 text-left font-semibold">Photographer</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Paid</th>
+                  <th className="px-3 py-2.5 text-right font-semibold hidden sm:table-cell">Total</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Revenue</th>
+                  <th className="px-3 py-2.5 text-right font-semibold hidden md:table-cell">Payout</th>
+                  <th className="px-3 py-2.5 text-left font-semibold hidden sm:table-cell">Plan</th>
+                  <th className="px-3 py-2.5 text-right font-semibold hidden md:table-cell">★</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Last booking</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-warm-100">
+                {visible.map((r, i) => {
+                  const p = r.photographer;
+                  const s = r.stats!;
+                  const isInactive = !p.is_approved || p.is_banned;
+                  return (
+                    <tr key={p.id} className={`hover:bg-warm-50 ${isInactive ? "opacity-60" : ""}`}>
+                      <td className="px-3 py-2.5 text-xs font-bold text-gray-400">{i + 1}</td>
+                      <td className="px-3 py-2.5">
+                        <a
+                          href={`/photographers/${p.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-gray-900 hover:text-primary-600 hover:underline"
+                        >
+                          {p.display_name}
+                        </a>
+                        {p.is_banned && <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-700">banned</span>}
+                        {!p.is_approved && !p.is_banned && <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-700">pending</span>}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-semibold text-gray-900">{s.paid_bookings}</td>
+                      <td className="px-3 py-2.5 text-right text-gray-500 hidden sm:table-cell">
+                        {s.total_bookings}
+                        {s.cancelled_bookings > 0 && <span className="ml-1 text-[10px] text-gray-400">(−{s.cancelled_bookings})</span>}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-medium text-gray-900">€{Math.round(s.total_revenue).toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-right text-gray-500 hidden md:table-cell">€{Math.round(s.total_payout).toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-xs text-gray-500 capitalize hidden sm:table-cell">{p.plan}</td>
+                      <td className="px-3 py-2.5 text-right text-xs text-gray-500 hidden md:table-cell">
+                        {p.rating ? `${Number(p.rating).toFixed(1)} (${p.review_count})` : "—"}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-xs text-gray-500">{fmtDate(s.last_booking_at)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {ranked.length > 25 && (
+            <div className="border-t border-warm-100 px-5 py-2.5 text-center">
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                className="text-xs font-medium text-primary-600 hover:text-primary-700"
+              >
+                {showAll ? "Show top 25" : `Show all ${ranked.length}`}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

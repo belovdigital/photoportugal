@@ -6,6 +6,7 @@ import DatePicker from "@/components/ui/DatePicker";
 interface PromoCode {
   id: string;
   code: string;
+  coupon_id: string | null;
   coupon_name: string;
   percent_off: number | null;
   amount_off: number | null;
@@ -16,6 +17,9 @@ interface PromoCode {
   max_redemptions: number | null;
   active: boolean;
   expires_at: number | null;
+  source: "video_review" | "regular_review" | "admin_panel" | "manual_stripe";
+  notes: string | null;
+  created_by_email: string | null;
 }
 
 export function PromoCodesManager() {
@@ -117,15 +121,40 @@ export function PromoCodesManager() {
   };
 
   const handleDeactivate = async (id: string) => {
-    if (!confirm("Deactivate this promo code?")) return;
-
+    if (!confirm("Deactivate this promo code? It stays in Stripe (so historical orders keep working) but can't be used for new purchases.")) return;
     try {
-      const res = await fetch(`/api/admin/promo-codes?id=${id}`, { method: "DELETE" });
-      if (res.ok) {
-        await fetchCodes();
-      }
+      const res = await fetch(`/api/admin/promo-codes?id=${id}&mode=deactivate`, { method: "DELETE" });
+      if (res.ok) await fetchCodes();
     } catch {
       console.error("Failed to deactivate promo code");
+    }
+  };
+
+  const handleDelete = async (pc: PromoCode) => {
+    const warning = pc.times_redeemed > 0
+      ? "This code has been redeemed and can't be fully deleted from Stripe — it'll be deactivated instead. Continue?"
+      : "Permanently delete this unused code from Stripe? This cannot be undone.";
+    if (!confirm(warning)) return;
+    try {
+      const qs = new URLSearchParams({ id: pc.id, mode: "delete" });
+      if (pc.coupon_id) qs.set("coupon", pc.coupon_id);
+      const res = await fetch(`/api/admin/promo-codes?${qs.toString()}`, { method: "DELETE" });
+      if (res.ok) await fetchCodes();
+    } catch {
+      console.error("Failed to delete promo code");
+    }
+  };
+
+  const handleNotesSave = async (code: string, notes: string) => {
+    try {
+      await fetch("/api/admin/promo-codes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, notes }),
+      });
+      await fetchCodes();
+    } catch {
+      console.error("Failed to save notes");
     }
   };
 
@@ -145,13 +174,28 @@ export function PromoCodesManager() {
   return (
     <section>
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">Promo Codes</h2>
-        <button
-          onClick={() => { setShowForm(!showForm); if (!showForm) resetForm(); }}
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
-        >
-          {showForm ? "Cancel" : "Create Promo Code"}
-        </button>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Promo Codes</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Stripe is the source of truth. Codes created here also sync back to Stripe; codes created in the Stripe Dashboard show up too.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => fetchCodes()}
+            disabled={loading}
+            className="rounded-lg border border-warm-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-warm-50 disabled:opacity-50"
+            title="Re-fetch latest state from Stripe"
+          >
+            {loading ? "Syncing…" : "↻ Sync"}
+          </button>
+          <button
+            onClick={() => { setShowForm(!showForm); if (!showForm) resetForm(); }}
+            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
+          >
+            {showForm ? "Cancel" : "Create Promo Code"}
+          </button>
+        </div>
       </div>
 
       {/* Create Form */}
@@ -292,22 +336,38 @@ export function PromoCodesManager() {
         {loading ? (
           <div className="px-4 py-8 text-center text-gray-400">Loading promo codes...</div>
         ) : (
-          <table className="w-full min-w-[700px] text-sm">
+          <table className="w-full min-w-[820px] text-sm">
             <thead className="border-b border-warm-200 bg-warm-50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Code</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Source</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Discount</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Duration</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Used / Max</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Expires</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Notes</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">Actions</th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-warm-100">
               {codes.map((pc) => (
                 <tr key={pc.id} className={pc.active ? "" : "opacity-50"}>
                   <td className="px-4 py-3 font-mono font-semibold text-gray-900">{pc.code}</td>
+                  <td className="px-4 py-3">
+                    {pc.source === "video_review" && (
+                      <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-purple-700">🎥 Video review</span>
+                    )}
+                    {pc.source === "regular_review" && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-blue-700">⭐ Review</span>
+                    )}
+                    {pc.source === "admin_panel" && (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-green-700" title={pc.created_by_email || ""}>👤 Admin</span>
+                    )}
+                    {pc.source === "manual_stripe" && (
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-gray-600">⚙ Stripe</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-700">{formatDiscount(pc)}</td>
                   <td className="px-4 py-3 text-gray-700">{formatDuration(pc)}</td>
                   <td className="px-4 py-3 text-gray-700">
@@ -319,6 +379,9 @@ export function PromoCodesManager() {
                       : "—"}
                   </td>
                   <td className="px-4 py-3">
+                    <NotesCell code={pc.code} initial={pc.notes || ""} onSave={handleNotesSave} />
+                  </td>
+                  <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                       pc.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                     }`}>
@@ -326,20 +389,30 @@ export function PromoCodesManager() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {pc.active && (
+                    <div className="flex items-center justify-end gap-2">
+                      {pc.active && (
+                        <button
+                          onClick={() => handleDeactivate(pc.id)}
+                          className="text-xs font-medium text-amber-600 hover:text-amber-800 transition-colors"
+                          title="Disable for new purchases; keep in Stripe for historical orders"
+                        >
+                          Deactivate
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleDeactivate(pc.id)}
+                        onClick={() => handleDelete(pc)}
                         className="text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
+                        title={pc.times_redeemed > 0 ? "Code has redemptions — Stripe will deactivate instead of delete" : "Permanently remove from Stripe"}
                       >
-                        Deactivate
+                        Delete
                       </button>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))}
               {codes.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
                     No promo codes yet
                   </td>
                 </tr>
@@ -349,5 +422,50 @@ export function PromoCodesManager() {
         )}
       </div>
     </section>
+  );
+}
+
+// Inline editable notes cell. Shows the current note as text; click to
+// edit; blur or Enter to save. Empty input clears the note.
+function NotesCell({ code, initial, onSave }: { code: string; initial: string; onSave: (code: string, notes: string) => Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(initial);
+
+  // Re-sync when the parent refetches.
+  useEffect(() => { setValue(initial); }, [initial]);
+
+  async function commit() {
+    setEditing(false);
+    if (value.trim() === initial.trim()) return;
+    await onSave(code, value.trim());
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value.slice(0, 500))}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          if (e.key === "Escape") { setValue(initial); setEditing(false); }
+        }}
+        placeholder="Note…"
+        className="w-full rounded border border-primary-300 bg-white px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-primary-500"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="text-left text-xs text-gray-600 hover:text-gray-900 max-w-[200px] truncate"
+      title={value || "Click to add a note"}
+    >
+      {value || <span className="text-gray-400 italic">add note…</span>}
+    </button>
   );
 }

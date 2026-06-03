@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
+import { ensurePhotographerCanPurchase } from "@/lib/photographer-purchase-guard";
 
 const FEATURED_PRICE = 1900; // €19.00
 
@@ -52,6 +53,10 @@ export async function POST(req: NextRequest) {
   const userId = (session.user as { id?: string }).id;
 
   try {
+    // Gate: must be approved + non-banned. See photographer-purchase-guard.
+    const gate = await ensurePhotographerCanPurchase(userId);
+    if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status });
+
     const profile = await queryOne<{ id: string; is_featured: boolean }>(
       "SELECT id, is_featured FROM photographer_profiles WHERE user_id = $1", [userId]
     );
@@ -80,7 +85,7 @@ export async function POST(req: NextRequest) {
     const checkoutSession = await (requireStripe().checkout.sessions.create as any)({
       customer: customerId,
       mode: "subscription",
-      locale: ({pt:"pt-PT",de:"de",es:"es",fr:"fr"} as Record<string,string>)[locale] || "en",
+      locale: ({pt:"pt",de:"de",es:"es",fr:"fr"} as Record<string,string>)[locale] || "en",
       adaptive_pricing: { enabled: true },
       allow_promotion_codes: true,
       line_items: [{ price: priceId, quantity: 1 }],

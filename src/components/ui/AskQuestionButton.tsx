@@ -5,35 +5,75 @@ import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
+import { usePathname } from "next/navigation";
 
-export function AskQuestionButton({ photographerId, photographerName, autoOpen }: { photographerId: string; photographerName: string; autoOpen?: boolean }) {
+export function AskQuestionButton({ photographerId, photographerName, autoOpen, existingBookingId }: { photographerId: string; photographerName: string; autoOpen?: boolean; /** SSR-detected existing thread with this photographer — when set, the button deep-links to that chat instead of opening the inquiry modal. */ existingBookingId?: string | null }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  // SSR-safe pathname — window is undefined on the server, so a render-time
+  // `window.location.pathname` falls back to "" and the shareable link
+  // becomes /auth/signup?callbackUrl=%23message (path lost). usePathname()
+  // returns the real path both on SSR and after hydration.
+  const pathname = usePathname();
   const t = useTranslations("askQuestion");
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const [open, setOpen] = useState(false);
 
-  // Auto-open when navigating from card with #message hash
+  // Auto-open when navigating from card with #message hash, AND when the
+  // hash later changes to #message (e.g. the mobile StickyBookBar uses
+  // href="#message" to scroll-and-open the dialog from the same page).
   useEffect(() => {
-    if (window.location.hash === "#message") {
+    function syncHash() {
+      if (window.location.hash !== "#message") return;
+      // Existing thread → skip the inquiry modal entirely and route the
+      // viewer to the existing chat. Avoids a parallel inquiry row AND
+      // an empty modal where the photographer's prior messages are
+      // invisible.
+      if (existingBookingId && session?.user) {
+        // Clear the hash before navigating so a back-button to the
+        // profile doesn't re-trigger the navigation in a loop.
+        window.history.replaceState(null, "", window.location.pathname);
+        router.push(`/dashboard/messages/${existingBookingId}` as never);
+        return;
+      }
       if (session?.user) {
         setOpen(true);
-        window.history.replaceState(null, "", window.location.pathname);
       } else if (session === null) {
-        // Not logged in — redirect to sign up with return URL
         const returnUrl = window.location.pathname + "#message";
         router.replace(`/auth/signup?callbackUrl=${encodeURIComponent(returnUrl)}`);
       }
     }
-  }, [session, autoOpen, router]);
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, [session, autoOpen, router, existingBookingId]);
+
+  // Keep the URL in sync with the dialog so users can copy a shareable link.
+  function openDialog() {
+    // Same deep-link short-circuit as the hashchange handler — covers
+    // direct button clicks (which don't go through the hash flow).
+    if (existingBookingId && session?.user) {
+      router.push(`/dashboard/messages/${existingBookingId}` as never);
+      return;
+    }
+    setOpen(true);
+    if (typeof window !== "undefined" && window.location.hash !== "#message") {
+      window.history.replaceState(null, "", window.location.pathname + "#message");
+    }
+  }
+
+  function closeDialog() {
+    setOpen(false);
+    if (typeof window !== "undefined" && window.location.hash === "#message") {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
   if (!session?.user) {
-    const returnUrl = typeof window !== "undefined"
-      ? `${window.location.pathname}#message`
-      : "#message";
+    const returnUrl = `${pathname}#message`;
     return (
       <Link
         href={`/auth/signup?callbackUrl=${encodeURIComponent(returnUrl)}`}
@@ -74,7 +114,7 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={openDialog}
         className="flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 whitespace-nowrap"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -85,7 +125,7 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-black/40" onClick={closeDialog} />
           <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-bold text-gray-900">{t("dialogTitle", { name: photographerName })}</h2>
             <p className="mt-1 text-sm text-gray-500">{t("dialogSubtitle")}</p>
@@ -106,7 +146,7 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen }
                   className="flex-1 rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50">
                   {sending ? t("sending") : t("sendMessage")}
                 </button>
-                <button type="button" onClick={() => setOpen(false)}
+                <button type="button" onClick={closeDialog}
                   className="rounded-xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50">
                   {t("cancel")}
                 </button>

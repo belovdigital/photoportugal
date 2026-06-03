@@ -67,6 +67,7 @@ export function VisitorTracker() {
         try {
           sessionStorage.setItem(key, value);
           localStorage.setItem(`pp_${key}`, JSON.stringify({ v: value, ts: Date.now() }));
+          setCookie(key, value, 90);
         } catch {}
       };
       if (effectiveSource) {
@@ -109,12 +110,14 @@ export function VisitorTracker() {
         if (freshGclid) {
           sessionStorage.setItem("gclid", freshGclid);
           localStorage.setItem("pp_gclid", JSON.stringify({ v: freshGclid, ts: Date.now() }));
+          setCookie("gclid", freshGclid, 90);
         }
         for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_term"] as const) {
           const v = params.get(k);
           if (v) {
             sessionStorage.setItem(k, v);
             localStorage.setItem(`pp_${k}`, JSON.stringify({ v, ts: Date.now() }));
+            setCookie(k, v, 90);
           }
         }
       } catch {}

@@ -469,16 +469,37 @@ export function AdminBookingActions({ id, status, paymentStatus }: { id: string;
       { danger: true, confirmLabel: action === "cancel" ? "Cancel Booking" : "Delete" }
     );
     if (!ok) return;
+
+    // Optional admin note that gets persisted to bookings.cancelled_reason
+    // AND injected into the client + photographer emails so they
+    // understand WHY we cancelled. Empty / null is fine — emails fall
+    // back to a generic "cancelled by Photo Portugal" wording.
+    let reason: string | null = null;
+    if (action === "cancel") {
+      const entered = window.prompt(
+        "Optional note for the client + photographer (or leave blank):",
+        ""
+      );
+      // window.prompt returns null on Cancel — that's a hard abort.
+      if (entered === null) return;
+      reason = entered.trim();
+    }
+
     setLoading(true);
     const res = await fetch("/api/admin/bookings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action }),
+      body: JSON.stringify({ id, action, reason }),
     });
     setLoading(false);
 
     if (res.ok) {
-      router.refresh();
+      // Hard reload over router.refresh — Next 16 + Turbopack
+      // sometimes serves stale RSC data for a moment after a
+      // mutation, and for cancel/delete the admin needs to see the
+      // new status immediately. The action is rare enough that the
+      // full reload cost doesn't matter.
+      window.location.reload();
     } else {
       const data = await res.json().catch(() => null);
       alert(data?.error || "Failed");

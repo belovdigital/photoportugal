@@ -20,9 +20,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "booking_id and rating (1-5) required" }, { status: 400 });
     }
 
-    // Verify: booking exists, belongs to this client, is completed, no existing review
-    const booking = await queryOne<{ id: string; client_id: string; photographer_id: string; status: string }>(
-      "SELECT id, client_id, photographer_id, status FROM bookings WHERE id = $1",
+    // Verify: booking exists, belongs to this client (or gift recipient
+    // — they're the one who actually had the shoot), is completed, no
+    // existing review.
+    const booking = await queryOne<{ id: string; client_id: string; photographer_id: string; status: string; gift_recipient_user_id: string | null; is_gift: boolean }>(
+      "SELECT id, client_id, photographer_id, status, gift_recipient_user_id, COALESCE(is_gift, FALSE) as is_gift FROM bookings WHERE id = $1",
       [booking_id]
     );
 
@@ -30,7 +32,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (booking.client_id !== userId) {
+    // Gift bookings: only the recipient can review (they attended the
+    // shoot, not the buyer). Normal bookings: only the client_id can.
+    const isAuthor = booking.is_gift
+      ? booking.gift_recipient_user_id === userId
+      : booking.client_id === userId;
+    if (!isAuthor) {
       return NextResponse.json({ error: "Not your booking" }, { status: 403 });
     }
 
@@ -105,6 +112,16 @@ export async function POST(req: NextRequest) {
     const slugRow = await queryOne<{ slug: string }>("SELECT slug FROM photographer_profiles WHERE id = $1", [booking.photographer_id]);
     if (slugRow) revalidatePath(`/photographers/${slugRow.slug}`);
     revalidatePath("/");
+
+    // Ping IndexNow so the updated review count + rating get picked up.
+    if (slugRow) {
+      import("@/lib/indexnow").then(({ pingIndexNow }) =>
+        pingIndexNow([
+          `https://photoportugal.com/photographers/${slugRow.slug}`,
+          `https://photoportugal.com/`,
+        ])
+      ).catch(() => {});
+    }
 
     return NextResponse.json({ success: true, id: review?.id });
   } catch (error) {

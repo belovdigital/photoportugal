@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations, getLocationBySlug, getNearbyLocations, locationFaqs, locField, faqField } from "@/lib/locations-data";
 import { localizeShootType } from "@/lib/shoot-type-labels";
-import { photoSpots } from "@/lib/photo-spots-data";
+import { photoSpots, getSpotsWithMediaForCity } from "@/lib/photo-spots-data";
+import { CityMap, type CityMapPin } from "@/components/ui/CityMap";
 import { getLocationServices, serviceDescription } from "@/lib/location-services-data";
 import { locationImage, unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 
@@ -99,8 +100,46 @@ export default async function LocationPage({
   const longDescription = locField(location, "long_description", locale) || location.long_description;
   const localizedName = locField(location, "name", locale) || location.name;
 
+  // Mapbox public token for the 3D city map of photo spots. Empty string
+  // falls back to the static "Map unavailable" panel.
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
+
   const spots = photoSpots[slug] || [];
+  // Spots with media (coordinates + image) merged in. Drives the CityMap
+  // pins and lets each pin show a circular thumbnail when an image is
+  // available. Pins fall back to a coloured dot when only coordinates
+  // exist — better than no pin at all.
+  const spotsWithMedia = getSpotsWithMediaForCity(slug);
+  const cityMapPins: CityMapPin[] = spotsWithMedia
+    .filter((s) => !!s.coordinates)
+    .map((s) => ({
+      city: slug,
+      slug: s.spotSlug,
+      name: s.name,
+      coordinates: s.coordinates!,
+      thumbnailUrl: s.images?.[0]?.url,
+      description: s.description,
+    }));
   const services = getLocationServices(slug);
+
+  // Partner tour links — reciprocal placements as part of link
+  // exchanges with vetted Portugal travel sites. Inlined here because
+  // the list is tiny + read-only; promote to its own data file if it
+  // grows past ~5 partners. Each entry MUST be a topic that complements
+  // a Photo Portugal session (bike/walking/wine tours, food experiences,
+  // boat trips). No SEO-spam directories or unrelated services.
+  const partnerTours: { title: string; url: string; tagline: string }[] =
+    slug === "douro-valley" ? [
+      { title: "Douro Valley bike tour", url: "https://topbiketoursportugal.com/tours/bike-tours-douro-valley/", tagline: "Multi-day cycling through the wine terraces — perfect to combine with a vineyard photo session." },
+      { title: "Douro Valley walking tour", url: "https://topwalkingtoursportugal.com/tours/hiking-douro-valley-wine-region/", tagline: "World Heritage wine region on foot, 68 km of vineyard trails." },
+    ] : slug === "algarve" ? [
+      { title: "South Portugal bike tour", url: "https://topbiketoursportugal.com/tours/south-portugal-biketour/", tagline: "Vicentine Coast and Algarve by bike — wild clifftops and remote beaches." },
+      { title: "Costa Vicentina walking tour", url: "https://topwalkingtoursportugal.com/blog/5-reasons-to-visit-the-costa-vicentina-top-walking-tours/", tagline: "Same dramatic clifftops your photographer will love, on foot." },
+    ] : slug === "lisbon" ? [
+      { title: "Porto to Lisbon bike tour", url: "https://topbiketoursportugal.com/tours/porto-to-lisbon-bike-tour/", tagline: "13-day Atlantic coast ride finishing in Lisbon — pair with a session at either end." },
+      { title: "Lisbon walking tour", url: "https://topwalkingtoursportugal.com/tours/regions/lisboatejo/", tagline: "Historic neighborhoods and viewpoints on foot." },
+    ] : [];
 
   // Get real photographer count, average rating, total reviews, min price and session duration range for this location
   let photographerCount = 0;
@@ -383,13 +422,13 @@ export default async function LocationPage({
   // hash-shuffled per package_id so two cards from the same photographer
   // don't start on the same cover photo.
   const featuredPackages = await query<{
-    id: string; name: string; price: string; duration_minutes: number; num_photos: number;
+    id: string; slug: string | null; name: string; price: string; duration_minutes: number; num_photos: number;
     photographer_slug: string; photographer_name: string; photographer_avatar: string | null;
     rating: number; review_count: number; is_popular: boolean;
     portfolio_thumbs: string[];
   }>(
     `WITH per_photographer AS (
-       SELECT pk.id, pk.name, pk.price::text AS price, pk.duration_minutes,
+       SELECT pk.id, pk.slug, pk.name, pk.price::text AS price, pk.duration_minutes,
               COALESCE(pk.num_photos, 0) as num_photos,
               pp.id as profile_id,
               pp.slug as photographer_slug, u.name as photographer_name,
@@ -411,7 +450,7 @@ export default async function LocationPage({
           AND COALESCE(pp.is_test, FALSE) = FALSE
           AND pk.is_public = TRUE
      )
-     SELECT id, name, price, duration_minutes, num_photos,
+     SELECT id, slug, name, price, duration_minutes, num_photos,
             photographer_slug, photographer_name, photographer_avatar,
             rating, review_count, is_popular,
             COALESCE((
@@ -601,7 +640,8 @@ export default async function LocationPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
         />
       )}
-
+      {/* BreadcrumbList JSON-LD is emitted by <Breadcrumbs> below — no
+          inline duplicate. */}
       <Breadcrumbs
         items={[
           { name: tc("home"), href: "/" },
@@ -932,7 +972,10 @@ export default async function LocationPage({
         </div>
       </section>
 
-      {/* Top Photo Spots */}
+      {/* Top Photo Spots — 3D map + cards. The map gives a bird's-eye
+          sense of where photogenic places sit relative to each other;
+          the cards below give detail and serve as the SEO-text version
+          for visitors who don't engage with the map. */}
       {spots.length > 0 && (
         <section className="border-t border-warm-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -942,6 +985,22 @@ export default async function LocationPage({
             <p className="mt-2 text-gray-500">
               {t("mostPhotogenic", { location: location.name })}
             </p>
+
+            {/* 3D Mapbox view of every spot in the city. Hidden when no
+                pin has coordinates (all-or-nothing — half-empty maps
+                look broken). Overflow-hidden + rounded so it sits as a
+                clean panel inside the section. */}
+            {cityMapPins.length >= 1 && location.lat && location.lng && (
+              <div className="mt-8 h-[420px] overflow-hidden rounded-3xl border border-warm-200 sm:h-[520px]">
+                <CityMap
+                  pins={cityMapPins}
+                  cityCenter={{ lat: location.lat, lng: location.lng }}
+                  mapboxToken={mapboxToken}
+                  localePrefix={localePrefix}
+                />
+              </div>
+            )}
+
             <div className={`mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 ${
               spots.length <= 2 ? "lg:grid-cols-2" :
               spots.length === 4 ? "lg:grid-cols-2" :
@@ -1020,6 +1079,41 @@ export default async function LocationPage({
                     <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
                   </div>
                 </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Things to do around — partner placements complementing a
+          photo session. Bike + walking tours that share the same
+          scenery our photographers shoot. */}
+      {partnerTours.length > 0 && (
+        <section className="border-t border-warm-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 className="font-display text-2xl font-bold text-gray-900">
+              Things to do around {location.name}
+            </h2>
+            <p className="mt-2 text-gray-500">
+              Activities that pair naturally with a photo session — explore the region before or after your shoot.
+            </p>
+            <div className={`mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2`}>
+              {partnerTours.map((tour) => (
+                <a
+                  key={tour.url}
+                  href={tour.url}
+                  target="_blank"
+                  rel="noopener"
+                  className="group rounded-xl border border-warm-200 bg-warm-50 p-6 transition hover:border-primary-200 hover:shadow-md"
+                >
+                  <h3 className="font-semibold text-gray-900 group-hover:text-primary-700">
+                    {tour.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-gray-600">{tour.tagline}</p>
+                  <span className="mt-3 inline-block text-xs font-medium text-primary-600 group-hover:underline">
+                    Visit partner site →
+                  </span>
+                </a>
               ))}
             </div>
           </div>

@@ -109,15 +109,28 @@ export async function GET(
     // never see it.
     const session = await auth().catch(() => null);
     const viewerUserId = (session?.user as { id?: string } | undefined)?.id || null;
+    // Tier (gift-card) packages must NOT leak to normal viewers — those
+    // packages are private to gift mode. Only surface them when the
+    // viewer has an active gift card on their user row.
+    const viewerGiftCard = viewerUserId
+      ? await queryOne<{ active_gift_card_id: string | null }>(
+          "SELECT active_gift_card_id FROM users WHERE id = $1",
+          [viewerUserId]
+        )
+      : null;
+    const viewerInGiftMode = !!viewerGiftCard?.active_gift_card_id;
     const packages = await query<{
       id: string; name: string; description: string | null;
       duration_minutes: number; num_photos: number; price: number;
       is_popular: boolean; delivery_days: number;
       is_custom: boolean;
+      is_group_package: boolean;
+      slug: string | null;
       preview_url: string | null;
     }>(
       `SELECT id, ${pkgNameCol} as name, ${pkgDescCol} as description,
-              duration_minutes, num_photos, price, is_popular,
+              duration_minutes, num_photos, price, is_popular, slug,
+              COALESCE(is_group_package, FALSE) as is_group_package,
               COALESCE(delivery_days, 7) as delivery_days,
               COALESCE(features, '{}') as features,
               (custom_for_user_id IS NOT NULL) as is_custom,
@@ -133,9 +146,13 @@ export async function GET(
                 LIMIT 1) as preview_url
        FROM packages
        WHERE photographer_id = $1
-         AND (is_public = TRUE OR custom_for_user_id = $2::uuid)
+         AND (
+              is_public = TRUE
+           OR custom_for_user_id = $2::uuid
+           OR (tier IS NOT NULL AND $3::boolean = TRUE)
+         )
        ORDER BY (custom_for_user_id IS NOT NULL) DESC, sort_order, price`,
-      [profile.id, viewerUserId]
+      [profile.id, viewerUserId, viewerInGiftMode]
     );
 
     // Portfolio

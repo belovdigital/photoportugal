@@ -9,6 +9,10 @@ interface AddOnsSectionProps {
   phoneVerified: boolean;
   phoneNumber: string | null;
   compact?: boolean;
+  /** Non-null = photographer can't make purchases (pre-approval / banned).
+   *  Both Verified and Featured purchase buttons get disabled with this
+   *  string surfaced as a tooltip / replacement label. */
+  purchaseBlockedReason?: string | null;
 }
 
 /* Mini photographer card skeleton that shows how the badge/feature looks */
@@ -52,7 +56,7 @@ function MockCard({ type }: { type: "verified" | "featured" }) {
   );
 }
 
-export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPhoneVerified, phoneNumber: initialPhone, compact }: AddOnsSectionProps) {
+export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPhoneVerified, phoneNumber: initialPhone, compact, purchaseBlockedReason }: AddOnsSectionProps) {
   const [loading, setLoading] = useState("");
   const [phone, setPhone] = useState(initialPhone || "");
   const [phoneVerified, setPhoneVerified] = useState(initialPhoneVerified);
@@ -85,32 +89,35 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
   }
 
   async function handleBuyVerified() {
-    setLoading("buy-verified");
+    setLoading("buy-verified"); setError("");
     try {
       const res = await fetch("/api/stripe/verified", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ locale }) });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch {}
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) window.location.href = data.url;
+      else setError(data.error || t("checkoutError"));
+    } catch { setError(t("checkoutError")); }
     setLoading("");
   }
 
   async function handleGetFeatured() {
-    setLoading("featured");
+    setLoading("featured"); setError("");
     try {
       const res = await fetch("/api/stripe/featured", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ locale }) });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch {}
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) window.location.href = data.url;
+      else setError(data.error || t("checkoutError"));
+    } catch { setError(t("checkoutError")); }
     setLoading("");
   }
 
   async function handlePortal() {
-    setLoading("portal");
+    setLoading("portal"); setError("");
     try {
       const res = await fetch("/api/stripe/subscription", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "portal", locale }) });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-    } catch {}
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.url) window.location.href = data.url;
+      else setError(data.error || t("portalError"));
+    } catch { setError(t("portalError")); }
     setLoading("");
   }
 
@@ -121,6 +128,12 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
           <h2 className="text-lg font-bold text-gray-900">{t("addOns")}</h2>
           <p className="mt-1 text-sm text-gray-500">{t("addOnsSubtitle")}</p>
         </>
+      )}
+
+      {error && (
+        <div className={`${compact ? "mb-3" : "mt-4"} rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700`}>
+          {error}
+        </div>
       )}
 
       <div className={`${compact ? "" : "mt-6"} grid gap-4 sm:grid-cols-2`}>
@@ -204,7 +217,6 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
                     </button>
                   </div>
                 )}
-                {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
               </div>
             ) : (
               <div className="mt-4">
@@ -226,9 +238,16 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
                   </div>
                 </div>
                 <p className="text-xs text-gray-500">{t("completePaymentDesc")}</p>
-                <button onClick={handleBuyVerified} disabled={!!loading} className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
-                  {loading === "buy-verified" ? t("redirecting") : t("getVerified")}
-                </button>
+                {purchaseBlockedReason ? (
+                  <button type="button" disabled title={purchaseBlockedReason}
+                    className="mt-3 w-full cursor-not-allowed rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-500">
+                    {t("availableAfterApproval")}
+                  </button>
+                ) : (
+                  <button onClick={handleBuyVerified} disabled={!!loading} className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                    {loading === "buy-verified" ? t("redirecting") : t("getVerified")}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -286,9 +305,16 @@ export function AddOnsSection({ isVerified, isFeatured, phoneVerified: initialPh
               </div>
             ) : (
               <div className="mt-4">
-                <button onClick={handleGetFeatured} disabled={!!loading} className="w-full rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-600 disabled:opacity-50">
-                  {loading === "featured" ? t("redirecting") : t("getFeatured")}
-                </button>
+                {purchaseBlockedReason ? (
+                  <button type="button" disabled title={purchaseBlockedReason}
+                    className="w-full cursor-not-allowed rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-500">
+                    {t("availableAfterApproval")}
+                  </button>
+                ) : (
+                  <button onClick={handleGetFeatured} disabled={!!loading} className="w-full rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-600 disabled:opacity-50">
+                    {loading === "featured" ? t("redirecting") : t("getFeatured")}
+                  </button>
+                )}
               </div>
             )}
           </div>

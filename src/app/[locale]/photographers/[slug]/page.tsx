@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { redirect, permanentRedirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { queryOne, query } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -17,6 +17,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
 import { ProfileTabs } from "@/components/ui/ProfileTabs";
 import { PackageCard } from "@/components/ui/PackageCard";
+import { RequestCustomPackageCard } from "@/components/ui/RequestCustomPackageCard";
 import { localeAlternates } from "@/lib/seo";
 import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
@@ -194,18 +195,40 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
       [profile.id]
     );
 
-    const planLimits: Record<string, number> = { free: 100, pro: 100, premium: 100 };
-    const photoLimit = planLimits[profile.plan] || 100;
+    const planLimits: Record<string, number> = { free: 500, pro: 500, premium: 500 };
+    const photoLimit = planLimits[profile.plan] || 500;
 
     const portfolioItems = await query<{ url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; width: number | null; height: number | null }>(
       "SELECT url, thumbnail_url, caption, location_slug, shoot_type, width, height FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC LIMIT $2",
       [profile.id, photoLimit]
     );
 
+    // SSR existing-thread detection — if the viewer (logged-in client)
+    // already has any booking (inquiry/pending/confirmed/completed/
+    // cancelled) with this photographer, the Message and Request-custom
+    // CTAs should deep-link straight to that chat instead of opening the
+    // inquiry modal which would create a parallel inquiry row. No status
+    // filter on purpose: the messages list is conversation-scoped (see
+    // /api/messages/conversations), so even a cancelled booking with
+    // history should re-use its thread.
+    let existingBookingId: string | null = null;
+    if (viewerUserId) {
+      try {
+        const row = await queryOne<{ id: string }>(
+          `SELECT b.id FROM bookings b
+            WHERE b.client_id = $1 AND b.photographer_id = $2
+            ORDER BY b.created_at DESC LIMIT 1`,
+          [viewerUserId, profile.id]
+        );
+        existingBookingId = row?.id || null;
+      } catch {}
+    }
+
     return {
       type: "db" as const,
       data: {
         ...profile,
+        existingBookingId,
         locations: locs,
         coverageNodeSlugs,
         packages: pkgs,
@@ -237,7 +260,22 @@ export async function generateMetadata({
   const topShootTypes = (p.shoot_types || []).slice(0, 2);
   const shootTypeText = topShootTypes.length > 0 ? ` Specializing in ${topShootTypes.join(" & ").toLowerCase()} photography.` : "";
   const ratingText = p.review_count > 0 ? ` ★ ${Number(p.rating).toFixed(1)} (${p.review_count} ${p.review_count === 1 ? "review" : "reviews"}).` : "";
-  const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })}${shootTypeText}${ratingText} ${p.tagline || ""}`.trim();
+  // Locale-aware "from €X" hint up front — Google sometimes lifts this
+  // into the SERP price line (Casamentos.pt-style "Preço desde 750€").
+  const minPackagePrice = (p.packages && p.packages.length > 0)
+    ? Math.round(Math.min(...p.packages.map((pkg: { price: number }) => Number(pkg.price))))
+    : null;
+  const PRICE_PHRASES: Record<string, string> = {
+    en: "From €{price}.",
+    pt: "Desde €{price}.",
+    de: "Ab €{price}.",
+    es: "Desde €{price}.",
+    fr: "À partir de €{price}.",
+  };
+  const priceText = minPackagePrice
+    ? ` ${(PRICE_PHRASES[locale] || PRICE_PHRASES.en).replace("{price}", String(minPackagePrice))}`
+    : "";
+  const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })}${priceText}${shootTypeText}${ratingText} ${p.tagline || ""}`.trim();
   const rawImage = p.cover_url || p.avatar_url;
   const ogImage = resolveAbsoluteImageUrl(rawImage) || "https://photoportugal.com/og-image.png";
   const profileUrl = `https://photoportugal.com/photographers/${slug}`;
@@ -259,9 +297,17 @@ export async function generateMetadata({
     } catch {}
   }
 
+  // Portfolio photos to vary the image carousel (real shoots beat
+  // a single cover for both social previews and image-pack ranking).
+  const portfolioImageUrls = ((p.portfolioItems || []) as { url: string }[])
+    .slice(0, 6)
+    .map((x) => resolveAbsoluteImageUrl(x.url))
+    .filter((u): u is string => Boolean(u));
+
   const ogImages = [
     { url: ogImage, width: 1200, height: 630, alt: title },
     ...reviewPhotoUrls.map((url, i) => ({ url, width: 1200, height: 630, alt: `Client review photo ${i + 1} — ${normalizeName(p.name)}` })),
+    ...portfolioImageUrls.map((url, i) => ({ url, width: 1200, height: 630, alt: `${normalizeName(p.name)} — portfolio ${i + 1}` })),
   ];
   return {
     title,
@@ -279,7 +325,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: [ogImage, ...reviewPhotoUrls],
+      images: [ogImage, ...reviewPhotoUrls, ...portfolioImageUrls],
     },
     other: p.review_count > 0 ? {
       "og:rating": String(Number(p.rating).toFixed(1)),
@@ -313,6 +359,46 @@ export default async function PhotographerProfilePage({
   const viewerIsPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const result = await getPhotographer(slug, isPreview, viewerUserId, locale);
 
+  // Gift-mode swap: if the viewer is a gift-card recipient, replace the
+  // normal public packages with the single tier-matching package and
+  // pass a `giftMode` flag down to UI so prices/CTAs render differently.
+  // Photographer profile remains fully visible (portfolio + reviews) —
+  // recipient needs to evaluate style; only commercial details flip.
+  const { getActiveGiftCard } = await import("@/lib/gift-card-session");
+  const giftCard = await getActiveGiftCard();
+  // Photographer might not accept gift cards (or hasn't been backfilled
+  // with tier packages yet) — track this so we render a clear fallback
+  // instead of an empty "no packages" state.
+  let giftPhotographerOptedIn = true;
+  if (giftCard && result?.type === "db") {
+    const TIER_LOCALES = new Set(["pt", "de", "es", "fr"]);
+    const useLoc = TIER_LOCALES.has(locale) ? locale : null;
+    const nameCol = useLoc ? `COALESCE(name_${useLoc}, name)` : "name";
+    const descCol = useLoc ? `COALESCE(description_${useLoc}, description)` : "description";
+    const tierPkg = await queryOne<{
+      id: string; name: string; description: string | null; duration_minutes: number;
+      num_photos: number; price: number; is_popular: boolean; delivery_days: number; features: string[];
+    }>(
+      `SELECT id, ${nameCol} as name, ${descCol} as description, duration_minutes, num_photos, price,
+              FALSE as is_popular, COALESCE(delivery_days, 7) as delivery_days,
+              COALESCE(features, '{}') as features
+         FROM packages
+        WHERE photographer_id = $1 AND tier = $2::gift_card_tier`,
+      [result.data.id, giftCard.tier]
+    );
+    // Check if the photographer still accepts gift cards (the catalog
+    // grid filters them out, but a direct URL hit could land on someone
+    // who turned them off in their dashboard).
+    const optIn = await queryOne<{ accepts_gift_cards: boolean | null }>(
+      "SELECT accepts_gift_cards FROM photographer_profiles WHERE id = $1",
+      [result.data.id]
+    );
+    giftPhotographerOptedIn = optIn?.accepts_gift_cards !== false && !!tierPkg;
+    // Only show the tier-matching package; hide all the photographer's
+    // normal packages so the recipient doesn't see comparable prices.
+    result.data.packages = tierPkg ? [tierPkg] : [];
+  }
+
   if (!result) {
     // Check slug_redirects for old slugs
     const slugRedirect = await queryOne<{ new_slug: string }>(
@@ -322,9 +408,15 @@ export default async function PhotographerProfilePage({
       [slug]
     ).catch(() => null);
     if (slugRedirect) {
-      redirect(`/photographers/${slugRedirect.new_slug}`);
+      permanentRedirect(`/photographers/${slugRedirect.new_slug}`);
     }
-    notFound();
+    // Unknown / banned / unapproved photographer — 301 to the catalog
+    // rather than 404. Google previously indexed many of these slugs (banned
+    // photographers, ones we removed during onboarding cleanups, typos in
+    // sitemap output) and 404 dilutes our crawl budget. Use permanent so the
+    // search index actually drops the dead URL instead of holding it.
+    const localePrefix = locale === "en" ? "" : `/${locale}`;
+    permanentRedirect(`${localePrefix}/photographers`);
   }
 
   const photographer = result.data;
@@ -401,10 +493,19 @@ export default async function PhotographerProfilePage({
                 u.avatar_url as client_avatar,
                 b.package_id,
                 pkg.name as package_name,
-                COALESCE(r.client_country_override,
+                COALESCE(
+                  r.client_country_override,
+                  -- Home country (most recent non-PT session) — tourists' first
+                  -- session was usually already in PT, but we want the home flag.
                   (SELECT vs.country FROM visitor_sessions vs
-                   WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL
-                   ORDER BY vs.started_at ASC LIMIT 1)) as client_country,
+                     WHERE vs.user_id = r.client_id
+                       AND vs.country IS NOT NULL
+                       AND vs.country != 'PT'
+                     ORDER BY vs.started_at DESC LIMIT 1),
+                  (SELECT vs.country FROM visitor_sessions vs
+                     WHERE vs.user_id = r.client_id AND vs.country IS NOT NULL
+                     ORDER BY vs.started_at ASC LIMIT 1)
+                ) as client_country,
                 COALESCE(
                   (SELECT json_agg(json_build_object('id', rp.id, 'url', rp.url) ORDER BY rp.created_at)
                    FROM review_photos rp WHERE rp.review_id = r.id AND rp.is_public = true),
@@ -538,7 +639,17 @@ export default async function PhotographerProfilePage({
               datePublished: new Date(r.created_at).toISOString().split("T")[0],
               ...(photoUrls.length > 0 ? {
                 image: photoUrls,
-                associatedMedia: photoUrls.map((url: string) => ({ "@type": "ImageObject", contentUrl: url, url })),
+                associatedMedia: photoUrls.map((url: string) => ({
+                  "@type": "ImageObject",
+                  contentUrl: url,
+                  url,
+                  creator: { "@type": "Person", name: normalizeName(photographer.name) },
+                  copyrightHolder: { "@type": "Person", name: normalizeName(photographer.name) },
+                  copyrightNotice: `© ${new Date().getFullYear()} ${normalizeName(photographer.name)} — All rights reserved`,
+                  creditText: `${normalizeName(photographer.name)} — Photo Portugal`,
+                  license: "https://photoportugal.com/terms",
+                  acquireLicensePage: `https://photoportugal.com/photographers/${slug}`,
+                })),
               } : {}),
             };
           }),
@@ -585,14 +696,9 @@ export default async function PhotographerProfilePage({
     ...(photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "" && {
       knowsLanguage: photographer.languages,
     }),
-    ...(photographer.review_count > 0 && {
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: photographer.rating,
-        reviewCount: photographer.review_count,
-        bestRating: 5,
-      },
-    }),
+    // aggregateRating omitted on Person — Google's review-snippet whitelist
+    // excludes Person. The same rating is already attached to the
+    // LocalBusiness node above, which is valid.
     ...(photographer.packages && photographer.packages.length > 0 && {
       makesOffer: photographer.packages.map((pkg: { name: string; price: number; description: string | null; duration_minutes: number; num_photos: number }) => ({
         "@type": "Offer",
@@ -614,10 +720,92 @@ export default async function PhotographerProfilePage({
     ],
   };
 
+  // Service schema with explicit Offers — gives Google a clean price
+  // signal it can lift into the SERP "Price from €X" line (the way
+  // Casamentos.pt-style listings render). Separate from LocalBusiness
+  // so rich-results parsing can pick the strongest match.
+  const serviceJsonLd = (photographer.packages && photographer.packages.length > 0) ? {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    serviceType: "Photography",
+    name: `${normalizeName(photographer.name)} — Photography in ${(photographer.locations?.[0]?.name) || "Portugal"}`,
+    provider: {
+      "@type": "LocalBusiness",
+      "@id": profileUrl,
+      name: normalizeName(photographer.name),
+      ...(avatarAbsoluteUrl ? { image: avatarAbsoluteUrl } : {}),
+    },
+    areaServed: (photographer.locations || []).map((l: { name: string }) => ({ "@type": "City", name: l.name })),
+    ...(photographer.review_count > 0 ? {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: Number(photographer.rating).toFixed(1),
+        reviewCount: photographer.review_count,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    } : {}),
+    offers: photographer.packages.map((pkg: { name: string; price: number; description: string | null; duration_minutes: number; num_photos: number }) => ({
+      "@type": "Offer",
+      name: pkg.name,
+      priceCurrency: "EUR",
+      price: String(pkg.price),
+      url: profileUrl,
+      availability: "https://schema.org/InStock",
+      description: pkg.description || `${pkg.duration_minutes} min session, ${pkg.num_photos} photos`,
+      itemOffered: {
+        "@type": "Service",
+        name: pkg.name,
+        serviceType: "Photography session",
+      },
+      // Merchant listing fields — Google flags Offer-with-price as a
+      // potential product listing and asks for these. We're a service,
+      // so they're nominal (digital delivery, 24h cancellation window).
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "PT",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 1,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/FreeReturn",
+      },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "EUR" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "PT" },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+          transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+        },
+      },
+    })),
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: `${normalizeName(photographer.name)} — Photography Packages`,
+      itemListElement: photographer.packages.map((pkg: { name: string; price: number }, i: number) => ({
+        "@type": "Offer",
+        position: i + 1,
+        name: pkg.name,
+        priceCurrency: "EUR",
+        price: String(pkg.price),
+      })),
+    },
+  } : null;
+
   const showPreviewBanner = result.type === "db" && !(photographer as { is_approved?: boolean }).is_approved;
+
+  // LCP preload: the cover photo is the dominant above-the-fold image
+  // on the photographer profile. Preloading it shaves 200-500ms off LCP
+  // on mobile by letting the browser dispatch the image request before
+  // React hydrates the hero component.
+  const lcpHeroUrl = resolveAbsoluteImageUrl(photographer.cover_url || photographer.avatar_url || portfolioItems[0]?.url || null);
 
   return (
     <>
+      {lcpHeroUrl && (
+        <link rel="preload" as="image" href={lcpHeroUrl} fetchPriority="high" />
+      )}
       {showPreviewBanner && (
         <div className="sticky top-0 z-40 border-b border-amber-200 bg-amber-50">
           <div className="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
@@ -628,6 +816,10 @@ export default async function PhotographerProfilePage({
           </div>
         </div>
       )}
+      {/* Global GiftModeBanner from /[locale]/layout.tsx renders the
+          sticky gift-mode header on every page; the contextual
+          "Click Book my gift session below" instruction is conveyed via
+          the PackageCard CTA wording itself, no inline banner needed. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -640,6 +832,39 @@ export default async function PhotographerProfilePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
       />
+      {serviceJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+        />
+      )}
+      {/* Portfolio = ImageGallery of ImageObjects with creator credit. Helps
+          Google Image Search attribute photos to this photographer and
+          potentially surface the page from image queries. */}
+      {portfolioItems.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ImageGallery",
+            name: `${normalizeName(photographer.name)} — Portfolio`,
+            url: `https://photoportugal.com/photographers/${slug}#portfolio`,
+            image: portfolioItems.slice(0, 24).map((it) => ({
+              "@type": "ImageObject",
+              contentUrl: toAbsoluteUrl(it.url),
+              url: toAbsoluteUrl(it.url),
+              ...(it.thumbnail_url ? { thumbnailUrl: toAbsoluteUrl(it.thumbnail_url) } : {}),
+              ...(it.caption ? { caption: it.caption, name: it.caption } : {}),
+              creator: { "@type": "Person", name: normalizeName(photographer.name) },
+              copyrightHolder: { "@type": "Person", name: normalizeName(photographer.name) },
+              copyrightNotice: `© ${new Date().getFullYear()} ${normalizeName(photographer.name)} — All rights reserved`,
+              creditText: `${normalizeName(photographer.name)} — Photo Portugal`,
+              license: "https://photoportugal.com/terms",
+              acquireLicensePage: `https://photoportugal.com/photographers/${slug}`,
+            })),
+          }) }}
+        />
+      )}
 
       {/* Mobile-only conversion-first hero: full-width swipeable cover
           carousel with name + rating overlay. Replaces the wall-of-text
@@ -714,7 +939,7 @@ export default async function PhotographerProfilePage({
                 <p className="mt-1 max-w-3xl text-sm leading-relaxed text-gray-500">{photographer.tagline}</p>
               )}
 
-              {photographer.review_count > 0 && (
+              {photographer.review_count > 0 ? (
                 <a href="#reviews" className="mt-1.5 inline-flex items-center gap-1 text-sm transition hover:text-primary-600">
                   <span className="flex items-center gap-0.5 text-amber-500">
                     {[...Array(5)].map((_, i) => (
@@ -726,6 +951,10 @@ export default async function PhotographerProfilePage({
                   <span className="font-semibold text-gray-900">{Number(photographer.rating).toFixed(1)}</span>
                   <span className="text-gray-400">({photographer.review_count} {photographer.review_count !== 1 ? tc("reviews") : tc("review")})</span>
                 </a>
+              ) : (
+                <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                  ✨ {tc("newOnPhotoPortugal")}
+                </span>
               )}
 
               {coverageGroups.length > 0 && (
@@ -781,7 +1010,7 @@ export default async function PhotographerProfilePage({
               <div id="message" className="flex shrink-0 flex-col items-end gap-1.5 sm:ml-auto sm:self-center">
                 <div className="flex items-center gap-3">
                   <WishlistButton photographerId={photographer.id} size="md" className="border border-warm-200 shadow-sm" />
-                  <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} />
+                  <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} existingBookingId={(photographer as { existingBookingId?: string | null }).existingBookingId} />
                 </div>
                 <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
               </div>
@@ -854,17 +1083,42 @@ export default async function PhotographerProfilePage({
                   <h2 className="px-4 pt-6 text-xl font-bold text-gray-900 lg:px-0 lg:pt-0">{t("packages")}</h2>
                   {/* Mobile: horizontal scroll-snap. Desktop: vertical stack. */}
                   <div className="-mx-4 sm:-mx-6 lg:-mx-0 flex gap-3 overflow-x-auto snap-x snap-mandatory overscroll-x-contain px-4 sm:px-6 pt-3 pb-2 lg:flex-col lg:gap-4 lg:overflow-x-visible lg:px-0 lg:py-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {photographer.packages.map((pkg: { id: string; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean; delivery_days?: number }) => (
+                    {photographer.packages.map((pkg: { id: string; slug?: string | null; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean; delivery_days?: number }) => (
                       <div key={pkg.id} className="snap-center shrink-0 w-[78vw] max-w-[340px] lg:w-auto lg:max-w-none">
-                        <PackageCard pkg={pkg} photographerSlug={photographer.slug} />
+                        <PackageCard pkg={pkg} photographerSlug={photographer.slug} giftMode={giftCard ? { tier: giftCard.tier, tierLabel: giftCard.meta.label } : null} />
                       </div>
                     ))}
+                    {/* "Request a custom package" pseudo-card — sibling of
+                        real PackageCard items so it participates in the
+                        mobile snap row and the desktop vertical stack.
+                        Hidden for photographers (no use case) and in gift
+                        mode (would muddy the redemption flow). */}
+                    {!viewerIsPhotographer && !giftCard && (
+                      <div className="snap-center shrink-0 w-[78vw] max-w-[340px] lg:w-auto lg:max-w-none">
+                        <RequestCustomPackageCard
+                          existingBookingId={(photographer as { existingBookingId?: string | null }).existingBookingId}
+                          viewerSignedIn={!!viewerUserId}
+                          profilePath={`${locale === "en" ? "" : `/${locale}`}/photographers/${slug}`}
+                        />
+                      </div>
+                    )}
                   </div>
                 </>
               )}
 
+              {/* Gift-mode: photographer doesn't accept gift cards (or
+                  isn't backfilled). Tell the recipient + offer support. */}
+              {giftCard && !giftPhotographerOptedIn && (
+                <div className="mx-4 mt-6 rounded-xl border border-amber-200 bg-amber-50 p-6 sm:mx-6 lg:mx-0 lg:mt-0">
+                  <h2 className="text-lg font-bold text-gray-900">{photographer.name.split(" ")[0]} doesn&rsquo;t accept gift cards</h2>
+                  <p className="mt-2 text-sm text-gray-700">
+                    This photographer isn&rsquo;t currently participating in our gift card program. <a href="/photographers" className="text-primary-600 hover:underline">Browse other photographers</a> or <a href="mailto:info@photoportugal.com?subject=Gift card support" className="text-primary-600 hover:underline">email support</a>.
+                  </p>
+                </div>
+              )}
+
               {/* Contact card for profiles without packages */}
-              {(!photographer.packages || photographer.packages.length === 0) && (
+              {!giftCard && (!photographer.packages || photographer.packages.length === 0) && (
                 <div className="mx-4 mt-6 rounded-xl border border-warm-200 bg-white p-6 sm:mx-6 lg:mx-0 lg:mt-0">
                   <h2 className="text-lg font-bold text-gray-900">{t("interested")}</h2>
                   <p className="mt-2 text-sm text-gray-500">

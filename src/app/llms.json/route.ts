@@ -84,7 +84,7 @@ export async function GET() {
       blog: "https://photoportugal.com/blog",
       faq: "https://photoportugal.com/faq",
     },
-    languages: ["en", "pt"],
+    languages: ["en", "pt", "de", "es", "fr"],
     country: "Portugal",
     contact_email: "info@photoportugal.com",
   };

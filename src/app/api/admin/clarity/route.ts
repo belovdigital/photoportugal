@@ -50,8 +50,22 @@ export async function GET(req: Request) {
       { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
     );
     if (!res.ok) {
-      const txt = await res.text();
-      return NextResponse.json({ error: `Clarity API error ${res.status}`, detail: txt }, { status: 502 });
+      const txt = await res.text().catch(() => "");
+      // Clarity's Data Export API is flaky and frequently 500s with an empty
+      // body (treat it as a transient upstream outage, not our bug).
+      const friendly =
+        res.status >= 500
+          ? "Clarity's Data Export API is temporarily unavailable. The dashboard at clarity.microsoft.com still works; try again in a few minutes."
+          : `Clarity API returned ${res.status}.`;
+      return NextResponse.json(
+        {
+          error: friendly,
+          upstreamStatus: res.status,
+          detail: txt.slice(0, 500),
+          dashboardUrl: "https://clarity.microsoft.com/projects/view/" + (process.env.NEXT_PUBLIC_CLARITY_ID || "we7hzvxpom"),
+        },
+        { status: 502 }
+      );
     }
     const metrics: ClarityMetric[] = await res.json();
 
