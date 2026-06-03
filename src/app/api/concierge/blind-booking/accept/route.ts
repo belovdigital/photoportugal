@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import { hash } from "bcryptjs";
 import crypto from "crypto";
-import { requireStripe } from "@/lib/stripe";
+import { requireStripe, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { consumeHold } from "@/lib/blind-booking/holds";
 
 export const dynamic = "force-dynamic";
@@ -150,8 +150,11 @@ export async function POST(req: NextRequest) {
       : `[Blind booking via Concierge]`;
 
     // INSERT booking — photographer_id NULL, status='unmatched',
-    // blind_booking=TRUE. Region goes into location_slug so existing
-    // admin views & emails surface it.
+    // blind_booking=TRUE. total_price stores the BASE photographer
+    // rate (matches non-blind semantics: package price, before
+    // service fee). Stripe charges base × 1.125; payout split is
+    // computed at admin-assign time. Region goes into location_slug
+    // so existing admin views & emails surface it.
     const booking = await queryOne<{ id: string }>(
       `INSERT INTO bookings (
          client_id, photographer_id, location_slug, shoot_date,
@@ -203,6 +206,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Same fee structure as the rest of the marketplace: client pays
+    // photographer rate + 12.5% platform service fee. Payout split
+    // (commission per photographer's plan) is computed at admin-assign
+    // time when we know the photographer's plan.
+    const totalClientPaysCents = Math.round(hold.price_eur * (1 + SERVICE_FEE_RATE) * 100);
+    const serviceFeeEur = Math.round(hold.price_eur * SERVICE_FEE_RATE);
+
     const session = await requireStripe().checkout.sessions.create(
       {
         customer: customerId,
@@ -215,9 +225,9 @@ export async function POST(req: NextRequest) {
               currency: "eur",
               product_data: {
                 name: "Photo Portugal photoshoot — handpicked photographer",
-                description: `${hold.region.replace(/-/g, " ")} · ${hold.duration_minutes} min · ${hold.occasion} · ${hold.date}. Authorised now, charged only when your photographer is confirmed (within 24h). Auto-refund otherwise.`,
+                description: `${hold.region.replace(/-/g, " ")} · ${hold.duration_minutes} min · ${hold.occasion} · ${hold.date}. Includes €${serviceFeeEur} platform service fee. Authorised now, charged only when your photographer is confirmed (within 24h). Auto-refund otherwise.`,
               },
-              unit_amount: hold.price_eur * 100,
+              unit_amount: totalClientPaysCents,
             },
             quantity: 1,
           },

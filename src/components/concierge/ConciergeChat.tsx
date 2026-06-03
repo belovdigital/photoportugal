@@ -1801,8 +1801,11 @@ function BlindBookingCard({
 
           <div className="rounded-lg bg-white px-3 py-2.5 ring-1 ring-amber-200">
             <p className="text-[11px] text-gray-500">{t("blindBookingTotal") || "Total"}</p>
-            <p className="text-2xl font-bold text-gray-900">€{offer.price_eur}</p>
+            <p className="text-2xl font-bold text-gray-900">€{Math.round(offer.price_eur * 1.125)}</p>
             <p className="mt-0.5 text-[11px] text-gray-500">
+              €{offer.price_eur} {t("blindBookingPhotographerRate") || "photographer rate"} + €{Math.round(offer.price_eur * 0.125)} {t("blindBookingServiceFeeLabel") || "platform fee"}
+            </p>
+            <p className="mt-1 text-[11px] text-gray-500">
               {t("blindBookingHoldNote") || "Authorised now — charged only when your photographer is confirmed within 24h. Auto-refund if we can't match."}
             </p>
           </div>
@@ -1842,7 +1845,10 @@ function BlindBookingCard({
           {regionLabel} · {dateLabel} · {occasionLabel} · {offer.party_size}{" "}
           {offer.party_size === 1 ? "person" : "people"} · {durationLabel}
         </p>
-        <p className="mt-1 text-base font-bold text-gray-900">€{offer.price_eur}</p>
+        <p className="mt-1 text-base font-bold text-gray-900">€{Math.round(offer.price_eur * 1.125)}</p>
+        <p className="text-[10px] text-gray-500">
+          €{offer.price_eur} {t("blindBookingPhotographerRate") || "photographer rate"} + €{Math.round(offer.price_eur * 0.125)} {t("blindBookingServiceFeeLabel") || "platform fee"}
+        </p>
         <p className="mt-0.5 text-[11px] text-gray-500">
           {t("blindBookingHoldNote") || "Authorised now — charged only when your photographer is confirmed within 24h. Auto-refund if we can't match."}
         </p>

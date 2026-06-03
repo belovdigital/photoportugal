@@ -161,18 +161,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Compute payment split now that photographer's plan is known.
+    // total_price stores the BASE photographer rate (matches non-blind
+    // semantics) — calculatePayment adds 12.5% service fee on top for
+    // the client total, deducts plan-based commission for payout.
     let serviceFee = 0,
       platformFee = 0,
       photographerPayout = 0;
     if (booking.total_price) {
       const split = calculatePayment(booking.total_price, photographer.plan);
-      // For blind bookings total_price IS the all-in price, so the
-      // "service fee on top" is effectively zero. We use the platform
-      // commission share for accounting but the client already paid
-      // the all-in.
-      serviceFee = 0;
-      platformFee = Math.round(Number(booking.total_price) * (1 - split.photographerPayout / split.totalClientPays) * 100) / 100;
-      photographerPayout = Math.round((Number(booking.total_price) - platformFee) * 100) / 100;
+      serviceFee = split.serviceFee;
+      platformFee = split.platformFee;
+      photographerPayout = split.photographerPayout;
     }
 
     const adminCookie = await cookies();

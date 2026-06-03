@@ -531,10 +531,14 @@ export async function POST(req: NextRequest) {
               `UPDATE bookings SET auto_refund_at = NOW() + INTERVAL '24 hours' WHERE id = $1 AND status = 'unmatched' RETURNING id`,
               [bookingId]
             );
-            const priceLabel = blindCheck.total_price ? `€${Math.round(Number(blindCheck.total_price))}` : "(no price)";
+            const baseEur = blindCheck.total_price ? Math.round(Number(blindCheck.total_price)) : 0;
+            const totalEur = Math.round(baseEur * 1.125);
+            const amtLabel = baseEur
+              ? `€${totalEur} (€${baseEur} rate + €${totalEur - baseEur} service fee)`
+              : "(no price)";
             import("@/lib/telegram").then(({ sendTelegram }) =>
               sendTelegram(
-                `<b>🎯 Blind booking authorised — needs admin assignment</b>\nBooking: <code>${bookingId}</code>\nAmount: ${priceLabel} (auth-hold, not captured)\nDeadline: 24h to assign a photographer or auto-refund.\n<a href="https://photoportugal.com/admin">Open admin queue</a>`,
+                `<b>🎯 Blind booking authorised — needs admin assignment</b>\nBooking: <code>${bookingId}</code>\nAmount: ${amtLabel} (auth-hold, not captured)\nDeadline: 24h to assign a photographer or auto-refund.\n<a href="https://photoportugal.com/admin">Open admin queue</a>`,
                 "bookings"
               )
             ).catch((err) => console.error("[webhook] blind-booking telegram error:", err));

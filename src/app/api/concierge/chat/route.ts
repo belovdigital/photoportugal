@@ -1333,9 +1333,11 @@ async function notifyConciergeAdmins(opts: {
     const partySize = Number(d.party_size) || 0;
     const durationMinutes = Number(d.duration_minutes) || 0;
     const priceEur = Number(d.price_eur) || 0;
+    const totalEur = Math.round(priceEur * 1.125);
     lines.push("");
     lines.push(`<b>Offer:</b> ${escapeHtml(region)} · ${escapeHtml(occasion)} · ${escapeHtml(date)}`);
-    lines.push(`<b>${partySize} ${partySize === 1 ? "person" : "people"} · ${durationMinutes} min · €${priceEur}</b> (auth-hold pending visitor click)`);
+    lines.push(`<b>${partySize} ${partySize === 1 ? "person" : "people"} · ${durationMinutes} min</b>`);
+    lines.push(`<b>€${totalEur} total</b> (€${priceEur} photographer rate + €${totalEur - priceEur} service fee). Auth-hold pending visitor click.`);
   }
 
   if (opts.chatId) {
