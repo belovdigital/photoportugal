@@ -3456,6 +3456,7 @@
     "blindBookingRedirecting": "Opening checkout…",
     "blindBookingProceed": "Continue to secure checkout",
     "blindBookingError": "Could not process your booking. Please try again.",
+    "blindBookingDeclineMessage": "Actually, let me see the photographer options instead.",
     "prefillIntro": "Hi! I found you through the AI concierge. Here's what I'm looking for:",
     "startOver": "Start over",
     "newBadge": "New",

@@ -858,7 +858,38 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                     locale={locale}
                     chatId={chatId}
                     onDecline={() => {
-                      send("Actually, let me see the photographer options instead.");
+                      // Use the user's actual chat language, not the URL
+                      // locale — visitors often type Russian/Ukrainian/Italian
+                      // on an /en page and our forced English bubble looked
+                      // glitchy. Heuristic over script ranges + fallback to
+                      // the next-intl translation for the 5 site locales.
+                      const lastUserMsg = [...messages].reverse().find((x) => x.role === "user");
+                      const txt = lastUserMsg?.content || "";
+                      const declineByScript: Record<string, string> = {
+                        ru: "Вообще-то покажи мне варианты фотографов.",
+                        uk: "Насправді покажи варіанти фотографів.",
+                        zh: "其实，请显示摄影师选项。",
+                        ja: "やっぱり、写真家の選択肢を見せてください。",
+                        ko: "그냥 사진작가 옵션을 보여주세요.",
+                        ar: "في الواقع، أرني خيارات المصورين.",
+                        he: "בעצם, הראה לי את אפשרויות הצלמים.",
+                        tr: "Aslında, fotoğrafçı seçeneklerini görmek istiyorum.",
+                        it: "In realtà, mostratemi le opzioni dei fotografi.",
+                        nl: "Eigenlijk wil ik liever de fotograafopties zien.",
+                      };
+                      let synth: string | null = null;
+                      if (/[а-яА-ЯёЁ]/.test(txt)) {
+                        synth = /[іїєґІЇЄҐ]/.test(txt) ? declineByScript.uk : declineByScript.ru;
+                      } else if (/[一-鿿]/.test(txt)) synth = declineByScript.zh;
+                      else if (/[぀-ヿ]/.test(txt)) synth = declineByScript.ja;
+                      else if (/[가-힯]/.test(txt)) synth = declineByScript.ko;
+                      else if (/[؀-ۿ]/.test(txt)) synth = declineByScript.ar;
+                      else if (/[֐-׿]/.test(txt)) synth = declineByScript.he;
+                      send(
+                        synth ||
+                          t("blindBookingDeclineMessage") ||
+                          "Actually, let me see the photographer options instead."
+                      );
                     }}
                   />
                 )}

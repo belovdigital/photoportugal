@@ -123,7 +123,7 @@ const tools = [
         properties: {
           region: { type: "string", description: "Region/city/island slug (e.g. lisbon, sintra, madeira, algarve, porto, azores, ponta-delgada)." },
           date: { type: "string", description: "ISO YYYY-MM-DD shoot date. Required — do not call without a concrete date." },
-          occasion: { type: "string", description: "Shoot type slug: couples, family, proposal, honeymoon, engagement, elopement, maternity, anniversary, birthday, vacation, other." },
+          occasion: { type: "string", description: "Shoot type slug: couples, family, solo, proposal, honeymoon, engagement, elopement, maternity, anniversary, birthday, vacation, other." },
           party_size: { type: "integer", minimum: 1, maximum: 30, description: "Number of people in the shoot. Required." },
           duration_minutes: { type: "integer", minimum: 60, maximum: 180, description: "Session duration in minutes. Choose 60, 120, or 180 based on visitor context — never guess if they said nothing." },
           reply_text: { type: "string", description: "Short confident intro line above the offer card. NEVER mention EUR amounts, never use 'either way' or 'no pressure'. Example: 'Got everything I need — I can lock this in for you with one of our verified photographers. Want me to take care of it?'" },
@@ -1170,7 +1170,7 @@ export async function POST(req: NextRequest) {
   // human; subsequent show_matches in the same chat are deduped via the
   // shownSlugs heuristic — admin sees the freshest snapshot. Fire-and-
   // forget so a Telegram outage never blocks the chat response.
-  if (action && (action.type === "show_matches" || action.type === "human_handoff")) {
+  if (action && (action.type === "show_matches" || action.type === "human_handoff" || action.type === "offer_blind_booking")) {
     // Gate human_handoff: don't ping admins if we have NO way to follow
     // up. Either the AI captured a contact (contact_email/phone in the
     // tool call), the chat session already has one (email param or
@@ -1278,7 +1278,9 @@ async function notifyConciergeAdmins(opts: {
   const lines: string[] = [];
   const headerText = opts.action.type === "human_handoff"
     ? "🆘 <b>Concierge: human handoff requested</b>"
-    : "⭐ <b>Concierge: matches shown</b>";
+    : opts.action.type === "offer_blind_booking"
+      ? "🎯 <b>Concierge: blind-booking offer shown</b>"
+      : "⭐ <b>Concierge: matches shown</b>";
   lines.push(leadHeatBadge ? `${headerText} · ${leadHeatBadge}` : headerText);
 
   const meta: string[] = [];
@@ -1323,6 +1325,17 @@ async function notifyConciergeAdmins(opts: {
       lines.push("");
       lines.push(`<b>Summary:</b> ${escapeHtml(summary)}`);
     }
+  } else if (opts.action.type === "offer_blind_booking") {
+    const d = opts.action.data || {};
+    const region = String(d.region || "");
+    const occasion = String(d.occasion || "");
+    const date = String(d.date || "");
+    const partySize = Number(d.party_size) || 0;
+    const durationMinutes = Number(d.duration_minutes) || 0;
+    const priceEur = Number(d.price_eur) || 0;
+    lines.push("");
+    lines.push(`<b>Offer:</b> ${escapeHtml(region)} · ${escapeHtml(occasion)} · ${escapeHtml(date)}`);
+    lines.push(`<b>${partySize} ${partySize === 1 ? "person" : "people"} · ${durationMinutes} min · €${priceEur}</b> (auth-hold pending visitor click)`);
   }
 
   if (opts.chatId) {

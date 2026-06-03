@@ -692,6 +692,7 @@
     "blindBookingRedirecting": "Ouverture du paiement…",
     "blindBookingProceed": "Continuer vers le paiement sécurisé",
     "blindBookingError": "Impossible de traiter votre réservation. Réessayez.",
+    "blindBookingDeclineMessage": "En fait, montrez-moi plutôt les photographes.",
     "prefillIntro": "Bonjour ! Je vous ai trouvé via le concierge IA. Voici ce que je recherche :",
     "startOver": "Recommencer",
     "newBadge": "Nouveau",

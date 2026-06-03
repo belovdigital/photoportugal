@@ -3462,6 +3462,7 @@
     "blindBookingRedirecting": "Kasse wird geöffnet…",
     "blindBookingProceed": "Weiter zur sicheren Kasse",
     "blindBookingError": "Buchung konnte nicht bearbeitet werden. Bitte erneut versuchen.",
+    "blindBookingDeclineMessage": "Eigentlich möchte ich doch die Fotografen-Optionen sehen.",
     "prefillIntro": "Hallo! Ich habe Sie über den KI-Concierge gefunden. Hier ist, was ich suche:",
     "startOver": "Neu starten",
     "newBadge": "Neu",

@@ -23,11 +23,10 @@ const REGION_OF: Record<string, string> = {
 };
 
 // Must match the occasion enum the Concierge tool description teaches
-// the LLM to use. Audit found "couples" missing — LLM emitted it,
-// pricing lookup returned null, offer card silently dropped.
+// the LLM to use. Same fix that landed "couples" later landed "solo".
 const OCCASIONS = [
   "anniversary", "birthday", "couples", "elopement", "engagement",
-  "family", "honeymoon", "maternity", "other", "proposal", "vacation",
+  "family", "honeymoon", "maternity", "other", "proposal", "solo", "vacation",
 ];
 
 const DURATIONS = [60, 120, 180];

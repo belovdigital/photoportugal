@@ -3462,6 +3462,7 @@
     "blindBookingRedirecting": "A abrir o pagamento…",
     "blindBookingProceed": "Continuar para pagamento seguro",
     "blindBookingError": "Não foi possível processar a sua reserva. Tente novamente.",
+    "blindBookingDeclineMessage": "Na verdade, prefiro ver as opções de fotógrafos.",
     "prefillIntro": "Olá! Encontrei-o através do concierge IA. Eis o que estou a procurar:",
     "startOver": "Começar de novo",
     "newBadge": "Novo",
