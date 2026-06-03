@@ -39,14 +39,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
+    let body: Record<string, unknown> = {};
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Malformed request body" }, { status: 400 });
+    }
     const holdId = String(body.hold_id || "").trim();
     const chatId = String(body.chat_id || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
     const name = String(body.name || "").trim().slice(0, 100);
     const phone = String(body.phone || "").trim().slice(0, 30);
     const meetingHint = String(body.meeting_hint || "").trim().slice(0, 500);
-    const locale = ["pt", "de", "es", "fr"].includes(body.locale) ? body.locale : "en";
+    const rawLocale = typeof body.locale === "string" ? body.locale : "";
+    const locale: "pt" | "de" | "es" | "fr" | "en" =
+      rawLocale === "pt" || rawLocale === "de" || rawLocale === "es" || rawLocale === "fr"
+        ? rawLocale
+        : "en";
 
     // Per-email rate limit too — different IPs hitting the same email
     // is still spam (e.g. botnet).
