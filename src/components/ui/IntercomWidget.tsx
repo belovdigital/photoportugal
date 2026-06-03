@@ -3,8 +3,10 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-// Routes where Intercom should never load (chat-style pages where it competes)
-const SUPPRESS_INTERCOM_ROUTES = ["/concierge"];
+// Routes where Intercom should never load. /concierge competes with
+// the AI chat panel; /blog visitors are reading long-form, the
+// launcher is just noise + competes with the sticky conversion bar.
+const SUPPRESS_INTERCOM_ROUTES = ["/concierge", "/blog"];
 
 export function IntercomWidget() {
   const pathname = usePathname();
