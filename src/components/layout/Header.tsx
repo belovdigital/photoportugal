@@ -13,6 +13,7 @@ import { trackCTAClick } from "@/lib/analytics";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
+import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
 import { Compass, Search, ShieldCheck, HelpCircle, Users, Mail, LifeBuoy, MapPin, Heart, UserRound, Baby, Gem, Sparkles, Sun, UserPlus, CreditCard, Camera, BookOpen, TreePine, PartyPopper, Cake } from "lucide-react";
 
 const TOP_DESTINATIONS = [
@@ -236,16 +237,16 @@ export function Header() {
               </ConciergeTrigger>
             )}
 
-            {/* Primary CTA — opens the AI Concierge drawer. Replaced the
-                old /choose-booking-type → /find-photographer manual flow
-                when we shifted focus to AI matching. */}
+            {/* Primary CTA — Quick Booking modal. Direct path: form →
+                Stripe Checkout → dashboard. Concierge AI icon sits next
+                to it for visitors who prefer a chat-based discovery. */}
             {!isLoading && !isPhotographer && pathname !== "/concierge" && (
-              <ConciergeTrigger
-                onClick={() => trackCTAClick("get_matched", "header_desktop")}
+              <QuickBookingTrigger
+                onClick={() => trackCTAClick("quick_booking", "header_desktop")}
                 className="hidden rounded-lg bg-primary-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 sm:inline-flex"
               >
-                {t("getMatched")}
-              </ConciergeTrigger>
+                {t("quickBooking")}
+              </QuickBookingTrigger>
             )}
 
             {isLoading ? (
@@ -703,12 +704,12 @@ export function Header() {
                 </>
               ) : null}
               {!isPhotographer && (
-                <ConciergeTrigger
-                  onClick={() => { trackCTAClick("get_matched", "header_mobile"); setMobileOpen(false); }}
+                <QuickBookingTrigger
+                  onClick={() => { trackCTAClick("quick_booking", "header_mobile"); setMobileOpen(false); }}
                   className="mt-2 w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white"
                 >
-                  {t("getMatched")}
-                </ConciergeTrigger>
+                  {t("quickBooking")}
+                </QuickBookingTrigger>
               )}
             </div>
           </div>

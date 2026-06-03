@@ -49,7 +49,9 @@ export async function GET() {
             b.utm_source, b.utm_medium
        FROM bookings b
        JOIN users u ON u.id = b.client_id
-      WHERE b.status = 'unmatched'
+      WHERE b.status = 'confirmed'
+        AND b.photographer_id IS NULL
+        AND b.blind_booking = TRUE
       ORDER BY b.created_at DESC
       LIMIT 100`
   );
@@ -120,8 +122,8 @@ export async function POST(req: NextRequest) {
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
-    if (booking.status !== "unmatched") {
-      return NextResponse.json({ error: `Booking is ${booking.status}, not unmatched` }, { status: 400 });
+    if (booking.status !== "confirmed") {
+      return NextResponse.json({ error: `Booking is ${booking.status}, not confirmed (cannot assign)` }, { status: 400 });
     }
     if (booking.photographer_id) {
       return NextResponse.json({ error: "Booking already has a photographer assigned" }, { status: 400 });
@@ -192,8 +194,6 @@ export async function POST(req: NextRequest) {
     const updated = await queryOne<{ id: string }>(
       `UPDATE bookings
           SET photographer_id   = $1,
-              status            = 'confirmed',
-              confirmed_at      = NOW(),
               assigned_by       = $2,
               assigned_at       = NOW(),
               admin_notes       = COALESCE($3, admin_notes),
@@ -202,7 +202,7 @@ export async function POST(req: NextRequest) {
               payout_amount     = $6,
               auto_refund_at    = NULL
         WHERE id = $7
-          AND status = 'unmatched'
+          AND status = 'confirmed'
           AND photographer_id IS NULL
         RETURNING id`,
       [

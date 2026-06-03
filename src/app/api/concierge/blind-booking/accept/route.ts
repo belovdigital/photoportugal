@@ -45,6 +45,12 @@ export async function POST(req: NextRequest) {
     } catch {
       return NextResponse.json({ error: "Malformed request body" }, { status: 400 });
     }
+    // Two input modes:
+    //  1. Concierge AI path — body has { hold_id, chat_id }; we
+    //     consume the in-memory hold for region/occasion/date/etc.
+    //  2. Direct modal path — body has raw fields { region, occasion,
+    //     date, duration_minutes, party_size }; we price server-side.
+    // Both modes require the contact triple (name/email/phone).
     const holdId = String(body.hold_id || "").trim();
     const chatId = String(body.chat_id || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
@@ -66,9 +72,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!holdId) {
-      return NextResponse.json({ error: "Missing hold_id" }, { status: 400 });
-    }
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return NextResponse.json({ error: "Valid email required" }, { status: 400 });
     }
@@ -79,36 +82,88 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Valid phone required" }, { status: 400 });
     }
 
-    const hold = consumeHold(holdId);
-    if (!hold) {
-      return NextResponse.json(
-        { error: "This booking offer has expired. Please ask again in chat." },
-        { status: 410 }
-      );
+    // Resolve booking parameters from either mode.
+    type ResolvedOffer = {
+      region: string;
+      date: string;
+      occasion: string;
+      party_size: number;
+      duration_minutes: number;
+      price_eur: number;
+    };
+    let hold: ResolvedOffer;
+
+    if (holdId) {
+      const fromMem = consumeHold(holdId);
+      if (!fromMem) {
+        return NextResponse.json(
+          { error: "This booking offer has expired. Please ask again in chat." },
+          { status: 410 }
+        );
+      }
+      // Bind hold to the chat that minted it. Anonymous holds accept
+      // any chat_id since there's nothing to bind against.
+      if (fromMem.chat_id !== "anonymous" && fromMem.chat_id !== chatId) {
+        return NextResponse.json(
+          { error: "This booking offer was not issued for this session." },
+          { status: 403 }
+        );
+      }
+      hold = {
+        region: fromMem.region,
+        date: fromMem.date,
+        occasion: fromMem.occasion,
+        party_size: fromMem.party_size,
+        duration_minutes: fromMem.duration_minutes,
+        price_eur: fromMem.price_eur,
+      };
+    } else {
+      // Direct modal path — validate raw inputs + price server-side.
+      const region = String(body.region || "").trim().toLowerCase();
+      const date = String(body.date || "").trim();
+      const occasion = String(body.occasion || "").trim().toLowerCase();
+      const partySize = Number(body.party_size);
+      const durationMinutes = Number(body.duration_minutes) || 60;
+      if (!region || !occasion) {
+        return NextResponse.json({ error: "Region and occasion required" }, { status: 400 });
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return NextResponse.json({ error: "Date must be YYYY-MM-DD" }, { status: 400 });
+      }
+      if (!Number.isFinite(partySize) || partySize < 1 || partySize > 30) {
+        return NextResponse.json({ error: "Party size must be 1-30" }, { status: 400 });
+      }
+      if (![60, 120, 180].includes(durationMinutes)) {
+        return NextResponse.json({ error: "Duration must be 60, 120, or 180 minutes" }, { status: 400 });
+      }
+      const { priceForSlug, slugToRegion } = await import("@/lib/blind-booking/pricing");
+      const priced = await priceForSlug(region, occasion, durationMinutes);
+      const canonicalRegion = slugToRegion(region);
+      if (!priced || !canonicalRegion) {
+        return NextResponse.json(
+          { error: "Sorry, blind booking isn't available for this region/occasion combination yet." },
+          { status: 400 }
+        );
+      }
+      hold = {
+        region: canonicalRegion,
+        date,
+        occasion,
+        party_size: partySize,
+        duration_minutes: priced.duration_minutes,
+        price_eur: priced.price_eur,
+      };
     }
 
-    // Bind hold to the chat that minted it. If the chat had a real ID,
-    // the request must echo the same chat_id back — otherwise a leaked
-    // hold_id (logs, screenshot) could be claimed by anyone (audit
-    // finding #8). Anonymous holds (chat_id === "anonymous") accept
-    // any chat_id since there's nothing to bind against.
-    if (hold.chat_id !== "anonymous" && hold.chat_id !== chatId) {
-      return NextResponse.json(
-        { error: "This booking offer was not issued for this session." },
-        { status: 403 }
-      );
-    }
-
-    // Defence-in-depth: even if chat-route validated the date, the
-    // hold could have been minted hours ago — re-check the date is
-    // still in the future before charging the card.
+    // Defence-in-depth: re-check the date is in the future for both
+    // paths (hold may have been minted hours ago; raw input could lie).
     {
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
       if (new Date(hold.date + "T00:00:00Z") < today) {
         return NextResponse.json(
-          { error: "Shoot date is in the past — please ask the concierge for a new date." },
-          { status: 410 }
+          { error: "Shoot date is in the past — pick a future date." },
+          { status: 400 }
         );
       }
     }
@@ -149,20 +204,22 @@ export async function POST(req: NextRequest) {
       ? `[Blind booking via Concierge] Meeting hint: ${meetingHint}`
       : `[Blind booking via Concierge]`;
 
-    // INSERT booking — photographer_id NULL, status='unmatched',
-    // blind_booking=TRUE. total_price stores the BASE photographer
-    // rate (matches non-blind semantics: package price, before
-    // service fee). Stripe charges base × 1.125; payout split is
-    // computed at admin-assign time. Region goes into location_slug
-    // so existing admin views & emails surface it.
+    // INSERT booking — status='confirmed' + photographer_id=NULL.
+    // The combination "confirmed + no photographer" IS the marker for
+    // "blind booking awaiting admin assignment" — no separate enum
+    // value needed (refactor 2026-06-03). total_price stores the
+    // BASE photographer rate (matches non-blind semantics: package
+    // price, before service fee). Stripe charges base × 1.125; payout
+    // split is computed at admin-assign time. blind_booking flag
+    // persists as a permanent analytics marker.
     const booking = await queryOne<{ id: string }>(
       `INSERT INTO bookings (
          client_id, photographer_id, location_slug, shoot_date,
          group_size, occasion, message, total_price, status,
-         blind_booking, utm_source, utm_medium
+         confirmed_at, blind_booking, utm_source, utm_medium
        ) VALUES (
-         $1, NULL, $2, $3, $4, $5, $6, $7, 'unmatched',
-         TRUE, 'concierge', 'blind_booking'
+         $1, NULL, $2, $3, $4, $5, $6, $7, 'confirmed',
+         NOW(), TRUE, 'concierge', 'blind_booking'
        ) RETURNING id`,
       [
         user.id,

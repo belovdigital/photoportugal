@@ -507,28 +507,26 @@ export async function POST(req: NextRequest) {
             ? fmtAmount(paymentSummary.amountTotal, paymentSummary.currency)
             : null;
           // Guard against Stripe webhook replays: only flip to paid for
-          // bookings still in a payable state. If a blind booking was
-          // auto-cancelled by the refund cron, a replayed
-          // checkout.session.completed must NOT reset payment_status
-          // and re-arm auto_refund_at (audit finding #4).
+          // bookings still in a payable state.
           await queryOne(
             `UPDATE bookings SET stripe_payment_intent_id = $1, payment_status = 'paid'
-             WHERE id = $2 AND status IN ('confirmed', 'unmatched') RETURNING id`,
+             WHERE id = $2 AND status = 'confirmed' RETURNING id`,
             [checkoutSession.payment_intent, bookingId]
           );
 
           // Blind booking — auth-hold authorised, NOT captured yet.
+          // Marker: photographer_id IS NULL + blind_booking=TRUE.
           // Stamp the 24h deadline by which an admin must assign a
           // photographer (and trigger capture) or the auto-refund cron
-          // will void this PaymentIntent. Also notify admins now so
-          // they can start looking for a match.
+          // will void this PaymentIntent.
           const blindCheck = await queryOne<{ blind_booking: boolean; photographer_id: string | null; total_price: number | null; status: string }>(
             "SELECT blind_booking, photographer_id, total_price, status::text as status FROM bookings WHERE id = $1",
             [bookingId]
           );
-          if (blindCheck?.blind_booking && !blindCheck.photographer_id && blindCheck.status === "unmatched") {
+          if (blindCheck?.blind_booking && !blindCheck.photographer_id && blindCheck.status === "confirmed") {
             await queryOne(
-              `UPDATE bookings SET auto_refund_at = NOW() + INTERVAL '24 hours' WHERE id = $1 AND status = 'unmatched' RETURNING id`,
+              `UPDATE bookings SET auto_refund_at = NOW() + INTERVAL '24 hours'
+                WHERE id = $1 AND status = 'confirmed' AND photographer_id IS NULL RETURNING id`,
               [bookingId]
             );
             const baseEur = blindCheck.total_price ? Math.round(Number(blindCheck.total_price)) : 0;

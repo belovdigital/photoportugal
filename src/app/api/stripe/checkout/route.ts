@@ -48,12 +48,13 @@ export async function POST(req: NextRequest) {
 
     if (!booking) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     if (booking.client_id !== userId) return NextResponse.json({ error: "Not your booking" }, { status: 403 });
-    // Blind bookings sit at status='unmatched' until admin assigns; both
-    // 'confirmed' (normal flow) and 'unmatched' (blind flow) may pay.
-    const isBlind = !!booking.blind_booking;
-    if (!isBlind && booking.status !== "confirmed") return NextResponse.json({ error: "Booking must be confirmed to pay" }, { status: 400 });
-    if (isBlind && booking.status !== "unmatched") return NextResponse.json({ error: "Blind booking must be unmatched to pay" }, { status: 400 });
+    if (booking.status !== "confirmed") return NextResponse.json({ error: "Booking must be confirmed to pay" }, { status: 400 });
     if (booking.payment_status === "paid") return NextResponse.json({ error: "Already paid" }, { status: 400 });
+    // Blind = no photographer assigned yet. Same status enum value
+    // ('confirmed'); the photographer_id NULL is the distinguishing
+    // condition. capture_method=manual on Stripe; payout split
+    // computed when admin assigns.
+    const isBlind = !!booking.blind_booking;
 
     if (!isBlind && !booking.photographer_stripe_id) {
       return NextResponse.json({ error: "Photographer has not set up payments yet" }, { status: 400 });

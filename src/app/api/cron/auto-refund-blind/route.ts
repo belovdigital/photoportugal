@@ -20,6 +20,9 @@ export async function GET(req: NextRequest) {
   const results = { voided: 0, errors: [] as string[] };
 
   try {
+    // Blind bookings are 'confirmed' status with photographer_id=NULL
+    // (refactor 2026-06-03). Filter for auth-hold expiry OR 6-day
+    // safety net (Stripe auto-voids capture window).
     const candidates = await query<{
       id: string;
       stripe_payment_intent_id: string | null;
@@ -31,7 +34,9 @@ export async function GET(req: NextRequest) {
       `SELECT id, stripe_payment_intent_id, client_id, total_price,
               auto_refund_at::text, created_at::text
          FROM bookings
-        WHERE status = 'unmatched'
+        WHERE status = 'confirmed'
+          AND photographer_id IS NULL
+          AND blind_booking = TRUE
           AND (
             (auto_refund_at IS NOT NULL AND auto_refund_at <= NOW())
             OR created_at <= NOW() - INTERVAL '6 days'
@@ -85,7 +90,9 @@ export async function GET(req: NextRequest) {
                   payment_status = CASE WHEN payment_status = 'paid' THEN 'refunded' ELSE payment_status END,
                   auto_refund_at = NULL
             WHERE id = $1
-              AND status = 'unmatched'
+              AND status = 'confirmed'
+              AND photographer_id IS NULL
+              AND blind_booking = TRUE
             RETURNING id`,
           [b.id]
         );

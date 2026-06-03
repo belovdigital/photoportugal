@@ -18,6 +18,7 @@ import { VisitorTracker } from "@/components/ui/VisitorTracker";
 import { LazyIntercom } from "@/components/ui/LazyIntercom";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { ConciergeDrawerProvider } from "@/components/concierge/ConciergeDrawer";
+import { QuickBookingProvider } from "@/components/ui/QuickBookingModal";
 
 type Locale = "en" | "pt";
 
@@ -51,6 +52,7 @@ export default async function LocaleLayout({
       <SessionProvider>
         <NotificationProvider>
           <ConciergeDrawerProvider>
+            <QuickBookingProvider>
             <Header />
             {giftCard && (
               <GiftModeBanner
@@ -61,6 +63,7 @@ export default async function LocaleLayout({
             )}
             <main className="flex-1 pb-16 sm:pb-24">{children}</main>
             <Footer />
+            </QuickBookingProvider>
           </ConciergeDrawerProvider>
         </NotificationProvider>
         <ScrollToTop />
