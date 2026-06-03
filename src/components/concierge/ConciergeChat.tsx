@@ -142,7 +142,22 @@ type Action =
   | { type: "show_matches"; data: { matches: MatchPhotographer[]; reply_text: string } }
   | { type: "show_locations"; data: { locations: LocationOption[]; reply_text: string } }
   | { type: "show_spots"; data: { spots: SpotOption[]; reply_text: string } }
-  | { type: "human_handoff"; data: { reason: string; summary: string } };
+  | { type: "human_handoff"; data: { reason: string; summary: string } }
+  | {
+      type: "offer_blind_booking";
+      data: {
+        hold_id: string;
+        region: string;
+        slug: string;
+        date: string;
+        occasion: string;
+        party_size: number;
+        duration_minutes: number;
+        price_eur: number;
+        sample_size: number;
+        reply_text: string;
+      };
+    };
 
 interface Msg {
   role: "user" | "assistant";
@@ -834,6 +849,16 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                     locale={locale}
                     summary={m.action.data.summary}
                     hasContact={!!hasContact}
+                  />
+                )}
+
+                {m.action?.type === "offer_blind_booking" && (
+                  <BlindBookingCard
+                    offer={m.action.data}
+                    locale={locale}
+                    onDecline={() => {
+                      send("Actually, let me see the photographer options instead.");
+                    }}
                   />
                 )}
               </div>
@@ -1619,6 +1644,206 @@ function HumanHandoffBox({ chatId, summary, hasContact }: { chatId: string | nul
         className="w-full rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
       >
         {submitting ? t("handoffSendingBtn") : t("handoffSubmitBtn")}
+      </button>
+    </form>
+  );
+}
+
+interface BlindOffer {
+  hold_id: string;
+  region: string;
+  slug: string;
+  date: string;
+  occasion: string;
+  party_size: number;
+  duration_minutes: number;
+  price_eur: number;
+  sample_size: number;
+  reply_text: string;
+}
+
+function BlindBookingCard({
+  offer,
+  locale,
+  onDecline,
+}: {
+  offer: BlindOffer;
+  locale: string;
+  onDecline: () => void;
+}) {
+  const t = useTranslations("concierge");
+  const [stage, setStage] = useState<"offer" | "form" | "submitting" | "redirecting">("offer");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [hint, setHint] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const regionLabel = offer.region
+    .split("-")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(" ");
+  const occasionLabel = offer.occasion.charAt(0).toUpperCase() + offer.occasion.slice(1);
+  const durationLabel = `${offer.duration_minutes < 60 ? offer.duration_minutes + " min" : offer.duration_minutes / 60 + "h"}`;
+
+  const dateLabel = (() => {
+    try {
+      return new Date(offer.date + "T12:00:00").toLocaleDateString(locale === "en" ? "en-GB" : locale, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return offer.date;
+    }
+  })();
+
+  const validForm =
+    !!name.trim() &&
+    /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()) &&
+    phone.replace(/\D/g, "").length >= 6;
+
+  async function submitForm(e: React.FormEvent) {
+    e.preventDefault();
+    if (!validForm) return;
+    setStage("submitting");
+    setError(null);
+    try {
+      const res = await fetch("/api/concierge/blind-booking/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hold_id: offer.hold_id,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
+          meeting_hint: hint.trim(),
+          locale,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.checkout_url) {
+        setStage("form");
+        setError(data?.error || t("blindBookingError") || "Could not process your booking. Please try again.");
+        return;
+      }
+      setStage("redirecting");
+      window.location.href = data.checkout_url;
+    } catch {
+      setStage("form");
+      setError(t("blindBookingError") || "Could not process your booking. Please try again.");
+    }
+  }
+
+  if (stage === "offer") {
+    return (
+      <div className="mt-3 overflow-hidden rounded-2xl border border-amber-300 bg-gradient-to-br from-amber-50 to-white shadow-sm">
+        <div className="border-b border-amber-200 bg-amber-100/50 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-amber-800">
+          {t("blindBookingBadge") || "Concierge offer"}
+        </div>
+        <div className="space-y-3 px-4 py-4">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t("blindBookingRegion") || "Region"}</p>
+              <p className="font-semibold text-gray-900">{regionLabel}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t("blindBookingDate") || "Date"}</p>
+              <p className="font-semibold text-gray-900">{dateLabel}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t("blindBookingOccasion") || "Occasion"}</p>
+              <p className="font-semibold text-gray-900">
+                {occasionLabel} · {offer.party_size} {offer.party_size === 1 ? "person" : "people"}
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t("blindBookingDuration") || "Duration"}</p>
+              <p className="font-semibold text-gray-900">{durationLabel}</p>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-white px-3 py-2.5 ring-1 ring-amber-200">
+            <p className="text-[11px] text-gray-500">{t("blindBookingTotal") || "Total"}</p>
+            <p className="text-2xl font-bold text-gray-900">€{offer.price_eur}</p>
+            <p className="mt-0.5 text-[11px] text-gray-500">
+              {t("blindBookingHoldNote") || "Authorised now — charged only when your photographer is confirmed within 24h. Auto-refund if we can't match."}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setStage("form")}
+              className="flex-1 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700"
+            >
+              {t("blindBookingYes") || "Yes, book it"}
+            </button>
+            <button
+              type="button"
+              onClick={onDecline}
+              className="flex-1 rounded-lg border border-warm-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-warm-50"
+            >
+              {t("blindBookingNo") || "Show photographers"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Inline form (after Yes)
+  return (
+    <form onSubmit={submitForm} className="mt-3 space-y-2 rounded-2xl border border-amber-300 bg-white p-4 shadow-sm">
+      <p className="text-xs text-gray-600">
+        {t("blindBookingFormIntro") || "Two quick details so we can confirm by tomorrow."}
+      </p>
+      <input
+        type="text"
+        required
+        placeholder={t("blindBookingName") || "Your name"}
+        autoComplete="name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-base focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+      />
+      <input
+        type="email"
+        required
+        placeholder={t("blindBookingEmail") || "Email"}
+        autoComplete="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-base focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+      />
+      <input
+        type="tel"
+        required
+        placeholder={t("blindBookingPhone") || "WhatsApp / phone for the day"}
+        autoComplete="tel"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-base focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+      />
+      <input
+        type="text"
+        placeholder={t("blindBookingHint") || "Meeting hint (optional)"}
+        value={hint}
+        onChange={(e) => setHint(e.target.value)}
+        className="w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-base focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+      />
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      <button
+        type="submit"
+        disabled={!validForm || stage === "submitting" || stage === "redirecting"}
+        className="w-full rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50"
+      >
+        {stage === "submitting"
+          ? t("blindBookingProcessing") || "Processing..."
+          : stage === "redirecting"
+          ? t("blindBookingRedirecting") || "Opening checkout..."
+          : t("blindBookingProceed") || "Continue to secure checkout"}
       </button>
     </form>
   );

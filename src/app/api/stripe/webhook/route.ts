@@ -511,6 +511,29 @@ export async function POST(req: NextRequest) {
              WHERE id = $2 RETURNING id`,
             [checkoutSession.payment_intent, bookingId]
           );
+
+          // Blind booking — auth-hold authorised, NOT captured yet.
+          // Stamp the 24h deadline by which an admin must assign a
+          // photographer (and trigger capture) or the auto-refund cron
+          // will void this PaymentIntent. Also notify admins now so
+          // they can start looking for a match.
+          const blindCheck = await queryOne<{ blind_booking: boolean; photographer_id: string | null; total_price: number | null }>(
+            "SELECT blind_booking, photographer_id, total_price FROM bookings WHERE id = $1",
+            [bookingId]
+          );
+          if (blindCheck?.blind_booking && !blindCheck.photographer_id) {
+            await queryOne(
+              `UPDATE bookings SET auto_refund_at = NOW() + INTERVAL '24 hours' WHERE id = $1 RETURNING id`,
+              [bookingId]
+            );
+            const priceLabel = blindCheck.total_price ? `€${Math.round(Number(blindCheck.total_price))}` : "(no price)";
+            import("@/lib/telegram").then(({ sendTelegram }) =>
+              sendTelegram(
+                `<b>🎯 Blind booking authorised — needs admin assignment</b>\nBooking: <code>${bookingId}</code>\nAmount: ${priceLabel} (auth-hold, not captured)\nDeadline: 24h to assign a photographer or auto-refund.\n<a href="https://photoportugal.com/admin">Open admin queue</a>`,
+                "bookings"
+              )
+            ).catch((err) => console.error("[webhook] blind-booking telegram error:", err));
+          }
           if (await bookingStripePaymentColumnsExist()) {
             queryOne(
               `UPDATE bookings

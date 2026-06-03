@@ -116,6 +116,25 @@ const tools = [
   {
     type: "function" as const,
     function: {
+      name: "offer_blind_booking",
+      description: "Propose an immediate fixed-price 'we book one for you' offer when you know region (city/island slug), date (ISO YYYY-MM-DD), occasion (shoot type slug), and party_size. Use INSTEAD OF show_matches when those four are present and the visitor has NOT previously declined a blind offer in this chat. The server fetches the price — NEVER quote a EUR amount in reply_text. NEVER use the phrases 'either way' or 'no pressure'. If the visitor declines (says 'no', 'show options', etc.), your VERY NEXT turn MUST call show_matches with normal candidates for the same region/date/occasion.",
+      parameters: {
+        type: "object",
+        properties: {
+          region: { type: "string", description: "Region/city/island slug (e.g. lisbon, sintra, madeira, algarve, porto, azores, ponta-delgada)." },
+          date: { type: "string", description: "ISO YYYY-MM-DD shoot date. Required — do not call without a concrete date." },
+          occasion: { type: "string", description: "Shoot type slug: couples, family, proposal, honeymoon, engagement, elopement, maternity, anniversary, birthday, vacation, other." },
+          party_size: { type: "integer", minimum: 1, maximum: 30, description: "Number of people in the shoot. Required." },
+          duration_minutes: { type: "integer", minimum: 60, maximum: 180, description: "Session duration in minutes. Choose 60, 120, or 180 based on visitor context — never guess if they said nothing." },
+          reply_text: { type: "string", description: "Short confident intro line above the offer card. NEVER mention EUR amounts, never use 'either way' or 'no pressure'. Example: 'Got everything I need — I can lock this in for you with one of our verified photographers. Want me to take care of it?'" },
+        },
+        required: ["region", "date", "occasion", "party_size", "duration_minutes", "reply_text"],
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
       name: "request_human_match",
       description: "Use this only as fallback when you genuinely cannot match (location with no photographers, weird request, etc). A human will follow up within 4h. CRITICAL: BEFORE calling this tool, you MUST first ask the visitor for an email in a previous turn so our team can reach them. Pass that email in `contact_email`. If the visitor explicitly refuses to share contact info, you may still call this but set `contact_refused: true` so we know.",
       parameters: {
@@ -702,6 +721,7 @@ export async function POST(req: NextRequest) {
     if (a.type === "show_locations") return "exploring_locations";
     if (a.type === "show_spots") return "exploring_locations";
     if (a.type === "human_handoff") return "human_handoff";
+    if (a.type === "offer_blind_booking") return "blind_booking_offered";
     return a.type || null;
   }
 
@@ -934,6 +954,53 @@ export async function POST(req: NextRequest) {
           type: "show_spots",
           data: { spots: items, reply_text: args.reply_text || "" },
         };
+      } else if (tc.function.name === "offer_blind_booking") {
+        // Server is source of truth for price — LLM is forbidden from
+        // quoting EUR in reply_text. We look up region_pricing here
+        // and silently drop the action if the slug/occasion/duration
+        // combo isn't priced. Hold is minted so the inline form has
+        // something to POST against.
+        const region = String(args.region || "").trim().toLowerCase();
+        const date = String(args.date || "").trim();
+        const occasion = String(args.occasion || "").trim().toLowerCase();
+        const partySize = Number(args.party_size);
+        const durationMinutes = Number(args.duration_minutes) || 60;
+        const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date);
+        if (region && validDate && occasion && partySize > 0) {
+          const { priceForSlug, slugToRegion } = await import("@/lib/blind-booking/pricing");
+          const priced = await priceForSlug(region, occasion, durationMinutes);
+          const canonicalRegion = slugToRegion(region);
+          if (priced && canonicalRegion) {
+            const { mintHold } = await import("@/lib/blind-booking/holds");
+            const holdId = mintHold({
+              chat_id: chat_id || "anonymous",
+              region: canonicalRegion,
+              date,
+              occasion,
+              party_size: partySize,
+              duration_minutes: priced.duration_minutes,
+              price_eur: priced.price_eur,
+            });
+            action = {
+              type: "offer_blind_booking",
+              data: {
+                hold_id: holdId,
+                region: canonicalRegion,
+                slug: region,
+                date,
+                occasion,
+                party_size: partySize,
+                duration_minutes: priced.duration_minutes,
+                price_eur: priced.price_eur,
+                sample_size: priced.sample_size,
+                reply_text: args.reply_text || "",
+              },
+            };
+          }
+          // priced=null OR canonicalRegion=null → no card; LLM's
+          // reply_text still renders as a plain message and the LLM
+          // can self-correct on the next turn.
+        }
       } else if (tc.function.name === "request_human_match") {
         action = {
           type: "human_handoff",

@@ -17,25 +17,30 @@ export async function POST(req: NextRequest) {
 
     if (!booking_id) return NextResponse.json({ error: "Booking ID required" }, { status: 400 });
 
-    // Get booking with photographer info
+    // Get booking with photographer info. LEFT JOIN — blind bookings
+    // have photographer_id NULL until an admin assigns one. Existing
+    // (non-blind) bookings keep the same shape; the photographer fields
+    // come back NULL for blind and we handle that below.
     const booking = await queryOne<{
       id: string;
       client_id: string;
       total_price: number;
       status: string;
       payment_status: string;
+      blind_booking: boolean;
       photographer_stripe_id: string | null;
-      photographer_plan: string;
-      photographer_name: string;
+      photographer_plan: string | null;
+      photographer_name: string | null;
       package_name: string | null;
     }>(
       `SELECT b.id, b.client_id, b.total_price, b.status, b.payment_status,
+              b.blind_booking,
               pp.stripe_account_id as photographer_stripe_id, pp.plan as photographer_plan,
               pu.name as photographer_name,
               p.name as package_name
        FROM bookings b
-       JOIN photographer_profiles pp ON pp.id = b.photographer_id
-       JOIN users pu ON pu.id = pp.user_id
+       LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       LEFT JOIN users pu ON pu.id = pp.user_id
        LEFT JOIN packages p ON p.id = b.package_id
        WHERE b.id = $1`,
       [booking_id]
@@ -43,10 +48,14 @@ export async function POST(req: NextRequest) {
 
     if (!booking) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     if (booking.client_id !== userId) return NextResponse.json({ error: "Not your booking" }, { status: 403 });
-    if (booking.status !== "confirmed") return NextResponse.json({ error: "Booking must be confirmed to pay" }, { status: 400 });
+    // Blind bookings sit at status='unmatched' until admin assigns; both
+    // 'confirmed' (normal flow) and 'unmatched' (blind flow) may pay.
+    const isBlind = !!booking.blind_booking;
+    if (!isBlind && booking.status !== "confirmed") return NextResponse.json({ error: "Booking must be confirmed to pay" }, { status: 400 });
+    if (isBlind && booking.status !== "unmatched") return NextResponse.json({ error: "Blind booking must be unmatched to pay" }, { status: 400 });
     if (booking.payment_status === "paid") return NextResponse.json({ error: "Already paid" }, { status: 400 });
 
-    if (!booking.photographer_stripe_id) {
+    if (!isBlind && !booking.photographer_stripe_id) {
       return NextResponse.json({ error: "Photographer has not set up payments yet" }, { status: 400 });
     }
 
@@ -54,17 +63,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No price set for this booking" }, { status: 400 });
     }
 
-    // Calculate payment split
-    const payment = calculatePayment(booking.total_price, booking.photographer_plan);
+    // Payment split:
+    //   - Non-blind: existing flow — package price + 12.5% service fee
+    //     on top, then split between platform & photographer payout.
+    //   - Blind: total_price IS the all-in client price (region_pricing
+    //     seeds it that way), no extra service fee added. Payout split
+    //     gets computed at admin-assign time when we know the
+    //     photographer's plan; checkout just collects.
+    let payment: ReturnType<typeof calculatePayment>;
+    if (isBlind) {
+      payment = {
+        packagePrice: Number(booking.total_price),
+        totalClientPays: Number(booking.total_price),
+        serviceFee: 0,
+        platformFee: 0,
+        photographerPayout: 0,
+        commissionRate: 0,
+      };
+    } else {
+      payment = calculatePayment(booking.total_price, booking.photographer_plan || "free");
 
-    // Safety log and verify service fee is included
-    const stripeAmount = Math.round(payment.totalClientPays * 100);
-    const packageAmount = Math.round(booking.total_price * 100);
-    console.log(`[stripe/checkout] Payment calc: package=${packageAmount}c, serviceFee=${Math.round(payment.serviceFee * 100)}c, total=${stripeAmount}c, plan=${booking.photographer_plan}`);
-    if (stripeAmount <= packageAmount) {
-      console.error(`[stripe/checkout] BUG: Stripe amount ${stripeAmount} should be > package ${packageAmount}. Force-fixing.`);
-      payment.totalClientPays = booking.total_price * (1 + SERVICE_FEE_RATE);
-      payment.serviceFee = Math.round(booking.total_price * SERVICE_FEE_RATE * 100) / 100;
+      // Safety log and verify service fee is included
+      const stripeAmount = Math.round(payment.totalClientPays * 100);
+      const packageAmount = Math.round(booking.total_price * 100);
+      console.log(`[stripe/checkout] Payment calc: package=${packageAmount}c, serviceFee=${Math.round(payment.serviceFee * 100)}c, total=${stripeAmount}c, plan=${booking.photographer_plan}`);
+      if (stripeAmount <= packageAmount) {
+        console.error(`[stripe/checkout] BUG: Stripe amount ${stripeAmount} should be > package ${packageAmount}. Force-fixing.`);
+        payment.totalClientPays = booking.total_price * (1 + SERVICE_FEE_RATE);
+        payment.serviceFee = Math.round(booking.total_price * SERVICE_FEE_RATE * 100) / 100;
+      }
     }
 
     // Get or create Stripe customer for the client
@@ -95,18 +122,25 @@ export async function POST(req: NextRequest) {
         price_data: {
           currency: "eur",
           product_data: {
-            name: `${booking.package_name || "Photoshoot"} with ${booking.photographer_name}`,
-            description: "Photo Portugal photoshoot session",
+            name: isBlind
+              ? `Photo Portugal photoshoot — handpicked photographer`
+              : `${booking.package_name || "Photoshoot"} with ${booking.photographer_name}`,
+            description: isBlind
+              ? "Authorised now — charged when your photographer is confirmed (within 24h). Auto-refund if we can't match."
+              : "Photo Portugal photoshoot session",
           },
           unit_amount: Math.round(payment.totalClientPays * 100), // Total in cents (package + service fee)
         },
         quantity: 1,
       }],
       payment_intent_data: {
+        // Blind: auth-hold only, capture at admin-assign. Non-blind: default automatic.
+        capture_method: isBlind ? "manual" : "automatic",
         metadata: {
           booking_id: booking.id,
-          photographer_name: booking.photographer_name,
+          photographer_name: booking.photographer_name || "(unassigned)",
           package_name: booking.package_name || "Custom",
+          blind_booking: isBlind ? "1" : "0",
         },
       },
       success_url: `${BASE_URL}${localePrefix}/dashboard/bookings?payment=success&booking=${booking.id}`,
@@ -164,11 +198,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Save fee breakdown
-    await queryOne(
-      `UPDATE bookings SET service_fee = $1, platform_fee = $2, payout_amount = $3 WHERE id = $4 RETURNING id`,
-      [payment.serviceFee, payment.platformFee, payment.photographerPayout, booking.id]
-    );
+    // Save fee breakdown. Skipped for blind — split is computed at
+    // admin-assign time when the photographer's plan is known.
+    if (!isBlind) {
+      await queryOne(
+        `UPDATE bookings SET service_fee = $1, platform_fee = $2, payout_amount = $3 WHERE id = $4 RETURNING id`,
+        [payment.serviceFee, payment.platformFee, payment.photographerPayout, booking.id]
+      );
+    }
 
     return NextResponse.json({ url: checkoutSession.url, payment });
   } catch (error) {

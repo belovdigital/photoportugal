@@ -104,3 +104,17 @@ export async function createReviewRewardPromoCode(opts: {
 
   return { code: promo.code, promotionCodeId: promo.id, couponId: coupon.id, percentOff };
 }
+
+// Manual-capture helpers — used by blind-booking flow where the auth-hold
+// is placed at checkout time and only captured once an admin assigns a
+// photographer. Auto-refund cron voids if no assignment within 24h.
+export async function capturePaymentIntent(paymentIntentId: string) {
+  return requireStripe().paymentIntents.capture(paymentIntentId);
+}
+
+export async function voidUncapturedPaymentIntent(paymentIntentId: string) {
+  return requireStripe().paymentIntents.cancel(paymentIntentId, {
+    cancellation_reason: "abandoned",
+  });
+}
+
