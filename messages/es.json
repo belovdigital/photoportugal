@@ -3604,6 +3604,8 @@
     "title": "Reservamos un fotógrafo por usted",
     "intro": "Díganos qué necesita y seleccionamos a su fotógrafo en 24 horas. Solo se cobra cuando el fotógrafo esté confirmado — reembolso total en caso contrario.",
     "region": "Región",
+    "regionSearch": "Buscar regiones, ciudades, islas",
+    "regionNoMatch": "No se encontraron ubicaciones",
     "occasion": "Ocasión",
     "date": "Fecha",
     "duration": "Duración",

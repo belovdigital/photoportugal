@@ -3362,6 +3362,8 @@
     "title": "Wir buchen einen Fotografen für Sie",
     "intro": "Sagen Sie uns, was Sie brauchen, und wir wählen Ihren Fotografen innerhalb von 24 Stunden aus. Belastung erst nach Bestätigung — andernfalls volle Rückerstattung.",
     "region": "Region",
+    "regionSearch": "Regionen, Städte, Inseln suchen",
+    "regionNoMatch": "Keine Orte gefunden",
     "occasion": "Anlass",
     "date": "Datum",
     "duration": "Dauer",

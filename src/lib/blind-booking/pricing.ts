@@ -13,10 +13,12 @@ export type Region =
   | "madeira"
   | "azores";
 
+// Single source of truth — every slug (canonical region, tree-region,
+// city, island, group, legacy alias) maps to one of the 7 canonical
+// pricing regions. Used by both the price endpoint and the accept
+// endpoint to resolve any user-picked slug to a billable region.
 const SLUG_TO_REGION: Record<string, Region> = {
-  // Region slugs map to themselves (identity) so callers that already
-  // know the canonical region — e.g. QuickBookingModal — can pass it
-  // directly without going through a city slug.
+  // Canonical regions (identity).
   "greater-lisbon": "greater-lisbon",
   "northern-portugal": "northern-portugal",
   "central-portugal": "central-portugal",
@@ -24,7 +26,13 @@ const SLUG_TO_REGION: Record<string, Region> = {
   "algarve": "algarve",
   "madeira": "madeira",
   "azores": "azores",
-  // Greater Lisbon
+  // location-hierarchy.ts region/group slugs.
+  "lisbon-region": "greater-lisbon",
+  "porto-north": "northern-portugal",
+  "azores-eastern-group": "azores",
+  "azores-central-group": "azores",
+  "azores-western-group": "azores",
+  // Greater Lisbon cities/spots.
   "lisbon": "greater-lisbon",
   "sintra": "greater-lisbon",
   "cascais": "greater-lisbon",
@@ -35,33 +43,42 @@ const SLUG_TO_REGION: Record<string, Region> = {
   "comporta": "greater-lisbon",
   "sesimbra": "greater-lisbon",
   "arrabida": "greater-lisbon",
-  // Northern Portugal
+  // Northern Portugal cities/regions.
   "porto": "northern-portugal",
   "braga": "northern-portugal",
   "guimaraes": "northern-portugal",
   "douro-valley": "northern-portugal",
   "douro": "northern-portugal",
-  "aveiro": "northern-portugal",
-  // Central Portugal
+  "geres": "northern-portugal",
+  // Central Portugal cities (aveiro lives here per the hierarchy tree).
+  "aveiro": "central-portugal",
   "coimbra": "central-portugal",
   "nazare": "central-portugal",
   "obidos": "central-portugal",
   "tomar": "central-portugal",
   "peniche": "central-portugal",
-  // Alentejo
+  // Alentejo cities.
   "evora": "alentejo",
-  // Algarve
+  // Algarve cities.
   "lagos": "algarve",
   "tavira": "algarve",
   "portimao": "algarve",
   "albufeira": "algarve",
   "faro": "algarve",
   "vilamoura": "algarve",
-  // Madeira
+  // Madeira.
   "funchal": "madeira",
-  // Azores
-  "ponta-delgada": "azores",
+  // Azores islands + cities.
   "sao-miguel": "azores",
+  "ponta-delgada": "azores",
+  "santa-maria": "azores",
+  "terceira": "azores",
+  "graciosa": "azores",
+  "sao-jorge": "azores",
+  "pico": "azores",
+  "faial": "azores",
+  "flores": "azores",
+  "corvo": "azores",
 };
 
 export function slugToRegion(slug: string): Region | null {

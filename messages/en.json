@@ -3356,6 +3356,8 @@
     "title": "We'll book a photographer for you",
     "intro": "Tell us what you need and we'll hand-pick your photographer within 24 hours. You're only charged once your photographer is confirmed — full refund otherwise.",
     "region": "Region",
+    "regionSearch": "Search regions, cities, islands",
+    "regionNoMatch": "No locations found",
     "occasion": "Occasion",
     "date": "Date",
     "duration": "Duration",

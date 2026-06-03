@@ -3604,6 +3604,8 @@
     "title": "On vous réserve un photographe",
     "intro": "Dites-nous ce qu'il vous faut et nous sélectionnons votre photographe sous 24 heures. Débité uniquement quand le photographe est confirmé — remboursement intégral sinon.",
     "region": "Région",
+    "regionSearch": "Rechercher régions, villes, îles",
+    "regionNoMatch": "Aucun lieu trouvé",
     "occasion": "Occasion",
     "date": "Date",
     "duration": "Durée",

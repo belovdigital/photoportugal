@@ -2,25 +2,14 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
+import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-
-// Mapping of canonical regions → user-facing labels. Keep aligned with
-// the canonical region list in src/lib/blind-booking/pricing.ts.
-const REGIONS: { slug: string; label: string }[] = [
-  { slug: "greater-lisbon", label: "Lisbon" },
-  { slug: "algarve", label: "Algarve" },
-  { slug: "northern-portugal", label: "Porto / Northern Portugal" },
-  { slug: "central-portugal", label: "Central Portugal" },
-  { slug: "alentejo", label: "Alentejo" },
-  { slug: "madeira", label: "Madeira" },
-  { slug: "azores", label: "Azores" },
-];
+import { LocationTreeSelect } from "@/components/ui/LocationTreeSelect";
 
 const OCCASIONS = [
   "couples",
@@ -89,17 +78,67 @@ function todayISO(): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
+// Detect the location/occasion the visitor is currently looking at so
+// the modal opens pre-filled. Examples (with /en/, /pt/, etc prefix):
+//   /locations/madeira → region=madeira
+//   /locations/sintra → region=sintra (a Greater Lisbon city)
+//   /locations/lisbon/proposal → region=lisbon, occasion=proposal
+//   /photoshoots/couples → occasion=couples
+function detectFromPath(pathname: string | null): { slug?: string; occasion?: string } {
+  if (!pathname) return {};
+  // Strip locale prefix.
+  const stripped = pathname.replace(/^\/(en|pt|de|es|fr)(?=\/|$)/, "");
+  const locMatch = stripped.match(/^\/locations\/([^/]+)(?:\/([^/]+))?/);
+  if (locMatch) {
+    return { slug: locMatch[1], occasion: locMatch[2] };
+  }
+  const shootMatch = stripped.match(/^\/photoshoots\/([^/]+)/);
+  if (shootMatch) {
+    return { occasion: shootMatch[1] };
+  }
+  // /photographers?location=foo handled via search params elsewhere.
+  return {};
+}
+
 interface PricePreview {
   base_eur: number;
   service_fee_eur: number;
   total_eur: number;
 }
 
+// Normalize occasion picked from URL (e.g. /photoshoots/proposal) to
+// the enum the accept endpoint accepts. Unknown values fall back to
+// "couples" so the form always has a valid default.
+function normalizeOccasion(raw: string | undefined): string {
+  if (!raw) return "couples";
+  const map: Record<string, string> = {
+    "couples": "couples",
+    "family": "family",
+    "solo": "solo",
+    "solo-portrait": "solo",
+    "proposal": "proposal",
+    "engagement": "engagement",
+    "elopement": "elopement",
+    "honeymoon": "honeymoon",
+    "anniversary": "anniversary",
+    "maternity": "maternity",
+    "birthday": "birthday",
+    "vacation": "vacation",
+    "wedding": "couples", // weddings → couples package for blind MVP
+    "fashion": "other",
+    "branding": "other",
+    "other": "other",
+  };
+  return map[raw] || "couples";
+}
+
 function QuickBookingModalImpl({ onClose }: { onClose: () => void }) {
   const t = useTranslations("quickBooking");
   const locale = useLocale();
-  const [region, setRegion] = useState<string>("greater-lisbon");
-  const [occasion, setOccasion] = useState<string>("couples");
+  const pathname = usePathname();
+  const detected = useMemo(() => detectFromPath(pathname), [pathname]);
+  const [region, setRegion] = useState<string>(detected.slug || "greater-lisbon");
+  const [occasion, setOccasion] = useState<string>(normalizeOccasion(detected.occasion));
   const [duration, setDuration] = useState<60 | 120 | 180>(60);
   const [date, setDate] = useState<string>("");
   const [partySize, setPartySize] = useState<number>(2);
@@ -263,17 +302,15 @@ function QuickBookingModalImpl({ onClose }: { onClose: () => void }) {
                 <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500">
                   {t("region") || "Region"}
                 </label>
-                <select
+                <LocationTreeSelect
                   value={region}
-                  onChange={(e) => setRegion(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-warm-200 bg-white px-3 py-2 text-base"
-                >
-                  {REGIONS.map((r) => (
-                    <option key={r.slug} value={r.slug}>
-                      {r.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setRegion}
+                  placeholder={t("region") || "Region"}
+                  searchPlaceholder={t("regionSearch") || "Search regions / cities / islands"}
+                  noMatchLabel={t("regionNoMatch") || "No locations found"}
+                  className="mt-1"
+                  buttonClassName="flex w-full items-center justify-between gap-2 rounded-lg border border-warm-200 bg-white px-3 py-2 text-base text-left"
+                />
               </div>
               <div>
                 <label className="block text-[11px] font-medium uppercase tracking-wider text-gray-500">
