@@ -6,7 +6,7 @@ import { locations, getLocationBySlug, getNearbyLocations, locationFaqs, locFiel
 import { localizeShootType } from "@/lib/shoot-type-labels";
 import { photoSpots, getSpotsWithMediaForCity } from "@/lib/photo-spots-data";
 import { CityMap, type CityMapPin } from "@/components/ui/CityMap";
-import { BlindBookingCTA } from "@/components/ui/BlindBookingCTA";
+import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
 import { getLocationServices, serviceDescription } from "@/lib/location-services-data";
 import { locationImage, unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 
@@ -841,17 +841,14 @@ export default async function LocationPage({
                   <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">{t("blindBookingSubline")}</p>
                 </div>
               </div>
-              <BlindBookingCTA
-                message={`Book a photo session for me in ${location.name} — I want you to pick the photographer.`}
-                ctaName="blind_booking"
-                location={`location_${location.slug}`}
+              <QuickBookingTrigger
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700 sm:mt-0 sm:w-auto"
               >
                 {t("blindBookingCtaLocation", { location: location.name })}
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
-              </BlindBookingCTA>
+              </QuickBookingTrigger>
             </div>
             {/* Switched from <PhotographerCard> to <PhotographerCardCompact>
                 so this page can render inline package CTAs (top 2 packages

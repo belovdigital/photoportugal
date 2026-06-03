@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { LocationTreeSelect } from "@/components/ui/LocationTreeSelect";
 
@@ -136,7 +136,16 @@ function QuickBookingModalImpl({ onClose }: { onClose: () => void }) {
   const t = useTranslations("quickBooking");
   const locale = useLocale();
   const pathname = usePathname();
-  const detected = useMemo(() => detectFromPath(pathname), [pathname]);
+  const searchParams = useSearchParams();
+  // URL path takes priority over query param: a visitor on
+  // /locations/madeira has clearly committed to Madeira, while a
+  // photographers-page filter ?location=madeira is a softer signal.
+  const detected = useMemo(() => {
+    const fromPath = detectFromPath(pathname);
+    if (fromPath.slug) return fromPath;
+    const fromQuery = searchParams.get("location");
+    return fromQuery ? { slug: fromQuery, occasion: fromPath.occasion } : fromPath;
+  }, [pathname, searchParams]);
   const [region, setRegion] = useState<string>(detected.slug || "greater-lisbon");
   const [occasion, setOccasion] = useState<string>(normalizeOccasion(detected.occasion));
   const [duration, setDuration] = useState<60 | 120 | 180>(60);

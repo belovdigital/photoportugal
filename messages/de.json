@@ -1193,7 +1193,7 @@
     "teamWillBeOnlineIn": "Team ist in {hours}h wieder online",
     "summerSeasonNotice": "Die Sommersaison füllt sich — buchen Sie früh, um Ihren Wunschtermin zu sichern",
     "blindBookingHeadline": "Keine Lust zu wählen? Wir buchen für Sie.",
-    "blindBookingSubline": "Sagen Sie unserem Concierge, was Sie brauchen — Bestätigung in 24h oder volle Rückerstattung.",
+    "blindBookingSubline": "Sagen Sie uns in 60 Sekunden, was Sie brauchen — Bestätigung in 24h oder volle Rückerstattung.",
     "blindBookingCta": "Für mich buchen",
     "concierge": {
       "title": "Brauchen Sie Hilfe bei der Auswahl? Lassen Sie uns matchen!",
@@ -1349,7 +1349,7 @@
       "chooseYourPhotographerHeading": "Wählen Sie Ihren Fotografen",
       "chooseYourPhotographerSub": "Oder suchen Sie sich selbst aus — alle {location}-Fotografen unten sind verfügbar, mit Paketen und Live-Bewertungen.",
       "blindBookingHeadlineLocation": "Keine Lust, einen Fotografen in {location} auszusuchen?",
-      "blindBookingSubline": "Sagen Sie unserem Concierge, was Sie brauchen — Bestätigung in 24h oder volle Rückerstattung.",
+      "blindBookingSubline": "Sagen Sie uns in 60 Sekunden, was Sie brauchen — Bestätigung in 24h oder volle Rückerstattung.",
       "blindBookingCtaLocation": "Einen Fotografen in {location} für mich buchen",
       "packagesHeading": "Fotoshooting-Pakete in {location}",
       "packagesSub": "Paket wählen, direkt buchen. Die Preise unten decken den Fotografen und die bearbeiteten Fotos ab. Beim Checkout wird eine 12,5 % Servicegebühr hinzugefügt.",

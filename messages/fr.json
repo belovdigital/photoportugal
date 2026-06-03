@@ -1609,7 +1609,7 @@
     "teamWillBeOnlineIn": "L'équipe sera en ligne dans {hours} h",
     "summerSeasonNotice": "La saison estivale se remplit — réservez tôt pour garantir votre date",
     "blindBookingHeadline": "Pas envie de choisir ? On en réserve un pour vous.",
-    "blindBookingSubline": "Dites à notre concierge ce qu'il vous faut — confirmé en 24h ou remboursement intégral.",
+    "blindBookingSubline": "Dites-nous ce qu'il vous faut en 60 secondes — confirmé en 24h ou remboursement intégral.",
     "blindBookingCta": "Réserver pour moi",
     "concierge": {
       "title": "Besoin d'aide pour choisir ? Laissez-nous vous mettre en relation !",
@@ -1765,7 +1765,7 @@
       "chooseYourPhotographerHeading": "Choisissez votre photographe",
       "chooseYourPhotographerSub": "Ou choisissez vous-même — tous les photographes de {location} ci-dessous sont disponibles, avec leurs forfaits et avis.",
       "blindBookingHeadlineLocation": "Pas envie de choisir un photographe à {location} ?",
-      "blindBookingSubline": "Dites à notre concierge ce qu'il vous faut — confirmé en 24h ou remboursement intégral.",
+      "blindBookingSubline": "Dites-nous ce qu'il vous faut en 60 secondes — confirmé en 24h ou remboursement intégral.",
       "blindBookingCtaLocation": "Réserver un photographe à {location} pour moi",
       "packagesHeading": "Forfaits photo à {location}",
       "packagesSub": "Choisissez un forfait, réservez directement. Les prix couvrent le photographe et les photos retouchées. Des frais de service de 12,5 % sont ajoutés au paiement.",

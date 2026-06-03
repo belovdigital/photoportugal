@@ -7,7 +7,7 @@ import { localizeShootType } from "@/lib/shoot-type-labels";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
-import { BlindBookingCTA } from "@/components/ui/BlindBookingCTA";
+import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
 import { trackSearch, trackCTAClick } from "@/lib/analytics";
 import {
   LocationTreeOptions,
@@ -541,21 +541,15 @@ export function PhotographerCatalog({
             <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">{t("blindBookingSubline")}</p>
           </div>
         </div>
-        <BlindBookingCTA
-          message={
-            selectedLocationNames.length === 1
-              ? `Book a photo session for me in ${selectedLocationNames[0]} — I want you to pick the photographer.`
-              : "Book a photo session for me — I want you to pick the photographer."
-          }
-          ctaName="blind_booking"
-          location="catalog_blind_cta"
+        <QuickBookingTrigger
+          onClick={() => trackCTAClick("quick_booking", "catalog_blind_cta")}
           className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700 sm:mt-0 sm:w-auto"
         >
           {t("blindBookingCta")}
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
-        </BlindBookingCTA>
+        </QuickBookingTrigger>
       </div>
 
       {/* Mobile-only buckets row (horizontal scroll) */}

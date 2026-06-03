@@ -1193,7 +1193,7 @@
     "teamWillBeOnlineIn": "A equipa volta online em {hours}h",
     "summerSeasonNotice": "Época de verão a encher — reserve cedo para garantir a sua data preferida",
     "blindBookingHeadline": "Não quer escolher? Nós reservamos por si.",
-    "blindBookingSubline": "Diga ao nosso concierge o que precisa — confirmado em 24h ou reembolso total.",
+    "blindBookingSubline": "Diga-nos o que precisa em 60 segundos — confirmado em 24h ou reembolso total.",
     "blindBookingCta": "Reservar por mim",
     "concierge": {
       "title": "Precisa de ajuda a escolher? Nós ajudamos!",
@@ -1349,7 +1349,7 @@
       "chooseYourPhotographerHeading": "Escolha o seu fotógrafo",
       "chooseYourPhotographerSub": "Ou escolha você mesmo — todos os fotógrafos de {location} abaixo estão disponíveis, com pacotes e avaliações.",
       "blindBookingHeadlineLocation": "Não quer escolher um fotógrafo em {location}?",
-      "blindBookingSubline": "Diga ao nosso concierge o que precisa — confirmado em 24h ou reembolso total.",
+      "blindBookingSubline": "Diga-nos o que precisa em 60 segundos — confirmado em 24h ou reembolso total.",
       "blindBookingCtaLocation": "Reservar um fotógrafo em {location} por mim",
       "packagesHeading": "Pacotes fotográficos em {location}",
       "packagesSub": "Escolha um pacote, reserve diretamente. Os preços cobrem o tempo do fotógrafo e as fotos editadas. Uma taxa de serviço de 12,5% é adicionada no pagamento.",
