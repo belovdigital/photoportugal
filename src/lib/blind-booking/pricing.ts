@@ -14,6 +14,16 @@ export type Region =
   | "azores";
 
 const SLUG_TO_REGION: Record<string, Region> = {
+  // Region slugs map to themselves (identity) so callers that already
+  // know the canonical region — e.g. QuickBookingModal — can pass it
+  // directly without going through a city slug.
+  "greater-lisbon": "greater-lisbon",
+  "northern-portugal": "northern-portugal",
+  "central-portugal": "central-portugal",
+  "alentejo": "alentejo",
+  "algarve": "algarve",
+  "madeira": "madeira",
+  "azores": "azores",
   // Greater Lisbon
   "lisbon": "greater-lisbon",
   "sintra": "greater-lisbon",
@@ -40,9 +50,7 @@ const SLUG_TO_REGION: Record<string, Region> = {
   "peniche": "central-portugal",
   // Alentejo
   "evora": "alentejo",
-  "alentejo": "alentejo",
   // Algarve
-  "algarve": "algarve",
   "lagos": "algarve",
   "tavira": "algarve",
   "portimao": "algarve",
@@ -50,10 +58,8 @@ const SLUG_TO_REGION: Record<string, Region> = {
   "faro": "algarve",
   "vilamoura": "algarve",
   // Madeira
-  "madeira": "madeira",
   "funchal": "madeira",
   // Azores
-  "azores": "azores",
   "ponta-delgada": "azores",
   "sao-miguel": "azores",
 };
