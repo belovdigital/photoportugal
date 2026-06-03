@@ -82,6 +82,12 @@ export async function fetchBlogConversionAssets(opts: {
   breakouts: PhotographerBreakout[];
   reviews: TopicReview[];
   endCapPhotographers: EndCapPhotographer[];
+  /** True total of approved photographers matching the post's primary
+   *  location (or shoot type, if no location). Used by the mobile
+   *  sticky bar — the curated breakout/end-cap arrays are capped at
+   *  3-10 for display, so their .length under-states the real catalog
+   *  by an order of magnitude. */
+  totalPhotographerCount: number;
 }> {
   const { postId, locationSlugs, shootTypeNames, locale } = opts;
 
@@ -95,18 +101,59 @@ export async function fetchBlogConversionAssets(opts: {
       breakouts: [],
       reviews: [],
       endCapPhotographers: [],
+      totalPhotographerCount: 0,
     };
   }
 
-  const [heroCarousel, photoStrip, breakouts, reviews, endCapPhotographers] = await Promise.all([
+  const [heroCarousel, photoStrip, breakouts, reviews, endCapPhotographers, totalPhotographerCount] = await Promise.all([
     fetchHeroCarousel(postId, locationSlugs, shootTypeNames),
     fetchPhotoStrip(postId, locationSlugs, shootTypeNames),
     fetchPhotographerBreakouts(postId, locationSlugs, shootTypeNames),
     fetchTopicReviews(locationSlugs, shootTypeNames),
     fetchEndCapPhotographers(postId, locationSlugs, shootTypeNames, locale),
+    fetchTotalPhotographerCount(locationSlugs, shootTypeNames),
   ]);
 
-  return { heroCarousel, photoStrip, breakouts, reviews, endCapPhotographers };
+  return { heroCarousel, photoStrip, breakouts, reviews, endCapPhotographers, totalPhotographerCount };
+}
+
+async function fetchTotalPhotographerCount(
+  locationSlugs: string[],
+  shootTypeNames: string[]
+): Promise<number> {
+  try {
+    const { queryOne } = await import("@/lib/db");
+    if (locationSlugs.length > 0) {
+      const row = await queryOne<{ n: string }>(
+        `SELECT COUNT(DISTINCT pp.id)::text AS n
+           FROM photographer_profiles pp
+           JOIN users u ON u.id = pp.user_id
+           JOIN photographer_locations pl ON pl.photographer_id = pp.id
+          WHERE pp.is_approved = TRUE
+            AND COALESCE(pp.is_test, FALSE) = FALSE
+            AND COALESCE(u.is_banned, FALSE) = FALSE
+            AND pl.location_slug = ANY($1::varchar[])`,
+        [locationSlugs]
+      );
+      return parseInt(row?.n || "0", 10) || 0;
+    }
+    if (shootTypeNames.length > 0) {
+      const row = await queryOne<{ n: string }>(
+        `SELECT COUNT(DISTINCT pp.id)::text AS n
+           FROM photographer_profiles pp
+           JOIN users u ON u.id = pp.user_id
+          WHERE pp.is_approved = TRUE
+            AND COALESCE(pp.is_test, FALSE) = FALSE
+            AND COALESCE(u.is_banned, FALSE) = FALSE
+            AND pp.shoot_types && $1::varchar[]`,
+        [shootTypeNames]
+      );
+      return parseInt(row?.n || "0", 10) || 0;
+    }
+  } catch (err) {
+    console.error("[blog-conversion] count error:", err);
+  }
+  return 0;
 }
 
 // ---------------------------------------------------------------------------

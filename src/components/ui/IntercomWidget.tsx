@@ -55,6 +55,7 @@ export function IntercomWidget() {
             /^\/(?:[a-z]{2}\/)?locations\/[^/]+/.test(path) ||
             /^\/(?:[a-z]{2}\/)?photographers\/[^/]+/.test(path) ||
             /^\/(?:[a-z]{2}\/)?photoshoots\/[^/]+/.test(path) ||
+            /^\/(?:[a-z]{2}\/)?blog\/[^/]+/.test(path) ||
             path.includes("/dashboard")
           );
           const settings: Record<string, unknown> = {
@@ -116,10 +117,11 @@ export function IntercomWidget() {
     const isLocationDetail = /^\/(?:[a-z]{2}\/)?locations\/[^/]+/.test(pathname);
     const isPhotographerProfile = /^\/(?:[a-z]{2}\/)?photographers\/[^/]+/.test(pathname);
     const isPhotoshootType = /^\/(?:[a-z]{2}\/)?photoshoots\/[^/]+/.test(pathname);
+    const isBlogPost = /^\/(?:[a-z]{2}\/)?blog\/[^/]+/.test(pathname);
     const isDashboard = pathname.includes("/dashboard");
 
     const hasMobileBottomBar =
-      isMobile && (isLocationDetail || isPhotographerProfile || isPhotoshootType || isDashboard);
+      isMobile && (isLocationDetail || isPhotographerProfile || isPhotoshootType || isBlogPost || isDashboard);
 
     document.body.classList.toggle("intercom-lifted", hasMobileBottomBar);
 

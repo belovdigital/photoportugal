@@ -1308,7 +1308,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           only; desktop has the inline breakouts and end-cap grid. */}
       {(conversion.endCapPhotographers.length > 0 || conversion.breakouts.length > 0) && (
         <BlogStickyMobileBar
-          count={Math.max(conversion.endCapPhotographers.length, conversion.breakouts.length, relatedPackages.length)}
+          count={conversion.totalPhotographerCount || Math.max(conversion.endCapPhotographers.length, conversion.breakouts.length, relatedPackages.length)}
           primaryHref={primaryLocation
             ? `/photographers?location=${primaryLocation.slug}`
             : "/photographers"}
