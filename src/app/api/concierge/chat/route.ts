@@ -966,7 +966,15 @@ export async function POST(req: NextRequest) {
         const partySize = Number(args.party_size);
         const durationMinutes = Number(args.duration_minutes) || 60;
         const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date);
-        if (region && validDate && occasion && partySize > 0) {
+        // Reject past dates (audit finding #9). Compare in UTC; the
+        // LLM may interpret "tomorrow" loosely, so today is allowed.
+        const isFuture = (() => {
+          if (!validDate) return false;
+          const today = new Date();
+          today.setUTCHours(0, 0, 0, 0);
+          return new Date(date + "T00:00:00Z") >= today;
+        })();
+        if (region && validDate && isFuture && occasion && partySize > 0) {
           const { priceForSlug, slugToRegion } = await import("@/lib/blind-booking/pricing");
           const priced = await priceForSlug(region, occasion, durationMinutes);
           const canonicalRegion = slugToRegion(region);

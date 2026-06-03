@@ -25,13 +25,37 @@ export const dynamic = "force-dynamic";
 // friction during the flow).
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit — this endpoint creates a user + booking + Stripe
+    // customer + Checkout Session each call. Without limits it's a
+    // DoS / spam vector (audit finding #7).
+    const { checkRateLimit } = await import("@/lib/rate-limit");
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || req.headers.get("x-real-ip")
+      || "anonymous";
+    if (!checkRateLimit(`blind-accept:ip:${ip}`, 5, 60_000)) {
+      return NextResponse.json(
+        { error: "Too many booking attempts from this network. Try again in a minute." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const holdId = String(body.hold_id || "").trim();
+    const chatId = String(body.chat_id || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
-    const name = String(body.name || "").trim();
-    const phone = String(body.phone || "").trim();
-    const meetingHint = String(body.meeting_hint || "").trim();
+    const name = String(body.name || "").trim().slice(0, 100);
+    const phone = String(body.phone || "").trim().slice(0, 30);
+    const meetingHint = String(body.meeting_hint || "").trim().slice(0, 500);
     const locale = ["pt", "de", "es", "fr"].includes(body.locale) ? body.locale : "en";
+
+    // Per-email rate limit too — different IPs hitting the same email
+    // is still spam (e.g. botnet).
+    if (email && !checkRateLimit(`blind-accept:email:${email}`, 3, 60_000)) {
+      return NextResponse.json(
+        { error: "Too many booking attempts for this email. Try again in a minute." },
+        { status: 429 }
+      );
+    }
 
     if (!holdId) {
       return NextResponse.json({ error: "Missing hold_id" }, { status: 400 });
@@ -52,6 +76,32 @@ export async function POST(req: NextRequest) {
         { error: "This booking offer has expired. Please ask again in chat." },
         { status: 410 }
       );
+    }
+
+    // Bind hold to the chat that minted it. If the chat had a real ID,
+    // the request must echo the same chat_id back — otherwise a leaked
+    // hold_id (logs, screenshot) could be claimed by anyone (audit
+    // finding #8). Anonymous holds (chat_id === "anonymous") accept
+    // any chat_id since there's nothing to bind against.
+    if (hold.chat_id !== "anonymous" && hold.chat_id !== chatId) {
+      return NextResponse.json(
+        { error: "This booking offer was not issued for this session." },
+        { status: 403 }
+      );
+    }
+
+    // Defence-in-depth: even if chat-route validated the date, the
+    // hold could have been minted hours ago — re-check the date is
+    // still in the future before charging the card.
+    {
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      if (new Date(hold.date + "T00:00:00Z") < today) {
+        return NextResponse.json(
+          { error: "Shoot date is in the past — please ask the concierge for a new date." },
+          { status: 410 }
+        );
+      }
     }
 
     // Find or create user. Existing email → reuse (they'll log in later

@@ -190,8 +190,8 @@ export default async function BookingsPage() {
                 b.cancelled_at, b.cancelled_by, b.cancelled_reason,
                 FALSE as has_photographer_message
          FROM bookings b
-         JOIN photographer_profiles pp ON pp.id = b.photographer_id
-         JOIN users u ON u.id = pp.user_id
+         LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         LEFT JOIN users u ON u.id = pp.user_id
          LEFT JOIN packages p ON p.id = b.package_id
          LEFT JOIN gift_cards gc ON gc.id = b.gift_card_id
          WHERE (

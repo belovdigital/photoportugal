@@ -720,8 +720,8 @@ export async function GET(req: NextRequest) {
                   ELSE 'client'
                 END as viewer_role
          FROM bookings b
-         JOIN photographer_profiles pp ON pp.id = b.photographer_id
-         JOIN users u ON u.id = pp.user_id
+         LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         LEFT JOIN users u ON u.id = pp.user_id
          LEFT JOIN packages p ON p.id = b.package_id
          WHERE (b.client_id = $1 OR b.gift_recipient_user_id = $1) AND b.status != 'inquiry'
          ORDER BY b.created_at DESC`,

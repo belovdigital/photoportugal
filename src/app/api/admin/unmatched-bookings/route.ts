@@ -185,7 +185,12 @@ export async function POST(req: NextRequest) {
       }
     } catch {}
 
-    await queryOne(
+    // Row-level guard against double-assignment (two admins racing) and
+    // assignment-after-auto-refund-cron (audit findings #5, #6). If the
+    // booking isn't still unmatched and unassigned, UPDATE returns no
+    // rows — we must NOT proceed with notifications (and ideally refund
+    // the capture, but that's a separate cleanup).
+    const updated = await queryOne<{ id: string }>(
       `UPDATE bookings
           SET photographer_id   = $1,
               status            = 'confirmed',
@@ -198,6 +203,8 @@ export async function POST(req: NextRequest) {
               payout_amount     = $6,
               auto_refund_at    = NULL
         WHERE id = $7
+          AND status = 'unmatched'
+          AND photographer_id IS NULL
         RETURNING id`,
       [
         photographer.id,
@@ -209,6 +216,22 @@ export async function POST(req: NextRequest) {
         bookingId,
       ]
     );
+    if (!updated) {
+      // Another admin already assigned, or the cron just cancelled it.
+      // If we did capture above and lost the race, surface this to the
+      // admin so they can refund manually rather than silently double-
+      // assigning. Re-read current state so the message is concrete.
+      const current = await queryOne<{ status: string; photographer_id: string | null }>(
+        "SELECT status::text as status, photographer_id FROM bookings WHERE id = $1",
+        [bookingId]
+      );
+      return NextResponse.json(
+        {
+          error: `Booking state changed: status='${current?.status}', photographer_id='${current?.photographer_id || "NULL"}'. Refresh and retry — if Stripe was captured, refund manually.`,
+        },
+        { status: 409 }
+      );
+    }
 
     revalidatePath("/admin");
 

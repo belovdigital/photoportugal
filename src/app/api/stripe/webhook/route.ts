@@ -506,9 +506,14 @@ export async function POST(req: NextRequest) {
           const paidAmountLabel = typeof paymentSummary.amountTotal === "number"
             ? fmtAmount(paymentSummary.amountTotal, paymentSummary.currency)
             : null;
+          // Guard against Stripe webhook replays: only flip to paid for
+          // bookings still in a payable state. If a blind booking was
+          // auto-cancelled by the refund cron, a replayed
+          // checkout.session.completed must NOT reset payment_status
+          // and re-arm auto_refund_at (audit finding #4).
           await queryOne(
             `UPDATE bookings SET stripe_payment_intent_id = $1, payment_status = 'paid'
-             WHERE id = $2 RETURNING id`,
+             WHERE id = $2 AND status IN ('confirmed', 'unmatched') RETURNING id`,
             [checkoutSession.payment_intent, bookingId]
           );
 
@@ -517,13 +522,13 @@ export async function POST(req: NextRequest) {
           // photographer (and trigger capture) or the auto-refund cron
           // will void this PaymentIntent. Also notify admins now so
           // they can start looking for a match.
-          const blindCheck = await queryOne<{ blind_booking: boolean; photographer_id: string | null; total_price: number | null }>(
-            "SELECT blind_booking, photographer_id, total_price FROM bookings WHERE id = $1",
+          const blindCheck = await queryOne<{ blind_booking: boolean; photographer_id: string | null; total_price: number | null; status: string }>(
+            "SELECT blind_booking, photographer_id, total_price, status::text as status FROM bookings WHERE id = $1",
             [bookingId]
           );
-          if (blindCheck?.blind_booking && !blindCheck.photographer_id) {
+          if (blindCheck?.blind_booking && !blindCheck.photographer_id && blindCheck.status === "unmatched") {
             await queryOne(
-              `UPDATE bookings SET auto_refund_at = NOW() + INTERVAL '24 hours' WHERE id = $1 RETURNING id`,
+              `UPDATE bookings SET auto_refund_at = NOW() + INTERVAL '24 hours' WHERE id = $1 AND status = 'unmatched' RETURNING id`,
               [bookingId]
             );
             const priceLabel = blindCheck.total_price ? `€${Math.round(Number(blindCheck.total_price))}` : "(no price)";
@@ -533,6 +538,31 @@ export async function POST(req: NextRequest) {
                 "bookings"
               )
             ).catch((err) => console.error("[webhook] blind-booking telegram error:", err));
+
+            // Send client confirmation — INNER JOIN photographer_profiles
+            // skips blind rows (audit finding #1), so we email here.
+            import("@/lib/email").then(async ({ sendEmail }) => {
+              const ctx = await queryOne<{ email: string; name: string; location_slug: string | null; shoot_date: string | null }>(
+                `SELECT u.email, u.name, b.location_slug, b.shoot_date::text
+                   FROM bookings b JOIN users u ON u.id = b.client_id WHERE b.id = $1`,
+                [bookingId]
+              );
+              if (!ctx?.email) return;
+              const BASE = process.env.AUTH_URL || "https://photoportugal.com";
+              const priceText = blindCheck.total_price ? `€${Math.round(Number(blindCheck.total_price))}` : "your booking";
+              await sendEmail(
+                ctx.email,
+                "We've got your booking — finding your photographer now",
+                `<div style="font-family: sans-serif; max-width: 540px; margin: 0 auto;">
+                  <h2 style="color:#C94536;">Booking received 🎉</h2>
+                  <p>Hi ${(ctx.name.split(" ")[0] || ctx.name).replace(/[<>]/g, "")},</p>
+                  <p>Your ${ctx.location_slug || "Portugal"} photoshoot ${ctx.shoot_date ? `on ${ctx.shoot_date}` : ""} is authorised (${priceText}). Our team is hand-picking the right photographer for you and will confirm within 24 hours by email.</p>
+                  <p>You'll only be charged once we confirm your photographer. If we can't match you in time, the hold is released automatically.</p>
+                  <p><a href="${BASE}/dashboard/bookings" style="display:inline-block;background:#C94536;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">View your booking</a></p>
+                  <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+                </div>`
+              );
+            }).catch((err) => console.error("[webhook] blind-booking client email error:", err));
           }
           if (await bookingStripePaymentColumnsExist()) {
             queryOne(

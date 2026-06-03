@@ -856,6 +856,7 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
                   <BlindBookingCard
                     offer={m.action.data}
                     locale={locale}
+                    chatId={chatId}
                     onDecline={() => {
                       send("Actually, let me see the photographer options instead.");
                     }}
@@ -1665,10 +1666,12 @@ interface BlindOffer {
 function BlindBookingCard({
   offer,
   locale,
+  chatId,
   onDecline,
 }: {
   offer: BlindOffer;
   locale: string;
+  chatId: string | null;
   onDecline: () => void;
 }) {
   const t = useTranslations("concierge");
@@ -1715,6 +1718,7 @@ function BlindBookingCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           hold_id: offer.hold_id,
+          chat_id: chatId,
           name: name.trim(),
           email: email.trim().toLowerCase(),
           phone: phone.trim(),
@@ -1793,9 +1797,25 @@ function BlindBookingCard({
     );
   }
 
-  // Inline form (after Yes)
+  // Inline form (after Yes) — re-shows the offer summary above the
+  // fields so the price + scope stay visible at the moment of consent
+  // (audit finding #12). Without this, "I never saw €280" disputes
+  // become plausible when the user hits Stripe Checkout.
   return (
     <form onSubmit={submitForm} className="mt-3 space-y-2 rounded-2xl border border-amber-300 bg-white p-4 shadow-sm">
+      <div className="rounded-lg bg-amber-50/70 px-3 py-2 ring-1 ring-amber-200">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">
+          {t("blindBookingBadge") || "Concierge offer"}
+        </p>
+        <p className="mt-0.5 text-sm font-semibold text-gray-900">
+          {regionLabel} · {dateLabel} · {occasionLabel} · {offer.party_size}{" "}
+          {offer.party_size === 1 ? "person" : "people"} · {durationLabel}
+        </p>
+        <p className="mt-1 text-base font-bold text-gray-900">€{offer.price_eur}</p>
+        <p className="mt-0.5 text-[11px] text-gray-500">
+          {t("blindBookingHoldNote") || "Authorised now — charged only when your photographer is confirmed within 24h. Auto-refund if we can't match."}
+        </p>
+      </div>
       <p className="text-xs text-gray-600">
         {t("blindBookingFormIntro") || "Two quick details so we can confirm by tomorrow."}
       </p>

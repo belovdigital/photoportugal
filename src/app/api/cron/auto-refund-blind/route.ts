@@ -42,16 +42,40 @@ export async function GET(req: NextRequest) {
 
     for (const b of candidates) {
       try {
+        let voidedOrAlreadyVoid = true;
         if (b.stripe_payment_intent_id) {
           try {
             await voidUncapturedPaymentIntent(b.stripe_payment_intent_id);
           } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
-            // PI already captured / cancelled / expired — log + continue
-            // so we still mark the booking cancelled.
-            console.warn(`[cron/auto-refund-blind] void PI ${b.stripe_payment_intent_id} skipped: ${msg}`);
+            // Two distinct failure modes:
+            //   (a) already captured — money is gone to platform, MUST
+            //       NOT mark booking refunded. Skip this booking entirely
+            //       and alert; admin needs to refund manually.
+            //   (b) already void/expired/cancelled — safe to proceed
+            //       with marking the booking cancelled.
+            const alreadyCaptured = /already\s*captur|already_captured|requires_capture/i.test(msg);
+            if (alreadyCaptured) {
+              console.error(`[cron/auto-refund-blind] PI ${b.stripe_payment_intent_id} already CAPTURED — skipping (admin must refund manually):`, msg);
+              import("@/lib/telegram").then(({ sendTelegram }) =>
+                sendTelegram(
+                  `<b>⚠️ Auto-refund cron skipped — PI already captured</b>\nBooking: <code>${b.id.slice(0, 8)}</code>\nPI: <code>${b.stripe_payment_intent_id}</code>\nReason: ${msg}\nAction: refund manually in Stripe Dashboard if intended.`,
+                  "bookings"
+                )
+              ).catch(() => {});
+              voidedOrAlreadyVoid = false;
+            } else {
+              console.warn(`[cron/auto-refund-blind] void PI ${b.stripe_payment_intent_id} no-op (${msg})`);
+            }
           }
         }
+
+        // Skip the booking-cancellation UPDATE only if PI was captured
+        // out from under us. In all other cases (no PI, void succeeded,
+        // already-void) it's safe to mark cancelled+refunded. Also gate
+        // on status='unmatched' so a racing admin-assign doesn't get
+        // stomped (audit finding #5).
+        if (!voidedOrAlreadyVoid) continue;
 
         await queryOne(
           `UPDATE bookings
@@ -61,6 +85,7 @@ export async function GET(req: NextRequest) {
                   payment_status = CASE WHEN payment_status = 'paid' THEN 'refunded' ELSE payment_status END,
                   auto_refund_at = NULL
             WHERE id = $1
+              AND status = 'unmatched'
             RETURNING id`,
           [b.id]
         );

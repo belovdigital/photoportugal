@@ -22,9 +22,12 @@ const REGION_OF: Record<string, string> = {
   azores: "azores", "ponta-delgada": "azores", "sao-miguel": "azores",
 };
 
+// Must match the occasion enum the Concierge tool description teaches
+// the LLM to use. Audit found "couples" missing — LLM emitted it,
+// pricing lookup returned null, offer card silently dropped.
 const OCCASIONS = [
-  "anniversary", "birthday", "elopement", "engagement", "family",
-  "honeymoon", "maternity", "other", "proposal", "vacation",
+  "anniversary", "birthday", "couples", "elopement", "engagement",
+  "family", "honeymoon", "maternity", "other", "proposal", "vacation",
 ];
 
 const DURATIONS = [60, 120, 180];
@@ -44,11 +47,14 @@ export async function GET(req: NextRequest) {
   const inserted = { rows: 0, regions: 0, errors: [] as string[] };
 
   try {
-    // Pull all eligible (location_slug, €/hour, sample size hint) rows.
-    // One package may appear under multiple slugs — that's fine, we
-    // re-group into regions and aggregate per region.
-    const rows = await query<{ location_slug: string; eur_per_hour: number }>(
-      `SELECT pl.location_slug,
+    // Pull (pkg_id, location_slug, €/hour). One package can cover many
+    // slugs in the same region (e.g. "lagos" + "tavira" + "faro" all
+    // map to Algarve) — we MUST dedup to one row per (package, region)
+    // or photographers with wider coverage skew the median upward.
+    // Last bug: Algarve median was €410/h before dedup, €300/h after.
+    const rows = await query<{ pkg_id: string; location_slug: string; eur_per_hour: number }>(
+      `SELECT p.id AS pkg_id,
+              pl.location_slug,
               (p.price::float / (p.duration_minutes::float / 60.0)) AS eur_per_hour
          FROM packages p
          JOIN photographer_profiles pp ON pp.id = p.photographer_id
@@ -64,11 +70,15 @@ export async function GET(req: NextRequest) {
           AND COALESCE(u.is_banned, FALSE) = FALSE`
     );
 
-    // Bucket €/hour by region.
+    // Bucket €/hour by region, deduplicated per (package_id, region).
     const buckets = new Map<string, number[]>();
+    const seen = new Set<string>();
     for (const r of rows) {
       const region = REGION_OF[r.location_slug];
       if (!region) continue;
+      const key = `${r.pkg_id}:${region}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       if (!buckets.has(region)) buckets.set(region, []);
       buckets.get(region)!.push(Number(r.eur_per_hour));
     }

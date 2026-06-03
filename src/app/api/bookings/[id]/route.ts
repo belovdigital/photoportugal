@@ -26,8 +26,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               p.name as package_name, p.duration_minutes, p.num_photos
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
-       JOIN photographer_profiles pp ON pp.id = b.photographer_id
-       JOIN users pu ON pu.id = pp.user_id
+       LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       LEFT JOIN users pu ON pu.id = pp.user_id
        LEFT JOIN packages p ON p.id = b.package_id
        WHERE b.id = $1 AND (b.client_id = $2 OR pp.user_id = $2)`,
       [id, user.id]
@@ -66,11 +66,11 @@ export async function PATCH(
 
   try {
     // Verify ownership: photographer can confirm/complete, both can cancel
-    const booking = await queryOne<{ client_id: string; photographer_user_id: string }>(
+    const booking = await queryOne<{ client_id: string; photographer_user_id: string | null }>(
       `SELECT b.client_id, u.id as photographer_user_id
        FROM bookings b
-       JOIN photographer_profiles pp ON pp.id = b.photographer_id
-       JOIN users u ON u.id = pp.user_id
+       LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       LEFT JOIN users u ON u.id = pp.user_id
        WHERE b.id = $1`,
       [id]
     );
