@@ -5,6 +5,8 @@ import { AdminToastProvider } from "./AdminToast";
 import { AuditLog as AuditLogTab } from "./AuditLog";
 import AdminCalendarTab from "./AdminCalendarTab";
 import { AdminConciergeTab } from "./AdminConciergeTab";
+import { AdminWarningsTab } from "./AdminWarningsTab";
+import type { PhotographerOption } from "./IssueWarningModal";
 // AdminPopupStats removed 2026-05-07 — feature retired. File kept for reference.
 import { RedirectsManager } from "./RedirectsManager";
 import { NotFoundManager } from "./NotFoundManager";
@@ -201,6 +203,7 @@ const tabGroups = [
     label: "People",
     items: [
       { key: "photographers", label: "Photographers", icon: "camera" },
+      { key: "warnings", label: "Warnings", icon: "flag" },
       { key: "clients", label: "Clients", icon: "users" },
     ],
   },
@@ -227,7 +230,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
+type TabKey = "overview" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "warnings" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -536,6 +539,7 @@ export function AdminDashboard({
   makealbumSection,
   locationsSection,
   settingsSection,
+  warningsPhotographerRoster,
 }: {
   stats: AdminStats;
   logoutButton: ReactNode;
@@ -553,6 +557,7 @@ export function AdminDashboard({
   giftCardsSection: ReactNode;
   makealbumSection: ReactNode;
   locationsSection: ReactNode;
+  warningsPhotographerRoster?: PhotographerOption[];
   settingsSection: ReactNode;
 }) {
   const [activeTab, setActiveTabState] = useState<TabKey>("overview");
@@ -935,6 +940,7 @@ export function AdminDashboard({
             </div>
           )}
           {activeTab === "photographers" && photographersSection}
+          {activeTab === "warnings" && <AdminWarningsTab photographerRoster={warningsPhotographerRoster || []} />}
           {activeTab === "clients" && clientsSection}
           {activeTab === "calendar" && <AdminCalendarTab />}
           {activeTab === "bookings" && bookingsSection}

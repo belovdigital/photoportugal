@@ -151,6 +151,8 @@ export default async function AdminPage() {
     has_avatar: boolean; has_cover: boolean; has_bio: boolean; portfolio_count: number;
     package_count: number; location_count: number; locations: string | null; stripe_ready: boolean; has_phone: boolean; phone: string | null;
     revision_status: string | null;
+    warning_open_count: number | null;
+    warning_critical_open_count: number | null;
   }>(
     `SELECT pp.id, u.id as user_id, u.name as display_name, pp.slug, pp.plan, pp.rating, pp.review_count,
             pp.session_count, pp.is_verified, pp.is_featured, pp.is_approved, COALESCE(u.is_banned, FALSE) as is_banned, pp.created_at, u.email,
@@ -174,8 +176,11 @@ export default async function AdminPage() {
             pp.revision_status,
             CASE WHEN pp.is_approved = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE
               THEN GREATEST(0, 7 - EXTRACT(DAY FROM NOW() - pp.created_at)::int)
-              ELSE NULL END as days_until_deactivation
+              ELSE NULL END as days_until_deactivation,
+            COALESCE(wc.open_count, 0)::int as warning_open_count,
+            COALESCE(wc.critical_open_count, 0)::int as warning_critical_open_count
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
+     LEFT JOIN v_photographer_warning_counts wc ON wc.photographer_id = pp.id
      WHERE COALESCE(u.email_verified, FALSE) = TRUE
      ORDER BY pp.is_approved DESC, COALESCE(u.is_banned, FALSE) ASC, pp.created_at DESC`
   );
@@ -570,6 +575,12 @@ export default async function AdminPage() {
       makealbumSection={makealbumSection}
       locationsSection={<LocationsManager />}
       settingsSection={settingsSection}
+      warningsPhotographerRoster={adminPhotographerRoster.map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        plan: p.plan,
+      }))}
     />
   );
 }

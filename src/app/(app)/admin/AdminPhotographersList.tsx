@@ -39,6 +39,10 @@ export interface AdminPhotographer {
   has_phone: boolean;
   phone: string | null;
   revision_status: string | null;
+  // Photographer-warnings surface — counts from the
+  // v_photographer_warning_counts view. Null when no warnings exist.
+  warning_open_count?: number | null;
+  warning_critical_open_count?: number | null;
 }
 
 const PAGE_SIZE = 50;
@@ -342,6 +346,22 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-sm font-semibold text-gray-900">{normalizeName(p.display_name)}</span>
+                  {(p.warning_open_count || 0) > 0 && (
+                    <a
+                      href={`/admin?tab=warnings&photographer_id=${p.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      title={`${p.warning_open_count} open warning${p.warning_open_count === 1 ? "" : "s"}${
+                        (p.warning_critical_open_count || 0) > 0 ? ` · ${p.warning_critical_open_count} critical` : ""
+                      }`}
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+                        (p.warning_critical_open_count || 0) > 0
+                          ? "bg-red-100 text-red-700 ring-1 ring-red-300"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      ⚠ {p.warning_open_count}
+                    </a>
+                  )}
                   {p.is_founding && (
                     <span className="shrink-0 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
                       Founding
