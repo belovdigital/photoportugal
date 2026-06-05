@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS photographer_warnings (
                            'policy',
                            'safety',
                            'misrepresentation',
+                           'availability-conflict',
                            'other'
                          )),
   severity               VARCHAR(10) NOT NULL DEFAULT 'minor' CHECK (severity IN (

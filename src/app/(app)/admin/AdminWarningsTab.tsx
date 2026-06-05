@@ -13,6 +13,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   "policy": "Policy",
   "safety": "Safety",
   "misrepresentation": "Misrepresentation",
+  "availability-conflict": "Availability conflict",
   "other": "Other",
 };
 

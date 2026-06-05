@@ -12,6 +12,7 @@ const CATEGORIES = [
   { value: "policy", label: "Policy violation" },
   { value: "safety", label: "Safety / harassment" },
   { value: "misrepresentation", label: "Misrepresentation (style vs portfolio)" },
+  { value: "availability-conflict", label: "Availability conflict — unavailable after booking request" },
   { value: "other", label: "Other (describe below)" },
 ];
 

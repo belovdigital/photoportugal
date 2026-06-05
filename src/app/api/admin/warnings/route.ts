@@ -16,6 +16,7 @@ const CATEGORIES = [
   "policy",
   "safety",
   "misrepresentation",
+  "availability-conflict",
   "other",
 ] as const;
 type Category = typeof CATEGORIES[number];
