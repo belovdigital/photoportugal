@@ -28,11 +28,17 @@ export async function POST(req: NextRequest) {
   // Persist phone on the chat session up front so the gate below + the
   // admin Telegram both see it. We use a separate UPDATE because the
   // existing UPDATE further down only touches email/match_request_id.
+  // Same validation as /whatsapp — reject sentence-shaped "phones".
   if (phone && phone.trim()) {
-    await queryOne(
-      "UPDATE concierge_chats SET phone = $1, updated_at = NOW() WHERE id = $2 RETURNING id",
-      [phone.trim(), chat_id]
-    ).catch(() => null);
+    const candidate = phone.trim().slice(0, 32);
+    const digits = candidate.replace(/\D/g, "");
+    const nonDigits = candidate.length - digits.length;
+    if (digits.length >= 6 && nonDigits <= digits.length) {
+      await queryOne(
+        "UPDATE concierge_chats SET phone = $1, updated_at = NOW() WHERE id = $2 RETURNING id",
+        [candidate, chat_id]
+      ).catch(() => null);
+    }
   }
 
   let matchReqId: string | null = null;

@@ -2268,6 +2268,14 @@ export async function GET(req: NextRequest) {
             AND m2.is_system = FALSE
             AND m2.created_at > last_photographer_msg.created_at
         )
+        -- Don't nag a client who already has a paid booking somewhere
+        -- else on the platform. They're "active customers", stale
+        -- inquiry threads should stay quiet.
+        AND NOT EXISTS (
+          SELECT 1 FROM bookings paid
+          WHERE paid.client_id = b.client_id
+            AND paid.payment_status = 'paid'
+        )
     `);
 
     const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
@@ -2356,6 +2364,11 @@ export async function GET(req: NextRequest) {
             AND m2.is_system = FALSE
             AND m2.created_at > last_photographer_msg.created_at
         )
+        AND NOT EXISTS (
+          SELECT 1 FROM bookings paid
+          WHERE paid.client_id = b.client_id
+            AND paid.payment_status = 'paid'
+        )
     `);
 
     const BASE_URL2 = process.env.AUTH_URL || "https://photoportugal.com";
@@ -2422,6 +2435,11 @@ export async function GET(req: NextRequest) {
             AND m2.sender_id = b.client_id
             AND m2.is_system = FALSE
             AND m2.created_at > last_photographer_msg.created_at
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM bookings paid
+          WHERE paid.client_id = b.client_id
+            AND paid.payment_status = 'paid'
         )
     `);
 

@@ -38,7 +38,21 @@ export async function POST(req: NextRequest) {
   if (!chat_id || !phone || !phone.trim()) {
     return NextResponse.json({ error: "chat_id and phone required" }, { status: 400 });
   }
+  // Validate: must look like a phone number, not a sentence. We saw
+  // chats land with phone="My husband has mobility issues a" because
+  // the legacy frontend sent raw text whenever digits.length >= 6 was
+  // anywhere in the input. Reject anything where digits are <6 OR the
+  // non-digit content exceeds the digits by 2x (heuristic for "text
+  // with a phone buried in it"). Keep at most 32 chars on storage.
   const cleanPhone = phone.trim().slice(0, 32);
+  const digits = cleanPhone.replace(/\D/g, "");
+  const nonDigits = cleanPhone.length - digits.length;
+  if (digits.length < 6) {
+    return NextResponse.json({ error: "Phone must contain at least 6 digits" }, { status: 400 });
+  }
+  if (nonDigits > digits.length) {
+    return NextResponse.json({ error: "Phone field looks like text, not a number" }, { status: 400 });
+  }
 
   const chat = await queryOne<ChatRow>(
     `UPDATE concierge_chats
