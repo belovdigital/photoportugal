@@ -87,6 +87,13 @@ export default async function BookingsPage() {
     delivery_accepted: boolean;
     delivery_expires_at: string | null;
     delivery_chat_payload: string | null;
+    // When status='pending' and photographer has sent a custom
+    // BOOKING_CARD chat message: the client must tap the card in
+    // chat to start the new booking (the pending one here can't be
+    // upgraded). We carry the latest such payload to the renderer so
+    // we can show a yellow "tap the card in chat" callout instead of
+    // a misleading "waiting for photographer" status.
+    custom_package_card_payload: string | null;
     payment_url: string | null;
     updated_at: string;
     confirmed_at: string | null;
@@ -186,6 +193,18 @@ export default async function BookingsPage() {
                 (SELECT m.text FROM messages m
                   WHERE m.booking_id = b.id AND m.text LIKE 'DELIVERY:%'
                   ORDER BY m.created_at DESC LIMIT 1) as delivery_chat_payload,
+                -- Latest CUSTOM BOOKING_CARD payload from the
+                -- photographer on this booking — when set + status
+                -- still 'pending', it means the photographer wants
+                -- the client to tap the chat card to spawn a new
+                -- booking rather than wait for confirmation on this
+                -- one. Drives the yellow callout in the UI.
+                (SELECT m.text FROM messages m
+                  WHERE m.booking_id = b.id
+                    AND m.text LIKE 'BOOKING_CARD:%'
+                    AND m.text LIKE '%"is_custom":true%'
+                    AND m.sender_id != b.client_id
+                  ORDER BY m.created_at DESC LIMIT 1) as custom_package_card_payload,
                 b.payment_url, b.updated_at, b.confirmed_at,
                 b.cancelled_at, b.cancelled_by, b.cancelled_reason,
                 FALSE as has_photographer_message
@@ -318,6 +337,41 @@ export default async function BookingsPage() {
                   )}
                 </div>
               </div>
+
+              {/* Custom-package callout — when the photographer has
+                  sent a custom BOOKING_CARD in chat and this booking
+                  is still 'pending', the client must tap the card to
+                  spawn a new (payable) booking. Without this hint,
+                  clients tap the pending row, see "waiting for
+                  photographer to confirm", and get stuck (real case:
+                  Andrew Ballard / Daria 2026-06-08). */}
+              {!isPhotographer
+                && booking.status === "pending"
+                && booking.custom_package_card_payload
+                && (() => {
+                  let pkg: { name?: string; price?: number; duration_minutes?: number; num_photos?: number } | null = null;
+                  try {
+                    pkg = JSON.parse(booking.custom_package_card_payload.slice("BOOKING_CARD:".length));
+                  } catch {}
+                  return (
+                    <div className="mt-3 rounded-lg border-l-4 border-amber-500 bg-amber-50 px-3.5 py-3 text-sm">
+                      <p className="font-semibold text-amber-900">
+                        💬 {t("customPackageInChatTitle")}
+                      </p>
+                      <p className="mt-0.5 text-xs text-amber-800 leading-relaxed">
+                        {pkg?.name
+                          ? t("customPackageInChatExplain", { packageName: pkg.name })
+                          : t("customPackageInChatExplainGeneric")}
+                      </p>
+                      <a
+                        href={`/dashboard/messages/${booking.id}`}
+                        className="mt-2 inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-700"
+                      >
+                        {t("openChatToTapCard")} →
+                      </a>
+                    </div>
+                  );
+                })()}
 
               {/* Cancellation reason banner — shows who cancelled and
                   why. Reason text is whatever the canceller typed (or
