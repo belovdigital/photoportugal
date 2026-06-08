@@ -38,3 +38,44 @@ for a header / modal / critical UX surface), skip `useTranslations()`
 and use plain string literals. Don't pretend you'll come back.
 
 See: `~/.claude/projects/-Users-alex-projects-photoportugal/memory/feedback_i18n_never_ship_raw_keys.md`
+
+## Dates & times — NEVER guess, ALWAYS run `date`
+
+I do not have a reliable internal clock. `<system-reminder>` "Today is
+X" hints arrive only intermittently, and between them I drift /
+hallucinate hours and even date math. This has bitten the user
+multiple times (claimed wrong day-of-week for a booking; told the user
+it was 8am Phoenix when it was actually 4am — they were about to
+WhatsApp a sleeping client).
+
+**Rule:** any time a response involves today's date, current time, a
+"now"-relative phrasing ("today/yesterday/tomorrow/this week"), or a
+timezone conversion — run `date` via Bash FIRST, then write the
+response. Do not estimate.
+
+**Commands to use:**
+
+```bash
+# Current UTC (canonical, never DST surprises)
+date -u "+%Y-%m-%d %H:%M:%S UTC"
+
+# Local Lisbon time (the user's TZ)
+TZ=Europe/Lisbon date "+%Y-%m-%d %H:%M %Z"
+
+# Convert "now" to a client's timezone (e.g. before recommending when to message)
+TZ=America/Phoenix date "+%Y-%m-%d %H:%M %Z"
+TZ=America/New_York date "+%Y-%m-%d %H:%M %Z"
+
+# Difference between two zones — just run both and read.
+```
+
+For SQL/DB queries that need a relative window ("last 30 days"), the
+prod Postgres NOW() is authoritative — but for telling the user "today
+is X" or "Phoenix is asleep right now", the local `date` command is
+the source of truth.
+
+If running `date` ever feels redundant for a small response, run it
+anyway. The cost is one extra tool call; the cost of wrong is the user
+WhatsApp-ing a client at 4am.
+
+See: `~/.claude/projects/-Users-alex-projects-photoportugal/memory/feedback_always_run_date.md`
