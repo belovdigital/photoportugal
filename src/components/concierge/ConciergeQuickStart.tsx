@@ -45,7 +45,14 @@ export function ConciergeQuickStart({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = text.trim();
-    if (!trimmed) return;
+    // Empty Ask click still opens the concierge drawer — the AI greets
+    // and asks opening questions ("what kind of session, where, when?")
+    // so the visitor isn't stuck staring at a disabled button if they
+    // don't know what to type.
+    if (!trimmed) {
+      drawer.setOpen(true);
+      return;
+    }
     // Don't mutate the visitor's text — the location is already in
     // pageContextObj passed by the drawer to ConciergeChat. Sending
     // their original message verbatim keeps language/grammar/punctuation
@@ -75,12 +82,8 @@ export function ConciergeQuickStart({
         />
         <button
           type="submit"
-          disabled={!text.trim()}
-          // No `disabled:opacity-50` — visitor wants the CTA to read as
-          // "active and inviting" at first glance even when the input is
-          // empty. The `disabled` attribute still gates the actual submit
-          // (handleSubmit early-returns on empty), it just doesn't dim
-          // the visuals.
+          // Always enabled — empty click opens the drawer and lets Lens
+          // greet first instead of dead-ending on a disabled button.
           className="shrink-0 rounded-xl bg-primary-600 px-5 py-3 text-base font-bold text-white shadow-lg transition hover:bg-primary-700 sm:px-6"
         >
           {cta}

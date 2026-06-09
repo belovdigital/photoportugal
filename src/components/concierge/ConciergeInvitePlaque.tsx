@@ -41,7 +41,13 @@ export function ConciergeInvitePlaque({
 
   function handleSend(message: string, fromChip = false) {
     const trimmed = message.trim();
-    if (!trimmed) return;
+    // Empty Ask click still opens the drawer — Lens greets and asks
+    // opening questions so visitors who don't know what to type can
+    // still start the conversation.
+    if (!trimmed) {
+      drawer.setOpen(true);
+      return;
+    }
     drawer.openWith(trimmed, fromChip ? { chip: trimmed } : undefined);
     setText("");
   }
@@ -101,7 +107,8 @@ export function ConciergeInvitePlaque({
         />
         <button
           type="submit"
-          disabled={!text.trim()}
+          // Always enabled — empty click opens the drawer for an
+          // AI-led intro instead of dead-ending on a disabled button.
           className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-5 py-3 text-base font-bold text-white shadow-lg transition hover:bg-primary-700 sm:px-6"
         >
           {ctaLabel || t("send")}
