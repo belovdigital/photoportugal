@@ -106,7 +106,14 @@ export function ExitIntentPopup() {
             onSubmit={(e) => {
               e.preventDefault();
               const trimmed = conciergeText.trim();
-              if (!trimmed) return;
+              // Empty click still routes to the drawer — Lens greets
+              // and asks opening questions instead of the form silently
+              // doing nothing.
+              if (!trimmed) {
+                drawer.setOpen(true);
+                setShow(false);
+                return;
+              }
               trackEvent("submitted");
               drawer.openWith(trimmed);
               setShow(false);
