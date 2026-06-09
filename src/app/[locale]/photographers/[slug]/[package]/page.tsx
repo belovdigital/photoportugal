@@ -15,6 +15,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { LARGE_GROUP_SURCHARGE_RATE, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { inferPackageTags, locationDisplayName } from "@/lib/package-photo-matching";
 import { PackageHeroCarousel } from "./PackageHeroCarousel";
+import { localeAlternates } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -178,20 +179,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const ogImage = portfolio[0]?.url || photographer.cover_url || photographer.avatar_url || "https://photoportugal.com/og-image.png";
   const ogImageAbs = ogImage.startsWith("http") ? ogImage : `https://photoportugal.com${ogImage}`;
 
-  const canonical = `https://photoportugal.com/photographers/${slug}/${pkgSlug}`;
-  const altLangs: Record<string, string> = {};
-  for (const l of LOCALES) {
-    altLangs[l === "en" ? "x-default" : l] = l === "en" ? canonical : `https://photoportugal.com/${l}/photographers/${slug}/${pkgSlug}`;
-  }
+  // Canonical: consolidate the per-package page into the parent
+  // photographer profile. The package page has ~70% overlapping
+  // content (same bio/portfolio/reviews/photographer card), and the
+  // pre-existing hand-rolled canonical hard-coded the EN URL for
+  // ALL locales — that's how Google ended up flagging /pt/.../love-
+  // story as a duplicate while the EN version got chosen as canonical.
+  // Using localeAlternates() against the profile path gives every
+  // locale its own per-locale canonical (pointing to the profile in
+  // that locale) plus a full hreflang cluster, matching the profile
+  // page's working pattern.
+  const ogCanonical = `https://photoportugal.com${locale === "en" ? "" : `/${locale}`}/photographers/${slug}`;
 
   return {
     title,
     description,
-    alternates: { canonical, languages: altLangs },
+    alternates: localeAlternates(`/photographers/${slug}`, locale),
     openGraph: {
       title,
       description,
-      url: canonical,
+      url: ogCanonical,
       type: "website",
       images: [{ url: ogImageAbs, width: 1200, height: 630, alt: `${pkg.name} — ${photographer.display_name}` }],
     },
@@ -209,7 +216,23 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
   const loc: Loc = (LOCALES as readonly string[]).includes(locale) ? (locale as Loc) : "en";
   const data = await loadPackage(slug, pkgSlug, loc);
   if (!data) {
-    permanentRedirect(`/photographers/${slug}`);
+    // Photographer slug may be an OLD slug that's been renamed (we
+    // store the mapping in slug_redirects). Preserve the locale and
+    // the package slug if the rename has a successor slug — Google
+    // had ~1255 ghost URLs on old p-* slugs indexed before this fix.
+    const redirected = await queryOne<{ new_slug: string }>(
+      `SELECT pp.slug AS new_slug
+         FROM slug_redirects sr
+         JOIN photographer_profiles pp ON pp.id = sr.photographer_id
+        WHERE sr.old_slug = $1
+        LIMIT 1`,
+      [slug]
+    );
+    const localePrefix = loc === "en" ? "" : `/${loc}`;
+    if (redirected?.new_slug) {
+      permanentRedirect(`${localePrefix}/photographers/${redirected.new_slug}/${pkgSlug}`);
+    }
+    permanentRedirect(`${localePrefix}/photographers/${slug}`);
   }
   const { pkg, photographer, portfolio, locations, reviews, otherPackages } = data!;
   const t = await getTranslations({ locale: loc, namespace: "packagePage" }).catch(() => null);

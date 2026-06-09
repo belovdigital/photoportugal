@@ -407,15 +407,18 @@ export default async function PhotographerProfilePage({
        WHERE sr.old_slug = $1`,
       [slug]
     ).catch(() => null);
+    const localePrefix = locale === "en" ? "" : `/${locale}`;
     if (slugRedirect) {
-      permanentRedirect(`/photographers/${slugRedirect.new_slug}`);
+      // Preserve the locale — bare /photographers/{slug} would drop a
+      // /pt/ visitor onto the EN profile, which Google was then
+      // flagging as "Duplicate without user-selected canonical".
+      permanentRedirect(`${localePrefix}/photographers/${slugRedirect.new_slug}`);
     }
     // Unknown / banned / unapproved photographer — 301 to the catalog
     // rather than 404. Google previously indexed many of these slugs (banned
     // photographers, ones we removed during onboarding cleanups, typos in
     // sitemap output) and 404 dilutes our crawl budget. Use permanent so the
     // search index actually drops the dead URL instead of holding it.
-    const localePrefix = locale === "en" ? "" : `/${locale}`;
     permanentRedirect(`${localePrefix}/photographers`);
   }
 
