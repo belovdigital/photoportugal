@@ -4,6 +4,7 @@ import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { maskSurname } from "@/lib/photographer-name";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
 import { localeAlternates, localeAlternatesFiltered } from "@/lib/seo";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
@@ -129,7 +130,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: pageDescription,
       url: `https://photoportugal.com/blog/${post.slug}`,
       type: "article",
-      publishedTime: post.published_at,
+      // pg returns timestamp columns as Date objects despite the string
+      // type annotation — without toISOString() the OG meta renders
+      // "[object Object]".
+      publishedTime: new Date(post.published_at).toISOString(),
       authors: [post.author],
       ...(ogImageUrl && {
         images: [
@@ -881,7 +885,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 href={`/photographers/${heroPhoto.photographer_slug}`}
                 className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur px-3 py-1.5 text-xs font-medium text-white hover:bg-black/60 transition"
               >
-                Photo by {heroPhoto.photographer_name} →
+                Photo by {maskSurname(heroPhoto.photographer_name)} →
               </Link>
             )}
           </div>

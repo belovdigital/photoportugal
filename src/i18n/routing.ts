@@ -23,6 +23,17 @@ export const routing = defineRouting({
       es: "/fotografos/[slug]",
       fr: "/photographes/[slug]",
     },
+    // Per-package pages. Without this entry the localized form the
+    // middleware slug-map 301s to (/fr/photographes/{slug}/{pkg}) has no
+    // matching route and 404s — every fr/es/de package URL was a
+    // 301→404 chain.
+    "/photographers/[slug]/[package]": {
+      en: "/photographers/[slug]/[package]",
+      pt: "/photographers/[slug]/[package]",
+      de: "/fotografen/[slug]/[package]",
+      es: "/fotografos/[slug]/[package]",
+      fr: "/photographes/[slug]/[package]",
+    },
     // Filtered photographer catalog by location — keeps the literal "location"
     // segment untranslated so middleware's slug-map redirect (`/photographers`
     // → `/fotografen` only) stays consistent. Without this entry the sitemap
@@ -77,6 +88,15 @@ export const routing = defineRouting({
       de: "/fotoshootings",
       es: "/sesiones-de-fotos",
       fr: "/seances-photo",
+    },
+    // Dedicated wedding landing — /photoshoots/wedding 301s here
+    // (see next.config.ts redirects).
+    "/weddings": {
+      en: "/weddings",
+      pt: "/weddings",
+      de: "/hochzeiten",
+      es: "/bodas",
+      fr: "/mariages",
     },
     "/photoshoots/[slug]": {
       en: "/photoshoots/[slug]",

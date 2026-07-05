@@ -83,6 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/for-photographers/how-we-select", changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/for-photographers/join", changeFrequency: "daily" as const, priority: 0.9 },
     { path: "/photoshoots", changeFrequency: "weekly" as const, priority: 0.8 },
+    { path: "/weddings", changeFrequency: "weekly" as const, priority: 0.9 },
     { path: "/blog", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/concierge", changeFrequency: "weekly" as const, priority: 0.8 },
     { path: "/contact", changeFrequency: "monthly" as const, priority: 0.4 },
@@ -108,7 +109,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // label set (Solo → ["Solo Travel","Solo Portrait"], Birthday → ["Birthday"]).
   const occasions = [
     "proposal", "honeymoon", "couples", "family", "solo",
-    "engagement", "elopement", "kids-birthday", "studio-portrait",
+    "engagement", "elopement", "wedding", "kids-birthday", "studio-portrait",
   ];
   // Resolve each occasion slug → the labels photographers store in
   // photographer_profiles.shoot_types[]. Default is [name] when not overridden.
@@ -155,9 +156,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       )
   );
 
-  const shootTypePages = shootTypes.flatMap((type) =>
-    localized(`/photoshoots/${type.slug}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.8 })
-  );
+  // Wedding is excluded: /photoshoots/wedding 301-redirects to the
+  // dedicated /weddings landing (see next.config.ts), which is in
+  // staticPages above.
+  const shootTypePages = shootTypes
+    .filter((type) => type.slug !== "wedding")
+    .flatMap((type) =>
+      localized(`/photoshoots/${type.slug}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.8 })
+    );
 
   // Spot pages: /spots/[city]/[spot]
   const spotPages = Object.entries(photoSpots).flatMap(([city, spots]) =>
@@ -182,28 +188,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] Failed to load photographer pages:", err);
   }
 
-  // Per-package landing pages — high SEO value (long-tail
-  // "{package name} {photographer} {city}" queries). Only public
-  // packages from approved photographers, with a slug.
-  let packagePages: MetadataRoute.Sitemap = [];
-  try {
-    const dbPackages = await query<{ photographer_slug: string; package_slug: string; updated_at: string }>(
-      `SELECT pp.slug as photographer_slug, pk.slug as package_slug, pp.updated_at
-       FROM packages pk
-       JOIN photographer_profiles pp ON pp.id = pk.photographer_id
-       WHERE pk.is_public = TRUE AND pk.custom_for_user_id IS NULL AND pk.slug IS NOT NULL
-         AND pp.is_approved = TRUE`
-    );
-    packagePages = dbPackages.flatMap((p) =>
-      localized(`/photographers/${p.photographer_slug}/${p.package_slug}`, {
-        lastModified: p.updated_at ? new Date(p.updated_at) : STATIC_CONTENT_LAST_MODIFIED,
-        changeFrequency: "weekly",
-        priority: 0.7,
-      })
-    );
-  } catch (err) {
-    console.error("[sitemap] Failed to load package pages:", err);
-  }
+  // Per-package pages are deliberately NOT in the sitemap: since the
+  // "Duplicate without user-selected canonical" fix they canonicalize to
+  // the parent photographer profile (see [package]/page.tsx), and a
+  // sitemap must only list canonical URLs. Listing them fed Search
+  // Console "Duplicate" noise, and the fr/es/de variants were 301→404
+  // chains (564 dead URLs) until the pathnames entry in routing.ts.
 
   let blogPages: MetadataRoute.Sitemap = [];
   try {
@@ -238,5 +228,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     localized(`/blog/category/${cat}`, { lastModified: blogLastModified, changeFrequency: "weekly", priority: 0.7 })
   );
 
-  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...spotPages, ...photographerLocationPages, ...photographerPages, ...packagePages, ...blogPages, ...blogCategoryPages];
+  return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...spotPages, ...photographerLocationPages, ...photographerPages, ...blogPages, ...blogCategoryPages];
 }
