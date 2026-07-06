@@ -104,8 +104,55 @@ const EXCLUDED_PREFIXES = [
   "/uploads",
 ];
 
+// Markdown for Agents — which public pages have a markdown representation
+// (served by /api/agent-markdown). Input is the path with the locale prefix
+// already stripped and DE/ES/FR slugs mapped back to canonical EN.
+function agentMarkdownPath(pathname: string): string | null {
+  let rest = pathname.replace(/\/+$/, "") || "/";
+  const m = rest.match(/^\/(pt|de|es|fr)(\/.*)?$/);
+  let source: "en" | "pt" | "de" | "es" | "fr" = "en";
+  if (m) {
+    source = m[1] as "pt" | "de" | "es" | "fr";
+    rest = m[2] || "/";
+  }
+  if (source === "de" || source === "es" || source === "fr") {
+    for (const [locSlug, enSlug] of Object.entries(LOCALIZED_TO_EN[source])) {
+      if (rest === locSlug || rest.startsWith(locSlug + "/")) {
+        rest = enSlug + rest.slice(locSlug.length);
+        break;
+      }
+    }
+  }
+  if (rest === "/") return "/";
+  if (/^\/(photographers|locations|photoshoots)(\/[a-z0-9-]+)?$/.test(rest)) return rest;
+  return null;
+}
+
 export default async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+
+  // Reject malformed percent-encoding before anything tries to decode it.
+  // Scanner bots probe path-traversal / LFI payloads like
+  // `/%c0%ae%c0%ae/.env` or `/..%e0%80%af../etc/passwd` (overlong UTF-8
+  // encodings of `.` / `/`). Next's usePathname() decodes the pathname during
+  // page render and throws `URIError: URI malformed`, which surfaces as a
+  // bogus 500. A cheap 400 here stops the render and the false 5xx alerts.
+  try {
+    decodeURIComponent(pathname);
+  } catch {
+    return new NextResponse("Bad Request", { status: 400 });
+  }
+
+  // Static assets (sitemap.xml, robots.txt, og images, fonts, source maps…)
+  // skip the intl/redirect pipeline — same as the old matcher exclusion, but
+  // now AFTER the decode guard above, so a malformed `…/WEB-INF/web.xml`
+  // scanner probe is rejected with 400 instead of crashing usePathname()
+  // during render (a bogus 500). These extensions previously bypassed the
+  // middleware entirely via the matcher, which is why the guard missed them.
+  if (/\.(?:txt|xml|ico|png|jpe?g|svg|webp|gif|woff2?|map)$/i.test(pathname)) {
+    return NextResponse.next();
+  }
+
   const host = (request.headers.get("host") || "").split(":")[0].toLowerCase();
   const isLensPt = host === "lens.pt" || host === "www.lens.pt";
 
@@ -137,6 +184,26 @@ export default async function middleware(request: NextRequest) {
       status: 404,
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
+  }
+
+  // === Markdown for Agents (content negotiation) ===
+  // AI agents request pages with `Accept: text/markdown`; browsers always
+  // include text/html, so they never hit this branch. Runs BEFORE the AB
+  // test and locale auto-redirect: agents get canonical EN markdown without
+  // cookies or 302 detours. Responses carry Vary: Accept.
+  const acceptHeader = request.headers.get("accept") || "";
+  if (
+    request.method === "GET" &&
+    acceptHeader.includes("text/markdown") &&
+    !acceptHeader.includes("text/html")
+  ) {
+    const mdPath = agentMarkdownPath(pathname);
+    if (mdPath) {
+      // Page path goes into the URL path, not ?path= — query params added
+      // here don't survive the rewrite into the route handler.
+      const suffix = mdPath === "/" ? "" : mdPath;
+      return NextResponse.rewrite(new URL(`/api/agent-markdown${suffix}`, request.url));
+    }
   }
 
   // Skip excluded paths
@@ -386,6 +453,11 @@ export const config = {
   // streaming for multipart/form-data uploads (delivery, portfolio). lens.pt's
   // /api surface is already 404'd at the nginx layer, so we don't need
   // middleware to also block it.
-  matcher: ["/((?!_next|uploads|api|.*\\.(?:txt|xml|ico|png|jpg|jpeg|svg|webp|gif|woff2?|map)).*)"],
+  // NOTE: static-extension paths are NO LONGER excluded here — they now enter
+  // the middleware so the malformed-URL decode guard runs on them too, then
+  // get an immediate NextResponse.next() inside the handler (see top). Without
+  // this, scanner probes like `/%c0%ae/WEB-INF/web.xml` bypassed the guard and
+  // crashed usePathname() with a 500.
+  matcher: ["/((?!_next|uploads|api).*)"],
   runtime: "nodejs",
 };
