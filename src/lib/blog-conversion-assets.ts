@@ -1,4 +1,5 @@
 import { query, queryOne } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 
 /**
  * Fetches all the carousel data a single blog post page needs to do
@@ -67,6 +68,7 @@ export type EndCapPhotographer = {
   locations: string | null;
   last_active_at: string | null;
   avg_response_minutes: number | null;
+  languages: string[] | null;
   packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number }[];
   packages_total_count: number;
 };
@@ -224,7 +226,7 @@ async function fetchHeroCarousel(
 
   return {
     thumbnails: photos.map((p) => p.url),
-    photographerName: result.photographer_name,
+    photographerName: maskSurname(result.photographer_name),
     photographerSlug: result.photographer_slug,
   };
 }
@@ -236,7 +238,7 @@ async function fetchPhotoStrip(
   locationSlugs: string[],
   shootTypeNames: string[]
 ): Promise<PhotoStripItem[]> {
-  return query<PhotoStripItem>(
+  const rows = await query<PhotoStripItem>(
     `WITH ranked AS (
        SELECT pi.url, u.name as photographer_name, pp.slug as photographer_slug,
               ROW_NUMBER() OVER (
@@ -296,6 +298,7 @@ async function fetchPhotoStrip(
       LIMIT 10`,
     [locationSlugs, shootTypeNames, postId]
   ).catch(() => []);
+  return rows.map((r) => ({ ...r, photographer_name: maskSurname(r.photographer_name) }));
 }
 
 // ---------------------------------------------------------------------------
@@ -399,6 +402,7 @@ async function fetchPhotographerBreakouts(
       ]);
       return {
         ...p,
+        name: maskSurname(p.name),
         thumbnails: thumbs.map((t) => t.url),
         packages,
       };
@@ -412,7 +416,7 @@ async function fetchTopicReviews(
   locationSlugs: string[],
   shootTypeNames: string[]
 ): Promise<TopicReview[]> {
-  return query<TopicReview>(
+  const rows = await query<TopicReview>(
     `SELECT r.id, r.rating, r.title, r.text,
             COALESCE(r.client_name_override, cu.name) as client_name,
             u.name as photographer_name, pp.slug as photographer_slug
@@ -439,6 +443,7 @@ async function fetchTopicReviews(
       LIMIT 6`,
     [locationSlugs, shootTypeNames]
   ).catch(() => []);
+  return rows.map((r) => ({ ...r, photographer_name: maskSurname(r.photographer_name) }));
 }
 
 // ---------------------------------------------------------------------------
@@ -466,6 +471,7 @@ async function fetchEndCapPhotographers(
             COALESCE(pp.rating, 0) as rating,
             COALESCE(pp.review_count, 0) as review_count,
             u.last_seen_at as last_active_at, pp.avg_response_minutes,
+            COALESCE(pp.languages, '{}') as languages,
             (SELECT MIN(price)::text FROM packages
               WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL) as starting_price,
             (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)

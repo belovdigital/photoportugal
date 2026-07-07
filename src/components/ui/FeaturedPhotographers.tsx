@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { query } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 
 interface FeaturedPhotographer {
@@ -20,6 +21,7 @@ interface FeaturedPhotographer {
   locations: string;
   last_active_at: string | null;
   avg_response_minutes: number | null;
+  languages: string[] | null;
 }
 
 const TOP_PHOTOGRAPHERS_LIMIT = 8;
@@ -42,6 +44,7 @@ export async function FeaturedPhotographers({ locale }: { locale?: string } = {}
               pp.rating, pp.review_count,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
+              COALESCE(pp.languages, '{}') as languages,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
               ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
@@ -89,7 +92,7 @@ export async function FeaturedPhotographers({ locale }: { locale?: string } = {}
             key={p.slug}
             p={{
               slug: p.slug,
-              name: p.name,
+              name: maskSurname(p.name),
               tagline: p.tagline,
               avatar_url: p.avatar_url,
               cover_url: p.cover_url,
@@ -104,6 +107,7 @@ export async function FeaturedPhotographers({ locale }: { locale?: string } = {}
               locations: p.locations,
               last_active_at: p.last_active_at,
               avg_response_minutes: p.avg_response_minutes,
+              languages: p.languages,
             }}
           />
         ))}

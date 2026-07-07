@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect, permanentRedirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { queryOne, query } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 import { auth } from "@/lib/auth";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
@@ -10,7 +11,7 @@ import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
 import { localizeShootType } from "@/lib/shoot-type-labels";
 import { shootTypes as allShootTypes } from "@/lib/shoot-types-data";
-import { localizeLanguageNames } from "@/lib/languages-i18n";
+import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
@@ -423,6 +424,11 @@ export default async function PhotographerProfilePage({
   }
 
   const photographer = result.data;
+  // VISIBLE display name is masked ("Jennifer D.") to discourage clients from
+  // going off-platform. Meta/title/JSON-LD keep the FULL name on purpose, so
+  // name searches still lead to us. Image alts also keep the full name (SEO,
+  // not visible to a casual browser).
+  const visibleName = maskSurname(photographer.name);
   const coverageGroups = buildCoverageGroups(photographer.coverageNodeSlugs || [], photographer.locations || []);
   const coverageTitle = (() => {
     if (coverageGroups.length === 0) return "";
@@ -462,7 +468,6 @@ export default async function PhotographerProfilePage({
   });
   const hiddenShootTypeChipCount = Math.max(0, shootTypeChipItems.length - 5);
   const hasExperience = photographer.experience_years > 0;
-  const hasLanguages = photographer.languages && photographer.languages.length > 0 && photographer.languages[0] !== "";
   let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string | null; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
   const portfolioItems = (photographer as { portfolioItems?: { url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
@@ -554,7 +559,7 @@ export default async function PhotographerProfilePage({
     is_featured: boolean; is_verified: boolean; is_founding: boolean;
     tagline: string | null; rating: number; review_count: number;
     starting_price: string | null;
-    locations: string | null;
+    locations: string | null; languages: string[] | null;
     last_active_at: string | null; avg_response_minutes: number | null;
   };
   let similarPhotographers: SimilarRow[] = [];
@@ -565,6 +570,7 @@ export default async function PhotographerProfilePage({
         `SELECT DISTINCT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.cover_position_y,
                 pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
                 pp.tagline, pp.rating, pp.review_count,
+                COALESCE(pp.languages, '{}') as languages,
                 u.last_seen_at as last_active_at, pp.avg_response_minutes,
                 (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
                 (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
@@ -884,7 +890,7 @@ export default async function PhotographerProfilePage({
         return (
           <MobilePhotographerHero
             slug={slug}
-            name={photographer.name}
+            name={visibleName}
             isVerified={!!photographer.is_verified}
             isFeatured={!!photographer.is_featured}
             isFounding={!!photographer.is_founding}
@@ -895,6 +901,7 @@ export default async function PhotographerProfilePage({
             primaryLocationName={mobileCoverageLabel}
             thumbnails={thumbs}
             coverPositionY={photographer.cover_position_y ?? null}
+            languages={photographer.languages ?? null}
           />
         );
       })()}
@@ -921,7 +928,7 @@ export default async function PhotographerProfilePage({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-                  {normalizeName(photographer.name)}
+                  {normalizeName(visibleName)}
                 </h1>
                 {photographer.is_verified && (
                   <span className="text-accent-500" title={t("verifiedPhotographer")}>
@@ -984,17 +991,14 @@ export default async function PhotographerProfilePage({
                 </div>
               )}
 
-              {(hasExperience || hasLanguages) && (
-                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500">
-                  {hasExperience && (
-                    <span>{tc("yrsExperience", { years: photographer.experience_years })}</span>
-                  )}
-                  {hasExperience && hasLanguages && <span className="text-gray-300">·</span>}
-                  {hasLanguages && (
-                    <span>{localizeLanguageNames(photographer.languages, locale).join(", ")}</span>
-                  )}
-                </div>
-              )}
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                {hasExperience && (
+                  <span className="text-sm text-gray-500">{tc("yrsExperience", { years: photographer.experience_years })}</span>
+                )}
+                {/* Prominent English badge — replaces the old tiny gray
+                    language list clients kept missing before booking. */}
+                <LanguageBadge languages={photographer.languages} size="md" />
+              </div>
 
               {shootTypeChipItems.length > 0 && (
                 <div className="mt-2">
@@ -1013,7 +1017,7 @@ export default async function PhotographerProfilePage({
               <div id="message" className="flex shrink-0 flex-col items-end gap-1.5 sm:ml-auto sm:self-center">
                 <div className="flex items-center gap-3">
                   <WishlistButton photographerId={photographer.id} size="md" className="border border-warm-200 shadow-sm" />
-                  <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(photographer.name)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} existingBookingId={(photographer as { existingBookingId?: string | null }).existingBookingId} />
+                  <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(visibleName)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} existingBookingId={(photographer as { existingBookingId?: string | null }).existingBookingId} />
                 </div>
                 <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
               </div>
@@ -1058,7 +1062,7 @@ export default async function PhotographerProfilePage({
                   reviews={reviews}
                   reviewCount={photographer.review_count}
                   rating={photographer.rating}
-                  photographerName={normalizeName(photographer.name)}
+                  photographerName={normalizeName(visibleName)}
                   photographerSlug={slug}
                 />
               }
@@ -1069,7 +1073,7 @@ export default async function PhotographerProfilePage({
               <PortfolioGallery
                 items={portfolioItems}
                 locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
-                photographerName={normalizeName(photographer.name)}
+                photographerName={normalizeName(visibleName)}
               />
             )}
           </div>
@@ -1165,6 +1169,7 @@ export default async function PhotographerProfilePage({
                     review_count: sp.review_count,
                     min_price: sp.starting_price,
                     locations: sp.locations,
+                    languages: sp.languages,
                     last_active_at: sp.last_active_at,
                     avg_response_minutes: sp.avg_response_minutes,
                   })}
@@ -1178,7 +1183,7 @@ export default async function PhotographerProfilePage({
       {result.type === "db" && (
         <StickyBookBar
           minPrice={photographer.packages?.length > 0 ? Math.min(...photographer.packages.map((pkg: { price: number }) => Number(pkg.price))) : null}
-          photographerName={normalizeName(photographer.name)}
+          photographerName={normalizeName(visibleName)}
         />
       )}
     </>

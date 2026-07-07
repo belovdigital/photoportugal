@@ -10,6 +10,7 @@ import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock, extractStru
 import { checkPhotographersAvailability } from "@/lib/concierge/availability-check";
 import { classifyTrafficSegment, logRecommendations, type RecommendationSnapshot, type RecommendationStrategy } from "@/lib/concierge/recommendation-events";
 import { computeLeadScore } from "@/lib/concierge/lead-score";
+import { hasCommonLanguage } from "@/lib/languages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -117,7 +118,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "offer_blind_booking",
-      description: "Propose an immediate fixed-price 'we book one for you' offer when you know region (city/island slug), date (ISO YYYY-MM-DD), occasion (shoot type slug), and party_size. Use INSTEAD OF show_matches when those four are present and the visitor has NOT previously declined a blind offer in this chat. The server fetches the price — NEVER quote a EUR amount in reply_text. NEVER use the phrases 'either way' or 'no pressure'. If the visitor declines (says 'no', 'show options', etc.), your VERY NEXT turn MUST call show_matches with normal candidates for the same region/date/occasion.",
+      description: "Propose an immediate fixed-price 'we book one for you' offer when you know region (city/island slug), date (ISO YYYY-MM-DD), occasion (shoot type slug), and party_size. Use INSTEAD OF show_matches when those four are present and the visitor has NOT previously declined a blind offer in this chat. NEVER use for occasion=wedding — full weddings are sold via show_matches, never blind-booked. The server fetches the price — NEVER quote a EUR amount in reply_text. NEVER use the phrases 'either way' or 'no pressure'. If the visitor declines (says 'no', 'show options', etc.), your VERY NEXT turn MUST call show_matches with normal candidates for the same region/date/occasion.",
       parameters: {
         type: "object",
         properties: {
@@ -395,6 +396,8 @@ export async function POST(req: NextRequest) {
   // Per-turn language anchor. We say "stay in X unless visitor asks
   // otherwise" instead of the old absolute "do not switch", because the
   // detection above already gave us the latest-truth lang.
+  systemPrompt += `\n\n## LANGUAGE MATCHING (hard rule)\nThe visitor speaks "${detectedLang}". NEVER include a photographer in show_matches unless their languages contain English OR the visitor's language. Photographers marked ⚠️NO-ENGLISH are OFF-LIMITS for recommendations to non-matching visitors — the server will remove them anyway, so picking them wastes a slot. If the visitor asks about such a photographer BY NAME, answer honestly and warn clearly about the language barrier (they could not communicate during the shoot) and offer alternatives who do speak the visitor's language.`;
+
   systemPrompt += `\n\n## ACTIVE CONVERSATION LANGUAGE: ${detectedLang}\nEvery field you generate (reply_text, each match.reasoning, each location.reason) MUST be in this language. If the visitor's LATEST message is in a different language or explicitly asks to switch, the detection above has already updated this value — just follow it. Open the reply with a 1-line acknowledgement in the new language ("Claro! Vou continuar em português" etc.) if this turn switched.`;
 
   // Track which photographers were already shown in this chat so we don't repeat
@@ -572,8 +575,16 @@ export async function POST(req: NextRequest) {
     console.warn("[concierge] recently-shown newcomers query failed:", err);
   }
 
+  // Language gate: only photographers who share a language with the
+  // visitor (their detected language OR English) are rankable. Clients
+  // kept booking photographers they couldn't talk to — hard-exclude
+  // them from recommendations entirely; the visitor can still ask about
+  // a specific profile and gets a warning instead (see prompt rule).
+  const languageEligible = photographers.filter((p) =>
+    hasCommonLanguage(detectedLang, p.languages)
+  );
   const rankedCandidates: RankedCandidate[] = rankTopCandidates({
-    photographers,
+    photographers: languageEligible,
     intent,
     topN: 12,
     excludeSlugs: rankerExcludes,
@@ -748,10 +759,40 @@ export async function POST(req: NextRequest) {
             { chatId: chat_id, msgCount: messages.length, slugs: (args.matches || []).map((m: { slug: string }) => m.slug) }
           );
         }
-        const slugs: string[] = (args.matches || []).map((m: { slug: string }) => m.slug);
+        // Dedupe the LLM's picks by slug — it occasionally lists the same
+        // photographer twice, which rendered duplicate cards to the visitor
+        // AND a doubled "Recommended" line in the admin Telegram ping. Keep
+        // the first occurrence (its reasoning + order).
+        const seenMatchSlugs = new Set<string>();
+        const dedupedMatches = (Array.isArray(args.matches) ? args.matches : [])
+          .filter((m: { slug?: unknown }) => {
+            if (!m || typeof m.slug !== "string" || seenMatchSlugs.has(m.slug)) return false;
+            seenMatchSlugs.add(m.slug);
+            return true;
+          }) as { slug: string; reasoning: string; style_label?: string }[];
+        // Language gate (server-side enforcement of the prompt rule):
+        // drop picks with no common language with the visitor. The
+        // 0-match fallback below pads from topCandidates, which is
+        // already language-filtered at the ranker input.
+        const languageBlocked = dedupedMatches.filter((m) => {
+          const p = photographers.find((x) => x.slug === m.slug);
+          return p && !hasCommonLanguage(detectedLang, p.languages);
+        });
+        if (languageBlocked.length > 0) {
+          console.warn("[concierge] show_matches language-blocked picks", {
+            chatId: chat_id,
+            lang: detectedLang,
+            slugs: languageBlocked.map((m) => m.slug),
+          });
+          const blockedSlugs = new Set(languageBlocked.map((m) => m.slug));
+          for (let i = dedupedMatches.length - 1; i >= 0; i--) {
+            if (blockedSlugs.has(dedupedMatches[i].slug)) dedupedMatches.splice(i, 1);
+          }
+        }
+        const slugs: string[] = dedupedMatches.map((m) => m.slug);
         const full = photographers.filter((p) => slugs.includes(p.slug));
-        const reasoned = (args.matches || [])
-          .map((m: { slug: string; reasoning: string; style_label?: string }, idx: number) => {
+        const reasoned = dedupedMatches
+          .map((m, idx: number) => {
             const p = photographers.find((x) => x.slug === m.slug);
             if (!p) return null;
             return {
@@ -797,7 +838,12 @@ export async function POST(req: NextRequest) {
         const MIN_MATCHES = 3;
         let usedRankerFallback = false;
         const llmMatchCount = enriched.length;
-        if (enriched.length < MIN_MATCHES && topCandidates.length > enriched.length) {
+        // Option A: only fall back to ranker padding when the LLM returned
+        // NOTHING. When it made ≥1 genuine pick, show those (1-2 is fine —
+        // "1 perfect match beats 3 shoehorned", per the show_matches prompt)
+        // instead of padding with reasoning-less, possibly off-location
+        // fillers that render as blank-description cards.
+        if (llmMatchCount === 0 && topCandidates.length > 0) {
           const existingIds = new Set(enriched.map((m) => m.id));
           const filler = topCandidates
             .filter((p) => !existingIds.has(p.id))
@@ -974,11 +1020,26 @@ export async function POST(req: NextRequest) {
           today.setUTCHours(0, 0, 0, 0);
           return new Date(date + "T00:00:00Z") >= today;
         })();
-        if (region && validDate && isFuture && occasion && partySize > 0) {
-          const { priceForSlug, slugToRegion } = await import("@/lib/blind-booking/pricing");
+        // Weddings are never blind-booked — full weddings are multi-hour,
+        // high-value bookings sold by photographer (no flat regional price
+        // exists, so the lookup would NULL out and silently drop anyway).
+        // The prompt steers the model to show_matches for weddings; this is
+        // the deterministic guard in case it slips and calls blind here.
+        if (occasion === "wedding") {
+          console.warn("[concierge] suppressed blind-booking offer for wedding occasion", { chatId: chat_id });
+        } else if (region && validDate && isFuture && occasion && partySize > 0) {
+          const { priceForSlug, slugToRegion, BLIND_COMPARE_AT_EUR } = await import("@/lib/blind-booking/pricing");
+          const { largeGroupMultiplier, LARGE_GROUP_THRESHOLD } = await import("@/lib/stripe");
           const priced = await priceForSlug(region, occasion, durationMinutes);
           const canonicalRegion = slugToRegion(region);
           if (priced && canonicalRegion) {
+            // Summer super-offer: priced.price_eur is the CLIENT-INCLUSIVE
+            // total. Apply the 9+ large-group +50% surcharge to it; the
+            // stored hold.price_eur is the SURCHARGED all-in total — the
+            // accept endpoint charges it straight (nothing added on top).
+            const groupMultiplier = largeGroupMultiplier(partySize);
+            const surchargedTotalEur = Math.round(Number(priced.price_eur) * groupMultiplier);
+            const compareAtEur = Math.round((BLIND_COMPARE_AT_EUR[priced.duration_minutes] || 0) * groupMultiplier);
             const { mintHold } = await import("@/lib/blind-booking/holds");
             const holdId = mintHold({
               chat_id: chat_id || "anonymous",
@@ -987,7 +1048,7 @@ export async function POST(req: NextRequest) {
               occasion,
               party_size: partySize,
               duration_minutes: priced.duration_minutes,
-              price_eur: priced.price_eur,
+              price_eur: surchargedTotalEur,
             });
             action = {
               type: "offer_blind_booking",
@@ -999,7 +1060,11 @@ export async function POST(req: NextRequest) {
                 occasion,
                 party_size: partySize,
                 duration_minutes: priced.duration_minutes,
-                price_eur: priced.price_eur,
+                price_eur: surchargedTotalEur,
+                regional_base_eur: priced.price_eur,
+                compare_at_eur: compareAtEur,
+                savings_eur: compareAtEur > surchargedTotalEur ? compareAtEur - surchargedTotalEur : 0,
+                large_group_applied: partySize >= LARGE_GROUP_THRESHOLD,
                 sample_size: priced.sample_size,
                 reply_text: args.reply_text || "",
               },
@@ -1089,6 +1154,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Server-resolved occasion (wedding, couples, proposal…) so the chat is
+  // queryable by shoot type for funnel analytics and forwarded to
+  // bookings.occasion on conversion. COALESCE on UPDATE: each turn that
+  // detects an occasion refreshes it; turns with no signal keep the prior.
+  const detectedOccasion = intent.occasionSlug || null;
+
   let chatId = chat_id;
   if (chatId) {
     const updated = await queryOne<{ id: string }>(
@@ -1106,8 +1177,9 @@ export async function POST(req: NextRequest) {
          utm_campaign = COALESCE(utm_campaign, $11),
          utm_term = COALESCE(utm_term, $12),
          gclid = COALESCE(gclid, $13),
+         occasion = COALESCE($14, occasion),
          updated_at = NOW()
-       WHERE id = $14 RETURNING id`,
+       WHERE id = $15 RETURNING id`,
       [
         JSON.stringify(newChatMessages),
         email || null,
@@ -1122,6 +1194,7 @@ export async function POST(req: NextRequest) {
         utm.campaign,
         utm.term,
         utm.gclid,
+        detectedOccasion,
         chatId,
       ]
     ).catch((e) => { console.error("[concierge] update error:", e); return null; });
@@ -1130,8 +1203,8 @@ export async function POST(req: NextRequest) {
 
   if (!chatId) {
     const created = await queryOne<{ id: string }>(
-      `INSERT INTO concierge_chats (visitor_id, user_id, email, first_name, messages, matched_photographer_ids, outcome, language, total_tokens, total_cost_usd, utm_source, utm_medium, utm_campaign, utm_term, gclid, source, page_context, source_chip)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`,
+      `INSERT INTO concierge_chats (visitor_id, user_id, email, first_name, messages, matched_photographer_ids, outcome, language, total_tokens, total_cost_usd, utm_source, utm_medium, utm_campaign, utm_term, gclid, source, page_context, source_chip, occasion)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING id`,
       [
         visitor_id || null,
         userId,
@@ -1147,6 +1220,7 @@ export async function POST(req: NextRequest) {
         source || "page",
         page_context || null,
         typeof source_chip === "string" && source_chip.trim() ? source_chip.trim().slice(0, 200) : null,
+        detectedOccasion,
       ]
     ).catch((e) => { console.error("[concierge] insert error:", e); return null; });
     chatId = created?.id;
@@ -1250,10 +1324,10 @@ async function notifyConciergeAdmins(opts: {
       phone: string | null; gclid: string | null; utm_source: string | null;
       outcome: string | null; matched_photographer_ids: string[] | null;
       inquiry_booking_ids: string[] | null;
-      created_at: string; updated_at: string;
+      created_at: string; updated_at: string; occasion: string | null;
     }>(
       `SELECT phone, gclid, utm_source, outcome, matched_photographer_ids,
-              inquiry_booking_ids, created_at, updated_at
+              inquiry_booking_ids, created_at, updated_at, occasion
          FROM concierge_chats WHERE id = $1`,
       [opts.chatId]
     ).catch(() => null);
@@ -1270,6 +1344,7 @@ async function notifyConciergeAdmins(opts: {
         messages: opts.messages || [],
         created_at: row.created_at,
         updated_at: row.updated_at,
+        occasion: row.occasion,
       });
       leadHeatBadge = ls.heat === "hot" ? `🔥 HOT ${ls.score}` : ls.heat === "warm" ? `🟡 WARM ${ls.score}` : `🔵 ${ls.score}`;
     }
@@ -1332,12 +1407,13 @@ async function notifyConciergeAdmins(opts: {
     const date = String(d.date || "");
     const partySize = Number(d.party_size) || 0;
     const durationMinutes = Number(d.duration_minutes) || 0;
-    const priceEur = Number(d.price_eur) || 0;
-    const totalEur = Math.round(priceEur * 1.125);
+    // price_eur is the all-inclusive summer-offer total (charged straight).
+    const totalEur = Number(d.price_eur) || 0;
+    const compareAt = Number(d.compare_at_eur) || 0;
     lines.push("");
     lines.push(`<b>Offer:</b> ${escapeHtml(region)} · ${escapeHtml(occasion)} · ${escapeHtml(date)}`);
     lines.push(`<b>${partySize} ${partySize === 1 ? "person" : "people"} · ${durationMinutes} min</b>`);
-    lines.push(`<b>€${totalEur} total</b> (€${priceEur} photographer rate + €${totalEur - priceEur} service fee). Auth-hold pending visitor click.`);
+    lines.push(`<b>€${totalEur} all-in summer offer</b>${compareAt > totalEur ? ` (was €${compareAt})` : ""}. Auth-hold pending visitor click.`);
   }
 
   if (opts.chatId) {

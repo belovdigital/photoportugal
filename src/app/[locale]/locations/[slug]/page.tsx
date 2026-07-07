@@ -353,6 +353,7 @@ export default async function LocationPage({
     rating: number; review_count: number; starting_price: string | null;
     locations: string | null;
     last_active_at: string | null; avg_response_minutes: number | null;
+    languages: string[] | null;
     packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number }[] | null;
     packages_count: number;
   };
@@ -368,6 +369,7 @@ export default async function LocationPage({
               pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
               ${taglineSql} as tagline, pp.rating, pp.review_count,
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
+              COALESCE(pp.languages, '{}') as languages,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
@@ -877,6 +879,7 @@ export default async function LocationPage({
                     locations: sp.locations,
                     last_active_at: sp.last_active_at,
                     avg_response_minutes: sp.avg_response_minutes,
+                    languages: sp.languages,
                     packages: sp.packages ?? [],
                     packages_total_count: sp.packages_count,
                   }}

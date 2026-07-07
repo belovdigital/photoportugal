@@ -149,6 +149,19 @@ const OCCASIONS: Record<string, OccasionEntry> = {
     descriptionFr: "Photographie intime d'elopement pour les couples qui choisissent de célébrer leur amour en privé dans l'un des plus beaux pays d'Europe.",
     emoji: "🌿",
   },
+  wedding: {
+    title: "Wedding Photographer",
+    titlePt: "Fotógrafo de Casamento",
+    titleDe: "Hochzeitsfotograf",
+    titleEs: "Fotógrafo de Boda",
+    titleFr: "Photographe de mariage",
+    description: "Destination wedding photography by local professionals who know every venue, viewpoint, and golden-hour spot. From intimate ceremonies to full-day celebrations.",
+    descriptionPt: "Fotografia de casamento por profissionais locais que conhecem cada espaço, miradouro e luz dourada. De cerimónias intimistas a celebrações de dia inteiro.",
+    descriptionDe: "Hochzeitsfotografie von lokalen Profis, die jeden Veranstaltungsort, Aussichtspunkt und Golden-Hour-Spot kennen. Von intimen Zeremonien bis zur ganztägigen Begleitung.",
+    descriptionEs: "Fotografía de bodas por profesionales locales que conocen cada espacio, mirador y luz dorada. Desde ceremonias íntimas hasta celebraciones de día completo.",
+    descriptionFr: "Photographie de mariage par des professionnels locaux qui connaissent chaque lieu, point de vue et lumière dorée. Des cérémonies intimes aux célébrations d'une journée complète.",
+    emoji: "💒",
+  },
   "kids-birthday": {
     title: "Kids Birthday Photographer",
     titlePt: "Fotógrafo de Aniversário Infantil",
@@ -221,6 +234,7 @@ const BOOKING_LABEL: Record<string, Record<string, string>> = {
   honeymoon: { en: "Honeymoon Photoshoot", pt: "Sessão de Lua de Mel", de: "Flitterwochen-Fotoshooting", es: "Sesión de Luna de Miel", fr: "Séance Lune de Miel" },
   solo: { en: "Solo Photoshoot", pt: "Sessão Solo", de: "Solo-Fotoshooting", es: "Sesión Solo", fr: "Séance Solo" },
   elopement: { en: "Elopement Photoshoot", pt: "Sessão de Elopement", de: "Elopement-Fotoshooting", es: "Sesión de Boda Íntima", fr: "Séance Elopement" },
+  wedding: { en: "Wedding Photoshoot", pt: "Sessão de Casamento", de: "Hochzeits-Fotoshooting", es: "Sesión de Boda", fr: "Séance Mariage" },
   "kids-birthday": { en: "Kids Birthday Photoshoot", pt: "Sessão de Aniversário Infantil", de: "Kindergeburtstag-Fotoshooting", es: "Sesión de Cumpleaños Infantil", fr: "Séance Anniversaire Enfant" },
   "studio-portrait": { en: "Studio Portrait Session", pt: "Sessão de Retrato em Estúdio", de: "Studio-Porträt-Session", es: "Sesión de Retrato en Estudio", fr: "Séance Portrait en Studio" },
 };
@@ -230,7 +244,7 @@ const L = {
   en: {
     metaTitle: (occ: string, loc: string) => `${occ} in ${loc} — Book a Photoshoot`,
     metaDesc: (desc: string, occLower: string, loc: string) =>
-      `${desc} Book your ${occLower} in ${loc}. Verified portfolios, instant booking. From €150.`,
+      `${desc} Book your ${occLower} in ${loc}. Verified portfolios, instant booking. From €299.`,
     home: "Home",
     locations: "Locations",
     aboutLocation: (loc: string) => `About ${loc}`,
@@ -248,7 +262,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographer" : "photographers"} ready to shoot in ${loc}`,
     packagesHeading: (occ: string, loc: string) => `${occ} packages in ${loc}`,
-    packagesSub: "Pick a package, book it directly. Prices below cover the photographer's time and edited photos. A 12.5% platform service fee is added at checkout.",
+    packagesSub: "Pick a package, book it directly. Prices below cover the photographer's time and edited photos. A 15% platform service fee is added at checkout.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "photos",
@@ -259,7 +273,7 @@ const L = {
   pt: {
     metaTitle: (occ: string, loc: string) => `${occ} em ${loc} — Reserve Sessão Fotográfica`,
     metaDesc: (desc: string, occLower: string, loc: string) =>
-      `${desc} Reserve o seu ${occLower} em ${loc}. Portfólios verificados, reserva instantânea. Desde 150 €.`,
+      `${desc} Reserve o seu ${occLower} em ${loc}. Portfólios verificados, reserva instantânea. Desde 299 €.`,
     home: "Início",
     locations: "Localizações",
     aboutLocation: (loc: string) => `Sobre ${loc}`,
@@ -277,7 +291,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo pronto" : "fotógrafos prontos"} para fotografar em ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Pacotes de ${occ.toLowerCase()} em ${loc}`,
-    packagesSub: "Escolha um pacote, reserve diretamente. Os preços cobrem o tempo do fotógrafo e as fotos editadas. Uma taxa de serviço de 12,5% é adicionada no pagamento.",
+    packagesSub: "Escolha um pacote, reserve diretamente. Os preços cobrem o tempo do fotógrafo e as fotos editadas. Uma taxa de serviço de 15% é adicionada no pagamento.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "fotos",
@@ -288,7 +302,7 @@ const L = {
   de: {
     metaTitle: (occ: string, loc: string) => `${occ} in ${loc} — Fotoshooting buchen`,
     metaDesc: (desc: string, occLower: string, loc: string) =>
-      `${desc} Buchen Sie Ihren ${occLower} in ${loc}. Verifizierte Portfolios, sofortige Buchung. Ab 150 €.`,
+      `${desc} Buchen Sie Ihren ${occLower} in ${loc}. Verifizierte Portfolios, sofortige Buchung. Ab 299 €.`,
     home: "Startseite",
     locations: "Orte",
     aboutLocation: (loc: string) => `Über ${loc}`,
@@ -306,7 +320,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "Fotograf bereit" : "Fotografen bereit"} für Shootings in ${loc}`,
     packagesHeading: (occ: string, loc: string) => `${occ}-Pakete in ${loc}`,
-    packagesSub: "Paket wählen, direkt buchen. Die Preise unten decken den Fotografen und die bearbeiteten Fotos ab. Beim Checkout wird eine 12,5 % Servicegebühr hinzugefügt.",
+    packagesSub: "Paket wählen, direkt buchen. Die Preise unten decken den Fotografen und die bearbeiteten Fotos ab. Beim Checkout wird eine 15 % Servicegebühr hinzugefügt.",
     packagePopular: "Beliebt",
     packageMinutesAbbr: "Min.",
     packagePhotos: "Fotos",
@@ -317,7 +331,7 @@ const L = {
   es: {
     metaTitle: (occ: string, loc: string) => `${occ} en ${loc} — Reserve su sesión fotográfica`,
     metaDesc: (desc: string, occLower: string, loc: string) =>
-      `${desc} Reserve su ${occLower} en ${loc}. Portafolios verificados, reserva al instante. Desde 150 €.`,
+      `${desc} Reserve su ${occLower} en ${loc}. Portafolios verificados, reserva al instante. Desde 299 €.`,
     home: "Inicio",
     locations: "Ubicaciones",
     aboutLocation: (loc: string) => `Sobre ${loc}`,
@@ -335,7 +349,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "fotógrafo listo" : "fotógrafos listos"} para sesiones en ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Paquetes de ${occ.toLowerCase()} en ${loc}`,
-    packagesSub: "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Se añade una tarifa de servicio del 12,5% al pagar.",
+    packagesSub: "Elija un paquete, resérvelo directamente. Los precios cubren al fotógrafo y las fotos editadas. Se añade una tarifa de servicio del 15% al pagar.",
     packagePopular: "Popular",
     packageMinutesAbbr: "min",
     packagePhotos: "fotos",
@@ -346,7 +360,7 @@ const L = {
   fr: {
     metaTitle: (occ: string, loc: string) => `${occ} à ${loc} — Réservez votre séance photo`,
     metaDesc: (desc: string, occLower: string, loc: string) =>
-      `${desc} Réservez votre ${occLower} à ${loc}. Portfolios vérifiés, réservation immédiate. À partir de 150 €.`,
+      `${desc} Réservez votre ${occLower} à ${loc}. Portfolios vérifiés, réservation immédiate. À partir de 299 €.`,
     home: "Accueil",
     locations: "Lieux",
     aboutLocation: (loc: string) => `À propos de ${loc}`,
@@ -364,7 +378,7 @@ const L = {
     photographersAvailable: (count: number, loc: string) =>
       `${count} ${count === 1 ? "photographe prêt" : "photographes prêts"} pour des séances à ${loc}`,
     packagesHeading: (occ: string, loc: string) => `Forfaits ${occ.toLowerCase()} à ${loc}`,
-    packagesSub: "Choisissez un forfait, réservez directement. Les prix couvrent le photographe et les photos retouchées. Des frais de service de 12,5 % sont ajoutés au paiement.",
+    packagesSub: "Choisissez un forfait, réservez directement. Les prix couvrent le photographe et les photos retouchées. Des frais de service de 15 % sont ajoutés au paiement.",
     packagePopular: "Populaire",
     packageMinutesAbbr: "min",
     packagePhotos: "photos",
@@ -425,6 +439,12 @@ export default async function OccasionPage({
   const location = getLocationBySlug(slug);
   const occ = OCCASIONS[occasion];
   if (!location || !occ) notFound();
+
+  // Wedding combos hide all price surfaces (package grids, inline package
+  // rows, "from €X" chips): MIN(price) across these photographers' public
+  // packages picks up €150 mini-sessions, not wedding coverage — couples
+  // should land on the photographer and start a conversation instead.
+  const isWedding = occasion === "wedding";
 
   const t = await getTranslations("locations.detail");
   const tc = await getTranslations("common");
@@ -667,8 +687,8 @@ export default async function OccasionPage({
     name: localizedName,
     region: location.region,
     photographerCount,
-    minPrice,
-    durationText,
+    minPrice: isWedding ? null : minPrice,
+    durationText: isWedding ? null : durationText,
     avgRating: avgRating || null,
     totalReviews,
     occasionLabel: heroOccasionLabel,
@@ -686,6 +706,7 @@ export default async function OccasionPage({
     rating: number; review_count: number; starting_price: string | null;
     locations: string | null;
     last_active_at: string | null; avg_response_minutes: number | null;
+    languages: string[] | null;
     packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number }[] | null;
     packages_count: number;
   };
@@ -700,6 +721,7 @@ export default async function OccasionPage({
               pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
               ${taglineSql} as tagline, pp.rating, pp.review_count,
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
+              COALESCE(pp.languages, '{}') as languages,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
@@ -855,7 +877,7 @@ export default async function OccasionPage({
       name: location.name,
       containedInPlace: { "@type": "Country", name: "Portugal" },
     },
-    ...(minPrice ? {
+    ...(!isWedding && minPrice ? {
       offers: {
         "@type": "Offer",
         priceCurrency: "EUR",
@@ -924,7 +946,7 @@ export default async function OccasionPage({
       <LocationStickyBookBar
         locationSlug={slug}
         locationName={localizedName}
-        minPrice={minPrice}
+        minPrice={isWedding ? null : minPrice}
       />
 
       {/* Hero — single-photographer carousel, with combo-aware h1
@@ -987,7 +1009,7 @@ export default async function OccasionPage({
           visitor sees, before any "browse photographers" decision. Same
           shape as the parent location-page packages section but filtered
           to photographers covering this occasion. Mobile-first 1/2/3-col. */}
-      {featuredPackages.length > 0 && (
+      {!isWedding && featuredPackages.length > 0 && (
         <section id="packages" className="border-b border-warm-200 bg-white">
           <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
             <div className="max-w-3xl">
@@ -1078,7 +1100,15 @@ export default async function OccasionPage({
               {tL.chooseYourPhotographerHeading}
             </h2>
             <p className="mt-2 text-gray-500">
-              {tL.chooseYourPhotographerSub(occT, localizedName)}
+              {isWedding
+                ? ({
+                    en: `Browse the wedding photographers covering ${localizedName} — portfolios, ratings and reviews. Wedding coverage is quoted per couple: open a profile and start the conversation.`,
+                    pt: `Conheça os fotógrafos de casamento que cobrem ${localizedName} — portefólios, classificações e avaliações. A cobertura de casamento é orçamentada por casal: abra um perfil e comece a conversa.`,
+                    de: `Entdeckt die Hochzeitsfotografen für ${localizedName} — Portfolios, Bewertungen und Rezensionen. Hochzeitsbegleitung wird individuell angeboten: Profil öffnen und das Gespräch beginnen.`,
+                    es: `Descubrid los fotógrafos de boda que cubren ${localizedName} — portfolios, valoraciones y reseñas. La cobertura de boda se presupuesta por pareja: abrid un perfil y empezad la conversación.`,
+                    fr: `Découvrez les photographes de mariage couvrant ${localizedName} — portfolios, notes et avis. La couverture mariage est devisée par couple : ouvrez un profil et lancez la conversation.`,
+                  } as Record<string, string>)[locale] || `Browse the wedding photographers covering ${localizedName} — portfolios, ratings and reviews. Wedding coverage is quoted per couple: open a profile and start the conversation.`
+                : tL.chooseYourPhotographerSub(occT, localizedName)}
             </p>
             <div className="mt-6">
               <ScarcityBanner count={photographerCount} locationName={localizedName} locale={locale} />
@@ -1100,12 +1130,13 @@ export default async function OccasionPage({
                     is_founding: sp.is_founding,
                     rating: Number(sp.rating),
                     review_count: sp.review_count,
-                    min_price: sp.starting_price ? Number(sp.starting_price) : null,
+                    min_price: isWedding ? null : (sp.starting_price ? Number(sp.starting_price) : null),
                     locations: sp.locations,
                     last_active_at: sp.last_active_at,
                     avg_response_minutes: sp.avg_response_minutes,
-                    packages: sp.packages ?? [],
-                    packages_total_count: sp.packages_count,
+                    languages: sp.languages,
+                    packages: isWedding ? [] : (sp.packages ?? []),
+                    packages_total_count: isWedding ? 0 : sp.packages_count,
                   }}
                 />
               ))}

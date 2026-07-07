@@ -1,8 +1,10 @@
 import { Link } from "@/i18n/navigation";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { normalizeName } from "@/lib/format-name";
+import { maskSurname } from "@/lib/photographer-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
+import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { getTranslations, getLocale } from "next-intl/server";
 import { formatDuration } from "@/lib/package-pricing";
 
@@ -23,6 +25,9 @@ export interface PhotographerCardCompactData {
   min_price: number | null;
   /** Pre-joined string like "Lisbon, Cascais, Porto", or null. */
   locations?: string | null;
+  /** Spoken languages ('English', 'German', …). undefined = caller didn't
+   *  load them (badge hidden); [] = declared nothing (amber warning). */
+  languages?: string[] | null;
   last_active_at?: string | null;
   avg_response_minutes?: number | null;
   /** Optional: top 2 packages rendered inline so visitors don't have to click
@@ -97,7 +102,7 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
       <Link href={`/photographers/${p.slug}`} className="flex flex-col p-4 pt-8">
         <div className="flex items-center gap-1.5">
           <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
-            {normalizeName(p.name)}
+            {normalizeName(maskSurname(p.name))}
           </h3>
           {p.is_verified && (
             <svg
@@ -120,6 +125,9 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
 
         {p.tagline && (
           <p className="mt-1 truncate text-xs text-gray-500">{p.tagline}</p>
+        )}
+        {p.languages !== undefined && (
+          <LanguageBadge languages={p.languages} className="mt-2" />
         )}
         <ResponseTimeBadge avgMinutes={p.avg_response_minutes ?? null} compact />
 

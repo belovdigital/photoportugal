@@ -124,6 +124,7 @@
     "photographers": "Fotógrafos",
     "ourPhotographers": "Os Nossos Fotógrafos",
     "giftCards": "Vales de Oferta",
+    "weddings": "Casamentos",
     "explore": "Explorar",
     "megaForTravelers": "Para Viajantes",
     "megaForPhotographers": "Para Fotógrafos",
@@ -390,8 +391,8 @@
       "title": "Ofereça uma sessão fotográfica em Portugal",
       "subtitle": "Surpreenda alguém com uma sessão profissional — escolhem o fotógrafo, a data e o local. Válido durante 12 meses.",
       "cta": "Ver vales de oferta",
-      "tierExpress": "Express €290",
-      "tierFull": "Completo €490",
+      "tierExpress": "Express €349",
+      "tierFull": "Completo €520",
       "perk1": "Válido durante 12 meses",
       "perk2": "Destinatário escolhe o fotógrafo",
       "perk3": "Entregue instantaneamente por e-mail"
@@ -632,7 +633,7 @@
       },
       "cost": {
         "question": "Quanto custa uma sessão fotográfica?",
-        "answer": "Os preços variam conforme o fotógrafo e o pacote, tipicamente entre €120 para uma sessão rápida de 30 minutos e mais de €500 para uma experiência de dia inteiro. Cada fotógrafo define os seus próprios preços e pacotes, que pode consultar na página de perfil. Veja a nossa <a href=\"/for-photographers/pricing\">página de preços</a> para uma visão geral."
+        "answer": "Os preços variam conforme o fotógrafo e o pacote, tipicamente entre €299 para uma sessão de uma hora e mais de €500 para uma experiência de dia inteiro. Cada fotógrafo define os seus próprios preços e pacotes, que pode consultar na página de perfil. Veja a nossa <a href=\"/for-photographers/pricing\">página de preços</a> para uma visão geral."
       },
       "howToBook": {
         "question": "Como reservo um fotógrafo?",
@@ -812,7 +813,7 @@
   },
   "pricing": {
     "metaTitle": "Pacotes e Preços de Fotografia — Sessões Fotográficas de Férias em Portugal",
-    "metaDescription": "Pacotes de sessões fotográficas de férias em Portugal a partir de 150 EUR. Fotografia de casais, família, individual e pedidos de casamento. Compare fotógrafos, leia avaliações verificadas. Cancelamento gratuito disponível.",
+    "metaDescription": "Pacotes de sessões fotográficas de férias em Portugal a partir de 299 EUR. Fotografia de casais, família, individual e pedidos de casamento. Compare fotógrafos, leia avaliações verificadas. Cancelamento gratuito disponível.",
     "title": "Preços simples e transparentes",
     "subtitle": "Comece gratuitamente, faça upgrade quando estiver pronto para crescer",
     "plans": {
@@ -891,7 +892,7 @@
         "description": "Receba o preço do pacote menos a comissão da plataforma. Pagamentos automáticos para a sua conta bancária."
       },
       "table": {
-        "examplePackage": "Exemplo: pacote de €300",
+        "examplePackage": "Exemplo: pacote de €299",
         "clientPays": "O cliente paga",
         "serviceFee": "Taxa de serviço ({rate}%)",
         "platformCommission": "Comissão da plataforma",
@@ -992,7 +993,7 @@
         "plan": "Plano",
         "monthly": "Mensal",
         "commission": "Comissão",
-        "youEarn": "Ganha numa reserva de €200"
+        "youEarn": "Ganha numa reserva de €299"
       },
       "earlyBirdNote": "Fotógrafos early bird recebem o upgrade de plano gratuitamente — ainda beneficia de taxas de comissão mais baixas."
     },
@@ -1338,7 +1339,7 @@
         "averageSession": "Sessão Média",
         "averageSessionValue": "1-2 horas",
         "startingFrom": "A Partir De",
-        "startingFromValue": "€150 / sessão"
+        "startingFromValue": "€299 / sessão"
       },
       "cta": {
         "title": "Pronto para a Sua Sessão Fotográfica em {location}?",
@@ -1352,7 +1353,7 @@
       "blindBookingSubline": "Diga-nos o que precisa em 60 segundos — confirmado em 24h ou reembolso total.",
       "blindBookingCtaLocation": "Reservar um fotógrafo em {location} por mim",
       "packagesHeading": "Pacotes fotográficos em {location}",
-      "packagesSub": "Escolha um pacote, reserve diretamente. Os preços cobrem o tempo do fotógrafo e as fotos editadas. Uma taxa de serviço de 12,5% é adicionada no pagamento.",
+      "packagesSub": "Escolha um pacote, reserve diretamente. Os preços cobrem o tempo do fotógrafo e as fotos editadas. Uma taxa de serviço de 15% é adicionada no pagamento.",
       "packagePopular": "Popular",
       "packageMinutesAbbr": "min",
       "packagePhotos": "fotos",
@@ -1479,7 +1480,7 @@
       "submitting": "A enviar pedido...",
       "payAndBook": "Pagar e Reservar",
       "proposalHint": "O fotógrafo já aprovou este pacote — o pagamento confirma a reserva.",
-      "paymentNote": "O pagamento é processado em segurança após o fotógrafo confirmar a sua reserva.",
+      "paymentNote": "Não será cobrado agora. Assim que o fotógrafo confirmar, paga em segurança via Stripe.",
       "exactGroupSize": "Tamanho exato do grupo",
       "exactGroupSizeHint": "Para 9+ pessoas, indique o número real para o fotógrafo planear e calcular o preço corretamente.",
       "enterExactGroupSize": "Indique o tamanho exato do grupo para grupos maiores.",
@@ -1501,7 +1502,12 @@
       "giftRevealDaysBefore": "dias antes da sessão",
       "giftRecipientNameRequired": "O nome do destinatário é obrigatório",
       "giftRecipientEmailRequired": "É necessário um email válido do destinatário",
-      "giftRecipientPhoneRequired": "O número de WhatsApp do destinatário é obrigatório"
+      "giftRecipientPhoneRequired": "O número de WhatsApp do destinatário é obrigatório",
+      "langBarrierTitle": "Atenção ao idioma",
+      "langBarrierText": "Este fotógrafo fala {languages} — não fala inglês. Certifique-se de que consegue comunicar durante a sessão.",
+      "langBarrierTextUnknown": "Este fotógrafo ainda não confirmou os idiomas que fala.",
+      "langBarrierAck": "Compreendo e quero reservar na mesma",
+      "langBarrierMustAck": "Confirme primeiro que aceita a barreira linguística."
     },
     "time": {
       "flexible": "Sou flexível",
@@ -1583,7 +1589,11 @@
       "reviews": "{count, plural, =1 {# avaliação} other {# avaliações}}",
       "byPhotographer": "Em destaque: {name}",
       "matchPrompt": "Match com fotógrafo por IA — instantâneo"
-    }
+    },
+    "offerKicker": "Super oferta de verão",
+    "offerTitle": "Sessão desde {price} tudo incluído",
+    "offerSub": "Escolhemos por si um fotógrafo de topo — cancelamento grátis até 48h antes",
+    "offerCta": "Reservar"
   },
   "quickMatch": {
     "locationLabel": "Localização",
@@ -1867,9 +1877,9 @@
   },
   "photographersMeta": {
     "title": "Contratar Fotógrafo em Portugal — Lisboa, Porto, Algarve",
-    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e mais de 40 localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €150.",
+    "description": "Encontre e contrate um fotógrafo profissional em Lisboa, Porto, Sintra, Algarve e mais de 40 localizações em Portugal. Veja portfólios, compare preços, leia avaliações verificadas. Reserve a sua sessão fotográfica online — casais, família, casamento, elopement. Desde €299.",
     "locationTitle": "Encontre Fotógrafos em {location} — Portfólios e Preços",
-    "locationDescription": "Encontre e reserve fotógrafos verificados em {location}, Portugal. Veja portfólios, leia avaliações, compare pacotes. Desde €150.",
+    "locationDescription": "Encontre e reserve fotógrafos verificados em {location}, Portugal. Veja portfólios, leia avaliações, compare pacotes. Desde €299.",
     "ogAlt": "Fotógrafos em {location}, Portugal",
     "browseByCity": "Fotógrafos por cidade",
     "browseByCitySub": "Explore fotógrafos verificados nas principais cidades de Portugal."
@@ -2450,6 +2460,7 @@
     "confirm": "Confirmar",
     "decline": "Recusar",
     "markAsCompleted": "Marcar como Concluída",
+    "markCompleteAvailableOn": "Disponível a {date} — após a sessão",
     "message": "Mensagem",
     "statusPending": "Pendente",
     "statusConfirmed": "Confirmada",
@@ -2542,7 +2553,7 @@
     "stepPayment": "Pagamento",
     "phoneVerified": "Telefone verificado",
     "phonePlaceholder": "912 345 678",
-    "phoneAutoPrefix": "Números portugueses com prefixo automático +351",
+    "phoneAutoPrefix": "Os números portugueses recebem +351 automaticamente. Para outros países, inclua o seu indicativo, ex.: +49.",
     "sendSmsCode": "Enviar Código SMS",
     "sending": "A enviar...",
     "codeSentTo": "Código enviado para {phone}",
@@ -2697,7 +2708,27 @@
     "sharePhotosAndVideos": "Partilhar {photos} {photos, plural, one {foto} other {fotos}} e {videos} {videos, plural, one {vídeo} other {vídeos}}",
     "confirmShareVideos": "Pronto para partilhar {count} {count, plural, one {vídeo} other {vídeos}} com o cliente?",
     "confirmSharePhotosAndVideos": "Pronto para partilhar {photos} {photos, plural, one {foto} other {fotos}} e {videos} {videos, plural, one {vídeo} other {vídeos}} com o cliente?",
-    "accept": "Aceitar"
+    "accept": "Aceitar",
+    "needMorePhotos": "O pacote pago inclui {required} fotos — só adicionou {count}. Adicione pelo menos {required} antes de entregar ao cliente.",
+    "photoCounterShort": "{count} / {required} fotos — adicione mais {remaining} antes de entregar",
+    "photoCounterOk": "{count} / {required} fotos ✓",
+    "photosInPackage": "{count, plural, one {# foto} other {# fotos}}",
+    "titleHelp": "Aparece como o título grande no topo da galeria. Curto e pessoal — ex.: \"A sua noite mágica em Lisboa\".",
+    "messageHelp": "Uma nota calorosa acima das fotos — agradeça, recorde um momento, deixe uma dica. 2 a 4 frases (cerca de 200–400 caracteres) fica perfeito. Opcional.",
+    "tipHeading": "Adorou as fotos de {name}?",
+    "tipSub": "Deixe um pequeno agradecimento. Vai para {name}, menos uma pequena taxa de processamento.",
+    "tipCustom": "Outro valor",
+    "tipSend": "Enviar gorjeta de €{amount}",
+    "tipSendDisabled": "Enviar gorjeta",
+    "tipLater": "Talvez depois",
+    "tipThanks": "Obrigado! A sua gorjeta está a caminho de {name}.",
+    "tipError": "Não foi possível iniciar o pagamento — tente novamente.",
+    "peekHeading": "Partilhar uma prévia",
+    "peekSub": "Envie {count, plural, one {esta # foto} other {estas # fotos}} como primeira amostra enquanto edita o resto — os clientes adoram. Sem download, prévias limpas, não conta como entrega.",
+    "peekSend": "Enviar prévia ({count})",
+    "peekSent": "✨ Prévia enviada — {count, plural, one {# foto} other {# fotos}}. Continue a carregar para a entrega completa.",
+    "peekCopyLink": "Copiar link da prévia",
+    "peekError": "Não foi possível partilhar a prévia — tente novamente."
   },
   "availability": {
     "pageTitle": "Disponibilidade",
@@ -2778,7 +2809,7 @@
     "failedUpdate": "Falha ao atualizar a reserva",
     "markSessionDoneHint": "Confirme que a sessão decorreu com sucesso. Se houve algum problema (cliente não apareceu, imprevistos), contacte o suporte.",
     "markSessionDoneWait": "Disponível a {date}",
-    "uploadDeliverHint": "Carregue as suas fotos e partilhe-as com o cliente. Receberão um email com um link para rever e aceitar.",
+    "uploadDeliverHint": "Carregue as suas fotos e partilhe-as com o cliente. Ele receberá um email com um link para rever e aceitar. ✨ Dica: já tem algumas favoritas? Pode enviar primeiro uma prévia — opcional.",
     "cancelTitle": "Cancelar esta reserva?",
     "declineTitle": "Recusar este pedido?",
     "cancelReasonHelp": "Diga à outra parte porquê — a sua razão será enviada por email e na conversa.",
@@ -2983,6 +3014,8 @@
     "telegramDisconnectTitle": "Desconectar Telegram"
   },
   "bookings": {
+    "yourPayout": "O seu pagamento",
+    "sessionPrice": "Preço da sessão",
     "bookingRequests": "Pedidos de Reserva",
     "myBookings": "As Minhas Reservas",
     "manageIncoming": "Gerir pedidos recebidos de clientes",
@@ -3042,7 +3075,9 @@
     "requestedLabel": "Solicitado",
     "packageLabel": "Pacote",
     "locationLabel": "Localização",
-    "groupLabel": "Grupo"
+    "groupLabel": "Grupo",
+    "tipLine": "Gorjeta",
+    "peekReady": "✨ Prévia pronta — primeiras fotos da sua sessão"
   },
   "bookingJourney": {
     "cancelled": "Cancelada",
@@ -3112,8 +3147,9 @@
     "rating": "Classificação",
     "titleLabel": "Título (opcional)",
     "titlePlaceholder": "Resuma a sua experiência",
-    "reviewLabel": "A sua avaliação (opcional)",
-    "starsOnlyHint": "Só estrelas? É suficiente — o texto é opcional.",
+    "reviewLabel": "A sua avaliação",
+    "starsOnlyHint": "Algumas frases sobre a sua experiência ajudam muito os próximos clientes.",
+    "minWordsHint": "Escreva pelo menos {min} palavras.",
     "rewardHint": "🎁 Envie e enviaremos por email um código de 10% de desconto depois da avaliação ser aprovada.",
     "rewardEmailed": "Obrigado — o seu código de desconto será enviado por email depois da avaliação ser aprovada.",
     "rewardBadge": "10% off",
@@ -3160,7 +3196,9 @@
       "done": "Concluído",
       "cameraError": "Não foi possível aceder à câmara. Por favor, permita o acesso à câmara e ao microfone."
     },
-    "reviewPhotoPreview": "Pré-visualização da foto da avaliação"
+    "reviewPhotoPreview": "Pré-visualização da foto da avaliação",
+    "tipChipsHeading": "Faça o dia de {name} — deixar uma gorjeta?",
+    "tipChipsError": "Não foi possível iniciar o pagamento — tente novamente."
   },
   "payButton": {
     "pay": "Pagar €{total}",
@@ -3186,6 +3224,7 @@
     "partySize": "Número de pessoas",
     "total": "Total",
     "photographerRate": "tarifa do fotógrafo",
+    "largeGroupSurcharge": "sobretaxa de grupo grande (9+ pessoas)",
     "platformFee": "taxa da plataforma",
     "noPrice": "Ainda não há preços disponíveis para esta combinação.",
     "holdNote": "Autorizado agora — só cobrado quando o seu fotógrafo for confirmado em 24h. Reembolso total se não conseguirmos encontrar.",
@@ -3197,6 +3236,10 @@
     "submitting": "A processar…",
     "error": "Não foi possível criar a reserva. Tente novamente.",
     "trust": "Pagamento processado pela Stripe. A Photo Portugal seleciona o fotógrafo entre profissionais verificados.",
+    "madlibsSentence": "Quero uma sessão <occasion></occasion> em <region></region> no dia <date></date> para <party></party> {partySize, plural, =1 {pessoa} other {pessoas}}, com <duration></duration> de duração.",
+    "pickDate": "escolher data",
+    "largeGroupBadge": "Grupo grande · +50% sobretaxa",
+    "afterMatchNote": "Assim que escolhermos o fotógrafo, poderá conversar diretamente com ele para combinar o local, ideias de outfit, tudo.",
     "occasions": {
       "couples": "Casais",
       "family": "Família",
@@ -3210,7 +3253,10 @@
       "birthday": "Aniversário",
       "vacation": "Férias",
       "other": "Outro"
-    }
+    },
+    "summerOffer": "☀️ Oferta de verão — tudo incluído",
+    "youSave": "Poupa €{amount} ({pct}%)",
+    "allInclusive": "Um preço único com tudo incluído — escolhemos o seu fotógrafo entre o top 1% verificado dos profissionais de Portugal. Sem taxas extra."
   },
   "onboarding": {
     "completeYourProfile": "Complete o seu perfil",
@@ -3381,7 +3427,7 @@
         },
         "serviceFees": {
           "question": "Quais são as taxas de serviço?",
-          "answer": "As nossas taxas são transparentes e sem surpresas. Para clientes: é aplicada uma taxa de serviço de 12,5% sobre o valor do pacote, apresentada antes da confirmação do pagamento. Para fotógrafos: a comissão varia conforme o plano de subscrição — 20% no plano Gratuito, 15% no plano Pro e 10% no plano Premium. Não existem taxas ocultas, custos de adesão nem cobranças adicionais. O preço que vê é o preço que paga. Visite a nossa página de preços para os valores atuais dos planos."
+          "answer": "As nossas taxas são transparentes e sem surpresas. Para clientes: é aplicada uma taxa de serviço de 15% sobre o valor do pacote, apresentada antes da confirmação do pagamento. Para fotógrafos: a comissão varia conforme o plano de subscrição — 20% no plano Gratuito, 15% no plano Pro e 10% no plano Premium. Não existem taxas ocultas, custos de adesão nem cobranças adicionais. O preço que vê é o preço que paga. Visite a nossa página de preços para os valores atuais dos planos."
         },
         "refundPolicy": {
           "question": "Qual é a política de reembolso?",
@@ -3409,7 +3455,7 @@
       "gifts": {
         "howToBuy": {
           "question": "Como compro um vale de oferta?",
-          "answer": "Visite a nossa **[página de vales de oferta](/gift-cards)** e escolha o nível:\n\n• **Express — €290:** sessão de 1 hora, 30 fotos editadas, 1 local\n• **Completo — €490:** sessão de 2 horas, 60 fotos editadas, até 2 locais, uma mudança de roupa\n\nIntroduza o nome e email do destinatário (e opcionalmente o telefone para um SMS), adicione uma mensagem pessoal e pague com cartão, Apple Pay ou Google Pay via Stripe. Ambos os níveis são entregues em 7 dias após a sessão e válidos durante 12 meses a partir da compra."
+          "answer": "Visite a nossa **[página de vales de oferta](/gift-cards)** e escolha o nível:\n\n• **Express — €349:** sessão de 1 hora, 30 fotos editadas, 1 local\n• **Completo — €520:** sessão de 2 horas, 60 fotos editadas, até 2 locais, uma mudança de roupa\n\nIntroduza o nome e email do destinatário (e opcionalmente o telefone para um SMS), adicione uma mensagem pessoal e pague com cartão, Apple Pay ou Google Pay via Stripe. Ambos os níveis são entregues em 7 dias após a sessão e válidos durante 12 meses a partir da compra."
         },
         "howToRedeem": {
           "question": "Como é que o destinatário reclama e usa a oferta?",
@@ -3496,6 +3542,9 @@
     "blindBookingOccasion": "Ocasião",
     "blindBookingDuration": "Duração",
     "blindBookingTotal": "Total",
+    "blindBookingPhotographerRate": "tarifa do fotógrafo",
+    "blindBookingServiceFeeLabel": "taxa da plataforma",
+    "blindBookingLargeGroupSurcharge": "sobretaxa de grupo grande (9+ pessoas)",
     "blindBookingHoldNote": "Autorizado agora — só é cobrado quando o seu fotógrafo for confirmado em 24h. Reembolso automático se não conseguirmos encontrar.",
     "blindBookingYes": "Sim, reservar",
     "blindBookingNo": "Ver fotógrafos",
@@ -3624,7 +3673,10 @@
       ]
     },
     "handoffPromptPhone": "Partilhe o seu WhatsApp ou email e a equipa responde dentro de algumas horas.",
-    "handoffContactPlaceholder": "WhatsApp ou email"
+    "handoffContactPlaceholder": "WhatsApp ou email",
+    "blindBookingSummerOffer": "☀️ Oferta de verão — tudo incluído",
+    "blindBookingSave": "Poupa €{amount}",
+    "blindBookingAllIn": "Tudo incluído — escolhemos o seu fotógrafo entre o top 1% verificado dos profissionais de Portugal."
   },
   "lp": {
     "metaTitleTyped": "Fotógrafos de {shootType} em {city} — Reserve já | Photo Portugal",
@@ -3826,7 +3878,7 @@
     "stat_response": "⚡ A maioria das reservas é confirmada em menos de 4 h",
     "stat_refund": "🛡️ Reembolso total até 7 dias antes da sessão",
     "stat_secure": "🔒 Pagamento seguro — só é libertado depois da sessão",
-    "stat_fromPrice": "💶 Desde €90 por uma hora, fotos editadas incluídas",
+    "stat_fromPrice": "💶 Desde €299 por uma hora, fotos editadas incluídas",
     "stat_locations": "📍 Lisboa · Sintra · Porto · Algarve · Madeira · Açores",
     "statBigPhotographers": "Fotógrafos selecionados",
     "statBigRating": "Média de 500+ avaliações",
@@ -3870,5 +3922,28 @@
     "otherPackagesSubtitle": "Outras formas de trabalhar com {photographer} — escolha o que melhor encaixa na sua história.",
     "viewDetails": "Ver detalhes",
     "from": "A partir de"
+  },
+  "peek": {
+    "title": "Uma prévia de {name} ✨",
+    "subtitle": "{name} escolheu {count, plural, one {# favorita} other {# favoritas}} enquanto edita o resto da galeria.",
+    "fullGalleryExpected": "{count, plural, =0 {Galeria completa esperada por volta de {date}} other {Galeria completa com ~# fotos esperada por volta de {date}}}",
+    "photosBy": "Fotos de",
+    "bookYourOwn": "Reserve a sua sessão fotográfica em Portugal →",
+    "deliveredVia": "Entregue via",
+    "notFoundTitle": "Prévia não encontrada",
+    "notFoundSub": "Este link parece não existir. Verifique o URL.",
+    "expiredTitle": "Esta prévia terminou",
+    "expiredSub": "A galeria completa foi entregue — os links de prévia expiram após a grande revelação.",
+    "expiredCta": "Explorar a Photo Portugal"
+  },
+  "languageBadge": {
+    "speaksEnglish": "Falo inglês",
+    "noEnglish": "Sem inglês",
+    "notSpecified": "Idiomas não confirmados"
+  },
+  "promoTopbar": {
+    "text": "Super Oferta de Verão: sessão fotográfica <strong>desde {price} tudo incluído</strong> <was>€344</was> — reservamos um fotógrafo de topo por si",
+    "cta": "Reservar em 60 seg",
+    "dismiss": "Fechar"
   }
 }

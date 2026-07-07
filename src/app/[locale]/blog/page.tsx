@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
+import { maskSurname } from "@/lib/photographer-name";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { localeAlternates } from "@/lib/seo";
 
@@ -132,6 +133,7 @@ export default async function BlogPage({
     starting_price: string | null;
     locations: string | null;
     last_active_at: string | null; avg_response_minutes: number | null;
+    languages: string[] | null;
   };
   let featuredPhotographers: BlogFeaturedRow[] = [];
   try {
@@ -144,6 +146,7 @@ export default async function BlogPage({
               p.is_featured, p.is_verified, COALESCE(p.is_founding, FALSE) as is_founding,
               p.rating, p.review_count,
               u.last_seen_at as last_active_at, p.avg_response_minutes,
+              COALESCE(p.languages, '{}') as languages,
               (SELECT MIN(price) FROM packages WHERE photographer_id = p.id AND is_public = TRUE)::text as starting_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = p.id LIMIT 3) as locations,
@@ -243,7 +246,7 @@ export default async function BlogPage({
                         />
                         {post.hero_photographer_name && (
                           <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-black/40 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-white">
-                            ◉ {post.hero_photographer_name}
+                            ◉ {maskSurname(post.hero_photographer_name)}
                           </span>
                         )}
                       </div>
@@ -401,6 +404,7 @@ export default async function BlogPage({
                     locations: p.locations,
                     last_active_at: p.last_active_at,
                     avg_response_minutes: p.avg_response_minutes,
+                    languages: p.languages,
                   }}
                 />
               ))}

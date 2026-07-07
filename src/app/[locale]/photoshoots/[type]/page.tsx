@@ -31,7 +31,7 @@ export const dynamic = "force-dynamic";
 // else still falls through to /locations/<slug>.
 const COMBO_OCCASIONS = new Set([
   "couples", "family", "proposal", "engagement",
-  "honeymoon", "solo", "elopement",
+  "honeymoon", "solo", "elopement", "wedding",
 ]);
 
 // Per-locale "in" preposition ("Portugal Photographer in Portugal" reads
@@ -304,7 +304,7 @@ export default async function ShootTypePage({
     is_featured: boolean; is_verified: boolean; is_founding: boolean;
     tagline: string | null;
     rating: number; review_count: number; starting_price: string | null;
-    locations: string | null;
+    locations: string | null; languages: string[] | null;
     last_active_at: string | null; avg_response_minutes: number | null;
     packages: { id: string; name: string; price: number; duration_minutes: number; num_photos: number }[] | null;
     packages_count: number;
@@ -319,6 +319,7 @@ export default async function ShootTypePage({
               pp.cover_url, pp.cover_position_y,
               pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
               ${taglineSql} as tagline, pp.rating, pp.review_count,
+              COALESCE(pp.languages, '{}') as languages,
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
@@ -648,6 +649,7 @@ export default async function ShootTypePage({
                     review_count: sp.review_count,
                     min_price: sp.starting_price ? Number(sp.starting_price) : null,
                     locations: sp.locations,
+                    languages: sp.languages,
                     last_active_at: sp.last_active_at,
                     avg_response_minutes: sp.avg_response_minutes,
                     packages: sp.packages ?? [],

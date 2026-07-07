@@ -124,6 +124,7 @@
     "photographers": "Photographers",
     "ourPhotographers": "Our Photographers",
     "giftCards": "Gift Cards",
+    "weddings": "Weddings",
     "explore": "Explore",
     "megaForTravelers": "For Travelers",
     "megaForPhotographers": "For Photographers",
@@ -390,8 +391,8 @@
       "title": "Give a photoshoot in Portugal",
       "subtitle": "Surprise someone with a professional photoshoot — they pick the photographer, the date, the location. Valid for 12 months.",
       "cta": "Browse gift cards",
-      "tierExpress": "Express €290",
-      "tierFull": "Full €490",
+      "tierExpress": "Express €349",
+      "tierFull": "Full €520",
       "perk1": "Valid for 12 months",
       "perk2": "Recipient picks photographer",
       "perk3": "Delivered instantly by email"
@@ -632,7 +633,7 @@
       },
       "cost": {
         "question": "How much does a photoshoot cost?",
-        "answer": "Prices vary by photographer and package, typically ranging from €120 for a 30-minute quick session to €500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page. See our <a href=\"/for-photographers/pricing\">pricing page</a> for an overview."
+        "answer": "Prices vary by photographer and package, typically ranging from €299 for a one-hour session to €500+ for a full-day experience. Each photographer sets their own prices and packages, which you can see on their profile page. See our <a href=\"/for-photographers/pricing\">pricing page</a> for an overview."
       },
       "howToBook": {
         "question": "How do I book a photographer?",
@@ -812,7 +813,7 @@
   },
   "pricing": {
     "metaTitle": "Photography Packages & Pricing — Vacation Photoshoots in Portugal",
-    "metaDescription": "Vacation photoshoot packages in Portugal from EUR150. Couples, family, solo & proposal photography. Compare photographers, read verified reviews. Free cancellation available.",
+    "metaDescription": "Vacation photoshoot packages in Portugal from EUR299. Couples, family, solo & proposal photography. Compare photographers, read verified reviews. Free cancellation available.",
     "title": "Simple, transparent pricing",
     "subtitle": "Start for free, upgrade when you're ready to grow",
     "plans": {
@@ -891,7 +892,7 @@
         "description": "Receive the package price minus platform commission. Automatic payouts to your bank account."
       },
       "table": {
-        "examplePackage": "Example: €300 package",
+        "examplePackage": "Example: €299 package",
         "clientPays": "Client pays",
         "serviceFee": "Service fee ({rate}%)",
         "platformCommission": "Platform commission",
@@ -987,7 +988,7 @@
         "plan": "Plan",
         "monthly": "Monthly",
         "commission": "Commission",
-        "youEarn": "You earn on €200 booking"
+        "youEarn": "You earn on €299 booking"
       },
       "earlyBirdNote": "Early bird photographers get their plan upgrade free — you still benefit from lower commission rates."
     },
@@ -1333,7 +1334,7 @@
         "averageSession": "Average Session",
         "averageSessionValue": "1-2 hours",
         "startingFrom": "Starting From",
-        "startingFromValue": "€150 / session"
+        "startingFromValue": "€299 / session"
       },
       "cta": {
         "title": "Ready for Your {location} Photoshoot?",
@@ -1347,7 +1348,7 @@
       "blindBookingSubline": "Tell us what you need in 60 seconds — confirmed within 24h or full refund.",
       "blindBookingCtaLocation": "Book a {location} photographer for me",
       "packagesHeading": "Photoshoot packages in {location}",
-      "packagesSub": "Pick a package, book it directly. Prices below cover the photographer's time and edited photos. A 12.5% platform service fee is added at checkout.",
+      "packagesSub": "Pick a package, book it directly. Prices below cover the photographer's time and edited photos. A 15% platform service fee is added at checkout.",
       "packagePopular": "Popular",
       "packageMinutesAbbr": "min",
       "packagePhotos": "photos",
@@ -1474,7 +1475,7 @@
       "submitting": "Sending request...",
       "payAndBook": "Pay & Book Now",
       "proposalHint": "The photographer already approved this package — payment confirms the booking.",
-      "paymentNote": "Payment is processed securely after the photographer confirms your booking.",
+      "paymentNote": "You won't be charged now. Once the photographer confirms, you'll pay securely via Stripe.",
       "exactGroupSize": "Exact group size",
       "exactGroupSizeHint": "For 9+ people, enter the real number so your photographer can price and plan correctly.",
       "enterExactGroupSize": "Please enter the exact group size for larger groups.",
@@ -1496,7 +1497,12 @@
       "giftRevealDaysBefore": "days before the shoot",
       "giftRecipientNameRequired": "Recipient name is required",
       "giftRecipientEmailRequired": "A valid recipient email is required",
-      "giftRecipientPhoneRequired": "Recipient WhatsApp number is required"
+      "giftRecipientPhoneRequired": "Recipient WhatsApp number is required",
+      "langBarrierTitle": "Language heads-up",
+      "langBarrierText": "This photographer speaks {languages} — no English. Make sure you're comfortable communicating during the shoot.",
+      "langBarrierTextUnknown": "This photographer hasn't confirmed which languages they speak.",
+      "langBarrierAck": "I understand and want to book anyway",
+      "langBarrierMustAck": "Please confirm you're OK with the language barrier first."
     },
     "time": {
       "flexible": "I'm flexible",
@@ -1578,7 +1584,11 @@
       "reviews": "{count, plural, =1 {# review} other {# reviews}}",
       "byPhotographer": "Featuring {name}",
       "matchPrompt": "AI photographer match — instant"
-    }
+    },
+    "offerKicker": "Summer super-offer",
+    "offerTitle": "Photoshoot from {price} all-in",
+    "offerSub": "We match you with a top-rated photographer — free cancellation up to 48h",
+    "offerCta": "Book now"
   },
   "quickMatch": {
     "locationLabel": "Location",
@@ -1862,9 +1872,9 @@
   },
   "photographersMeta": {
     "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve",
-    "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 40+ places across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €150.",
+    "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 40+ places across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €299.",
     "locationTitle": "Find Photographers in {location} — Portfolios & Prices",
-    "locationDescription": "Find and book verified photographers in {location}, Portugal. Browse portfolios, read reviews, compare packages. From €150. Instant booking.",
+    "locationDescription": "Find and book verified photographers in {location}, Portugal. Browse portfolios, read reviews, compare packages. From €299. Instant booking.",
     "ogAlt": "Photographers in {location}, Portugal",
     "browseByCity": "Browse photographers by city",
     "browseByCitySub": "Explore verified photographers in Portugal's top destinations."
@@ -2445,6 +2455,7 @@
     "confirm": "Confirm",
     "decline": "Decline",
     "markAsCompleted": "Mark as Completed",
+    "markCompleteAvailableOn": "Available on {date} — after the shoot",
     "message": "Message",
     "statusPending": "Pending",
     "statusConfirmed": "Confirmed",
@@ -2537,7 +2548,7 @@
     "stepPayment": "Payment",
     "phoneVerified": "Phone verified",
     "phonePlaceholder": "912 345 678",
-    "phoneAutoPrefix": "Portuguese numbers auto-prefixed with +351",
+    "phoneAutoPrefix": "Portuguese numbers get +351 automatically. For other countries, include your code, e.g. +49.",
     "sendSmsCode": "Send SMS Code",
     "sending": "Sending...",
     "codeSentTo": "Code sent to {phone}",
@@ -2740,7 +2751,7 @@
         },
         "serviceFees": {
           "question": "What are the service fees?",
-          "answer": "**For clients:** A 12.5% service fee is added on top of the package price. For example, a €300 package costs €337.50 total. This fee covers payment processing, platform maintenance, and client support.\n\n**For photographers:** A commission is deducted from each booking based on your plan:\n• Free plan — 20% commission\n• Pro plan — 15% commission\n• Premium plan — 10% commission\n\nThere are no hidden fees. All fees are displayed transparently before any transaction."
+          "answer": "**For clients:** A 15% service fee is added on top of the package price. For example, a €299 package costs €344 total. This fee covers payment processing, platform maintenance, and client support.\n\n**For photographers:** A commission is deducted from each booking based on your plan:\n• Free plan — 20% commission\n• Pro plan — 15% commission\n• Premium plan — 10% commission\n\nThere are no hidden fees. All fees are displayed transparently before any transaction."
         },
         "refundPolicy": {
           "question": "What is the refund policy?",
@@ -2768,7 +2779,7 @@
       "gifts": {
         "howToBuy": {
           "question": "How do I buy a gift card?",
-          "answer": "Visit our **[gift cards page](/gift-cards)** to choose a tier:\n\n• **Express — €290:** 1-hour shoot, 30 edited photos, 1 location\n• **Full — €490:** 2-hour shoot, 60 edited photos, up to 2 locations, one outfit change\n\nEnter the recipient's name and email (optionally their phone for an SMS nudge), add a personal message, and pay with card, Apple Pay, or Google Pay via Stripe. Both tiers are delivered in 7 days from the shoot date and valid for 12 months from purchase."
+          "answer": "Visit our **[gift cards page](/gift-cards)** to choose a tier:\n\n• **Express — €349:** 1-hour shoot, 30 edited photos, 1 location\n• **Full — €520:** 2-hour shoot, 60 edited photos, up to 2 locations, one outfit change\n\nEnter the recipient's name and email (optionally their phone for an SMS nudge), add a personal message, and pay with card, Apple Pay, or Google Pay via Stripe. Both tiers are delivered in 7 days from the shoot date and valid for 12 months from purchase."
         },
         "howToRedeem": {
           "question": "How does the recipient claim and redeem the gift?",
@@ -2881,7 +2892,27 @@
     "retryUpload": "Retry",
     "galleryExpiredTitle": "Gallery Expired",
     "galleryExpiredMessage": "This photo gallery has expired. Please contact your photographer to request a new link.",
-    "accept": "Accept"
+    "accept": "Accept",
+    "needMorePhotos": "The paid package includes {required} photos — you have only added {count}. Add at least {required} before delivering to the client.",
+    "photoCounterShort": "{count} / {required} photos — add {remaining} more before delivering",
+    "photoCounterOk": "{count} / {required} photos ✓",
+    "photosInPackage": "{count, plural, one {# photo} other {# photos}}",
+    "titleHelp": "Shown as the headline above your gallery. Keep it short and personal — e.g. \"Your magical Lisbon evening\".",
+    "messageHelp": "A warm note shown above the photos — thank the client, recall a favourite moment, add a tip. 2–4 sentences (around 200–400 characters) is perfect. Optional.",
+    "tipHeading": "Loved {name}’s photos?",
+    "tipSub": "Add a little thank-you. It goes to {name}, minus a small processing fee.",
+    "tipCustom": "Custom",
+    "tipSend": "Send €{amount} tip",
+    "tipSendDisabled": "Send a tip",
+    "tipLater": "Maybe later",
+    "tipThanks": "Thank you! Your tip is on its way to {name}.",
+    "tipError": "Could not start the payment — please try again.",
+    "peekHeading": "Share a sneak peek",
+    "peekSub": "Send these {count, plural, one {# photo} other {# photos}} as a first look while you edit the rest — clients love it. No download, clean previews, does not count as delivery.",
+    "peekSend": "Send sneak peek ({count})",
+    "peekSent": "✨ Sneak peek sent — {count, plural, one {# photo} other {# photos}}. Keep uploading toward the full delivery.",
+    "peekCopyLink": "Copy peek link",
+    "peekError": "Could not share the sneak peek — try again."
   },
   "availability": {
     "pageTitle": "Availability",
@@ -2962,7 +2993,7 @@
     "failedUpdate": "Failed to update booking",
     "markSessionDoneHint": "Confirm that the session took place successfully. If there was a problem (client no-show, issues), contact support instead.",
     "markSessionDoneWait": "Available on {date}",
-    "uploadDeliverHint": "Upload your photos and share them with the client. They'll receive an email with a link to review and accept.",
+    "uploadDeliverHint": "Upload your photos and share them with the client. They'll receive an email with a link to review and accept. ✨ Tip: uploaded a few favourites? You can send a sneak peek first — optional.",
     "cancelTitle": "Cancel this booking?",
     "declineTitle": "Decline this request?",
     "cancelReasonHelp": "Tell the other side why — they'll receive your reason by email and in the chat.",
@@ -3167,6 +3198,8 @@
     "telegramDisconnectTitle": "Disconnect Telegram"
   },
   "bookings": {
+    "yourPayout": "Your payout",
+    "sessionPrice": "Session price",
     "bookingRequests": "Booking Requests",
     "myBookings": "My Bookings",
     "manageIncoming": "Manage incoming requests from clients",
@@ -3226,7 +3259,9 @@
     "requestedLabel": "Requested",
     "packageLabel": "Package",
     "locationLabel": "Location",
-    "groupLabel": "Group"
+    "groupLabel": "Group",
+    "tipLine": "Tip",
+    "peekReady": "✨ Sneak peek ready — first photos from your session"
   },
   "bookingJourney": {
     "cancelled": "Cancelled",
@@ -3296,8 +3331,9 @@
     "rating": "Rating",
     "titleLabel": "Title (optional)",
     "titlePlaceholder": "Sum up your experience",
-    "reviewLabel": "Your review (optional)",
-    "starsOnlyHint": "Just rate? That's enough — text is optional.",
+    "reviewLabel": "Your review",
+    "starsOnlyHint": "A few sentences about your experience really help future clients.",
+    "minWordsHint": "Please write at least {min} words.",
     "rewardHint": "🎁 Submit and we'll email you a 10% off code after the review is approved.",
     "rewardEmailed": "Thanks — your discount code will be emailed after the review is approved.",
     "rewardBadge": "10% off",
@@ -3344,7 +3380,9 @@
       "done": "Done",
       "cameraError": "Could not access camera. Please allow camera and microphone permissions."
     },
-    "reviewPhotoPreview": "Review photo preview"
+    "reviewPhotoPreview": "Review photo preview",
+    "tipChipsHeading": "Make {name}’s day — add a tip?",
+    "tipChipsError": "Could not start the payment — try again."
   },
   "payButton": {
     "pay": "Pay €{total}",
@@ -3370,6 +3408,7 @@
     "partySize": "Number of people",
     "total": "Total",
     "photographerRate": "photographer rate",
+    "largeGroupSurcharge": "large-group surcharge (9+ people)",
     "platformFee": "platform fee",
     "noPrice": "No pricing available for this combination yet.",
     "holdNote": "Authorised now — charged only when your photographer is confirmed within 24h. Full refund if we can't match.",
@@ -3381,6 +3420,10 @@
     "submitting": "Processing…",
     "error": "Could not create booking. Please try again.",
     "trust": "Payment processed by Stripe. Photo Portugal handpicks your photographer from verified pros.",
+    "madlibsSentence": "I want a <occasion></occasion> photoshoot in <region></region> on <date></date> for <party></party> {partySize, plural, =1 {person} other {people}}, <duration></duration> long.",
+    "pickDate": "pick a date",
+    "largeGroupBadge": "Large group · +50% surcharge",
+    "afterMatchNote": "Once we've matched you, you'll chat with your photographer directly to lock in the meeting spot, outfit ideas, anything.",
     "occasions": {
       "couples": "Couples",
       "family": "Family",
@@ -3394,7 +3437,10 @@
       "birthday": "Birthday",
       "vacation": "Vacation",
       "other": "Other"
-    }
+    },
+    "summerOffer": "☀️ Summer offer — all-inclusive",
+    "youSave": "You save €{amount} ({pct}%)",
+    "allInclusive": "One all-in price — we hand-pick your photographer from our vetted top 1% of Portugal pros. No extra fees."
   },
   "onboarding": {
     "completeYourProfile": "Complete your profile",
@@ -3490,6 +3536,9 @@
     "blindBookingOccasion": "Occasion",
     "blindBookingDuration": "Duration",
     "blindBookingTotal": "Total",
+    "blindBookingPhotographerRate": "photographer rate",
+    "blindBookingServiceFeeLabel": "platform fee",
+    "blindBookingLargeGroupSurcharge": "large-group surcharge (9+ people)",
     "blindBookingHoldNote": "Authorised now — charged only when your photographer is confirmed within 24h. Auto-refund if we can't match.",
     "blindBookingYes": "Yes, book it",
     "blindBookingNo": "Show photographers",
@@ -3618,7 +3667,10 @@
       ]
     },
     "handoffPromptPhone": "Share your WhatsApp number or email and the team will get back within a few hours.",
-    "handoffContactPlaceholder": "WhatsApp number or email"
+    "handoffContactPlaceholder": "WhatsApp number or email",
+    "blindBookingSummerOffer": "☀️ Summer offer — all-inclusive",
+    "blindBookingSave": "You save €{amount}",
+    "blindBookingAllIn": "All-inclusive — we hand-pick your photographer from our vetted top 1% of Portugal pros."
   },
   "lp": {
     "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Portugal",
@@ -3820,7 +3872,7 @@
     "stat_response": "⚡ Most bookings confirmed in under 4 hours",
     "stat_refund": "🛡️ Full refund up to 7 days before your shoot",
     "stat_secure": "🔒 Secure payment — only paid out after the shoot",
-    "stat_fromPrice": "💶 From €90 for an hour-long session, edited photos included",
+    "stat_fromPrice": "💶 From €299 for an hour-long session, edited photos included",
     "stat_locations": "📍 Lisbon · Sintra · Porto · Algarve · Madeira · Azores",
     "statBigPhotographers": "Hand-picked photographers",
     "statBigRating": "Average from 500+ reviews",
@@ -3864,5 +3916,28 @@
     "otherPackagesSubtitle": "Other ways to work with {photographer} — pick what fits your story best.",
     "viewDetails": "View details",
     "from": "From"
+  },
+  "peek": {
+    "title": "A sneak peek from {name} ✨",
+    "subtitle": "{name} picked {count, plural, one {# favourite} other {# favourites}} while editing the rest of the gallery.",
+    "fullGalleryExpected": "{count, plural, =0 {Full gallery expected by ~{date}} other {Full gallery of ~# photos expected by ~{date}}}",
+    "photosBy": "Photos by",
+    "bookYourOwn": "Book your own photoshoot in Portugal →",
+    "deliveredVia": "Delivered via",
+    "notFoundTitle": "Peek not found",
+    "notFoundSub": "This link does not seem to exist. Double-check the URL.",
+    "expiredTitle": "This sneak peek has ended",
+    "expiredSub": "The full gallery has been delivered — sneak peek links retire after the big reveal.",
+    "expiredCta": "Explore Photo Portugal"
+  },
+  "languageBadge": {
+    "speaksEnglish": "I speak English",
+    "noEnglish": "No English",
+    "notSpecified": "Languages not confirmed"
+  },
+  "promoTopbar": {
+    "text": "Summer Super-Offer: photoshoot <strong>from {price} all-in</strong> <was>€344</was> — we book a top photographer for you",
+    "cta": "Book in 60 sec",
+    "dismiss": "Dismiss"
   }
 }

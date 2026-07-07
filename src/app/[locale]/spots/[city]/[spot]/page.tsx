@@ -279,6 +279,7 @@ export default async function SpotPage({
     locations: string | null;
     last_active_at: string | null;
     avg_response_minutes: number | null;
+    languages: string[] | null;
   };
   const photographers = await query<PhotographerRow>(
     `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.cover_position_y,
@@ -286,6 +287,7 @@ export default async function SpotPage({
             ${taglineSql} as tagline, pp.rating, pp.review_count,
             (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as min_price,
             u.last_seen_at as last_active_at, pp.avg_response_minutes,
+            COALESCE(pp.languages, '{}') as languages,
             (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
              FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
             ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
@@ -560,6 +562,7 @@ export default async function SpotPage({
                     locations: p.locations,
                     last_active_at: p.last_active_at,
                     avg_response_minutes: p.avg_response_minutes,
+                    languages: p.languages,
                   }}
                 />
               ))}

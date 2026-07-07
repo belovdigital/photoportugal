@@ -1,16 +1,17 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
-import { localizeLanguageNames } from "@/lib/languages-i18n";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PhotographerProfile } from "@/types";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useSession } from "next-auth/react";
 import { trackViewPhotographer, trackCTAClick } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
+import { maskSurname } from "@/lib/photographer-name";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
+import { LanguageBadge } from "@/components/ui/LanguageBadge";
 
 export function PhotographerCard({
   photographer,
@@ -25,7 +26,9 @@ export function PhotographerCard({
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const t = useTranslations("photographers.card");
   const tc = useTranslations("common");
-  const locale = useLocale();
+  // Public card — mask the surname ("Jennifer Duarte" -> "Jennifer D.").
+  // Idempotent, so it's harmless if the data arrived already masked.
+  const displayName = maskSurname(photographer.name);
   // In gift-mode hide all per-photographer pricing — the recipient already
   // knows their tier and price; showing "from €X" creates the wrong
   // expectation (they don't pay anything).
@@ -46,13 +49,13 @@ export function PhotographerCard({
   return (
     <div
       className="group relative isolate flex h-full flex-col overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm transition hover:shadow-lg"
-      onClick={() => trackViewPhotographer(photographer.slug, normalizeName(photographer.name))}
+      onClick={() => trackViewPhotographer(photographer.slug, normalizeName(displayName))}
     >
       {/* Cover with carousel + lightbox launcher (own button areas) */}
       <div className="relative">
         <PhotographerCardCover
           slug={photographer.slug}
-          name={photographer.name}
+          name={displayName}
           thumbnails={thumbs}
           coverPositionY={photographer.cover_position_y}
           height="h-56"
@@ -73,9 +76,9 @@ export function PhotographerCard({
         <div className="absolute -bottom-6 left-6 z-10">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-primary-100 text-xl font-bold text-primary-600 shadow-md overflow-hidden">
             {photographer.avatar_url ? (
-              <OptimizedImage src={photographer.avatar_url} alt={normalizeName(photographer.name)} width={200} className="h-full w-full" />
+              <OptimizedImage src={photographer.avatar_url} alt={normalizeName(displayName)} width={200} className="h-full w-full" />
             ) : (
-              normalizeName(photographer.name).charAt(0)
+              normalizeName(displayName).charAt(0)
             )}
           </div>
         </div>
@@ -92,7 +95,7 @@ export function PhotographerCard({
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary-600 transition">
-              {normalizeName(photographer.name)}
+              {normalizeName(displayName)}
             </h3>
             <p className="text-sm text-gray-500">{photographer.tagline}</p>
           </div>
@@ -159,12 +162,8 @@ export function PhotographerCard({
           ))}
         </div>
 
-        {/* Languages */}
-        {photographer.languages.length > 0 && (
-          <p className="mt-2 text-xs text-gray-400">
-            {t("speaks", { languages: localizeLanguageNames(photographer.languages, locale).join(", ") })}
-          </p>
-        )}
+        {/* Languages — prominent English badge (visible on mobile too) */}
+        <LanguageBadge languages={photographer.languages} className="mt-2" />
       </div>
       </Link>
 
@@ -192,7 +191,7 @@ export function PhotographerCard({
               href={`/photographers/${photographer.slug}#message`}
               onClick={() => trackCTAClick("message_photographer", "photographer_card")}
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
-              title={t("messagePhotographer", { name: normalizeName(photographer.name) })}
+              title={t("messagePhotographer", { name: normalizeName(displayName) })}
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

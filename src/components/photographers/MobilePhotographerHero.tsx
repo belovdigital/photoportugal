@@ -5,6 +5,7 @@ import { lazy, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge } from "@/components/ui/ActiveBadge";
+import { LanguageBadge } from "@/components/ui/LanguageBadge";
 
 // Lazy-load lightbox — heavy, mounts only on first cover tap.
 const PhotographerLightbox = lazy(() =>
@@ -36,6 +37,7 @@ export function MobilePhotographerHero({
   primaryLocationName,
   thumbnails,
   coverPositionY,
+  languages,
 }: {
   slug: string;
   name: string;
@@ -49,6 +51,7 @@ export function MobilePhotographerHero({
   primaryLocationName: string | null;
   thumbnails: string[];
   coverPositionY: number | null;
+  languages: string[] | null;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -157,6 +160,10 @@ export function MobilePhotographerHero({
             <ActiveBadge lastSeenAt={lastSeenAt} size="sm" />
           </span>
         </div>
+        {/* English badge — the mobile hero used to show NO languages at
+            all, which is exactly where clients booked photographers they
+            couldn't talk to. Solid pill stays readable on the gradient. */}
+        <LanguageBadge languages={languages} className="mt-2" />
       </div>
 
       {/* Lightbox — opens on photo tap, mounts lazily. */}

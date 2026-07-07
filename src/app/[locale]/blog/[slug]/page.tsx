@@ -1160,6 +1160,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                       locations: ph.locations,
                       last_active_at: ph.last_active_at,
                       avg_response_minutes: ph.avg_response_minutes,
+                      languages: ph.languages,
                       packages: ph.packages ?? [],
                       packages_total_count: ph.packages_total_count,
                     }}
@@ -1189,6 +1190,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                     locations: ph.locations,
                     last_active_at: ph.last_active_at,
                     avg_response_minutes: ph.avg_response_minutes,
+                    languages: ph.languages,
                     packages: ph.packages ?? [],
                     packages_total_count: ph.packages_total_count,
                   }}

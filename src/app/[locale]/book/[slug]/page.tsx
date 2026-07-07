@@ -8,13 +8,17 @@ import { useTranslations, useLocale } from "next-intl";
 import { SERVICE_FEE_RATE, LARGE_GROUP_SURCHARGE_RATE, LARGE_GROUP_THRESHOLD } from "@/lib/stripe";
 import { trackBookingSubmitted, trackStartBooking } from "@/lib/analytics";
 import DatePicker, { UnavailableRange } from "@/components/ui/DatePicker";
+import { todayLocalISO, localISOPlusDays } from "@/lib/date-utils";
 import { formatDuration } from "@/lib/package-pricing";
 import { AuthModal } from "@/components/ui/AuthModal";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { normalizeName } from "@/lib/format-name";
+import { maskSurname } from "@/lib/photographer-name";
 import { type BusyWindow, hasAvailableBookingStart } from "@/lib/booking-time-windows";
+import { hasCommonLanguage } from "@/lib/languages";
+import { localizeLanguageNames } from "@/lib/languages-i18n";
 
 interface Package {
   id: string;
@@ -56,6 +60,7 @@ interface Photographer {
   avg_response_minutes?: number | null;
   recent_bookings_30d?: number;
   is_verified?: boolean;
+  languages?: string[];
 }
 
 export default function BookPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -106,6 +111,11 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const [unavailableRanges, setUnavailableRanges] = useState<UnavailableRange[]>([]);
   const [busyWindows, setBusyWindows] = useState<BusyWindow[]>([]);
   const [groupSize, setGroupSize] = useState("2");
+  // Language-barrier acknowledgement — clients kept booking photographers
+  // they couldn't talk to. When the photographer shares no language with
+  // the visitor (their locale's language or English), the submit requires
+  // an explicit checkbox tick.
+  const [langBarrierAck, setLangBarrierAck] = useState(false);
   const [largeGroupSize, setLargeGroupSize] = useState("");
   const [occasion, setOccasion] = useState("");
   const [locationDetail, setLocationDetail] = useState("");
@@ -178,9 +188,17 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
     });
   }, [params, searchParams, t]);
 
+  const noCommonLanguage =
+    !!photographer?.languages && !hasCommonLanguage(locale, photographer.languages);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!photographer) return;
+
+    if (noCommonLanguage && !langBarrierAck) {
+      setError(t("form.langBarrierMustAck"));
+      return;
+    }
 
     if (!flexibleDate && !shootDate) {
       setError(t("form.selectDateOrFlexible"));
@@ -479,7 +497,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-            {t("title", { photographer: normalizeName(photographer.name) })}
+            {t("title", { photographer: normalizeName(maskSurname(photographer.name)) })}
           </h1>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
             {(photographer.review_count || 0) > 0 && (
@@ -506,7 +524,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
           </span>
-          {t("socialProof.recentBookings", { count: photographer.recent_bookings_30d ?? 0, name: normalizeName(photographer.name) })}
+          {t("socialProof.recentBookings", { count: photographer.recent_bookings_30d ?? 0, name: normalizeName(maskSurname(photographer.name)) })}
         </div>
       )}
 
@@ -671,14 +689,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 // Earliest selectable date = today + photographer's notice
                 // period (hours rounded up to whole days). 0h → today.
                 // Backend re-validates the same window on submit.
-                min={(() => {
-                  const hours = photographer?.min_lead_time_hours || 0;
-                  const days = Math.ceil(hours / 24);
-                  const earliest = new Date();
-                  earliest.setHours(0, 0, 0, 0);
-                  earliest.setDate(earliest.getDate() + days);
-                  return earliest.toISOString().split("T")[0];
-                })()}
+                min={localISOPlusDays(Math.ceil((photographer?.min_lead_time_hours || 0) / 24))}
                 required={!flexibleDate}
                 unavailableRanges={unavailableRanges}
                 placeholder={t("form.selectDate")}
@@ -738,7 +749,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 label={t("form.dateFrom")}
                 value={flexibleDateFrom}
                 onChange={(v, coords) => { setFlexibleDateFrom(v); setFlexibleDateFromCoords(coords || null); }}
-                min={new Date().toISOString().split("T")[0]}
+                min={todayLocalISO()}
                 required
                 placeholder={t("form.selectDate")}
               />
@@ -746,7 +757,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 label={t("form.dateTo")}
                 value={flexibleDateTo}
                 onChange={(v, coords) => { setFlexibleDateTo(v); setFlexibleDateToCoords(coords || null); }}
-                min={flexibleDateFrom || new Date().toISOString().split("T")[0]}
+                min={flexibleDateFrom || todayLocalISO()}
                 required
                 placeholder={t("form.selectDate")}
               />
@@ -836,13 +847,13 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         {/* Message */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            {t("form.messageToNamed", { name: normalizeName(photographer.name) })}
+            {t("form.messageToNamed", { name: normalizeName(maskSurname(photographer.name)) })}
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={3}
-            placeholder={t("form.messagePlaceholderNamed", { name: normalizeName(photographer.name) })}
+            placeholder={t("form.messagePlaceholderNamed", { name: normalizeName(maskSurname(photographer.name)) })}
             className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
           />
         </div>
@@ -1035,6 +1046,28 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
           );
         })()}
 
+        {noCommonLanguage && (
+          <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
+            <p className="text-sm font-semibold text-amber-900">
+              ⚠️ {t("form.langBarrierTitle")}
+            </p>
+            <p className="mt-1 text-sm text-amber-800">
+              {photographer.languages && photographer.languages.filter((l) => l.trim() !== "").length > 0
+                ? t("form.langBarrierText", { languages: localizeLanguageNames(photographer.languages, locale).join(", ") })
+                : t("form.langBarrierTextUnknown")}
+            </p>
+            <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm font-medium text-amber-900">
+              <input
+                type="checkbox"
+                checked={langBarrierAck}
+                onChange={(e) => setLangBarrierAck(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+              />
+              {t("form.langBarrierAck")}
+            </label>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={submitting}
@@ -1075,7 +1108,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               <span className="text-xs text-gray-500">&middot; {photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")}</span>
             ) : null}
           </div>
-          <p className="mt-3 text-sm font-semibold text-gray-900">{tc("whatClientsSayAbout", { name: photographer.name })}</p>
+          <p className="mt-3 text-sm font-semibold text-gray-900">{tc("whatClientsSayAbout", { name: normalizeName(maskSurname(photographer.name)) })}</p>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {sidebarReviews.map((r) => (
               <div key={r.id} className="rounded-xl border border-warm-100 bg-warm-50/50 p-4">
@@ -1156,7 +1189,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{normalizeName(photographer.name)}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{normalizeName(maskSurname(photographer.name))}</p>
                 {(photographer.review_count || 0) > 0 && (
                   <p className="text-xs text-gray-500">
                     ★ {Number(photographer.rating || 5).toFixed(1)} · {photographer.review_count} {photographer.review_count === 1 ? tc("review") : tc("reviews")}

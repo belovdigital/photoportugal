@@ -1,5 +1,6 @@
 import { query } from "@/lib/db";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
+import { maskSurname } from "@/lib/photographer-name";
 
 export interface ConciergePhotographer {
   id: string;
@@ -87,7 +88,7 @@ export async function loadPhotographersForConcierge(): Promise<ConciergePhotogra
   const photographers: ConciergePhotographer[] = rows.map((r) => ({
     id: r.id,
     slug: r.slug,
-    name: r.name,
+    name: maskSurname(r.name),
     tagline: r.tagline,
     rating: parseFloat(r.rating) || 0,
     review_count: r.review_count,
@@ -128,7 +129,12 @@ export function photographersToSystemPromptBlock(list: ConciergePhotographer[]):
       `name="${p.name}"`,
       `locations=[${p.locations.join(",")}]`,
       `shoot_types=[${p.shoot_types.join(", ")}]`,
-      p.languages.length ? `languages=[${p.languages.join(",")}]` : null,
+      // Always emit languages — an omitted field reads as "probably fine"
+      // to the model. Missing English gets a loud marker so the LLM can
+      // obey the language-matching rule in the system prompt.
+      p.languages.length
+        ? `languages=[${p.languages.join(",")}]${p.languages.some((l) => l.trim().toLowerCase() === "english") ? "" : " ⚠️NO-ENGLISH"}`
+        : "languages=[NONE DECLARED] ⚠️NO-ENGLISH",
       p.min_price ? `from=€${p.min_price}` : null,
       p.review_count > 0 ? `rating=${p.rating.toFixed(1)} (${p.review_count} reviews)` : `rating=new`,
       p.tagline ? `tagline="${p.tagline.replace(/"/g, "'").slice(0, 120)}"` : null,
