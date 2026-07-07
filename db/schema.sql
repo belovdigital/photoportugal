@@ -518,6 +518,7 @@ CREATE TABLE IF NOT EXISTS concierge_chats (
   messages JSONB NOT NULL DEFAULT '[]'::jsonb,
   matched_photographer_ids UUID[],
   outcome VARCHAR(50),
+  occasion VARCHAR(50), -- server-resolved shoot-type slug (wedding, couples…); see db/concierge-occasion.sql
   utm_source TEXT, utm_medium TEXT, utm_campaign TEXT, utm_term TEXT, gclid TEXT,
   country VARCHAR(2),
   language VARCHAR(10),
@@ -531,6 +532,7 @@ CREATE TABLE IF NOT EXISTS concierge_chats (
 CREATE INDEX IF NOT EXISTS idx_concierge_visitor ON concierge_chats(visitor_id);
 CREATE INDEX IF NOT EXISTS idx_concierge_email ON concierge_chats(email) WHERE email IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_concierge_created ON concierge_chats(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_concierge_occasion ON concierge_chats(occasion) WHERE occasion IS NOT NULL;
 
 -- ============================================================
 -- AI GENERATIONS (try-yourself feature: gpt-image-2 selfie → Portugal scene)
@@ -572,3 +574,52 @@ CREATE TABLE IF NOT EXISTS popup_events (
 );
 CREATE INDEX IF NOT EXISTS idx_popup_events_occurred ON popup_events (occurred_at DESC);
 CREATE INDEX IF NOT EXISTS idx_popup_events_type_occurred ON popup_events (event_type, occurred_at DESC);
+
+-- ============================================================
+-- TIPS (2026-07-02) — optional post-delivery gratuity.
+-- Client pays amount_cents straight via its own Checkout session;
+-- platform keeps 10% (platform_fee_cents, covers Stripe processing),
+-- photographer receives payout_cents via a Connect transfer fired from
+-- the checkout.session.completed webhook (idempotency: tip_transfer_{id}).
+-- One PAID tip per booking (partial unique index); pending rows are
+-- abandoned checkouts and may accumulate harmlessly.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS tips (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  client_id UUID REFERENCES users(id),
+  photographer_id UUID REFERENCES photographer_profiles(id),
+  amount_cents INTEGER NOT NULL,
+  platform_fee_cents INTEGER NOT NULL,
+  payout_cents INTEGER NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending | paid
+  transferred BOOLEAN NOT NULL DEFAULT FALSE,
+  stripe_session_id TEXT,
+  stripe_payment_intent_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  paid_at TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tips_one_paid_per_booking ON tips(booking_id) WHERE status = 'paid';
+CREATE INDEX IF NOT EXISTS idx_tips_booking ON tips(booking_id);
+
+-- ============================================================
+-- SNEAK PEEK (2026-07-02) — optional post-session preview.
+-- Photographer shares 1-10 CLEAN 1200px thumbnails (no watermark, no
+-- full-res, no download) at /peek/{peek_token} BEFORE the full delivery.
+-- Passwordless + shareable by design (unguessable token, noindex);
+-- link dies when the full delivery is accepted or after 30 days.
+-- booking.status stays 'completed' — peek never touches the delivery
+-- lifecycle, deadlines or payout. Photographer name shown MASKED
+-- (viewers are the client's friends = pre-payment audience).
+-- ============================================================
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS peek_token TEXT;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS peek_shared_at TIMESTAMPTZ;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bookings_peek_token ON bookings(peek_token) WHERE peek_token IS NOT NULL;
+ALTER TABLE delivery_photos ADD COLUMN IF NOT EXISTS is_peek BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 2026-07-06: hard link a booking to the anonymous browsing session
+-- (tracking cookie "vid"). Lets the admin blind-booking card show the
+-- client's journey (landing page, referrer, pages viewed) even when
+-- the booking came from the Quick Booking form with no concierge chat.
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS visitor_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_visitor_sessions_visitor_id ON visitor_sessions(visitor_id);

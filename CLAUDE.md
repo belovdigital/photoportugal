@@ -2,6 +2,20 @@
 
 Operational rules that must hold across all sessions on this codebase.
 
+## Local dev server — NEVER start it on this machine
+
+Do NOT run `npm run dev` (or any other command that starts a local
+server / Turbopack watcher) on the user's Mac. Turbopack on this project
+sustains 200%+ CPU even at idle and **hangs the user's computer**. The
+user explicitly banned it on 2026-06-12 ("только не запускай локалку —
+она вешает комп").
+
+- Verification without a server: `npx tsc --noEmit`, `npx eslint <files>`,
+  `node -e "JSON.parse(...)"` for messages/*.json, and reading code.
+- If something truly needs a live render, ASK the user first — they may
+  start the dev server themselves or check on prod after deploy.
+- This overrides any older note suggesting localhost:3000 is available.
+
 ## i18n — NEVER ship raw key paths to the UI
 
 `useTranslations("ns")` + `t("foo") || "fallback"` is a footgun. When the

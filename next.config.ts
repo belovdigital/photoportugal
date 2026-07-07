@@ -92,6 +92,14 @@ const nextConfig: NextConfig = {
       { source: "/es/choose-booking-type", destination: "/es/concierge", permanent: true },
       { source: "/fr/trouver-photographe", destination: "/fr/concierge", permanent: true },
       { source: "/fr/choose-booking-type", destination: "/fr/concierge", permanent: true },
+      // Wedding got its own landing — /photoshoots/wedding (and localized
+      // aliases) consolidate into /weddings so the two pages don't compete
+      // for the same "wedding photographer portugal" queries.
+      { source: "/photoshoots/wedding", destination: "/weddings", permanent: true },
+      { source: "/pt/photoshoots/wedding", destination: "/pt/weddings", permanent: true },
+      { source: "/de/fotoshootings/wedding", destination: "/de/hochzeiten", permanent: true },
+      { source: "/es/sesiones-de-fotos/wedding", destination: "/es/bodas", permanent: true },
+      { source: "/fr/seances-photo/wedding", destination: "/fr/mariages", permanent: true },
     ];
   },
   async headers() {
