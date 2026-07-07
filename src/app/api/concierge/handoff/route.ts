@@ -73,11 +73,11 @@ export async function POST(req: NextRequest) {
       email: string | null;
       matched_photographer_ids: string[] | null;
       inquiry_booking_ids: string[] | null;
-      created_at: string; updated_at: string;
+      created_at: string; updated_at: string; occasion: string | null;
     }>(
       `SELECT messages, utm_source, utm_term, country, phone, gclid, outcome, email,
               matched_photographer_ids, inquiry_booking_ids,
-              created_at, updated_at
+              created_at, updated_at, occasion
          FROM concierge_chats WHERE id = $1`,
       [chat_id]
     ).catch(() => null);
@@ -116,6 +116,7 @@ export async function POST(req: NextRequest) {
       messages: ctx.messages || [],
       created_at: ctx.created_at,
       updated_at: ctx.updated_at,
+      occasion: ctx.occasion,
     }) : null;
     const heatBadge = ls
       ? (ls.heat === "hot" ? `🔥 HOT ${ls.score}` : ls.heat === "warm" ? `🟡 WARM ${ls.score}` : `🔵 ${ls.score}`)

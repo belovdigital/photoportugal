@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { emailLayout, emailButton, sendEmail } from "@/lib/email";
+import { maskSurname } from "@/lib/photographer-name";
 
 export const runtime = "nodejs";
 
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
         if (!r) return null;
         return {
           slug,
-          name: r.name,
+          name: maskSurname(r.name),
           tagline: r.tagline,
           rating: parseFloat(r.rating) || 0,
           review_count: r.review_count,

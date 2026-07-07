@@ -6,6 +6,11 @@ function getStatusMessage(status: string, photographerName: string, clientName: 
 
   const messages: Record<string, string> = {
     confirmed: `📋 Booking confirmed by ${pName}. Payment link has been sent.\n⏳ Slot is held but not locked — until payment clears, another client paying first could take the date.`,
+    // Blind booking just got a photographer assigned by admin — payment is
+    // ALREADY captured, so DON'T reuse `confirmed` (which talks about a pending
+    // payment link / unlocked slot). This is a warm "you two are set, start
+    // planning" opener in the shared thread.
+    matched: `🎉 You're matched! ${cName} ↔ ${pName} — the session is booked and paid. Say hi and sort out the details (meeting point, outfits, timing) right here in the chat.`,
     completed: `📸 Session marked as completed. ${pName} will upload photos soon.`,
     delivered: "📦 Photo previews have been uploaded and are ready for review.",
     cancelled: "❌ Booking has been cancelled.",

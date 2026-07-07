@@ -17,6 +17,9 @@ export interface LeadScoreInput {
   messages: { role: string; content: string }[];
   created_at: string | Date;
   updated_at: string | Date;
+  /** Server-resolved shoot-type slug (wedding, couples…). Optional so older
+   *  callers compile; when absent, no occasion weighting is applied. */
+  occasion?: string | null;
 }
 
 const DATE_PATTERN = /\b(\d{1,2}[\/\.\- ](?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december)|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s*\d{0,4}\b|\bnext (week|month|weekend)\b|\bin \d+ (days?|weeks?|months?)\b|\b(this|next) (january|february|march|april|may|june|july|august|september|october|november|december)\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/i;
@@ -52,6 +55,14 @@ export function computeLeadScore(input: LeadScoreInput): { score: number; heat: 
   if (ageHours < 1) score += 15;
   else if (ageHours < 24) score += 10;
   else if (ageHours > 24 * 7) score -= 10;
+
+  // Occasion value tier. Weddings carry several times the LTV of a
+  // standard portrait and a long, high-intent planning cycle — surface
+  // them first and justify the extended nurture cadence. Other
+  // wedding-adjacent occasions get a smaller lift.
+  const occ = (input.occasion || "").toLowerCase();
+  if (occ === "wedding") score += 25;
+  else if (occ === "elopement" || occ === "engagement" || occ === "proposal" || occ === "honeymoon") score += 12;
 
   // Already converted to a booking — cold (we shouldn't keep marketing)
   if (input.inquiry_booking_ids && input.inquiry_booking_ids.length > 0) score -= 40;

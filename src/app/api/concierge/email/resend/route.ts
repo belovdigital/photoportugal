@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { emailLayout, emailButton, sendEmail } from "@/lib/email";
+import { maskSurname } from "@/lib/photographer-name";
 
 export const runtime = "nodejs";
 
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
     const reasoning = reasoned.find((m) => m.slug === slug)?.reasoning || "";
     if (!r) return null;
     return {
-      slug, name: r.name,
+      slug, name: maskSurname(r.name),
       rating: parseFloat(r.rating) || 0,
       review_count: r.review_count,
       min_price: r.min_price ? parseInt(r.min_price) : null,

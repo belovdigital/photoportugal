@@ -30,6 +30,7 @@ interface ChatRow {
   messages: { role: string; content: string; action?: { type?: string; data?: { matches?: { slug: string }[] } } | null }[];
   created_at: string;
   updated_at: string;
+  occasion: string | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
       WHERE id = $3
       RETURNING id, email, first_name, language, utm_source, gclid, outcome,
                 matched_photographer_ids, inquiry_booking_ids, messages,
-                created_at, updated_at`,
+                created_at, updated_at, occasion`,
     [cleanPhone, first_name?.trim() || null, chat_id]
   ).catch((err) => {
     console.error("[concierge/whatsapp] update error:", err);
@@ -126,6 +127,7 @@ export async function POST(req: NextRequest) {
         messages: chat.messages || [],
         created_at: chat.created_at,
         updated_at: chat.updated_at,
+        occasion: chat.occasion,
       });
       const heatBadge = ls.heat === "hot" ? `🔥 HOT ${ls.score}` : ls.heat === "warm" ? `🟡 WARM ${ls.score}` : `🔵 ${ls.score}`;
 

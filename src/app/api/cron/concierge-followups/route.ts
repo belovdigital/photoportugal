@@ -19,6 +19,7 @@ import { query, queryOne } from "@/lib/db";
 import {
   sendConciergeFollowup30min,
   sendConciergeFollowup24h,
+  sendConciergeWeddingNurture,
   extractMatchesFromChat,
 } from "@/lib/concierge/followup-emails";
 
@@ -32,6 +33,15 @@ interface ChatRow {
   language: string | null;
   messages: { role: string; action?: { type?: string; data?: { matches?: unknown[] } } | null }[];
 }
+
+// Wedding nurture stages — spaced touches over ~3 weeks for the long
+// wedding decision cycle. Each fires once per chat (stamped in
+// followups_sent) and only while the couple hasn't booked yet.
+const WEDDING_STAGES: { stamp: string; stage: "d4" | "d11" | "d21"; minDays: number; maxDays: number }[] = [
+  { stamp: "wedding_d4", stage: "d4", minDays: 4, maxDays: 6 },
+  { stamp: "wedding_d11", stage: "d11", minDays: 11, maxDays: 14 },
+  { stamp: "wedding_d21", stage: "d21", minDays: 21, maxDays: 25 },
+];
 
 export async function GET(req: NextRequest) {
   if (req.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
@@ -48,7 +58,7 @@ export async function GET(req: NextRequest) {
     }
   } catch {}
 
-  const result = { sent_30min: 0, sent_24h: 0, errors: [] as string[] };
+  const result = { sent_30min: 0, sent_24h: 0, sent_wedding: 0, errors: [] as string[] };
 
   try {
     // === 30-minute nudge ===
@@ -121,6 +131,50 @@ export async function GET(req: NextRequest) {
         result.sent_24h++;
       } catch (e) {
         result.errors.push(`24h send for ${chat.id}: ${e}`);
+      }
+    }
+
+    // === Wedding nurture (day ~4 / ~11 / ~21) ===
+    // Weddings plan over weeks/months — keep gently re-surfacing the
+    // shortlist while the couple hasn't booked. occasion='wedding' is
+    // server-resolved per chat (see chat route); booked couples are
+    // excluded via inquiry_booking_ids.
+    for (const w of WEDDING_STAGES) {
+      const rows = await query<ChatRow>(
+        `SELECT id, email, first_name, language, messages
+           FROM concierge_chats
+          WHERE email IS NOT NULL
+            AND occasion = 'wedding'
+            AND outcome = 'matched'
+            AND COALESCE(archived, FALSE) = FALSE
+            AND COALESCE(array_length(inquiry_booking_ids, 1), 0) = 0
+            AND created_at < NOW() - ($1::int * INTERVAL '1 day')
+            AND created_at > NOW() - ($2::int * INTERVAL '1 day')
+            AND (followups_sent->>$3) IS NULL`,
+        [w.minDays, w.maxDays, w.stamp]
+      ).catch((e) => { result.errors.push(`${w.stamp} query: ${e}`); return [] as ChatRow[]; });
+
+      for (const chat of rows) {
+        await queryOne(
+          `UPDATE concierge_chats
+              SET followups_sent = followups_sent || jsonb_build_object($2, NOW()::text)
+            WHERE id = $1 RETURNING id`,
+          [chat.id, w.stamp]
+        ).catch(() => null);
+        try {
+          const matches = extractMatchesFromChat(chat.messages || []);
+          if (matches.length === 0) continue;
+          await sendConciergeWeddingNurture({
+            to: chat.email,
+            firstName: chat.first_name,
+            locale: chat.language,
+            matches,
+            stage: w.stage,
+          });
+          result.sent_wedding++;
+        } catch (e) {
+          result.errors.push(`${w.stamp} send for ${chat.id}: ${e}`);
+        }
       }
     }
   } finally {

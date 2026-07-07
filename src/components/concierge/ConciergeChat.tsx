@@ -153,7 +153,13 @@ type Action =
         occasion: string;
         party_size: number;
         duration_minutes: number;
+        // price_eur is the ALL-INCLUSIVE summer-offer total the client pays
+        // (regional inclusive × 9+-group multiplier) — charged straight.
         price_eur: number;
+        regional_base_eur?: number;
+        compare_at_eur?: number;
+        savings_eur?: number;
+        large_group_applied?: boolean;
         sample_size: number;
         reply_text: string;
       };
@@ -1689,7 +1695,14 @@ interface BlindOffer {
   occasion: string;
   party_size: number;
   duration_minutes: number;
+  // price_eur is the ALL-INCLUSIVE summer-offer total the client pays
+  // (regional inclusive price × 9+-group multiplier) — charged straight.
   price_eur: number;
+  regional_base_eur?: number;
+  // Pre-offer all-in total for the strike-through ("was €344") + saving.
+  compare_at_eur?: number;
+  savings_eur?: number;
+  large_group_applied?: boolean;
   sample_size: number;
   reply_text: string;
 }
@@ -1800,11 +1813,19 @@ function BlindBookingCard({
           </div>
 
           <div className="rounded-lg bg-white px-3 py-2.5 ring-1 ring-amber-200">
-            <p className="text-[11px] text-gray-500">{t("blindBookingTotal") || "Total"}</p>
-            <p className="text-2xl font-bold text-gray-900">€{Math.round(offer.price_eur * 1.125)}</p>
-            <p className="mt-0.5 text-[11px] text-gray-500">
-              €{offer.price_eur} {t("blindBookingPhotographerRate") || "photographer rate"} + €{Math.round(offer.price_eur * 0.125)} {t("blindBookingServiceFeeLabel") || "platform fee"}
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">{t("blindBookingSummerOffer")}</p>
+            <p className="text-2xl font-bold text-gray-900">
+              €{offer.price_eur}
+              {offer.compare_at_eur && offer.compare_at_eur > offer.price_eur ? (
+                <span className="ml-2 align-middle text-base font-medium text-gray-400 line-through">€{offer.compare_at_eur}</span>
+              ) : null}
             </p>
+            {offer.savings_eur && offer.savings_eur > 0 ? (
+              <p className="mt-0.5 text-[12px] font-semibold text-green-700">
+                {t("blindBookingSave", { amount: offer.savings_eur })}
+              </p>
+            ) : null}
+            <p className="mt-0.5 text-[11px] text-gray-500">{t("blindBookingAllIn")}</p>
             <p className="mt-1 text-[11px] text-gray-500">
               {t("blindBookingHoldNote") || "Authorised now — charged only when your photographer is confirmed within 24h. Auto-refund if we can't match."}
             </p>
@@ -1845,10 +1866,13 @@ function BlindBookingCard({
           {regionLabel} · {dateLabel} · {occasionLabel} · {offer.party_size}{" "}
           {offer.party_size === 1 ? "person" : "people"} · {durationLabel}
         </p>
-        <p className="mt-1 text-base font-bold text-gray-900">€{Math.round(offer.price_eur * 1.125)}</p>
-        <p className="text-[10px] text-gray-500">
-          €{offer.price_eur} {t("blindBookingPhotographerRate") || "photographer rate"} + €{Math.round(offer.price_eur * 0.125)} {t("blindBookingServiceFeeLabel") || "platform fee"}
+        <p className="mt-1 text-base font-bold text-gray-900">
+          €{offer.price_eur}
+          {offer.compare_at_eur && offer.compare_at_eur > offer.price_eur ? (
+            <span className="ml-1.5 align-middle text-xs font-medium text-gray-400 line-through">€{offer.compare_at_eur}</span>
+          ) : null}
         </p>
+        <p className="text-[10px] text-gray-500">{t("blindBookingAllIn")}</p>
         <p className="mt-0.5 text-[11px] text-gray-500">
           {t("blindBookingHoldNote") || "Authorised now — charged only when your photographer is confirmed within 24h. Auto-refund if we can't match."}
         </p>

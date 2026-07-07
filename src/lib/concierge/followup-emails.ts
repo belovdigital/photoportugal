@@ -215,6 +215,127 @@ export async function sendConciergeFollowup24h(opts: {
 /** Helper: extract follow-up-friendly photographer rows from the latest
  *  show_matches action in a chat. We render whatever we have — covers and
  *  ratings come from the action data the chat already stored. */
+// Wedding nurture — weddings have a 4-8 week (often months) decision cycle,
+// so a 30min/24h cadence is far too short. After the standard early nudges,
+// wedding chats get three spaced touches (day ~4 / ~11 / ~21) with copy that
+// acknowledges the long planning horizon and the "book early" reality.
+// Gated on occasion='wedding' + email + no booking yet in the cron.
+export async function sendConciergeWeddingNurture(opts: {
+  to: string;
+  firstName: string | null;
+  locale: string | null;
+  matches: FollowupMatch[];
+  stage: "d4" | "d11" | "d21";
+}): Promise<void> {
+  const loc: Locale = normalizeLocale(opts.locale);
+  const hi = (name: string, fallback: string) => (opts.firstName ? `${name} ${opts.firstName}` : fallback);
+  const T = pickT(
+    {
+      en: {
+        subject: {
+          d4: "Still dreaming about your Portugal wedding?",
+          d11: "Your wedding photographer shortlist",
+          d21: "Shall we hold your wedding date?",
+        }[opts.stage],
+        h1: hi("Hi", "Hi there"),
+        intro: {
+          d4: "Planning a wedding takes time — no rush. Your shortlist is right here whenever you're ready. The photographers who shoot weddings best tend to book out 6-12 months ahead, so it's worth opening a couple of profiles early.",
+          d11: "Still here when you need us. Have a proper look at your wedding photographers below — open a profile to see full galleries from real weddings and message them directly with your date and venue.",
+          d21: "One last note from us. Wedding dates fill fast at the best photographers, so if one of these feels right, reach out now to hold your date — even a quick message starts the conversation.",
+        }[opts.stage],
+        cta: "Open my shortlist",
+        ps: "Reply to this email any time — a real person reads every one.",
+        from: "From",
+        viewProfile: "View profile",
+      },
+      pt: {
+        subject: {
+          d4: "Ainda a sonhar com o vosso casamento em Portugal?",
+          d11: "A vossa lista de fotógrafos de casamento",
+          d21: "Reservamos a data do vosso casamento?",
+        }[opts.stage],
+        h1: hi("Olá", "Olá"),
+        intro: {
+          d4: "Planear um casamento leva tempo — sem pressa. A vossa lista está aqui quando estiverem prontos. Os melhores fotógrafos de casamento costumam ficar reservados com 6-12 meses de antecedência, por isso vale a pena espreitar alguns perfis cedo.",
+          d11: "Continuamos aqui. Vejam com calma os vossos fotógrafos de casamento abaixo — abram um perfil para ver galerias completas de casamentos reais e falem diretamente com eles sobre a vossa data e espaço.",
+          d21: "Um último apontamento. As datas de casamento esgotam depressa nos melhores fotógrafos — se algum vos parecer certo, falem com ele agora para garantir a data; basta uma mensagem para começar.",
+        }[opts.stage],
+        cta: "Abrir a minha lista",
+        ps: "Respondam a este email quando quiserem — é lido por uma pessoa real.",
+        from: "Desde",
+        viewProfile: "Ver perfil",
+      },
+      de: {
+        subject: {
+          d4: "Träumt ihr noch von eurer Hochzeit in Portugal?",
+          d11: "Eure Auswahl an Hochzeitsfotografen",
+          d21: "Sollen wir euren Hochzeitstermin sichern?",
+        }[opts.stage],
+        h1: hi("Hallo", "Hallo"),
+        intro: {
+          d4: "Eine Hochzeit zu planen braucht Zeit — kein Stress. Eure Auswahl ist hier, wann immer ihr bereit seid. Die besten Hochzeitsfotografen sind oft 6-12 Monate im Voraus ausgebucht, also lohnt es sich, früh ein paar Profile anzusehen.",
+          d11: "Wir sind weiterhin für euch da. Schaut euch eure Hochzeitsfotografen unten in Ruhe an — öffnet ein Profil für vollständige Galerien echter Hochzeiten und schreibt direkt mit eurem Datum und Veranstaltungsort.",
+          d21: "Eine letzte Nachricht von uns. Hochzeitstermine sind bei den besten Fotografen schnell vergeben — wenn euch einer zusagt, meldet euch jetzt, um euren Termin zu sichern. Eine kurze Nachricht genügt.",
+        }[opts.stage],
+        cta: "Meine Auswahl öffnen",
+        ps: "Antwortet jederzeit auf diese E-Mail — ein echter Mensch liest jede.",
+        from: "Ab",
+        viewProfile: "Profil ansehen",
+      },
+      es: {
+        subject: {
+          d4: "¿Aún soñando con vuestra boda en Portugal?",
+          d11: "Vuestra lista de fotógrafos de boda",
+          d21: "¿Reservamos la fecha de vuestra boda?",
+        }[opts.stage],
+        h1: hi("Hola", "Hola"),
+        intro: {
+          d4: "Planear una boda lleva tiempo — sin prisa. Vuestra lista está aquí cuando estéis listos. Los mejores fotógrafos de boda suelen reservarse con 6-12 meses de antelación, así que vale la pena abrir algún perfil pronto.",
+          d11: "Seguimos aquí. Mirad con calma vuestros fotógrafos de boda abajo — abrid un perfil para ver galerías completas de bodas reales y escribidles directamente con vuestra fecha y lugar.",
+          d21: "Una última nota. Las fechas de boda se llenan rápido en los mejores fotógrafos — si alguno os encaja, contactadle ahora para reservar la fecha; un mensaje basta para empezar.",
+        }[opts.stage],
+        cta: "Abrir mi lista",
+        ps: "Responded a este correo cuando queráis — lo lee una persona real.",
+        from: "Desde",
+        viewProfile: "Ver perfil",
+      },
+      fr: {
+        subject: {
+          d4: "Vous rêvez encore de votre mariage au Portugal ?",
+          d11: "Votre sélection de photographes de mariage",
+          d21: "On réserve la date de votre mariage ?",
+        }[opts.stage],
+        h1: hi("Bonjour", "Bonjour"),
+        intro: {
+          d4: "Organiser un mariage prend du temps — rien ne presse. Votre sélection est là quand vous serez prêts. Les meilleurs photographes de mariage sont souvent réservés 6 à 12 mois à l'avance, alors n'hésitez pas à ouvrir quelques profils tôt.",
+          d11: "Nous sommes toujours là. Regardez tranquillement vos photographes de mariage ci-dessous — ouvrez un profil pour voir les galeries complètes de vrais mariages et écrivez-leur directement avec votre date et votre lieu.",
+          d21: "Un dernier mot de notre part. Les dates de mariage partent vite chez les meilleurs photographes — si l'un d'eux vous plaît, contactez-le maintenant pour retenir votre date ; un simple message suffit.",
+        }[opts.stage],
+        cta: "Ouvrir ma sélection",
+        ps: "Répondez à cet e-mail quand vous voulez — une vraie personne le lit.",
+        from: "À partir de",
+        viewProfile: "Voir le profil",
+      },
+    },
+    loc
+  );
+
+  const conciergeUrl = localizedUrl("/concierge", loc);
+  const cards = opts.matches
+    .slice(0, 3)
+    .map((m) => matchCardHtml(m, localizedUrl(`/photographers/${m.slug}`, loc), { from: T.from, viewProfile: T.viewProfile }))
+    .join("");
+
+  const body = `
+    <h1 style="font-size:22px;font-weight:700;color:#1F1F1F;margin:0 0 12px;">${T.h1}</h1>
+    <p style="font-size:15px;line-height:1.6;color:#3A3A3A;margin:0 0 8px;">${T.intro}</p>
+    ${cards}
+    ${emailButton(conciergeUrl, T.cta)}
+    <p style="font-size:13px;color:#9B8E82;line-height:1.5;margin:20px 0 0;">${T.ps}</p>
+  `;
+  await sendEmail(opts.to, T.subject, emailLayout(body, loc));
+}
+
 export function extractMatchesFromChat(messages: Array<{ role: string; action?: { type?: string; data?: { matches?: unknown[] } } | null }>): FollowupMatch[] {
   for (let i = messages.length - 1; i >= 0; i--) {
     const a = messages[i].action;

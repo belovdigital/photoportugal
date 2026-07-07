@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import { hash } from "bcryptjs";
 import crypto from "crypto";
-import { requireStripe, SERVICE_FEE_RATE } from "@/lib/stripe";
+import { requireStripe, largeGroupMultiplier } from "@/lib/stripe";
+import { blindBaseFromTotal, blindServiceFeeFromTotal } from "@/lib/blind-booking/pricing";
 import { consumeHold } from "@/lib/blind-booking/holds";
 
 export const dynamic = "force-dynamic";
@@ -109,6 +110,9 @@ export async function POST(req: NextRequest) {
           { status: 403 }
         );
       }
+      // Hold price already includes 9+ large-group surcharge (applied
+      // by chat route's offer_blind_booking handler before mintHold).
+      // Pass through as-is — do NOT multiply again.
       hold = {
         region: fromMem.region,
         date: fromMem.date,
@@ -145,13 +149,16 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+      // price_eur is the CLIENT-INCLUSIVE summer-offer total (€279/465/649);
+      // apply the 9+ large-group +50% surcharge to it (matches non-blind flow).
+      const surchargedTotalEur = Math.round(Number(priced.price_eur) * largeGroupMultiplier(partySize));
       hold = {
         region: canonicalRegion,
         date,
         occasion,
         party_size: partySize,
         duration_minutes: priced.duration_minutes,
-        price_eur: priced.price_eur,
+        price_eur: surchargedTotalEur,
       };
     }
 
@@ -182,9 +189,17 @@ export async function POST(req: NextRequest) {
       const passwordHash = await hash(randomPassword, 12);
       const firstName = name.split(" ")[0] || name;
       const lastName = name.split(" ").slice(1).join(" ") || null;
+      // email_verified = TRUE from birth: nobody ever sends these
+      // auto-created accounts a verification link, so FALSE means the
+      // login authorize() check locks them out FOREVER — even after a
+      // successful password reset (David De Almeida, 2026-07-06: reset
+      // worked, login still said "verify your email", he gave up and
+      // created a duplicate account). The visitor is mid-Stripe-checkout
+      // with this address and every booking email lands there — that is
+      // stronger ownership proof than a verification click.
       user = await queryOne<{ id: string; email: string; name: string }>(
-        `INSERT INTO users (email, name, first_name, last_name, password_hash, role, phone, locale)
-         VALUES ($1, $2, $3, $4, $5, 'client', $6, $7)
+        `INSERT INTO users (email, name, first_name, last_name, password_hash, role, phone, locale, email_verified)
+         VALUES ($1, $2, $3, $4, $5, 'client', $6, $7, TRUE)
          RETURNING id, email, name`,
         [email, name, firstName, lastName, passwordHash, phone, locale]
       );
@@ -199,27 +214,85 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Build the booking message — combine meeting hint with origin trail.
+    // Build the booking message — combine meeting hint with an HONEST
+    // origin trail. holdId present = the offer came out of a concierge
+    // CHAT; absent = the visitor used the Quick Booking form (modal/
+    // homepage button) and there is NO conversation to look up. The old
+    // single "via Concierge" label sent admins hunting for chat history
+    // that never existed (David De Almeida case, 2026-07-06).
+    const origin = holdId ? "via Concierge chat" : "Quick Booking form";
     const message = meetingHint
-      ? `[Blind booking via Concierge] Meeting hint: ${meetingHint}`
-      : `[Blind booking via Concierge]`;
+      ? `[Blind booking — ${origin}] Meeting hint: ${meetingHint}`
+      : `[Blind booking — ${origin}]`;
+
+    // Visitor id from the tracking cookie — hard-links the booking to the
+    // anonymous browsing session so the admin card can show the client's
+    // journey (landing page, referrer, pages viewed) even when there was
+    // no concierge chat.
+    const visitorId = (req.cookies.get("vid")?.value || "").slice(0, 64) || null;
+
+    // Bind the (previously anonymous) concierge chat to this client and
+    // store its id on the booking for a hard link, so the admin card can
+    // show the exact conversation.
+    let boundChatId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(chatId) ? chatId : null;
+    if (boundChatId) {
+      // Concierge-chat path — we have the explicit id.
+      await queryOne(
+        "UPDATE concierge_chats SET user_id = $1 WHERE id = $2 AND user_id IS NULL RETURNING id",
+        [user.id, boundChatId]
+      ).catch(() => {});
+    } else {
+      // Quick Booking FORM path — no chat_id is passed. But the visitor
+      // very often chatted with the bot anonymously earlier (drawer),
+      // gave a phone/email, left, then came back and booked via the form
+      // (David De Almeida, 2026-07-06: chatted "surprise proposal in
+      // Sintra" on Jul 3, booked via form Jul 6 — phone matched, nothing
+      // linked). Retro-link the most recent anonymous chat by phone (last
+      // 9 digits, country-code-agnostic) or email, within 30 days.
+      const phoneDigits = phone.replace(/\D/g, "");
+      const phoneKey = phoneDigits.length >= 9 ? phoneDigits.slice(-9) : null;
+      if (phoneKey || email) {
+        const matched = await queryOne<{ id: string }>(
+          `SELECT id FROM concierge_chats
+            WHERE user_id IS NULL
+              AND created_at > NOW() - INTERVAL '30 days'
+              AND (
+                ($1::text IS NOT NULL AND regexp_replace(COALESCE(phone, ''), '[^0-9]', '', 'g') LIKE '%' || $1::text)
+                OR ($2::text <> '' AND lower(email) = $2::text)
+              )
+            ORDER BY created_at DESC
+            LIMIT 1`,
+          [phoneKey, email]
+        ).catch(() => null);
+        if (matched?.id) {
+          boundChatId = matched.id;
+          await queryOne(
+            "UPDATE concierge_chats SET user_id = $1 WHERE id = $2 AND user_id IS NULL RETURNING id",
+            [user.id, matched.id]
+          ).catch(() => {});
+        }
+      }
+    }
+    const chatUuid = boundChatId;
 
     // INSERT booking — status='confirmed' + photographer_id=NULL.
     // The combination "confirmed + no photographer" IS the marker for
     // "blind booking awaiting admin assignment" — no separate enum
-    // value needed (refactor 2026-06-03). total_price stores the
-    // BASE photographer rate (matches non-blind semantics: package
-    // price, before service fee). Stripe charges base × 1.125; payout
-    // split is computed at admin-assign time. blind_booking flag
-    // persists as a permanent analytics marker.
+    // value needed (refactor 2026-06-03). total_price stores the BASE
+    // photographer rate (matches non-blind semantics) — since the 2026-07
+    // summer offer that base is DERIVED from the inclusive price the
+    // client saw: base = hold.price_eur − 15% platform cut. Stripe
+    // charges hold.price_eur straight (it IS the all-in number); payout
+    // split (standard commission on the base) is computed at admin-assign
+    // time. blind_booking flag persists as a permanent analytics marker.
     const booking = await queryOne<{ id: string }>(
       `INSERT INTO bookings (
          client_id, photographer_id, location_slug, shoot_date,
-         group_size, occasion, message, total_price, status,
-         confirmed_at, blind_booking, utm_source, utm_medium
+         group_size, occasion, message, total_price, service_fee, status,
+         confirmed_at, blind_booking, utm_source, utm_medium, concierge_chat_id, visitor_id
        ) VALUES (
-         $1, NULL, $2, $3, $4, $5, $6, $7, 'confirmed',
-         NOW(), TRUE, 'concierge', 'blind_booking'
+         $1, NULL, $2, $3, $4, $5, $6, $7, $8, 'confirmed',
+         NOW(), TRUE, $10, 'blind_booking', $9, $11
        ) RETURNING id`,
       [
         user.id,
@@ -228,7 +301,16 @@ export async function POST(req: NextRequest) {
         hold.party_size,
         hold.occasion,
         message,
-        hold.price_eur,
+        // base + fee reconstruct the exact client charge:
+        // 237.15 + 41.85 = 279 — keeps every "total_price + service_fee"
+        // consumer (refunds, analytics) money-correct for blind rows.
+        blindBaseFromTotal(hold.price_eur),
+        Math.round((hold.price_eur - blindBaseFromTotal(hold.price_eur)) * 100) / 100,
+        chatUuid,
+        // utm_source distinguishes the two funnels honestly; utm_medium
+        // stays 'blind_booking' for both so blind-funnel filters keep working.
+        holdId ? "concierge" : "quick_booking",
+        visitorId,
       ]
     );
 
@@ -263,12 +345,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Same fee structure as the rest of the marketplace: client pays
-    // photographer rate + 12.5% platform service fee. Payout split
-    // (commission per photographer's plan) is computed at admin-assign
-    // time when we know the photographer's plan.
-    const totalClientPaysCents = Math.round(hold.price_eur * (1 + SERVICE_FEE_RATE) * 100);
-    const serviceFeeEur = Math.round(hold.price_eur * SERVICE_FEE_RATE);
+    // Summer super-offer: hold.price_eur IS the all-inclusive number the
+    // visitor saw (€279/465/649) — charge it straight, nothing added on
+    // top. The 15% platform cut + photographer base are carved out of it
+    // (see blindBaseFromTotal); commission split lands at admin-assign.
+    const totalClientPaysCents = Math.round(hold.price_eur * 100);
+    const serviceFeeEur = Math.round(blindServiceFeeFromTotal(hold.price_eur));
 
     const session = await requireStripe().checkout.sessions.create(
       {
