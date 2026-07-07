@@ -7,7 +7,6 @@ import { localizeShootType } from "@/lib/shoot-type-labels";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
-import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
 import { trackSearch, trackCTAClick } from "@/lib/analytics";
 import {
   LocationTreeOptions,
@@ -525,33 +524,6 @@ export function PhotographerCatalog({
         ) : null;
       })()}
 
-      {/* Blind booking CTA — "we'll book one for you" path. Sits above
-          the grid so visitors who feel overwhelmed by 50+ photographer
-          cards have a one-tap escape. The pre-prompt is regional when
-          a single location is filtered, generic otherwise. */}
-      <div className="mt-5 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-amber-50 to-white p-4 sm:flex sm:items-center sm:justify-between sm:p-5">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-sm">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.847.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-          </span>
-          <div>
-            <p className="text-sm font-bold text-gray-900">{t("blindBookingHeadline")}</p>
-            <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">{t("blindBookingSubline")}</p>
-          </div>
-        </div>
-        <QuickBookingTrigger
-          onClick={() => trackCTAClick("quick_booking", "catalog_blind_cta")}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700 sm:mt-0 sm:w-auto"
-        >
-          {t("blindBookingCta")}
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </QuickBookingTrigger>
-      </div>
-
       {/* Mobile-only buckets row (horizontal scroll) */}
       <div className="mt-4 -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:hidden">
         {BUCKETS.map((b) => {
@@ -611,7 +583,7 @@ export function PhotographerCatalog({
                       autoFocus
                     />
                   </div>
-                  <div className="max-h-60 overflow-y-auto px-1 pb-1">
+                  <div className="max-h-[28rem] overflow-y-auto px-1 pb-1">
                     <LocationTreeOptions
                       selectedSlugs={locationFilters}
                       onSelect={toggleLocation}

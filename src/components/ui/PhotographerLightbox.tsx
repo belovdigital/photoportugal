@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { normalizeName } from "@/lib/format-name";
+import { maskSurname } from "@/lib/photographer-name";
 import { Link } from "@/i18n/navigation";
 
 /**
@@ -173,7 +174,7 @@ export function PhotographerLightbox({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="min-w-0">
-          <p className="text-sm font-semibold truncate">{normalizeName(name)}</p>
+          <p className="text-sm font-semibold truncate">{normalizeName(maskSurname(name))}</p>
           {total > 0 && (
             <p className="text-xs text-white/60 tabular-nums">{idx + 1} / {total}</p>
           )}

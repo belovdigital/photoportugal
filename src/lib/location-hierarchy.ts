@@ -57,6 +57,7 @@ export const LOCATION_TREE: LocationNode[] = [
       { slug: "nazare", name: "Nazare", type: "city", legacySlugs: legacy("nazare") },
       { slug: "obidos", name: "Obidos", type: "city", legacySlugs: legacy("obidos") },
       { slug: "tomar", name: "Tomar", type: "city", legacySlugs: legacy("tomar") },
+      { slug: "leiria", name: "Leiria", type: "city", legacySlugs: legacy("leiria") },
     ],
   },
   {

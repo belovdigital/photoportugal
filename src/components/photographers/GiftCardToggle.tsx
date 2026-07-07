@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { GIFT_CARD_TIERS } from "@/lib/gift-card";
 
 // Standalone toggle for the photographer dashboard: "Accept Photo Portugal
 // gift cards on my profile". When ON, the photographer's standard tier
@@ -45,8 +46,8 @@ export function GiftCardToggle({ initial }: { initial: boolean }) {
             When ON, your profile appears in the gift-mode browser. Each redemption pays you a fixed amount per tier:
           </p>
           <ul className="mt-2 text-sm text-gray-700 space-y-1">
-            <li>• <strong>Express</strong> (1h, 30 photos): <strong>€210</strong></li>
-            <li>• <strong>Full</strong> (2h, 60 photos): <strong>€360</strong></li>
+            <li>• <strong>Express</strong> (1h, 30 photos): <strong>€{GIFT_CARD_TIERS.express.photographerPayout}</strong></li>
+            <li>• <strong>Full</strong> (2h, 60 photos): <strong>€{GIFT_CARD_TIERS.full.photographerPayout}</strong></li>
           </ul>
           <p className="mt-2 text-[11px] text-gray-400">
             Payouts are flat — no platform-plan commission applies to gift card bookings.

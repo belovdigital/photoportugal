@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { maskSurname } from "@/lib/photographer-name";
 import { localeAlternates } from "@/lib/seo";
 import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
 
@@ -180,7 +181,7 @@ export default async function BlogCategoryPage({ params }: PageProps) {
                       />
                       {post.hero_photographer_name && (
                         <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-black/40 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-white">
-                          ◉ {post.hero_photographer_name}
+                          ◉ {maskSurname(post.hero_photographer_name)}
                         </span>
                       )}
                     </div>

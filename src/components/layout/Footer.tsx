@@ -354,7 +354,7 @@ export function Footer() {
           <p className="mt-3 text-center text-[11px] text-gray-300">
             Made by{" "}
             <a
-              href="https://belovdigital.agency"
+              href="https://blv.group"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-gray-500 transition"

@@ -10,6 +10,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
 import { ShootTypesSection } from "@/components/ui/ShootTypesSection";
+import { WeddingBand } from "@/components/ui/WeddingBand";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
 import { getHomepageReviews, getSiteReviewStats } from "@/lib/reviews-data";
@@ -597,6 +598,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {/* ===== HOW IT WORKS ===== */}
       <HowItWorksSection />
+
+      {/* ===== WEDDINGS BAND (self-fetching) ===== */}
+      <Suspense fallback={null}>
+        <WeddingBand locale={locale} />
+      </Suspense>
 
       {/* ===== GIFT CARDS PROMO ===== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { maskSurname } from "@/lib/photographer-name";
 
 export interface MosaicPhoto {
   url: string;
@@ -239,7 +240,7 @@ function MosaicCell({
         className="relative h-full w-full object-cover transition duration-700 group-hover:scale-[1.04] animate-mosaic-fade-in"
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent p-3 opacity-0 transition group-hover:opacity-100">
-        <p className="text-sm font-semibold text-white drop-shadow">{current.name}</p>
+        <p className="text-sm font-semibold text-white drop-shadow">{maskSurname(current.name)}</p>
         {current.location && (
           <p className="text-xs text-white/85 drop-shadow">{current.location}</p>
         )}

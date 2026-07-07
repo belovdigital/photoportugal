@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { queryOne, query } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 import { locations as allLocations } from "@/lib/locations-data";
 import { getLocationDisplayName } from "@/lib/location-hierarchy";
 import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
@@ -211,6 +212,7 @@ export async function GET(
     // a per-user response (custom packages are viewer-scoped).
     return NextResponse.json({
       ...profile,
+      name: maskSurname(profile.name), // public surface — mask surname
       locations: locations.map(l => {
         const loc = allLocations.find(x => x.slug === l.location_slug);
         return { slug: l.location_slug, name: loc?.name || l.location_slug.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) };

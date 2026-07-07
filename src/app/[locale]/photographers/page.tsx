@@ -5,6 +5,7 @@ import { SHOOT_TYPES, PhotographerProfile } from "@/types";
 import { PhotographerCatalog } from "./PhotographerCatalog";
 import { getOneLinerQuotesForPhotographers } from "@/lib/reviews-data";
 import { query } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 import { localeAlternates } from "@/lib/seo";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
@@ -119,7 +120,7 @@ async function getDbPhotographers(locale?: string, giftMode = false): Promise<Ph
         id: p.id,
         user_id: "",
         slug: p.slug,
-        name: p.name,
+        name: maskSurname(p.name),
         tagline: p.tagline || "",
         bio: p.bio || "",
         avatar_url: p.avatar_url,
@@ -202,7 +203,7 @@ export default async function PhotographersPage({
         "@type": "ListItem",
         position: i + 1,
         url: `${base}/photographers/${p.slug}`,
-        name: p.name,
+        name: p.name, // full name in JSON-LD — name searches should find us
         ...(image ? { image } : {}),
       };
     }),

@@ -1704,6 +1704,94 @@ const INTROS: Record<ComboKey, ComboIntro> = {
     es: "Un elopement en Ponta Delgada es para parejas que quieren votos de isla atlántica con facilidad urbana — ceremonia en capilla, fotos en lagunas, cena en el puerto.",
     fr: "Un elopement à Ponta Delgada, c'est pour les couples qui veulent des vœux d'île atlantique avec la facilité urbaine — cérémonie en chapelle, photos aux lacs de cratère, dîner au port.",
   },
+
+  // ─── Weddings ───────────────────────────────────────────────────────────
+  // Grouped by occasion (not location) because the wedding tier was added
+  // across all top destinations at once — see /weddings landing.
+  "lisbon:wedding": {
+    en: "Lisbon weddings get rooftop ceremonies over the Tejo, palace venues in Ajuda, and a photographer who knows where the light lands in Alfama at every hour of your timeline.",
+    pt: "Casamentos em Lisboa têm cerimónias em rooftops sobre o Tejo, palácios na Ajuda e um fotógrafo que sabe onde a luz cai em Alfama a cada hora do seu dia.",
+    de: "Hochzeiten in Lissabon: Rooftop-Zeremonien über dem Tejo, Palast-Locations in Ajuda und ein Fotograf, der weiß, wo das Licht in Alfama zu jeder Stunde Ihres Tages fällt.",
+    es: "Las bodas en Lisboa tienen ceremonias en azoteas sobre el Tajo, palacios en Ajuda y un fotógrafo que sabe dónde cae la luz en Alfama a cada hora de su día.",
+    fr: "Les mariages à Lisbonne : cérémonies sur les toits face au Tage, palais d'Ajuda et un photographe qui sait où tombe la lumière dans l'Alfama à chaque heure de votre journée.",
+  },
+  "sintra:wedding": {
+    en: "Sintra is Portugal's fairytale wedding capital — Pena Palace backdrops, Monserrate gardens, and misty forest light that makes every ceremony photo look like a film still.",
+    pt: "Sintra é a capital dos casamentos de conto de fadas — o Palácio da Pena, os jardins de Monserrate e a luz enevoada da serra fazem cada foto parecer um fotograma de cinema.",
+    de: "Sintra ist Portugals Märchenhochzeits-Hauptstadt — Pena-Palast-Kulissen, Monserrate-Gärten und nebliges Waldlicht, das jedes Zeremonienfoto wie ein Filmstill wirken lässt.",
+    es: "Sintra es la capital de las bodas de cuento de hadas — el Palacio da Pena, los jardines de Monserrate y la luz brumosa del bosque hacen que cada foto parezca un fotograma de cine.",
+    fr: "Sintra est la capitale portugaise des mariages de conte de fées — le palais de Pena, les jardins de Monserrate et la lumière brumeuse de la forêt donnent à chaque photo des airs de cinéma.",
+  },
+  "cascais:wedding": {
+    en: "Cascais weddings pair Atlantic cliff ceremonies at Boca do Inferno with marina receptions — a coastal wedding twenty minutes from Lisbon's airport, photographed in golden seaside light.",
+    pt: "Casamentos em Cascais juntam cerimónias nas falésias da Boca do Inferno a receções na marina — um casamento à beira-mar a vinte minutos do aeroporto, fotografado em luz dourada.",
+    de: "Hochzeiten in Cascais verbinden Klippen-Zeremonien an der Boca do Inferno mit Marina-Empfängen — eine Küstenhochzeit zwanzig Minuten vom Flughafen Lissabon, fotografiert in goldenem Meereslicht.",
+    es: "Las bodas en Cascais combinan ceremonias en los acantilados de Boca do Inferno con recepciones en la marina — una boda costera a veinte minutos del aeropuerto de Lisboa, con luz dorada del mar.",
+    fr: "Les mariages à Cascais associent cérémonies sur les falaises de Boca do Inferno et réceptions à la marina — un mariage côtier à vingt minutes de l'aéroport de Lisbonne, dans une lumière dorée.",
+  },
+  "porto:wedding": {
+    en: "Porto weddings have a drama all their own — Ribeira rooftops, port-cellar receptions in Gaia, and that moody Douro light photographers fly across Europe for.",
+    pt: "Casamentos no Porto têm um drama próprio — telhados da Ribeira, receções em caves de vinho do Porto em Gaia e aquela luz do Douro pela qual fotógrafos atravessam a Europa.",
+    de: "Hochzeiten in Porto haben ihre eigene Dramatik — Ribeira-Dächer, Portweinkeller-Empfänge in Gaia und dieses stimmungsvolle Douro-Licht, für das Fotografen durch Europa fliegen.",
+    es: "Las bodas en Oporto tienen un drama propio — tejados de la Ribeira, recepciones en bodegas de Gaia y esa luz melancólica del Duero por la que los fotógrafos cruzan Europa.",
+    fr: "Les mariages à Porto ont leur propre intensité — toits de la Ribeira, réceptions dans les caves à porto de Gaia et cette lumière du Douro pour laquelle les photographes traversent l'Europe.",
+  },
+  "douro-valley:wedding": {
+    en: "A Douro Valley wedding means vows on a quinta terrace above the river, vineyard portraits at golden hour, and a reception among the barrels — harvest-season light included.",
+    pt: "Um casamento no Douro significa votos no terraço de uma quinta sobre o rio, retratos nas vinhas à hora dourada e uma receção entre barricas — com a luz das vindimas incluída.",
+    de: "Eine Douro-Tal-Hochzeit bedeutet Eheversprechen auf einer Quinta-Terrasse über dem Fluss, Weinberg-Porträts zur goldenen Stunde und ein Empfang zwischen Fässern — Erntelicht inklusive.",
+    es: "Una boda en el Valle del Duero significa votos en la terraza de una quinta sobre el río, retratos entre viñedos a la hora dorada y recepción entre barricas — con la luz de la vendimia incluida.",
+    fr: "Un mariage dans la vallée du Douro : vœux sur la terrasse d'une quinta au-dessus du fleuve, portraits dans les vignes à l'heure dorée et réception parmi les fûts — lumière des vendanges incluse.",
+  },
+  "algarve:wedding": {
+    en: "Algarve weddings own Europe's most reliable wedding weather — clifftop ceremonies, barefoot beach receptions, and 300 days of sun your photographer can actually plan around.",
+    pt: "Casamentos no Algarve têm o clima mais fiável da Europa — cerimónias nas falésias, receções descalços na areia e 300 dias de sol com que o fotógrafo pode realmente contar.",
+    de: "Algarve-Hochzeiten haben Europas zuverlässigstes Hochzeitswetter — Klippen-Zeremonien, Barfuß-Empfänge am Strand und 300 Sonnentage, mit denen Ihr Fotograf wirklich planen kann.",
+    es: "Las bodas en el Algarve tienen el clima más fiable de Europa — ceremonias en acantilados, recepciones descalzos en la playa y 300 días de sol con los que el fotógrafo puede contar de verdad.",
+    fr: "Les mariages en Algarve bénéficient de la météo la plus fiable d'Europe — cérémonies au sommet des falaises, réceptions pieds nus sur la plage et 300 jours de soleil sur lesquels votre photographe peut compter.",
+  },
+  "lagos:wedding": {
+    en: "Lagos weddings happen between Ponta da Piedade's golden cliffs and old-town courtyards — sunset ceremony photos here look retouched straight out of camera.",
+    pt: "Casamentos em Lagos acontecem entre as falésias douradas da Ponta da Piedade e os pátios da cidade velha — as fotos da cerimónia ao pôr do sol parecem editadas logo da câmara.",
+    de: "Hochzeiten in Lagos finden zwischen den goldenen Klippen der Ponta da Piedade und Altstadthöfen statt — Sonnenuntergangs-Zeremonienfotos wirken hier direkt aus der Kamera retuschiert.",
+    es: "Las bodas en Lagos suceden entre los acantilados dorados de Ponta da Piedade y los patios del casco antiguo — las fotos de la ceremonia al atardecer parecen retocadas directamente de cámara.",
+    fr: "Les mariages à Lagos se déroulent entre les falaises dorées de Ponta da Piedade et les cours de la vieille ville — les photos de cérémonie au coucher du soleil semblent retouchées dès la prise de vue.",
+  },
+  "comporta:wedding": {
+    en: "Comporta is Portugal's bohemian wedding secret — rice-field horizons, pine-shaded beach venues, and that understated barefoot-luxury aesthetic editorial photographers love.",
+    pt: "Comporta é o segredo boémio dos casamentos em Portugal — horizontes de arrozais, espaços na praia à sombra dos pinheiros e aquela estética descalça de luxo discreto que os fotógrafos editoriais adoram.",
+    de: "Comporta ist Portugals bohemisches Hochzeitsgeheimnis — Reisfeld-Horizonte, kieferbeschattete Strandlocations und diese dezente Barfuß-Luxus-Ästhetik, die Editorial-Fotografen lieben.",
+    es: "Comporta es el secreto bohemio de las bodas en Portugal — horizontes de arrozales, espacios en la playa a la sombra de los pinos y esa estética de lujo descalzo que aman los fotógrafos editoriales.",
+    fr: "Comporta est le secret bohème des mariages au Portugal — horizons de rizières, lieux de plage ombragés de pins et cette esthétique de luxe pieds nus discrète qu'adorent les photographes éditoriaux.",
+  },
+  "obidos:wedding": {
+    en: "Óbidos weddings unfold inside a medieval walled town — castle ceremonies, bougainvillea lanes, and evening light on whitewashed walls made for romantic portraits.",
+    pt: "Casamentos em Óbidos acontecem dentro de uma vila medieval murada — cerimónias no castelo, ruelas de buganvílias e luz do entardecer nas paredes caiadas, feitas para retratos românticos.",
+    de: "Hochzeiten in Óbidos entfalten sich in einer mittelalterlichen Stadtmauer — Burg-Zeremonien, Bougainvillea-Gassen und Abendlicht auf weiß getünchten Mauern wie gemacht für romantische Porträts.",
+    es: "Las bodas en Óbidos se celebran dentro de una villa medieval amurallada — ceremonias en el castillo, callejuelas de buganvillas y luz vespertina sobre paredes encaladas, hechas para retratos románticos.",
+    fr: "Les mariages à Óbidos se déroulent dans une ville médiévale fortifiée — cérémonies au château, ruelles de bougainvilliers et lumière du soir sur les murs blanchis, faits pour des portraits romantiques.",
+  },
+  "evora:wedding": {
+    en: "Évora weddings bring Alentejo gravitas — Roman temple backdrops, whitewashed monastery venues, cork-oak plains at sunset, and slow golden light all evening long.",
+    pt: "Casamentos em Évora trazem a gravitas do Alentejo — o Templo Romano como cenário, conventos caiados, planícies de sobreiros ao pôr do sol e uma luz dourada lenta toda a noite.",
+    de: "Hochzeiten in Évora bringen Alentejo-Gravitas — römische Tempel-Kulissen, weiß getünchte Klosterlocations, Korkeichen-Ebenen bei Sonnenuntergang und langsames goldenes Licht den ganzen Abend.",
+    es: "Las bodas en Évora traen la gravedad del Alentejo — el templo romano de fondo, conventos encalados, llanuras de alcornoques al atardecer y una luz dorada lenta toda la tarde.",
+    fr: "Les mariages à Évora apportent la gravité de l'Alentejo — temple romain en toile de fond, monastères blanchis, plaines de chênes-lièges au coucher du soleil et lumière dorée tout au long de la soirée.",
+  },
+  "madeira:wedding": {
+    en: "Madeira weddings trade ballrooms for levada-laced mountains, cliff-edge viewpoints, and subtropical gardens — island drama your guests will never stop talking about.",
+    pt: "Casamentos na Madeira trocam salões por montanhas com levadas, miradouros sobre falésias e jardins subtropicais — um drama de ilha de que os convidados nunca se vão esquecer.",
+    de: "Madeira-Hochzeiten tauschen Ballsäle gegen Levada-durchzogene Berge, Klippen-Aussichtspunkte und subtropische Gärten — Insel-Dramatik, über die Ihre Gäste nie aufhören werden zu reden.",
+    es: "Las bodas en Madeira cambian salones por montañas con levadas, miradores al borde del acantilado y jardines subtropicales — un drama isleño del que sus invitados hablarán para siempre.",
+    fr: "Les mariages à Madère échangent les salles de bal contre des montagnes sillonnées de levadas, des belvédères à flanc de falaise et des jardins subtropicaux — un décor insulaire dont vos invités parleront toujours.",
+  },
+  "azores:wedding": {
+    en: "An Azores wedding is for couples who want vows over crater lakes and ceremonies between hydrangea hedges — Europe's wildest wedding backdrop, nine islands deep.",
+    pt: "Um casamento nos Açores é para casais que querem votos sobre lagoas de cratera e cerimónias entre sebes de hortênsias — o cenário de casamento mais selvagem da Europa, em nove ilhas.",
+    de: "Eine Azoren-Hochzeit ist für Paare, die Eheversprechen über Kraterseen und Zeremonien zwischen Hortensienhecken wollen — Europas wildeste Hochzeitskulisse, neun Inseln tief.",
+    es: "Una boda en las Azores es para parejas que quieren votos sobre lagunas de cráter y ceremonias entre setos de hortensias — el escenario nupcial más salvaje de Europa, en nueve islas.",
+    fr: "Un mariage aux Açores est fait pour les couples qui veulent des vœux au-dessus des lacs de cratère et des cérémonies entre les haies d'hortensias — le décor de mariage le plus sauvage d'Europe, sur neuf îles.",
+  },
 };
 
 /**

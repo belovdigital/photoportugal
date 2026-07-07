@@ -37,7 +37,9 @@ export async function ShootTypesSection() {
           {SHOOT_TYPES.map((type) => (
             <Link
               key={type.shoot}
-              href={`/photoshoots/${type.key}`}
+              // Wedding has a dedicated landing; everything else keeps the
+              // generic shoot-type page.
+              href={type.key === "wedding" ? "/weddings" : `/photoshoots/${type.key}`}
               className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-gray-900 sm:aspect-[4/5]"
             >
               <OptimizedImage

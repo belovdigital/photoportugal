@@ -11,6 +11,10 @@ interface LocationTreeSelectProps {
   noMatchLabel?: string;
   className?: string;
   buttonClassName?: string;
+  /** When provided, the tree is filtered to nodes that cover one of these
+   *  legacy location slugs — hides locations with no relevant photographers.
+   *  Omit to show the full tree (existing behaviour). */
+  availableSlugs?: string[];
 }
 
 export function LocationTreeSelect({
@@ -21,6 +25,7 @@ export function LocationTreeSelect({
   noMatchLabel,
   className = "",
   buttonClassName = "",
+  availableSlugs,
 }: LocationTreeSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -73,6 +78,7 @@ export function LocationTreeSelect({
                 setOpen(false);
               }}
               searchQuery={search}
+              availableLegacySlugs={availableSlugs}
               noMatchLabel={noMatchLabel}
             />
           </div>

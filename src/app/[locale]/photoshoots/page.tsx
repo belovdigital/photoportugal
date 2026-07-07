@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 // the parent /locations/[slug] page.
 const COMBO_OCCASIONS = new Set([
   "couples", "family", "proposal", "engagement",
-  "honeymoon", "solo", "elopement",
+  "honeymoon", "solo", "elopement", "wedding",
 ]);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -147,7 +147,11 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
     itemListElement: shootTypes.map((type, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: `https://photoportugal.com/photoshoots/${type.slug}`,
+      // Wedding lives on its own landing — don't emit the redirecting
+      // /photoshoots/wedding URL in structured data.
+      url: type.slug === "wedding"
+        ? "https://photoportugal.com/weddings"
+        : `https://photoportugal.com/photoshoots/${type.slug}`,
       name: `${type.name} Photoshoot in Portugal`,
     })),
   };
@@ -284,7 +288,7 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
                 >
                   {/* Photo + overlay header */}
                   <Link
-                    href={`/photoshoots/${type.slug}`}
+                    href={type.slug === "wedding" ? "/weddings" : `/photoshoots/${type.slug}`}
                     className="relative block aspect-[4/3] overflow-hidden bg-gray-900"
                   >
                     {photo ? (

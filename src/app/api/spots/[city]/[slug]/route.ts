@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSpot, spotLocalized } from "@/lib/photo-spots-data";
 import { getLocationBySlug, locField } from "@/lib/locations-data";
 import { query } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,6 +65,8 @@ export async function GET(
     tips: s.tips || null,
     images: spotData.images || [],
     coordinates: spotData.coordinates || null,
-    photographers,
+    // Anti-disintermediation: mask the photographer surname at the API source
+    // so both web and mobile clients see "First L." (mirrors /api/photographers).
+    photographers: photographers.map((p) => ({ ...p, name: maskSurname(p.name) })),
   });
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { localizeShootType } from "@/lib/shoot-type-labels";
+import { localizeShootType, canonicalizeShootType } from "@/lib/shoot-type-labels";
 
 interface PortfolioItem {
   url: string;
@@ -144,7 +144,9 @@ export function PortfolioGallery({
   const lightboxInitialJumpRef = useRef<number | null>(null);
 
   const usedLocations = [...new Set(items.map((p) => p.location_slug).filter(Boolean))] as string[];
-  const usedShootTypes = [...new Set(items.map((p) => p.shoot_type).filter(Boolean))] as string[];
+  // Canonicalize before de-duping so legacy slug/case variants ("wedding"
+  // vs "Wedding", "solo" vs "Solo Portrait") collapse to a single pill.
+  const usedShootTypes = [...new Set(items.map((p) => canonicalizeShootType(p.shoot_type)).filter(Boolean))] as string[];
 
   function describePhoto(item: PortfolioItem): string {
     if (item.caption) return item.caption;
@@ -162,7 +164,9 @@ export function PortfolioGallery({
 
   const filtered = items.filter((item) => {
     if (filter.location && item.location_slug !== filter.location) return false;
-    if (filter.shootType && item.shoot_type !== filter.shootType) return false;
+    // Compare on the canonical form so a "Wedding" pill also matches photos
+    // still tagged "wedding" (and vice-versa) until the data migration lands.
+    if (filter.shootType && canonicalizeShootType(item.shoot_type) !== filter.shootType) return false;
     return true;
   });
 

@@ -85,6 +85,7 @@ export const LOCATION_EXPLORER_REGIONS: LocationExplorerRegion[] = [
       { slug: "nazare", name: "Nazare", type: "City" },
       { slug: "obidos", name: "Obidos", type: "City" },
       { slug: "tomar", name: "Tomar", type: "City" },
+      { slug: "leiria", name: "Leiria", type: "City" },
     ],
   },
   {

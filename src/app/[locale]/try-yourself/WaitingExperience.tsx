@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { maskSurname } from "@/lib/photographer-name";
 
 interface PortfolioPhoto {
   url: string;
@@ -211,7 +212,8 @@ export function WaitingExperience({
       <div className="grid grid-cols-3 gap-3 max-w-3xl mx-auto w-full">
         <StatCard big="30+" label={t("statBigPhotographers")} icon="📸" />
         <StatCard big="4.9★" label={t("statBigRating")} icon="⭐" />
-        <StatCard big="€90" label={t("statBigFromPrice")} icon="💶" />
+        {/* Summer super-offer: blind booking is €279 all-in, our cheapest path. */}
+        <StatCard big="€279" label={t("statBigFromPrice")} icon="💶" />
       </div>
     </div>
   );
@@ -261,7 +263,7 @@ function SwipeDeck({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent pointer-events-none" />
           <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-            <p className="font-display text-base font-bold drop-shadow">{cur.photographerName}</p>
+            <p className="font-display text-base font-bold drop-shadow">{maskSurname(cur.photographerName)}</p>
             <div className="mt-0.5 text-xs opacity-95 flex items-center gap-2">
               {cur.photographerRating && <span>★ {cur.photographerRating.toFixed(1)}</span>}
               <span className="font-semibold opacity-90">{t("viewProfile")}</span>
@@ -342,7 +344,7 @@ function MatchesCard({
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-2 text-white">
-                <p className="font-semibold text-xs leading-tight truncate">{p.name}</p>
+                <p className="font-semibold text-xs leading-tight truncate">{maskSurname(p.name)}</p>
                 <div className="mt-0.5 flex items-center gap-1 text-[10px] opacity-95">
                   {p.rating && <span>★ {p.rating.toFixed(1)}</span>}
                   {p.minPrice && <span className="font-semibold ml-auto">€{p.minPrice}</span>}

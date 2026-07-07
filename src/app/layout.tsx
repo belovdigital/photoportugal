@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | Photo Portugal",
   },
   description:
-    `Book a hand-picked vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places. Every photographer personally vetted. Verified reviews, secure payments, private photo gallery. From EUR150.`,
+    `Book a hand-picked vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places. Every photographer personally vetted. Verified reviews, secure payments, private photo gallery. From EUR299.`,
   keywords: [
     "photographer portugal",
     "vacation photographer lisbon",

@@ -18,14 +18,14 @@ export const locations: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in Lisbon — Book Professional Vacation Photoshoots",
     seo_description:
-      "Book a professional photographer in Lisbon, Portugal. Couples, family, proposal & solo photoshoots at Alfama, Belém, Tram 28 & more. Verified reviews. From €150.",
+      "Book a professional photographer in Lisbon, Portugal. Couples, family, proposal & solo photoshoots at Alfama, Belém, Tram 28 & more. Verified reviews. From €299.",
     description_pt:
       "Capture momentos inesquecíveis na capital mais soalheira da Europa — ruas empedradas, azulejos coloridos e vistas deslumbrantes sobre o rio.",
     long_description_pt:
       "Lisboa é um sonho para qualquer fotógrafo. Desde as ruelas sinuosas de Alfama, decoradas com azulejos tradicionais, até aos miradouros panorâmicos com vistas deslumbrantes sobre o Rio Tejo, cada esquina conta uma história. Entre os locais mais procurados estão a icónica Torre de Belém, a romântica Rua Cor-de-Rosa, o histórico Mosteiro dos Jerónimos e a vibrante LX Factory. A luz dourada de Lisboa — tantas vezes chamada 'a cidade da luz' — cria uma atmosfera quente e mágica, perfeita para casais, famílias e viajantes que procuram fotografias verdadeiramente memoráveis.",
-    seo_title_pt: "Fotógrafo em Lisboa — Reserve a Sua Sessão Fotográfica desde 150€",
+    seo_title_pt: "Fotógrafo em Lisboa — Reserve a Sua Sessão Fotográfica desde 299€",
     seo_description_pt:
-      "Reserve um fotógrafo profissional em Lisboa, Portugal. Sessões fotográficas em Alfama, Belém, Rua Cor-de-Rosa e mais. Avaliações verificadas, reserva imediata. Desde 150€.",
+      "Reserve um fotógrafo profissional em Lisboa, Portugal. Sessões fotográficas em Alfama, Belém, Rua Cor-de-Rosa e mais. Avaliações verificadas, reserva imediata. Desde 299€.",
     name_de: "Lissabon",
     name_pt: "Lisboa",
     name_es: "Lisboa",
@@ -36,7 +36,7 @@ export const locations: Location[] = [
       "Lissabon ist ein Traum für jeden Fotografen. Von den verwinkelten Gassen Alfamas mit ihren traditionellen Azulejo-Kacheln bis zu den panoramischen Aussichtspunkten (Miradouros) mit weiten Blicken über den Tejo erzählt jede Ecke ihre eigene Geschichte. Zu den beliebtesten Spots zählen der ikonische Belém-Turm, die romantische Pink Street, das historische Hieronymus-Kloster und die lebendige LX Factory. Das goldene Licht Lissabons — oft als 'Stadt des Lichts' bezeichnet — schafft eine warme, magische Atmosphäre, perfekt für Paare, Familien und Alleinreisende, die beeindruckende Aufnahmen suchen.",
     seo_title_de: "Fotograf in Lissabon — Professionelle Urlaubs-Fotoshootings buchen",
     seo_description_de:
-      "Buchen Sie einen professionellen Fotografen in Lissabon, Portugal. Paar-, Familien-, Heiratsantrag- und Solo-Fotoshootings in Alfama, Belém, Tram 28 und mehr. Verifizierte Bewertungen. Ab 150 €.",
+      "Buchen Sie einen professionellen Fotografen in Lissabon, Portugal. Paar-, Familien-, Heiratsantrag- und Solo-Fotoshootings in Alfama, Belém, Tram 28 und mehr. Verifizierte Bewertungen. Ab 299 €.",
     description_es:
       "Capture momentos inolvidables en la capital más soleada de Europa: calles empedradas, coloridos azulejos y vistas espectaculares sobre el río Tajo.",
     description_fr:
@@ -47,10 +47,10 @@ export const locations: Location[] = [
       "Lisbonne est un rêve pour tout photographe. Des ruelles sinueuses de l'Alfama, ornées d'azulejos traditionnels, aux miradouros panoramiques offrant des vues à couper le souffle sur le Tage, chaque coin raconte une histoire. Parmi les lieux les plus recherchés : l'iconique Tour de Belém, la romantique Pink Street, l'historique Monastère des Hiéronymites et la vibrante LX Factory. La lumière dorée de Lisbonne — souvent appelée « la ville de la lumière » — crée une atmosphère chaude et magique, parfaite pour les couples, les familles et les voyageurs en quête de photos vraiment mémorables.",
     seo_title_es: "Fotógrafo en Lisboa — Reserve sesiones fotográficas profesionales",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Lisboa, Portugal. Sesiones para parejas, familia, pedidas de mano y solo en Alfama, Belém, Tranvía 28 y más. Reseñas verificadas. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Lisboa, Portugal. Sesiones para parejas, familia, pedidas de mano y solo en Alfama, Belém, Tranvía 28 y más. Reseñas verificadas. Desde 299 €.",
     seo_title_fr: "Photographe à Lisbonne — Réservez vos séances de vacances",
     seo_description_fr:
-      "Réservez un photographe professionnel à Lisbonne, Portugal. Séances couple, famille, demande en mariage et solo à l'Alfama, Belém, le Tram 28 et plus. Avis vérifiés. À partir de 150 €.",
+      "Réservez un photographe professionnel à Lisbonne, Portugal. Séances couple, famille, demande en mariage et solo à l'Alfama, Belém, le Tram 28 et plus. Avis vérifiés. À partir de 299 €.",
   },
   {
     id: "sintra",
@@ -68,14 +68,14 @@ export const locations: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in Sintra — Fairytale Photoshoots at Pena Palace",
     seo_description:
-      "Book a professional photographer in Sintra, Portugal. Couples, proposal & engagement photoshoots at Pena Palace, Regaleira & more. From €150.",
+      "Book a professional photographer in Sintra, Portugal. Couples, proposal & engagement photoshoots at Pena Palace, Regaleira & more. From €299.",
     description_pt:
       "Um mundo de conto de fadas com palácios encantados, florestas místicas e jardins românticos, a poucos minutos de Lisboa.",
     long_description_pt:
       "Sintra é como entrar num conto de fadas. Esta vila classificada como Património Mundial da UNESCO alberga o colorido Palácio da Pena, empoleirado em colinas envoltas em nevoeiro, a misteriosa Quinta da Regaleira com o seu poço iniciático e o romântico Palácio de Monserrate rodeado de jardins exóticos. As florestas exuberantes, os caminhos cobertos de musgo e a arquitetura fantástica criam uma atmosfera de outro mundo, perfeita para sessões fotográficas românticas, pedidos de casamento e retratos de família inesquecíveis. Sintra fica a apenas 30 minutos de Lisboa, tornando-a um destino ideal para um passeio de um dia.",
     seo_title_pt: "Fotógrafo em Sintra — Sessões de Conto de Fadas no Palácio da Pena",
     seo_description_pt:
-      "Reserve um fotógrafo profissional em Sintra, Portugal. Sessões para casais, pedidos de casamento e noivados no Palácio da Pena, Regaleira e muito mais. Desde 150€.",
+      "Reserve um fotógrafo profissional em Sintra, Portugal. Sessões para casais, pedidos de casamento e noivados no Palácio da Pena, Regaleira e muito mais. Desde 299€.",
     name_de: "Sintra",
     name_pt: "Sintra",
     name_es: "Sintra",
@@ -86,7 +86,7 @@ export const locations: Location[] = [
       "Sintra fühlt sich an wie ein Schritt in ein Märchen. Diese als UNESCO-Welterbe ausgezeichnete Stadt beherbergt den farbenfrohen Pena-Palast auf nebelverhangenen Hügeln, die geheimnisvolle Quinta da Regaleira mit ihrem Initiationsbrunnen und den romantischen Monserrate-Palast inmitten exotischer Gärten. Die üppigen Wälder, moosbedeckten Pfade und die fantasievolle Architektur erzeugen eine entrückte Atmosphäre — ideal für romantische Fotoshootings, Verlobungssessions und verträumte Familienporträts. Sintra liegt nur 30 Minuten von Lissabon entfernt und eignet sich perfekt für einen Tagesausflug.",
     seo_title_de: "Fotograf in Sintra — Märchenhafte Fotoshootings am Pena-Palast",
     seo_description_de:
-      "Buchen Sie einen professionellen Fotografen in Sintra, Portugal. Paar-, Heiratsantrag- und Verlobungs-Fotoshootings am Pena-Palast, in der Regaleira und mehr. Ab 150 €.",
+      "Buchen Sie einen professionellen Fotografen in Sintra, Portugal. Paar-, Heiratsantrag- und Verlobungs-Fotoshootings am Pena-Palast, in der Regaleira und mehr. Ab 299 €.",
     description_es:
       "Un mundo de cuento de hadas con palacios encantados, bosques místicos y jardines románticos a pocos minutos de Lisboa.",
     description_fr:
@@ -97,10 +97,10 @@ export const locations: Location[] = [
       "Sintra, c'est comme entrer dans un conte de fées. Cette ville classée au patrimoine mondial de l'UNESCO abrite le palais de la Pena coloré perché sur des collines brumeuses, la mystérieuse Quinta da Regaleira avec son puits initiatique et le romantique palais de Monserrate entouré de jardins exotiques. Les forêts luxuriantes, les sentiers couverts de mousse et l'architecture fantasque créent une atmosphère hors du monde, parfaite pour les séances romantiques, les demandes en mariage et les portraits de famille oniriques. Sintra n'est qu'à 30 minutes de Lisbonne, ce qui en fait une destination idéale pour une excursion d'une journée.",
     seo_title_es: "Fotógrafo en Sintra — Sesiones de cuento de hadas en el Palacio de la Pena",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Sintra, Portugal. Sesiones para parejas, pedidas de mano y compromiso en el Palacio de la Pena, Regaleira y más. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Sintra, Portugal. Sesiones para parejas, pedidas de mano y compromiso en el Palacio de la Pena, Regaleira y más. Desde 299 €.",
     seo_title_fr: "Photographe à Sintra — Séances de conte de fées au Palais de la Pena",
     seo_description_fr:
-      "Réservez un photographe professionnel à Sintra, Portugal. Séances couple, demande en mariage et fiançailles au Palais de la Pena, Regaleira et plus. À partir de 150 €.",
+      "Réservez un photographe professionnel à Sintra, Portugal. Séances couple, demande en mariage et fiançailles au Palais de la Pena, Regaleira et plus. À partir de 299 €.",
   },
   {
     id: "cascais",
@@ -471,14 +471,14 @@ export const locations: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in Porto — Book Professional Vacation Photoshoots",
     seo_description:
-      "Book a professional photographer in Porto, Portugal. Couples, family & proposal photoshoots at Ribeira, Dom Luis Bridge & more. Verified reviews. From €90.",
+      "Book a professional photographer in Porto, Portugal. Couples, family & proposal photoshoots at Ribeira, Dom Luis Bridge & more. Verified reviews. From €299.",
     description_pt:
       "A joia romântica do Norte — arquitetura barroca, pores do sol sobre o Douro e a icónica Ribeira.",
     long_description_pt:
       "O Porto encanta com o seu cenário dramático à beira-rio, arquitetura medieval e mundialmente famosas caves de vinho do Porto. O bairro da Ribeira, Património Mundial da UNESCO, oferece um cenário deslumbrante com os seus edifícios coloridos em cascata até ao Rio Douro. Os locais de fotografia mais procurados incluem a Ponte D. Luís I, a ornamentada Estação de São Bento, a Livraria Lello e a Torre dos Clérigos. O charme cru e autêntico da cidade torna-a ideal para sessões íntimas de casal, pedidos de casamento e retratos artísticos.",
     seo_title_pt: "Fotógrafo no Porto — Reserve Sessões Fotográficas Profissionais de Férias",
     seo_description_pt:
-      "Reserve um fotógrafo profissional no Porto, Portugal. Sessões para casais, famílias e pedidos de casamento na Ribeira, Ponte D. Luís e muito mais. Avaliações verificadas. Desde 90€.",
+      "Reserve um fotógrafo profissional no Porto, Portugal. Sessões para casais, famílias e pedidos de casamento na Ribeira, Ponte D. Luís e muito mais. Avaliações verificadas. Desde 299€.",
     name_de: "Porto",
     name_pt: "Porto",
     name_es: "Oporto",
@@ -489,7 +489,7 @@ export const locations: Location[] = [
       "Porto verzaubert mit seiner spektakulären Lage am Fluss, mittelalterlicher Architektur und weltberühmten Portweinkellern. Das Viertel Ribeira, ein UNESCO-Welterbe, bietet eine atemberaubende Kulisse mit seinen farbenfrohen Häusern, die sich zum Douro hinabstaffeln. Zu den wichtigsten Fotolocations zählen die Brücke Dom Luís I., der prachtvolle Bahnhof São Bento, die Buchhandlung Livraria Lello und der Torre dos Clérigos. Der raue, authentische Charme der Stadt macht sie ideal für intime Paar-Fotoshootings, Verlobungssessions und künstlerische Porträts.",
     seo_title_de: "Fotograf in Porto — Professionelle Urlaubs-Fotoshootings buchen",
     seo_description_de:
-      "Buchen Sie einen professionellen Fotografen in Porto, Portugal. Paar-, Familien- und Heiratsantrag-Fotoshootings an der Ribeira, Dom-Luís-Brücke und mehr. Verifizierte Bewertungen. Ab 90 €.",
+      "Buchen Sie einen professionellen Fotografen in Porto, Portugal. Paar-, Familien- und Heiratsantrag-Fotoshootings an der Ribeira, Dom-Luís-Brücke und mehr. Verifizierte Bewertungen. Ab 299 €.",
     description_es:
       "La joya romántica del norte: arquitectura barroca, atardeceres sobre el Duero y la icónica ribera de la Ribeira.",
     description_fr:
@@ -500,10 +500,10 @@ export const locations: Location[] = [
       "Porto enchante par son cadre spectaculaire au bord du fleuve, son architecture médiévale et ses caves de Porto mondialement célèbres. Le quartier de Ribeira, classé au patrimoine mondial de l'UNESCO, offre un décor à couper le souffle avec ses maisons colorées descendant en cascade vers le Douro. Les lieux clés incluent le pont Dom Luís Ier, la gare São Bento ornée de fresques, la librairie Lello et la Tour des Clérigos. Le charme brut et authentique de la ville en fait un cadre idéal pour des séances intimes de couple, de fiançailles et des portraits artistiques.",
     seo_title_es: "Fotógrafo en Oporto — Reserve sesiones fotográficas profesionales",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Oporto, Portugal. Sesiones para parejas, familia y pedidas de mano en Ribeira, puente Don Luis y más. Reseñas verificadas. Desde 90 €.",
+      "Reserve un fotógrafo profesional en Oporto, Portugal. Sesiones para parejas, familia y pedidas de mano en Ribeira, puente Don Luis y más. Reseñas verificadas. Desde 299 €.",
     seo_title_fr: "Photographe à Porto — Réservez vos séances de vacances",
     seo_description_fr:
-      "Réservez un photographe professionnel à Porto, Portugal. Séances couple, famille et demande en mariage à la Ribeira, pont Dom Luís et plus. Avis vérifiés. À partir de 90 €.",
+      "Réservez un photographe professionnel à Porto, Portugal. Séances couple, famille et demande en mariage à la Ribeira, pont Dom Luís et plus. Avis vérifiés. À partir de 299 €.",
   },
   {
     id: "braga",
@@ -758,6 +758,32 @@ export const locations: Location[] = [
       "Réservez un photographe à Peniche, Portugal. Séances surf, falaises et îles Berlengas sur la côte atlantique.",
   },
   {
+    id: "leiria",
+    slug: "leiria",
+    name: "Leiria",
+    region: "Central Portugal",
+    description:
+      "A hilltop medieval castle, the royal pine forest, and the gateway to Fátima and the Silver Coast.",
+    long_description:
+      "Leiria is a historic city in central Portugal, crowned by a striking medieval castle that sits on a wooded hill above the old town. Along the Lis river you'll find a relaxed riverside centre, leafy gardens, and characterful streets that make easy, uncrowded backdrops for couples, families, and maternity sessions. Just outside the city, the Pinhal de Leiria — Portugal's ancient royal pine forest — opens onto the Silver Coast at São Pedro de Moel, with quiet Atlantic beaches and dunes. Leiria is also the gateway to Fátima and the UNESCO monasteries of Batalha and Alcobaça, making it a versatile base that blends medieval history, forest, and ocean in one place.",
+    cover_image: "/images/locations/leiria-cover.jpg",
+    gallery_images: [],
+    lat: 39.7437,
+    lng: -8.8071,
+    photographer_count: 0,
+    seo_title: "Photographer in Leiria, Portugal | Castle, Forest & Silver Coast Photoshoots",
+    seo_description:
+      "Book a photographer in Leiria, Portugal. Photoshoots at the medieval hilltop castle, the Lis riverside old town, the Pinhal de Leiria pine forest, and the nearby Silver Coast beaches.",
+    name_pt: "Leiria",
+    description_pt:
+      "Um castelo medieval no alto da colina, o pinhal del-rei e a porta de entrada para Fátima e a Costa de Prata.",
+    long_description_pt:
+      "Leiria é uma cidade histórica no centro de Portugal, coroada por um impressionante castelo medieval sobre uma colina arborizada acima do centro antigo. Junto ao rio Lis encontra um centro histórico tranquilo, jardins verdejantes e ruas cheias de carácter — cenários fáceis e pouco concorridos para sessões de casais, família e maternidade. Mesmo à saída da cidade, o Pinhal de Leiria — o antigo pinhal del-rei — abre-se sobre a Costa de Prata em São Pedro de Moel, com praias atlânticas calmas e dunas. Leiria é ainda a porta de entrada para Fátima e para os mosteiros da Batalha e de Alcobaça (Património da UNESCO), oferecendo num só lugar história medieval, floresta e oceano.",
+    seo_title_pt: "Fotógrafo em Leiria, Portugal | Castelo, Pinhal e Costa de Prata",
+    seo_description_pt:
+      "Reserve um fotógrafo em Leiria, Portugal. Sessões no castelo medieval, no centro histórico junto ao rio Lis, no Pinhal de Leiria e nas praias da Costa de Prata.",
+  },
+  {
     id: "coimbra",
     slug: "coimbra",
     name: "Coimbra",
@@ -977,14 +1003,14 @@ export const locations: Location[] = [
     photographer_count: 0,
     seo_title: "Algarve Photographer — Beach, Cliff & Cave Photoshoots",
     seo_description:
-      "Book a professional photographer in the Algarve, Portugal. Engagement photography in southern Portugal, beach, cliff & cave photoshoots at Benagil, Lagos & Praia da Marinha. Verified reviews. From EUR90.",
+      "Book a professional photographer in the Algarve, Portugal. Engagement photography in southern Portugal, beach, cliff & cave photoshoots at Benagil, Lagos & Praia da Marinha. Verified reviews. From EUR299.",
     description_pt:
       "Falésias douradas dramáticas, águas turquesa e grutas marinhas escondidas — o Algarve é o estúdio fotográfico perfeito da natureza.",
     long_description_pt:
       "A costa algarvia é um dos destinos mais fotogénicos da Europa. Imponentes falésias de calcário dourado, grutas secretas e praias imaculadas criam cenários naturais de cortar a respiração. Os locais imperdíveis incluem a Gruta de Benagil, as formações rochosas da Ponta da Piedade em Lagos, as falésias dramáticas da Praia da Marinha e o encantador centro histórico de Faro. Quer esteja a celebrar uma lua de mel, férias em família ou um pedido de casamento, os cenários espetaculares do Algarve garantem imagens inesquecíveis.",
     seo_title_pt: "Fotógrafo no Algarve — Sessões na Praia, Falésias e Grutas",
     seo_description_pt:
-      "Reserve um fotógrafo profissional no Algarve, Portugal. Sessões fotográficas deslumbrantes na praia, falésias e grutas em Benagil, Lagos e Praia da Marinha. Avaliações verificadas. Desde 150€.",
+      "Reserve um fotógrafo profissional no Algarve, Portugal. Sessões fotográficas deslumbrantes na praia, falésias e grutas em Benagil, Lagos e Praia da Marinha. Avaliações verificadas. Desde 299€.",
     name_de: "Algarve",
     name_pt: "Algarve",
     name_es: "Algarve",
@@ -995,7 +1021,7 @@ export const locations: Location[] = [
       "Die Algarve ist das Herz Südportugals — eines der fotogensten Reiseziele Europas und die sonnenverwöhnte Südküste des Landes. Hoch aufragende goldene Kalksteinklippen, geheime Grotten und unberührte Strände bilden atemberaubende Naturkulissen für Verlobungs-Fotografie, Paar-Fotoshootings, Flitterwochen- und Familien-Fotoshootings in Südportugal. Zu den Must-See-Spots zählen die Benagil-Höhle, die Felsformationen der Ponta da Piedade in Lagos, die dramatischen Klippen am Praia da Marinha und die charmante Altstadt von Faro. Verlobungs-Fotografie in Südportugal ist an der Algarve besonders beliebt — dank ganzjährig zuverlässiger Sonne, weichem Licht zur goldenen Stunde über dem Atlantik und der romantischen Abgeschiedenheit versteckter Buchten. Ob Flitterwochen, Familienurlaub, Heiratsantrag oder Destination-Verlobungs-Shooting — die spektakuläre Kulisse der Algarve garantiert unvergessliche Bilder.",
     seo_title_de: "Algarve Fotograf — Strand-, Klippen- und Höhlen-Fotoshootings",
     seo_description_de:
-      "Buchen Sie einen professionellen Fotografen an der Algarve, Portugal. Verlobungs-Fotografie in Südportugal, Strand-, Klippen- und Höhlen-Fotoshootings in Benagil, Lagos und Praia da Marinha. Verifizierte Bewertungen. Ab 90 €.",
+      "Buchen Sie einen professionellen Fotografen an der Algarve, Portugal. Verlobungs-Fotografie in Südportugal, Strand-, Klippen- und Höhlen-Fotoshootings in Benagil, Lagos und Praia da Marinha. Verifizierte Bewertungen. Ab 299 €.",
     description_es:
       "Espectaculares acantilados dorados, aguas turquesas y grutas marinas escondidas: el Algarve es el estudio fotográfico perfecto de la naturaleza.",
     description_fr:
@@ -1006,10 +1032,10 @@ export const locations: Location[] = [
       "L'Algarve est le cœur du sud du Portugal — l'une des destinations les plus photogéniques d'Europe et la côte sud ensoleillée du pays. Des falaises calcaires dorées imposantes, des grottes secrètes et des plages immaculées composent des décors naturels à couper le souffle pour la photographie de fiançailles, les séances de couple, les lunes de miel et les séances famille dans le sud du Portugal. Les sites incontournables incluent la grotte marine de Benagil, les formations rocheuses de Ponta da Piedade à Lagos, les falaises spectaculaires de Praia da Marinha et la charmante vieille ville de Faro. La photographie de fiançailles dans le sud du Portugal est particulièrement populaire en Algarve grâce au soleil fiable toute l'année, la lumière dorée sur l'Atlantique et l'isolement romantique des criques cachées.",
     seo_title_es: "Fotógrafo en Algarve | Sesiones en playa, acantilados y grutas",
     seo_description_es:
-      "Reserve un fotógrafo profesional en el Algarve, Portugal. Fotografía de compromiso, sesiones en playa, acantilados y grutas en Benagil, Lagos y Praia da Marinha. Reseñas verificadas. Desde 90 €.",
+      "Reserve un fotógrafo profesional en el Algarve, Portugal. Fotografía de compromiso, sesiones en playa, acantilados y grutas en Benagil, Lagos y Praia da Marinha. Reseñas verificadas. Desde 299 €.",
     seo_title_fr: "Photographe en Algarve | Séances plage, falaises et grottes",
     seo_description_fr:
-      "Réservez un photographe professionnel en Algarve, Portugal. Photographie de fiançailles, séances plage, falaises et grottes à Benagil, Lagos et Praia da Marinha. Avis vérifiés. À partir de 90 €.",
+      "Réservez un photographe professionnel en Algarve, Portugal. Photographie de fiançailles, séances plage, falaises et grottes à Benagil, Lagos et Praia da Marinha. Avis vérifiés. À partir de 299 €.",
   },
   {
     id: "lagos",
@@ -1124,11 +1150,11 @@ export const locations: Location[] = [
     lng: -8.5387,
     photographer_count: 0,
     seo_title: "Photographer in Portimao — Cliff Beach Photoshoots in Algarve",
-    seo_description: "Book a professional photographer in Portimao, Portugal. Stunning cliff beach, Praia da Rocha & marina photoshoots. From EUR150.",
+    seo_description: "Book a professional photographer in Portimao, Portugal. Stunning cliff beach, Praia da Rocha & marina photoshoots. From EUR299.",
     description_pt: "Praias dramáticas de falésia, a famosa Praia da Rocha e energia vibrante à beira-mar na costa do Algarve.",
     long_description_pt: "Portimão é uma das cidades costeiras mais dinâmicas do Algarve. A deslumbrante Praia da Rocha com as suas falésias douradas e formações rochosas oferece um cenário dramático para sessões fotográficas. O passadiço de Alvor, o centro histórico e a marina panorâmica proporcionam cenários diversificados. Ao pôr do sol, as falésias brilham em tons laranja quentes — perfeito para sessões de casais e família.",
     seo_title_pt: "Fotógrafo em Portimão — Sessões nas Falésias do Algarve",
-    seo_description_pt: "Reserve um fotógrafo profissional em Portimão, Portugal. Sessões na Praia da Rocha, falésias e marina. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional em Portimão, Portugal. Sessões na Praia da Rocha, falésias e marina. Desde 299€.",
     name_de: "Portimão",
     name_pt: "Portimão",
     name_es: "Portimão",
@@ -1136,7 +1162,7 @@ export const locations: Location[] = [
     description_de: "Dramatische Klippenstrände, der berühmte Praia da Rocha und lebendige Strandstimmung an der Algarve-Küste.",
     long_description_de: "Portimão ist eine der dynamischsten Küstenstädte der Algarve. Der atemberaubende Praia da Rocha mit seinen goldenen Klippen und Felsformationen bietet eine eindrucksvolle Kulisse für Fotoshootings. Die Promenade von Alvor, die historische Altstadt und der malerische Yachthafen liefern abwechslungsreiche Hintergründe. Beim Sonnenuntergang erstrahlen die Klippen in warmen Orangetönen — perfekt für Paar- und Familien-Fotoshootings.",
     seo_title_de: "Fotograf in Portimão — Klippen-Fotoshootings an der Algarve",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Portimão, Portugal. Atemberaubende Klippen-, Praia-da-Rocha- und Marina-Fotoshootings. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Portimão, Portugal. Atemberaubende Klippen-, Praia-da-Rocha- und Marina-Fotoshootings. Ab 299 €.",
     description_es:
       "Playas dramáticas de acantilado, la famosa Praia da Rocha y energía vibrante junto al mar en la costa del Algarve.",
     description_fr:
@@ -1147,10 +1173,10 @@ export const locations: Location[] = [
       "Portimão est l'une des villes côtières les plus dynamiques de l'Algarve. La spectaculaire Praia da Rocha avec ses falaises dorées et ses formations rocheuses offre un décor saisissant pour les séances. La promenade d'Alvor, la vieille ville historique et la marina pittoresque proposent des cadres variés. Au coucher du soleil, les falaises s'embrasent de chaudes teintes orangées — parfait pour les séances couple et famille.",
     seo_title_es: "Fotógrafo en Portimão, Portugal | Sesiones en Praia da Rocha",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Portimão, Portugal. Espectaculares sesiones en playa de acantilados, Praia da Rocha y marina. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Portimão, Portugal. Espectaculares sesiones en playa de acantilados, Praia da Rocha y marina. Desde 299 €.",
     seo_title_fr: "Photographe à Portimão, Portugal | Séances à la Praia da Rocha",
     seo_description_fr:
-      "Réservez un photographe professionnel à Portimão, Portugal. Magnifiques séances plage encaissée, Praia da Rocha et marina. À partir de 150 €.",
+      "Réservez un photographe professionnel à Portimão, Portugal. Magnifiques séances plage encaissée, Praia da Rocha et marina. À partir de 299 €.",
   },
   {
     id: "albufeira",
@@ -1165,11 +1191,11 @@ export const locations: Location[] = [
     lng: -8.2503,
     photographer_count: 0,
     seo_title: "Photographer in Albufeira — Beach & Old Town Photoshoots",
-    seo_description: "Book a professional photographer in Albufeira, Algarve. Beach, old town, and sea cave photoshoots. Verified reviews. From EUR150.",
+    seo_description: "Book a professional photographer in Albufeira, Algarve. Beach, old town, and sea cave photoshoots. Verified reviews. From EUR299.",
     description_pt: "A cidade turística mais popular do Algarve — praias douradas, ruas charmosas do centro histórico e grutas marinhas dramáticas.",
     long_description_pt: "Albufeira é o coração pulsante do turismo algarvio. Os edifícios caiados de branco e as ruelas empedradas do centro histórico descem até à Praia dos Pescadores, enquanto a dramática gruta de Benagil nas proximidades é uma das maravilhas naturais mais fotografadas de Portugal. As praias de São Rafael e Olhos de Água oferecem formações rochosas deslumbrantes para sessões ao pôr do sol.",
     seo_title_pt: "Fotógrafo em Albufeira — Sessões na Praia e Centro Histórico",
-    seo_description_pt: "Reserve um fotógrafo profissional em Albufeira, Algarve. Sessões na praia, centro histórico e grutas marinhas. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional em Albufeira, Algarve. Sessões na praia, centro histórico e grutas marinhas. Desde 299€.",
     name_de: "Albufeira",
     name_pt: "Albufeira",
     name_es: "Albufeira",
@@ -1177,7 +1203,7 @@ export const locations: Location[] = [
     description_de: "Der beliebteste Urlaubsort der Algarve — goldene Strände, charmante Altstadtgassen und dramatische Meeresgrotten.",
     long_description_de: "Albufeira ist das pulsierende Herz des Algarve-Tourismus. Die weiß getünchten Häuser und engen Kopfsteinpflastergassen der Altstadt führen hinunter zum Fischerstrand, während die dramatische Benagil-Höhle in der Nähe zu den meistfotografierten Naturwundern Portugals zählt. Die Strände São Rafael und Olhos de Água beeindrucken mit imposanten Felsformationen, ideal für Sessions zur goldenen Stunde.",
     seo_title_de: "Fotograf in Albufeira — Strand- und Altstadt-Fotoshootings",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Albufeira, Algarve. Strand-, Altstadt- und Meeresgrotten-Fotoshootings. Verifizierte Bewertungen. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Albufeira, Algarve. Strand-, Altstadt- und Meeresgrotten-Fotoshootings. Verifizierte Bewertungen. Ab 299 €.",
     description_es:
       "El destino turístico más popular del Algarve: playas doradas, encantadoras calles del casco antiguo y espectaculares grutas marinas.",
     description_fr:
@@ -1188,10 +1214,10 @@ export const locations: Location[] = [
       "Albufeira est le cœur battant du tourisme algarvien. Les bâtiments blanchis à la chaux de la vieille ville et les ruelles pavées descendent jusqu'à la Praia dos Pescadores, tandis que la spectaculaire grotte marine de Benagil toute proche est l'une des merveilles naturelles les plus photographiées du Portugal. Les plages de São Rafael et Olhos de Água offrent des formations rocheuses saisissantes pour les séances à l'heure dorée.",
     seo_title_es: "Fotógrafo en Albufeira, Algarve | Sesiones en playa y grutas",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Albufeira, Algarve. Sesiones en playa, casco antiguo y grutas marinas. Reseñas verificadas. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Albufeira, Algarve. Sesiones en playa, casco antiguo y grutas marinas. Reseñas verificadas. Desde 299 €.",
     seo_title_fr: "Photographe à Albufeira, Algarve | Séances plage et grottes",
     seo_description_fr:
-      "Réservez un photographe professionnel à Albufeira, Algarve. Séances plage, vieille ville et grottes marines. Avis vérifiés. À partir de 150 €.",
+      "Réservez un photographe professionnel à Albufeira, Algarve. Séances plage, vieille ville et grottes marines. Avis vérifiés. À partir de 299 €.",
   },
   {
     id: "faro",
@@ -1206,11 +1232,11 @@ export const locations: Location[] = [
     lng: -7.9322,
     photographer_count: 0,
     seo_title: "Photographer in Faro — Old Town & Ria Formosa Photoshoots",
-    seo_description: "Book a professional photographer in Faro, Algarve. Historic old town, Ria Formosa lagoon & island beach photoshoots. From EUR150.",
+    seo_description: "Book a professional photographer in Faro, Algarve. Historic old town, Ria Formosa lagoon & island beach photoshoots. From EUR299.",
     description_pt: "A elegante capital do Algarve — centro histórico muralhado, lagoa da Ria Formosa e praias tranquilas em ilhas.",
     long_description_pt: "Faro é a porta de entrada do Algarve e uma joia escondida por mérito próprio. O centro histórico muralhado (Cidade Velha) com as suas ruas empedradas, catedral e laranjeiras oferece uma atmosfera europeia encantadora. O Parque Natural da Ria Formosa estende-se ao longo da costa com praias imaculadas em ilhas-barreira — a Ilha Deserta e a Ilha de Faro são perfeitas para sessões fotográficas íntimas e isoladas.",
     seo_title_pt: "Fotógrafo em Faro — Sessões no Centro Histórico e Ria Formosa",
-    seo_description_pt: "Reserve um fotógrafo profissional em Faro, Algarve. Sessões no centro histórico, Ria Formosa e praias de ilha. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional em Faro, Algarve. Sessões no centro histórico, Ria Formosa e praias de ilha. Desde 299€.",
     name_de: "Faro",
     name_pt: "Faro",
     name_es: "Faro",
@@ -1218,7 +1244,7 @@ export const locations: Location[] = [
     description_de: "Die elegante Hauptstadt der Algarve — historische ummauerte Altstadt, Lagune Ria Formosa und ruhige Inselstrände.",
     long_description_de: "Faro ist das Tor zur Algarve und zugleich ein verstecktes Juwel. Die ummauerte Altstadt (Cidade Velha) mit ihren Kopfsteinpflastergassen, der Kathedrale und Orangenbäumen verströmt charmantes europäisches Flair. Der Naturpark Ria Formosa erstreckt sich entlang der Küste mit unberührten Stränden auf vorgelagerten Inseln, die per Boot erreichbar sind — die Ilha Deserta und die Ilha de Faro sind perfekt für intime, abgeschiedene Fotoshootings.",
     seo_title_de: "Fotograf in Faro — Altstadt- und Ria-Formosa-Fotoshootings",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Faro, Algarve. Historische Altstadt-, Ria-Formosa- und Inselstrand-Fotoshootings. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Faro, Algarve. Historische Altstadt-, Ria-Formosa- und Inselstrand-Fotoshootings. Ab 299 €.",
     description_es:
       "La elegante capital del Algarve: casco histórico amurallado, laguna de la Ria Formosa y tranquilas playas de las islas barrera.",
     description_fr:
@@ -1229,10 +1255,10 @@ export const locations: Location[] = [
       "Faro est la porte d'entrée de l'Algarve et un joyau caché à part entière. La vieille ville fortifiée (Cidade Velha) avec ses ruelles pavées, sa cathédrale et ses orangers offre une atmosphère européenne pleine de charme. Le parc naturel de la Ria Formosa s'étire le long de la côte avec des plages immaculées sur des îles-barrières accessibles en bateau — Ilha Deserta et Ilha de Faro sont parfaites pour des séances intimes et isolées.",
     seo_title_es: "Fotógrafo en Faro, Algarve | Sesiones en Ria Formosa e islas",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Faro, Algarve. Sesiones en casco antiguo, laguna de Ria Formosa y playas de las islas. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Faro, Algarve. Sesiones en casco antiguo, laguna de Ria Formosa y playas de las islas. Desde 299 €.",
     seo_title_fr: "Photographe à Faro, Algarve | Séances Ria Formosa et îles",
     seo_description_fr:
-      "Réservez un photographe professionnel à Faro, Algarve. Séances vieille ville, lagune de la Ria Formosa et plages des îles. À partir de 150 €.",
+      "Réservez un photographe professionnel à Faro, Algarve. Séances vieille ville, lagune de la Ria Formosa et plages des îles. À partir de 299 €.",
   },
   {
     id: "vilamoura",
@@ -1247,11 +1273,11 @@ export const locations: Location[] = [
     lng: -8.1181,
     photographer_count: 0,
     seo_title: "Photographer in Vilamoura — Luxury Marina & Beach Photoshoots",
-    seo_description: "Book a professional photographer in Vilamoura, Algarve. Luxury marina, Falesia Beach & upscale resort photoshoots. From EUR150.",
+    seo_description: "Book a professional photographer in Vilamoura, Algarve. Luxury marina, Falesia Beach & upscale resort photoshoots. From EUR299.",
     description_pt: "Marina de luxo, praias douradas e glamour algarvio sofisticado, perfeito para sessões fotográficas elegantes.",
     long_description_pt: "Vilamoura é o destino turístico mais prestigiado do Algarve. A icónica marina ladeada por iates de luxo, restaurantes e boutiques cria o cenário para sessões fotográficas sofisticadas. A Praia da Falésia — um trecho de 6 km de areia dourada com impressionantes falésias laranja e vermelhas — é uma das praias mais fotogénicas de Portugal.",
     seo_title_pt: "Fotógrafo em Vilamoura — Sessões na Marina de Luxo e Praia",
-    seo_description_pt: "Reserve um fotógrafo profissional em Vilamoura, Algarve. Sessões na marina de luxo, Praia da Falésia e resort. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional em Vilamoura, Algarve. Sessões na marina de luxo, Praia da Falésia e resort. Desde 299€.",
     name_de: "Vilamoura",
     name_pt: "Vilamoura",
     name_es: "Vilamoura",
@@ -1259,7 +1285,7 @@ export const locations: Location[] = [
     description_de: "Luxuriöses Marina-Leben, goldene Strände und exklusiver Algarve-Glamour — perfekt für stilvolle Fotoshootings.",
     long_description_de: "Vilamoura ist die prestigeträchtigste Urlaubsdestination der Algarve. Die ikonische Marina, gesäumt von Luxusyachten, Restaurants und Boutiquen, bildet die Kulisse für anspruchsvolle Fotoshootings. Der Praia da Falésia — ein 6 km langer Streifen goldener Sand vor beeindruckenden orange-roten Klippen — gehört zu den fotogensten Stränden Portugals. Ideal für Paare, die eine elegante, polierte Ästhetik suchen.",
     seo_title_de: "Fotograf in Vilamoura — Luxus-Marina- und Strand-Fotoshootings",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Vilamoura, Algarve. Luxuriöse Marina-, Praia-da-Falésia- und Resort-Fotoshootings. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Vilamoura, Algarve. Luxuriöse Marina-, Praia-da-Falésia- und Resort-Fotoshootings. Ab 299 €.",
     description_es:
       "Vida de marina de lujo, playas doradas y glamour algarveño de alto nivel, perfecto para sesiones fotográficas con estilo.",
     description_fr:
@@ -1270,10 +1296,10 @@ export const locations: Location[] = [
       "Vilamoura est la destination la plus prestigieuse de l'Algarve. La marina iconique bordée de yachts de luxe, restaurants et boutiques pose le décor de séances raffinées. La plage de Falésia — 6 km de sable doré adossés à de spectaculaires falaises orange et rouges — est l'une des plages les plus photogéniques du Portugal. Parfait pour les couples en quête d'une esthétique élégante et sophistiquée.",
     seo_title_es: "Fotógrafo en Vilamoura, Algarve | Sesiones en marina y Falésia",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Vilamoura, Algarve. Marina de lujo, playa de Falésia y sesiones en resorts elegantes. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Vilamoura, Algarve. Marina de lujo, playa de Falésia y sesiones en resorts elegantes. Desde 299 €.",
     seo_title_fr: "Photographe à Vilamoura, Algarve | Séances marina et Falésia",
     seo_description_fr:
-      "Réservez un photographe professionnel à Vilamoura, Algarve. Marina de luxe, plage de Falésia et séances dans des resorts élégants. À partir de 150 €.",
+      "Réservez un photographe professionnel à Vilamoura, Algarve. Marina de luxe, plage de Falésia et séances dans des resorts élégants. À partir de 299 €.",
   },
   // Greater Lisbon — additional
   {
@@ -1289,11 +1315,11 @@ export const locations: Location[] = [
     lng: -9.1007,
     photographer_count: 0,
     seo_title: "Photographer in Sesimbra — Castle & Beach Photoshoots near Lisbon",
-    seo_description: "Book a professional photographer in Sesimbra, Portugal. Castle views, crystal-clear beaches & Arrabida coastline photoshoots. From EUR150.",
+    seo_description: "Book a professional photographer in Sesimbra, Portugal. Castle views, crystal-clear beaches & Arrabida coastline photoshoots. From EUR299.",
     description_pt: "Uma vila piscatória encantadora com águas cristalinas, castelo no topo da colina e a dramática costa da Arrábida nas proximidades.",
     long_description_pt: "Sesimbra é uma bela vila piscatória a apenas 40 minutos a sul de Lisboa. O castelo mouro no topo da colina oferece vistas panorâmicas do Atlântico, enquanto a praia abrigada e os barcos de pesca coloridos criam uma cena quintessencialmente portuguesa. A vizinha Serra da Arrábida com as suas enseadas turquesa é uma das áreas naturais mais deslumbrantes perto de Lisboa.",
     seo_title_pt: "Fotógrafo em Sesimbra — Sessões no Castelo e Praia perto de Lisboa",
-    seo_description_pt: "Reserve um fotógrafo profissional em Sesimbra, Portugal. Vistas do castelo, praias cristalinas e costa da Arrábida. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional em Sesimbra, Portugal. Vistas do castelo, praias cristalinas e costa da Arrábida. Desde 299€.",
     name_de: "Sesimbra",
     name_pt: "Sesimbra",
     name_es: "Sesimbra",
@@ -1301,7 +1327,7 @@ export const locations: Location[] = [
     description_de: "Ein charmantes Fischerdorf mit kristallklarem Wasser, einer Hügelburg und der dramatischen Arrábida-Küste in der Nähe.",
     long_description_de: "Sesimbra ist ein wunderschönes Fischerdorf, nur 40 Minuten südlich von Lissabon. Die maurische Burg auf dem Hügel bietet Panoramablicke auf den Atlantik, während der geschützte Strand und die bunten Fischerboote eine quintessentiell portugiesische Szene ergeben. Die nahe Serra da Arrábida mit ihren türkisfarbenen Buchten zählt zu den schönsten Naturgebieten in der Umgebung Lissabons — ideal für abenteuerlustige Paare und naturliebende Familien.",
     seo_title_de: "Fotograf in Sesimbra — Burg- und Strand-Fotoshootings nahe Lissabon",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Sesimbra, Portugal. Burgblicke, kristallklare Strände und Arrábida-Küste-Fotoshootings. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Sesimbra, Portugal. Burgblicke, kristallklare Strände und Arrábida-Küste-Fotoshootings. Ab 299 €.",
     description_es:
       "Un encantador pueblo pesquero con aguas cristalinas, castillo en lo alto de la colina y la espectacular costa de Arrábida cerca.",
     description_fr:
@@ -1312,10 +1338,10 @@ export const locations: Location[] = [
       "Sesimbra est un joli village de pêcheurs à seulement 40 minutes au sud de Lisbonne. Le château maure perché offre des vues panoramiques sur l'Atlantique, tandis que la plage abritée et les bateaux de pêche colorés composent une scène quintessentiellement portugaise. La proche Serra da Arrábida et ses criques turquoise comptent parmi les zones naturelles les plus spectaculaires près de Lisbonne — parfaite pour les couples aventureux et les familles amoureuses de la nature.",
     seo_title_es: "Fotógrafo en Sesimbra, Portugal | Sesiones en costa de Arrábida",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Sesimbra, Portugal. Vistas del castillo, playas cristalinas y sesiones en la costa de Arrábida. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Sesimbra, Portugal. Vistas del castillo, playas cristalinas y sesiones en la costa de Arrábida. Desde 299 €.",
     seo_title_fr: "Photographe à Sesimbra, Portugal | Séances côte de l'Arrábida",
     seo_description_fr:
-      "Réservez un photographe professionnel à Sesimbra, Portugal. Vues du château, plages cristallines et séances sur la côte de l'Arrábida. À partir de 150 €.",
+      "Réservez un photographe professionnel à Sesimbra, Portugal. Vues du château, plages cristallines et séances sur la côte de l'Arrábida. À partir de 299 €.",
   },
   {
     id: "ericeira",
@@ -1330,11 +1356,11 @@ export const locations: Location[] = [
     lng: -9.4154,
     photographer_count: 0,
     seo_title: "Photographer in Ericeira — Surf Town & Cliff Photoshoots",
-    seo_description: "Book a professional photographer in Ericeira, Portugal. Surf town, Atlantic cliffs & bohemian vibes near Lisbon. From EUR150.",
+    seo_description: "Book a professional photographer in Ericeira, Portugal. Surf town, Atlantic cliffs & bohemian vibes near Lisbon. From EUR299.",
     description_pt: "Vila de surf de classe mundial com falésias atlânticas agrestes, ruas caiadas de branco e ambiente boémio descontraído.",
     long_description_pt: "Ericeira é uma Reserva Mundial de Surf e uma das vilas costeiras mais cool de Portugal, a apenas 35 minutos de Lisboa. As falésias atlânticas dramáticas, a arte de rua vibrante, os edifícios caiados com apontamentos azuis e os barcos de pesca coloridos tornam-na incrivelmente fotogénica.",
     seo_title_pt: "Fotógrafo em Ericeira — Sessões na Vila de Surf e Falésias",
-    seo_description_pt: "Reserve um fotógrafo profissional em Ericeira, Portugal. Vila de surf, falésias atlânticas e ambiente boémio perto de Lisboa. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional em Ericeira, Portugal. Vila de surf, falésias atlânticas e ambiente boémio perto de Lisboa. Desde 299€.",
     name_de: "Ericeira",
     name_pt: "Ericeira",
     name_es: "Ericeira",
@@ -1342,7 +1368,7 @@ export const locations: Location[] = [
     description_de: "Weltklasse-Surfstadt mit zerklüfteten Atlantikklippen, weiß getünchten Gassen und entspannter Bohemian-Atmosphäre.",
     long_description_de: "Ericeira ist eine World Surfing Reserve und eine der coolsten Küstenstädte Portugals, nur 35 Minuten von Lissabon entfernt. Die dramatischen Atlantikklippen, die lebendige Street-Art, die weiß getünchten Gebäude mit blauen Akzenten und die bunten Fischerboote machen den Ort unglaublich fotogen. Die entspannte Surf-Kultur sorgt für eine lockere, natürliche Energie — perfekt für authentische, ungestellte Fotoshootings.",
     seo_title_de: "Fotograf in Ericeira — Surfstadt- und Klippen-Fotoshootings",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Ericeira, Portugal. Surfstadt-, Atlantikklippen- und Bohemian-Vibe-Fotoshootings nahe Lissabon. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Ericeira, Portugal. Surfstadt-, Atlantikklippen- und Bohemian-Vibe-Fotoshootings nahe Lissabon. Ab 299 €.",
     description_es:
       "Pueblo surfista de nivel mundial con acantilados atlánticos abruptos, calles encaladas y un ambiente bohemio relajado.",
     description_fr:
@@ -1353,10 +1379,10 @@ export const locations: Location[] = [
       "Ericeira est Réserve mondiale de surf et l'un des villages côtiers les plus cool du Portugal, à seulement 35 minutes de Lisbonne. Les spectaculaires falaises atlantiques, le street art vibrant, les bâtiments blanchis à la chaux soulignés de bleu et les bateaux de pêche colorés en font un cadre incroyablement photogénique. La culture surf décontractée crée une énergie naturelle et tranquille parfaite pour des séances authentiques et spontanées.",
     seo_title_es: "Fotógrafo en Ericeira, Portugal | Sesiones surf y bohemias",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Ericeira, Portugal. Pueblo surfista, acantilados atlánticos y vibras bohemias cerca de Lisboa. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Ericeira, Portugal. Pueblo surfista, acantilados atlánticos y vibras bohemias cerca de Lisboa. Desde 299 €.",
     seo_title_fr: "Photographe à Ericeira, Portugal | Séances surf et ambiance bohème",
     seo_description_fr:
-      "Réservez un photographe professionnel à Ericeira, Portugal. Village surf, falaises atlantiques et ambiance bohème près de Lisbonne. À partir de 150 €.",
+      "Réservez un photographe professionnel à Ericeira, Portugal. Village surf, falaises atlantiques et ambiance bohème près de Lisbonne. À partir de 299 €.",
   },
   {
     id: "arrabida",
@@ -1371,11 +1397,11 @@ export const locations: Location[] = [
     lng: -8.9800,
     photographer_count: 0,
     seo_title: "Photographer in Arrabida — Turquoise Beach Photoshoots near Lisbon",
-    seo_description: "Book a professional photographer in Arrabida, Portugal. Turquoise coves, mountain trails & secluded beach photoshoots. From EUR150.",
+    seo_description: "Book a professional photographer in Arrabida, Portugal. Turquoise coves, mountain trails & secluded beach photoshoots. From EUR299.",
     description_pt: "Um paraíso escondido de enseadas turquesa, montanhas florestadas e praias isoladas a sul de Lisboa.",
     long_description_pt: "A Serra da Arrábida é um parque natural com algumas das paisagens mais deslumbrantes perto de Lisboa. As águas turquesa da Praia de Galapinhos (eleita uma das melhores praias da Europa), os trilhos florestados e as dramáticas falésias costeiras criam um cenário paradisíaco.",
     seo_title_pt: "Fotógrafo na Arrábida — Sessões nas Praias Turquesa perto de Lisboa",
-    seo_description_pt: "Reserve um fotógrafo profissional na Arrábida, Portugal. Enseadas turquesa, trilhos de montanha e praias isoladas. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional na Arrábida, Portugal. Enseadas turquesa, trilhos de montanha e praias isoladas. Desde 299€.",
     name_de: "Arrábida",
     name_pt: "Arrábida",
     name_es: "Arrábida",
@@ -1383,7 +1409,7 @@ export const locations: Location[] = [
     description_de: "Ein verstecktes Paradies aus türkisfarbenen Buchten, bewaldeten Bergen und einsamen Stränden südlich von Lissabon.",
     long_description_de: "Die Serra da Arrábida ist ein Naturpark mit einigen der eindrucksvollsten Landschaften in der Nähe Lissabons. Das türkisfarbene Wasser des Praia de Galapinhos (gewählt zu einem der schönsten Strände Europas), die bewaldeten Bergpfade und die dramatischen Küstenklippen ergeben eine paradiesische Kulisse. Perfekt für abenteuerlustige Paare, die Aufnahmen wie aus den Tropen wünschen — und das nur 45 Minuten von Lissabon entfernt.",
     seo_title_de: "Fotograf in Arrábida — Türkisstrand-Fotoshootings nahe Lissabon",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Arrábida, Portugal. Türkisbuchten, Bergpfade und Fotoshootings an einsamen Stränden. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Arrábida, Portugal. Türkisbuchten, Bergpfade und Fotoshootings an einsamen Stränden. Ab 299 €.",
     description_es:
       "Un paraíso escondido de calas turquesas, montañas cubiertas de bosque y playas aisladas justo al sur de Lisboa.",
     description_fr:
@@ -1394,10 +1420,10 @@ export const locations: Location[] = [
       "La Serra da Arrábida est un parc naturel offrant certains des paysages les plus spectaculaires près de Lisbonne. Les eaux turquoise de la Praia de Galapinhos (élue parmi les plus belles plages d'Europe), les sentiers de montagne boisés et les falaises côtières spectaculaires composent un cadre paradisiaque. Parfait pour les couples aventureux qui veulent des photos aux allures tropicales — mais à seulement 45 minutes de Lisbonne.",
     seo_title_es: "Fotógrafo en Arrábida, Portugal | Sesiones en calas turquesas",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Arrábida, Portugal. Calas turquesas, senderos montañosos y sesiones en playas aisladas. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Arrábida, Portugal. Calas turquesas, senderos montañosos y sesiones en playas aisladas. Desde 299 €.",
     seo_title_fr: "Photographe à Arrábida, Portugal | Séances criques turquoise",
     seo_description_fr:
-      "Réservez un photographe professionnel à Arrábida, Portugal. Criques turquoise, sentiers de montagne et séances sur plages isolées. À partir de 150 €.",
+      "Réservez un photographe professionnel à Arrábida, Portugal. Criques turquoise, sentiers de montagne et séances sur plages isolées. À partir de 299 €.",
   },
 
   // Islands — additional
@@ -1414,11 +1440,11 @@ export const locations: Location[] = [
     lng: -16.9241,
     photographer_count: 0,
     seo_title: "Photographer in Funchal, Madeira — Tropical Garden & Ocean Photoshoots",
-    seo_description: "Book a professional photographer in Funchal, Madeira. Botanical gardens, old town, and mountain-ocean photoshoots. From EUR150.",
+    seo_description: "Book a professional photographer in Funchal, Madeira. Botanical gardens, old town, and mountain-ocean photoshoots. From EUR299.",
     description_pt: "A vibrante capital da Madeira — jardins botânicos, mercados coloridos e paisagens dramáticas onde a montanha encontra o oceano.",
     long_description_pt: "O Funchal é o coração da ilha da Madeira, uma cidade onde as montanhas mergulham dramaticamente no Atlântico. O Jardim Tropical Monte Palace, o colorido Mercado dos Lavradores, o centro histórico com as suas portas pintadas e o passeio panorâmico de teleférico oferecem cenários diversificados e deslumbrantes.",
     seo_title_pt: "Fotógrafo no Funchal, Madeira — Sessões em Jardins Tropicais e Oceano",
-    seo_description_pt: "Reserve um fotógrafo profissional no Funchal, Madeira. Jardins botânicos, centro histórico e sessões montanha-oceano. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional no Funchal, Madeira. Jardins botânicos, centro histórico e sessões montanha-oceano. Desde 299€.",
     name_de: "Funchal",
     name_pt: "Funchal",
     name_es: "Funchal",
@@ -1426,7 +1452,7 @@ export const locations: Location[] = [
     description_de: "Madeiras lebendige Hauptstadt — botanische Gärten, farbenfrohe Märkte und dramatische Landschaften, in denen die Berge auf den Ozean treffen.",
     long_description_de: "Funchal ist das Herz der Insel Madeira — eine Stadt, in der die Berge dramatisch in den Atlantik abfallen. Der Tropische Garten Monte Palace, der bunte Mercado dos Lavradores, die historische Altstadt mit ihren bemalten Türen und die panoramische Seilbahnfahrt bieten vielfältige und beeindruckende Kulissen. Das ganzjährig subtropische Klima sorgt zu jeder Jahreszeit für perfektes goldenes Licht für Fotoshootings.",
     seo_title_de: "Fotograf in Funchal, Madeira — Tropische-Gärten- und Ozean-Fotoshootings",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Funchal, Madeira. Botanische Gärten, Altstadt und Berg-Ozean-Fotoshootings. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Funchal, Madeira. Botanische Gärten, Altstadt und Berg-Ozean-Fotoshootings. Ab 299 €.",
     description_es:
       "La vibrante capital de Madeira: jardines botánicos, mercados coloridos y un paisaje espectacular donde la montaña abraza el océano.",
     description_fr:
@@ -1437,10 +1463,10 @@ export const locations: Location[] = [
       "Funchal est le cœur de Madère, une ville où les montagnes plongent spectaculairement dans l'Atlantique. Le jardin tropical du Monte Palace, le marché coloré dos Lavradores, la vieille ville historique avec ses portes peintes et le téléphérique panoramique offrent des décors variés et saisissants. Le climat subtropical toute l'année garantit une lumière dorée idéale pour les séances en toutes saisons.",
     seo_title_es: "Fotógrafo en Funchal, Madeira | Jardines y casco antiguo",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Funchal, Madeira. Jardines botánicos, casco antiguo y sesiones de montaña-océano. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Funchal, Madeira. Jardines botánicos, casco antiguo y sesiones de montaña-océano. Desde 299 €.",
     seo_title_fr: "Photographe à Funchal, Madère | Jardins et vieille ville",
     seo_description_fr:
-      "Réservez un photographe professionnel à Funchal, Madère. Jardins botaniques, vieille ville et séances montagne-océan. À partir de 150 €.",
+      "Réservez un photographe professionnel à Funchal, Madère. Jardins botaniques, vieille ville et séances montagne-océan. À partir de 299 €.",
   },
   {
     id: "ponta-delgada",
@@ -1455,11 +1481,11 @@ export const locations: Location[] = [
     lng: -25.6666,
     photographer_count: 0,
     seo_title: "Photographer in Ponta Delgada, Azores — Volcanic Lake Photoshoots",
-    seo_description: "Book a professional photographer in Ponta Delgada, Azores. Volcanic lakes, hot springs & Atlantic island photoshoots. From EUR150.",
+    seo_description: "Book a professional photographer in Ponta Delgada, Azores. Volcanic lakes, hot springs & Atlantic island photoshoots. From EUR299.",
     description_pt: "Porta de entrada dos Açores — lagos vulcânicos, paisagens verdes exuberantes e uma encantadora cidade insular atlântica.",
     long_description_pt: "Ponta Delgada é a principal cidade de São Miguel, a maior ilha dos Açores. As Portas da Cidade, as ruas de calçada a preto e branco e a dramática paisagem vulcânica proporcionam cenários únicos para sessões fotográficas que não se encontram em mais nenhum lugar da Europa.",
     seo_title_pt: "Fotógrafo em Ponta Delgada, Açores — Sessões nos Lagos Vulcânicos",
-    seo_description_pt: "Reserve um fotógrafo profissional em Ponta Delgada, Açores. Lagos vulcânicos, termas e sessões fotográficas em ilha atlântica. Desde 150€.",
+    seo_description_pt: "Reserve um fotógrafo profissional em Ponta Delgada, Açores. Lagos vulcânicos, termas e sessões fotográficas em ilha atlântica. Desde 299€.",
     name_de: "Ponta Delgada",
     name_pt: "Ponta Delgada",
     name_es: "Ponta Delgada",
@@ -1467,7 +1493,7 @@ export const locations: Location[] = [
     description_de: "Tor zu den Azoren — Vulkanseen, üppig grüne Landschaften und eine charmante Inselstadt im Atlantik.",
     long_description_de: "Ponta Delgada ist die Hauptstadt von São Miguel, der größten Insel der Azoren. Die Stadttore Portas da Cidade, die schwarz-weißen Kopfsteinpflastergassen und die dramatische Vulkanlandschaft bieten einzigartige Fotoshooting-Kulissen, wie man sie nirgends sonst in Europa findet. Tagesausflüge zu den Zwillingsseen von Sete Cidades, den heißen Quellen von Furnas und den Teeplantagen liefern außergewöhnliche Hintergründe.",
     seo_title_de: "Fotograf in Ponta Delgada, Azoren — Vulkansee-Fotoshootings",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Ponta Delgada, Azoren. Vulkanseen, heiße Quellen und Atlantikinsel-Fotoshootings. Ab 150 €.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Ponta Delgada, Azoren. Vulkanseen, heiße Quellen und Atlantikinsel-Fotoshootings. Ab 299 €.",
     description_es:
       "Puerta de entrada a las Azores: lagos volcánicos, paisajes verdes exuberantes y una encantadora ciudad insular del Atlántico.",
     description_fr:
@@ -1478,10 +1504,10 @@ export const locations: Location[] = [
       "Ponta Delgada est la principale ville de São Miguel, la plus grande des Açores. Les portes Portas da Cidade, les ruelles pavées noir et blanc et le spectaculaire paysage volcanique offrent des décors uniques introuvables ailleurs en Europe. Les excursions à la journée vers les lacs jumeaux de Sete Cidades, les sources chaudes de Furnas et les plantations de thé offrent des arrière-plans extraordinaires.",
     seo_title_es: "Fotógrafo en Ponta Delgada, Azores | Sesiones en lagos volcánicos",
     seo_description_es:
-      "Reserve un fotógrafo profesional en Ponta Delgada, Azores. Lagos volcánicos, aguas termales y sesiones en isla atlántica. Desde 150 €.",
+      "Reserve un fotógrafo profesional en Ponta Delgada, Azores. Lagos volcánicos, aguas termales y sesiones en isla atlántica. Desde 299 €.",
     seo_title_fr: "Photographe à Ponta Delgada, Açores | Séances lacs volcaniques",
     seo_description_fr:
-      "Réservez un photographe professionnel à Ponta Delgada, Açores. Lacs volcaniques, sources chaudes et séances sur l'île atlantique. À partir de 150 €.",
+      "Réservez un photographe professionnel à Ponta Delgada, Açores. Lacs volcaniques, sources chaudes et séances sur l'île atlantique. À partir de 299 €.",
   },
 
   // Islands
@@ -1672,15 +1698,15 @@ export const locationFaqs: Record<string, LocationFaq[]> = {
   lisbon: [
     {
       question: "How much does a photoshoot in Lisbon cost?",
-      answer: "Professional photoshoots in Lisbon start from €150 for a 30-minute session. Most photographers offer packages ranging from €150 to €450 depending on duration, number of edited photos, and locations covered.",
+      answer: "Professional photoshoots in Lisbon start from €299. Most photographers offer packages ranging from €299 to €450 depending on duration, number of edited photos, and locations covered.",
       question_pt: "Quanto custa uma sessão fotográfica em Lisboa?",
-      answer_pt: "Sessões fotográficas profissionais em Lisboa começam em 150 € para 30 minutos. A maioria dos fotógrafos oferece pacotes entre 150 € e 450 € consoante a duração, número de fotos editadas e locais cobertos.",
+      answer_pt: "Sessões fotográficas profissionais em Lisboa começam em 299 €. A maioria dos fotógrafos oferece pacotes entre 299 € e 450 € consoante a duração, número de fotos editadas e locais cobertos.",
       question_de: "Wie viel kostet ein Fotoshooting in Lissabon?",
-      answer_de: "Professionelle Fotoshootings in Lissabon beginnen bei 150 € für eine 30-minütige Session. Die meisten Fotografen bieten Pakete von 150 € bis 450 € je nach Dauer, Anzahl bearbeiteter Fotos und besuchter Orte an.",
+      answer_de: "Professionelle Fotoshootings in Lissabon beginnen bei 299 €. Die meisten Fotografen bieten Pakete von 299 € bis 450 € je nach Dauer, Anzahl bearbeiteter Fotos und besuchter Orte an.",
       question_es: "¿Cuánto cuesta una sesión fotográfica en Lisboa?",
-      answer_es: "Las sesiones fotográficas profesionales en Lisboa comienzan en 150 € para 30 minutos. La mayoría de los fotógrafos ofrecen paquetes de 150 € a 450 € según la duración, el número de fotos editadas y los lugares cubiertos.",
+      answer_es: "Las sesiones fotográficas profesionales en Lisboa comienzan en 299 €. La mayoría de los fotógrafos ofrecen paquetes de 299 € a 450 € según la duración, el número de fotos editadas y los lugares cubiertos.",
       question_fr: "Combien coûte une séance photo à Lisbonne ?",
-      answer_fr: "Les séances photo professionnelles à Lisbonne commencent à 150 € pour 30 minutes. La plupart des photographes proposent des forfaits de 150 € à 450 € selon la durée, le nombre de photos retouchées et les lieux couverts.",
+      answer_fr: "Les séances photo professionnelles à Lisbonne commencent à 299 €. La plupart des photographes proposent des forfaits de 299 € à 450 € selon la durée, le nombre de photos retouchées et les lieux couverts.",
     },
     {
       question: "What are the best locations for a photoshoot in Lisbon?",
@@ -1770,15 +1796,15 @@ export const locationFaqs: Record<string, LocationFaq[]> = {
   porto: [
     {
       question: "How much does a photoshoot in Porto cost?",
-      answer: "Professional photoshoots in Porto start from €150 for a 30-minute session. Prices vary from €150 to €450 depending on the package, duration, and number of locations included.",
+      answer: "Professional photoshoots in Porto start from €299. Prices vary from €299 to €450 depending on the package, duration, and number of locations included.",
       question_pt: "Quanto custa uma sessão fotográfica no Porto?",
-      answer_pt: "Sessões fotográficas profissionais no Porto começam em 150 € para 30 minutos. Os preços variam entre 150 € e 450 € consoante o pacote, duração e número de locais incluídos.",
+      answer_pt: "Sessões fotográficas profissionais no Porto começam em 299 €. Os preços variam entre 299 € e 450 € consoante o pacote, duração e número de locais incluídos.",
       question_de: "Wie viel kostet ein Fotoshooting in Porto?",
-      answer_de: "Professionelle Fotoshootings in Porto beginnen bei 150 € für eine 30-minütige Session. Die Preise liegen zwischen 150 € und 450 € je nach Paket, Dauer und Anzahl der inkludierten Orte.",
+      answer_de: "Professionelle Fotoshootings in Porto beginnen bei 299 €. Die Preise liegen zwischen 299 € und 450 € je nach Paket, Dauer und Anzahl der inkludierten Orte.",
       question_es: "¿Cuánto cuesta una sesión fotográfica en Oporto?",
-      answer_es: "Las sesiones fotográficas profesionales en Oporto comienzan en 150 € para 30 minutos. Los precios varían de 150 € a 450 € según el paquete, la duración y el número de lugares incluidos.",
+      answer_es: "Las sesiones fotográficas profesionales en Oporto comienzan en 299 €. Los precios varían de 299 € a 450 € según el paquete, la duración y el número de lugares incluidos.",
       question_fr: "Combien coûte une séance photo à Porto ?",
-      answer_fr: "Les séances photo professionnelles à Porto commencent à 150 € pour 30 minutes. Les prix varient de 150 € à 450 € selon le forfait, la durée et le nombre de lieux inclus.",
+      answer_fr: "Les séances photo professionnelles à Porto commencent à 299 €. Les prix varient de 299 € à 450 € selon le forfait, la durée et le nombre de lieux inclus.",
     },
     {
       question: "What are the best locations for a photoshoot in Porto?",
@@ -1856,15 +1882,15 @@ export const locationFaqs: Record<string, LocationFaq[]> = {
   algarve: [
     {
       question: "How much does a photoshoot in the Algarve cost?",
-      answer: "Professional photoshoots in the Algarve start from €150 for a 30-minute session. Beach, cliff, and cave photoshoots typically range from €150 to €450 depending on duration and locations visited.",
+      answer: "Professional photoshoots in the Algarve start from €299. Beach, cliff, and cave photoshoots typically range from €299 to €450 depending on duration and locations visited.",
       question_pt: "Quanto custa uma sessão fotográfica no Algarve?",
-      answer_pt: "Sessões fotográficas profissionais no Algarve começam em 150 € para 30 minutos. Sessões na praia, em falésias e grutas variam normalmente entre 150 € e 450 €, dependendo da duração e dos locais visitados.",
+      answer_pt: "Sessões fotográficas profissionais no Algarve começam em 299 €. Sessões na praia, em falésias e grutas variam normalmente entre 299 € e 450 €, dependendo da duração e dos locais visitados.",
       question_de: "Wie viel kostet ein Fotoshooting an der Algarve?",
-      answer_de: "Professionelle Fotoshootings an der Algarve beginnen bei 150 € für eine 30-minütige Session. Strand-, Klippen- und Höhlen-Fotoshootings liegen typischerweise zwischen 150 € und 450 €, je nach Dauer und besuchten Orten.",
+      answer_de: "Professionelle Fotoshootings an der Algarve beginnen bei 299 €. Strand-, Klippen- und Höhlen-Fotoshootings liegen typischerweise zwischen 299 € und 450 €, je nach Dauer und besuchten Orten.",
       question_es: "¿Cuánto cuesta una sesión fotográfica en el Algarve?",
-      answer_es: "Las sesiones fotográficas profesionales en el Algarve comienzan en 150 € para 30 minutos. Las sesiones en playas, acantilados y cuevas suelen ir de 150 € a 450 € según la duración y los lugares visitados.",
+      answer_es: "Las sesiones fotográficas profesionales en el Algarve comienzan en 299 €. Las sesiones en playas, acantilados y cuevas suelen ir de 299 € a 450 € según la duración y los lugares visitados.",
       question_fr: "Combien coûte une séance photo en Algarve ?",
-      answer_fr: "Les séances photo professionnelles en Algarve commencent à 150 € pour 30 minutes. Les séances plage, falaises et grottes varient généralement de 150 € à 450 € selon la durée et les lieux visités.",
+      answer_fr: "Les séances photo professionnelles en Algarve commencent à 299 €. Les séances plage, falaises et grottes varient généralement de 299 € à 450 € selon la durée et les lieux visités.",
     },
     {
       question: "What are the best locations for a photoshoot in the Algarve?",
@@ -1942,15 +1968,15 @@ export const locationFaqs: Record<string, LocationFaq[]> = {
   sintra: [
     {
       question: "How much does a photoshoot in Sintra cost?",
-      answer: "Professional photoshoots in Sintra start from €150 for a 30-minute session. Palace and garden sessions typically range from €150 to €450. Note that some palace locations may require entrance tickets.",
+      answer: "Professional photoshoots in Sintra start from €299. Palace and garden sessions typically range from €299 to €450. Note that some palace locations may require entrance tickets.",
       question_pt: "Quanto custa uma sessão fotográfica em Sintra?",
-      answer_pt: "Sessões fotográficas profissionais em Sintra começam em 150 € para 30 minutos. Sessões nos palácios e jardins variam normalmente entre 150 € e 450 €. Note que alguns palácios podem requerer bilhete de entrada.",
+      answer_pt: "Sessões fotográficas profissionais em Sintra começam em 299 €. Sessões nos palácios e jardins variam normalmente entre 299 € e 450 €. Note que alguns palácios podem requerer bilhete de entrada.",
       question_de: "Wie viel kostet ein Fotoshooting in Sintra?",
-      answer_de: "Professionelle Fotoshootings in Sintra beginnen bei 150 € für 30 Minuten. Sessions in Palästen und Gärten liegen typischerweise zwischen 150 € und 450 €. Beachten Sie, dass einige Palast-Locations Eintrittstickets erfordern können.",
+      answer_de: "Professionelle Fotoshootings in Sintra beginnen bei 299 €. Sessions in Palästen und Gärten liegen typischerweise zwischen 299 € und 450 €. Beachten Sie, dass einige Palast-Locations Eintrittstickets erfordern können.",
       question_es: "¿Cuánto cuesta una sesión fotográfica en Sintra?",
-      answer_es: "Las sesiones fotográficas profesionales en Sintra comienzan en 150 € para 30 minutos. Las sesiones en palacios y jardines suelen ir de 150 € a 450 €. Tenga en cuenta que algunos palacios pueden requerir entradas.",
+      answer_es: "Las sesiones fotográficas profesionales en Sintra comienzan en 299 €. Las sesiones en palacios y jardines suelen ir de 299 € a 450 €. Tenga en cuenta que algunos palacios pueden requerir entradas.",
       question_fr: "Combien coûte une séance photo à Sintra ?",
-      answer_fr: "Les séances photo professionnelles à Sintra commencent à 150 € pour 30 minutes. Les séances dans les palais et jardins varient généralement de 150 € à 450 €. Notez que certains palais peuvent nécessiter des billets d'entrée.",
+      answer_fr: "Les séances photo professionnelles à Sintra commencent à 299 €. Les séances dans les palais et jardins varient généralement de 299 € à 450 €. Notez que certains palais peuvent nécessiter des billets d'entrée.",
     },
     {
       question: "What are the best locations for a photoshoot in Sintra?",
@@ -2028,15 +2054,15 @@ export const locationFaqs: Record<string, LocationFaq[]> = {
   cascais: [
     {
       question: "How much does a photoshoot in Cascais cost?",
-      answer: "Professional photoshoots in Cascais start from €150 for a 30-minute session. Most photographers offer packages from €150 to €400. Beach and cliff-side sessions are the most popular options.",
+      answer: "Professional photoshoots in Cascais start from €299. Most photographers offer packages from €299 to €400. Beach and cliff-side sessions are the most popular options.",
       question_pt: "Quanto custa uma sessão fotográfica em Cascais?",
-      answer_pt: "Sessões fotográficas profissionais em Cascais começam em 150 € para 30 minutos. A maioria dos fotógrafos oferece pacotes de 150 € a 400 €. Sessões na praia e nas falésias são as opções mais populares.",
+      answer_pt: "Sessões fotográficas profissionais em Cascais começam em 299 €. A maioria dos fotógrafos oferece pacotes de 299 € a 400 €. Sessões na praia e nas falésias são as opções mais populares.",
       question_de: "Wie viel kostet ein Fotoshooting in Cascais?",
-      answer_de: "Professionelle Fotoshootings in Cascais beginnen bei 150 € für 30 Minuten. Die meisten Fotografen bieten Pakete von 150 € bis 400 € an. Strand- und Klippen-Sessions sind die beliebtesten Optionen.",
+      answer_de: "Professionelle Fotoshootings in Cascais beginnen bei 299 €. Die meisten Fotografen bieten Pakete von 299 € bis 400 € an. Strand- und Klippen-Sessions sind die beliebtesten Optionen.",
       question_es: "¿Cuánto cuesta una sesión fotográfica en Cascais?",
-      answer_es: "Las sesiones fotográficas profesionales en Cascais comienzan en 150 € para 30 minutos. La mayoría de fotógrafos ofrecen paquetes de 150 € a 400 €. Las sesiones en la playa y los acantilados son las opciones más populares.",
+      answer_es: "Las sesiones fotográficas profesionales en Cascais comienzan en 299 €. La mayoría de fotógrafos ofrecen paquetes de 299 € a 400 €. Las sesiones en la playa y los acantilados son las opciones más populares.",
       question_fr: "Combien coûte une séance photo à Cascais ?",
-      answer_fr: "Les séances photo professionnelles à Cascais commencent à 150 € pour 30 minutes. La plupart des photographes proposent des forfaits de 150 € à 400 €. Les séances plage et falaises sont les options les plus populaires.",
+      answer_fr: "Les séances photo professionnelles à Cascais commencent à 299 €. La plupart des photographes proposent des forfaits de 299 € à 400 €. Les séances plage et falaises sont les options les plus populaires.",
     },
     {
       question: "What are the best photo spots in Cascais?",
@@ -2090,15 +2116,15 @@ export const locationFaqs: Record<string, LocationFaq[]> = {
   lagos: [
     {
       question: "How much does a photoshoot in Lagos cost?",
-      answer: "Professional photoshoots in Lagos and the western Algarve start from €150. Beach and cliff sessions at Ponta da Piedade are the most popular, typically ranging from €150 to €400 depending on duration.",
+      answer: "Professional photoshoots in Lagos and the western Algarve start from €299. Beach and cliff sessions at Ponta da Piedade are the most popular, typically ranging from €299 to €400 depending on duration.",
       question_pt: "Quanto custa uma sessão fotográfica em Lagos?",
-      answer_pt: "Sessões fotográficas profissionais em Lagos e no Algarve ocidental começam em 150 €. Sessões na praia e nas falésias da Ponta da Piedade são as mais populares, variando normalmente entre 150 € e 400 € consoante a duração.",
+      answer_pt: "Sessões fotográficas profissionais em Lagos e no Algarve ocidental começam em 299 €. Sessões na praia e nas falésias da Ponta da Piedade são as mais populares, variando normalmente entre 299 € e 400 € consoante a duração.",
       question_de: "Wie viel kostet ein Fotoshooting in Lagos?",
-      answer_de: "Professionelle Fotoshootings in Lagos und der westlichen Algarve beginnen bei 150 €. Strand- und Klippen-Sessions an der Ponta da Piedade sind am beliebtesten und liegen typischerweise zwischen 150 € und 400 € je nach Dauer.",
+      answer_de: "Professionelle Fotoshootings in Lagos und der westlichen Algarve beginnen bei 299 €. Strand- und Klippen-Sessions an der Ponta da Piedade sind am beliebtesten und liegen typischerweise zwischen 299 € und 400 € je nach Dauer.",
       question_es: "¿Cuánto cuesta una sesión fotográfica en Lagos?",
-      answer_es: "Las sesiones fotográficas profesionales en Lagos y el Algarve occidental comienzan en 150 €. Las sesiones en la playa y los acantilados de Ponta da Piedade son las más populares, normalmente entre 150 € y 400 € según la duración.",
+      answer_es: "Las sesiones fotográficas profesionales en Lagos y el Algarve occidental comienzan en 299 €. Las sesiones en la playa y los acantilados de Ponta da Piedade son las más populares, normalmente entre 299 € y 400 € según la duración.",
       question_fr: "Combien coûte une séance photo à Lagos ?",
-      answer_fr: "Les séances photo professionnelles à Lagos et dans l'ouest de l'Algarve commencent à 150 €. Les séances plage et falaises à la Ponta da Piedade sont les plus populaires, généralement de 150 € à 400 € selon la durée.",
+      answer_fr: "Les séances photo professionnelles à Lagos et dans l'ouest de l'Algarve commencent à 299 €. Les séances plage et falaises à la Ponta da Piedade sont les plus populaires, généralement de 299 € à 400 € selon la durée.",
     },
     {
       question: "What are the best photo spots in Lagos?",
@@ -2140,15 +2166,15 @@ export const locationFaqs: Record<string, LocationFaq[]> = {
   madeira: [
     {
       question: "How much does a photoshoot in Madeira cost?",
-      answer: "Professional photoshoots in Madeira start from €150. Due to the island's diverse landscapes, many photographers offer half-day packages (€300–500) covering multiple locations from mountains to coast.",
+      answer: "Professional photoshoots in Madeira start from €299. Due to the island's diverse landscapes, many photographers offer half-day packages (€300–500) covering multiple locations from mountains to coast.",
       question_pt: "Quanto custa uma sessão fotográfica na Madeira?",
-      answer_pt: "Sessões fotográficas profissionais na Madeira começam em 150 €. Devido às paisagens diversas da ilha, muitos fotógrafos oferecem pacotes de meio dia (300–500 €) cobrindo vários locais, das montanhas à costa.",
+      answer_pt: "Sessões fotográficas profissionais na Madeira começam em 299 €. Devido às paisagens diversas da ilha, muitos fotógrafos oferecem pacotes de meio dia (300–500 €) cobrindo vários locais, das montanhas à costa.",
       question_de: "Wie viel kostet ein Fotoshooting auf Madeira?",
-      answer_de: "Professionelle Fotoshootings auf Madeira beginnen bei 150 €. Aufgrund der vielfältigen Landschaften der Insel bieten viele Fotografen Halbtages-Pakete (300–500 €) an, die mehrere Orte von den Bergen bis zur Küste abdecken.",
+      answer_de: "Professionelle Fotoshootings auf Madeira beginnen bei 299 €. Aufgrund der vielfältigen Landschaften der Insel bieten viele Fotografen Halbtages-Pakete (300–500 €) an, die mehrere Orte von den Bergen bis zur Küste abdecken.",
       question_es: "¿Cuánto cuesta una sesión fotográfica en Madeira?",
-      answer_es: "Las sesiones fotográficas profesionales en Madeira comienzan en 150 €. Debido a los paisajes diversos de la isla, muchos fotógrafos ofrecen paquetes de medio día (300–500 €) que cubren múltiples ubicaciones desde las montañas hasta la costa.",
+      answer_es: "Las sesiones fotográficas profesionales en Madeira comienzan en 299 €. Debido a los paisajes diversos de la isla, muchos fotógrafos ofrecen paquetes de medio día (300–500 €) que cubren múltiples ubicaciones desde las montañas hasta la costa.",
       question_fr: "Combien coûte une séance photo à Madère ?",
-      answer_fr: "Les séances photo professionnelles à Madère commencent à 150 €. En raison de la diversité des paysages de l'île, de nombreux photographes proposent des forfaits demi-journée (300–500 €) couvrant plusieurs lieux, des montagnes à la côte.",
+      answer_fr: "Les séances photo professionnelles à Madère commencent à 299 €. En raison de la diversité des paysages de l'île, de nombreux photographes proposent des forfaits demi-journée (300–500 €) couvrant plusieurs lieux, des montagnes à la côte.",
     },
     {
       question: "What are the best photo spots in Madeira?",
@@ -2190,15 +2216,15 @@ export const locationFaqs: Record<string, LocationFaq[]> = {
   "douro-valley": [
     {
       question: "How much does a photoshoot in Douro Valley cost?",
-      answer: "Professional photoshoots in Douro Valley start from €200 due to travel from Porto (1.5 hours). Half-day packages covering vineyards and river viewpoints typically range from €300 to €500.",
+      answer: "Professional photoshoots in Douro Valley start from €299 due to travel from Porto (1.5 hours). Half-day packages covering vineyards and river viewpoints typically range from €300 to €500.",
       question_pt: "Quanto custa uma sessão fotográfica no Vale do Douro?",
-      answer_pt: "Sessões fotográficas profissionais no Vale do Douro começam em 200 € devido à viagem desde o Porto (1,5 horas). Pacotes de meio dia cobrindo vinhas e miradouros do rio variam normalmente entre 300 € e 500 €.",
+      answer_pt: "Sessões fotográficas profissionais no Vale do Douro começam em 299 € devido à viagem desde o Porto (1,5 horas). Pacotes de meio dia cobrindo vinhas e miradouros do rio variam normalmente entre 300 € e 500 €.",
       question_de: "Wie viel kostet ein Fotoshooting im Douro-Tal?",
-      answer_de: "Professionelle Fotoshootings im Douro-Tal beginnen bei 200 € aufgrund der Anfahrt aus Porto (1,5 Stunden). Halbtages-Pakete, die Weinberge und Flussaussichtspunkte abdecken, liegen typischerweise zwischen 300 € und 500 €.",
+      answer_de: "Professionelle Fotoshootings im Douro-Tal beginnen bei 299 € aufgrund der Anfahrt aus Porto (1,5 Stunden). Halbtages-Pakete, die Weinberge und Flussaussichtspunkte abdecken, liegen typischerweise zwischen 300 € und 500 €.",
       question_es: "¿Cuánto cuesta una sesión fotográfica en el valle del Duero?",
-      answer_es: "Las sesiones fotográficas profesionales en el valle del Duero comienzan en 200 € debido al viaje desde Oporto (1,5 horas). Los paquetes de medio día que cubren viñedos y miradores del río suelen ir de 300 € a 500 €.",
+      answer_es: "Las sesiones fotográficas profesionales en el valle del Duero comienzan en 299 € debido al viaje desde Oporto (1,5 horas). Los paquetes de medio día que cubren viñedos y miradores del río suelen ir de 300 € a 500 €.",
       question_fr: "Combien coûte une séance photo dans la vallée du Douro ?",
-      answer_fr: "Les séances photo professionnelles dans la vallée du Douro commencent à 200 € en raison du trajet depuis Porto (1h30). Les forfaits demi-journée couvrant vignobles et belvédères du fleuve varient généralement de 300 € à 500 €.",
+      answer_fr: "Les séances photo professionnelles dans la vallée du Douro commencent à 299 € en raison du trajet depuis Porto (1h30). Les forfaits demi-journée couvrant vignobles et belvédères du fleuve varient généralement de 300 € à 500 €.",
     },
     {
       question: "What are the best photo spots in Douro Valley?",

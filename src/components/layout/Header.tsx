@@ -33,7 +33,7 @@ const SHOOT_TYPES_DATA = [
   { key: "family", href: "/photoshoots/family", icon: Baby },
   { key: "proposal", href: "/photoshoots/proposal", icon: Sparkles },
   { key: "elopement", href: "/photoshoots/elopement", icon: TreePine },
-  { key: "wedding", href: "/photoshoots/wedding", icon: PartyPopper },
+  { key: "wedding", href: "/weddings", icon: PartyPopper },
   { key: "honeymoon", href: "/photoshoots/honeymoon", icon: Sun },
   { key: "soloPortrait", href: "/photoshoots/solo", icon: UserRound },
   { key: "engagement", href: "/photoshoots/engagement", icon: Gem },
@@ -50,6 +50,8 @@ export function Header() {
   const langRef = useRef<HTMLDivElement>(null);
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  // Active when on the exact page or a sub-path of it (e.g. /photographers/lisbon).
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
   const locale = useLocale();
   const t = useTranslations("nav");
   const user = session?.user;
@@ -124,17 +126,30 @@ export function Header() {
             <Link
               href="/photographers"
               onClick={() => trackCTAClick("our_photographers", "header_desktop")}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600"
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${isActive("/photographers") ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50 hover:text-primary-600"}`}
             >
               {t("ourPhotographers")}
             </Link>
+
+            {/* Weddings — dedicated landing. Kept semibold + 💍 so the
+                highest-value occasion stays distinct, but no colored
+                background (reads as a plain accented link, not a button). */}
+            {!isPhotographer && (
+              <Link
+                href="/weddings"
+                onClick={() => trackCTAClick("weddings", "header_desktop")}
+                className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${isActive("/weddings") ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50 hover:text-primary-600"}`}
+              >
+                💍 {t("weddings")}
+              </Link>
+            )}
 
             {/* Gift Cards — hidden for photographers (they don't buy gifts for clients) */}
             {!isPhotographer && (
               <Link
                 href="/gift-cards"
                 onClick={() => trackCTAClick("gift_cards", "header_desktop")}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-warm-50 hover:text-primary-600"
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition ${isActive("/gift-cards") ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50 hover:text-primary-600"}`}
               >
                 🎁 {t("giftCards")}
               </Link>
@@ -686,6 +701,9 @@ export function Header() {
             <div className="flex flex-col gap-1">
               <MobileNavLink href="/photographers" label={t("findPhotographers")} onClick={() => { trackCTAClick("our_photographers", "header_mobile"); setMobileOpen(false); }} />
               {!isPhotographer && (
+                <MobileNavLink href="/weddings" label={`💍 ${t("weddings")}`} onClick={() => { trackCTAClick("weddings", "header_mobile"); setMobileOpen(false); }} />
+              )}
+              {!isPhotographer && (
                 <MobileNavLink href="/gift-cards" label={`🎁 ${t("giftCards")}`} onClick={() => { trackCTAClick("gift_cards", "header_mobile"); setMobileOpen(false); }} />
               )}
               <MobileNavLink href="/locations" label={t("photoMap")} onClick={() => setMobileOpen(false)} />
@@ -721,8 +739,10 @@ export function Header() {
 
 // i18n Link for public routes
 function MobileNavLink({ href, label, onClick }: { href: string; label: string; onClick: () => void }) {
+  const pathname = usePathname();
+  const active = pathname === href || pathname.startsWith(href + "/");
   return (
-    <Link href={href} onClick={onClick} className="rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-warm-50">
+    <Link href={href} onClick={onClick} className={`rounded-lg px-3 py-2.5 text-sm font-medium transition ${active ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50"}`}>
       {label}
     </Link>
   );

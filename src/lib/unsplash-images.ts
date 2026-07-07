@@ -57,6 +57,10 @@ const aliasMap: Record<string, string> = {
   almada: "lisbon",
   funchal: "madeira",
   "ponta-delgada": "azores",
+  // Placeholder until a real Leiria cover is added — reuse Coimbra's
+  // central-Portugal hilltop-city-over-a-river photo (Leiria has the same
+  // castle-on-a-hill + riverside vibe) so the page hero isn't empty.
+  leiria: "coimbra",
 };
 
 const HERO_ID = "photo-1765854638659-aa17a6b00543"; // Couple on beach

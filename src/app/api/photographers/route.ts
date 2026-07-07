@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 import { getShootTypeBySlug } from "@/lib/shoot-types-data";
 import {
   expandLocationCoverageToLegacySlugs,
@@ -99,6 +100,10 @@ export async function GET(req: NextRequest) {
     sql += ` ORDER BY p.is_featured DESC, p.is_verified DESC, RANDOM()`;
 
     const photographers = await query(sql, params);
+    // Public catalog — mask each photographer's surname.
+    for (const p of photographers) {
+      if (typeof p.name === "string") p.name = maskSurname(p.name);
+    }
 
     return NextResponse.json(photographers);
   } catch (error) {

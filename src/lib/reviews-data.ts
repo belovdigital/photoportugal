@@ -1,5 +1,6 @@
 import { query } from "@/lib/db";
 import { unstable_cache } from "next/cache";
+import { maskSurname } from "@/lib/photographer-name";
 
 export interface PublicReview {
   id: string;
@@ -38,7 +39,7 @@ function mapRow(r: DbRow): PublicReview {
     created_at: r.created_at,
     client_name: r.client_name_override || r.client_db_name || null,
     photographer_id: r.photographer_id,
-    photographer_name: r.photographer_name,
+    photographer_name: maskSurname(r.photographer_name),
     photographer_slug: r.photographer_slug,
     photographer_avatar: r.photographer_avatar,
     photo_url: r.photo_url,

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import DatePicker from "@/components/ui/DatePicker";
+import { todayLocalISO } from "@/lib/date-utils";
 import { AuthModal } from "@/components/ui/AuthModal";
 import { LocationTreeSelect } from "@/components/ui/LocationTreeSelect";
 
@@ -85,7 +86,7 @@ export function FindPhotographerForm({ defaultName = "", defaultEmail = "", defa
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
-  const minDate = new Date().toISOString().split("T")[0];
+  const minDate = todayLocalISO();
 
   // Auto-resubmit after auth
   useEffect(() => {

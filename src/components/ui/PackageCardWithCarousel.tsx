@@ -2,6 +2,7 @@ import { Link } from "@/i18n/navigation";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { PhotographerCardCover } from "@/components/ui/PhotographerCardCover";
 import { normalizeName } from "@/lib/format-name";
+import { maskSurname } from "@/lib/photographer-name";
 import { getTranslations } from "next-intl/server";
 
 export interface PackageCardWithCarouselData {
@@ -101,7 +102,7 @@ export async function PackageCardWithCarousel({
       >
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-gray-900">
-            {normalizeName(pkg.photographer_name)}
+            {normalizeName(maskSurname(pkg.photographer_name))}
           </p>
           {pkg.review_count > 0 && (
             <p className="text-xs text-gray-500">

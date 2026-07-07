@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { maskSurname } from "@/lib/photographer-name";
 
 export interface LocationMasonryPhoto {
   url: string;
@@ -186,7 +187,7 @@ function PhotoOverlay({
       )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-white drop-shadow">
-          {photographer.name}
+          {maskSurname(photographer.name)}
         </p>
         <p className="truncate text-[11px] text-white/80">{viewProfileText}</p>
       </div>

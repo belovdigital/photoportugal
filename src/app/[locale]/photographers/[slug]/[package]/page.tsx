@@ -12,6 +12,7 @@ import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 import { getTranslations, getLocale } from "next-intl/server";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
+import { maskSurname } from "@/lib/photographer-name";
 import { LARGE_GROUP_SURCHARGE_RATE, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { inferPackageTags, locationDisplayName } from "@/lib/package-photo-matching";
 import { PackageHeroCarousel } from "./PackageHeroCarousel";
@@ -364,7 +365,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
             )}
             <h1 className="font-display text-3xl font-bold text-white drop-shadow-md sm:text-5xl md:text-6xl">{pkg.name}</h1>
             <p className="mt-2 text-base text-white/90 sm:text-lg">
-              {T("byPhotographerInLocation", "by {photographer}{locText}", { photographer: photographer.display_name, locText: where ? ` · ${where}` : "" })}
+              {T("byPhotographerInLocation", "by {photographer}{locText}", { photographer: maskSurname(photographer.display_name), locText: where ? ` · ${where}` : "" })}
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <div className="rounded-2xl bg-white/95 px-5 py-3 shadow-lg backdrop-blur-sm">
@@ -438,7 +439,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
               </div>
             ) : (
               <p className="mt-4 text-base leading-relaxed text-gray-700">
-                {T("descFallback", "A {duration} session with {photographer}, capturing {photos} polished, edited photos delivered within {days} days.", { duration: pkg.duration_minutes < 60 ? `${pkg.duration_minutes}-minute` : `${pkg.duration_minutes / 60}-hour`, photographer: photographer.display_name, photos: pkg.num_photos, days: pkg.delivery_days })}
+                {T("descFallback", "A {duration} session with {photographer}, capturing {photos} polished, edited photos delivered within {days} days.", { duration: pkg.duration_minutes < 60 ? `${pkg.duration_minutes}-minute` : `${pkg.duration_minutes / 60}-hour`, photographer: maskSurname(photographer.display_name), photos: pkg.num_photos, days: pkg.delivery_days })}
               </p>
             )}
 
@@ -476,7 +477,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
               <Link href={`/photographers/${slug}` as never} className="flex items-center gap-3 group">
                 <Avatar src={photographer.avatar_url} fallback={photographer.display_name} size="lg" />
                 <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 group-hover:text-primary-600">{photographer.display_name}</p>
+                  <p className="font-semibold text-gray-900 group-hover:text-primary-600">{maskSurname(photographer.display_name)}</p>
                   {photographer.review_count > 0 && (
                     <p className="text-xs text-gray-500">★ {ratingNum.toFixed(1)} · {photographer.review_count} {photographer.review_count === 1 ? T("review", "review") : T("reviews", "reviews")}</p>
                   )}
@@ -509,7 +510,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
         <section className="border-t border-warm-200 bg-warm-50/50 py-12 sm:py-16">
           <div className="mx-auto max-w-6xl px-4">
             <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
-              {T("samplePortfolio", "Sample work from {photographer}", { photographer: photographer.display_name })}
+              {T("samplePortfolio", "Sample work from {photographer}", { photographer: maskSurname(photographer.display_name) })}
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-gray-600">
               {T("samplePortfolioDesc", "A taste of {photographer}'s style across recent shoots. Your final delivery will be edited with the same care.", { photographer: photographer.display_name })}
