@@ -10,15 +10,19 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
-import { ClarityWidget } from "@/components/ui/ClarityWidget";
+// Clarity tracking temporarily disabled per user request 2026-06-18.
+// Re-enable by uncommenting this import and the <ClarityWidget /> below.
+// import { ClarityWidget } from "@/components/ui/ClarityWidget";
 // ExitIntentPopup removed 2026-05-07 — stats showed near-zero conversion
 // and visitor feedback flagged it as annoying. Component file kept on disk
 // in case we want to revive a different exit-intent experiment later.
 import { VisitorTracker } from "@/components/ui/VisitorTracker";
 import { LazyIntercom } from "@/components/ui/LazyIntercom";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import { SocialProofToaster } from "@/components/ui/SocialProofToaster";
 import { ConciergeDrawerProvider } from "@/components/concierge/ConciergeDrawer";
 import { QuickBookingProvider } from "@/components/ui/QuickBookingModal";
+import { PromoTopbar } from "@/components/layout/PromoTopbar";
 
 type Locale = "en" | "pt";
 
@@ -53,6 +57,9 @@ export default async function LocaleLayout({
         <NotificationProvider>
           <ConciergeDrawerProvider>
             <QuickBookingProvider>
+            {/* Summer super-offer bar — gift mode wins: gift recipients
+                shouldn't be cross-sold a paid offer while redeeming. */}
+            {!giftCard && <PromoTopbar />}
             <Header />
             {giftCard && (
               <GiftModeBanner
@@ -67,10 +74,12 @@ export default async function LocaleLayout({
           </ConciergeDrawerProvider>
         </NotificationProvider>
         <ScrollToTop />
+        <SocialProofToaster />
         <CookieConsent />
         <VisitorTracker />
         <GoogleAnalytics />
-        <ClarityWidget />
+        {/* Clarity temporarily disabled 2026-06-18 — re-enable: uncomment import + this line */}
+        {/* <ClarityWidget /> */}
         <LazyIntercom />
       </SessionProvider>
     </NextIntlClientProvider>

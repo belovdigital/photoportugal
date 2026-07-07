@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { maskSurname } from "@/lib/photographer-name";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ConciergeQuickStart } from "@/components/concierge/ConciergeQuickStart";
 import { ConciergeInvitePlaque } from "@/components/concierge/ConciergeInvitePlaque";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
+import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
+import { trackCTAClick } from "@/lib/analytics";
 
 export interface HeroFeaturedPhotographer {
   slug: string;
@@ -59,7 +62,7 @@ const ROTATION_MS = 5000;
  * hydration (which there used to be when we re-rolled client-side). Photo
  * rotation is client-side because it has no SEO/SSR meaning.
  */
-export function HeroSingleVariant({ photographer, locationContext, totalPhotographers, showSiteChip }: {
+export function HeroSingleVariant({ photographer, locationContext, totalPhotographers, showSiteChip, hideBrowseAll }: {
   photographer: HeroFeaturedPhotographer;
   locationContext?: HeroLocationContext;
   /** Real count of approved photographers used in the "browse all N" link
@@ -71,6 +74,9 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
    *  the chip reads as a location-level claim ("Available this week in
    *  Algarve") even though the page features the whole site. */
   showSiteChip?: boolean;
+  /** Occasion landings (/weddings): the "browse all N photographers across
+   *  Portugal" escape hatch dilutes the pitch — hide it. */
+  hideBrowseAll?: boolean;
 }) {
   const t = useTranslations("heroSingle");
   const tLoc = useTranslations("heroSingle.location");
@@ -312,6 +318,10 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
   if (!photographer) return null;
 
   const firstName = photographer.name.split(" ")[0];
+  // Visible name under the avatar is masked ("Marilia P."). Alts keep the
+  // full name for SEO; the "Meet {firstName}" headline already uses the first
+  // name only.
+  const displayName = maskSurname(photographer.name);
   const photos = photographer.portfolio_urls.length > 0
     ? photographer.portfolio_urls
     : (photographer.cover_url ? [photographer.cover_url] : ["/hero-family.webp"]);
@@ -553,7 +563,7 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
                 </div>
                 <div className="text-sm">
                   <p className="font-semibold text-white group-hover:underline">
-                    {locationContext ? tLoc("byPhotographer", { name: photographer.name }) : photographer.name}
+                    {locationContext ? tLoc("byPhotographer", { name: displayName }) : displayName}
                   </p>
                   <p className="text-white/70 text-xs">{t("viewProfile")} →</p>
                 </div>
@@ -579,7 +589,31 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
               blur (`backdrop-blur-md`), brighter edge (`border-white/25`)
               so the photo behind shows through clearly while still keeping
               the form readable. */}
-          <div className="mt-7 rounded-2xl bg-white/[0.06] backdrop-blur-md border border-white/25 p-4 shadow-2xl">
+          {/* Summer super-offer — the PRIMARY CTA since 2026-07-07: Alex
+              wants blind quick-bookings sold harder. Concierge plaque
+              below stays as the secondary path. */}
+          <QuickBookingTrigger
+            className="mt-7 flex w-full items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-4 text-left shadow-2xl transition hover:brightness-105 active:scale-[0.99]"
+            onClick={() => trackCTAClick("quick_booking", "hero_offer")}
+          >
+            <span className="min-w-0">
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-amber-950/80">
+                ☀️ {t("offerKicker")}
+              </span>
+              <span className="mt-0.5 block text-lg font-bold leading-tight text-white drop-shadow-sm">
+                {t("offerTitle", { price: "€279" })}{" "}
+                <s className="font-semibold text-white/70">€344</s>
+              </span>
+              <span className="mt-0.5 block text-xs font-medium text-amber-950/80">
+                {t("offerSub")}
+              </span>
+            </span>
+            <span className="shrink-0 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-orange-600 shadow">
+              {t("offerCta")} →
+            </span>
+          </QuickBookingTrigger>
+
+          <div className="mt-4 rounded-2xl bg-white/[0.06] backdrop-blur-md border border-white/25 p-4 shadow-2xl">
             {/* AI-led heading: ✨ icon + "instant match" wording. The
                 old copy ("Tell us about your X photoshoot — we'll match")
                 buried the AI/instant promise. The icon + new label make
@@ -620,14 +654,16 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
             )}
           </div>
 
-          <p className="mt-4 text-sm text-white/70">
-            {t.rich("browseAll", {
-              count: totalPhotographers ?? 0,
-              link: (chunks) => (
-                <Link href="/photographers" className="font-semibold text-white underline underline-offset-2 hover:text-primary-300">{chunks}</Link>
-              ),
-            })}
-          </p>
+          {!hideBrowseAll && (
+            <p className="mt-4 text-sm text-white/70">
+              {t.rich("browseAll", {
+                count: totalPhotographers ?? 0,
+                link: (chunks) => (
+                  <Link href="/photographers" className="font-semibold text-white underline underline-offset-2 hover:text-primary-300">{chunks}</Link>
+                ),
+              })}
+            </p>
+          )}
           <div className="mt-3 lg:hidden">
             <GoogleReviewsBadge
               variant="compact"
