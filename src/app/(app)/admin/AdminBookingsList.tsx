@@ -26,6 +26,8 @@ export interface AdminBooking {
   package_duration: number | null;
   service_fee: number | null;
   payout_amount: number | null;
+  tip_amount_cents?: number | null;
+  tip_transferred?: boolean | null;
   stripe_amount_subtotal_cents: number | null;
   stripe_amount_paid_cents: number | null;
   stripe_amount_discount_cents: number | null;
@@ -52,7 +54,7 @@ export interface AdminBooking {
   auto_refund_at?: string | null;
   admin_notes?: string | null;
   // Gift card redemption — set when booking was paid via Photo Portugal
-  // gift card (not Stripe). Payout is flat per tier (€210/€360).
+  // gift card (not Stripe). Payout is flat per tier (€254/€382).
   gift_card_id?: string | null;
   gift_card_tier?: "express" | "full" | null;
   // Attribution — only rendered in admin, never exposed to client/photographer
@@ -70,6 +72,12 @@ export interface AdminBooking {
   first_landing_page?: string | null;
   first_session_at?: string | null;
   concierge_first_msg?: string | null;
+  concierge_user_msgs?: string | null;
+  concierge_dialogue?: string | null;
+  visitor_landing_page?: string | null;
+  visitor_referrer?: string | null;
+  visitor_pageviews?: number | null;
+  visitor_device?: string | null;
   concierge_match_count?: number | null;
   concierge_outcome?: string | null;
 }
@@ -322,6 +330,9 @@ export function AdminBookingsList({
                     <AdminPaymentCountdown confirmedAt={b.confirmed_at || b.created_at} inline />
                   )}
                   <div className="flex items-center gap-2">
+                    {Number(b.tip_amount_cents) > 0 && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">💛 Tip €{Math.round(Number(b.tip_amount_cents) / 100)}</span>
+                    )}
                     {b.total_price && <span className="text-base font-bold text-gray-900">&euro;{Math.round(Number(b.total_price))}</span>}
                     <svg
                       className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -467,6 +478,9 @@ export function AdminBookingsList({
                       {Number(b.service_fee) > 0 || Number(b.payout_amount) > 0 ? (
                         <p className="text-[10px] text-gray-400">Fee: €{Math.round(Number(b.service_fee))} · Payout: €{Math.round(Number(b.payout_amount))}</p>
                       ) : null}
+                      {Number(b.tip_amount_cents) > 0 && (
+                        <p className="text-[10px] font-medium text-amber-700">💛 Tip: €{(Number(b.tip_amount_cents) / 100).toFixed(2)} {b.tip_transferred ? "· sent ✓" : "· pending transfer"}</p>
+                      )}
                     </div>
                     {b.package_name && (
                       <div>
@@ -542,7 +556,10 @@ export function AdminBookingsList({
                   {(() => {
                     const src = deriveSource(b);
                     const landing = b.first_landing_page;
-                    const concierge = b.concierge_first_msg?.trim();
+                    // Prefer the full transcript of the visitor's own turns
+                    // (everything they asked for) over just the first message —
+                    // the admin needs the whole picture to assign a blind booking.
+                    const concierge = (b.concierge_user_msgs || b.concierge_first_msg)?.trim();
                     return (
                       <div className={`mt-3 rounded-lg border p-3 ${src.isAd ? "border-amber-200 bg-amber-50" : "border-warm-200 bg-warm-50"}`}>
                         <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400 mb-1">Source</p>
@@ -558,12 +575,43 @@ export function AdminBookingsList({
                           <p className="mt-1.5 text-sm text-gray-700">
                             <span className="mr-1">💬</span>
                             <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Lens:</span>{" "}
-                            <span className="italic">&ldquo;{concierge.length > 140 ? concierge.slice(0, 140) + "…" : concierge}&rdquo;</span>
+                            <span className="italic">&ldquo;{concierge.length > 500 ? concierge.slice(0, 500) + "…" : concierge}&rdquo;</span>
                             {typeof b.concierge_match_count === "number" && b.concierge_match_count > 0 && (
                               <span className="text-gray-500"> · {b.concierge_match_count} match{b.concierge_match_count === 1 ? "" : "es"}</span>
                             )}
                             {b.concierge_outcome && (
                               <span className="text-gray-500"> · {b.concierge_outcome}</span>
+                            )}
+                          </p>
+                        )}
+                        {/* Full concierge transcript — the whole user↔bot
+                            conversation behind this booking, expandable. */}
+                        {b.concierge_dialogue && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-xs font-semibold text-primary-700 hover:text-primary-800">
+                              🤖 Full concierge conversation
+                            </summary>
+                            <div className="mt-2 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg border border-warm-200 bg-white p-3 text-[13px] leading-relaxed text-gray-700">
+                              {b.concierge_dialogue}
+                            </div>
+                          </details>
+                        )}
+                        {/* No chat → show the browsing journey instead, and say
+                            HONESTLY that this was the Quick Booking form. */}
+                        {!b.concierge_dialogue && b.blind_booking && (
+                          <p className="mt-1.5 text-sm text-gray-600">
+                            <span className="mr-1">⚡</span>
+                            <span className="text-[11px] font-medium uppercase tracking-wider text-gray-400">No chat</span>{" "}
+                            {b.message?.includes("Quick Booking form") || !b.message?.includes("Concierge chat")
+                              ? "Quick Booking form — the client never talked to the bot."
+                              : "Chat transcript not found."}
+                            {(b.visitor_landing_page || b.visitor_referrer) && (
+                              <span className="block mt-1 text-xs text-gray-500">
+                                Journey: landed on <code className="bg-white px-1 py-0.5 rounded border border-gray-200">{(b.visitor_landing_page || "?").slice(0, 60)}</code>
+                                {b.visitor_referrer ? <> from {b.visitor_referrer.replace(/^https?:\/\//, "").slice(0, 40)}</> : " (direct)"}
+                                {typeof b.visitor_pageviews === "number" && b.visitor_pageviews > 0 && <> · {b.visitor_pageviews} pages</>}
+                                {b.visitor_device && <> · {b.visitor_device}</>}
+                              </span>
                             )}
                           </p>
                         )}

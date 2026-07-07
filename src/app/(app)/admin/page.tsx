@@ -182,7 +182,7 @@ export default async function AdminPage() {
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
      LEFT JOIN v_photographer_warning_counts wc ON wc.photographer_id = pp.id
      WHERE COALESCE(u.email_verified, FALSE) = TRUE
-     ORDER BY pp.is_approved DESC, COALESCE(u.is_banned, FALSE) ASC, pp.created_at DESC`
+     ORDER BY pp.is_approved DESC, COALESCE(u.is_banned, FALSE) ASC, LOWER(u.name) ASC`
   );
 
   const stripePaymentSelect = await bookingStripePaymentSelect("b");
@@ -223,8 +223,11 @@ export default async function AdminPage() {
     first_utm_campaign: string | null; first_utm_term: string | null; first_gclid: string | null;
     first_referrer: string | null; first_landing_page: string | null;
     first_session_at: string | null;
-    concierge_first_msg: string | null; concierge_match_count: number | null;
-    concierge_outcome: string | null;
+    tip_amount_cents: number | null; tip_transferred: boolean | null;
+    concierge_first_msg: string | null; concierge_user_msgs: string | null; concierge_match_count: number | null;
+    concierge_outcome: string | null; concierge_dialogue: string | null;
+    visitor_landing_page: string | null; visitor_referrer: string | null;
+    visitor_pageviews: number | null; visitor_device: string | null;
   }>(
     `SELECT b.id, b.client_id, cu.name as client_name, pu.name as photographer_name, pp.slug as photographer_slug,
             b.status, b.shoot_date, b.total_price, b.created_at, b.confirmed_at, b.payment_status,
@@ -233,7 +236,11 @@ export default async function AdminPage() {
             ${stripePaymentSelect},
             b.flexible_date_from, b.flexible_date_to, b.date_note,
             b.delivery_accepted, b.delivery_accepted_at, b.location_detail,
-            (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1) as client_country,
+            COALESCE(
+              (SELECT vs.country FROM visitor_sessions vs WHERE vs.user_id = b.client_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1),
+              (SELECT vs.country FROM visitor_sessions vs WHERE vs.visitor_id = lens.visitor_id AND vs.country IS NOT NULL ORDER BY vs.started_at DESC LIMIT 1),
+              lens.country
+            ) as client_country,
             cu.phone as client_phone, cu.email as client_email,
             pu.phone as photographer_phone, pu.email as photographer_email,
             b.blind_booking, b.auto_refund_at::text as auto_refund_at, b.admin_notes,
@@ -245,9 +252,17 @@ export default async function AdminPage() {
             first_sess.utm_campaign as first_utm_campaign, first_sess.utm_term as first_utm_term,
             first_sess.gclid as first_gclid, first_sess.referrer as first_referrer,
             first_sess.landing_page as first_landing_page, first_sess.started_at::text as first_session_at,
+            (SELECT t.amount_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_amount_cents,
+            (SELECT t.transferred FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_transferred,
             lens.first_msg as concierge_first_msg,
+            lens.user_msgs as concierge_user_msgs,
+            lens.full_dialogue as concierge_dialogue,
             lens.match_count as concierge_match_count,
-            lens.outcome as concierge_outcome
+            lens.outcome as concierge_outcome,
+            bsess.landing_page as visitor_landing_page,
+            bsess.referrer as visitor_referrer,
+            bsess.pageview_count as visitor_pageviews,
+            bsess.device_type as visitor_device
      FROM bookings b JOIN users cu ON cu.id = b.client_id
      LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
      LEFT JOIN users pu ON pu.id = pp.user_id
@@ -262,9 +277,10 @@ export default async function AdminPage() {
        ORDER BY vs.started_at ASC
        LIMIT 1
      ) first_sess ON TRUE
-     -- Latest Lens (concierge) chat for this user — first user message
-     -- + how many photographers were matched. Best snapshot of what
-     -- they actually wanted in their own words.
+     -- Latest Lens (concierge) chat for this user. Prefer the HARD link
+     -- (b.concierge_chat_id, stored at blind-accept) over the soft
+     -- user_id match — guarantees the admin sees the exact conversation
+     -- that produced the booking, not just the most recent one.
      LEFT JOIN LATERAL (
        SELECT
          -- WITH ORDINALITY preserves the array index so we grab the FIRST
@@ -273,13 +289,43 @@ export default async function AdminPage() {
             FROM jsonb_array_elements(cc.messages) WITH ORDINALITY AS m(value, idx)
            WHERE m.value->>'role' = 'user' AND length(m.value->>'content') > 0
            ORDER BY m.idx LIMIT 1) as first_msg,
+         -- ALL user turns concatenated — the full "what they asked for" so the
+         -- admin can pick the right photographer for a blind booking.
+         (SELECT string_agg(m.value->>'content', '  •  ' ORDER BY m.idx)
+            FROM jsonb_array_elements(cc.messages) WITH ORDINALITY AS m(value, idx)
+           WHERE m.value->>'role' = 'user' AND length(m.value->>'content') > 0) as user_msgs,
+         -- FULL dialogue (user + bot, role-tagged) — expandable block on
+         -- the booking card so the admin never hunts for what the client
+         -- discussed. Turns capped at 600 chars, transcript at 15k.
+         LEFT(
+           (SELECT string_agg(
+                     (CASE WHEN m.value->>'role' = 'user' THEN '👤 ' ELSE '🤖 ' END)
+                       || LEFT(m.value->>'content', 600),
+                     E'\n\n' ORDER BY m.idx)
+              FROM jsonb_array_elements(cc.messages) WITH ORDINALITY AS m(value, idx)
+             WHERE m.value->>'role' IN ('user', 'assistant')
+               AND length(COALESCE(m.value->>'content', '')) > 0),
+           15000) as full_dialogue,
          COALESCE(array_length(cc.matched_photographer_ids, 1), 0) as match_count,
-         cc.outcome
+         cc.outcome,
+         cc.country,
+         cc.visitor_id
        FROM concierge_chats cc
-       WHERE cc.user_id = b.client_id
-       ORDER BY cc.created_at DESC
+       WHERE cc.id = b.concierge_chat_id
+          OR (b.concierge_chat_id IS NULL AND cc.user_id = b.client_id)
+       ORDER BY (cc.id = b.concierge_chat_id) DESC, cc.created_at DESC
        LIMIT 1
      ) lens ON TRUE
+     -- Anonymous browsing session behind the booking (tracking cookie
+     -- "vid", stored at blind-accept). Journey context when there was
+     -- no concierge chat (Quick Booking form path).
+     LEFT JOIN LATERAL (
+       SELECT vs.landing_page, vs.referrer, vs.pageview_count, vs.device_type
+       FROM visitor_sessions vs
+       WHERE b.visitor_id IS NOT NULL AND vs.visitor_id = b.visitor_id
+       ORDER BY vs.started_at DESC
+       LIMIT 1
+     ) bsess ON TRUE
      WHERE b.status != 'inquiry'
      ORDER BY b.created_at DESC LIMIT 200`
   );

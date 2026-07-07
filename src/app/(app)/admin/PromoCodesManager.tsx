@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import DatePicker from "@/components/ui/DatePicker";
+import { todayLocalISO } from "@/lib/date-utils";
 
 interface PromoCode {
   id: string;
@@ -317,7 +318,7 @@ export function PromoCodesManager() {
             label="Expiry date (optional)"
             value={expiresAt}
             onChange={setExpiresAt}
-            min={new Date().toISOString().split("T")[0]}
+            min={todayLocalISO()}
             placeholder="No expiry"
           />
 

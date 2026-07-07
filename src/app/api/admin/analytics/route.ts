@@ -302,6 +302,10 @@ export async function GET(req: Request) {
 
     // Compute movements per bucket (vs yesterday)
     function bucketMovements(maxPos: number) {
+      // No per-query baseline for yesterday (e.g. a counts-only snapshot where
+      // `queries` is NULL) → we can't tell what actually entered/exited, so
+      // report nothing rather than flagging every keyword as "newly entered".
+      if (!prevSnapshot?.queries) return { entered: [], exited: [] };
       const todayInBucket = allQueries.filter(q => q.position <= maxPos).map(q => q.query!);
       const yesterdayInBucket = prevSnapshot?.queries
         ? prevSnapshot.queries.filter(q => q.p <= maxPos).map(q => q.q)

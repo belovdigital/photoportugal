@@ -9,6 +9,7 @@ import { AdminWarningsTab } from "./AdminWarningsTab";
 import type { PhotographerOption } from "./IssueWarningModal";
 // AdminPopupStats removed 2026-05-07 — feature retired. File kept for reference.
 import { RedirectsManager } from "./RedirectsManager";
+import { SERVICE_FEE_RATE } from "@/lib/stripe";
 import { NotFoundManager } from "./NotFoundManager";
 
 function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "telegram"; title: string }) {
@@ -494,7 +495,7 @@ function RevenueCharts() {
             title="Service fee (from clients)"
             subtitle={
               totalServiceFee > 0
-                ? `€${totalServiceFee.toLocaleString()} earned · 12.5% on top of every paid booking`
+                ? `€${totalServiceFee.toLocaleString()} earned · ${SERVICE_FEE_RATE * 100}% on top of every paid booking`
                 : "No paid bookings yet"
             }
             filled={rows} field="service_fee" color="bg-emerald-500 hover:bg-emerald-600"

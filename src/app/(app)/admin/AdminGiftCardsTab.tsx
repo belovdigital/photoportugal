@@ -188,7 +188,7 @@ export function AdminGiftCardsTab({ cards }: { cards: AdminGiftCard[] }) {
                       {c.status}
                     </span>
                     <span className="rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
-                      {c.tier === "express" ? "Express €290" : "Full €490"}
+                      {c.tier === "express" ? "Express €349" : "Full €520"}
                     </span>
                   </div>
                   <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">

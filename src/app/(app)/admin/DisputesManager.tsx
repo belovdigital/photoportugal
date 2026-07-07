@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from "react";
 
+// The client paid the GROSS (base + 15% service fee). Refund caps/figures
+// here must reflect the gross, not the base — otherwise the service-fee
+// portion looks un-refundable. Mirrors SERVICE_FEE_RATE (0.15); we can't
+// import the server stripe lib into a client component. The /api/disputes
+// route is authoritative and uses the real charged amount.
+const GROSS_MULTIPLIER = 1.15;
+
 interface Dispute {
   id: string;
   booking_id: string;
@@ -63,9 +70,9 @@ export function DisputesManager() {
     if (resolution === "partial_refund" && refundAmount) {
       body.refund_amount = parseFloat(refundAmount);
     }
-    if (resolution === "full_refund" && selected.total_price) {
-      body.refund_amount = selected.total_price;
-    }
+    // full_refund: don't send an estimate — the server computes the true
+    // gross from stripe_amount_paid_cents (covers promo codes and blind
+    // summer-offer bookings) and persists it onto the dispute row.
 
     const res = await fetch(`/api/disputes/${selected.id}`, {
       method: "PATCH",
@@ -180,7 +187,7 @@ export function DisputesManager() {
                     step="0.01"
                     value={refundAmount}
                     onChange={(e) => setRefundAmount(e.target.value)}
-                    placeholder={selected.total_price ? `Max: €${Math.round(Number(selected.total_price))}` : ""}
+                    placeholder={selected.total_price ? `Max: €${Math.round(Number(selected.total_price) * GROSS_MULTIPLIER)}` : ""}
                     className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-primary-500"
                   />
                 </div>

@@ -250,6 +250,16 @@ async function handleAssignPhotographer(opts: {
       serviceFee = split.serviceFee;
       platformFee = split.platformFee;
       photographerPayout = split.photographerPayout;
+      // Blind summer offer: total_price is the base derived from the
+      // inclusive charge (base = total × 0.85), so the REAL platform cut
+      // is total − base (€41.85 on €279) — NOT base × 0.15 (€35.57),
+      // which assumed the old "charge = base × 1.15" model. Keeps
+      // total_price + service_fee equal to the exact Stripe charge for
+      // refunds/analytics. Commission split on the base stays plan-based.
+      if (booking.blind_booking) {
+        const base = Number(booking.total_price);
+        serviceFee = Math.round((base / 0.85 - base) * 100) / 100;
+      }
     }
 
     const adminCookie = await cookies();
@@ -299,12 +309,16 @@ async function handleAssignPhotographer(opts: {
     ).catch((err) => console.error("[admin/bookings/assign] telegram error:", err));
 
     import("@/lib/booking-messages").then(({ sendBookingStatusMessage }) =>
-      sendBookingStatusMessage(bookingId, "confirmed", photographer.user_id)
+      // "matched" (NOT "confirmed") — blind payment is already captured here,
+      // so the thread opener must not talk about a pending payment link.
+      sendBookingStatusMessage(bookingId, "matched", photographer.user_id)
     ).catch((err) => console.error("[admin/bookings/assign] system message error:", err));
 
     import("@/lib/email").then(async ({ sendEmail }) => {
-      const ctx = await queryOne<{ client_email: string; client_name: string; photographer_name: string }>(
-        `SELECT cu.email AS client_email, cu.name AS client_name, pu.name AS photographer_name
+      const ctx = await queryOne<{ client_email: string; client_name: string; photographer_email: string; photographer_name: string; location_slug: string | null; shoot_date: string | null }>(
+        `SELECT cu.email AS client_email, cu.name AS client_name,
+                pu.email AS photographer_email, pu.name AS photographer_name,
+                b.location_slug, b.shoot_date::text AS shoot_date
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -314,6 +328,8 @@ async function handleAssignPhotographer(opts: {
       );
       if (!ctx) return;
       const BASE = process.env.AUTH_URL || "https://photoportugal.com";
+      const dateLine = ctx.shoot_date ? ` on ${ctx.shoot_date}` : "";
+      // Client — "your photographer is confirmed, chat with them".
       await sendEmail(
         ctx.client_email,
         `Your photographer is confirmed — ${ctx.photographer_name}`,
@@ -322,6 +338,20 @@ async function handleAssignPhotographer(opts: {
           <p>Hi ${(ctx.client_name.split(" ")[0] || ctx.client_name).replace(/[<>]/g, "")},</p>
           <p>We've matched you with <strong>${ctx.photographer_name.replace(/[<>]/g, "")}</strong> for your photoshoot. Your payment has been processed.</p>
           <p><a href="${BASE}/dashboard/bookings" style="display:inline-block;background:#16A34A;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">View booking & chat with your photographer</a></p>
+          <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+        </div>`
+      );
+      // Photographer — a system chat message alone doesn't push/email them, so
+      // tell them directly they've got a new (paid) booking + nudge to chat.
+      await sendEmail(
+        ctx.photographer_email,
+        `New booking — you've been matched with ${(ctx.client_name.split(" ")[0] || ctx.client_name)}`,
+        `<div style="font-family: sans-serif; max-width: 540px; margin: 0 auto;">
+          <h2 style="color:#16A34A;">You've got a new booking 🎉</h2>
+          <p>Hi ${(ctx.photographer_name.split(" ")[0] || ctx.photographer_name).replace(/[<>]/g, "")},</p>
+          <p>Photo Portugal matched you with <strong>${ctx.client_name.replace(/[<>]/g, "")}</strong> for a ${(ctx.location_slug || "Portugal").replace(/-/g, " ")} photoshoot${dateLine}. It's booked and paid — your payout is on the way once the session is delivered.</p>
+          <p>Say hi and plan the details (meeting point, timing, outfits) with them in the chat.</p>
+          <p><a href="${BASE}/dashboard/messages" style="display:inline-block;background:#16A34A;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Open chat with your client</a></p>
           <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
         </div>`
       );

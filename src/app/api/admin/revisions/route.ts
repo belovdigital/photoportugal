@@ -138,13 +138,13 @@ export async function PATCH(req: NextRequest) {
     // (photographer can't edit), opt-out lives on /dashboard/subscriptions.
     await queryOne(
       `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, delivery_days, tier, is_popular, is_public)
-       VALUES ($1, $2, $3, 60, 30, 290, 7, 'express'::gift_card_tier, FALSE, FALSE)
+       VALUES ($1, $2, $3, 60, 30, 349, 7, 'express'::gift_card_tier, FALSE, FALSE)
        ON CONFLICT DO NOTHING RETURNING id`,
       [revision.photographer_id, "Express Gift Session", "A 1-hour photo session — perfect for solo portraits, branding, or a casual couple shoot. Includes 30 edited photos delivered within 7 days."]
     ).catch((e) => console.error("[admin/revisions] tier express insert error:", e));
     await queryOne(
       `INSERT INTO packages (photographer_id, name, description, duration_minutes, num_photos, price, delivery_days, tier, is_popular, is_public)
-       VALUES ($1, $2, $3, 120, 60, 490, 7, 'full'::gift_card_tier, FALSE, FALSE)
+       VALUES ($1, $2, $3, 120, 60, 520, 7, 'full'::gift_card_tier, FALSE, FALSE)
        ON CONFLICT DO NOTHING RETURNING id`,
       [revision.photographer_id, "Full Gift Session", "A 2-hour photo session across up to 2 locations, with one outfit change. Includes 60 edited photos delivered within 7 days — ideal for engagements, anniversaries, or family shoots."]
     ).catch((e) => console.error("[admin/revisions] tier full insert error:", e));
