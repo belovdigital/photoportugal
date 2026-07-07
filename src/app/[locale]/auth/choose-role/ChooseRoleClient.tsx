@@ -1,35 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Camera, MapPin } from "lucide-react";
 
 export function ChooseRoleClient({ callbackUrl }: { callbackUrl?: string }) {
   const [loading, setLoading] = useState<string | null>(null);
-  const router = useRouter();
-  const { update } = useSession();
   const t = useTranslations("chooseRole");
 
-  async function selectRole(role: "client" | "photographer") {
+  function selectRole(role: "client" | "photographer") {
     setLoading(role);
-    try {
-      await fetch(`/api/auth/set-role?role=${role}`, { redirect: "manual" });
-      // Force NextAuth to refresh the JWT with updated role from DB
-      await update({ role });
-      // Small delay to ensure cookie is written, then hard redirect
-      await new Promise(r => setTimeout(r, 300));
-      // Honour callbackUrl if it's a safe internal path (e.g. the
-      // /dashboard/messages link they came from); otherwise role default.
-      const safeCb = callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
-        ? callbackUrl
-        : null;
-      const dest = safeCb || (role === "photographer" ? "/dashboard/photographer" : "/photographers");
-      window.location.href = dest;
-    } catch {
-      setLoading(null);
-    }
+    // Honour callbackUrl if it's a safe internal path (e.g. the
+    // /dashboard/messages link they came from); otherwise role default.
+    const safeCb = callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+      ? callbackUrl
+      : null;
+    const dest = safeCb || (role === "photographer" ? "/dashboard/photographer" : "/photographers");
+    // Set the role AND redirect server-side in one shot: the set-role GET
+    // updates the DB then 302s to `redirect`, and the JWT picks the role up
+    // from the DB sync on that redirected request. Replaces a fragile
+    // fetch + update() + setTimeout(300) dance that raced the cookie write
+    // and produced choose-role ⇄ dashboard redirect loops.
+    window.location.href = `/api/auth/set-role?role=${role}&redirect=${encodeURIComponent(dest)}`;
   }
 
   return (

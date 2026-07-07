@@ -37,6 +37,10 @@ interface GalleryData {
   payment_status: string;
   zip_ready?: boolean;
   zip_size?: number | null;
+  /** A paid tip already exists for this booking — hide the tip card. */
+  tipped?: boolean;
+  /** Paid booking with no open dispute — the tip card may render. */
+  tip_allowed?: boolean;
 }
 
 export function DeliveryPageClient({
@@ -64,6 +68,23 @@ export function DeliveryPageClient({
   const [accepted, setAccepted] = useState(false);
   const [acceptError, setAcceptError] = useState("");
   const { modal, confirm } = useConfirmModal();
+  // Tip card state. `tipJustSent` covers the redirect back from Stripe
+  // (?tip=success) before the webhook lands; `tipDismissed` remembers
+  // "maybe later" per booking on this device.
+  const [tipJustSent, setTipJustSent] = useState(false);
+  const [tipDismissed, setTipDismissed] = useState(false);
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get("tip") === "success") setTipJustSent(true);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    if (!gallery?.booking_id) return;
+    try {
+      if (localStorage.getItem(`tip_dismissed_${gallery.booking_id}`)) setTipDismissed(true);
+    } catch {}
+  }, [gallery?.booking_id]);
 
   // Auto-login with URL param, cached password, admin bypass, OR a
   // signed-in session for the booking's gift recipient. Gift recipients
@@ -350,6 +371,7 @@ export function DeliveryPageClient({
       {isOwner ? (
         <div className="mt-6">
           {accepted ? (
+            <>
             <div className="rounded-xl border border-green-200 bg-green-50 p-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
@@ -363,6 +385,25 @@ export function DeliveryPageClient({
                 </div>
               </div>
             </div>
+            {/* Optional tip — peak-happiness moment, right below the accept
+                confirmation, NEVER between the client and the download. */}
+            {tipJustSent || gallery.tipped ? (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-5 text-center">
+                <p className="font-semibold text-amber-800">💛 {t("tipThanks", { name: normalizeName(gallery.photographer_name).split(" ")[0] })}</p>
+              </div>
+            ) : gallery.tip_allowed !== false && !tipDismissed ? (
+              <TipCard
+                token={token}
+                photographerName={normalizeName(gallery.photographer_name).split(" ")[0]}
+                photographerAvatar={gallery.photographer_avatar}
+                password={password || (typeof window !== "undefined" ? sessionStorage.getItem(`delivery_pw_${token}`) || "" : "")}
+                onDismiss={() => {
+                  setTipDismissed(true);
+                  try { localStorage.setItem(`tip_dismissed_${gallery.booking_id}`, "1"); } catch {}
+                }}
+              />
+            ) : null}
+            </>
           ) : (
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -408,6 +449,117 @@ export function DeliveryPageClient({
         </p>
       </div>
       {modal}
+    </div>
+  );
+}
+
+/** Optional post-delivery tip card. Warm, dismissible, never gates the
+ *  download (it renders BELOW the accept confirmation, download lives in
+ *  the stats bar above). Fixed € presets — percent framing reads like a
+ *  second service fee on €300-800 bookings. Nothing is pre-selected. */
+function TipCard({ token, photographerName, photographerAvatar, password, onDismiss }: {
+  token: string;
+  photographerName: string;
+  photographerAvatar: string | null;
+  password: string;
+  onDismiss: () => void;
+}) {
+  const t = useTranslations("delivery");
+  const [amount, setAmount] = useState<number | null>(null);
+  const [custom, setCustom] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const PRESETS = [20, 40, 60];
+
+  const effective = showCustom ? Math.round(Number(custom)) : amount;
+  const valid = Number.isFinite(effective) && (effective as number) >= 5 && (effective as number) <= 500;
+
+  async function sendTip() {
+    if (!valid || sending) return;
+    setSending(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/delivery/${token}/tip`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount_eur: effective, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) {
+        setError(data?.error || t("tipError"));
+        setSending(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError(t("tipError"));
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-warm-200 bg-warm-50 p-5">
+      <div className="flex items-start gap-3">
+        {photographerAvatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photographerAvatar} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white" />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-lg">💛</div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-gray-900">{t("tipHeading", { name: photographerName })}</p>
+          <p className="mt-0.5 text-sm text-gray-500">{t("tipSub", { name: photographerName })}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {PRESETS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => { setAmount(p); setShowCustom(false); }}
+                className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${!showCustom && amount === p ? "border-amber-500 bg-amber-100 text-amber-800" : "border-warm-200 bg-white text-gray-700 hover:border-amber-300"}`}
+              >
+                €{p}
+              </button>
+            ))}
+            {showCustom ? (
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500 bg-amber-100 px-3 py-1">
+                <span className="text-sm font-semibold text-amber-800">€</span>
+                <input
+                  autoFocus
+                  type="number"
+                  min={5}
+                  max={500}
+                  value={custom}
+                  onChange={(e) => setCustom(e.target.value)}
+                  className="w-16 border-0 bg-transparent text-sm font-semibold text-amber-800 focus:outline-none"
+                />
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setShowCustom(true); setAmount(null); }}
+                className="rounded-full border border-warm-200 bg-white px-4 py-1.5 text-sm font-semibold text-gray-700 transition hover:border-amber-300"
+              >
+                {t("tipCustom")}
+              </button>
+            )}
+          </div>
+          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          <div className="mt-3 flex items-center gap-4">
+            <button
+              type="button"
+              onClick={sendTip}
+              disabled={!valid || sending}
+              className="rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-amber-700 disabled:opacity-40"
+            >
+              {sending ? "…" : valid ? t("tipSend", { amount: effective as number }) : t("tipSendDisabled")}
+            </button>
+            <button type="button" onClick={onDismiss} className="text-sm text-gray-400 hover:text-gray-600">
+              {t("tipLater")}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
         // Alert admins.
         import("@/lib/telegram").then(({ sendTelegram }) =>
           sendTelegram(
-            `<b>⚠️ Blind booking auto-refunded</b>\nBooking: <code>${b.id.slice(0, 8)}</code>\nAmount: €${b.total_price ? Math.round(Number(b.total_price)) : "?"}\nReason: no photographer assigned within 24h.`,
+            `<b>⚠️ Blind booking auto-refunded</b>\nBooking: <code>${b.id.slice(0, 8)}</code>\nAmount: €${b.total_price ? Math.round(Number(b.total_price) / 0.85) : "?"} all-in (base €${b.total_price ? Math.round(Number(b.total_price)) : "?"})\nReason: no photographer assigned within 24h.`,
             "bookings"
           )
         ).catch((err) => console.error("[cron/auto-refund-blind] telegram error:", err));

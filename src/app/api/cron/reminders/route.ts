@@ -15,8 +15,9 @@ import {
   emailButton,
 } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
+import { maskSurname } from "@/lib/photographer-name";
 import { queueNotification, processNotificationQueue } from "@/lib/notification-queue";
-import { requireStripe, calculatePayment } from "@/lib/stripe";
+import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { rm } from "fs/promises";
 import path from "path";
 
@@ -97,13 +98,14 @@ export async function GET(req: NextRequest) {
           if (smsPrefs?.sms_bookings !== false) {
             const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
             const cLocale = await getUserLocaleById(booking.client_id);
-            const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
+            const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price * (1 + SERVICE_FEE_RATE))})` : "";
+            const maskedPhotog = maskSurname(booking.photographer_name);
             const smsBody = pickT({
-              en: `Photo Portugal: Your slot with ${booking.photographer_name}${priceStr} isn't locked yet — secure it now. Auto-cancel in ~18h if unpaid: https://photoportugal.com/dashboard/bookings`,
-              pt: `Photo Portugal: O seu horário com ${booking.photographer_name}${priceStr} ainda não está bloqueado — garanta-o agora. Cancelamento automático em ~18h: https://photoportugal.com/dashboard/bookings`,
-              de: `Photo Portugal: Ihr Termin mit ${booking.photographer_name}${priceStr} ist noch nicht gesperrt — jetzt sichern. Auto-Storno in ~18h: https://photoportugal.com/dashboard/bookings`,
-              es: `Photo Portugal: Su sesión con ${booking.photographer_name}${priceStr} aún no está bloqueada — asegúrela ahora. Cancelación automática en ~18h: https://photoportugal.com/dashboard/bookings`,
-              fr: `Photo Portugal : Votre créneau avec ${booking.photographer_name}${priceStr} n'est pas encore verrouillé — réservez-le maintenant. Annulation automatique dans ~18h : https://photoportugal.com/dashboard/bookings`,
+              en: `Photo Portugal: Your slot with ${maskedPhotog}${priceStr} isn't locked yet — secure it now. Auto-cancel in ~18h if unpaid: https://photoportugal.com/dashboard/bookings`,
+              pt: `Photo Portugal: O seu horário com ${maskedPhotog}${priceStr} ainda não está bloqueado — garanta-o agora. Cancelamento automático em ~18h: https://photoportugal.com/dashboard/bookings`,
+              de: `Photo Portugal: Ihr Termin mit ${maskedPhotog}${priceStr} ist noch nicht gesperrt — jetzt sichern. Auto-Storno in ~18h: https://photoportugal.com/dashboard/bookings`,
+              es: `Photo Portugal: Su sesión con ${maskedPhotog}${priceStr} aún no está bloqueada — asegúrela ahora. Cancelación automática en ~18h: https://photoportugal.com/dashboard/bookings`,
+              fr: `Photo Portugal : Votre créneau avec ${maskedPhotog}${priceStr} n'est pas encore verrouillé — réservez-le maintenant. Annulation automatique dans ~18h : https://photoportugal.com/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -164,7 +166,7 @@ export async function GET(req: NextRequest) {
         const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
         const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
         const cLocale = await getUserLocaleByEmail(booking.client_email);
-        const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
+        const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price * (1 + SERVICE_FEE_RATE))})` : "";
         const firstName = booking.client_name.split(" ")[0];
         const T = pickT({
           en: { subject: "Last chance — your booking will be cancelled in 6 hours", h2: "Your Booking Will Be Cancelled Soon", greet: `Hi ${firstName},`, body1: `Your photoshoot with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in 6 hours</strong> if payment is not received.`, body2: `${booking.photographer_name} is holding this time slot for you — don't miss out!`, fomo: `Reminder: your slot isn't locked in our calendar yet — only paid bookings are. Another client could still pay for this date first.`, cta: "Pay Now & Secure Your Booking", footer: "If you no longer wish to proceed, the booking will be cancelled automatically. No action needed." },
@@ -194,12 +196,13 @@ export async function GET(req: NextRequest) {
             [booking.client_id]
           );
           if (smsPrefs?.sms_bookings !== false) {
+            const maskedPhotog1b = maskSurname(booking.photographer_name);
             const smsBody = pickT({
-              en: `Photo Portugal: Last chance! Booking with ${booking.photographer_name} auto-cancels in 6h if unpaid — slot isn't locked yet. Pay now: https://photoportugal.com/dashboard/bookings`,
-              pt: `Photo Portugal: Última oportunidade! Reserva com ${booking.photographer_name} cancela-se em 6h se não for paga — o horário ainda não está bloqueado. Pague: https://photoportugal.com/dashboard/bookings`,
-              de: `Photo Portugal: Letzte Chance! Buchung mit ${booking.photographer_name} storniert in 6h, wenn unbezahlt — Termin noch nicht gesperrt. Zahlen: https://photoportugal.com/dashboard/bookings`,
-              es: `Photo Portugal: ¡Última oportunidad! Reserva con ${booking.photographer_name} se cancela en 6h si no se paga — plaza no bloqueada aún. Pague: https://photoportugal.com/dashboard/bookings`,
-              fr: `Photo Portugal : Dernière chance ! Réservation avec ${booking.photographer_name} annulée dans 6h si non payée — créneau pas encore verrouillé. Payez : https://photoportugal.com/dashboard/bookings`,
+              en: `Photo Portugal: Last chance! Booking with ${maskedPhotog1b} auto-cancels in 6h if unpaid — slot isn't locked yet. Pay now: https://photoportugal.com/dashboard/bookings`,
+              pt: `Photo Portugal: Última oportunidade! Reserva com ${maskedPhotog1b} cancela-se em 6h se não for paga — o horário ainda não está bloqueado. Pague: https://photoportugal.com/dashboard/bookings`,
+              de: `Photo Portugal: Letzte Chance! Buchung mit ${maskedPhotog1b} storniert in 6h, wenn unbezahlt — Termin noch nicht gesperrt. Zahlen: https://photoportugal.com/dashboard/bookings`,
+              es: `Photo Portugal: ¡Última oportunidad! Reserva con ${maskedPhotog1b} se cancela en 6h si no se paga — plaza no bloqueada aún. Pague: https://photoportugal.com/dashboard/bookings`,
+              fr: `Photo Portugal : Dernière chance ! Réservation avec ${maskedPhotog1b} annulée dans 6h si non payée — créneau pas encore verrouillé. Payez : https://photoportugal.com/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -251,7 +254,7 @@ export async function GET(req: NextRequest) {
         const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
         const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
         const cLocale = await getUserLocaleByEmail(booking.client_email);
-        const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price)})` : "";
+        const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price * (1 + SERVICE_FEE_RATE))})` : "";
         const firstName = booking.client_name.split(" ")[0];
         const T = pickT({
           en: { subject: "🚨 FINAL WARNING — 30 minutes left to pay", h2: "30 Minutes Left — Last Chance", greet: `Hi ${firstName},`, body1: `This is the FINAL warning. Your booking with <strong>${booking.photographer_name}</strong>${priceStr} will be <strong>automatically cancelled in approximately 30 minutes</strong>.`, body2: `Pay now or lose your slot — there will be no further warnings.`, fomo: `Once your booking is cancelled the slot reopens to other clients — and the calendar only locks the date after payment clears.`, cta: "Pay Now — Final Chance" },
@@ -281,12 +284,13 @@ export async function GET(req: NextRequest) {
             [booking.client_id]
           );
           if (smsPrefs?.sms_bookings !== false) {
+            const maskedPhotog30 = maskSurname(booking.photographer_name);
             const smsBody = pickT({
-              en: `🚨 Photo Portugal: FINAL WARNING — booking with ${booking.photographer_name} auto-cancels in ~30 min if unpaid, and the slot reopens to other clients. Pay NOW: https://photoportugal.com/dashboard/bookings`,
-              pt: `🚨 Photo Portugal: AVISO FINAL — reserva com ${booking.photographer_name} cancela-se em ~30 min se não for paga, e o horário fica disponível a outros clientes. Pague JÁ: https://photoportugal.com/dashboard/bookings`,
-              de: `🚨 Photo Portugal: LETZTE WARNUNG — Buchung mit ${booking.photographer_name} storniert in ~30 Min, wenn unbezahlt, und der Termin wird für andere Kunden freigegeben. JETZT zahlen: https://photoportugal.com/dashboard/bookings`,
-              es: `🚨 Photo Portugal: AVISO FINAL — reserva con ${booking.photographer_name} se cancela en ~30 min si no se paga, y el horario vuelve a estar disponible. Pague YA: https://photoportugal.com/dashboard/bookings`,
-              fr: `🚨 Photo Portugal : DERNIER AVERTISSEMENT — réservation avec ${booking.photographer_name} annulée dans ~30 min si non payée, et le créneau redevient disponible. Payez MAINTENANT : https://photoportugal.com/dashboard/bookings`,
+              en: `🚨 Photo Portugal: FINAL WARNING — booking with ${maskedPhotog30} auto-cancels in ~30 min if unpaid, and the slot reopens to other clients. Pay NOW: https://photoportugal.com/dashboard/bookings`,
+              pt: `🚨 Photo Portugal: AVISO FINAL — reserva com ${maskedPhotog30} cancela-se em ~30 min se não for paga, e o horário fica disponível a outros clientes. Pague JÁ: https://photoportugal.com/dashboard/bookings`,
+              de: `🚨 Photo Portugal: LETZTE WARNUNG — Buchung mit ${maskedPhotog30} storniert in ~30 Min, wenn unbezahlt, und der Termin wird für andere Kunden freigegeben. JETZT zahlen: https://photoportugal.com/dashboard/bookings`,
+              es: `🚨 Photo Portugal: AVISO FINAL — reserva con ${maskedPhotog30} se cancela en ~30 min si no se paga, y el horario vuelve a estar disponible. Pague YA: https://photoportugal.com/dashboard/bookings`,
+              fr: `🚨 Photo Portugal : DERNIER AVERTISSEMENT — réservation avec ${maskedPhotog30} annulée dans ~30 min si non payée, et le créneau redevient disponible. Payez MAINTENANT : https://photoportugal.com/dashboard/bookings`,
             }, cLocale);
             sendSMS(booking.client_phone, smsBody).catch(err => console.error("[cron] critical sms error:", err));
           }
@@ -352,7 +356,9 @@ export async function GET(req: NextRequest) {
             const hrsLeft = Math.floor(minsLeft / 60);
             const remMins = minsLeft % 60;
             const timeLeft = hrsLeft > 0 ? `${hrsLeft}h${remMins ? ` ${remMins}m` : ""}` : `${minsLeft}m`;
-            const priceLabel = r.total_price ? `€${Math.round(Number(r.total_price))}` : "(no price)";
+            // total_price = photographer base (summer offer: inclusive × 0.85);
+            // show the admin the client's all-in charge too.
+            const priceLabel = r.total_price ? `€${Math.round(Number(r.total_price) / 0.85)} all-in (base €${Math.round(Number(r.total_price))})` : "(no price)";
             import("@/lib/telegram").then(({ sendTelegram }) =>
               sendTelegram(
                 `${stage.emoji} <b>Blind booking still unassigned — ${stage.label} left</b>\n` +
@@ -595,9 +601,11 @@ export async function GET(req: NextRequest) {
         const smsInfo = await queryOne<{
           photographer_phone: string | null; photographer_user_id: string;
           client_phone: string | null; client_id: string;
+          occasion: string | null; client_sms_opt_in: boolean;
         }>(
           `SELECT pu.phone as photographer_phone, pu.id as photographer_user_id,
-                  cu.phone as client_phone, cu.id as client_id
+                  cu.phone as client_phone, cu.id as client_id,
+                  b.occasion, COALESCE(b.client_sms_opt_in, false) AS client_sms_opt_in
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
            JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -605,6 +613,11 @@ export async function GET(req: NextRequest) {
            WHERE b.id = $1`,
           [booking.id]
         );
+        // Surprise-proposal discretion: don't SMS the client a "your
+        // photoshoot is tomorrow" reminder on a proposal booking — it
+        // could spoil the surprise. Email still goes (private inbox).
+        const proposalClientSmsSkip =
+          !!smsInfo?.occasion && /proposal/i.test(smsInfo.occasion) && !smsInfo.client_sms_opt_in;
 
         // Queue email reminders (timezone-aware — "tomorrow" must be accurate)
         {
@@ -633,13 +646,16 @@ export async function GET(req: NextRequest) {
         // SMS reminders to both parties
         try {
           if (smsInfo) {
-            // Photographer WhatsApp/SMS
+            // Photographer WhatsApp/SMS — skip if they have the app
+            // (push_token set): the push reminder below already covers
+            // them, and sending both push + SMS is the redundant spam
+            // we're trying to avoid.
             if (smsInfo.photographer_phone) {
-              const pPrefs = await queryOne<{ sms_bookings: boolean }>(
-                "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+              const pPrefs = await queryOne<{ sms_bookings: boolean | null; push_token: string | null }>(
+                "SELECT np.sms_bookings, u.push_token FROM users u LEFT JOIN notification_preferences np ON np.user_id = u.id WHERE u.id = $1",
                 [smsInfo.photographer_user_id]
               );
-              if (pPrefs?.sms_bookings !== false) {
+              if (pPrefs?.sms_bookings !== false && !pPrefs?.push_token) {
                 queueNotification({
                   channel: "sms",
                   recipient: smsInfo.photographer_phone,
@@ -648,13 +664,14 @@ export async function GET(req: NextRequest) {
                 }).catch(err => console.error("[sms] error:", err));
               }
             }
-            // Client WhatsApp/SMS
-            if (smsInfo.client_phone) {
-              const cPrefs = await queryOne<{ sms_bookings: boolean }>(
-                "SELECT sms_bookings FROM notification_preferences WHERE user_id = $1",
+            // Client WhatsApp/SMS — same app-installed skip, plus the
+            // surprise-proposal skip.
+            if (smsInfo.client_phone && !proposalClientSmsSkip) {
+              const cPrefs = await queryOne<{ sms_bookings: boolean | null; push_token: string | null }>(
+                "SELECT np.sms_bookings, u.push_token FROM users u LEFT JOIN notification_preferences np ON np.user_id = u.id WHERE u.id = $1",
                 [smsInfo.client_id]
               );
-              if (cPrefs?.sms_bookings !== false) {
+              if (cPrefs?.sms_bookings !== false && !cPrefs?.push_token) {
                 const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
                 const cLocale = await getUserLocaleById(smsInfo.client_id);
                 const body = pickT({
@@ -2303,11 +2320,12 @@ export async function GET(req: NextRequest) {
           const { normalizeLocale, pickT, localizedUrl } = await import("@/lib/email-locale");
           const cLocale = normalizeLocale(c.client_locale);
           const url = localizedUrl("/dashboard/messages", cLocale);
+          const maskedPhotog = maskSurname(c.photographer_name);
           const smsBody = pickT({
-            en: `Hi ${firstName}! ${c.photographer_name} replied to your message on Photo Portugal and is waiting for you. Check it out: ${url}`,
-            pt: `Olá ${firstName}! ${c.photographer_name} respondeu à sua mensagem na Photo Portugal e está à sua espera. Veja: ${url}`,
-            de: `Hallo ${firstName}! ${c.photographer_name} hat Ihrer Nachricht auf Photo Portugal geantwortet und wartet auf Sie. Hier ansehen: ${url}`,
-            fr: `Bonjour ${firstName} ! ${c.photographer_name} a répondu à votre message sur Photo Portugal et vous attend. À voir : ${url}`,
+            en: `Hi ${firstName}! ${maskedPhotog} replied to your message on Photo Portugal and is waiting for you. Check it out: ${url}`,
+            pt: `Olá ${firstName}! ${maskedPhotog} respondeu à sua mensagem na Photo Portugal e está à sua espera. Veja: ${url}`,
+            de: `Hallo ${firstName}! ${maskedPhotog} hat Ihrer Nachricht auf Photo Portugal geantwortet und wartet auf Sie. Hier ansehen: ${url}`,
+            fr: `Bonjour ${firstName} ! ${maskedPhotog} a répondu à votre message sur Photo Portugal et vous attend. À voir : ${url}`,
           }, cLocale);
           await queueNotification({
             channel: "sms",

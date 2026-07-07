@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification } from "@/lib/email";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
+import { maskSurname } from "@/lib/photographer-name";
 import { bookingGroupSizeEstimateColumnExists } from "@/lib/booking-group-size-fields";
 import {
   getBufferedBusyWindows,
@@ -313,8 +314,11 @@ export async function POST(req: NextRequest) {
         );
         const dormantLocale = buyerLocale?.locale || "en";
         const created = await queryOne<{ id: string }>(
+          // email_verified=TRUE: clients are verified from birth (platform
+          // policy 2026-07-06) — an unverified auto-account is a permanent
+          // lockout, since nobody ever emails these users a verify link.
           `INSERT INTO users (email, name, first_name, last_name, role, locale, email_verified, password_hash)
-           VALUES ($1, $2, $3, $4, 'client', $5, FALSE, NULL)
+           VALUES ($1, $2, $3, $4, 'client', $5, TRUE, NULL)
            RETURNING id`,
           [recipEmailRaw, recipName, firstName, lastName, dormantLocale]
         );
@@ -457,8 +461,8 @@ export async function POST(req: NextRequest) {
       void (async () => {
         try {
           const { queryOne } = await import("@/lib/db");
-          const recent = await queryOne<{ id: string }>(
-            `SELECT cc.id FROM concierge_chats cc
+          const recent = await queryOne<{ id: string; occasion: string | null }>(
+            `SELECT cc.id, cc.occasion FROM concierge_chats cc
                JOIN concierge_recommendation_events r ON r.chat_id = cc.id
               WHERE cc.user_id = $1
                 AND r.photographer_id = $2
@@ -474,6 +478,16 @@ export async function POST(req: NextRequest) {
               "UPDATE bookings SET concierge_chat_id = $1 WHERE id = $2 RETURNING id",
               [recent.id, booking.id]
             ).catch(() => null);
+            // Back-fill the booking's occasion from the concierge chat when
+            // the booking form didn't capture one — so wedding (and every
+            // other) concierge-driven booking is attributable by occasion
+            // without overwriting an explicit client choice.
+            if (recent.occasion) {
+              await queryOne(
+                "UPDATE bookings SET occasion = $1 WHERE id = $2 AND (occasion IS NULL OR occasion = '') RETURNING id",
+                [recent.occasion, booking.id]
+              ).catch(() => null);
+            }
             const { markBookingFromConcierge } = await import("@/lib/concierge/recommendation-events");
             await markBookingFromConcierge(recent.id, photographer_id);
           }
@@ -697,7 +711,9 @@ export async function GET(req: NextRequest) {
 
       bookings = await query(
         `SELECT b.*, u.name as client_name, u.email as client_email, u.avatar_url as client_avatar,
-                p.name as package_name, p.duration_minutes, p.num_photos
+                p.name as package_name, p.duration_minutes, p.num_photos,
+                -- Photographer's tip share (90%), in cents. Photographer-safe.
+                (SELECT t.payout_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_payout_cents
          FROM bookings b
          JOIN users u ON u.id = b.client_id
          LEFT JOIN packages p ON p.id = b.package_id
@@ -705,6 +721,21 @@ export async function GET(req: NextRequest) {
          ORDER BY b.created_at DESC`,
         [profile.id]
       );
+      // Strip the client-side money columns the photographer must NEVER see:
+      // the 15% service fee we add ON TOP (charged to the client), the gross
+      // the client actually paid, and the promo/coupon details. They keep
+      // total_price (their base rate), payout_amount (their take-home), and
+      // platform_fee (our commission from them). `SELECT b.*` leaked all of
+      // these into the JSON even though the UI only rendered total_price.
+      for (const b of bookings as Array<Record<string, unknown>>) {
+        delete b.service_fee;
+        delete b.stripe_amount_subtotal_cents;
+        delete b.stripe_amount_paid_cents;
+        delete b.stripe_amount_discount_cents;
+        delete b.stripe_promo_code;
+        delete b.stripe_coupon_name;
+        delete b.stripe_coupon_percent_off;
+      }
     } else {
       // Bookings where the user is either the buyer (client_id) or the
       // gift recipient. The viewer_role column lets the UI render
@@ -727,6 +758,16 @@ export async function GET(req: NextRequest) {
          ORDER BY b.created_at DESC`,
         [userId]
       );
+    }
+
+    // Anti-disintermediation: in the CLIENT's booking list, mask the
+    // photographer's surname while the booking is still UNPAID (pre-payment
+    // lead). Once paid, the full name shows for coordination. Photographer-
+    // viewer rows carry client_name (no photographer_name) and are untouched.
+    for (const b of bookings as Array<Record<string, unknown>>) {
+      if (typeof b.photographer_name === "string" && b.payment_status !== "paid") {
+        b.photographer_name = maskSurname(b.photographer_name as string);
+      }
     }
 
     return NextResponse.json(bookings);

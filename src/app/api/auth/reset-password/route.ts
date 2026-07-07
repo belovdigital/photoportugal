@@ -26,11 +26,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find user with valid, non-expired token
+    // Find user with valid, non-expired token. Banned users can't reset
+    // (the token match fails for them — same generic error, no ban leak).
     const user = await queryOne<{ id: string }>(
       `SELECT id FROM users
        WHERE password_reset_token = $1
-         AND password_reset_expires > NOW()`,
+         AND password_reset_expires > NOW()
+         AND COALESCE(is_banned, FALSE) = FALSE`,
       [token]
     );
 
@@ -43,11 +45,18 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await hash(password, 12);
 
+    // Completing a reset via a link we EMAILED them is ownership proof —
+    // at least as strong as a verification click. Mark the email verified
+    // so the subsequent login isn't rejected by the authorize() check.
+    // (Without this, auto-created accounts — e.g. blind bookings — could
+    // reset successfully and STILL be locked out with "verify your
+    // email", a link that was never sent to them.)
     await queryOne(
       `UPDATE users
        SET password_hash = $1,
            password_reset_token = NULL,
-           password_reset_expires = NULL
+           password_reset_expires = NULL,
+           email_verified = TRUE
        WHERE id = $2`,
       [passwordHash, user.id]
     );

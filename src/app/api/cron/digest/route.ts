@@ -24,7 +24,10 @@ export async function GET(req: NextRequest) {
     const endDate = new Date(now.getTime() - 3 * 86400000).toISOString().split("T")[0];
     const startDate = new Date(now.getTime() - 33 * 86400000).toISOString().split("T")[0];
     const gscRes = await searchconsole.searchanalytics.query({
-      siteUrl: "sc-domain:photoportugal.com",
+      // Use the SAME GSC property as the analytics dashboard so cron-written
+      // and dashboard-written snapshots are comparable (was sc-domain:, which
+      // returns a different query set than the url-prefix property).
+      siteUrl: process.env.GSC_SITE_URL || "https://photoportugal.com",
       requestBody: { startDate, endDate, dimensions: ["query"], rowLimit: 500 },
     });
     const rows = gscRes.data.rows || [];
@@ -32,11 +35,17 @@ export async function GET(req: NextRequest) {
     const top10 = rows.filter(r => (r.position || 999) <= 10).length;
     const top20 = rows.filter(r => (r.position || 999) <= 20).length;
     const top100 = rows.filter(r => (r.position || 999) <= 100).length;
+    // Save the full per-query list too — the analytics dashboard compares
+    // day-over-day BY QUERY, and a counts-only row (queries NULL) makes every
+    // keyword look "newly entered" the next day. (Caused the 2026-06-22 bug.)
+    const queriesJson = JSON.stringify(
+      rows.map(r => ({ q: r.keys?.[0], p: Math.round((r.position || 0) * 10) / 10 })).filter(x => x.q)
+    );
     await queryOne(
-      `INSERT INTO keyword_snapshots (date, top3, top10, top20, top100, total)
-       VALUES (CURRENT_DATE, $1, $2, $3, $4, $5)
-       ON CONFLICT (date) DO UPDATE SET top3=$1, top10=$2, top20=$3, top100=$4, total=$5`,
-      [top3, top10, top20, top100, rows.length]
+      `INSERT INTO keyword_snapshots (date, top3, top10, top20, top100, total, queries)
+       VALUES (CURRENT_DATE, $1, $2, $3, $4, $5, $6::jsonb)
+       ON CONFLICT (date) DO UPDATE SET top3=$1, top10=$2, top20=$3, top100=$4, total=$5, queries=$6::jsonb`,
+      [top3, top10, top20, top100, rows.length, queriesJson]
     );
     console.log(`[cron/digest] keyword snapshot saved: top3=${top3} top10=${top10} top20=${top20} top100=${top100} total=${rows.length}`);
   } catch (err) {

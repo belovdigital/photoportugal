@@ -6,15 +6,24 @@ export const dynamic = "force-dynamic";
 
 // FLAT PRICING (2026-06-03) — user decision: same rate across all
 // regions and occasions, with a built-in duration discount that makes
-// 2h+ attractive. Photographer payout in cheap regions is generous;
-// in expensive regions (Algarve) margin is tight but acceptable.
-//   1h →  €300 (€338 client all-in with 12.5% service fee)
-//   2h →  €500 (€563)
-//   3h →  €700 (€788)
+// 2h+ attractive.
+//
+// ☀️ SUMMER SUPER-OFFER (2026-07-02): price_eur is now the
+// CLIENT-INCLUSIVE all-in price — the visitor pays exactly this,
+// nothing added on top. The photographer base is derived downstream
+// (total − 15% platform cut → base; the photographer's standard PLAN
+// commission — 10/15/20% — applies to the base at assign). Payout on
+// 1h: €213 premium / €202 pro / €190 free (2h/3h scale the same way).
+//   1h → €279 all-in (was €344)
+//   2h → €465 all-in (was €575)
+//   3h → €649 all-in (was €805)
+// When the offer ends: restore base semantics + old numbers here AND
+// in lib/blind-booking/pricing.ts (BLIND_COMPARE_AT_EUR + helpers),
+// price route, accept route, checkout blind branch.
 const FLAT_PRICES: Record<60 | 120 | 180, number> = {
-  60: 300,
-  120: 500,
-  180: 700,
+  60: 279,
+  120: 465,
+  180: 649,
 };
 
 // Region + occasion combos that get priced. UPSERT covers any new

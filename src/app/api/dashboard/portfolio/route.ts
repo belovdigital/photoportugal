@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { uploadToS3, deleteFromS3 } from "@/lib/s3";
+import { canonicalizeShootType } from "@/lib/shoot-type-labels";
 import crypto from "crypto";
 import sharp from "sharp";
 
@@ -156,7 +157,7 @@ export async function POST(req: NextRequest) {
 
     const url = `${R2_PUBLIC_URL}/${r2Key}`;
     const locationSlug = (formData.get("location_slug") as string) || null;
-    const shootType = (formData.get("shoot_type") as string) || null;
+    const shootType = canonicalizeShootType(formData.get("shoot_type") as string);
 
     // Get image dimensions for aspect-ratio (prevents layout shift)
     let imgWidth: number | null = null;
@@ -292,7 +293,7 @@ export async function PATCH(req: NextRequest) {
     }
     if ("shoot_type" in body) {
       setClauses.push(`shoot_type = $${idx++}`);
-      params.push(body.shoot_type || null);
+      params.push(canonicalizeShootType(body.shoot_type));
     }
     if (setClauses.length === 0) return NextResponse.json({ success: true, count: 0 });
 
@@ -312,7 +313,7 @@ export async function PATCH(req: NextRequest) {
 
   await queryOne(
     "UPDATE portfolio_items SET location_slug = $1, shoot_type = $2 WHERE id = $3 AND photographer_id = $4 RETURNING id",
-    [location_slug || null, shoot_type || null, itemId, profile.id]
+    [location_slug || null, canonicalizeShootType(shoot_type), itemId, profile.id]
   );
 
   return NextResponse.json({ success: true });

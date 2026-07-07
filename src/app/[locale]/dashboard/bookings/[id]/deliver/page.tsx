@@ -22,6 +22,7 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
     photographer_user_id: string;
     client_name: string;
     package_name: string | null;
+    required_photos: number | null;
     shoot_date: string | null;
     status: string;
     delivery_token: string | null;
@@ -29,13 +30,15 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
     delivery_password_plain: string | null;
     delivery_accepted: boolean;
     delivery_title: string | null;
+    peek_token: string | null;
+    peek_shared_at: string | null;
     delivery_message: string | null;
   }>(
     `SELECT b.id, u.id as photographer_user_id, cu.name as client_name,
-            p.name as package_name, b.shoot_date, b.status, b.delivery_token,
+            p.name as package_name, p.num_photos as required_photos, b.shoot_date, b.status, b.delivery_token,
             b.delivery_password, b.delivery_password_plain,
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
-            b.delivery_title, b.delivery_message
+            b.delivery_title, b.delivery_message, b.peek_token, b.peek_shared_at::text as peek_shared_at
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -93,6 +96,9 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
       <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-gray-500">
         <span>{t("client")} <strong className="text-gray-900">{booking.client_name}</strong></span>
         {booking.package_name && <span>{t("package")} {booking.package_name}</span>}
+        {booking.required_photos ? (
+          <span className="font-semibold text-gray-900">{t("photosInPackage", { count: booking.required_photos })}</span>
+        ) : null}
         {booking.shoot_date && (
           <span>{new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })}</span>
         )}
@@ -116,6 +122,9 @@ export default async function DeliverPage({ params }: { params: Promise<{ id: st
         deliveryPassword={booking.delivery_password_plain}
         initialTitle={booking.delivery_title}
         initialMessage={booking.delivery_message}
+        requiredPhotos={booking.required_photos ?? 0}
+        initialPeekToken={booking.peek_token}
+        initialPeekSharedAt={booking.peek_shared_at}
       />
     </div>
   );

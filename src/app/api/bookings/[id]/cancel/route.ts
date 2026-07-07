@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendCancellationMessage } from "@/lib/booking-messages";
+import { maskSurname } from "@/lib/photographer-name";
 
 export const dynamic = "force-dynamic";
 
@@ -151,12 +152,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         if (recipUser?.recipient_user_id && cancelledBy === "photographer") {
           const loc = normalizeLocale(await getUserLocaleById(recipUser.recipient_user_id));
           const firstName = booking.photographer_name.split(" ")[0] || booking.photographer_name;
+          // Recipient is the gift client; mask the photographer's surname.
+          const giftPhotog = maskSurname(booking.photographer_name);
           const T = pickT({
-            en: { subject: `Your gift session is restored`, h2: `${booking.photographer_name} had to cancel`, body: `Sorry — ${firstName} had to cancel your gift session. Your gift card is back in your account with an extra 30 days to redeem. Pick another photographer below.`, cta: "Pick another photographer" },
-            pt: { subject: `A sua sessão de presente foi restaurada`, h2: `${booking.photographer_name} teve de cancelar`, body: `Lamentamos — ${firstName} teve de cancelar a sua sessão. O cartão-presente está de volta na sua conta com mais 30 dias para utilizar. Escolha outro fotógrafo.`, cta: "Escolher outro fotógrafo" },
-            de: { subject: `Ihre Geschenk-Session wurde wiederhergestellt`, h2: `${booking.photographer_name} musste absagen`, body: `Es tut uns leid — ${firstName} musste Ihre Session absagen. Ihre Geschenkkarte ist wieder in Ihrem Konto mit 30 zusätzlichen Tagen. Wählen Sie einen anderen Fotografen.`, cta: "Anderen Fotografen wählen" },
-            es: { subject: `Su sesión de regalo ha sido restaurada`, h2: `${booking.photographer_name} tuvo que cancelar`, body: `Lo sentimos — ${firstName} tuvo que cancelar su sesión. Su tarjeta de regalo está de nuevo en su cuenta con 30 días adicionales. Elija otro fotógrafo.`, cta: "Elegir otro fotógrafo" },
-            fr: { subject: `Votre séance cadeau est rétablie`, h2: `${booking.photographer_name} a dû annuler`, body: `Désolé — ${firstName} a dû annuler votre séance. Votre carte cadeau est de retour dans votre compte avec 30 jours supplémentaires. Choisissez un autre photographe.`, cta: "Choisir un autre photographe" },
+            en: { subject: `Your gift session is restored`, h2: `${giftPhotog} had to cancel`, body: `Sorry — ${firstName} had to cancel your gift session. Your gift card is back in your account with an extra 30 days to redeem. Pick another photographer below.`, cta: "Pick another photographer" },
+            pt: { subject: `A sua sessão de presente foi restaurada`, h2: `${giftPhotog} teve de cancelar`, body: `Lamentamos — ${firstName} teve de cancelar a sua sessão. O cartão-presente está de volta na sua conta com mais 30 dias para utilizar. Escolha outro fotógrafo.`, cta: "Escolher outro fotógrafo" },
+            de: { subject: `Ihre Geschenk-Session wurde wiederhergestellt`, h2: `${giftPhotog} musste absagen`, body: `Es tut uns leid — ${firstName} musste Ihre Session absagen. Ihre Geschenkkarte ist wieder in Ihrem Konto mit 30 zusätzlichen Tagen. Wählen Sie einen anderen Fotografen.`, cta: "Anderen Fotografen wählen" },
+            es: { subject: `Su sesión de regalo ha sido restaurada`, h2: `${giftPhotog} tuvo que cancelar`, body: `Lo sentimos — ${firstName} tuvo que cancelar su sesión. Su tarjeta de regalo está de nuevo en su cuenta con 30 días adicionales. Elija otro fotógrafo.`, cta: "Elegir otro fotógrafo" },
+            fr: { subject: `Votre séance cadeau est rétablie`, h2: `${giftPhotog} a dû annuler`, body: `Désolé — ${firstName} a dû annuler votre séance. Votre carte cadeau est de retour dans votre compte avec 30 jours supplémentaires. Choisissez un autre photographe.`, cta: "Choisir un autre photographe" },
           }, loc);
           const html = emailLayout(`
             <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
@@ -189,17 +192,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const recipientEmail = cancelledBy === "photographer" ? booking.client_email : booking.photographer_email;
     const recipientLocale = await getUserLocaleByEmail(recipientEmail);
     const cancellerName = cancelledBy === "photographer" ? booking.photographer_name : booking.client_name;
+    // Recipient is the OTHER party. When the photographer cancels, the recipient
+    // is the client → mask the photographer's surname in the name shown to them.
+    // When the client cancels, the recipient is the photographer and the name
+    // shown is the client's → keep it full.
+    const cancellerDisplay = cancelledBy === "photographer" ? maskSurname(cancellerName) : cancellerName;
     const otherFirstName = (cancelledBy === "photographer" ? booking.client_name : booking.photographer_name).split(" ")[0] || "there";
     const formattedDate = formatShootDate(booking.shoot_date, recipientLocale);
     const dateLine = formattedDate ? `<p style="margin:0 0 8px;color:#666;">Date: ${formattedDate}</p>` : "";
     const priceLine = booking.total_price ? `<p style="margin:0 0 8px;color:#666;">Amount: €${Math.round(Number(booking.total_price))}</p>` : "";
     const subject = cancelledBy === "photographer"
-      ? `Your booking with ${booking.photographer_name} was cancelled`
+      ? `Your booking with ${maskSurname(booking.photographer_name)} was cancelled`
       : `${booking.client_name} cancelled their booking`;
     sendEmail(recipientEmail, subject,
       emailLayout(`
         <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${otherFirstName},</p>
-        <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${cancellerName}</strong> cancelled the unpaid booking. Their reason:</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;"><strong>${cancellerDisplay}</strong> cancelled the unpaid booking. Their reason:</p>
         <blockquote style="margin:0 0 16px;padding:12px 16px;border-left:3px solid #C94536;background:#FFF5F2;color:#4A4A4A;font-size:14px;line-height:1.5;font-style:italic;">${reason.replace(/[<>]/g, "")}</blockquote>
         ${dateLine}
         ${priceLine}

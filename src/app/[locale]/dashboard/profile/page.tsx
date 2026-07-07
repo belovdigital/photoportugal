@@ -45,17 +45,18 @@ export default async function ProfilePage() {
 
   const packages = await query<{
     id: string; name: string; description: string | null; duration_minutes: number; num_photos: number; price: number; is_popular: boolean; is_public: boolean; delivery_days: number; features: string[];
-  }>("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, is_public, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 ORDER BY sort_order, price", [profile.id]);
+  }>("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, is_public, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND tier IS NULL ORDER BY sort_order, price", [profile.id]);
 
   const bookings = await query<{
     id: string; client_name: string; client_email: string; client_avatar: string | null;
     package_name: string | null; duration_minutes: number | null; num_photos: number | null;
     status: string; shoot_date: string | null; shoot_time: string | null; total_price: number | null;
+    payout_amount: number | null;
     message: string | null; created_at: string; payment_status: string | null; delivery_accepted: boolean;
   }>(
     `SELECT b.id, u.name as client_name, u.email as client_email, u.avatar_url as client_avatar,
             p.name as package_name, p.duration_minutes, p.num_photos,
-            b.status, b.shoot_date, b.shoot_time, b.total_price, b.message, b.created_at,
+            b.status, b.shoot_date, b.shoot_time, b.total_price, b.payout_amount, b.message, b.created_at,
             b.payment_status, COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
      FROM bookings b JOIN users u ON u.id = b.client_id LEFT JOIN packages p ON p.id = b.package_id
      WHERE b.photographer_id = $1 AND b.status != 'inquiry' ORDER BY b.created_at DESC`,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 
 export interface UnavailableRange {
@@ -28,6 +29,21 @@ interface DatePickerProps {
   required?: boolean;
   placeholder?: string;
   unavailableRanges?: UnavailableRange[];
+  // When set, replaces the default trigger button styling. Used to
+  // embed the picker inline in prose (MadLibs-style sentence) without
+  // duplicating the calendar popup logic.
+  triggerClassName?: string;
+  // Override the trigger's display value formatter — useful when the
+  // inline context wants a shorter/longer format than the default.
+  formatTrigger?: (value: string) => string;
+  // Hide the trailing calendar icon — set to true when used inline.
+  hideIcon?: boolean;
+  // Render the calendar popover in a body-level portal with fixed
+  // positioning instead of an `absolute` child. Needed when the picker
+  // lives inside a scroll container that clips overflow (e.g. a modal with
+  // `overflow-y-auto`, which CSS forces to also clip overflow-x) — otherwise
+  // the 320px calendar gets cut off at the container edge.
+  portalPopover?: boolean;
 }
 
 // Map our app locales to BCP-47 codes for Intl APIs.
@@ -93,13 +109,17 @@ function parseDate(str: string) {
   return { year: y, month: m - 1, day: d };
 }
 
-export default function DatePicker({ value, onChange, min, max, label, required, placeholder, unavailableRanges }: DatePickerProps) {
+export default function DatePicker({ value, onChange, min, max, label, required, placeholder, unavailableRanges, triggerClassName, formatTrigger, hideIcon, portalPopover }: DatePickerProps) {
   const locale = useLocale();
   const t = useTranslations("common");
   const WEEKDAYS = buildWeekdays(locale);
   const MONTH_NAMES = buildMonths(locale);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  // Fixed viewport coords for the portaled popover (anchored under the
+  // trigger, clamped to the viewport so it never overflows the edge).
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
 
   const today = new Date();
   const todayStr = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
@@ -117,16 +137,42 @@ export default function DatePicker({ value, onChange, min, max, label, required,
     }
   }, [value]);
 
-  // Close on outside click
+  // Close on outside click. The portaled popover lives outside `ref`, so it
+  // needs its own containment check or clicking a day would close instantly.
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      if (ref.current && ref.current.contains(target)) return;
+      if (popoverRef.current && popoverRef.current.contains(target)) return;
+      setOpen(false);
     }
     if (open) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
+
+  // Position the portaled popover under the trigger, clamped to the viewport.
+  // Re-runs on scroll/resize so it follows the trigger while open.
+  useEffect(() => {
+    if (!open || !portalPopover) return;
+    function place() {
+      const anchor = ref.current;
+      if (!anchor) return;
+      const r = anchor.getBoundingClientRect();
+      const PANEL_W = 320;
+      const margin = 8;
+      let left = r.left;
+      if (left + PANEL_W > window.innerWidth - margin) left = window.innerWidth - margin - PANEL_W;
+      if (left < margin) left = margin;
+      setCoords({ top: r.bottom + 8, left });
+    }
+    place();
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    return () => {
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+    };
+  }, [open, portalPopover]);
 
   function prevMonth() {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
@@ -157,28 +203,36 @@ export default function DatePicker({ value, onChange, min, max, label, required,
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const displayValue = value
+  const defaultDisplay = value
     ? new Date(value + "T12:00:00").toLocaleDateString(INTL_LOCALES[locale] || locale, { day: "numeric", month: "short", year: "numeric" })
     : "";
+  const displayValue = value && formatTrigger ? formatTrigger(value) : defaultDisplay;
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative inline-block">
       {label && <label className="block text-sm font-medium text-gray-700">{label}</label>}
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`${label ? "mt-1" : ""} flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 text-left text-sm transition hover:border-gray-400 focus:border-primary-500 focus:outline-none ${
+        className={triggerClassName ?? `${label ? "mt-1" : ""} flex w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-4 py-3 text-left text-sm transition hover:border-gray-400 focus:border-primary-500 focus:outline-none ${
           !value ? "text-gray-400" : "text-gray-900"
         }`}
       >
         <span>{displayValue || placeholder || t("selectDate")}</span>
-        <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
+        {!hideIcon && (
+          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )}
       </button>
 
-      {open && (
-        <div className="absolute left-0 z-50 mt-2 w-[320px] max-w-[calc(100vw-2rem)] rounded-2xl border border-warm-200 bg-white p-4 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
+      {open && (() => {
+        const panel = (
+        <div
+          ref={popoverRef}
+          style={portalPopover && coords ? { position: "fixed", top: coords.top, left: coords.left } : undefined}
+          className={`${portalPopover ? "z-[70]" : "absolute left-0 z-50 mt-2"} w-[320px] max-w-[calc(100vw-2rem)] rounded-2xl border border-warm-200 bg-white p-4 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150`}
+        >
           {/* Header */}
           <div className="mb-3 flex items-center justify-between">
             <button type="button" onClick={prevMonth} aria-label="Previous month" className="rounded-lg p-1.5 text-gray-400 transition hover:bg-warm-100 hover:text-gray-600">
@@ -269,7 +323,9 @@ export default function DatePicker({ value, onChange, min, max, label, required,
             </button>
           )}
         </div>
-      )}
+        );
+        return portalPopover ? (coords ? createPortal(panel, document.body) : null) : panel;
+      })()}
 
       {/* Hidden input for form validation */}
       {required && <input type="text" value={value} required tabIndex={-1} className="sr-only" onChange={() => {}} />}

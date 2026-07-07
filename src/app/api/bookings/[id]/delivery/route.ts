@@ -137,6 +137,115 @@ export async function POST(
       return NextResponse.json({ success: true });
     }
 
+    // ── Sneak peek — optional early preview, NOT a delivery ─────────
+    // Flags the currently-uploaded images (1-10, photos only) as peek and
+    // mints a passwordless shareable /peek/{token} link. Deliberately does
+    // NOT touch status / delivery_token / deadlines — the delivery clock
+    // keeps ticking and accept/ZIP/tips stay locked until the real share.
+    if (body.action === "share_peek") {
+      if (booking.status !== "completed") {
+        return NextResponse.json({ error: "Sneak peek is only available before the full delivery" }, { status: 400 });
+      }
+      const existing = await queryOne<{ peek_shared_at: string | null; peek_token: string | null }>(
+        "SELECT peek_shared_at, peek_token FROM bookings WHERE id = $1",
+        [id]
+      );
+      if (existing?.peek_shared_at) {
+        return NextResponse.json({ error: "Sneak peek already shared", peek_token: existing.peek_token }, { status: 409 });
+      }
+      const imgs = await queryOne<{ count: string }>(
+        "SELECT COUNT(*) as count FROM delivery_photos WHERE booking_id = $1 AND COALESCE(media_type, 'image') <> 'video'",
+        [id]
+      );
+      const imgCount = parseInt(imgs?.count || "0");
+      if (imgCount < 1 || imgCount > 10) {
+        return NextResponse.json({ error: "A sneak peek is 1-10 photos" }, { status: 400 });
+      }
+
+      const peekToken = crypto.randomBytes(32).toString("hex");
+      // Videos are excluded — they aren't watermarked and would leak the
+      // final asset; the clean 1200px thumbnail is the peek's max quality.
+      await queryOne(
+        `UPDATE delivery_photos SET is_peek = TRUE
+          WHERE booking_id = $1 AND COALESCE(media_type, 'image') <> 'video' RETURNING id`,
+        [id]
+      );
+      const updated = await queryOne<{ id: string }>(
+        `UPDATE bookings SET peek_token = $1, peek_shared_at = NOW()
+          WHERE id = $2 AND peek_shared_at IS NULL RETURNING id`,
+        [peekToken, id]
+      );
+      if (!updated) {
+        return NextResponse.json({ error: "Sneak peek already shared" }, { status: 409 });
+      }
+
+      const peekUrl = `${BASE_URL}/peek/${peekToken}`;
+
+      // Chat message — plain text (typed payload prefixes render raw on
+      // mobile app builds that don't know them).
+      try {
+        const photogFirst = booking.photographer_name.split(" ")[0];
+        await queryOne(
+          `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE)`,
+          [id, userId, `✨ ${photogFirst} shared a sneak peek — ${imgCount} ${imgCount === 1 ? "photo" : "photos"} while the full gallery is being edited: ${peekUrl}`]
+        );
+      } catch (e) {
+        console.error("[delivery/share_peek] chat message error:", e);
+      }
+
+      // Client email — 5-locale, soft expectation-setting.
+      try {
+        const details = await queryOne<{ client_email: string; client_name: string; photographer_name: string; shoot_date: string | null; delivery_days: number | null; num_photos: number | null }>(
+          `SELECT cu.email as client_email, cu.name as client_name, pu.name as photographer_name,
+                  b.shoot_date::text as shoot_date, p.delivery_days, p.num_photos
+           FROM bookings b
+           JOIN users cu ON cu.id = b.client_id
+           JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           JOIN users pu ON pu.id = pp.user_id
+           LEFT JOIN packages p ON p.id = b.package_id
+           WHERE b.id = $1`, [id]
+        );
+        if (details) {
+          const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
+          const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
+          const loc = await getUserLocaleByEmail(details.client_email);
+          const cFirst = details.client_name.split(" ")[0];
+          const pFirst = details.photographer_name.split(" ")[0];
+          const expected = details.shoot_date
+            ? new Date(new Date(details.shoot_date).getTime() + (details.delivery_days || 7) * 86400000)
+            : null;
+          const expStr = expected ? expected.toLocaleDateString(loc === "en" ? "en-GB" : loc, { day: "numeric", month: "long" }) : null;
+          const T = pickT({
+            en: { subject: `✨ ${pFirst} shared a sneak peek of your photos`, body: `${pFirst} picked ${imgCount} favourite${imgCount === 1 ? "" : "s"} from your session while editing the rest of your gallery.`, expect: expStr ? `Your full gallery${details.num_photos ? ` of ~${details.num_photos} photos` : ""} is expected by ~${expStr}.` : "", cta: "See the sneak peek", share: "Feel free to share the link with family and friends!" },
+            pt: { subject: `✨ ${pFirst} partilhou uma prévia das suas fotos`, body: `${pFirst} escolheu ${imgCount} ${imgCount === 1 ? "favorita" : "favoritas"} da sua sessão enquanto edita o resto da galeria.`, expect: expStr ? `A sua galeria completa${details.num_photos ? ` com ~${details.num_photos} fotos` : ""} deverá chegar por volta de ${expStr}.` : "", cta: "Ver a prévia", share: "Partilhe o link com família e amigos à vontade!" },
+            de: { subject: `✨ ${pFirst} hat eine Vorschau Ihrer Fotos geteilt`, body: `${pFirst} hat ${imgCount} Favorit${imgCount === 1 ? "en" : "en"} aus Ihrer Session ausgewählt, während der Rest der Galerie bearbeitet wird.`, expect: expStr ? `Ihre vollständige Galerie${details.num_photos ? ` mit ~${details.num_photos} Fotos` : ""} wird etwa am ${expStr} erwartet.` : "", cta: "Vorschau ansehen", share: "Teilen Sie den Link gerne mit Familie und Freunden!" },
+            es: { subject: `✨ ${pFirst} compartió un adelanto de tus fotos`, body: `${pFirst} eligió ${imgCount} favorita${imgCount === 1 ? "" : "s"} de tu sesión mientras edita el resto de la galería.`, expect: expStr ? `Tu galería completa${details.num_photos ? ` de ~${details.num_photos} fotos` : ""} llegará alrededor del ${expStr}.` : "", cta: "Ver el adelanto", share: "¡Comparte el enlace con familia y amigos!" },
+            fr: { subject: `✨ ${pFirst} a partagé un aperçu de vos photos`, body: `${pFirst} a choisi ${imgCount} favorite${imgCount === 1 ? "" : "s"} de votre séance pendant que le reste de la galerie est en cours de retouche.`, expect: expStr ? `Votre galerie complète${details.num_photos ? ` de ~${details.num_photos} photos` : ""} est attendue vers le ${expStr}.` : "", cta: "Voir l’aperçu", share: "Partagez le lien avec votre famille et vos amis !" },
+          }, loc);
+          await sendEmail(
+            details.client_email,
+            T.subject,
+            emailLayout(`
+              <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">✨ ${T.subject.replace("✨ ", "")}</h2>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${cFirst},</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
+              ${T.expect ? `<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#6B7280;">${T.expect}</p>` : ""}
+              ${emailButton(peekUrl, T.cta)}
+              <p style="margin:16px 0 0;font-size:13px;color:#9CA3AF;">${T.share}</p>
+            `, loc)
+          );
+        }
+      } catch (e) {
+        console.error("[delivery/share_peek] email error:", e);
+      }
+
+      import("@/lib/telegram").then(({ sendTelegram }) =>
+        sendTelegram(`✨ <b>Sneak peek shared</b>\nBooking: <code>${id.slice(0, 8)}</code>\nPhotos: ${imgCount}\n${peekUrl}`, "bookings")
+      ).catch(() => {});
+
+      return NextResponse.json({ success: true, peek_token: peekToken, peek_url: peekUrl, count: imgCount });
+    }
+
     if (body.action === "share") {
       const password = body.password?.trim();
       if (!password || password.length < 4) {
@@ -145,6 +254,36 @@ export async function POST(
 
       const title = typeof body.title === "string" ? body.title.trim().slice(0, 200) : null;
       const message = typeof body.message === "string" ? body.message.trim().slice(0, 1500) : null;
+
+      // Don't let the photographer deliver fewer photos than the paid package
+      // promised. The booking's package.num_photos is the agreed minimum.
+      // Videos are extras and don't count toward the photo minimum (schema:
+      // media_type 'image' for photos, 'video' for videos). If the booking has
+      // no package / no num_photos (e.g. legacy or unassigned), we can't
+      // enforce a number, so we skip the check.
+      const pkg = await queryOne<{ num_photos: number | null }>(
+        `SELECT p.num_photos
+           FROM bookings b JOIN packages p ON p.id = b.package_id
+          WHERE b.id = $1`,
+        [id]
+      );
+      const requiredPhotos = pkg?.num_photos && Number(pkg.num_photos) > 0 ? Number(pkg.num_photos) : 0;
+      if (requiredPhotos > 0) {
+        const delivered = await queryOne<{ photos: string }>(
+          `SELECT COUNT(*) FILTER (WHERE media_type <> 'video') AS photos
+             FROM delivery_photos WHERE booking_id = $1`,
+          [id]
+        );
+        const photoCount = parseInt(delivered?.photos || "0");
+        if (photoCount < requiredPhotos) {
+          return NextResponse.json({
+            error: `This package includes ${requiredPhotos} photos, but you've added ${photoCount}. Upload at least ${requiredPhotos} photos before delivering to the client.`,
+            code: "insufficient_photos",
+            required: requiredPhotos,
+            uploaded: photoCount,
+          }, { status: 400 });
+        }
+      }
 
       // Generate delivery token and mark as delivered
       const token = crypto.randomBytes(32).toString("hex");

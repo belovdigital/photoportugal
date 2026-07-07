@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
+import { maskSurname } from "@/lib/photographer-name";
 import {
   getBufferedBusyWindows,
   getPhotographerCalendarBufferMinutes,
@@ -122,7 +123,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         proposed_date,
         proposed_time: proposed_time || null,
         proposed_by: proposedBy,
-        sender_name: isPhotographer ? booking.photographer_name : booking.client_name,
+        sender_name: isPhotographer ? maskSurname(booking.photographer_name) : booking.client_name,
         date_note: date_note || null,
       };
       const senderUserId = isPhotographer ? booking.photographer_user_id : booking.client_id;
@@ -139,16 +140,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const recipientEmail = isPhotographer ? booking.client_email : booking.photographer_email;
     const recipientName = isPhotographer ? booking.client_name : booking.photographer_name;
     const senderName = isPhotographer ? booking.photographer_name : booking.client_name;
+    // Anti-disintermediation: the recipient here is the OTHER party. When the
+    // sender is the photographer, the recipient is the client → mask the
+    // photographer's surname. When the sender is the client, the recipient is
+    // the photographer and the name shown is the client's → keep it full.
+    const senderDisplay = isPhotographer ? maskSurname(senderName) : senderName;
     const formattedDate = new Date(proposed_date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
     const timeDisplay = proposed_time ? ` at ${proposed_time}` : "";
 
     await sendEmail(
       recipientEmail,
-      `Date Change Proposed — ${senderName}`,
+      `Date Change Proposed — ${senderDisplay}`,
       `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2 style="color: #C94536;">New Date Proposed</h2>
         <p>Hi ${recipientName.split(" ")[0]},</p>
-        <p><strong>${senderName}</strong> has proposed a new date for your photoshoot:</p>
+        <p><strong>${senderDisplay}</strong> has proposed a new date for your photoshoot:</p>
         <div style="background: #FFF9F0; border: 1px solid #F0E6D6; border-radius: 12px; padding: 16px; margin: 16px 0;">
           <p style="font-size: 18px; font-weight: bold; margin: 0;">${formattedDate}${timeDisplay}</p>
           ${date_note ? `<p style="color: #666; margin: 8px 0 0;">"${date_note}"</p>` : ""}
@@ -195,10 +201,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           const { enqueueNewMessageNotif } = await import("@/lib/notification-queue");
           const rLocale = await getUserLocaleById(recipientUserId);
           const smsBody = pickT({
-            en: `Photo Portugal: ${senderName} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`,
-            pt: `Photo Portugal: ${senderName} propôs uma nova data (${formattedDate}${timeDisplay}) para a sua sessão fotográfica. Inicie sessão para responder.`,
-            de: `Photo Portugal: ${senderName} hat ein neues Datum (${formattedDate}${timeDisplay}) für Ihr Fotoshooting vorgeschlagen. Melden Sie sich an, um zu antworten.`,
-            fr: `Photo Portugal : ${senderName} a proposé une nouvelle date (${formattedDate}${timeDisplay}) pour votre séance photo. Connectez-vous pour répondre.`,
+            en: `Photo Portugal: ${senderDisplay} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`,
+            pt: `Photo Portugal: ${senderDisplay} propôs uma nova data (${formattedDate}${timeDisplay}) para a sua sessão fotográfica. Inicie sessão para responder.`,
+            de: `Photo Portugal: ${senderDisplay} hat ein neues Datum (${formattedDate}${timeDisplay}) für Ihr Fotoshooting vorgeschlagen. Melden Sie sich an, um zu antworten.`,
+            fr: `Photo Portugal : ${senderDisplay} a proposé une nouvelle date (${formattedDate}${timeDisplay}) pour votre séance photo. Connectez-vous pour répondre.`,
           }, rLocale);
           await enqueueNewMessageNotif({
             recipientId: recipientUserId,
@@ -265,6 +271,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const recipientEmail = isPhotographer ? booking.client_email : booking.photographer_email;
     const recipientName = isPhotographer ? booking.client_name : booking.photographer_name;
     const accepterName = isPhotographer ? booking.photographer_name : booking.client_name;
+    // Recipient of this "date confirmed" notice is the OTHER party (the
+    // proposer). When the accepter is the photographer, the recipient is the
+    // client → mask the photographer's surname. When the client accepts, the
+    // recipient is the photographer and the name shown is the client's → full.
+    const accepterDisplay = isPhotographer ? maskSurname(accepterName) : accepterName;
     const pdStr = toDateString(booking.proposed_date);
     const formattedDate = new Date(pdStr + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
     const acceptedTimeDisplay = proposalData?.proposed_time ? ` at ${proposalData.proposed_time}` : "";
@@ -276,7 +287,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2 style="color: #22C55E;">Date Confirmed!</h2>
         <p>Hi ${recipientName.split(" ")[0]},</p>
-        <p><strong>${accepterName}</strong> has accepted the proposed date:</p>
+        <p><strong>${accepterDisplay}</strong> has accepted the proposed date:</p>
         <div style="background: #F0FFF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 16px; margin: 16px 0;">
           <p style="font-size: 18px; font-weight: bold; margin: 0; color: #166534;">${formattedDate}${acceptedTimeDisplay}</p>
         </div>
@@ -295,10 +306,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
         const rLocale = await getUserLocaleById(recipientUserId);
         const smsBody = pickT({
-          en: `Photo Portugal: Date confirmed! ${accepterName} accepted ${formattedDate}${acceptedTimeDisplay} for your photoshoot.`,
-          pt: `Photo Portugal: Data confirmada! ${accepterName} aceitou ${formattedDate}${acceptedTimeDisplay} para a sua sessão fotográfica.`,
-          de: `Photo Portugal: Termin bestätigt! ${accepterName} hat ${formattedDate}${acceptedTimeDisplay} für Ihr Fotoshooting akzeptiert.`,
-          fr: `Photo Portugal : Date confirmée ! ${accepterName} a accepté ${formattedDate}${acceptedTimeDisplay} pour votre séance photo.`,
+          en: `Photo Portugal: Date confirmed! ${accepterDisplay} accepted ${formattedDate}${acceptedTimeDisplay} for your photoshoot.`,
+          pt: `Photo Portugal: Data confirmada! ${accepterDisplay} aceitou ${formattedDate}${acceptedTimeDisplay} para a sua sessão fotográfica.`,
+          de: `Photo Portugal: Termin bestätigt! ${accepterDisplay} hat ${formattedDate}${acceptedTimeDisplay} für Ihr Fotoshooting akzeptiert.`,
+          fr: `Photo Portugal : Date confirmée ! ${accepterDisplay} a accepté ${formattedDate}${acceptedTimeDisplay} pour votre séance photo.`,
         }, rLocale);
         sendSMS(
           recipientPhone.phone,

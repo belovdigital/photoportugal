@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import DatePicker from "@/components/ui/DatePicker";
 import { CalendarSyncClient } from "@/app/[locale]/dashboard/calendar-sync/CalendarSyncClient";
+import { todayLocalISO } from "@/lib/date-utils";
 
 interface UnavailabilityRange {
   id: string;
@@ -26,7 +27,7 @@ function formatRange(from: string, to: string, locale: string) {
 }
 
 function isPast(dateTo: string) {
-  return dateTo < new Date().toISOString().split("T")[0];
+  return dateTo < todayLocalISO();
 }
 
 export function AvailabilityTab() {
@@ -155,7 +156,7 @@ export function AvailabilityTab() {
   const activeRanges = ranges.filter((r) => !isPast(r.date_to));
   const pastRanges = ranges.filter((r) => isPast(r.date_to));
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayLocalISO();
 
   return (
     <div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 import { sendTelegram } from "@/lib/telegram";
+import { maskSurname } from "@/lib/photographer-name";
 
 // GET /api/wishlist — list wishlisted photographers
 // GET /api/wishlist?check=id1,id2 — bulk check which IDs are wishlisted
@@ -83,6 +84,11 @@ export async function GET(req: NextRequest) {
     [user.id]
   );
 
+  // Anti-disintermediation: mask the photographer surname at the API source
+  // so both web and mobile clients see "First L." (mirrors /api/photographers).
+  for (const r of rows as { name?: unknown }[]) {
+    if (typeof r.name === "string") r.name = maskSurname(r.name);
+  }
   return NextResponse.json(rows);
 }
 

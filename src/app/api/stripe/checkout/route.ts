@@ -65,18 +65,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Payment split:
-    //   - Non-blind: existing flow — package price + 12.5% service fee
-    //     on top, then split between platform & photographer payout.
-    //   - Blind: total_price IS the all-in client price (region_pricing
-    //     seeds it that way), no extra service fee added. Payout split
-    //     gets computed at admin-assign time when we know the
-    //     photographer's plan; checkout just collects.
+    //   - Non-blind: existing flow — package price + SERVICE_FEE_RATE
+    //     (15%) service fee on top, then split between platform &
+    //     photographer payout.
+    //   - Blind (summer super-offer): total_price stores the derived
+    //     photographer BASE (= inclusive × 0.85); the client's all-in
+    //     charge is base / 0.85 — must match exactly what the accept
+    //     endpoint authorised (€279/465/649). Payout split gets computed
+    //     at admin-assign time; checkout just collects.
     let payment: ReturnType<typeof calculatePayment>;
     if (isBlind) {
+      const blindBase = Number(booking.total_price);
+      const blindTotal = Math.round((blindBase / 0.85) * 100) / 100;
       payment = {
-        packagePrice: Number(booking.total_price),
-        totalClientPays: Number(booking.total_price),
-        serviceFee: 0,
+        packagePrice: blindBase,
+        totalClientPays: blindTotal,
+        serviceFee: Math.round((blindTotal - blindBase) * 100) / 100,
         platformFee: 0,
         photographerPayout: 0,
         commissionRate: 0,
@@ -156,8 +160,9 @@ export async function POST(req: NextRequest) {
     // bump, custom proposal, package swap) rotates the key — otherwise
     // Stripe rejects with StripeIdempotencyError "same key, different
     // params". Reusing checkout_<bookingId> after we changed
-    // SERVICE_FEE_RATE 10→12.5% on 2026-05-12 broke every booking that
-    // had already attempted checkout once.
+    // SERVICE_FEE_RATE 10→12.5% on 2026-05-12, then 12.5→15% on
+    // 2026-06-12 — broke every booking that had already attempted
+    // checkout once before we keyed by amount.
     const amountCents = Math.round(payment.totalClientPays * 100);
     const idempotencyKey = `checkout_${booking.id}_${amountCents}`;
 

@@ -26,6 +26,9 @@ export function DeliveryUploadClient({
   deliveryPassword: initialPassword,
   initialTitle,
   initialMessage,
+  requiredPhotos = 0,
+  initialPeekToken = null,
+  initialPeekSharedAt = null,
 }: {
   bookingId: string;
   initialPhotos: Photo[];
@@ -36,6 +39,13 @@ export function DeliveryUploadClient({
   deliveryPassword?: string | null;
   initialTitle?: string | null;
   initialMessage?: string | null;
+  /** Photos promised by the paid package — the photographer must add at
+   *  least this many (videos don't count) before they can deliver. 0 = no
+   *  package/expectation, so the check is skipped. */
+  requiredPhotos?: number;
+  /** Sneak peek state — token + timestamp when already shared. */
+  initialPeekToken?: string | null;
+  initialPeekSharedAt?: string | null;
 }) {
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [uploading, setUploading] = useState(false);
@@ -68,6 +78,44 @@ export function DeliveryUploadClient({
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [galleryPassword, setGalleryPassword] = useState(() => initialPassword || String(Math.floor(1000 + Math.random() * 9000)));
+  // Sneak peek — optional 1-10 photo early share (never a delivery).
+  const [peekToken, setPeekToken] = useState<string | null>(initialPeekToken);
+  const [peekShared, setPeekShared] = useState(!!initialPeekSharedAt);
+  const [peekSending, setPeekSending] = useState(false);
+  const [peekError, setPeekError] = useState("");
+  const [peekCopied, setPeekCopied] = useState(false);
+
+  async function sharePeek() {
+    if (peekSending || peekShared) return;
+    setPeekSending(true);
+    setPeekError("");
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "share_peek" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        setPeekError(data?.error || t("peekError"));
+        setPeekSending(false);
+        return;
+      }
+      setPeekToken(data.peek_token);
+      setPeekShared(true);
+    } catch {
+      setPeekError(t("peekError"));
+    }
+    setPeekSending(false);
+  }
+
+  function copyPeekLink() {
+    if (!peekToken) return;
+    navigator.clipboard?.writeText(`${window.location.origin}/peek/${peekToken}`).then(() => {
+      setPeekCopied(true);
+      setTimeout(() => setPeekCopied(false), 1500);
+    }).catch(() => {});
+  }
   const [deliveryTitle, setDeliveryTitle] = useState(initialTitle || "");
   const [deliveryMessage, setDeliveryMessage] = useState(initialMessage || "");
   const [savingMessage, setSavingMessage] = useState(false);
@@ -407,6 +455,13 @@ export function DeliveryUploadClient({
       alert(t("setPassword"));
       return;
     }
+    const deliverablePhotos = photos.filter((p) => p.media_type !== "video").length;
+    if (requiredPhotos > 0 && deliverablePhotos < requiredPhotos) {
+      // Mirror the server guard so the photographer sees it before the
+      // confirm dialog. Videos don't count toward the package photo minimum.
+      setError(t("needMorePhotos", { required: requiredPhotos, count: deliverablePhotos }));
+      return;
+    }
     const photoCnt = photos.filter((p) => p.media_type !== "video").length;
     const videoCnt = photos.filter((p) => p.media_type === "video").length;
     const confirmText = videoCnt === 0
@@ -431,7 +486,9 @@ export function DeliveryUploadClient({
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setError(data?.error || "Failed to share delivery. Please try again.");
+        setError(data?.code === "insufficient_photos"
+          ? t("needMorePhotos", { required: data.required, count: data.uploaded })
+          : (data?.error || "Failed to share delivery. Please try again."));
         return;
       }
       setDelivered(true);
@@ -481,6 +538,15 @@ export function DeliveryUploadClient({
         </div>
         <input
           type="text"
+          // This is a free-text gallery title, NOT a contact field — but the
+          // browser's email/name autofill kept dropping a saved address (e.g.
+          // "info@photoportugal.com") into it. Disable autofill + password
+          // managers so photographers only ever see what they typed.
+          autoComplete="off"
+          autoCorrect="off"
+          data-1p-ignore
+          data-lpignore="true"
+          name="delivery-gallery-title"
           value={deliveryTitle}
           onChange={(e) => {
             setDeliveryTitle(e.target.value);
@@ -490,7 +556,12 @@ export function DeliveryUploadClient({
           maxLength={200}
           className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-base font-semibold text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
         />
+        <p className="mt-1.5 text-[11px] leading-snug text-gray-400">{t("titleHelp")}</p>
         <textarea
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
+          name="delivery-gallery-message"
           value={deliveryMessage}
           onChange={(e) => {
             setDeliveryMessage(e.target.value);
@@ -499,9 +570,12 @@ export function DeliveryUploadClient({
           placeholder={t("messagePlaceholder")}
           maxLength={1500}
           rows={4}
-          className="mt-2 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+          className="mt-3 w-full rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
         />
-        <p className="mt-1 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>
+        <div className="mt-1.5 flex items-start justify-between gap-3">
+          <p className="text-[11px] leading-snug text-gray-400">{t("messageHelp")}</p>
+          <p className="shrink-0 text-[11px] text-gray-400">{deliveryMessage.length}/1500</p>
+        </div>
       </div>
 
       {/* Upload area — shown until the client has accepted (pre-share + post-share edit window). */}
@@ -671,6 +745,45 @@ export function DeliveryUploadClient({
               </div>
             </div>
           ) : (
+            <>
+            {/* Sneak peek — optional early share while editing. Shows only
+                pre-delivery with 1-10 images uploaded; silently disappears
+                past 10 (they're clearly heading for the full delivery). */}
+            {(() => {
+              const imgCount = photos.filter((p) => p.media_type !== "video").length;
+              if (peekShared) {
+                return (
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50 p-4">
+                    <p className="text-sm font-medium text-violet-800">{t("peekSent", { count: imgCount })}</p>
+                    {peekToken && (
+                      <button type="button" onClick={copyPeekLink} className="shrink-0 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700">
+                        {peekCopied ? t("copied") : t("peekCopyLink")}
+                      </button>
+                    )}
+                  </div>
+                );
+              }
+              if (imgCount < 1 || imgCount > 10) return null;
+              return (
+                <div className="mb-3 rounded-xl border border-violet-200 bg-violet-50 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-[220px] flex-1">
+                      <p className="text-sm font-semibold text-violet-900">✨ {t("peekHeading")}</p>
+                      <p className="mt-0.5 text-xs text-violet-700">{t("peekSub", { count: imgCount })}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={sharePeek}
+                      disabled={peekSending}
+                      className="shrink-0 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700 disabled:opacity-50"
+                    >
+                      {peekSending ? "…" : t("peekSend", { count: imgCount })}
+                    </button>
+                  </div>
+                  {peekError && <p className="mt-2 text-xs text-red-600">{peekError}</p>}
+                </div>
+              );
+            })()}
             <div className="flex flex-wrap items-end gap-3 rounded-xl border border-warm-200 bg-warm-50 p-4">
               <div className="flex-1 min-w-[200px]">
                 <label htmlFor="gallery-password" className="block text-sm font-medium text-gray-700">
@@ -687,7 +800,7 @@ export function DeliveryUploadClient({
               </div>
               <button
                 onClick={handleShare}
-                disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4}
+                disabled={sharing || photos.length === 0 || galleryPassword.trim().length < 4 || (requiredPhotos > 0 && photos.filter((p) => p.media_type !== "video").length < requiredPhotos)}
                 className="shrink-0 rounded-xl bg-accent-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-accent-700 disabled:opacity-50"
               >
                 {(() => {
@@ -699,7 +812,19 @@ export function DeliveryUploadClient({
                   return t("sharePhotosAndVideos", { photos: photoCnt, videos: videoCnt });
                 })()}
               </button>
+              {requiredPhotos > 0 && (() => {
+                const dp = photos.filter((p) => p.media_type !== "video").length;
+                const short = dp < requiredPhotos;
+                return (
+                  <p className={`w-full text-xs ${short ? "font-medium text-amber-700" : "text-gray-500"}`}>
+                    {short
+                      ? t("photoCounterShort", { count: dp, required: requiredPhotos, remaining: requiredPhotos - dp })
+                      : t("photoCounterOk", { count: dp, required: requiredPhotos })}
+                  </p>
+                );
+              })()}
             </div>
+            </>
           )}
         </div>
       )}

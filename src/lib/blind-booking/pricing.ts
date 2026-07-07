@@ -104,8 +104,36 @@ export interface PriceLookup {
   region: Region;
   occasion: string;
   duration_minutes: number;
+  /** CLIENT-INCLUSIVE price (summer super-offer, 2026-07-02): this is the
+   *  ALL-IN number the visitor pays — €279/€465/€649 for 60/120/180 min.
+   *  It is NOT the photographer base. Derive the base with
+   *  blindBaseFromTotal(): base = total − 15% platform cut, then the
+   *  standard commission applies to that base at assign time.
+   *  (Before 2026-07-02 this column held the photographer BASE and the
+   *  client paid base × 1.15 — €299 base / €343.85 all-in.) */
   price_eur: number;
   sample_size: number;
+}
+
+/** Pre-offer all-in totals (base €299/€500/€700 × 1.15) — shown struck
+ *  through next to the summer-offer price so the saving is visible. */
+export const BLIND_COMPARE_AT_EUR: Record<number, number> = {
+  60: 344,
+  120: 575,
+  180: 805,
+};
+
+/** 15%-of-total platform service cut, exact to cents. */
+export function blindServiceFeeFromTotal(totalEur: number): number {
+  return Math.round(totalEur * 0.15 * 100) / 100;
+}
+
+/** Photographer BASE from the client-inclusive total: total − 15% cut.
+ *  €279 → €237.15 base; the photographer's STANDARD plan commission then
+ *  applies to that base at assign time (premium 10% → €213.43, pro 15% →
+ *  €201.58, free 20% → €189.72). */
+export function blindBaseFromTotal(totalEur: number): number {
+  return Math.round((totalEur - blindServiceFeeFromTotal(totalEur)) * 100) / 100;
 }
 
 export async function lookupBlindPrice(

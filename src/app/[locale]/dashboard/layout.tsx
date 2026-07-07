@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { query } from "@/lib/db";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { DashboardMobileNav } from "@/components/layout/DashboardMobileNav";
 import { PendingReviewBanner } from "@/components/layout/PendingReviewBanner";
@@ -22,30 +22,30 @@ export default async function DashboardLayout({
     redirect("/auth/signin");
   }
 
-  const role = (session.user as { role?: string | null }).role;
+  const userId = (session.user as { id?: string }).id;
+  let role = (session.user as { role?: string | null }).role;
   if (!role) {
-    // Preserve where they were trying to go so choose-role can bounce
-    // them back after picking a role (was hard-coded to /photographers,
-    // which broke deep-links like /dashboard/messages — caused redirect
-    // loops when NextAuth's callbackUrl pointed inside /dashboard).
-    const h = await headers();
-    const xPath = h.get("x-pathname");
-    let callback = "";
-    if (xPath && xPath.startsWith("/")) {
-      callback = xPath;
-    } else {
-      const referer = h.get("referer") || "";
+    // No role yet → default to client and let them straight through.
+    // Photographers always get role set explicitly via
+    // /for-photographers/join → signup?role=photographer → set-role (the
+    // intent survives Google OAuth via callbackUrl) BEFORE they reach the
+    // dashboard, so a null role here is a client who signed in (typically via
+    // Google) without picking one. This replaces the "Tourist or
+    // Photographer?" interstitial that confused message-link clients AND
+    // caused a choose-role ⇄ dashboard redirect loop whenever the JWT role
+    // and DB role briefly disagreed. The JWT picks the role up from the DB
+    // sync on the next request; we set `role` locally so THIS render is
+    // already correct.
+    if (userId) {
       try {
-        const r = new URL(referer);
-        // After NextAuth signin the referer is /auth/signin?callbackUrl=…
-        const cb = r.searchParams.get("callbackUrl");
-        if (cb && cb.startsWith("/")) callback = cb;
-      } catch { /* no referer or invalid URL */ }
+        await query("UPDATE users SET role = 'client' WHERE id = $1 AND role IS NULL", [userId]);
+      } catch (e) {
+        console.error("[dashboard] failed to default role to client:", e);
+      }
     }
-    redirect(`/auth/choose-role${callback ? `?callbackUrl=${encodeURIComponent(callback)}` : ""}`);
+    role = "client";
   }
 
-  const userId = (session.user as { id?: string }).id;
   const { locale } = await params;
 
   return (

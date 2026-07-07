@@ -27,10 +27,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
   }
 
-  // Auto-prefix with +351 for Portuguese numbers without country code
-  let formattedPhone = phone.trim().replace(/\s+/g, "");
-  if (!formattedPhone.startsWith("+")) {
-    formattedPhone = "+351" + formattedPhone;
+  // Normalize to E.164. Strip spaces/dashes/parens/dots, then:
+  //   "+49179…"   -> kept (already international)
+  //   "0049179…"  -> "+49179…"    (00 = international access code)
+  //   "351912…"   -> "+351912…"   (PT country code typed without the +)
+  //   "912345678" -> "+351912345678" (bare Portuguese local number)
+  // Previously we blindly prepended +351 to ANYTHING without a leading "+",
+  // which turned a German "00491797489111" into "+35100491797489111" and
+  // Twilio rejected it ("Invalid parameter `To`").
+  let formattedPhone = phone.trim().replace(/[\s\-().]/g, "");
+  if (formattedPhone.startsWith("00")) {
+    formattedPhone = "+" + formattedPhone.slice(2);
+  } else if (!formattedPhone.startsWith("+")) {
+    formattedPhone = formattedPhone.startsWith("351")
+      ? "+" + formattedPhone
+      : "+351" + formattedPhone;
+  }
+
+  // Reject obviously-invalid E.164 (8-15 digits) up front, so we return a
+  // clean 400 instead of a Twilio 500 that spams the error log.
+  const digitCount = formattedPhone.replace(/\D/g, "").length;
+  if (digitCount < 8 || digitCount > 15) {
+    return NextResponse.json(
+      { error: "Invalid phone number. Include your country code, e.g. +49… or +351…" },
+      { status: 400 }
+    );
   }
 
   try {

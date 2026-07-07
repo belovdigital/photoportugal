@@ -4,6 +4,10 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+// Written reviews must have real content (mirrors the ReviewForm min-word
+// check — keep the two in sync).
+const MIN_REVIEW_WORDS = 10;
+
 // Create a review (client only, after completed booking)
 export async function POST(req: NextRequest) {
   const mobileUser = await authFromRequest(req);
@@ -18,6 +22,16 @@ export async function POST(req: NextRequest) {
 
     if (!booking_id || !rating || rating < 1 || rating > 5) {
       return NextResponse.json({ error: "booking_id and rating (1-5) required" }, { status: 400 });
+    }
+
+    // Require a written review of at least MIN_REVIEW_WORDS words.
+    const reviewText = typeof text === "string" ? text.trim() : "";
+    const wordCount = reviewText ? reviewText.split(/\s+/).filter(Boolean).length : 0;
+    if (wordCount < MIN_REVIEW_WORDS) {
+      return NextResponse.json(
+        { error: `Please write at least ${MIN_REVIEW_WORDS} words in your review.` },
+        { status: 400 }
+      );
     }
 
     // Verify: booking exists, belongs to this client (or gift recipient

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
-import { requireStripe } from "@/lib/stripe";
+import { requireStripe, SERVICE_FEE_RATE } from "@/lib/stripe";
 
 const VALID_STATUSES = ["under_review", "resolved", "rejected"] as const;
 const VALID_RESOLUTIONS = ["reshoot", "partial_refund", "full_refund", "rejected"] as const;
@@ -71,12 +71,22 @@ export async function PATCH(
 
     // Validate refund amount before making any changes
     if (refund_amount && (resolution === "full_refund" || resolution === "partial_refund")) {
-      const bookingCheck = await queryOne<{ total_price: number }>(
-        "SELECT total_price FROM bookings WHERE id = $1",
+      const bookingCheck = await queryOne<{ total_price: number; stripe_amount_paid_cents: number | null; blind_booking: boolean | null }>(
+        "SELECT total_price, stripe_amount_paid_cents, blind_booking FROM bookings WHERE id = $1",
         [dispute.booking_id]
       );
-      if (bookingCheck?.total_price && refund_amount > bookingCheck.total_price) {
-        return NextResponse.json({ error: "Refund amount cannot exceed booking price" }, { status: 400 });
+      // The client paid the GROSS. Cap refunds at the gross actually
+      // charged, not the base. Fallback when Stripe cents are missing:
+      // blind summer offer → base / 0.85; regular → base × 1.15.
+      const grossPaid = bookingCheck
+        ? (bookingCheck.stripe_amount_paid_cents != null
+            ? bookingCheck.stripe_amount_paid_cents / 100
+            : bookingCheck.blind_booking
+              ? Math.round((Number(bookingCheck.total_price) / 0.85) * 100) / 100
+              : Number(bookingCheck.total_price) * (1 + SERVICE_FEE_RATE))
+        : 0;
+      if (grossPaid && refund_amount > grossPaid + 0.005) {
+        return NextResponse.json({ error: "Refund amount cannot exceed what the client paid" }, { status: 400 });
       }
     }
 
@@ -94,14 +104,32 @@ export async function PATCH(
 
     // If resolution involves a refund, issue actual Stripe refund then update booking
     if (resolution === "full_refund" || resolution === "partial_refund") {
-      const booking = await queryOne<{ total_price: number; stripe_payment_intent_id: string | null }>(
-        "SELECT total_price, stripe_payment_intent_id FROM bookings WHERE id = $1",
+      const booking = await queryOne<{ total_price: number; stripe_payment_intent_id: string | null; stripe_amount_paid_cents: number | null; blind_booking: boolean | null }>(
+        "SELECT total_price, stripe_payment_intent_id, stripe_amount_paid_cents, blind_booking FROM bookings WHERE id = $1",
         [dispute.booking_id]
       );
 
+      // Full refund returns the GROSS the client paid, not the bare base —
+      // and we persist that gross so the recorded figure matches the Stripe
+      // refund. Fallback without Stripe cents: blind → base / 0.85 (summer
+      // offer), regular → base × 1.15.
+      const grossPaid = booking
+        ? (booking.stripe_amount_paid_cents != null
+            ? booking.stripe_amount_paid_cents / 100
+            : booking.blind_booking
+              ? Math.round((Number(booking.total_price) / 0.85) * 100) / 100
+              : Number(booking.total_price) * (1 + SERVICE_FEE_RATE))
+        : 0;
       const amount = resolution === "full_refund"
-        ? booking?.total_price ?? 0
+        ? grossPaid
         : refund_amount ?? 0;
+
+      // Keep the dispute row's recorded figure equal to what Stripe actually
+      // refunds on a full refund (the admin UI may have sent a computed
+      // estimate that's wrong for promo codes / blind bookings).
+      if (resolution === "full_refund" && grossPaid > 0) {
+        await query("UPDATE disputes SET refund_amount = $1 WHERE id = $2", [grossPaid, id]);
+      }
 
       // Issue actual Stripe refund
       if (booking?.stripe_payment_intent_id) {

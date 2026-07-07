@@ -45,27 +45,33 @@ export async function POST(req: NextRequest) {
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(" ") || null;
 
+    // Platform policy (2026-07-06, mirrors web register): CLIENTS are
+    // verified from birth — the email gate only cost us paying customers
+    // (they can't log in, they churn or create duplicate accounts).
+    // Photographers keep the verification step: payout-critical comms.
     const user = await queryOne<{ id: string }>(
       `INSERT INTO users (name, first_name, last_name, email, password_hash, role, email_verified)
-       VALUES ($1, $2, $3, $4, $5, $6, FALSE)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id`,
-      [name.trim(), firstName, lastName, email.toLowerCase().trim(), passwordHash, validRole]
+      [name.trim(), firstName, lastName, email.toLowerCase().trim(), passwordHash, validRole, validRole === "client"]
     );
 
     if (!user) {
       return NextResponse.json({ error: "Failed to create account" }, { status: 500 });
     }
 
-    // Send email verification
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    await queryOne(
-      "UPDATE users SET email_verification_token = $1, email_verification_expires = $2 WHERE id = $3",
-      [verificationToken, verificationExpires.toISOString(), user.id]
-    );
-    sendVerificationEmail(email.toLowerCase().trim(), name.trim(), verificationToken + "&source=mobile").catch(err =>
-      console.error("[mobile/register] verification email error:", err)
-    );
+    // Send email verification — photographers only (see policy above).
+    if (validRole === "photographer") {
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      await queryOne(
+        "UPDATE users SET email_verification_token = $1, email_verification_expires = $2 WHERE id = $3",
+        [verificationToken, verificationExpires.toISOString(), user.id]
+      );
+      sendVerificationEmail(email.toLowerCase().trim(), name.trim(), verificationToken + "&source=mobile").catch(err =>
+        console.error("[mobile/register] verification email error:", err)
+      );
+    }
 
     // Create photographer profile with early bird tier (same logic as web set-role)
     if (validRole === "photographer") {

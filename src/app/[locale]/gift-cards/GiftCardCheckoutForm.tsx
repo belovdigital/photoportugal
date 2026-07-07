@@ -64,7 +64,7 @@ export function GiftCardCheckoutForm() {
     {
       code: "express" as const,
       label: t("tierExpress"),
-      price: 290,
+      price: 349,
       duration: t("tierExpressDuration"),
       photos: t("tierExpressPhotos"),
       perks: [
@@ -78,7 +78,7 @@ export function GiftCardCheckoutForm() {
     {
       code: "full" as const,
       label: t("tierFull"),
-      price: 490,
+      price: 520,
       duration: t("tierFullDuration"),
       photos: t("tierFullPhotos"),
       perks: [
@@ -241,7 +241,7 @@ export function GiftCardCheckoutForm() {
         disabled={submitting}
         className="w-full rounded-xl bg-primary-600 text-white py-4 font-semibold text-base hover:bg-primary-700 disabled:opacity-50"
       >
-        {submitting ? t("submitting") : t("submit", { price: tier === "express" ? 290 : 490 })}
+        {submitting ? t("submitting") : t("submit", { price: TIERS.find((tt) => tt.code === tier)?.price ?? 0 })}
       </button>
       <p className="text-[11px] text-gray-400 text-center">
         {t("secureNote")}

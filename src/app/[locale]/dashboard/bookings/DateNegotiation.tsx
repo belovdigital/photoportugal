@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import DatePicker from "@/components/ui/DatePicker";
+import { todayLocalISO } from "@/lib/date-utils";
 
 function buildTimeOptions(flexibleLabel: string) {
   const opts: { value: string; label: string }[] = [
@@ -108,7 +109,7 @@ export function DateNegotiation({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
           <label className="block text-[11px] font-medium text-gray-500 mb-1">{td("date")}</label>
-          <DatePicker value={newDate} onChange={setNewDate} min={new Date().toISOString().split("T")[0]} placeholder={td("selectDate")} />
+          <DatePicker value={newDate} onChange={setNewDate} min={todayLocalISO()} placeholder={td("selectDate")} />
         </div>
         <div>
           <label className="block text-[11px] font-medium text-gray-500 mb-1">{td("timePT")}</label>

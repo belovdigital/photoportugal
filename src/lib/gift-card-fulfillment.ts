@@ -70,8 +70,11 @@ export async function handleGiftCardPaymentSuccess(giftCardId: string, paymentIn
         ? await queryOne<{ locale: string | null }>("SELECT locale FROM users WHERE id = $1", [card.buyer_user_id])
         : null;
       const created = await queryOne<{ id: string }>(
+        // email_verified=TRUE: clients are verified from birth (platform
+        // policy 2026-07-06) — an unverified auto-account is a permanent
+        // lockout, since nobody ever emails these users a verify link.
         `INSERT INTO users (email, name, first_name, last_name, role, locale, email_verified, password_hash)
-         VALUES ($1, $2, $3, $4, 'client', $5, FALSE, NULL)
+         VALUES ($1, $2, $3, $4, 'client', $5, TRUE, NULL)
          RETURNING id`,
         [card.recipient_email.toLowerCase(), card.recipient_name, firstName, lastName, buyerLocale?.locale || "en"]
       );
@@ -180,7 +183,7 @@ export async function handleGiftCardPaymentSuccess(giftCardId: string, paymentIn
       `🎁 <b>New gift card sold!</b>\n\n` +
         `<b>From:</b> ${escapeHtml(card.buyer_name)} (${escapeHtml(card.buyer_email)})\n` +
         `<b>To:</b> ${escapeHtml(card.recipient_name)} (${escapeHtml(card.recipient_email)})\n` +
-        `<b>Tier:</b> ${card.tier === "express" ? "Express €290" : "Full €490"}\n` +
+        `<b>Tier:</b> ${card.tier === "express" ? "Express €349" : "Full €520"}\n` +
         `<b>Code:</b> <code>${card.code}</code>`,
       "stripe"
     ).catch(() => {});

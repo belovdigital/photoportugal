@@ -104,6 +104,7 @@ interface Booking {
   shoot_date: string | null;
   shoot_time: string | null;
   total_price: number | null;
+  payout_amount: number | null;
   message: string | null;
   created_at: string;
   payment_status: string | null;
@@ -1869,7 +1870,12 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
           <span>{new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })}</span>
         )}
         {booking.shoot_time && <span>{TIME_LABEL_KEYS[booking.shoot_time] ? t(TIME_LABEL_KEYS[booking.shoot_time]) : booking.shoot_time}</span>}
-        {booking.total_price && <span>&euro;{Math.round(Number(booking.total_price))}</span>}
+        {/* Photographer sees their PAYOUT (earnings), not the session base
+            or the client's gross. Falls back to session price only when the
+            payout isn't computed yet (e.g. unpaid booking). */}
+        {(booking.payout_amount ?? booking.total_price) != null && (
+          <span>&euro;{Math.round(Number(booking.payout_amount ?? booking.total_price))}</span>
+        )}
       </div>
 
       {booking.message && (
@@ -1896,15 +1902,28 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: () => 
           </>
         )}
 
-        {booking.status === "confirmed" && (
-          <button
-            onClick={() => updateStatus("completed")}
-            disabled={updating}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {t("markAsCompleted")}
-          </button>
-        )}
+        {booking.status === "confirmed" && (() => {
+          // Block "mark complete" until the shoot has actually happened.
+          // shoot_date is a plain DATE (no time/TZ); compare as YYYY-MM-DD.
+          const today = (() => {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          })();
+          const tooEarly = !!booking.shoot_date && booking.shoot_date > today;
+          const shootDateLabel = booking.shoot_date
+            ? new Date(booking.shoot_date).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })
+            : "";
+          return (
+            <button
+              onClick={() => updateStatus("completed")}
+              disabled={updating || tooEarly}
+              title={tooEarly ? t("markCompleteAvailableOn", { date: shootDateLabel }) : undefined}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {t("markAsCompleted")}
+            </button>
+          );
+        })()}
         <a
           href={`/dashboard/messages/${booking.id}`}
           className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"

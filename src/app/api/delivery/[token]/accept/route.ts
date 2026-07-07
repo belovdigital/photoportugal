@@ -36,10 +36,11 @@ export async function POST(
     photographer_name: string;
     client_email: string;
     client_name: string;
+    delivery_password_plain: string | null;
   }>(
     `SELECT b.id, b.gift_recipient_user_id, b.delivery_password, b.delivery_expires_at,
             b.delivery_accepted, b.payment_status, b.stripe_payment_intent_id, b.gift_card_id,
-            b.total_price, b.payout_amount, b.payout_transferred,
+            b.total_price, b.payout_amount, b.payout_transferred, b.delivery_password_plain,
             pp.stripe_account_id as photographer_stripe_id,
             pp.stripe_onboarding_complete as photographer_stripe_ready,
             pp.plan as photographer_plan,
@@ -247,11 +248,16 @@ export async function POST(
     } // end if photographer_stripe_ready
   }
 
-  // Send acceptance email to client
+  // Send acceptance email to client — includes the optional-tip button
+  // deep-linking back into the gallery (pw embedded so it opens on any
+  // device without the password prompt).
   sendDeliveryAcceptedToClient(
     booking.client_email,
     booking.client_name,
-    booking.photographer_name
+    booking.photographer_name,
+    booking.delivery_password_plain
+      ? `https://photoportugal.com/delivery/${token}?pw=${encodeURIComponent(booking.delivery_password_plain)}&tip=1`
+      : null
   );
 
   // System message in chat

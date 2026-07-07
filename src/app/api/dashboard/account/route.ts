@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
-import { queryOne, query } from "@/lib/db";
+import { queryOne } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 
 export async function GET(req: NextRequest) {
@@ -74,47 +74,35 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    // Soft-delete: anonymize user data instead of hard-deleting
-    // This preserves bookings, reviews, and messages for data integrity
-    const deletedEmail = `deleted_${userId}@deleted.photoportugal.com`;
-
+    // Reversible deactivation — NOT a destructive wipe. We block login
+    // (is_banned) and hide the profile from the catalog/search
+    // (is_approved = FALSE), and stamp deactivated_at so we can tell a
+    // self-deactivation apart from an admin ban. ALL data is preserved
+    // (name, email, profile content, Stripe), so the account can be
+    // fully restored if the photographer comes back or deleted by
+    // mistake — just clear is_banned + deactivated_at and re-approve.
+    //
+    // We deliberately do NOT anonymize: the old behaviour overwrote the
+    // email with deleted_<id>@deleted.photoportugal.com (a dead domain),
+    // which (a) made restore impossible and (b) bounced every system
+    // email still aimed at the account. A true GDPR erasure, if ever
+    // requested, is a separate deliberate admin action.
     await queryOne(
-      `UPDATE users SET
-        name = 'Deleted User',
-        first_name = 'Deleted',
-        last_name = 'User',
-        email = $1,
-        password_hash = NULL,
-        avatar_url = NULL,
-        google_id = NULL,
-        phone = NULL,
-        is_banned = TRUE
-      WHERE id = $2 RETURNING id`,
-      [deletedEmail, userId]
+      `UPDATE users SET is_banned = TRUE, deactivated_at = NOW()
+       WHERE id = $1 RETURNING id`,
+      [userId]
     );
 
-    // If photographer: anonymize profile but keep the row
     const profile = await queryOne<{ id: string }>(
       "SELECT id FROM photographer_profiles WHERE user_id = $1",
       [userId]
     );
     if (profile) {
       await queryOne(
-        `UPDATE photographer_profiles SET
-          is_approved = FALSE,
-          tagline = NULL,
-          bio = NULL,
-          cover_url = NULL,
-          phone_number = NULL,
-          stripe_account_id = NULL,
-          stripe_onboarding_complete = FALSE
-        WHERE id = $1 RETURNING id`,
+        `UPDATE photographer_profiles SET is_approved = FALSE WHERE id = $1 RETURNING id`,
         [profile.id]
       );
     }
-
-    // Clear notification preferences
-    await query("DELETE FROM notification_preferences WHERE user_id = $1", [userId]);
 
     return NextResponse.json({ success: true });
   } catch (err) {

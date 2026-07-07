@@ -12,8 +12,8 @@ export const GIFT_CARD_TIERS = {
     locations: 1,
     deliveryDays: 7,
     outfitChange: false,
-    buyerPrice: 290,
-    photographerPayout: 210,
+    buyerPrice: 349,
+    photographerPayout: 254,
     description: "1-hour photo session — 30 edited photos, 1 location, delivered in 7 days.",
   },
   full: {
@@ -24,8 +24,8 @@ export const GIFT_CARD_TIERS = {
     locations: 2,
     deliveryDays: 7,
     outfitChange: true,
-    buyerPrice: 490,
-    photographerPayout: 360,
+    buyerPrice: 520,
+    photographerPayout: 382,
     description: "2-hour photo session — 60 edited photos, up to 2 locations, one outfit change, delivered in 7 days.",
   },
 } as const;

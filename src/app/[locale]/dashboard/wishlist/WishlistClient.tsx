@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { WishlistButton } from "@/components/ui/WishlistButton";
 import { normalizeName } from "@/lib/format-name";
+import { maskSurname } from "@/lib/photographer-name";
 
 interface WishlistItem {
   photographer_id: string;
@@ -91,7 +92,7 @@ export default function WishlistClient() {
               </div>
 
               <Link href={`/photographers/${item.slug}`} className="block px-4 pt-2 pb-4">
-                <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary-600 transition">{normalizeName(item.name)}</h3>
+                <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary-600 transition">{normalizeName(maskSurname(item.name))}</h3>
                 {item.tagline && <p className="text-sm text-gray-500 truncate mt-0.5">{item.tagline}</p>}
 
                 <div className="mt-2 flex items-center justify-between">

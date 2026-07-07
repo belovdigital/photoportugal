@@ -7,7 +7,21 @@ import { useSearchParams } from "next/navigation";
 import { trackReviewSubmitted } from "@/lib/analytics";
 import { VideoReviewRecorder } from "./VideoReviewRecorder";
 
-export function ReviewForm({ bookingId, photographerName }: { bookingId: string; photographerName: string }) {
+// Written reviews must have real content — require a minimum word count so we
+// don't get empty / one-word reviews. Enforced here AND server-side in
+// /api/reviews. Tune in one place.
+const MIN_REVIEW_WORDS = 10;
+const countWords = (s: string) => (s.trim() ? s.trim().split(/\s+/).filter(Boolean).length : 0);
+
+export function ReviewForm({ bookingId, photographerName, deliveryToken, tipped }: {
+  bookingId: string;
+  photographerName: string;
+  /** Delivery token — enables the optional tip chips on the 5★ success
+   *  state (the tip API accepts the signed-in booking owner, no password). */
+  deliveryToken?: string | null;
+  /** A paid tip already exists — never re-ask. */
+  tipped?: boolean;
+}) {
   const router = useRouter();
   const t = useTranslations("reviewForm");
   const searchParams = useSearchParams();
@@ -58,6 +72,10 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (countWords(text) < MIN_REVIEW_WORDS) {
+      setError(t("minWordsHint", { min: MIN_REVIEW_WORDS }));
+      return;
+    }
     setSubmitting(true);
     setError("");
 
@@ -90,16 +108,24 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
       setSubmitting(false);
       trackReviewSubmitted(bookingId, rating);
       setSuccess(true);
-      setTimeout(() => {
-        setOpen(false);
-        router.refresh();
-      }, 5000);
+      // Don't auto-close when the 5★ tip chips will render — vanishing
+      // mid-thought kills the tip moment. The user closes naturally.
+      const willShowTipChips = rating === 5 && !!deliveryToken && !tipped;
+      if (!willShowTipChips) {
+        setTimeout(() => {
+          setOpen(false);
+          router.refresh();
+        }, 5000);
+      }
     } else {
       setSubmitting(false);
       const data = await res.json().catch(() => null);
       setError(data?.error || t("failedToSubmit"));
     }
   }
+
+  const wordCount = countWords(text);
+  const enoughWords = wordCount >= MIN_REVIEW_WORDS;
 
   if (success) {
     return (
@@ -117,6 +143,9 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
           {t("alsoReviewOnGoogle")}
         </a>
+        {rating === 5 && deliveryToken && !tipped && (
+          <TipChips token={deliveryToken} photographerFirst={photographerName.split(" ")[0]} />
+        )}
       </div>
     );
   }
@@ -213,16 +242,28 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
                 />
               </div>
 
-              {/* Review text */}
+              {/* Review text — required, minimum word count */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">{t("reviewLabel")}</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  {t("reviewLabel")} <span className="text-red-500">*</span>
+                </label>
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   rows={4}
+                  required
+                  aria-invalid={!enoughWords}
                   placeholder={t("reviewPlaceholder")}
                   className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500"
                 />
+                <div className="mt-1 flex items-center justify-between text-xs">
+                  <span className={enoughWords ? "text-accent-600" : "text-gray-400"}>
+                    {enoughWords ? "✓" : t("minWordsHint", { min: MIN_REVIEW_WORDS })}
+                  </span>
+                  <span className={enoughWords ? "font-medium text-accent-600" : "text-gray-400"}>
+                    {wordCount}/{MIN_REVIEW_WORDS}
+                  </span>
+                </div>
               </div>
 
               {/* Photos */}
@@ -256,7 +297,7 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !enoughWords}
                   className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
                 >
                   {submitting ? t("submitting") : t("submitReview")}
@@ -273,6 +314,58 @@ export function ReviewForm({ bookingId, photographerName }: { bookingId: string;
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Miniature tip chips on the 5★ review-success state. The tip API
+ *  authorises the signed-in booking owner without the gallery password.
+ *  Quiet by design — the review was the primary ask; this is a whisper. */
+function TipChips({ token, photographerFirst }: { token: string; photographerFirst: string }) {
+  const t = useTranslations("reviewForm");
+  const [sending, setSending] = useState<number | null>(null);
+  const [error, setError] = useState("");
+
+  async function tip(amount: number) {
+    if (sending) return;
+    setSending(amount);
+    setError("");
+    try {
+      const res = await fetch(`/api/delivery/${token}/tip`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount_eur: amount }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) {
+        setError(data?.error || t("tipChipsError"));
+        setSending(null);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError(t("tipChipsError"));
+      setSending(null);
+    }
+  }
+
+  return (
+    <div className="mt-1 w-fit max-w-md rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+      <p className="text-xs font-medium text-amber-800">💛 {t("tipChipsHeading", { name: photographerFirst })}</p>
+      <div className="mt-1.5 flex items-center gap-1.5">
+        {[10, 20, 40].map((a) => (
+          <button
+            key={a}
+            type="button"
+            onClick={() => tip(a)}
+            disabled={sending !== null}
+            className="rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 disabled:opacity-50"
+          >
+            {sending === a ? "…" : `€${a}`}
+          </button>
+        ))}
+      </div>
+      {error && <p className="mt-1 text-[11px] text-red-600">{error}</p>}
     </div>
   );
 }

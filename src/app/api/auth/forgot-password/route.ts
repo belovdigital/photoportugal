@@ -21,12 +21,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Always return success to avoid revealing whether email exists
-    const user = await queryOne<{ id: string; name: string }>(
-      "SELECT id, name FROM users WHERE email = $1",
+    const user = await queryOne<{ id: string; name: string; is_banned: boolean }>(
+      "SELECT id, name, COALESCE(is_banned, FALSE) as is_banned FROM users WHERE email = $1",
       [email]
     );
 
-    if (user) {
+    // Banned users can't reset their password (they can't log in either).
+    // Still return the generic success so the ban isn't observable.
+    if (user && !user.is_banned) {
       const token = crypto.randomUUID();
       const expires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 

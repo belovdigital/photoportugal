@@ -34,7 +34,7 @@ export const PLAN_PRICES: Record<string, number> = {
   premium: 59,
 };
 
-export const SERVICE_FEE_RATE = 0.125; // 12.5%
+export const SERVICE_FEE_RATE = 0.15; // 15% — raised from 12.5% on 2026-06-12
 
 // Large-group surcharge: 9+ people pay an extra 50% on the package base
 // price. Applied before service fee. Smaller groups (≤8) pay the package

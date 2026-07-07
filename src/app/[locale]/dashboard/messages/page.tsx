@@ -14,6 +14,62 @@ import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import imageCompression from "browser-image-compression";
 import { useWebSocket } from "@/hooks/useWebSocket";
 
+// In-chat link rendering. Pre-payment, only links to known map domains
+// (Google Maps, Apple Maps, goo.gl/maps) are clickable — this lets the
+// photographer share a meeting-point pin without being a vector for
+// off-platform funneling. Post-payment, any URL is clickable because
+// the booking is real and the pair has every reason to share normal
+// links (Drive folders, weather, packing guides, anything).
+//
+// Three regex layers, applied in this order:
+//   1. Full URLs with scheme   (https://...)
+//   2. Bare URLs on map domains (maps.app.goo.gl/abc, google.com/maps/...)
+//   3. Any bare domain         (only when allowAllDomains is true)
+//
+// Anything that doesn't match falls through as plain text — that's the
+// fallback, so a malformed or partial URL still renders normally.
+const RE_LINKS_PAID =
+  /(https?:\/\/[^\s<>]+|(?:maps\.app\.goo\.gl|maps\.google\.[a-z.]+|google\.[a-z.]+\/maps|maps\.apple\.com|goo\.gl\/maps)[^\s<>]*|(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?:[/?#][^\s<>]*)?)/gi;
+const RE_LINKS_PRE_PAID =
+  /(https?:\/\/[^\s<>]+|(?:maps\.app\.goo\.gl|maps\.google\.[a-z.]+|google\.[a-z.]+\/maps|maps\.apple\.com|goo\.gl\/maps)[^\s<>]*)/gi;
+
+function renderMessageBody(text: string, allowAllDomains: boolean, isMe: boolean): React.ReactNode[] {
+  const re = allowAllDomains ? RE_LINKS_PAID : RE_LINKS_PRE_PAID;
+  const out: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  // Reset before exec — these are top-level constants with the /g flag,
+  // so lastIndex is shared across calls and would skip matches otherwise.
+  re.lastIndex = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > lastIndex) out.push(text.slice(lastIndex, m.index));
+    let url = m[0];
+    // Trim trailing punctuation people commonly type AFTER a URL
+    // ("see here: maps.app.goo.gl/abc!" — the "!" isn't part of the URL).
+    const trailing = url.match(/[.,;:!?)\]'"]+$/);
+    if (trailing) url = url.slice(0, url.length - trailing[0].length);
+    const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    const display = url.replace(/^https?:\/\//i, "");
+    out.push(
+      <a
+        key={`l-${m.index}`}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`underline break-all ${isMe ? "text-white/90 hover:text-white" : "text-primary-600 hover:text-primary-700"}`}
+      >
+        {display.length > 50 ? display.slice(0, 50) + "…" : display}
+      </a>
+    );
+    lastIndex = m.index + url.length;
+    // If we trimmed trailing punctuation, push it back as plain text.
+    if (trailing) out.push(trailing[0]);
+    lastIndex += trailing ? trailing[0].length : 0;
+  }
+  if (lastIndex < text.length) out.push(text.slice(lastIndex));
+  return out;
+}
+
 // Render structured message payloads (BOOKING_CARD:, DELIVERY:) as readable
 // previews in the sidebar instead of the raw JSON string.
 function formatLastMessagePreview(text: string | null, deleted = false): string | null {
@@ -68,6 +124,12 @@ interface Conversation {
   unread_count: number;
   booking_status: string;
   package_name: string | null;
+  // True if ANY booking between this (client, photographer) pair has
+  // been paid. Drives link handling in the chat: pre-paid, only safe
+  // map links are clickable to discourage off-platform funnels; once
+  // even a single booking is paid the relationship is real, so any
+  // URL is clickable.
+  any_paid_booking?: boolean;
 }
 
 interface Message {
@@ -1711,13 +1773,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                               })()}
                               {msg.text && (
                                 <p className="whitespace-pre-wrap break-words">
-                                  {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, pi) =>
-                                    /^https?:\/\//.test(part) ? (
-                                      <a key={pi} href={part} target="_blank" rel="noopener noreferrer"
-                                        className={`underline break-all ${isMe ? "text-white/90 hover:text-white" : "text-primary-600 hover:text-primary-700"}`}
-                                      >{part.replace(/^https?:\/\//, "").slice(0, 50)}{part.replace(/^https?:\/\//, "").length > 50 ? "…" : ""}</a>
-                                    ) : part
-                                  )}
+                                  {renderMessageBody(msg.text, !!activeConvo?.any_paid_booking, isMe)}
                                   {msg.edited_at && (
                                     <span className={`ml-1.5 text-[10px] italic ${isMe ? "text-white/70" : "text-gray-500"}`}>
                                       ({t("editedShort") || "edited"})

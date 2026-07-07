@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, withTransaction } from "@/lib/db";
 import { sendBookingConfirmationWithPayment, sendEmail, sendAdminBookingCancelledNotification, sendAdminBookingConfirmedNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
+import { maskSurname } from "@/lib/photographer-name";
 import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
 
@@ -23,7 +24,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               cu.name as client_name, cu.avatar_url as client_avatar,
               pu.name as photographer_name, pp.slug as photographer_slug,
               pu.avatar_url as photographer_avatar,
-              p.name as package_name, p.duration_minutes, p.num_photos
+              p.name as package_name, p.duration_minutes, p.num_photos,
+              -- Pair-level flag: has ANY booking between this (client,
+              -- photographer) pair been paid? Mirrors the same field on
+              -- /messages/conversations so the chat link-renderer behaves
+              -- identically on web and mobile (pre-paid: only map links
+              -- clickable; post-paid: any URL clickable).
+              EXISTS (
+                SELECT 1 FROM bookings bp
+                WHERE bp.client_id = b.client_id
+                  AND bp.photographer_id = b.photographer_id
+                  AND bp.payment_status = 'paid'
+              ) as any_paid_booking
        FROM bookings b
        JOIN users cu ON cu.id = b.client_id
        LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -35,6 +47,28 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    // Anti-disintermediation: for the CLIENT viewer, mask the photographer's
+    // surname until the pair shares a PAID booking (then full for
+    // coordination). The photographer viewing their own booking is unaffected.
+    const b = booking as Record<string, unknown>;
+    if (b.client_id === user.id && !b.any_paid_booking && typeof b.photographer_name === "string") {
+      b.photographer_name = maskSurname(b.photographer_name as string);
+    }
+
+    // When the PHOTOGRAPHER is viewing, strip the client-side money columns
+    // they must never see: the 15% service fee added on top, the gross the
+    // client paid, and promo/coupon details. They keep total_price (their
+    // base rate), payout_amount (take-home), and platform_fee (our cut).
+    if (b.client_id !== user.id) {
+      delete b.service_fee;
+      delete b.stripe_amount_subtotal_cents;
+      delete b.stripe_amount_paid_cents;
+      delete b.stripe_amount_discount_cents;
+      delete b.stripe_promo_code;
+      delete b.stripe_coupon_name;
+      delete b.stripe_coupon_percent_off;
     }
 
     return NextResponse.json(booking);
@@ -132,6 +166,24 @@ export async function PATCH(
       return NextResponse.json({ error: `Cannot change from ${currentBooking.status} to ${status}` }, { status: 400 });
     }
 
+    // Block confirmed → completed when the shoot hasn't happened yet.
+    // Without this, photographers could mark a session done minutes
+    // after the client paid for a shoot weeks away, jumping the funnel
+    // straight to "awaiting delivery" and firing a premature "session
+    // done — upload your photos" email to the client.
+    if (status === "completed" && currentBooking?.status === "confirmed") {
+      const dateCheck = await queryOne<{ shoot_date: string | null; not_yet: boolean }>(
+        "SELECT to_char(shoot_date, 'YYYY-MM-DD') AS shoot_date, COALESCE(shoot_date > CURRENT_DATE, false) AS not_yet FROM bookings WHERE id = $1",
+        [id]
+      );
+      if (dateCheck?.not_yet) {
+        return NextResponse.json(
+          { error: `Session can't be marked complete before the shoot date (${dateCheck.shoot_date}).` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check: photographer must have Stripe connected before confirming a paid booking
     if (status === "confirmed") {
       const photographerProfile = await queryOne<{ stripe_account_id: string | null; stripe_onboarding_complete: boolean }>(
@@ -197,7 +249,7 @@ export async function PATCH(
             `SELECT cu.email as client_email, cu.name as client_name, cu.id as client_user_id,
                     pu.email as photographer_email, pu.name as photographer_name,
                     pu.id as photographer_user_id, pp.id as photographer_profile_id,
-                    b.total_price, b.service_fee, b.shoot_date
+                    b.total_price, b.service_fee, b.shoot_date, b.stripe_amount_paid_cents
              FROM bookings b
              JOIN users cu ON cu.id = b.client_id
              JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -219,7 +271,13 @@ export async function PATCH(
             }
           }
 
-          const totalPaid = Number(info?.total_price ?? 0) + Number(info?.service_fee ?? 0);
+          // Refund math must start from what the card was ACTUALLY charged.
+          // stripe_amount_paid_cents is authoritative (covers promo codes and
+          // the blind summer offer, where total_price is a derived base);
+          // total_price + service_fee is only a legacy fallback.
+          const totalPaid = info?.stripe_amount_paid_cents != null
+            ? Number(info.stripe_amount_paid_cents) / 100
+            : Number(info?.total_price ?? 0) + Number(info?.service_fee ?? 0);
           const refundAmount = Math.round((totalPaid * refundPercent) / 100 * 100) / 100;
 
           if (refundPercent === 100) {
@@ -468,14 +526,20 @@ export async function PATCH(
           const otherEmail = isClient ? cancelInfo.photographer_email : cancelInfo.client_email;
           const otherName = isClient ? cancelInfo.photographer_name : cancelInfo.client_name;
           const cancellerName = isClient ? cancelInfo.client_name : cancelInfo.photographer_name;
+          // Recipient (otherEmail) is the OTHER party. When the photographer
+          // cancels (!isClient), the recipient is the client and the canceller
+          // name shown is the photographer's → mask the surname. When the client
+          // cancels, the recipient is the photographer and the name shown is the
+          // client's → keep it full.
+          const cancellerDisplay = !isClient ? maskSurname(cancellerName) : cancellerName;
 
           sendEmail(
             otherEmail,
-            `Booking cancelled by ${cancellerName}`,
+            `Booking cancelled by ${cancellerDisplay}`,
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2 style="color: #C94536;">Booking Cancelled</h2>
               <p>Hi ${otherName},</p>
-              <p>The booking with <strong>${cancellerName}</strong> has been cancelled by the ${cancelledBy}.</p>
+              <p>The booking with <strong>${cancellerDisplay}</strong> has been cancelled by the ${cancelledBy}.</p>
               <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
               <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
             </div>`
@@ -588,6 +652,9 @@ export async function PATCH(
               <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
               <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Great! The session with <strong>${completedInfo.client_name}</strong> has been marked as completed.</p>
               <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">When your photos are ready, you can upload them directly in the booking. ${completedInfo.client_name} will be notified automatically and can review them right away.</p>
+              <div style="margin:16px 0;padding:14px;background:#F5F3FF;border-radius:10px;border:1px solid #DDD6FE;">
+                <p style="margin:0;font-size:14px;line-height:1.6;color:#5B21B6;">✨ <strong>Pro tip:</strong> got 3-5 favourites already? Upload them and hit <strong>"Send sneak peek"</strong> on the delivery page — ${completedInfo.client_name} gets a beautiful first look while you edit the rest. Clients love it (and often share it with friends). Totally optional.</p>
+              </div>
               <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#9B8E82;">No rush — take your time to edit. We'll send you a reminder if the delivery deadline is approaching.</p>
               ${emailButton(`${baseUrl}/dashboard/bookings`, "Go to Bookings")}
             `)
@@ -596,7 +663,7 @@ export async function PATCH(
           import("@/lib/notify-photographer").then(({ notifyPhotographerViaTelegram }) => {
             notifyPhotographerViaTelegram(
               completedInfo.photographer_profile_id,
-              `Session with ${completedInfo.client_name} confirmed! When your photos are ready, upload them in your dashboard:\n${baseUrl}/dashboard/bookings`
+              `Session with ${completedInfo.client_name} confirmed! When your photos are ready, upload them in your dashboard:\n${baseUrl}/dashboard/bookings\n\n✨ Tip: upload 3-5 favourites now and hit "Send sneak peek" — a beautiful first look for the client while you edit the rest. Optional!`
             );
           }).catch(() => {});
 

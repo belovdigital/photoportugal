@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
-import { requireStripe } from "@/lib/stripe";
+import { requireStripe, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient } from "@/lib/email";
@@ -41,7 +41,10 @@ function fmtAmount(amountCents: number | null | undefined, currency?: string | n
 
 function paymentAmountFromStripe(amountCents: number | null | undefined, fallbackEuros: number | null | undefined): number {
   if (typeof amountCents === "number") return amountCents / 100;
-  return Number(fallbackEuros || 0);
+  // Fallback only fires if Stripe omitted amount_total. `fallbackEuros` is the
+  // booking BASE (total_price), but the client is charged the GROSS (base +
+  // service fee), so apply the fee here too — never quote bare base as "paid".
+  return Math.round(Number(fallbackEuros || 0) * (1 + SERVICE_FEE_RATE) * 100) / 100;
 }
 
 function safeTelegramText(value: unknown): string {
@@ -500,6 +503,113 @@ export async function POST(req: NextRequest) {
             );
             console.log(`[webhook] Verified badge activated for photographer ${photographerId}`);
           }
+        } else if (checkoutType === "tip") {
+          // ── Tip payment completed ─────────────────────────────────
+          // Client tipped the photographer post-delivery. Mark the tip
+          // paid (idempotent), then transfer the photographer's 90% via
+          // Connect (platform keeps 10% — covers Stripe processing).
+          // Same atomic-claim + idempotency pattern as the delivery
+          // payout in /api/delivery/[token]/accept.
+          const tipId = checkoutSession.metadata?.tip_id;
+          if (tipId) {
+            const tipPi = typeof checkoutSession.payment_intent === "string"
+              ? checkoutSession.payment_intent
+              : (checkoutSession.payment_intent as { id?: string } | null)?.id || null;
+            const tip = await queryOne<{
+              id: string; booking_id: string; amount_cents: number; payout_cents: number;
+            }>(
+              `UPDATE tips SET status = 'paid', paid_at = NOW(), stripe_payment_intent_id = COALESCE($2, stripe_payment_intent_id)
+                WHERE id = $1 AND status = 'pending'
+                RETURNING id, booking_id, amount_cents, payout_cents`,
+              [tipId, tipPi]
+            );
+            if (tip) {
+              const ctx = await queryOne<{
+                photographer_stripe_id: string | null;
+                stripe_ready: boolean;
+                photographer_email: string;
+                photographer_name: string;
+                photographer_user_id: string;
+                client_id: string;
+                client_name: string;
+              }>(
+                `SELECT pp.stripe_account_id as photographer_stripe_id,
+                        COALESCE(pp.stripe_onboarding_complete, FALSE) as stripe_ready,
+                        pu.email as photographer_email, pu.name as photographer_name,
+                        pu.id as photographer_user_id,
+                        b.client_id, cu.name as client_name
+                 FROM bookings b
+                 JOIN photographer_profiles pp ON pp.id = b.photographer_id
+                 JOIN users pu ON pu.id = pp.user_id
+                 JOIN users cu ON cu.id = b.client_id
+                 WHERE b.id = $1`,
+                [tip.booking_id]
+              );
+              const tipEur = (tip.amount_cents / 100).toFixed(2);
+              const payoutEur = (tip.payout_cents / 100).toFixed(2);
+
+              // Transfer the photographer's share when Stripe is ready;
+              // otherwise leave transferred=FALSE and alert admin (the tip
+              // sits on the platform balance until manually retried).
+              if (ctx?.photographer_stripe_id && ctx.stripe_ready) {
+                const claim = await queryOne<{ id: string }>(
+                  "UPDATE tips SET transferred = TRUE WHERE id = $1 AND transferred = FALSE RETURNING id",
+                  [tip.id]
+                );
+                if (claim) {
+                  try {
+                    await requireStripe().transfers.create({
+                      amount: tip.payout_cents,
+                      currency: "eur",
+                      destination: ctx.photographer_stripe_id,
+                      ...(tipPi ? { transfer_group: tipPi } : {}),
+                      metadata: { tip_id: tip.id, booking_id: tip.booking_id, type: "tip_payout" },
+                    }, { idempotencyKey: `tip_transfer_${tip.id}` });
+                  } catch (trErr) {
+                    // Roll the claim back so a retry can re-attempt.
+                    await queryOne("UPDATE tips SET transferred = FALSE WHERE id = $1 RETURNING id", [tip.id]).catch(() => {});
+                    console.error("[webhook] tip transfer error:", trErr);
+                  }
+                }
+              } else {
+                import("@/lib/telegram").then(({ sendTelegram }) =>
+                  sendTelegram(`⚠️ <b>Tip received but photographer Stripe not ready</b>\nTip: €${tipEur} (payout €${payoutEur})\nBooking: <code>${tip.booking_id.slice(0, 8)}</code>\nTransfer manually once onboarding completes.`, "stripe")
+                ).catch(() => {});
+              }
+
+              if (ctx) {
+                const clientFirst = ctx.client_name.split(" ")[0] || ctx.client_name;
+                const photogFirst = ctx.photographer_name.split(" ")[0] || ctx.photographer_name;
+                // Warm chat message in the shared thread (plain text — renders
+                // on every app version, unlike typed payloads).
+                await queryOne(
+                  `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE) RETURNING id`,
+                  [tip.booking_id, ctx.client_id, `💛 ${clientFirst} left a €${tipEur} tip — thank you!`]
+                ).catch((e) => console.error("[webhook] tip chat message error:", e));
+
+                // Email the photographer — honest about the 10% platform cut.
+                import("@/lib/email").then(({ sendEmail }) =>
+                  sendEmail(
+                    ctx.photographer_email,
+                    `💛 ${clientFirst} left you a €${tipEur} tip`,
+                    `<div style="font-family: sans-serif; max-width: 540px; margin: 0 auto;">
+                      <h2 style="color:#D97706;">You got a tip! 💛</h2>
+                      <p>Hi ${photogFirst},</p>
+                      <p><strong>${ctx.client_name.replace(/[<>]/g, "")}</strong> loved your photos so much they added a <strong style="color:#D97706;">€${tipEur}</strong> tip.</p>
+                      <p><strong>€${payoutEur}</strong> is on its way to your Stripe account (after the 10% platform fee) and will arrive with your regular payout schedule.</p>
+                      <p>Moments like this deserve a reply — a quick thank-you in the chat goes a long way.</p>
+                      <p><a href="https://photoportugal.com/dashboard/messages" style="display:inline-block;background:#D97706;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Say thanks →</a></p>
+                      <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+                    </div>`
+                  )
+                ).catch((e) => console.error("[webhook] tip email error:", e));
+
+                import("@/lib/telegram").then(({ sendTelegram }) =>
+                  sendTelegram(`💛 <b>Tip!</b> ${clientFirst} → ${photogFirst}: €${tipEur} (payout €${payoutEur}, platform €${((tip.amount_cents - tip.payout_cents) / 100).toFixed(2)})\nBooking: <code>${tip.booking_id.slice(0, 8)}</code>`, "bookings")
+                ).catch(() => {});
+              }
+            }
+          }
         } else if ((checkoutType === "booking" || bookingId) && checkoutSession.payment_intent) {
           // Booking payment completed
           const paymentSummary = await getCheckoutPaymentSummary(checkoutSession as unknown as Record<string, unknown>);
@@ -529,10 +639,13 @@ export async function POST(req: NextRequest) {
                 WHERE id = $1 AND status = 'confirmed' AND photographer_id IS NULL RETURNING id`,
               [bookingId]
             );
-            const baseEur = blindCheck.total_price ? Math.round(Number(blindCheck.total_price)) : 0;
-            const totalEur = Math.round(baseEur * 1.125);
+            // Summer offer: total_price is the derived photographer BASE
+            // (inclusive × 0.85); reconstruct the client's all-in charge as
+            // base / 0.85 — matches the exact Stripe auth amount.
+            const baseEur = blindCheck.total_price ? Number(blindCheck.total_price) : 0;
+            const totalEur = Math.round(baseEur / 0.85);
             const amtLabel = baseEur
-              ? `€${totalEur} (€${baseEur} rate + €${totalEur - baseEur} service fee)`
+              ? `€${totalEur} all-in (base €${baseEur} → photographer, cut €${Math.round((totalEur - baseEur) * 100) / 100})`
               : "(no price)";
             import("@/lib/telegram").then(({ sendTelegram }) =>
               sendTelegram(
@@ -551,7 +664,11 @@ export async function POST(req: NextRequest) {
               );
               if (!ctx?.email) return;
               const BASE = process.env.AUTH_URL || "https://photoportugal.com";
-              const priceText = blindCheck.total_price ? `€${Math.round(Number(blindCheck.total_price))}` : "your booking";
+              // Show the all-in amount the client's card is authorised for.
+              // total_price holds the derived photographer base (summer
+              // offer: inclusive × 0.85), so client total = base / 0.85 —
+              // matches the exact Stripe auth (€279/465/649).
+              const priceText = blindCheck.total_price ? `€${Math.round(Number(blindCheck.total_price) / 0.85)}` : "your booking";
               await sendEmail(
                 ctx.email,
                 "We've got your booking — finding your photographer now",
@@ -657,11 +774,11 @@ export async function POST(req: NextRequest) {
             const bookingInfo = await queryOne<{
               client_email: string; client_name: string; client_phone: string | null;
               photographer_email: string; photographer_name: string;
-              total_price: number;
+              total_price: number; payout_amount: string | null; platform_fee: string | null;
             }>(
               `SELECT cu.email as client_email, cu.name as client_name, cu.phone as client_phone,
                       pu.email as photographer_email, pu.name as photographer_name,
-                      b.total_price
+                      b.total_price, b.payout_amount, b.platform_fee
                FROM bookings b
                JOIN users cu ON cu.id = b.client_id
                JOIN photographer_profiles pp ON pp.id = b.photographer_id
@@ -672,12 +789,21 @@ export async function POST(req: NextRequest) {
             if (bookingInfo) {
               const paidAmount = paymentAmountFromStripe(paymentSummary.amountTotal, bookingInfo.total_price);
               const displayPaidAmount = paidAmountLabel || `€${Number(bookingInfo.total_price)}`;
+              // Photographer-facing notifications must show the PAYOUT (what
+              // they actually receive), not the gross the client paid — the
+              // gross includes the client-side service fee and confuses
+              // photographers (Isa thought €592.25 was hers when her payout
+              // was €463.50). Admin + client notifications keep the gross.
+              const payoutEur = bookingInfo.payout_amount != null
+                ? Number(bookingInfo.payout_amount)
+                : Number(bookingInfo.total_price) - Number(bookingInfo.platform_fee || 0);
+              const payoutLabel = `€${Number.isInteger(payoutEur) ? payoutEur : payoutEur.toFixed(2)}`;
               sendPaymentReceivedToPhotographer(
                 bookingInfo.photographer_email,
                 bookingInfo.photographer_name,
                 bookingInfo.client_name,
                 bookingId!,
-                paidAmount,
+                payoutEur,
                 bookingInfo.client_phone
               );
               sendPaymentConfirmedToClient(
@@ -747,7 +873,7 @@ export async function POST(req: NextRequest) {
                   if (smsPrefs?.sms_bookings !== false) {
                     sendSMS(
                       photographerUser.phone,
-                      `Photo Portugal: Payment of ${displayPaidAmount} received for your booking with ${bookingInfo.client_name}. Log in to view details.`
+                      `Photo Portugal: ${bookingInfo.client_name.split(" ")[0]} paid for your booking. Your payout: ${payoutLabel}. Log in to view details.`
                     ).catch(err => console.error("[sms] error:", err));
                   }
                 }
@@ -758,7 +884,7 @@ export async function POST(req: NextRequest) {
                   import("@/lib/push").then(m =>
                     m.sendPushNotification(
                       photographerUser.id,
-                      `💰 ${displayPaidAmount} received from ${clientFirst}`,
+                      `💰 ${payoutLabel} payout from ${clientFirst}`,
                       "Booking is confirmed — tap to view.",
                       { type: "booking", bookingId: bookingId || "", channelId: "payments", categoryId: "PAYMENT" }
                     )
@@ -804,7 +930,7 @@ export async function POST(req: NextRequest) {
                   import("@/lib/notify-photographer").then(m =>
                     m.notifyPhotographerViaTelegram(
                       photographerProfileId.photographer_id,
-                      `Payment received from ${clientFirst}!\n\nAmount: ${displayPaidAmount}\n\nView: https://photoportugal.com/dashboard/bookings`
+                      `Payment received from ${clientFirst}!\n\nYour payout: ${payoutLabel}\n\nView: https://photoportugal.com/dashboard/bookings`
                     )
                   ).catch((err) => console.error("[webhook] telegram photographer payment error:", err));
                 }

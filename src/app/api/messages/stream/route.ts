@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,18 @@ export async function GET(req: NextRequest) {
     return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: { "Content-Type": "application/json" } });
   }
 
+  // Anti-disintermediation: precompute once whether the CLIENT viewer should
+  // see the photographer's surname masked on live messages (no paid booking
+  // with this pair yet). Photographer viewers always see full client names.
+  const viewerIsClient = userId === booking.client_id;
+  const paidRow = viewerIsClient
+    ? await queryOne<{ exists: boolean }>(
+        `SELECT EXISTS (SELECT 1 FROM bookings WHERE client_id = $1 AND photographer_id = $2 AND payment_status = 'paid') as exists`,
+        [booking.client_id, booking.photographer_id]
+      )
+    : null;
+  const maskPhotographer = viewerIsClient && !paidRow?.exists;
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -83,6 +96,13 @@ export async function GET(req: NextRequest) {
                   AND sender_id != $3 AND read_at IS NULL`,
               [booking.client_id, booking.photographer_id, userId]
             );
+            if (maskPhotographer) {
+              for (const m of newMessages as Array<Record<string, unknown>>) {
+                if (m.sender_id === booking.photographer_user_id && typeof m.sender_name === "string") {
+                  m.sender_name = maskSurname(m.sender_name as string);
+                }
+              }
+            }
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(newMessages)}\n\n`));
           }
         } catch (err) {

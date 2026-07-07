@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import DatePicker from "@/components/ui/DatePicker";
+import { todayLocalISO } from "@/lib/date-utils";
 
 function buildTimeOptions(flexibleLabel: string) {
   const opts: { value: string; label: string }[] = [
@@ -177,8 +178,9 @@ export function ChangeDateModal({
               <DatePicker
                 value={newDate}
                 onChange={(v, coords) => { setNewDate(v); setNewDateCoords(coords || null); }}
-                min={new Date().toISOString().split("T")[0]}
+                min={todayLocalISO()}
                 placeholder={td("selectDate")}
+                portalPopover
               />
             </div>
           </div>

@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { sendNewMessageNotification } from "@/lib/email";
 import { detectContactInfo, detectSocialPlatform } from "@/lib/content-filter";
+import { maskSurname } from "@/lib/photographer-name";
 
 // Get messages for a booking
 export async function GET(req: NextRequest) {
@@ -67,6 +68,24 @@ export async function GET(req: NextRequest) {
       [booking.client_id, photographerId, userId]
     );
 
+    // Anti-disintermediation: when the CLIENT is viewing the thread, mask the
+    // photographer's surname on the photographer's own messages until they
+    // share a PAID booking (post-payment coordination keeps the full name).
+    // The photographer viewing the thread always sees the client's full name.
+    if (userId === booking.client_id) {
+      const paid = await queryOne<{ exists: boolean }>(
+        `SELECT EXISTS (SELECT 1 FROM bookings WHERE client_id = $1 AND photographer_id = $2 AND payment_status = 'paid') as exists`,
+        [booking.client_id, photographerId]
+      );
+      if (!paid?.exists) {
+        for (const m of messages as Array<Record<string, unknown>>) {
+          if (m.sender_id === booking.photographer_user_id && typeof m.sender_name === "string") {
+            m.sender_name = maskSurname(m.sender_name as string);
+          }
+        }
+      }
+    }
+
     return NextResponse.json(messages);
   } catch (error) {
     console.error("[messages] get error:", error);
@@ -121,11 +140,14 @@ export async function POST(req: NextRequest) {
       photographer_slug: string | null;
       photographer_name: string;
       client_name: string;
+      occasion: string | null;
+      client_sms_opt_in: boolean;
     }>(
       `SELECT b.client_id, u.id as photographer_user_id, b.status, b.payment_status,
               b.photographer_id, pp.slug as photographer_slug,
               u.name as photographer_name,
-              cu.name as client_name
+              cu.name as client_name,
+              b.occasion, COALESCE(b.client_sms_opt_in, false) AS client_sms_opt_in
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
        JOIN users u ON u.id = pp.user_id
@@ -289,10 +311,21 @@ export async function POST(req: NextRequest) {
       }).catch(() => {});
     } catch {}
 
+    // Recipient may have deactivated/deleted their account. Their email
+    // is preserved but login is blocked and they'll never read it — and
+    // historically a deleted account's email was a dead domain that just
+    // bounced. Skip ALL recipient-facing notifications (email + push) in
+    // that case. The admin Telegram line above still fires so we can see
+    // the orphaned inbound message and reach out to the client ourselves.
+    const recipientGone = await queryOne<{ gone: boolean }>(
+      "SELECT (COALESCE(is_banned, false) OR deactivated_at IS NOT NULL) AS gone FROM users WHERE id = $1",
+      [userId === booking.client_id ? booking.photographer_user_id : booking.client_id]
+    );
+
     // Send email notification to the other person (if they have it enabled, throttled to 1 per 15 min)
     try {
       const recipientId = userId === booking.client_id ? booking.photographer_user_id : booking.client_id;
-      const prefs = await queryOne<{ email_messages: boolean }>(
+      const prefs = recipientGone?.gone ? { email_messages: false } : await queryOne<{ email_messages: boolean }>(
         "SELECT email_messages FROM notification_preferences WHERE user_id = $1",
         [recipientId]
       );
@@ -320,14 +353,22 @@ export async function POST(req: NextRequest) {
             // read / replied / came online. No more "I got an email
             // about a message I already responded to 30 sec ago".
             const { enqueueNewMessageNotif } = await import("@/lib/notification-queue");
+            // Anti-disintermediation: if the sender is the photographer and the
+            // recipient (client) hasn't paid yet, mask the photographer surname
+            // in the notification ("Jennifer D."). Client->photographer emails
+            // show the client's full name unchanged.
+            const senderIsPhotographer = userId === booking.photographer_user_id;
+            const senderDisplay = senderIsPhotographer && booking.payment_status !== "paid"
+              ? maskSurname(sender.name)
+              : sender.name;
             await enqueueNewMessageNotif({
               recipientId,
               recipient: recipient.email,
               messageId: message!.id,
               bookingId: booking_id,
               channel: "email",
-              subject: `New message from ${sender.name} — Photo Portugal`,
-              body: `You've got a new message from ${sender.name} about your Photo Portugal booking.`,
+              subject: `New message from ${senderDisplay} — Photo Portugal`,
+              body: `You've got a new message from ${senderDisplay} about your Photo Portugal booking.`,
             });
           }
         }
@@ -345,20 +386,22 @@ export async function POST(req: NextRequest) {
         : media_url
           ? "📷 sent a photo"
           : "sent a message";
-      import("@/lib/push").then(m =>
-        m.sendPushNotification(
-          recipientId,
-          `💬 ${senderName}`,
-          pushBody,
-          {
-            type: "message",
-            bookingId: booking_id,
-            threadId: `chat:${booking.client_id}:${booking.photographer_id}`,
-            channelId: "messages",
-            categoryId: "MESSAGE",
-          }
-        )
-      ).catch((err) => console.error("[messages] push notification error:", err));
+      if (!recipientGone?.gone) {
+        import("@/lib/push").then(m =>
+          m.sendPushNotification(
+            recipientId,
+            `💬 ${senderName}`,
+            pushBody,
+            {
+              type: "message",
+              bookingId: booking_id,
+              threadId: `chat:${booking.client_id}:${booking.photographer_id}`,
+              channelId: "messages",
+              categoryId: "MESSAGE",
+            }
+          )
+        ).catch((err) => console.error("[messages] push notification error:", err));
+      }
       // Real-time conversation list refresh on the recipient's other
       // open clients (mobile + web tabs).
       import("@/lib/realtime").then((m) =>
@@ -385,10 +428,21 @@ export async function POST(req: NextRequest) {
         } catch {}
       }
 
+      // Surprise-proposal discretion: never SMS the CLIENT on a proposal
+      // booking by default — a "New message from <photographer>" SMS on
+      // their lock screen could blow the surprise if their partner sees
+      // it. They still get email + in-app. The client can opt back in
+      // from the booking (sets client_sms_opt_in). Photographer-side SMS
+      // is unaffected (they're not the surprise target).
+      const proposalDiscretionSkip =
+        recipientId === booking.client_id &&
+        !booking.client_sms_opt_in &&
+        !!booking.occasion && /proposal/i.test(booking.occasion);
+
       // SMS — go through the delayed queue (3-min hold, cancelled if
       // recipient reads / replies / is online / has the app installed).
       try {
-        const recipientInfo = await queryOne<{ phone: string | null }>(
+        const recipientInfo = proposalDiscretionSkip ? null : await queryOne<{ phone: string | null }>(
           "SELECT phone FROM users WHERE id = $1", [recipientId]
         );
         if (recipientInfo?.phone) {

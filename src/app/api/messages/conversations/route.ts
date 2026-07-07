@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
+import { maskSurname } from "@/lib/photographer-name";
 
 export async function GET(req: NextRequest) {
   const user = await authFromRequest(req);
@@ -50,7 +51,12 @@ export async function GET(req: NextRequest) {
           (SELECT deleted_at IS NOT NULL FROM messages WHERE client_id = u.id AND photographer_id = $2 ORDER BY created_at DESC LIMIT 1) as last_message_deleted,
           (SELECT media_url FROM messages WHERE client_id = u.id AND photographer_id = $2 ORDER BY created_at DESC LIMIT 1) as last_message_media_url,
           (SELECT created_at FROM messages WHERE client_id = u.id AND photographer_id = $2 ORDER BY created_at DESC LIMIT 1) as last_message_at,
-          (SELECT COUNT(*) FROM messages WHERE client_id = u.id AND photographer_id = $2 AND sender_id != $1 AND read_at IS NULL)::int as unread_count
+          (SELECT COUNT(*) FROM messages WHERE client_id = u.id AND photographer_id = $2 AND sender_id != $1 AND read_at IS NULL)::int as unread_count,
+          -- True if ANY booking between this (client, photographer) pair
+          -- has been paid. The chat renderer uses this to switch link
+          -- handling: pre-paid → only safe maps links are clickable;
+          -- post-paid → any URL is clickable (relationship is real).
+          EXISTS (SELECT 1 FROM bookings bp WHERE bp.client_id = u.id AND bp.photographer_id = $2 AND bp.payment_status = 'paid') as any_paid_booking
         FROM bookings b
         JOIN users u ON u.id = b.client_id
         LEFT JOIN packages p ON p.id = b.package_id
@@ -83,7 +89,8 @@ export async function GET(req: NextRequest) {
           (SELECT deleted_at IS NOT NULL FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id ORDER BY created_at DESC LIMIT 1) as last_message_deleted,
           (SELECT media_url FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id ORDER BY created_at DESC LIMIT 1) as last_message_media_url,
           (SELECT created_at FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id ORDER BY created_at DESC LIMIT 1) as last_message_at,
-          (SELECT COUNT(*) FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id AND sender_id != $1 AND read_at IS NULL)::int as unread_count
+          (SELECT COUNT(*) FROM messages WHERE client_id = $1 AND photographer_id = b.photographer_id AND sender_id != $1 AND read_at IS NULL)::int as unread_count,
+          EXISTS (SELECT 1 FROM bookings bp WHERE bp.client_id = $1 AND bp.photographer_id = b.photographer_id AND bp.payment_status = 'paid') as any_paid_booking
         FROM bookings b
         JOIN photographer_profiles pp ON pp.id = b.photographer_id
         JOIN users u ON u.id = pp.user_id
@@ -96,6 +103,16 @@ export async function GET(req: NextRequest) {
       (conversations as Array<Record<string, unknown>>).sort((a, b) =>
         new Date(b.last_message_at as string || 0).getTime() - new Date(a.last_message_at as string || 0).getTime()
       );
+    }
+
+    // Anti-disintermediation: in the CLIENT's conversation list, mask the
+    // photographer's surname ("Jennifer D.") until they share a PAID booking
+    // (post-payment coordination keeps the full name). Photographer-viewer
+    // rows show the CLIENT (other_role='client') and are never masked.
+    for (const c of conversations as Array<Record<string, unknown>>) {
+      if (c.other_role === "photographer" && !c.any_paid_booking && typeof c.other_name === "string") {
+        c.other_name = maskSurname(c.other_name as string);
+      }
     }
 
     return NextResponse.json(conversations);

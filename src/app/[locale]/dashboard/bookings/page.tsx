@@ -12,6 +12,7 @@ import { PaymentTracker } from "./PaymentTracker";
 import PaymentCountdown from "./PaymentCountdown";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { BookingJourney } from "./BookingJourney";
+import { ProposalSmsToggle } from "./ProposalSmsToggle";
 import { normalizeName } from "@/lib/format-name";
 import { bookingStripePaymentSelect } from "@/lib/booking-stripe-payment-fields";
 import { bookingGroupSizeEstimateSelect } from "@/lib/booking-group-size-fields";
@@ -68,9 +69,15 @@ export default async function BookingsPage() {
     group_size: number | null;
     group_size_is_estimate: boolean;
     occasion: string | null;
+    client_sms_opt_in: boolean;
     total_price: number | null;
     service_fee: number | null;
     payout_amount: number | null;
+    blind_booking: boolean | null;
+    tip_amount_cents: number | null;
+    tip_payout_cents: number | null;
+    peek_token?: string | null;
+    peek_shared_at?: string | null;
     stripe_amount_paid_cents: number | null;
     stripe_amount_discount_cents: number | null;
     stripe_currency: string | null;
@@ -120,10 +127,12 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount,
+                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.blind_booking,
                   ${stripePaymentSelect},
                   b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
+                  (SELECT t.amount_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_amount_cents,
+                  (SELECT t.payout_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_payout_cents,
                   COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
                   b.delivery_expires_at,
                   COALESCE(b.is_gift, FALSE) as is_gift,
@@ -175,10 +184,13 @@ export default async function BookingsPage() {
       // booking in their dashboard before they got the gift email.
       bookings = await query(
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount,
+                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, COALESCE(b.client_sms_opt_in, false) as client_sms_opt_in, b.total_price, b.service_fee, b.payout_amount, b.blind_booking,
                 ${stripePaymentSelect},
                 b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
+                b.peek_token, b.peek_shared_at::text as peek_shared_at,
+                (SELECT t.amount_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_amount_cents,
+                (SELECT t.payout_cents FROM tips t WHERE t.booking_id = b.id AND t.status = 'paid' LIMIT 1) as tip_payout_cents,
                 COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
                 b.delivery_expires_at,
                 COALESCE(b.is_gift, FALSE) as is_gift,
@@ -400,7 +412,7 @@ export default async function BookingsPage() {
                         <BookingStatusButtons bookingId={booking.id} currentStatus={booking.status} paymentStatus={booking.payment_status} deliveryAccepted={booking.delivery_accepted} shootDate={booking.shoot_date} clientFirstName={isPhotographer ? normalizeName(booking.other_name) : undefined} hasPhotographerMessage={booking.has_photographer_message} />
                       )}
                       {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
-                        <PayButton bookingId={booking.id} amount={Number(booking.total_price)} />
+                        <PayButton bookingId={booking.id} amount={Number(booking.total_price)} blind={!!booking.blind_booking} />
                       )}
                       {!isPhotographer && booking.status === "delivered" && booking.delivery_token && (
                         <Link
@@ -413,6 +425,13 @@ export default async function BookingsPage() {
                     </div>
                   }
                 />
+              )}
+
+              {/* Surprise-proposal discretion: SMS off by default, opt-in here. */}
+              {!isPhotographer
+                && booking.occasion && /proposal/i.test(booking.occasion)
+                && !["cancelled", "completed", "delivered"].includes(booking.status) && (
+                <ProposalSmsToggle bookingId={booking.id} initialOptIn={!!booking.client_sms_opt_in} />
               )}
 
               <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -441,21 +460,39 @@ export default async function BookingsPage() {
                 )}
                 {booking.total_price && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
-                    <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price))}</p>
-                    {booking.stripe_amount_paid_cents !== null && !isPhotographer && (
-                      <p className="text-[10px] font-medium text-green-700">
-                        Paid: {formatStripeAmount(booking.stripe_amount_paid_cents, booking.stripe_currency)}
-                      </p>
-                    )}
-                    {Number(booking.stripe_amount_discount_cents) > 0 && !isPhotographer && (
-                      <p className="text-[10px] font-medium text-primary-600">
-                        Discount: -{formatStripeAmount(booking.stripe_amount_discount_cents, booking.stripe_currency)}
-                        {booking.stripe_promo_code ? ` · ${booking.stripe_promo_code}` : ""}
-                      </p>
-                    )}
-                    {isPhotographer && Number(booking.payout_amount) > 0 && (
-                      <p className="text-[10px] font-medium text-green-700">Payout: &euro;{Math.round(Number(booking.payout_amount))}</p>
+                    {isPhotographer && Number(booking.payout_amount) > 0 ? (
+                      /* Photographers see their PAYOUT (what they receive),
+                         not the session base or the client's gross — base is
+                         shown small as context. */
+                      <>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("yourPayout") || "Your payout"}</p>
+                        <p className="text-sm font-medium text-green-700">&euro;{Math.round(Number(booking.payout_amount))}</p>
+                        {/* Tip payout (their 90% share) — separate line, never
+                            folded into payout_amount. */}
+                        {Number(booking.tip_payout_cents) > 0 && (
+                          <p className="text-[11px] font-semibold text-amber-700">💛 {t("tipLine")}: &euro;{(Number(booking.tip_payout_cents) / 100).toFixed(2)}</p>
+                        )}
+                        <p className="text-[10px] font-medium text-gray-400">{t("sessionPrice") || "Session price"}: &euro;{Math.round(Number(booking.total_price))}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("price") || "Price"}</p>
+                        {/* Blind summer offer: the CLIENT saw the all-inclusive
+                            number (base / 0.85) — never show them the internal
+                            base. Photographers keep seeing the base (their rate). */}
+                        <p className="text-sm font-medium text-gray-800">&euro;{Math.round(Number(booking.total_price) / (booking.blind_booking && !isPhotographer ? 0.85 : 1))}</p>
+                        {booking.stripe_amount_paid_cents !== null && !isPhotographer && (
+                          <p className="text-[10px] font-medium text-green-700">
+                            Paid: {formatStripeAmount(booking.stripe_amount_paid_cents, booking.stripe_currency)}
+                          </p>
+                        )}
+                        {Number(booking.stripe_amount_discount_cents) > 0 && !isPhotographer && (
+                          <p className="text-[10px] font-medium text-primary-600">
+                            Discount: -{formatStripeAmount(booking.stripe_amount_discount_cents, booking.stripe_currency)}
+                            {booking.stripe_promo_code ? ` · ${booking.stripe_promo_code}` : ""}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -537,6 +574,20 @@ export default async function BookingsPage() {
                   expires. We pull the plaintext password out of the auto-sent
                   DELIVERY chat message so the link opens the gallery directly,
                   no password prompt. */}
+              {/* Sneak peek link — completed but not yet delivered. */}
+              {!isPhotographer && booking.status === "completed" && booking.peek_token && booking.peek_shared_at && (
+                <a
+                  href={`/peek/${booking.peek_token}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 transition hover:bg-violet-100"
+                >
+                  <span className="text-sm font-semibold text-violet-800">{t("peekReady")}</span>
+                  <svg className="h-4 w-4 shrink-0 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              )}
               {!isPhotographer && booking.delivery_token && booking.status === "delivered" && (() => {
                 const notExpired = !booking.delivery_expires_at || new Date(booking.delivery_expires_at) > new Date();
                 if (!notExpired) return null;
@@ -563,7 +614,7 @@ export default async function BookingsPage() {
                   drops below it. */}
               {!isPhotographer && (booking.status === "completed" || booking.status === "delivered") && !booking.has_review && (
                 <div className="mt-4">
-                  <ReviewForm bookingId={booking.id} photographerName={normalizeName(booking.other_name)} />
+                  <ReviewForm bookingId={booking.id} photographerName={normalizeName(booking.other_name)} deliveryToken={booking.delivery_token} tipped={!!booking.tip_amount_cents} />
                 </div>
               )}
 

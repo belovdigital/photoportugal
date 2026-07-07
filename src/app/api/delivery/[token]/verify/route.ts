@@ -165,9 +165,22 @@ export async function POST(
     };
   }));
 
+  // Tip card state: hide once a tip is PAID for this booking, and never
+  // ask for a tip while a dispute is open (tone-deaf).
+  const tipRow = await queryOne<{ id: string }>(
+    "SELECT id FROM tips WHERE booking_id = $1 AND status = 'paid' LIMIT 1",
+    [booking.id]
+  ).catch(() => null);
+  const openDispute = await queryOne<{ id: string }>(
+    "SELECT id FROM disputes WHERE booking_id = $1 AND status IN ('open', 'under_review') LIMIT 1",
+    [booking.id]
+  ).catch(() => null);
+
   return NextResponse.json({
     booking_id: booking.id,
     client_id: booking.client_id,
+    tipped: !!tipRow,
+    tip_allowed: !openDispute && booking.payment_status === "paid",
     photographer_name: booking.photographer_name,
     photographer_avatar: booking.photographer_avatar,
     client_name: booking.client_name,
