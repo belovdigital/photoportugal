@@ -17,7 +17,39 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const results = { voided: 0, errors: [] as string[] };
+  const results = { voided: 0, cancelled_unpaid: 0, errors: [] as string[] };
+
+  // Sweep 0: unpaid blind checkouts. Blind is a pay-FIRST product (no 24h
+  // grace like standard bookings) — the Stripe session already expires
+  // after 1h (accept route), so a row still 'pending' at 2h is an
+  // abandoned checkout. Cancel it so the admin queue never shows a stale
+  // "awaiting payment" card that looks assignable. No PI exists to void
+  // and no client email — they never paid.
+  try {
+    const unpaid = await query<{ id: string }>(
+      `UPDATE bookings
+          SET status = 'cancelled',
+              cancelled_by = 'system',
+              cancelled_reason = 'Blind booking: checkout not completed'
+        WHERE blind_booking = TRUE
+          AND status = 'confirmed'
+          AND photographer_id IS NULL
+          AND payment_status = 'pending'
+          AND created_at <= NOW() - INTERVAL '2 hours'
+        RETURNING id`
+    );
+    results.cancelled_unpaid = unpaid.length;
+    if (unpaid.length > 0) {
+      import("@/lib/telegram").then(({ sendTelegram }) =>
+        sendTelegram(
+          `<b>🧹 Cancelled ${unpaid.length} unpaid blind booking${unpaid.length === 1 ? "" : "s"}</b> (checkout abandoned, no Stripe hold)\n${unpaid.map((u) => `<code>${u.id.slice(0, 8)}</code>`).join(", ")}`,
+          "bookings"
+        )
+      ).catch(() => {});
+    }
+  } catch (err) {
+    results.errors.push(`unpaid sweep: ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   try {
     // Blind bookings are 'confirmed' status with photographer_id=NULL

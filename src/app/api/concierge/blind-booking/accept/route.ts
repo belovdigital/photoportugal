@@ -358,6 +358,11 @@ export async function POST(req: NextRequest) {
         mode: "payment",
         locale: locale === "en" ? "auto" : (locale as "pt" | "de" | "es" | "fr"),
         adaptive_pricing: { enabled: true },
+        // Blind bookings are pay-NOW by design (unlike standard bookings'
+        // 24h grace). 1h session: either they pay in this sitting or the
+        // session dies and the unpaid-blind cron cancels the row shortly
+        // after. Stripe minimum is 30 min.
+        expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
         line_items: [
           {
             price_data: {
@@ -391,6 +396,38 @@ export async function POST(req: NextRequest) {
       },
       { idempotencyKey: `blind_${booking.id}` }
     );
+
+    // Admin heads-up at CREATION time (fire-and-forget). Until 2026-07-07
+    // admins were only notified from the Stripe webhook AFTER payment, so
+    // a visitor who opened checkout and never paid was invisible — the
+    // blind booking sat in the admin queue with no ping. Now: TG + email
+    // immediately, explicitly marked "awaiting payment"; the webhook sends
+    // the louder "authorised — assign now" follow-up on payment.
+    {
+      const clientLabel = `${name.replace(/[<>]/g, "")} (${email})`;
+      const factsText = `${hold.occasion} · ${hold.region} · ${hold.date} · ${hold.party_size} ppl · ${hold.duration_minutes} min · €${hold.price_eur} all-in`;
+      import("@/lib/telegram").then(({ sendTelegram }) =>
+        sendTelegram(
+          `<b>🕐 Blind booking created — awaiting payment</b>\nBooking: <code>${booking.id}</code>\n${factsText}\nClient: ${clientLabel}\nNo Stripe hold yet — client is in checkout. If it never turns "authorised", they abandoned payment.\n<a href="https://photoportugal.com/admin">Open admin queue</a>`,
+          "bookings"
+        )
+      ).catch((err) => console.error("[blind-booking/accept] admin telegram error:", err));
+      import("@/lib/email").then(async ({ sendEmail, getAdminEmail }) => {
+        const adminEmail = await getAdminEmail();
+        if (!adminEmail) return;
+        await sendEmail(
+          adminEmail,
+          `🕐 Blind booking created (awaiting payment) — ${hold.occasion} in ${hold.region}`,
+          `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;">
+            <h2 style="color:#C94536;">Blind booking created — awaiting payment</h2>
+            <p><strong>${factsText}</strong></p>
+            <p>Client: ${clientLabel}<br/>Booking ID: <code>${booking.id}</code></p>
+            <p>No Stripe authorisation yet — the client is in checkout. A separate "authorised" notification follows if they complete payment.</p>
+            <p><a href="https://photoportugal.com/admin" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open admin queue</a></p>
+          </div>`
+        );
+      }).catch((err) => console.error("[blind-booking/accept] admin email error:", err));
+    }
 
     // Fire-and-forget welcome email if new user — they'll need to
     // reset password to actually log in later. Errors don't block.

@@ -224,6 +224,16 @@ async function handleAssignPhotographer(opts: {
     if (booking.photographer_id) {
       return NextResponse.json({ error: "Booking already has a photographer" }, { status: 400 });
     }
+    // Blind bookings are pay-first by design: without a paid auth-hold
+    // there is NOTHING to capture — assigning would book a photographer
+    // against zero money (near-miss on 2026-07-07 with an abandoned
+    // checkout that looked assignable in the admin queue).
+    if (booking.blind_booking && booking.payment_status !== "paid") {
+      return NextResponse.json(
+        { error: "Client hasn't completed checkout — no Stripe hold to capture. Wait for payment or let it auto-cancel." },
+        { status: 400 }
+      );
+    }
 
     const photographer = await queryOne<{ id: string; user_id: string; plan: string }>(
       `SELECT id, user_id, plan

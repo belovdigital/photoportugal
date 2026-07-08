@@ -752,6 +752,25 @@ function BlindAssignPanel({
   const matchedPgs = photographers.filter(matches);
   const otherPgs = photographers.filter((p) => !matches(p));
 
+  // Pay-first product: until Stripe holds the money there is nothing to
+  // capture — don't render assign controls that LOOK actionable (the
+  // 2026-07-07 abandoned checkout sat here with a live Assign button).
+  // The unpaid-blind cron cancels these ~2h after creation.
+  if (booking.payment_status !== "paid") {
+    return (
+      <div className="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          ⏳ Blind booking — checkout not completed
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          Client hasn&apos;t paid — no Stripe hold exists, so there&apos;s nothing to
+          assign or capture. Auto-cancels ~2h after creation if payment never
+          arrives. If they pay, this turns into the assign panel automatically.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-3 rounded-lg border border-amber-300 bg-white p-3">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">

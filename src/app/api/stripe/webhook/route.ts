@@ -654,6 +654,24 @@ export async function POST(req: NextRequest) {
               )
             ).catch((err) => console.error("[webhook] blind-booking telegram error:", err));
 
+            // Email duplicate of the TG ping — Telegram alone proved easy
+            // to miss (Alex, 2026-07-07); assignment has a 24h auto-refund
+            // deadline, so admins get both channels.
+            import("@/lib/email").then(async ({ sendEmail, getAdminEmail }) => {
+              const adminEmail = await getAdminEmail();
+              if (!adminEmail) return;
+              await sendEmail(
+                adminEmail,
+                `🎯 Blind booking AUTHORISED — assign within 24h`,
+                `<div style="font-family:sans-serif;max-width:540px;margin:0 auto;">
+                  <h2 style="color:#C94536;">Blind booking authorised — needs assignment</h2>
+                  <p>Booking ID: <code>${bookingId}</code><br/>Amount: ${amtLabel} (auth-hold, not captured)</p>
+                  <p><strong>Deadline: 24 hours</strong> to assign a photographer, otherwise the hold auto-refunds.</p>
+                  <p><a href="https://photoportugal.com/admin" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open admin queue</a></p>
+                </div>`
+              );
+            }).catch((err) => console.error("[webhook] blind-booking admin email error:", err));
+
             // Send client confirmation — INNER JOIN photographer_profiles
             // skips blind rows (audit finding #1), so we email here.
             import("@/lib/email").then(async ({ sendEmail }) => {
