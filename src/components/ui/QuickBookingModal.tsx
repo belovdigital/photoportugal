@@ -2,13 +2,14 @@
 
 import {
   createContext,
+  Suspense,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { LocationTreeSelect } from "@/components/ui/LocationTreeSelect";
 import DatePicker from "@/components/ui/DatePicker";
@@ -46,9 +47,33 @@ export function QuickBookingProvider({ children }: { children: React.ReactNode }
   return (
     <Ctx.Provider value={{ open, setOpen }}>
       {children}
+      <Suspense fallback={null}>
+        <QuickBookingDeepLink />
+      </Suspense>
       {open && <QuickBookingModalImpl onClose={() => setOpen(false)} />}
     </Ctx.Provider>
   );
+}
+
+// Deep link: ?quickbook=1 on ANY page opens the drawer — shareable URL for
+// ads/stories via the /quickbook redirect in middleware. The param is
+// stripped after opening so closing the modal doesn't leave a URL that
+// re-opens it on refresh/share. Separate component so useSearchParams'
+// Suspense requirement doesn't bail out the whole provider tree.
+function QuickBookingDeepLink() {
+  const { setOpen } = useQuickBookingModal();
+  const searchParams = useSearchParams();
+  const wantsOpen = searchParams.get("quickbook") === "1";
+  useEffect(() => {
+    if (!wantsOpen) return;
+    setOpen(true);
+    import("@/lib/analytics").then(({ trackCTAClick }) => trackCTAClick("quick_booking", "deeplink")).catch(() => {});
+    const url = new URL(window.location.href);
+    url.searchParams.delete("quickbook");
+    window.history.replaceState(null, "", url.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsOpen]);
+  return null;
 }
 
 export function QuickBookingTrigger({

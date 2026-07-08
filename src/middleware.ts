@@ -274,6 +274,18 @@ export default async function middleware(request: NextRequest) {
     return attachAbCookie(NextResponse.redirect(cleanUrl));
   }
 
+  // Shareable quick-booking deep link for ads/stories:
+  // /quickbook (any locale prefix) → homepage with ?quickbook=1, which
+  // auto-opens the QuickBooking drawer (see QuickBookingDeepLink).
+  // Other query params (utm_*) are carried through.
+  const quickbookMatch = pathname.match(/^\/(?:(pt|de|es|fr)\/)?quickbook\/?$/);
+  if (quickbookMatch) {
+    const url = new URL(quickbookMatch[1] ? `/${quickbookMatch[1]}` : "/", request.url);
+    request.nextUrl.searchParams.forEach((v, k) => url.searchParams.set(k, v));
+    url.searchParams.set("quickbook", "1");
+    return NextResponse.redirect(url, 302);
+  }
+
   // 301 redirect: /blog?page=N → /blog/page/N
   const blogMatch = pathname.match(/^(\/pt)?\/blog\/?$/);
   if (blogMatch && searchParams.get("page")) {
@@ -359,8 +371,11 @@ export default async function middleware(request: NextRequest) {
     const effectiveUrlLocale: "en" | "pt" | "de" | "es" | "fr" = urlLocale || "en";
 
     if (pathname === "/" && pref && pref !== "en") {
-      // Bare root → preferred non-EN locale
-      return attachAbCookie(NextResponse.redirect(new URL(`/${pref}`, request.url), 302));
+      // Bare root → preferred non-EN locale. Keep the query string —
+      // ?quickbook=1 (modal deep link) and utm_* must survive the hop.
+      const rootUrl = new URL(`/${pref}`, request.url);
+      rootUrl.search = request.nextUrl.search;
+      return attachAbCookie(NextResponse.redirect(rootUrl, 302));
     }
 
     if (urlLocale && pref && pref !== urlLocale) {
