@@ -203,7 +203,9 @@
     "megaFaqPhotographerDesc": "Perguntas frequentes de fotógrafos",
     "megaBlog": "Blog",
     "megaBlogDesc": "Dicas, guias e inspiração fotográfica",
-    "language": "Idioma"
+    "language": "Idioma",
+    "forBusiness": "Para Empresas",
+    "giftCardsDesc": "Ofereça uma sessão fotográfica em Portugal"
   },
   "footer": {
     "tagline": "A conectar viajantes com fotógrafos locais talentosos em todo o Portugal. Capture os seus momentos perfeitos.",
@@ -239,7 +241,8 @@
     "appSubtitle": "Explore fotógrafos, reserve sessões e faça tudo pelo telemóvel.",
     "soon": "Em breve",
     "appStoreAlt": "Descarregar na App Store",
-    "googlePlayAlt": "Obter no Google Play"
+    "googlePlayAlt": "Obter no Google Play",
+    "forBusiness": "Para Empresas"
   },
   "giftCardsPage": {
     "h1": "Ofereça uma sessão Photo Portugal",
@@ -1812,7 +1815,7 @@
     "bestPhotographers": "Melhores Fotógrafos para {name}",
     "minutesAbbr": "min",
     "photosLabel": "fotos",
-    "bookCta": "Reservar →",
+    "bookCta": "Reservar",
     "reviewsTitle": "Avaliações reais de sessões de {nameLower}",
     "reviewsSubtitleClients": "De clientes que reservaram através da Photo Portugal",
     "guidesTitle": "Guias de Fotografia {name}",
@@ -2917,7 +2920,14 @@
     "customProposalDurationRequired": "Indique uma duração válida em minutos.",
     "customProposalPhotosRequired": "Indique o número de fotos.",
     "customProposalBadge": "Proposta personalizada",
-    "backToChats": "Voltar aos chats"
+    "backToChats": "Voltar aos chats",
+    "videoCallStart": "Iniciar videochamada",
+    "videoCallYouStarted": "Iniciou uma videochamada",
+    "videoCallInvite": "{name} convida-o para uma videochamada",
+    "videoCallJoin": "Entrar na chamada",
+    "videoCallTranscript": "Transcrição da chamada",
+    "videoCallButton": "Videochamada",
+    "viewAvatar": "Ver foto"
   },
   "settings": {
     "title": "Definições",
@@ -3945,5 +3955,107 @@
     "text": "Super Oferta de Verão: sessão fotográfica <strong>desde {price} tudo incluído</strong> <was>€344</was> — reservamos um fotógrafo de topo por si",
     "cta": "Reservar em 60 seg",
     "dismiss": "Fechar"
+  },
+  "videoCall": {
+    "consentTitle": "Videochamada",
+    "consentText": "Para segurança de todos, as chamadas na Photo Portugal podem ser gravadas e transcritas. A transcrição fica anexada a esta conversa e a gravação é apagada logo de seguida. Ao entrar, concorda com isto.",
+    "agreeJoin": "Entrar na chamada",
+    "cancel": "Cancelar",
+    "connecting": "A ligar…",
+    "joinFailed": "Não foi possível entrar na chamada. Tente novamente."
+  },
+  "business": {
+    "metaTitle": "Photo Portugal para Empresas — Fotografia Corporativa e de Eventos",
+    "metaDescription": "Fotografia corporativa em todo o Portugal: eventos, conferências, retratos de equipa, conteúdo de marca. Um contrato, uma fatura, um gestor de conta pessoal. Orçamento num dia útil.",
+    "kicker": "para Empresas",
+    "heroTitle": "Fotografia profissional para a sua empresa, em qualquer ponto de Portugal",
+    "heroText": "Eventos, conferências, retratos de equipa, conteúdo de marca. Escolhemos a dedo fotógrafos verificados para o seu projeto e gerimos tudo — recebe um contrato, uma fatura e um gestor de conta pessoal, não uma pasta de freelancers.",
+    "heroCta": "Pedir orçamento",
+    "heroSla": "Respondemos num dia útil",
+    "howTitle": "Como funciona",
+    "how1Title": "Fale-nos do seu projeto",
+    "how1Text": "Envie o briefing — evento, datas, locais, entregáveis. Quem o lê é uma pessoa real, não um algoritmo.",
+    "how2Title": "Montamos a sua equipa",
+    "how2Text": "Escolhemos a dedo os fotógrafos verificados certos — um ou vários, numa cidade ou por todo o país — e coordenamo-los por si.",
+    "how3Title": "Um contrato, uma fatura",
+    "how3Text": "A Photo Portugal é a sua contraparte única: contrato, fatura com IVA, prazos de entrega e qualidade são connosco.",
+    "casesTitle": "O que fotografamos para empresas",
+    "cases": {
+      "eventsIcon": "🎉",
+      "eventsTitle": "Eventos corporativos",
+      "eventsText": "Festas de empresa, lançamentos, galas — cobertura completa com opção de destaques no próprio dia.",
+      "conferencesIcon": "🎤",
+      "conferencesTitle": "Conferências e summits",
+      "conferencesText": "Cobertura de vários dias com vários fotógrafos e edição consistente — das keynotes ao networking.",
+      "headshotsIcon": "👔",
+      "headshotsTitle": "Retratos de equipa",
+      "headshotsText": "Retratos profissionais consistentes no escritório, num evento ou em estúdio.",
+      "brandIcon": "📸",
+      "brandTitle": "Conteúdo de marca e produto",
+      "brandText": "Imagens para o site, campanhas e redes sociais — com direitos de uso definidos.",
+      "offsitesIcon": "🏖️",
+      "offsitesTitle": "Offsites e retiros",
+      "offsitesText": "Team-building, viagens de incentivo e retiros no Algarve, na Madeira e não só.",
+      "spacesIcon": "🏢",
+      "spacesTitle": "Espaços e hotelaria",
+      "spacesText": "Escritórios, hotéis, restaurantes e imobiliário — fotografia de arquitetura e interiores."
+    },
+    "casesFootnote": "Quer ver fotógrafos que fazem trabalho para empresas?",
+    "casesFootnoteLink": "Ver fotógrafos para empresas",
+    "whyTitle": "Porque é que as empresas escolhem a Photo Portugal",
+    "why": {
+      "singleTitle": "Contraparte única",
+      "singleText": "Um contrato e uma fatura com IVA, independentemente de quantos fotógrafos o projeto exigir.",
+      "vettedTitle": "Só fotógrafos verificados",
+      "vettedText": "Cada fotógrafo passa por revisão de portfólio e verificação de identidade antes de entrar na plataforma.",
+      "managerTitle": "Gestor de conta humano",
+      "managerText": "Uma pessoa real analisa o briefing, escolhe a equipa e mantém-se contactável até à entrega.",
+      "speedTitle": "Entrega rápida e fiável",
+      "speedText": "Galerias privadas, destaques no próprio dia para eventos, prazos escritos no contrato."
+    },
+    "formTitle": "Fale-nos do seu projeto",
+    "formSubtitle": "Voltamos com um orçamento num dia útil.",
+    "form": {
+      "company": "Empresa",
+      "companyPh": "Acme Lda.",
+      "contactName": "O seu nome",
+      "contactNamePh": "Maria Silva",
+      "email": "Email de trabalho",
+      "phone": "Telefone",
+      "eventType": "Do que precisa?",
+      "eventDate": "Data (se souber)",
+      "location": "Local",
+      "locationPh": "Lisboa, Algarve…",
+      "headcount": "Pessoas (aprox.)",
+      "message": "Mais alguma coisa que devamos saber?",
+      "messagePh": "Formato, entregáveis, prazos, requisitos especiais…",
+      "submit": "Enviar pedido",
+      "sending": "A enviar…",
+      "sla": "Sem spam, sem compromissos — uma pessoa real responde num dia útil.",
+      "submitFailed": "Não foi possível enviar o pedido. Tente novamente ou escreva para info@photoportugal.com.",
+      "thanksTitle": "Pedido recebido!",
+      "thanksText": "Obrigado — a nossa equipa responde num dia útil. Verifique a caixa de entrada (e o spam, por precaução).",
+      "types": {
+        "corporate_event": "Evento corporativo",
+        "conference": "Conferência / summit",
+        "team_headshots": "Retratos de equipa",
+        "brand_content": "Conteúdo de marca / produto",
+        "real_estate": "Espaços / imobiliário",
+        "other": "Outra coisa"
+      }
+    },
+    "band": {
+      "kicker": "Photo Portugal para Empresas",
+      "title": "Fotografia para empresas — eventos, equipas, marcas",
+      "text": "Um contrato, uma fatura, fotógrafos verificados em todo o Portugal. Um gestor de conta humano trata de tudo.",
+      "cta": "Pedir orçamento"
+    },
+    "profileCardTitle": "Para empresas",
+    "profileCardBlurb": "Evento corporativo, retratos de equipa ou conteúdo de marca? A nossa equipa de empresas analisa e envia um orçamento à medida — este fotógrafo incluído.",
+    "profileCardCta": "Pedir orçamento empresarial",
+    "heroTitleRich": "Fotografia profissional para a sua empresa, <accent>em qualquer ponto de Portugal</accent>",
+    "faqTitle": "Perguntas frequentes",
+    "trustPhotographers": "{count} fotógrafos verificados em todo o Portugal",
+    "faqFootnote": "Ainda tem dúvidas? Escreva-nos para"
   }
 }

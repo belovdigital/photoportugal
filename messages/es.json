@@ -203,7 +203,9 @@
     "megaFaqPhotographerDesc": "Preguntas frecuentes de los fotógrafos",
     "megaBlog": "Blog",
     "megaBlogDesc": "Consejos, guías e inspiración fotográfica",
-    "language": "Idioma"
+    "language": "Idioma",
+    "forBusiness": "Para Empresas",
+    "giftCardsDesc": "Regala una sesión de fotos en Portugal"
   },
   "footer": {
     "tagline": "Conectamos a viajeros con fotógrafos locales talentosos en todo Portugal. Capture sus momentos perfectos.",
@@ -239,7 +241,8 @@
     "appSubtitle": "Explore fotógrafos, reserve sesiones y gestione todo desde su teléfono.",
     "soon": "Pronto",
     "appStoreAlt": "Descargar en App Store",
-    "googlePlayAlt": "Disponible en Google Play"
+    "googlePlayAlt": "Disponible en Google Play",
+    "forBusiness": "Para Empresas"
   },
   "giftCardsPage": {
     "h1": "Regala una sesión Photo Portugal",
@@ -1586,7 +1589,7 @@
     "bestPhotographers": "Mejores fotógrafos para sesiones de {name}",
     "minutesAbbr": "min",
     "photosLabel": "fotos",
-    "bookCta": "Reservar →",
+    "bookCta": "Reservar",
     "reviewsTitle": "Reseñas reales de sesiones de {nameLower}",
     "reviewsSubtitleClients": "De clientes que reservaron a través de Photo Portugal",
     "guidesTitle": "Guías de fotografía de {name}",
@@ -3355,7 +3358,14 @@
     "customProposalDurationRequired": "Introduzca una duración válida en minutos.",
     "customProposalPhotosRequired": "Introduzca el número de fotos.",
     "customProposalBadge": "Propuesta personalizada",
-    "backToChats": "Volver a chats"
+    "backToChats": "Volver a chats",
+    "videoCallStart": "Iniciar videollamada",
+    "videoCallYouStarted": "Has iniciado una videollamada",
+    "videoCallInvite": "{name} te invita a una videollamada",
+    "videoCallJoin": "Unirse a la llamada",
+    "videoCallTranscript": "Transcripción de la llamada",
+    "videoCallButton": "Videollamada",
+    "viewAvatar": "Ver foto"
   },
   "settings": {
     "title": "Configuración",
@@ -3945,5 +3955,107 @@
     "text": "Súper Oferta de Verano: sesión de fotos <strong>desde {price} todo incluido</strong> <was>€344</was> — reservamos un fotógrafo top por ti",
     "cta": "Reserva en 60 seg",
     "dismiss": "Cerrar"
+  },
+  "videoCall": {
+    "consentTitle": "Videollamada",
+    "consentText": "Por la seguridad de todos, las llamadas en Photo Portugal pueden grabarse y transcribirse. La transcripción se adjunta a este chat y la grabación se elimina justo después. Al unirte, aceptas esto.",
+    "agreeJoin": "Unirse a la llamada",
+    "cancel": "Cancelar",
+    "connecting": "Conectando…",
+    "joinFailed": "No se pudo entrar en la llamada. Inténtalo de nuevo."
+  },
+  "business": {
+    "metaTitle": "Photo Portugal para Empresas — Fotografía Corporativa y de Eventos",
+    "metaDescription": "Fotografía corporativa en todo Portugal: eventos, conferencias, retratos de equipo, contenido de marca. Un contrato, una factura, un gestor de cuenta personal. Presupuesto en un día laborable.",
+    "kicker": "para Empresas",
+    "heroTitle": "Fotografía profesional para tu empresa, en cualquier punto de Portugal",
+    "heroText": "Eventos, conferencias, retratos de equipo, contenido de marca. Seleccionamos a mano fotógrafos verificados para tu proyecto y lo gestionamos todo — recibes un contrato, una factura y un gestor de cuenta personal, no una carpeta de freelancers.",
+    "heroCta": "Pedir presupuesto",
+    "heroSla": "Respondemos en un día laborable",
+    "howTitle": "Cómo funciona",
+    "how1Title": "Cuéntanos tu proyecto",
+    "how1Text": "Envía el briefing — evento, fechas, lugares, entregables. Lo lee una persona real, no un algoritmo.",
+    "how2Title": "Montamos tu equipo",
+    "how2Text": "Seleccionamos a mano los fotógrafos verificados adecuados — uno o varios, en una ciudad o por todo el país — y los coordinamos por ti.",
+    "how3Title": "Un contrato, una factura",
+    "how3Text": "Photo Portugal es tu contraparte única: contrato, factura con IVA, plazos de entrega y calidad corren de nuestra cuenta.",
+    "casesTitle": "Qué fotografiamos para empresas",
+    "cases": {
+      "eventsIcon": "🎉",
+      "eventsTitle": "Eventos corporativos",
+      "eventsText": "Fiestas de empresa, lanzamientos, galas — cobertura completa con opción de destacados el mismo día.",
+      "conferencesIcon": "🎤",
+      "conferencesTitle": "Conferencias y summits",
+      "conferencesText": "Cobertura de varios días con varios fotógrafos y edición consistente — de las keynotes al networking.",
+      "headshotsIcon": "👔",
+      "headshotsTitle": "Retratos de equipo",
+      "headshotsText": "Retratos profesionales consistentes en tu oficina, en un evento o en estudio.",
+      "brandIcon": "📸",
+      "brandTitle": "Contenido de marca y producto",
+      "brandText": "Imágenes para tu web, campañas y redes — con derechos de uso definidos.",
+      "offsitesIcon": "🏖️",
+      "offsitesTitle": "Offsites y retiros",
+      "offsitesText": "Team-building, viajes de incentivo y retiros en el Algarve, Madeira y más allá.",
+      "spacesIcon": "🏢",
+      "spacesTitle": "Espacios y hostelería",
+      "spacesText": "Oficinas, hoteles, restaurantes e inmobiliaria — fotografía de arquitectura e interiores."
+    },
+    "casesFootnote": "¿Quieres ver fotógrafos que hacen trabajo para empresas?",
+    "casesFootnoteLink": "Ver fotógrafos para empresas",
+    "whyTitle": "Por qué las empresas eligen Photo Portugal",
+    "why": {
+      "singleTitle": "Contraparte única",
+      "singleText": "Un contrato y una factura con IVA, da igual cuántos fotógrafos necesite tu proyecto.",
+      "vettedTitle": "Solo fotógrafos verificados",
+      "vettedText": "Cada fotógrafo pasa revisión de portafolio y verificación de identidad antes de entrar en la plataforma.",
+      "managerTitle": "Gestor de cuenta humano",
+      "managerText": "Una persona real analiza tu briefing, elige el equipo y sigue disponible hasta la entrega.",
+      "speedTitle": "Entrega rápida y fiable",
+      "speedText": "Galerías privadas, destacados el mismo día para eventos, plazos escritos en el contrato."
+    },
+    "formTitle": "Cuéntanos tu proyecto",
+    "formSubtitle": "Te enviaremos un presupuesto en un día laborable.",
+    "form": {
+      "company": "Empresa",
+      "companyPh": "Acme S.L.",
+      "contactName": "Tu nombre",
+      "contactNamePh": "María García",
+      "email": "Email de trabajo",
+      "phone": "Teléfono",
+      "eventType": "¿Qué necesitas?",
+      "eventDate": "Fecha (si la sabes)",
+      "location": "Lugar",
+      "locationPh": "Lisboa, Algarve…",
+      "headcount": "Personas (aprox.)",
+      "message": "¿Algo más que debamos saber?",
+      "messagePh": "Formato, entregables, plazos, requisitos especiales…",
+      "submit": "Enviar solicitud",
+      "sending": "Enviando…",
+      "sla": "Sin spam ni compromisos — una persona real responderá en un día laborable.",
+      "submitFailed": "No se pudo enviar la solicitud. Inténtalo de nuevo o escribe a info@photoportugal.com.",
+      "thanksTitle": "¡Solicitud recibida!",
+      "thanksText": "Gracias — nuestro equipo responderá en un día laborable. Revisa tu bandeja de entrada (y el spam, por si acaso).",
+      "types": {
+        "corporate_event": "Evento corporativo",
+        "conference": "Conferencia / summit",
+        "team_headshots": "Retratos de equipo",
+        "brand_content": "Contenido de marca / producto",
+        "real_estate": "Espacios / inmobiliaria",
+        "other": "Otra cosa"
+      }
+    },
+    "band": {
+      "kicker": "Photo Portugal para Empresas",
+      "title": "Fotografía para empresas — eventos, equipos, marcas",
+      "text": "Un contrato, una factura, fotógrafos verificados en todo Portugal. Un gestor de cuenta humano se encarga de todo.",
+      "cta": "Pedir presupuesto"
+    },
+    "profileCardTitle": "Para empresas",
+    "profileCardBlurb": "¿Evento corporativo, retratos de equipo o contenido de marca? Nuestro equipo de empresas lo valora y envía un presupuesto a medida — este fotógrafo incluido.",
+    "profileCardCta": "Pedir presupuesto de empresa",
+    "heroTitleRich": "Fotografía profesional para tu empresa, <accent>en cualquier punto de Portugal</accent>",
+    "faqTitle": "Preguntas frecuentes",
+    "trustPhotographers": "{count} fotógrafos verificados en todo Portugal",
+    "faqFootnote": "¿Aún tienes preguntas? Escríbenos a"
   }
 }
