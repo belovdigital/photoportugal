@@ -153,6 +153,12 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // /.well-known/* (agent-skills index, api-catalog, openapi.json…) is
+  // machine-facing and must never be locale-redirected or geo-routed.
+  if (pathname.startsWith("/.well-known/")) {
+    return NextResponse.next();
+  }
+
   const host = (request.headers.get("host") || "").split(":")[0].toLowerCase();
   const isLensPt = host === "lens.pt" || host === "www.lens.pt";
 

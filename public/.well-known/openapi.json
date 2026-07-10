@@ -1,0 +1,100 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Photo Portugal — public machine-readable content API",
+    "description": "Read-only interface for AI agents. Key public pages of photoportugal.com serve Markdown via content negotiation (Accept: text/markdown); the same URLs serve HTML to browsers. There is no autonomous booking API — bookings are completed by humans at the URLs the content links to.",
+    "version": "1.0.0",
+    "contact": { "email": "info@photoportugal.com" }
+  },
+  "servers": [{ "url": "https://photoportugal.com" }],
+  "paths": {
+    "/llms.txt": {
+      "get": {
+        "summary": "Site overview for AI agents (llms.txt)",
+        "responses": {
+          "200": { "description": "Plain-text site overview with links to all machine-readable sections", "content": { "text/plain": {} } }
+        }
+      }
+    },
+    "/photographers": {
+      "get": {
+        "summary": "List all photographers",
+        "parameters": [{ "$ref": "#/components/parameters/AcceptMarkdown" }],
+        "responses": { "200": { "description": "Photographer directory. Markdown when requested with Accept: text/markdown, HTML otherwise.", "content": { "text/markdown": {}, "text/html": {} } } }
+      }
+    },
+    "/photographers/{slug}": {
+      "get": {
+        "summary": "One photographer profile: packages, EUR prices, languages, locations, rating",
+        "parameters": [{ "$ref": "#/components/parameters/Slug" }, { "$ref": "#/components/parameters/AcceptMarkdown" }],
+        "responses": {
+          "200": { "description": "Profile page. Markdown when requested with Accept: text/markdown.", "content": { "text/markdown": {}, "text/html": {} } },
+          "404": { "description": "Unknown photographer slug" }
+        }
+      }
+    },
+    "/locations": {
+      "get": {
+        "summary": "List photoshoot locations with photographer counts and starting prices",
+        "parameters": [{ "$ref": "#/components/parameters/AcceptMarkdown" }],
+        "responses": { "200": { "description": "Locations index.", "content": { "text/markdown": {}, "text/html": {} } } }
+      }
+    },
+    "/locations/{slug}": {
+      "get": {
+        "summary": "Photographers covering one location",
+        "parameters": [{ "$ref": "#/components/parameters/Slug" }, { "$ref": "#/components/parameters/AcceptMarkdown" }],
+        "responses": {
+          "200": { "description": "Location page.", "content": { "text/markdown": {}, "text/html": {} } },
+          "404": { "description": "Unknown location slug" }
+        }
+      }
+    },
+    "/photoshoots": {
+      "get": {
+        "summary": "List photoshoot types (couple, family, wedding, …)",
+        "parameters": [{ "$ref": "#/components/parameters/AcceptMarkdown" }],
+        "responses": { "200": { "description": "Shoot types index.", "content": { "text/markdown": {}, "text/html": {} } } }
+      }
+    },
+    "/photoshoots/{type}": {
+      "get": {
+        "summary": "Photographers for one shoot type",
+        "parameters": [
+          { "name": "type", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/AcceptMarkdown" }
+        ],
+        "responses": {
+          "200": { "description": "Shoot-type page.", "content": { "text/markdown": {}, "text/html": {} } },
+          "404": { "description": "Unknown shoot type" }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Service health",
+        "responses": {
+          "200": { "description": "Service and database are up", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" }, "db": { "type": "string" } } } } } },
+          "503": { "description": "Database unreachable" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "AcceptMarkdown": {
+        "name": "Accept",
+        "in": "header",
+        "required": false,
+        "description": "Set to text/markdown to receive Markdown instead of HTML",
+        "schema": { "type": "string", "example": "text/markdown" }
+      },
+      "Slug": {
+        "name": "slug",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+      }
+    }
+  }
+}

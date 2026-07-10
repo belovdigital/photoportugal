@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "find-photographer",
+      "type": "skill-md",
+      "description": "Find professional photographers in Portugal by location, shoot type, language and budget. Use when a user wants a photoshoot in Lisbon, Algarve, Porto, Madeira or anywhere in Portugal and needs photographer options with packages and EUR prices.",
+      "url": "/.well-known/agent-skills/find-photographer/SKILL.md",
+      "digest": "sha256:425c999a89264b20b6078e5d7ee77056022947db88de9b754e4cf0efb4dabfa8"
+    },
+    {
+      "name": "quick-booking",
+      "type": "skill-md",
+      "description": "Book a photoshoot in Portugal without choosing a photographer — Photo Portugal hand-picks a vetted one within 24 hours of payment. Use when the user wants the fastest or cheapest all-inclusive option instead of comparing portfolios.",
+      "url": "/.well-known/agent-skills/quick-booking/SKILL.md",
+      "digest": "sha256:c5c9a043174067701df83f5b49cac9060416d1bfc7c7b589e53cff9e35486f0a"
+    }
+  ]
+}
