@@ -19,6 +19,7 @@ import { ReviewsPaginated } from "@/components/ui/ReviewsPaginated";
 import { ProfileTabs } from "@/components/ui/ProfileTabs";
 import { PackageCard } from "@/components/ui/PackageCard";
 import { RequestCustomPackageCard } from "@/components/ui/RequestCustomPackageCard";
+import { BusinessQuoteCard } from "@/components/ui/BusinessQuoteCard";
 import { localeAlternates } from "@/lib/seo";
 import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
@@ -1100,6 +1101,15 @@ export default async function PhotographerProfilePage({
                         mobile snap row and the desktop vertical stack.
                         Hidden for photographers (no use case) and in gift
                         mode (would muddy the redemption flow). */}
+                    {/* Business quote pseudo-card — render-only, no DB row.
+                        The 'Business' shoot type is the photographer's
+                        opt-out switch (on by default for everyone). Sits
+                        BEFORE the custom-package card (Alex's ordering). */}
+                    {!viewerIsPhotographer && !giftCard && photographer.shoot_types?.includes("Business") && (
+                      <div className="snap-center shrink-0 w-[78vw] max-w-[340px] lg:w-auto lg:max-w-none">
+                        <BusinessQuoteCard photographerSlug={photographer.slug} />
+                      </div>
+                    )}
                     {!viewerIsPhotographer && !giftCard && (
                       <div className="snap-center shrink-0 w-[78vw] max-w-[340px] lg:w-auto lg:max-w-none">
                         <RequestCustomPackageCard

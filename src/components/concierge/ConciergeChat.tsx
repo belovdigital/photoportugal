@@ -15,22 +15,29 @@ function humanizeSlug(s: string): string {
 }
 
 /** Render the very small markdown subset the GPT concierge actually emits:
- *  `**bold**`, `*italic*`, line breaks. Everything else passes through as
- *  plain text. Pulling in a full markdown library for this is overkill. */
+ *  `**bold**`, `*italic*`, `[label](/internal-path)` links, line breaks.
+ *  Links are INTERNAL-ONLY (href must start with "/") — the LLM must never
+ *  be able to emit a clickable external URL. Everything else passes through
+ *  as plain text. Pulling in a full markdown library for this is overkill. */
 function renderInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
-  // Match **bold** first (greedy is fine — the regex is lazy via `?`),
-  // then *italic*. Order matters: ** must be tried before *.
-  const re = /(\*\*([^*]+?)\*\*|\*([^*\n]+?)\*)/g;
+  // Order matters: [link](…) first, then **bold**, then *italic*.
+  const re = /(\[([^\]\n]+)\]\((\/[^)\s]*)\)|\*\*([^*]+?)\*\*|\*([^*\n]+?)\*)/g;
   let last = 0;
   let m: RegExpExecArray | null;
   let key = 0;
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
-    if (m[2] !== undefined) {
-      parts.push(<strong key={key++}>{m[2]}</strong>);
-    } else if (m[3] !== undefined) {
-      parts.push(<em key={key++}>{m[3]}</em>);
+    if (m[2] !== undefined && m[3] !== undefined) {
+      parts.push(
+        <a key={key++} href={m[3]} className="font-medium text-primary-700 underline underline-offset-2 hover:text-primary-800">
+          {m[2]}
+        </a>
+      );
+    } else if (m[4] !== undefined) {
+      parts.push(<strong key={key++}>{m[4]}</strong>);
+    } else if (m[5] !== undefined) {
+      parts.push(<em key={key++}>{m[5]}</em>);
     }
     last = m.index + m[0].length;
   }

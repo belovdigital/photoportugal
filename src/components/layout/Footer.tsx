@@ -229,6 +229,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href={"/for-business" as never} className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
+                  {t("forBusiness")}
+                </Link>
+              </li>
+              <li>
                 <Link href="/privacy" className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block">
                   {t("privacyPolicy")}
                 </Link>

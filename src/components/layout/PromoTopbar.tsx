@@ -14,7 +14,9 @@ import { trackCTAClick } from "@/lib/analytics";
 // (dashboard/admin/delivery/auth), and on photographer PROFILE pages where
 // it would divert a visitor already sold on a specific photographer to the
 // cheaper blind offer. Catalog/locations/blog keep it — that's discovery.
-const HIDDEN_PREFIXES = ["/dashboard", "/admin", "/book", "/delivery", "/auth", "/try-yourself", "/gift"];
+// /for-business is hidden too: a B2B visitor reading "custom quote, one
+// invoice" shouldn't see a consumer €279 discount banner above it.
+const HIDDEN_PREFIXES = ["/dashboard", "/admin", "/book", "/delivery", "/auth", "/try-yourself", "/gift", "/for-business"];
 // photographers|fotografen|fotografos|photographes + one more segment = profile
 const PROFILE_RE = /^\/(photographers|fotografen|fotografos|photographes)\/[^/]+/;
 

@@ -160,7 +160,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // dedicated /weddings landing (see next.config.ts), which is in
   // staticPages above.
   const shootTypePages = shootTypes
-    .filter((type) => type.slug !== "wedding")
+    .filter((type) => type.slug !== "wedding" && type.slug !== "business")
     .flatMap((type) =>
       localized(`/photoshoots/${type.slug}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.8 })
     );

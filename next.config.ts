@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https: http:",
   "font-src 'self' https://fonts.gstatic.com https://js.intercomcdn.com https://fonts.intercomcdn.com https://api.mapbox.com",
-  "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://www.google.com https://googleads.g.doubleclick.net https://api.stripe.com https://api-iam.intercom.io https://nexus-websocket-a.intercom.io https://*.clarity.ms https://c.bing.com https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com wss: blob:",
+  "connect-src 'self' https://meet.photoportugal.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://www.google.com https://googleads.g.doubleclick.net https://api.stripe.com https://api-iam.intercom.io https://nexus-websocket-a.intercom.io https://*.clarity.ms https://c.bing.com https://api.mapbox.com https://events.mapbox.com https://*.tiles.mapbox.com wss: blob:",
   "worker-src 'self' blob:",
   "child-src blob:",
   "frame-src https://js.stripe.com https://hooks.stripe.com https://intercom-sheets.com https://www.intercom-reporting.com",
@@ -100,6 +100,14 @@ const nextConfig: NextConfig = {
       { source: "/de/fotoshootings/wedding", destination: "/de/hochzeiten", permanent: true },
       { source: "/es/sesiones-de-fotos/wedding", destination: "/es/bodas", permanent: true },
       { source: "/fr/seances-photo/wedding", destination: "/fr/mariages", permanent: true },
+      // Business shoot type consolidates into the /for-business landing —
+      // the generic shoot-type template (consumer hero, summer offer,
+      // couple packages) is wrong for a B2B audience.
+      { source: "/photoshoots/business", destination: "/for-business", permanent: true },
+      { source: "/pt/photoshoots/business", destination: "/pt/for-business", permanent: true },
+      { source: "/de/fotoshootings/business", destination: "/de/for-business", permanent: true },
+      { source: "/es/sesiones-de-fotos/business", destination: "/es/for-business", permanent: true },
+      { source: "/fr/seances-photo/business", destination: "/fr/for-business", permanent: true },
     ];
   },
   async headers() {

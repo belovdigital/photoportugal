@@ -14,7 +14,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
 import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
-import { Compass, Search, ShieldCheck, HelpCircle, Users, Mail, LifeBuoy, MapPin, Heart, UserRound, Baby, Gem, Sparkles, Sun, UserPlus, CreditCard, Camera, BookOpen, TreePine, PartyPopper, Cake } from "lucide-react";
+import { Compass, Search, ShieldCheck, HelpCircle, Users, Mail, LifeBuoy, MapPin, Heart, UserRound, Baby, Gem, Sparkles, Sun, UserPlus, CreditCard, Camera, BookOpen, TreePine, PartyPopper, Cake, Gift } from "lucide-react";
 
 const TOP_DESTINATIONS = [
   { slug: "lisbon", name: "Lisbon", img: "photo-1536663060084-a0d9eeeaf44b" },
@@ -144,16 +144,15 @@ export function Header() {
               </Link>
             )}
 
-            {/* Gift Cards — hidden for photographers (they don't buy gifts for clients) */}
-            {!isPhotographer && (
-              <Link
-                href="/gift-cards"
-                onClick={() => trackCTAClick("gift_cards", "header_desktop")}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition ${isActive("/gift-cards") ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50 hover:text-primary-600"}`}
-              >
-                🎁 {t("giftCards")}
-              </Link>
-            )}
+            {/* For Business — B2B inquiries (events, corporate, brand content).
+                Gift Cards moved into the Explore dropdown to make room. */}
+            <Link
+              href={"/for-business" as never}
+              onClick={() => trackCTAClick("for_business", "header_desktop")}
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${isActive("/for-business") ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50 hover:text-primary-600"}`}
+            >
+              {t("forBusiness")}
+            </Link>
 
             {/* Destinations dropdown */}
             <div className="relative">
@@ -278,17 +277,10 @@ export function Header() {
                     </svg>
                   </Link>
                 )}
-                <Link href="/dashboard/bookings" aria-label={t("bookings")} className="relative rounded-lg p-2 text-gray-500 transition hover:bg-warm-50 hover:text-gray-700">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {notifications.pending_bookings > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-600 px-1 text-[9px] font-bold text-white">
-                      {notifications.pending_bookings}
-                    </span>
-                  )}
-                </Link>
-
+                {/* Bookings calendar icon moved into the avatar dropdown
+                    (2026-07-10, header decluttering). The pending-bookings
+                    badge migrates to the avatar button so the signal isn't
+                    lost. */}
                 <Link href="/dashboard/messages" aria-label={t("messages")} className="relative rounded-lg p-2 text-gray-500 transition hover:bg-warm-50 hover:text-gray-700">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -301,13 +293,18 @@ export function Header() {
                 </Link>
 
                 <div className="relative" ref={profileRef}>
-                  <button onClick={() => setProfileOpen(!profileOpen)} aria-label={t("accountMenu")} className="flex items-center rounded-full p-1 transition hover:bg-warm-50">
+                  <button onClick={() => setProfileOpen(!profileOpen)} aria-label={t("accountMenu")} className="relative flex items-center rounded-full p-1 transition hover:bg-warm-50">
                     {user.image ? (
                       <Avatar src={user.image} fallback={user.name ?? "U"} size="sm" />
                     ) : (
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">
                         {user.name?.charAt(0) ?? "U"}
                       </div>
+                    )}
+                    {notifications.pending_bookings > 0 && (
+                      <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-600 px-1 text-[9px] font-bold text-white">
+                        {notifications.pending_bookings}
+                      </span>
                     )}
                   </button>
 
@@ -319,6 +316,7 @@ export function Header() {
                       </div>
                       <div className="py-1">
                         <DropdownLink href="/dashboard" icon="grid" label={t("dashboard")} onClick={() => setProfileOpen(false)} />
+                        <DropdownLink href="/dashboard/bookings" icon="calendar" label={t("bookings")} badge={notifications.pending_bookings} onClick={() => setProfileOpen(false)} />
                         {isPhotographer && (
                           <DropdownLink href="/dashboard/profile" icon="user" label={t("myProfile")} onClick={() => setProfileOpen(false)} />
                         )}
@@ -484,6 +482,15 @@ export function Header() {
                         <p className="text-xs text-gray-400">{t("megaContactDesc")}</p>
                       </div>
                     </Link>
+                    {!isPhotographer && (
+                      <Link href="/gift-cards" onClick={() => { trackCTAClick("gift_cards", "header_mega"); setActiveMenu(null); }} className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-warm-50">
+                        <Gift className="h-[18px] w-[18px] shrink-0 text-gray-400 transition group-hover:text-primary-600" strokeWidth={1.5} />
+                        <div>
+                          <p className="text-sm font-medium text-gray-800 group-hover:text-primary-600 transition">{t("giftCards")}</p>
+                          <p className="text-xs text-gray-400">{t("giftCardsDesc")}</p>
+                        </div>
+                      </Link>
+                    )}
                   </div>
                 </div>
 
@@ -703,6 +710,7 @@ export function Header() {
               {!isPhotographer && (
                 <MobileNavLink href="/weddings" label={`💍 ${t("weddings")}`} onClick={() => { trackCTAClick("weddings", "header_mobile"); setMobileOpen(false); }} />
               )}
+              <MobileNavLink href="/for-business" label={`${t("forBusiness")}`} onClick={() => { trackCTAClick("for_business", "header_mobile"); setMobileOpen(false); }} />
               {!isPhotographer && (
                 <MobileNavLink href="/gift-cards" label={`🎁 ${t("giftCards")}`} onClick={() => { trackCTAClick("gift_cards", "header_mobile"); setMobileOpen(false); }} />
               )}
@@ -757,11 +765,16 @@ function MobileDashLink({ href, label, onClick }: { href: string; label: string;
   );
 }
 
-function DropdownLink({ href, icon, label, onClick }: { href: string; icon: string; label: string; onClick: () => void }) {
+function DropdownLink({ href, icon, label, badge, onClick }: { href: string; icon: string; label: string; badge?: number; onClick: () => void }) {
   return (
     <Link href={href} onClick={onClick} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 transition hover:bg-warm-50">
       <DropdownIcon type={icon} />
       {label}
+      {!!badge && badge > 0 && (
+        <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-600 px-1 text-[9px] font-bold text-white">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -773,6 +786,7 @@ function DropdownIcon({ type }: { type: string }) {
     case "user": return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>;
     case "settings": return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
     case "logout": return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
+    case "calendar": return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
     default: return null;
   }
 }

@@ -24,6 +24,7 @@ export const SHOOT_TYPES = [
   "Studio Portrait",
   "Content Creator",
   "Fashion",
+  "Business",
 ] as const;
 
 export type ShootType = (typeof SHOOT_TYPES)[number];

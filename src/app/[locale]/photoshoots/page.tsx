@@ -288,7 +288,7 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
                 >
                   {/* Photo + overlay header */}
                   <Link
-                    href={type.slug === "wedding" ? "/weddings" : `/photoshoots/${type.slug}`}
+                    href={type.slug === "wedding" ? "/weddings" : type.slug === "business" ? "/for-business" : `/photoshoots/${type.slug}`}
                     className="relative block aspect-[4/3] overflow-hidden bg-gray-900"
                   >
                     {photo ? (

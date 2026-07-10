@@ -10,6 +10,7 @@ import { LocationCard } from "@/components/ui/LocationCard";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { TestimonialsSection } from "@/components/ui/TestimonialsSection";
 import { ShootTypesSection } from "@/components/ui/ShootTypesSection";
+import { ForBusinessBand } from "@/components/ui/ForBusinessBand";
 import { WeddingBand } from "@/components/ui/WeddingBand";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
@@ -674,6 +675,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {/* ===== SHOOT TYPES ===== */}
       <ShootTypesSection />
+
+      {/* ===== FOR BUSINESS ===== */}
+      <ForBusinessBand />
 
       {/* ===== LOCATIONS ===== */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
