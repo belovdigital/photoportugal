@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
           const newMessages = await query<{ id: string; created_at: string; translated_at: string | null }>(
             `SELECT m.id, m.text, m.media_url, m.sender_id, m.created_at, m.read_at,
                     m.detected_language, m.translated_text, m.translated_to_lang, m.translated_at,
+                    COALESCE(m.is_system, FALSE) as is_system,
                     u.name as sender_name, u.avatar_url as sender_avatar
              FROM messages m
              JOIN users u ON u.id = m.sender_id

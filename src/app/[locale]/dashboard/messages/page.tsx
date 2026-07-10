@@ -13,6 +13,10 @@ import { useSwipeNavigation } from "@/lib/use-swipe";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import imageCompression from "browser-image-compression";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import nextDynamic from "next/dynamic";
+
+// LiveKit bundle is heavy — load only when a call is actually opened.
+const VideoCallModal = nextDynamic(() => import("./VideoCallModal"), { ssr: false });
 
 // In-chat link rendering. Pre-payment, only links to known map domains
 // (Google Maps, Apple Maps, goo.gl/maps) are clickable — this lets the
@@ -91,6 +95,12 @@ function formatLastMessagePreview(text: string | null, deleted = false): string 
   }
   if (text.startsWith("REVIEW_REQUEST:")) {
     return "⭐ How was your photoshoot?";
+  }
+  if (text.startsWith("VIDEO_CALL:")) {
+    return "📹 Video call";
+  }
+  if (text.startsWith("CALL_TRANSCRIPT:")) {
+    return "📝 Call transcript";
   }
   if (text.startsWith("DATE_PROPOSAL:")) {
     try {
@@ -297,6 +307,11 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
   // client actually looks like before the shoot. Tap on chat header avatar
   // → full-screen modal.
   const [zoomedAvatar, setZoomedAvatar] = useState<{ src: string; name: string } | null>(null);
+  // Video call: null = closed; creds present when we started the call
+  // ourselves (token already minted by action=start), null creds when
+  // joining from a card (modal mints its own token after consent).
+  const [videoCall, setVideoCall] = useState<{ creds: { token: string; url: string } | null } | null>(null);
+  const [startingCall, setStartingCall] = useState(false);
   // Hide-suggestions toggle (mobile-first). When true the contextual chips
   // and AI freeform suggestions stop rendering — the photographer keeps the
   // tiny intent strip but the full reply panel collapses, giving them back
@@ -312,6 +327,25 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
       try { window.localStorage.setItem("chat_suggestions_hidden", next ? "1" : "0"); } catch {}
       return next;
     });
+  }
+
+  async function startVideoCall() {
+    if (!activeChat || startingCall) return;
+    setStartingCall(true);
+    try {
+      const res = await fetch("/api/video-call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ booking_id: activeChat, action: "start" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setVideoCall({ creds: { token: data.token, url: data.url } });
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to start video call");
+    } finally {
+      setStartingCall(false);
+    }
   }
   const [loadingPackages, setLoadingPackages] = useState(false);
   // Custom-proposal sub-flow inside the package picker. When the
@@ -1379,6 +1413,18 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                       </span>
                     </span>
                   )}
+                  <button
+                    type="button"
+                    onClick={startVideoCall}
+                    disabled={startingCall}
+                    title={t("videoCallStart")}
+                    className="flex h-8 items-center gap-1.5 rounded-full bg-gradient-to-r from-primary-600 to-primary-500 px-3 text-white shadow-sm transition hover:from-primary-700 hover:to-primary-600 disabled:opacity-50"
+                  >
+                    <svg className={`h-4 w-4 ${startingCall ? "animate-pulse" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    <span className="hidden text-xs font-bold sm:inline">{t("videoCallButton")}</span>
+                  </button>
                   {activeConvo?.other_role === "client" && (
                     <button
                       type="button"
@@ -1468,6 +1514,71 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
 
                       // System messages — centered, different style
                       if (msg.is_system) {
+                        // Video call card — join opens the embedded LiveKit modal.
+                        // Cards older than 2h (the join-token TTL) collapse to a
+                        // quiet one-liner: an old call is history, not an invite.
+                        if (msg.text?.startsWith("VIDEO_CALL:")) {
+                          const startedByMe = msg.sender_id === userId;
+                          const callerFirstName = (msg.sender_name || "").split(" ")[0];
+                          const isStale = Date.now() - new Date(msg.created_at).getTime() > 2 * 60 * 60 * 1000;
+                          const when = new Date(msg.created_at).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+                          if (isStale) {
+                            return (
+                              <div key={msg.id} className="flex justify-center my-2">
+                                <p className="text-[11px] text-gray-400">
+                                  📹 {startedByMe ? t("videoCallYouStarted") : t("videoCallInvite", { name: callerFirstName })} · {when}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div key={msg.id} className="flex justify-center my-3">
+                              <div className="max-w-[90%] sm:max-w-[70%] rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 to-white p-5 text-center shadow-sm">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 to-primary-400 text-white shadow">
+                                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                                  </svg>
+                                </div>
+                                <p className="mt-2 text-base font-bold text-gray-900">
+                                  {startedByMe
+                                    ? t("videoCallYouStarted")
+                                    : t("videoCallInvite", { name: callerFirstName })}
+                                </p>
+                                <p className="mt-1 text-xs text-gray-500">{when}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => setVideoCall({ creds: null })}
+                                  className="mt-3 inline-block rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-700 transition"
+                                >
+                                  {t("videoCallJoin")}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+                        // Call transcript — collapsed by default, both sides see it
+                        if (msg.text?.startsWith("CALL_TRANSCRIPT:")) {
+                          try {
+                            const payload = JSON.parse(msg.text.slice("CALL_TRANSCRIPT:".length));
+                            return (
+                              <div key={msg.id} className="flex justify-center my-3">
+                                <details className="max-w-[90%] sm:max-w-[70%] w-full rounded-2xl border border-warm-200 bg-warm-50/60 px-4 py-3 shadow-sm">
+                                  <summary className="cursor-pointer text-sm font-semibold text-gray-700">
+                                    📝 {t("videoCallTranscript")}
+                                    <span className="ml-2 text-[11px] font-normal text-gray-400">
+                                      {new Date(payload.at || msg.created_at).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })}
+                                    </span>
+                                  </summary>
+                                  <p className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-gray-600">
+                                    {payload.text}
+                                  </p>
+                                </details>
+                              </div>
+                            );
+                          } catch {
+                            // fall through
+                          }
+                        }
                         // Delivery card
                         if (msg.text?.startsWith("DELIVERY:")) {
                           const parts = msg.text!.split(":");
@@ -2287,6 +2398,15 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
           )}
         </div>
       </div>
+
+      {/* Embedded video call (LiveKit) — consent screen inside the modal */}
+      {videoCall && activeChat && (
+        <VideoCallModal
+          bookingId={activeChat}
+          initialToken={videoCall.creds}
+          onClose={() => setVideoCall(null)}
+        />
+      )}
 
       {/* Avatar zoom modal — tap on chat header avatar to see the other
           person's photo at a meaningful size. We pick a square container
