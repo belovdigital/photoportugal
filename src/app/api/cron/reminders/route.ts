@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
     shootReminders: 0,
     sessionReminders: 0,
     deliveryReminders: 0,
+    clientAcceptReminders: 0,
     deliveryEscalations: 0,
     deliveryAutoRefunds: 0,
     autoReleasedPayments: 0,
@@ -1272,6 +1273,95 @@ export async function GET(req: NextRequest) {
     }
   } catch (err) {
     results.errors.push(`Retry payouts query: ${err}`);
+  }
+
+  // === 3d. Client accept-delivery reminders (5d + 12d after delivery) ===
+  // Clients who never press "Accept delivery" freeze the escrow — the
+  // photographer stays unpaid (Bob Freese, 457 photos, 2026-07-08).
+  // delivered_at isn't stored, but it's always delivery_expires_at − 90d
+  // (see /api/bookings/[id]/delivery): delivered ≥5d ago ⇔ expires ≤
+  // NOW()+85d. At the 12d stage both flags are stamped so an old backlog
+  // gets ONE email, not two back-to-back.
+  try {
+    const pendingAccepts = await query<{
+      id: string;
+      stage: string;
+      client_email: string;
+      client_name: string;
+      photographer_name: string;
+      delivery_token: string;
+      password: string | null;
+      expires: string;
+      photos: number;
+    }>(
+      `SELECT b.id,
+              CASE WHEN b.delivery_expires_at <= NOW() + INTERVAL '78 days' THEN '12d' ELSE '5d' END as stage,
+              cu.email as client_email, cu.name as client_name,
+              pu.name as photographer_name,
+              b.delivery_token, b.delivery_password_plain as password,
+              b.delivery_expires_at::date::text as expires,
+              (SELECT COUNT(*)::int FROM delivery_photos dp WHERE dp.booking_id = b.id) as photos
+         FROM bookings b
+         JOIN users cu ON cu.id = b.client_id
+         JOIN photographer_profiles pp ON pp.id = b.photographer_id
+         JOIN users pu ON pu.id = pp.user_id
+        WHERE b.status = 'delivered'
+          AND b.delivery_accepted = FALSE
+          AND b.delivery_token IS NOT NULL
+          AND b.delivery_expires_at IS NOT NULL
+          AND (
+            (b.delivery_accept_reminder_12d_sent = FALSE AND b.delivery_expires_at <= NOW() + INTERVAL '78 days')
+            OR
+            (b.delivery_accept_reminder_5d_sent = FALSE AND b.delivery_expires_at <= NOW() + INTERVAL '85 days')
+          )
+        LIMIT 25`
+    );
+
+    for (const b of pendingAccepts) {
+      try {
+        // Stamp BEFORE sending so an SMTP failure can't double-send.
+        await queryOne(
+          b.stage === "12d"
+            ? "UPDATE bookings SET delivery_accept_reminder_5d_sent = TRUE, delivery_accept_reminder_12d_sent = TRUE WHERE id = $1 RETURNING id"
+            : "UPDATE bookings SET delivery_accept_reminder_5d_sent = TRUE WHERE id = $1 RETURNING id",
+          [b.id]
+        );
+
+        const first = (b.client_name || "there").split(" ")[0];
+        const url = `https://photoportugal.com/delivery/${b.delivery_token}`;
+        const isFinal = b.stage === "12d";
+        const p = (t: string) => `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#2A2A2A;">${t}</p>`;
+        const html = `
+          <div style="max-width:560px;margin:0 auto;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 16px;font-size:16px;color:#1F1F1F;">Hi ${first},</p>
+            ${isFinal
+              ? p(`A quick heads-up — your gallery of <strong>${b.photos} photos</strong> from ${b.photographer_name} is still waiting for you, and it stays online until <strong>${b.expires}</strong>. Don't lose your photos!`)
+              : p(`Just a friendly reminder — your <strong>${b.photos} photos</strong> from ${b.photographer_name} are ready and waiting for you 🎉`)}
+            ${p(`When you have a moment, please open the gallery and press <strong>“Accept delivery”</strong> — that tells us you're happy with the photos and releases the payment to your photographer.`)}
+            <p style="margin:0 0 8px;">
+              <a href="${url}" style="display:inline-block;background:#C94536;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Open my gallery</a>
+            </p>
+            ${b.password ? `<p style="margin:0 0 16px;font-size:13px;color:#6B6B6B;">Gallery password: <strong>${b.password}</strong></p>` : ""}
+            ${p(`You can download everything in original quality any time before <strong>${b.expires}</strong>. If anything's not right with the photos, just reply to this email — we're here to help.`)}
+            <p style="margin:0;font-size:13px;color:#9B8E82;">Photo Portugal Team — photoportugal.com</p>
+          </div>`;
+
+        await queueNotification({
+          channel: "email",
+          recipient: b.client_email,
+          subject: isFinal
+            ? `Reminder: your gallery expires ${b.expires} — accept your ${b.photos} photos`
+            : `Your ${b.photos} photos are waiting — one click to accept 📸`,
+          body: html,
+          dedupKey: `delivery_accept_${b.stage}:${b.id}`,
+        });
+        results.clientAcceptReminders++;
+      } catch (err) {
+        results.errors.push(`Accept reminder for booking ${b.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Accept reminders query: ${err}`);
   }
 
   // === 4. Review request chat from Kate (3h after delivery accepted) ===

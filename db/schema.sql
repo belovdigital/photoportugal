@@ -244,6 +244,8 @@ CREATE TABLE bookings (
   payment_reminder_sent BOOLEAN DEFAULT FALSE,
   shoot_reminder_sent BOOLEAN DEFAULT FALSE,
   delivery_reminder_sent BOOLEAN DEFAULT FALSE,
+  delivery_accept_reminder_5d_sent BOOLEAN DEFAULT FALSE,
+  delivery_accept_reminder_12d_sent BOOLEAN DEFAULT FALSE,
   review_requested BOOLEAN DEFAULT FALSE,
   review_chat_sent BOOLEAN DEFAULT FALSE,
   review_sms_sent BOOLEAN DEFAULT FALSE,
