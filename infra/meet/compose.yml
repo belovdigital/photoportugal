@@ -1,0 +1,34 @@
+# Photo Portugal video-call stack. Isolated from /opt/games (the games
+# project) — do not merge. Host networking is required for WebRTC ICE.
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    network_mode: host
+    command: redis-server --bind 127.0.0.1 --port 6379 --maxmemory 128mb
+    mem_limit: 192m
+
+  livekit:
+    image: livekit/livekit-server:v1.8
+    restart: unless-stopped
+    network_mode: host
+    command: --config /etc/livekit.yaml
+    volumes:
+      - ./livekit-with-keys.yaml:/etc/livekit.yaml:ro
+    mem_limit: 1g
+    depends_on:
+      - redis
+
+  egress:
+    image: livekit/egress:v1.9
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - EGRESS_CONFIG_FILE=/etc/egress.yaml
+    volumes:
+      - ./egress-with-keys.yaml:/etc/egress.yaml:ro
+      - ./recordings:/out
+    mem_limit: 1200m
+    depends_on:
+      - redis
+      - livekit

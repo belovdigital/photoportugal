@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 import { queryOne } from "@/lib/db";
 import { detectContactInfo } from "@/lib/content-filter";
 import { sendTelegram } from "@/lib/telegram";
@@ -7,35 +6,37 @@ import { notifyPairMessage } from "@/lib/chat-notify";
 
 export const dynamic = "force-dynamic";
 
-interface SpeakerBlock {
+interface Entry {
   identity: string;
-  started_at_ms: number;
+  t: number; // absolute epoch seconds of utterance start
   text: string;
 }
 
 // POST /api/video-call/transcript?secret=<CRON_SECRET>
-// { room: "pp-<client8>-<photog8>", speakers: [{identity, started_at_ms, text}] }
+// { room: "pp-<client8>-<photog8>", entries: [{identity, t, text}] }
 // (legacy fallback: { room, text } — single mixed blob, no speakers)
 //
 // Called by transcribe.sh on the meet server. Each speaker's track is
-// transcribed separately (good ASR, correct attribution) but WebRTC drops
-// silence, so per-file timestamps can't reliably interleave the dialogue —
-// instead a small LLM pass reconstructs chronological turn order from the
-// content, with per-file start times as a hint. The combined text runs
-// through the anti-disintermediation content filter — this is the control
-// that lets us allow calls BEFORE payment.
+// transcribed with WORD-level timestamps; the egress start epoch anchors
+// every word on a shared wall clock (verified: LiveKit track egress
+// preserves real-time gaps). Utterances are ordered by their real start
+// time — no turn-taking assumption, no LLM guessing: simultaneous speech
+// comes out as adjacent lines ordered by who started first, exactly like
+// Zoom renders call transcripts. The combined text runs through the
+// anti-disintermediation content filter — this is the control that lets us
+// allow calls BEFORE payment.
 export async function POST(req: NextRequest) {
   if (req.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
-  const { room, speakers, text } = body as { room?: string; speakers?: SpeakerBlock[]; text?: string };
-  const blocks = (Array.isArray(speakers) ? speakers : []).filter(
-    (s) => s && typeof s.text === "string" && s.text.trim()
+  const { room, entries, text } = body as { room?: string; entries?: Entry[]; text?: string };
+  const list = (Array.isArray(entries) ? entries : []).filter(
+    (e) => e && typeof e.text === "string" && e.text.trim()
   );
-  if (typeof room !== "string" || (blocks.length === 0 && !text?.trim())) {
-    return NextResponse.json({ error: "room and speakers (or text) required" }, { status: 400 });
+  if (typeof room !== "string" || (list.length === 0 && !text?.trim())) {
+    return NextResponse.json({ error: "room and entries (or text) required" }, { status: 400 });
   }
   const m = room.match(/^pp-([0-9a-f]{8})-([0-9a-f]{8})$/);
   if (!m) {
@@ -74,44 +75,19 @@ export async function POST(req: NextRequest) {
   };
 
   let composed: string;
-  if (blocks.length > 0) {
-    const named = [...blocks]
-      .sort((a, b) => (a.started_at_ms || 0) - (b.started_at_ms || 0))
-      .map((b) => ({ name: nameFor(b.identity), offsetSec: Math.round(((b.started_at_ms || 0) - (blocks[0].started_at_ms || 0)) / 1000), text: b.text.trim() }));
-
-    // Naive fallback: speaker blocks in join order
-    composed = named.map((b) => `${b.name}: ${b.text}`).join("\n");
-
-    if (named.length >= 2 && process.env.OPENAI_API_KEY) {
-      try {
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        const res = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          temperature: 0.2,
-          max_tokens: 4000,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You reconstruct a phone-call dialogue. You get each speaker's OWN transcript (recorded on separate tracks from one call) plus the seconds offset when they joined. Interleave the utterances into the most plausible chronological dialogue: split each transcript into natural turns and order them so questions precede answers and reactions follow what they react to. Fix obvious speech-recognition errors (wrong homophones, broken words) conservatively; NEVER invent content that is not there; keep the original language of the speech; keep fillers only when meaningful. Output ONLY the dialogue, one utterance per line, formatted exactly as 'Name: utterance'. Use the speaker names as given.",
-            },
-            {
-              role: "user",
-              content: named
-                .map((b) => `[${b.name}, joined at +${b.offsetSec}s]\n${b.text}`)
-                .join("\n\n"),
-            },
-          ],
-        });
-        const out = res.choices[0]?.message?.content?.trim();
-        // Sanity: accept only if it looks like a dialogue mentioning our speakers
-        if (out && named.every((b) => out.includes(`${b.name}:`))) {
-          composed = out;
-        }
-      } catch (e) {
-        console.error("[transcript] dialogue reconstruction failed, using fallback:", e);
+  if (list.length > 0) {
+    const sorted = [...list].sort((a, b) => (a.t || 0) - (b.t || 0));
+    const lines: { name: string; text: string }[] = [];
+    for (const e of sorted) {
+      const name = nameFor(e.identity);
+      const last = lines[lines.length - 1];
+      if (last && last.name === name) {
+        last.text += " " + e.text.trim();
+      } else {
+        lines.push({ name, text: e.text.trim() });
       }
     }
+    composed = lines.map((l) => `${l.name}: ${l.text}`).join("\n");
   } else {
     composed = text!.trim();
   }
@@ -157,5 +133,5 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ ok: true, speakers: blocks.length, contact_flag: contactType || null });
+  return NextResponse.json({ ok: true, utterances: list.length, contact_flag: contactType || null });
 }

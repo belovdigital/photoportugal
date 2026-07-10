@@ -13,8 +13,12 @@ export function detectContactInfo(text: string): string | null {
     { regex: /www\.[^\s]+/i, type: "website link" },
     // Common social handles
     { regex: /@[a-zA-Z0-9_]{3,}(?:\s|$)/i, type: "social media handle" },
-    // WhatsApp/Telegram mentions
-    { regex: /\b(whatsapp|telegram|viber|signal)\b/i, type: "messaging app reference" },
+    // WhatsApp/Telegram/Instagram mentions — latin AND cyrillic spellings.
+    // Cyrillic matters for call transcripts: a spoken "напишите мне в
+    // инстаграм" slipped past the latin-only list (staged Alex↔Kate test
+    // call, 2026-07-10).
+    { regex: /\b(whatsapp|telegram|viber|signal|instagram|insta)\b/i, type: "messaging app reference" },
+    { regex: /(инстаграм|инстограм|ватсап|вотсап|вацап|уотсап|телеграм|вайбер|директ)/i, type: "messaging app reference" },
   ];
 
   for (const { regex, type } of patterns) {

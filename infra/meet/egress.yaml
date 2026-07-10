@@ -1,0 +1,7 @@
+# LiveKit egress — audio-only room recordings for call transcripts.
+# Files land in /out (host: /opt/photoportugal-meet/recordings), get
+# transcribed by transcribe.sh (cron) and deleted. Never uploaded anywhere.
+redis:
+  address: 127.0.0.1:6379
+ws_url: ws://127.0.0.1:7880
+log_level: info
