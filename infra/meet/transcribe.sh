@@ -58,17 +58,34 @@ for room in $rooms; do
     start_ms=$(echo "$base" | awk -F'__' '{print $3}' | sed 's/\.ogg$//')
 
     resp="$WORK/${base}.stt.json"
-    curl -sS --max-time 300 https://api.openai.com/v1/audio/transcriptions \
-      -H "Authorization: Bearer $OPENAI_API_KEY" \
-      -F "file=@$f;type=audio/ogg" -F model=whisper-1 \
-      -F response_format=verbose_json -F "timestamp_granularities[]=word" \
-      -o "$resp" 2>>"$LOG"
+    if [ -n "${DEEPGRAM_API_KEY:-}" ]; then
+      # Deepgram nova-3: better RU/echo robustness than whisper-1, cheaper,
+      # native utterance timestamps. language=multi handles code-switching.
+      curl -sS --max-time 300 \
+        "https://api.deepgram.com/v1/listen?model=nova-3&language=multi&smart_format=true&punctuate=true&utterances=true" \
+        -H "Authorization: Token $DEEPGRAM_API_KEY" \
+        -H "Content-Type: audio/ogg" \
+        --data-binary "@$f" -o "$resp" 2>>"$LOG"
+      echo "deepgram" > "$WORK/${base}.stt.engine"
+    else
+      curl -sS --max-time 300 https://api.openai.com/v1/audio/transcriptions \
+        -H "Authorization: Bearer $OPENAI_API_KEY" \
+        -F "file=@$f;type=audio/ogg" -F model=whisper-1 \
+        -F response_format=verbose_json -F "timestamp_granularities[]=word" \
+        -o "$resp" 2>>"$LOG"
+      echo "whisper" > "$WORK/${base}.stt.engine"
+    fi
 
     ok=$(python3 -c "
 import json
 try:
     d=json.load(open('$resp'))
-    print('yes' if ((d.get('words') or []) or (d.get('text') or '').strip()) else 'no')
+    if 'results' in d:  # deepgram
+        u = (d.get('results') or {}).get('utterances') or []
+        alt = (((d.get('results') or {}).get('channels') or [{}])[0].get('alternatives') or [{}])[0]
+        print('yes' if (u or (alt.get('transcript') or '').strip()) else 'no')
+    else:  # whisper
+        print('yes' if ((d.get('words') or []) or (d.get('text') or '').strip()) else 'no')
 except Exception:
     print('no')
 ")
@@ -88,6 +105,23 @@ entries_path, resp_path, identity, start_ms = sys.argv[1:5]
 entries = json.load(open(entries_path))
 d = json.load(open(resp_path))
 epoch = int(start_ms) / 1000.0
+
+if "results" in d:
+    # Deepgram: utterances carry real start times within the track.
+    utts = (d.get("results") or {}).get("utterances") or []
+    if utts:
+        for u in utts:
+            txt = (u.get("transcript") or "").strip()
+            if txt:
+                entries.append({"identity": identity, "t": epoch + float(u.get("start") or 0), "text": txt})
+    else:
+        alt = (((d.get("results") or {}).get("channels") or [{}])[0].get("alternatives") or [{}])[0]
+        txt = (alt.get("transcript") or "").strip()
+        if txt:
+            entries.append({"identity": identity, "t": epoch, "text": txt})
+    json.dump(entries, open(entries_path, "w"))
+    sys.exit(0)
+
 words = d.get("words") or []
 if words:
     # Group words into utterances: same speaker file, gap < 2s between words.
