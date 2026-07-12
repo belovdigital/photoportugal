@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
+import { isBotUserAgent, isSuspectedBotSession } from "@/lib/bot-detect";
 
 function getDeviceType(ua: string): string {
   if (/tablet|ipad/i.test(ua)) return "tablet";
   if (/mobile|iphone|android.*mobile/i.test(ua)) return "mobile";
   return "desktop";
-}
-
-function isBot(ua: string): boolean {
-  return /bot|crawler|spider|googlebot|bingbot|yandex|baidu|duckduck/i.test(ua);
 }
 
 // Google Ads sometimes sends UTM params with duplicate comma-joined values
@@ -34,7 +31,7 @@ export async function POST(req: NextRequest) {
     if (!visitor_id || !session_id) return NextResponse.json({ ok: true });
 
     const ua = req.headers.get("user-agent") || "";
-    if (isBot(ua)) return NextResponse.json({ ok: true });
+    if (isBotUserAgent(ua)) return NextResponse.json({ ok: true });
 
     // Rate limit: skip if this visitor created 5+ sessions in last hour (bot/scraper)
     const recentSessions = await queryOne<{ count: string }>(
@@ -50,11 +47,14 @@ export async function POST(req: NextRequest) {
     const initialPageview = JSON.stringify([{ path: landing_page || "/", ts: new Date().toISOString() }]);
 
     const abHero = ab_hero === "A" || ab_hero === "B" ? ab_hero : null;
+    // Stealth scrapers (spoofed browser UA) are still recorded, but
+    // flagged so admin analytics can exclude them — see lib/bot-detect.
+    const suspectedBot = isSuspectedBotSession({ userAgent: ua, screenWidth: screen_width, language: acceptLang });
     await queryOne(
-      `INSERT INTO visitor_sessions (id, visitor_id, referrer, utm_source, utm_medium, utm_campaign, utm_term, gclid, landing_page, user_agent, device_type, country, language, screen_width, pageviews, pageview_count, ab_hero)
-       VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, 1, $16)
+      `INSERT INTO visitor_sessions (id, visitor_id, referrer, utm_source, utm_medium, utm_campaign, utm_term, gclid, landing_page, user_agent, device_type, country, language, screen_width, pageviews, pageview_count, ab_hero, is_bot)
+       VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, 1, $16, $17)
        ON CONFLICT (id) DO NOTHING`,
-      [session_id, visitor_id, referrer || null, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null, landing_page || null, ua.slice(0, 500), deviceType, country, acceptLang, screen_width || null, initialPageview, abHero]
+      [session_id, visitor_id, referrer || null, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null, landing_page || null, ua.slice(0, 500), deviceType, country, acceptLang, screen_width || null, initialPageview, abHero, suspectedBot]
     );
 
     return NextResponse.json({ ok: true });

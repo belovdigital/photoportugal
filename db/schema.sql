@@ -629,3 +629,8 @@ ALTER TABLE delivery_photos ADD COLUMN IF NOT EXISTS is_peek BOOLEAN NOT NULL DE
 -- the booking came from the Quick Booking form with no concierge chat.
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS visitor_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_visitor_sessions_visitor_id ON visitor_sessions(visitor_id);
+
+-- 2026-07-12: stealth-scraper flag (db/visitor-sessions-bot-flag.sql).
+-- Admin analytics exclude rows where is_bot AND user_id IS NULL; ingest
+-- classification lives in src/lib/bot-detect.ts.
+ALTER TABLE visitor_sessions ADD COLUMN IF NOT EXISTS is_bot BOOLEAN NOT NULL DEFAULT FALSE;

@@ -25,6 +25,12 @@ export async function GET(req: Request) {
   const roleFilter = url.searchParams.get("role") || "all";
   const countryFilter = url.searchParams.get("country") || "all";
 
+  // Flagged stealth scrapers (see lib/bot-detect) are excluded from every
+  // number on this dashboard. Sessions that later linked to a signed-in
+  // user are exempt — a real person matching the fleet signature stays
+  // visible once they log in.
+  const NOT_BOT = "NOT (COALESCE(is_bot, FALSE) AND user_id IS NULL)";
+
   // Summary stats
   const [summary, summaryPrev] = await Promise.all([
     queryOne<{ sessions: string; visitors: string; linked: string; avg_pages: string; avg_duration: string }>(`
@@ -34,32 +40,39 @@ export async function GET(req: Request) {
              ROUND(AVG(pageview_count), 1)::text as avg_pages,
              ROUND(AVG(EXTRACT(EPOCH FROM last_activity_at - started_at) / 60), 1)::text as avg_duration
       FROM visitor_sessions
-      WHERE started_at >= NOW() - INTERVAL '30 days'
+      WHERE started_at >= NOW() - INTERVAL '30 days' AND ${NOT_BOT}
     `),
     queryOne<{ sessions: string; visitors: string }>(`
       SELECT COUNT(*) as sessions, COUNT(DISTINCT visitor_id) as visitors
       FROM visitor_sessions
-      WHERE started_at >= NOW() - INTERVAL '60 days' AND started_at < NOW() - INTERVAL '30 days'
+      WHERE started_at >= NOW() - INTERVAL '60 days' AND started_at < NOW() - INTERVAL '30 days' AND ${NOT_BOT}
     `),
   ]);
+
+  // Bot volume (30d) — shown as a muted "hidden" note in the admin UI.
+  const botStats = await queryOne<{ sessions: string }>(`
+    SELECT COUNT(*) as sessions
+    FROM visitor_sessions
+    WHERE started_at >= NOW() - INTERVAL '30 days' AND COALESCE(is_bot, FALSE) AND user_id IS NULL
+  `);
 
   // Today stats
   const today = await queryOne<{ sessions: string; visitors: string }>(`
     SELECT COUNT(*) as sessions, COUNT(DISTINCT visitor_id) as visitors
-    FROM visitor_sessions WHERE started_at >= CURRENT_DATE
+    FROM visitor_sessions WHERE started_at >= CURRENT_DATE AND ${NOT_BOT}
   `);
 
   // Device breakdown
   const devices = await query<{ device_type: string; count: string }>(`
     SELECT COALESCE(device_type, 'unknown') as device_type, COUNT(*)::text as count
-    FROM visitor_sessions WHERE started_at >= NOW() - INTERVAL '30 days'
+    FROM visitor_sessions WHERE started_at >= NOW() - INTERVAL '30 days' AND ${NOT_BOT}
     GROUP BY device_type ORDER BY count DESC
   `);
 
   // Country breakdown
   const countries = await query<{ country: string; count: string }>(`
     SELECT COALESCE(country, '??') as country, COUNT(*)::text as count
-    FROM visitor_sessions WHERE started_at >= NOW() - INTERVAL '30 days'
+    FROM visitor_sessions WHERE started_at >= NOW() - INTERVAL '30 days' AND ${NOT_BOT}
     GROUP BY country ORDER BY count DESC LIMIT 15
   `);
 
@@ -81,14 +94,14 @@ export async function GET(req: Request) {
       'Direct'
     ) as source,
     COUNT(*)::text as count
-    FROM visitor_sessions WHERE started_at >= NOW() - INTERVAL '30 days'
+    FROM visitor_sessions WHERE started_at >= NOW() - INTERVAL '30 days' AND ${NOT_BOT}
     GROUP BY source ORDER BY count DESC LIMIT 10
   `);
 
   // Top landing pages
   const landingPages = await query<{ page: string; count: string }>(`
     SELECT COALESCE(landing_page, '/') as page, COUNT(*)::text as count
-    FROM visitor_sessions WHERE started_at >= NOW() - INTERVAL '30 days'
+    FROM visitor_sessions WHERE started_at >= NOW() - INTERVAL '30 days' AND ${NOT_BOT}
     GROUP BY landing_page ORDER BY count DESC LIMIT 15
   `);
 
@@ -104,13 +117,10 @@ export async function GET(req: Request) {
        )`
     : "";
 
-  const botFilter = `AND vs.user_agent NOT ILIKE '%googlebot%'
-    AND vs.user_agent NOT ILIKE '%AdsBot%'
-    AND vs.user_agent NOT ILIKE '%Mediapartners%'
-    AND vs.user_agent NOT ILIKE '%bingbot%'
-    AND vs.user_agent NOT ILIKE '%AhrefsBot%'
-    AND vs.user_agent NOT ILIKE '%SemrushBot%'
-    AND vs.user_agent NOT ILIKE '%HeadlessChrome%'
+  // is_bot covers both self-identified crawlers (historical rows — new ones
+  // are no longer inserted at all) and flagged stealth fleets. The velocity
+  // rule stays as a live catch-all for anything not yet classified.
+  const botFilter = `AND NOT (COALESCE(vs.is_bot, FALSE) AND vs.user_id IS NULL)
     ${hiddenUserSql}
     AND vs.visitor_id NOT IN (
       SELECT visitor_id FROM visitor_sessions
@@ -233,7 +243,7 @@ export async function GET(req: Request) {
            COUNT(*)::text as sessions,
            COUNT(DISTINCT visitor_id)::text as visitors
     FROM visitor_sessions
-    WHERE ${seriesWhere} ${excludePartial}
+    WHERE ${seriesWhere} ${excludePartial} AND ${NOT_BOT}
     GROUP BY DATE_TRUNC('${seriesBucket}', started_at)
     ORDER BY day ASC
   `);
@@ -282,6 +292,7 @@ export async function GET(req: Request) {
       linked: parseInt(summary?.linked || "0"),
       avgPages: parseFloat(summary?.avg_pages || "0"),
       avgDuration: parseFloat(summary?.avg_duration || "0"),
+      botSessions: parseInt(botStats?.sessions || "0"),
     },
     today: {
       sessions: parseInt(today?.sessions || "0"),

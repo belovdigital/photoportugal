@@ -236,7 +236,7 @@ const ANALYTICS_TABS = [
 ] as const;
 
 interface VisitorData {
-  summary: { sessions: number; sessionsPrev: number; visitors: number; visitorsPrev: number; linked: number; avgPages: number; avgDuration: number };
+  summary: { sessions: number; sessionsPrev: number; visitors: number; visitorsPrev: number; linked: number; avgPages: number; avgDuration: number; botSessions?: number };
   today: { sessions: number; visitors: number };
   devices: { device_type: string; count: string }[];
   countries: { country: string; count: string }[];
@@ -995,7 +995,14 @@ export function VisitorsTab({ recentOnly = false, hideRecent = false }: { recent
       {/* Recent Sessions */}
       {!hideRecent && <div>
         <div className="mb-3">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Recent Visitors</h3>
+          <div className="flex items-baseline justify-between mb-2">
+            <h3 className="text-sm font-semibold text-gray-700">Recent Visitors</h3>
+            {(vd.summary.botSessions ?? 0) > 0 && (
+              <span className="text-[11px] text-gray-400" title="Flagged scraper/crawler sessions excluded from all numbers on this tab">
+                🤖 {vd.summary.botSessions!.toLocaleString()} bot sessions hidden (30d)
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-1.5">
             {[
               { key: "all", label: "All", icon: "👥" },

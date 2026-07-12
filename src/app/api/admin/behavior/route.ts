@@ -42,6 +42,9 @@ export async function GET(req: Request) {
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
   const where = resolveWhere(period, from, to);
+  // Exclude flagged bot sessions (stealth scrapers etc. — see lib/bot-detect)
+  // unless they later linked to a signed-in user.
+  const notBot = "NOT (COALESCE(is_bot, FALSE) AND user_id IS NULL)";
 
   try {
     const [flows, landingPages, dropOff] = await Promise.all([
@@ -58,6 +61,7 @@ export async function GET(req: Request) {
           AND jsonb_typeof(vs.pageviews) = 'array'
           AND jsonb_array_length(vs.pageviews) >= 2
           AND vs.user_agent NOT ILIKE '%bot%'
+          AND ${notBot}
         GROUP BY sequence
         HAVING COUNT(*) >= 2
         ORDER BY COUNT(*) DESC
@@ -69,7 +73,7 @@ export async function GET(req: Request) {
                COUNT(*)::text as sessions,
                COUNT(*) FILTER (WHERE pageview_count <= 1)::text as bounced
         FROM visitor_sessions
-        WHERE ${where} AND landing_page IS NOT NULL
+        WHERE ${where} AND landing_page IS NOT NULL AND ${notBot}
         GROUP BY landing_page
         HAVING COUNT(*) >= 3
         ORDER BY COUNT(*) DESC
@@ -90,6 +94,7 @@ export async function GET(req: Request) {
             AND jsonb_array_length(vs.pageviews) >= 2
             AND vs.pageview_count >= 2
             AND vs.user_agent NOT ILIKE '%bot%'
+            AND ${notBot}
         )
         SELECT from_page, COUNT(*)::text as count
         FROM last_pages
