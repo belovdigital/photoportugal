@@ -68,6 +68,49 @@ export function calculatePayment(packagePrice: number | string, plan: string) {
 }
 
 /**
+ * Admin-Telegram payout message with the full money split. Numbers come
+ * from the booking row (actuals, not re-derived theory): commission is
+ * base − payout as actually transferred; service fee is the stored
+ * column. NUMERIC columns arrive as strings from pg — everything is
+ * Number()-coerced here. Lines that can't be computed are omitted
+ * rather than guessed.
+ */
+export function payoutBreakdownTelegram(opts: {
+  payout: number;
+  base: number | string | null;
+  serviceFee: number | string | null;
+  plan: string | null;
+  photographerName: string;
+  clientName: string;
+  bookingId: string;
+  note?: string;
+}): string {
+  const eur = (n: number) => `€${n.toFixed(2)}`;
+  const lines = [
+    `💸 <b>Отправили фотографу</b> ${eur(opts.payout)}${opts.note ? ` (${opts.note})` : ""}`,
+    `${opts.photographerName} · ${opts.clientName}`,
+  ];
+  const base = opts.base != null ? Number(opts.base) : null;
+  if (base && base > 0) {
+    const commission = Math.round((base - opts.payout) * 100) / 100;
+    if (commission >= 0) {
+      const pct = Math.round((commission / base) * 1000) / 10;
+      const planLabel = opts.plan ? `, план ${opts.plan}` : "";
+      const fee = opts.serviceFee != null ? Number(opts.serviceFee) : null;
+      if (fee != null && fee > 0) {
+        const ourTotal = Math.round((fee + commission) * 100) / 100;
+        lines.push(`Клиент заплатил ${eur(Math.round((base + fee) * 100) / 100)} = база ${eur(base)} + сбор ${eur(fee)}`);
+        lines.push(`Нам ${eur(ourTotal)}: сбор ${eur(fee)} + комиссия ${eur(commission)} (${pct}%${planLabel})`);
+      } else {
+        lines.push(`База ${eur(base)}, наша комиссия ${eur(commission)} (${pct}%${planLabel})`);
+      }
+    }
+  }
+  lines.push(`Букинг: <code>${opts.bookingId.slice(-8)}</code>`);
+  return lines.join("\n");
+}
+
+/**
  * Mint a one-time-use percent-off Stripe promotion code as a thank-you for
  * leaving a review. Code stays valid for 12 months. Returns the human-readable
  * code (REVIEW-XXXX...) plus the underlying Stripe promotionCode.id so the

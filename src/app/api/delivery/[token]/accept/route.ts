@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { queryOne, withTransaction } from "@/lib/db";
-import { requireStripe, calculatePayment } from "@/lib/stripe";
+import { requireStripe, calculatePayment, payoutBreakdownTelegram } from "@/lib/stripe";
 import { sendDeliveryAcceptedToPhotographer, sendDeliveryAcceptedToClient } from "@/lib/email";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
 import { auth } from "@/lib/auth";
@@ -27,6 +27,7 @@ export async function POST(
     gift_card_id: string | null;
     total_price: number | null;
     payout_amount: number | null;
+    service_fee: number | null;
     payout_transferred: boolean;
     photographer_stripe_id: string | null;
     photographer_stripe_ready: boolean;
@@ -40,7 +41,7 @@ export async function POST(
   }>(
     `SELECT b.id, b.gift_recipient_user_id, b.delivery_password, b.delivery_expires_at,
             b.delivery_accepted, b.payment_status, b.stripe_payment_intent_id, b.gift_card_id,
-            b.total_price, b.payout_amount, b.payout_transferred, b.delivery_password_plain,
+            b.total_price, b.payout_amount, b.service_fee, b.payout_transferred, b.delivery_password_plain,
             pp.stripe_account_id as photographer_stripe_id,
             pp.stripe_onboarding_complete as photographer_stripe_ready,
             pp.plan as photographer_plan,
@@ -215,7 +216,15 @@ export async function POST(
             // Dashboard, so notify directly from here).
             import("@/lib/telegram").then(({ sendTelegram }) => {
               sendTelegram(
-                `💸 <b>Отправили фотографу</b> €${payoutAmount!.toFixed(2)}\n${booking.photographer_name} · ${booking.client_name}\nБукинг: <code>${booking.id.slice(-8)}</code>`,
+                payoutBreakdownTelegram({
+                  payout: payoutAmount!,
+                  base: booking.total_price,
+                  serviceFee: booking.service_fee,
+                  plan: booking.photographer_plan,
+                  photographerName: booking.photographer_name,
+                  clientName: booking.client_name,
+                  bookingId: booking.id,
+                }),
                 "stripe"
               );
             }).catch(() => {});
@@ -265,8 +274,15 @@ export async function POST(
 
   // Telegram: notify admin of delivery acceptance
   import("@/lib/telegram").then(({ sendTelegram }) => {
-    const estimatedPayout = booking.payout_amount ? Number(booking.payout_amount) : (booking.total_price ? Math.round(booking.total_price * 0.8) : 0);
-    sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${Math.round(estimatedPayout)}` : ""}`, "bookings");
+    const payout = booking.payout_amount
+      ? Number(booking.payout_amount)
+      : (booking.total_price ? calculatePayment(booking.total_price, booking.photographer_plan).photographerPayout : 0);
+    const base = booking.total_price != null ? Number(booking.total_price) : null;
+    const fee = booking.service_fee != null ? Number(booking.service_fee) : 0;
+    const ourCut = base != null && payout > 0 && base - payout >= 0
+      ? Math.round((base - payout + fee) * 100) / 100
+      : null;
+    sendTelegram(`✅ <b>Delivery Accepted!</b>\n\n${booking.client_name} accepted photos from ${booking.photographer_name}${payoutSuccess ? `\nPayout: €${payout.toFixed(2)}${ourCut != null ? ` · нам €${ourCut.toFixed(2)}` : ""}` : ""}`, "bookings");
   }).catch((err) => console.error("[delivery/accept] telegram admin error:", err));
 
   // Telegram: notify photographer of delivery acceptance

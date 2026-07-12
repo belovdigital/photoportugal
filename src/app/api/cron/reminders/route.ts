@@ -17,7 +17,7 @@ import {
 import { sendSMS } from "@/lib/sms";
 import { maskSurname } from "@/lib/photographer-name";
 import { queueNotification, processNotificationQueue } from "@/lib/notification-queue";
-import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
+import { requireStripe, calculatePayment, SERVICE_FEE_RATE, payoutBreakdownTelegram } from "@/lib/stripe";
 import { rm } from "fs/promises";
 import path from "path";
 
@@ -1010,6 +1010,7 @@ export async function GET(req: NextRequest) {
       id: string;
       total_price: number | null;
       payout_amount: number | null;
+      service_fee: number | null;
       payout_transferred: boolean;
       stripe_payment_intent_id: string | null;
       photographer_stripe_id: string | null;
@@ -1020,7 +1021,7 @@ export async function GET(req: NextRequest) {
       client_email: string;
       client_name: string;
     }>(
-      `SELECT b.id, b.total_price, b.payout_amount, b.payout_transferred,
+      `SELECT b.id, b.total_price, b.payout_amount, b.service_fee, b.payout_transferred,
               b.stripe_payment_intent_id,
               pp.stripe_account_id as photographer_stripe_id,
               pp.stripe_onboarding_complete as photographer_stripe_ready,
@@ -1095,6 +1096,21 @@ export async function GET(req: NextRequest) {
                   ).catch(() => {});
                   throw transferErr;
                 }
+                import("@/lib/telegram").then(({ sendTelegram }) =>
+                  sendTelegram(
+                    payoutBreakdownTelegram({
+                      payout: payoutAmount!,
+                      base: booking.total_price,
+                      serviceFee: booking.service_fee,
+                      plan: booking.photographer_plan,
+                      photographerName: booking.photographer_name,
+                      clientName: booking.client_name,
+                      bookingId: booking.id,
+                      note: "авто-релиз: клиент не принял за 14 дней",
+                    }),
+                    "stripe"
+                  )
+                ).catch(() => {});
               }
             }
           } catch (stripeErr) {
@@ -1199,17 +1215,21 @@ export async function GET(req: NextRequest) {
   try {
     const pendingPayouts = await query<{
       id: string; total_price: number | null; payout_amount: number | null;
+      service_fee: number | null;
       stripe_payment_intent_id: string | null;
       photographer_stripe_id: string; photographer_plan: string;
       photographer_email: string; photographer_name: string;
+      client_name: string;
     }>(
-      `SELECT b.id, b.total_price, b.payout_amount, b.stripe_payment_intent_id,
+      `SELECT b.id, b.total_price, b.payout_amount, b.service_fee, b.stripe_payment_intent_id,
               pp.stripe_account_id as photographer_stripe_id,
               pp.plan as photographer_plan,
-              pu.email as photographer_email, pu.name as photographer_name
+              pu.email as photographer_email, pu.name as photographer_name,
+              cu.name as client_name
        FROM bookings b
        JOIN photographer_profiles pp ON pp.id = b.photographer_id
        JOIN users pu ON pu.id = pp.user_id
+       JOIN users cu ON cu.id = b.client_id
        WHERE b.delivery_accepted = TRUE
          AND b.payment_status = 'paid'
          AND (b.stripe_payment_intent_id IS NOT NULL OR b.gift_card_id IS NOT NULL)
@@ -1257,6 +1277,21 @@ export async function GET(req: NextRequest) {
             ).catch(() => {});
             throw transferErr;
           }
+          import("@/lib/telegram").then(({ sendTelegram }) =>
+            sendTelegram(
+              payoutBreakdownTelegram({
+                payout: payoutAmount!,
+                base: booking.total_price,
+                serviceFee: booking.service_fee,
+                plan: booking.photographer_plan,
+                photographerName: booking.photographer_name,
+                clientName: booking.client_name,
+                bookingId: booking.id,
+                note: "повторная выплата кроном",
+              }),
+              "stripe"
+            )
+          ).catch(() => {});
           sendEmail(booking.photographer_email, "Payment transferred!",
             `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
               <h2 style="color: #C94536;">Payment Transferred!</h2>
