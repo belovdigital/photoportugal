@@ -23,6 +23,10 @@ interface UseWebSocketOptions {
   onRead?: (userId: string, timestamp: string) => void;
   onOnline?: (users: { userId: string; userName: string }[]) => void;
   onStatusChange?: (status: "connected" | "disconnected" | "reconnecting") => void;
+  // Fired when the server closes with 4001 (invalid/expired token). The
+  // caller should re-fetch /api/auth/ws-token and update the `token` prop —
+  // the hook reconnects automatically when the token changes.
+  onAuthExpired?: () => void;
 }
 
 export function useWebSocket({
@@ -35,10 +39,19 @@ export function useWebSocket({
   onRead,
   onOnline,
   onStatusChange,
+  onAuthExpired,
 }: UseWebSocketOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttempt = useRef(0);
+  // When the socket OPENED (TCP+upgrade ok). An auth-rejected socket opens
+  // fine and dies <1s later — such closes must NOT reset the backoff, or
+  // the loop hammers the server every ~2s forever (seen in prod: 12.7k
+  // reconnects/day from one tab with an expired token).
+  const openedAt = useRef(0);
+  // Consecutive auth (4001) closes. After a few, give up entirely — the
+  // session itself is gone and the page has an SSE/API fallback anyway.
+  const authFailures = useRef(0);
   // intentionalCloseRef = true means "we closed this on purpose, don't reconnect".
   // Set whenever we tear down (cleanup or chat switch) so the dying socket's
   // onclose handler doesn't fight the fresh connection just being opened.
@@ -53,6 +66,8 @@ export function useWebSocket({
   const onReadRef = useRef(onRead);
   const onOnlineRef = useRef(onOnline);
   const onStatusChangeRef = useRef(onStatusChange);
+  const onAuthExpiredRef = useRef(onAuthExpired);
+  onAuthExpiredRef.current = onAuthExpired;
   onMessageRef.current = onMessage;
   onMessageEditedRef.current = onMessageEdited;
   onMessageDeletedRef.current = onMessageDeleted;
@@ -87,7 +102,10 @@ export function useWebSocket({
     ws.onopen = () => {
       // Only react if this is still the active socket.
       if (wsRef.current !== ws) return;
-      reconnectAttempt.current = 0;
+      // Deliberately NOT resetting the reconnect backoff here: a socket
+      // the server is about to auth-reject opens successfully first. The
+      // backoff resets in onclose only after a provably stable session.
+      openedAt.current = Date.now();
       setStatus("connected");
       onStatusChangeRef.current?.("connected");
       ws.send(JSON.stringify({ type: "join", booking_id: bookingId }));
@@ -127,10 +145,34 @@ export function useWebSocket({
       } catch {}
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       // Suppress reconnect & status churn when WE closed this socket on purpose
       // (cleanup or chat switch). Otherwise the dying handler races the fresh one.
       if (intentionalCloseRef.current || wsRef.current !== ws) return;
+
+      const lifetimeMs = openedAt.current ? Date.now() - openedAt.current : 0;
+      if (lifetimeMs >= 10_000) {
+        // Survived long enough to be a real session — this close is a
+        // genuine network hiccup, start the backoff ladder from scratch.
+        reconnectAttempt.current = 0;
+        authFailures.current = 0;
+      }
+
+      if (event.code === 4001) {
+        // Server rejected the token (expired/invalid). Reconnecting with
+        // the SAME token can never succeed — ask the page for a fresh one
+        // (token prop change re-triggers connect). Still schedule a backed-
+        // off retry below in case the refresh lands slowly, but give up
+        // after a few strikes: the session itself is dead.
+        authFailures.current++;
+        onAuthExpiredRef.current?.();
+        if (authFailures.current >= 5) {
+          setStatus("disconnected");
+          onStatusChangeRef.current?.("disconnected");
+          return;
+        }
+      }
+
       setStatus("reconnecting");
       onStatusChangeRef.current?.("reconnecting");
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempt.current), 30000);

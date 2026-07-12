@@ -462,10 +462,16 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
     fetchConversations().then(() => setLoadingConvos(false));
   }, [fetchConversations]);
 
-  // Fetch WS token on mount
-  useEffect(() => {
-    fetch("/api/auth/ws-token").then(r => r.json()).then(d => setWsToken(d.token)).catch(() => {});
+  // Fetch WS token on mount. Also re-fetched via onAuthExpired when the
+  // server closes the socket with 4001 — ws tokens live 24h, so a tab left
+  // open overnight used to reconnect-loop forever with the stale token.
+  const refreshWsToken = useCallback(() => {
+    fetch("/api/auth/ws-token")
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then(d => setWsToken(d.token))
+      .catch(() => {});
   }, []);
+  useEffect(() => { refreshWsToken(); }, [refreshWsToken]);
 
   // --- Periodic conversation list refresh (every 30s) ---
   useEffect(() => {
@@ -579,6 +585,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
     onRead: handleRead,
     onOnline: setOnlineUsers,
     onStatusChange: (s) => setSSEStatus(s === "connected" ? "connected" : s === "reconnecting" ? "reconnecting" : "disconnected"),
+    onAuthExpired: refreshWsToken,
   });
 
   // Keep sendRead ref in sync to avoid circular dependency
