@@ -2369,6 +2369,109 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Unanswered reminders: ${err}`);
   }
 
+  // === NO-OFFER NUDGE (photographer chats but never sends a bookable package) ===
+  // Evidence (2026-07-12, 90d of prod data): of 32 inquiries stuck >7 days,
+  // 31 had photographer replies but NO package/price attached — the client
+  // had nothing to pay for. The client-side follow-ups can't fix that.
+  // 48h after the photographer's FIRST reply with still no offer: email+SMS
+  // the photographer to send a custom package. Day 5: Telegram the admin.
+  // Both one-shot per booking.
+  let offerNudges = 0;
+  let offerNudgeAdminAlerts = 0;
+  try {
+    const noOffer = await query<{
+      booking_id: string;
+      photographer_name: string;
+      photographer_email: string;
+      photographer_phone: string | null;
+      client_name: string;
+      hours_since_first_reply: number;
+      offer_nudge_sent: boolean;
+      offer_nudge_admin_alerted: boolean;
+    }>(`
+      SELECT
+        b.id as booking_id,
+        pu.name as photographer_name,
+        pu.email as photographer_email,
+        pu.phone as photographer_phone,
+        cu.name as client_name,
+        EXTRACT(EPOCH FROM (NOW() - first_ph_msg.created_at))/3600 as hours_since_first_reply,
+        COALESCE(b.offer_nudge_sent, FALSE) as offer_nudge_sent,
+        COALESCE(b.offer_nudge_admin_alerted, FALSE) as offer_nudge_admin_alerted
+      FROM bookings b
+      JOIN photographer_profiles pp ON pp.id = b.photographer_id
+      JOIN users pu ON pu.id = pp.user_id
+      JOIN users cu ON cu.id = b.client_id
+      JOIN LATERAL (
+        SELECT m.created_at FROM messages m
+        WHERE m.booking_id = b.id AND m.sender_id = pp.user_id AND m.is_system = FALSE
+        ORDER BY m.created_at ASC LIMIT 1
+      ) first_ph_msg ON TRUE
+      WHERE b.status = 'inquiry'
+        AND (b.total_price IS NULL OR b.total_price = 0)
+        AND b.package_id IS NULL
+        -- Age cap: don't resurrect the historical backlog (31 stuck rows
+        -- at ship time) — nudging a photographer about a 2-month-old chat
+        -- is noise, and day-5 alerts would flood admin TG on first run.
+        AND b.created_at > NOW() - INTERVAL '21 days'
+        AND first_ph_msg.created_at < NOW() - INTERVAL '48 hours'
+        AND (COALESCE(b.offer_nudge_sent, FALSE) = FALSE
+             OR (COALESCE(b.offer_nudge_admin_alerted, FALSE) = FALSE
+                 AND first_ph_msg.created_at < NOW() - INTERVAL '5 days'))
+      LIMIT 50
+    `);
+
+    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+    for (const o of noOffer) {
+      try {
+        const firstName = o.photographer_name.split(" ")[0];
+
+        if (!o.offer_nudge_sent) {
+          if (o.photographer_phone) {
+            await queueNotification({
+              channel: "sms",
+              recipient: o.photographer_phone,
+              body: `Hi ${firstName}! You've been chatting with ${o.client_name} on Photo Portugal but haven't sent them a package yet — they can only book once you do: ${BASE_URL}/dashboard/messages`,
+              dedupKey: `offer_nudge_sms:${o.booking_id}`,
+            }).catch(console.error);
+          }
+          await queueNotification({
+            channel: "email",
+            recipient: o.photographer_email,
+            subject: `${o.client_name} can't book you yet — send them a package`,
+            body: emailLayout(`
+              <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#C94536;">Turn this chat into a booking</h2>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${firstName},</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">You've been chatting with <strong>${o.client_name}</strong>, but there's no package or price attached to the conversation yet — so they have nothing to book or pay for.</p>
+              <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Open the chat and send a custom package with your price. Clients who receive a concrete offer book far more often than those left waiting.</p>
+              ${emailButton(`${BASE_URL}/dashboard/messages`, "Send a Package")}
+            `),
+            dedupKey: `offer_nudge_email:${o.booking_id}`,
+            recipientPhone: o.photographer_phone || undefined,
+          }).catch(console.error);
+          await query("UPDATE bookings SET offer_nudge_sent = TRUE WHERE id = $1", [o.booking_id]);
+          offerNudges++;
+        }
+
+        if (!o.offer_nudge_admin_alerted && o.hours_since_first_reply >= 120) {
+          const { sendTelegram } = await import("@/lib/telegram");
+          await sendTelegram(
+            `🪤 <b>Чат без оффера ${Math.round(o.hours_since_first_reply / 24)} дней</b>\n\n` +
+            `${o.photographer_name} общается с ${o.client_name}, но так и не отправил пакет — клиенту нечего оплачивать.\n` +
+            `Пинг фотографу уже был. Букинг: <code>${o.booking_id.slice(-8)}</code>`,
+            "clients"
+          ).catch(console.error);
+          await query("UPDATE bookings SET offer_nudge_admin_alerted = TRUE WHERE id = $1", [o.booking_id]);
+          offerNudgeAdminAlerts++;
+        }
+      } catch (err) {
+        results.errors.push(`Offer nudge for booking ${o.booking_id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    results.errors.push(`Offer nudges: ${err}`);
+  }
+
   // === SILENT CLIENT FOLLOW-UP (48h after photographer replied, client hasn't responded) ===
   let clientFollowUps = 0;
   try {
@@ -2722,7 +2825,7 @@ export async function GET(req: NextRequest) {
     results.errors.push(`Calendar sync: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, conciergeMatchesEmails, readyToBookNudges });
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, offerNudges, offerNudgeAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, conciergeMatchesEmails, readyToBookNudges });
 
   return NextResponse.json({
     success: true,
@@ -2741,6 +2844,8 @@ export async function GET(req: NextRequest) {
     readyToBookNudges,
     newClientNotifications,
     unansweredReminders6h,
+    offerNudges,
+    offerNudgeAdminAlerts,
     unansweredReminders12h,
     unansweredAdminAlerts,
     clientFollowUps,
