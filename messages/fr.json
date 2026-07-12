@@ -2088,7 +2088,10 @@
       "titleLocation": "Vous voulez des photos professionnelles à {location} ?",
       "description": "Parcourez les portfolios, comparez les forfaits et réservez un photographe local vérifié en quelques minutes.",
       "browsePhotographers": "Parcourir les photographes",
-      "getMatched": "Trouvez votre photographe — gratuit"
+      "getMatched": "Trouvez votre photographe — gratuit",
+      "businessTitle": "La photographie pour votre entreprise, gérée de bout en bout",
+      "businessText": "Un brief, des photographes vérifiés triés sur le volet, un contrat et une facture. Devis sous un jour ouvré.",
+      "businessCta": "Demander un devis business"
     },
     "relatedPhotographersInLocation": "Photographes prêts à shooter à {location}",
     "relatedPhotographersGeneric": "Photographes à découvrir",

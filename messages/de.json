@@ -1840,7 +1840,10 @@
       "titleLocation": "Möchten Sie professionelle Fotos in {location}?",
       "description": "Stöbern Sie in Portfolios, vergleichen Sie Pakete und buchen Sie in wenigen Minuten einen verifizierten lokalen Fotografen.",
       "browsePhotographers": "Fotografen durchsuchen",
-      "getMatched": "Kostenlos vermitteln lassen"
+      "getMatched": "Kostenlos vermitteln lassen",
+      "businessTitle": "Fotografie für Ihr Unternehmen — komplett organisiert",
+      "businessText": "Ein Briefing, handverlesene geprüfte Fotografen, ein Vertrag und eine Rechnung. Angebot innerhalb eines Werktags.",
+      "businessCta": "Business-Angebot anfordern"
     },
     "relatedPhotographersInLocation": "Fotografen für Shootings in {location}",
     "relatedPhotographersGeneric": "Fotografen, die einen Blick wert sind",

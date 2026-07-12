@@ -39,6 +39,7 @@ interface BlogPost {
   published_at: string;
   updated_at: string | null;
   created_at: string;
+  category: string | null;
 }
 
 interface PageProps {
@@ -654,7 +655,13 @@ export default async function BlogPostPage({ params }: PageProps) {
   // same post always shows the same cover (predictable for sharing) but
   // different posts naturally rotate across photographers.
   // Falls back silently to cover_image_url if no match found.
-  const heroPhoto = (conversionLocationSlugs.length > 0 || conversionShootTypeNames.length > 0)
+  // B2B posts (category='business') opt OUT of the consumer conversion
+  // machinery: no portfolio hero override (stock covers stay), no couple
+  // packages/€-breakouts/reviews — a corporate reader quoted "€320 couple
+  // session" mid-article is worse than nothing. They get a dedicated
+  // /for-business CTA band instead (Alex, 2026-07-12).
+  const isBusinessPost = post.category === "business";
+  const heroPhoto = !isBusinessPost && (conversionLocationSlugs.length > 0 || conversionShootTypeNames.length > 0)
     ? await queryOne<{ url: string; photographer_name: string; photographer_slug: string }>(
         `SELECT pi.url, u.name as photographer_name, pp.slug as photographer_slug,
                 -- Lower rank = better match. 0 = both location+type tagged,
@@ -705,12 +712,14 @@ export default async function BlogPostPage({ params }: PageProps) {
   const heroSrc = heroPhoto?.url || post.cover_image_url;
 
   // ── Conversion assets (carousels, breakouts, reviews, end-cap) ─────────
-  const conversion = await fetchBlogConversionAssets({
-    postId: post.id,
-    locationSlugs: conversionLocationSlugs,
-    shootTypeNames: conversionShootTypeNames,
-    locale,
-  });
+  const conversion = isBusinessPost
+    ? { heroCarousel: null, photoStrip: [], breakouts: [], reviews: [], endCapPhotographers: [], totalPhotographerCount: 0 }
+    : await fetchBlogConversionAssets({
+        postId: post.id,
+        locationSlugs: conversionLocationSlugs,
+        shootTypeNames: conversionShootTypeNames,
+        locale,
+      });
 
   // ── Optional interactive city map ───────────────────────────────────────
   // For posts that are explicitly about "photo spots" / "photo locations"
@@ -1020,6 +1029,24 @@ export default async function BlogPostPage({ params }: PageProps) {
               />
             )}
 
+            {/* B2B mid-article CTA — the only injected block on business posts */}
+            {isBusinessPost && (
+              <div className="my-10 rounded-2xl bg-gray-900 p-8 text-center sm:p-10">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-warm-200">Photo Portugal for Business</p>
+                <h3 className="mt-3 font-display text-2xl font-bold text-white">{t("blogCta.businessTitle")}</h3>
+                <p className="mx-auto mt-2 max-w-md text-sm text-gray-300">{t("blogCta.businessText")}</p>
+                <Link
+                  href={"/for-business" as never}
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-primary-700"
+                >
+                  {t("blogCta.businessCta")}
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
+            )}
+
             {sectionContents.slice(inject2, inject3).map((s, i) => (
               <div key={`s3-${i}`}>{renderContent(s)}</div>
             ))}
@@ -1053,10 +1080,10 @@ export default async function BlogPostPage({ params }: PageProps) {
             </p>
             <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
-                href={primaryLocation ? `/photographers?location=${primaryLocation.slug}` : "/photographers"}
+                href={isBusinessPost ? ("/for-business" as never) : (primaryLocation ? `/photographers?location=${primaryLocation.slug}` : "/photographers")}
                 className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-primary-700"
               >
-                {t("blogCta.browsePhotographers")}
+                {isBusinessPost ? t("blogCta.businessCta") : t("blogCta.browsePhotographers")}
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>

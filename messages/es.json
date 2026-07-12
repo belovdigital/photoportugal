@@ -1614,7 +1614,10 @@
       "titleLocation": "¿Quiere fotos profesionales en {location}?",
       "description": "Explore portafolios, compare paquetes y reserve un fotógrafo local verificado en minutos.",
       "browsePhotographers": "Explorar fotógrafos",
-      "getMatched": "Encuentre su fotógrafo — gratis"
+      "getMatched": "Encuentre su fotógrafo — gratis",
+      "businessTitle": "Fotografía para tu empresa, gestionada de principio a fin",
+      "businessText": "Un briefing, fotógrafos verificados seleccionados a mano, un contrato y una factura. Presupuesto en un día laborable.",
+      "businessCta": "Pedir presupuesto de empresa"
     },
     "relatedPhotographersInLocation": "Fotógrafos listos para fotografiar en {location}",
     "relatedPhotographersGeneric": "Fotógrafos a considerar",
