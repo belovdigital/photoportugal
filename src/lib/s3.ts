@@ -38,6 +38,25 @@ export async function uploadToS3(
 }
 
 /**
+ * Upload a large file to R2 by streaming from disk — no full-file buffer in
+ * memory. PutObject streams fine when ContentLength is provided. Used by the
+ * delivery-zip builder (galleries can exceed Node's max Buffer size).
+ */
+export async function uploadFileToS3(key: string, filePath: string, contentType: string): Promise<string> {
+  const { createReadStream } = await import("fs");
+  const { stat } = await import("fs/promises");
+  const { size } = await stat(filePath);
+  await s3Client.send(new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+    Body: createReadStream(filePath),
+    ContentType: contentType,
+    ContentLength: size,
+  }));
+  return key;
+}
+
+/**
  * Get a public URL for an R2 object via custom domain.
  * No presigned URLs needed — files are served via files.photoportugal.com.
  */

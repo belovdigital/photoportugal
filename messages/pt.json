@@ -2736,7 +2736,10 @@
     "peekSend": "Enviar prévia ({count})",
     "peekSent": "✨ Prévia enviada — {count, plural, one {# foto} other {# fotos}}. Continue a carregar para a entrega completa.",
     "peekCopyLink": "Copiar link da prévia",
-    "peekError": "Não foi possível partilhar a prévia — tente novamente."
+    "peekError": "Não foi possível partilhar a prévia — tente novamente.",
+    "smallDeliveryTitle": "Entregar apenas {count} fotos?",
+    "smallDeliveryText": "Está prestes a enviar apenas {count} fotos como a galeria final COMPLETA — o cliente será convidado a aceitá-la e o pagamento será libertado. Se só queria mostrar alguns favoritos antecipadamente, use o Sneak Peek.",
+    "smallDeliveryConfirm": "Sim, é a galeria completa"
   },
   "availability": {
     "pageTitle": "Disponibilidade",

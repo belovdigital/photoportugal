@@ -2920,7 +2920,10 @@
     "peekSend": "Send sneak peek ({count})",
     "peekSent": "✨ Sneak peek sent — {count, plural, one {# photo} other {# photos}}. Keep uploading toward the full delivery.",
     "peekCopyLink": "Copy peek link",
-    "peekError": "Could not share the sneak peek — try again."
+    "peekError": "Could not share the sneak peek — try again.",
+    "smallDeliveryTitle": "Deliver only {count} photos?",
+    "smallDeliveryText": "You are about to send just {count} photos as the FULL final gallery — the client will be asked to accept it and the payout will be released. If you only wanted to show a few favourites early, use the Sneak Peek instead.",
+    "smallDeliveryConfirm": "Yes, this is the full gallery"
   },
   "availability": {
     "pageTitle": "Availability",

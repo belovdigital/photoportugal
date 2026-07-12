@@ -3174,7 +3174,10 @@
     "peekSend": "Envoyer l’aperçu ({count})",
     "peekSent": "✨ Aperçu envoyé — {count, plural, one {# photo} other {# photos}}. Continuez à téléverser vers la livraison complète.",
     "peekCopyLink": "Copier le lien de l’aperçu",
-    "peekError": "Impossible de partager l’aperçu — réessayez."
+    "peekError": "Impossible de partager l’aperçu — réessayez.",
+    "smallDeliveryTitle": "Livrer seulement {count} photos ?",
+    "smallDeliveryText": "Vous êtes sur le point d’envoyer seulement {count} photos comme galerie finale COMPLÈTE — le client devra l’accepter et le paiement sera libéré. Si vous vouliez juste montrer quelques favoris en avance, utilisez le Sneak Peek.",
+    "smallDeliveryConfirm": "Oui, c’est la galerie complète"
   },
   "availability": {
     "pageTitle": "Disponibilités",

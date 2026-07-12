@@ -268,21 +268,33 @@ export async function POST(
         [id]
       );
       const requiredPhotos = pkg?.num_photos && Number(pkg.num_photos) > 0 ? Number(pkg.num_photos) : 0;
+      const deliveredCnt = await queryOne<{ photos: string }>(
+        `SELECT COUNT(*) FILTER (WHERE media_type <> 'video') AS photos
+           FROM delivery_photos WHERE booking_id = $1`,
+        [id]
+      );
+      const uploadedPhotos = parseInt(deliveredCnt?.photos || "0");
       if (requiredPhotos > 0) {
-        const delivered = await queryOne<{ photos: string }>(
-          `SELECT COUNT(*) FILTER (WHERE media_type <> 'video') AS photos
-             FROM delivery_photos WHERE booking_id = $1`,
-          [id]
-        );
-        const photoCount = parseInt(delivered?.photos || "0");
-        if (photoCount < requiredPhotos) {
+        if (uploadedPhotos < requiredPhotos) {
           return NextResponse.json({
-            error: `This package includes ${requiredPhotos} photos, but you've added ${photoCount}. Upload at least ${requiredPhotos} photos before delivering to the client.`,
+            error: `This package includes ${requiredPhotos} photos, but you've added ${uploadedPhotos}. Upload at least ${requiredPhotos} photos before delivering to the client.`,
             code: "insufficient_photos",
             required: requiredPhotos,
-            uploaded: photoCount,
+            uploaded: uploadedPhotos,
           }, { status: 400 });
         }
+      } else if (uploadedPhotos < 20 && body.confirm_small !== true) {
+        // Blind/custom bookings carry no package minimum, which used to
+        // disable the guard entirely. A tiny "full gallery" is almost always
+        // a mistake — 2026-07-12: a photographer shared a 7-photo sneak peek
+        // and 43 seconds later delivered the same 7 photos as the full
+        // gallery; the client accepted and the payout auto-released. Force an
+        // explicit second confirmation for small no-package deliveries.
+        return NextResponse.json({
+          error: `Only ${uploadedPhotos} photos are uploaded. If this is really the FULL gallery (not a sneak peek), confirm again.`,
+          code: "small_delivery_confirm",
+          uploaded: uploadedPhotos,
+        }, { status: 409 });
       }
 
       // Generate delivery token and mark as delivered

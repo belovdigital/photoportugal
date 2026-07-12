@@ -3174,7 +3174,10 @@
     "peekSend": "Enviar adelanto ({count})",
     "peekSent": "✨ Adelanto enviado — {count, plural, one {# foto} other {# fotos}}. Sigue subiendo hacia la entrega completa.",
     "peekCopyLink": "Copiar enlace del adelanto",
-    "peekError": "No se pudo compartir el adelanto — inténtalo de nuevo."
+    "peekError": "No se pudo compartir el adelanto — inténtalo de nuevo.",
+    "smallDeliveryTitle": "¿Entregar solo {count} fotos?",
+    "smallDeliveryText": "Vas a enviar solo {count} fotos como la galería final COMPLETA — se pedirá al cliente que la acepte y se liberará el pago. Si solo querías adelantar algunos favoritos, usa el Sneak Peek.",
+    "smallDeliveryConfirm": "Sí, es la galería completa"
   },
   "availability": {
     "pageTitle": "Disponibilidad",

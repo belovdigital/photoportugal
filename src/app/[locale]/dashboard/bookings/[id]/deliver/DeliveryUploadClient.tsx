@@ -474,7 +474,7 @@ export function DeliveryUploadClient({
 
     setSharing(true);
     try {
-      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+      let res = await fetch(`/api/bookings/${bookingId}/delivery`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -484,7 +484,32 @@ export function DeliveryUploadClient({
           message: deliveryMessage.trim(),
         }),
       });
-      const data = await res.json();
+      let data = await res.json();
+      if (res.status === 409 && data?.code === "small_delivery_confirm") {
+        // No-package booking with a suspiciously small gallery — make the
+        // photographer explicitly distinguish "full delivery" from a sneak
+        // peek before we let it through.
+        setSharing(false);
+        const okSmall = await confirm(
+          t("smallDeliveryTitle"),
+          t("smallDeliveryText", { count: data.uploaded }),
+          { confirmLabel: t("smallDeliveryConfirm") }
+        );
+        if (!okSmall) return;
+        setSharing(true);
+        res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "share",
+            password: galleryPassword.trim(),
+            title: deliveryTitle.trim(),
+            message: deliveryMessage.trim(),
+            confirm_small: true,
+          }),
+        });
+        data = await res.json();
+      }
       if (!res.ok || !data.success) {
         setError(data?.code === "insufficient_photos"
           ? t("needMorePhotos", { required: data.required, count: data.uploaded })

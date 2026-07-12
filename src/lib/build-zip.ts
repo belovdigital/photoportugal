@@ -1,8 +1,10 @@
 import { query, queryOne } from "@/lib/db";
 import archiver from "archiver";
-import { createReadStream } from "fs";
+import { createReadStream, createWriteStream } from "fs";
+import { mkdtemp, rm, stat } from "fs/promises";
+import os from "os";
 import path from "path";
-import { uploadToS3 } from "@/lib/s3";
+import { uploadFileToS3 } from "@/lib/s3";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
@@ -50,17 +52,20 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
 
     console.log(`[build-zip] Building zip for booking ${bookingId} with ${photos.length} photos`);
 
-    const { PassThrough } = await import("stream");
-    const chunks: Buffer[] = [];
-    const passthrough = new PassThrough();
-    passthrough.on("data", (chunk: Buffer) => chunks.push(chunk));
+    // Stream the archive to a temp FILE, not memory: Buffer.concat on a
+    // 450-photo gallery (~4 GB) blows Node's max buffer length ("data is
+    // too long") and risks OOM on this box. Disk is cheap; the cron cleans
+    // the temp dir either way.
+    const tmpDir = await mkdtemp(path.join(os.tmpdir(), "pp-zip-"));
+    const tmpZip = path.join(tmpDir, zipFilename);
+    const fileOut = createWriteStream(tmpZip);
 
     const archive = archiver("zip", { zlib: { level: 5 } });
-    archive.pipe(passthrough);
+    archive.pipe(fileOut);
 
     const endPromise = new Promise<void>((resolve, reject) => {
-      passthrough.on("end", resolve);
-      passthrough.on("error", reject);
+      fileOut.on("close", resolve);
+      fileOut.on("error", reject);
       archive.on("error", reject);
     });
 
@@ -120,24 +125,28 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
     await archive.finalize();
     await endPromise;
 
-    const zipBuffer = Buffer.concat(chunks);
+    const { size: zipSize } = await stat(tmpZip);
     const r2Key = `delivery/${bookingId}/${zipFilename}`;
-    console.log(`[build-zip] Uploading zip for booking ${bookingId}: ${(zipBuffer.length / 1024 / 1024).toFixed(1)} MB`);
-    await uploadToS3(r2Key, zipBuffer, "application/zip");
+    console.log(`[build-zip] Uploading zip for booking ${bookingId}: ${(zipSize / 1024 / 1024).toFixed(1)} MB`);
+    try {
+      await uploadFileToS3(r2Key, tmpZip, "application/zip");
+    } finally {
+      await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+    }
     const zipUrl = `${R2_PUBLIC_URL}/${r2Key}`;
 
     await queryOne(
       "UPDATE bookings SET zip_path = $1, zip_size = $2, zip_ready = TRUE WHERE id = $3",
-      [zipUrl, zipBuffer.length, bookingId]
+      [zipUrl, zipSize, bookingId]
     );
 
-    console.log(`[build-zip] DONE for booking ${bookingId}: ${(zipBuffer.length / 1024 / 1024).toFixed(1)} MB`);
+    console.log(`[build-zip] DONE for booking ${bookingId}: ${(zipSize / 1024 / 1024).toFixed(1)} MB`);
 
     if (booking.delivery_token && booking.client_email) {
       try {
         const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
         const galleryUrl = `https://photoportugal.com/delivery/${booking.delivery_token}`;
-        const sizeMB = (zipBuffer.length / 1024 / 1024).toFixed(0);
+        const sizeMB = (zipSize / 1024 / 1024).toFixed(0);
         const firstName = booking.client_name?.split(" ")[0] || "there";
         await sendEmail(
           booking.client_email,
@@ -156,7 +165,7 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
       }
     }
 
-    return { path: zipUrl, size: zipBuffer.length };
+    return { path: zipUrl, size: zipSize };
   } catch (err) {
     console.error("[build-zip] error:", err);
     return null;
