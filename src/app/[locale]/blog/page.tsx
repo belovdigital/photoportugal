@@ -209,7 +209,7 @@ export default async function BlogPage({
             <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary-500 text-white shadow-sm">
               {tCat("all")}
             </span>
-            {["locations", "pricing", "elopements", "weddings", "couples", "family", "planning", "proposals", "solo", "comparisons"].map((slug) => (
+            {["locations", "pricing", "elopements", "weddings", "couples", "family", "planning", "proposals", "solo", "comparisons", "business"].map((slug) => (
               <Link
                 key={slug}
                 href={`/blog/category/${slug}`}

@@ -12,7 +12,7 @@ export const revalidate = 300;
 
 const CATEGORY_SLUGS = [
   "locations", "pricing", "elopements", "weddings", "couples",
-  "family", "planning", "proposals", "solo", "comparisons",
+  "family", "planning", "proposals", "solo", "comparisons", "business",
 ] as const;
 
 interface PageProps {

@@ -222,7 +222,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const blogCategories = [
     "locations", "pricing", "elopements", "weddings", "couples",
-    "family", "planning", "proposals", "solo", "comparisons",
+    "family", "planning", "proposals", "solo", "comparisons", "business",
   ];
   const blogCategoryPages = blogCategories.flatMap((cat) =>
     localized(`/blog/category/${cat}`, { lastModified: blogLastModified, changeFrequency: "weekly", priority: 0.7 })
