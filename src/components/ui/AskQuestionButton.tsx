@@ -93,10 +93,11 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen, 
     setSending(true);
     setError("");
 
+    const { getAllAttribution } = await import("@/lib/attribution");
     const res = await fetch("/api/inquiries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ photographer_id: photographerId, message: message.trim() }),
+      body: JSON.stringify({ photographer_id: photographerId, message: message.trim(), ...getAllAttribution() }),
     });
 
     setSending(false);

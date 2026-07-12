@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const userId = user.id;
 
   try {
-    const { photographer_id, message } = await req.json();
+    const { photographer_id, message, utm_source, utm_medium, utm_campaign, utm_term, gclid } = await req.json();
 
     if (!photographer_id || !message?.trim()) {
       return NextResponse.json({ error: "Photographer and message required" }, { status: 400 });
@@ -53,10 +53,14 @@ export async function POST(req: NextRequest) {
     if (existing) {
       bookingId = existing.id;
     } else {
-      // Create inquiry booking
+      // Create inquiry booking. Attribution (utm/gclid) rides along from
+      // the client's 90-day localStorage — without it, chat-first bookings
+      // were invisible to ads reporting (July 2026: 8 ads-sourced bookings
+      // showed as organic because only the /book form sent attribution).
       const booking = await queryOne<{ id: string }>(
-        `INSERT INTO bookings (client_id, photographer_id, status) VALUES ($1, $2, 'inquiry') RETURNING id`,
-        [userId, photographer_id]
+        `INSERT INTO bookings (client_id, photographer_id, status, utm_source, utm_medium, utm_campaign, utm_term, gclid)
+         VALUES ($1, $2, 'inquiry', $3, $4, $5, $6, $7) RETURNING id`,
+        [userId, photographer_id, utm_source || null, utm_medium || null, utm_campaign || null, utm_term || null, gclid || null]
       );
       bookingId = booking!.id;
     }
