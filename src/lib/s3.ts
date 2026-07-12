@@ -39,20 +39,26 @@ export async function uploadToS3(
 
 /**
  * Upload a large file to R2 by streaming from disk — no full-file buffer in
- * memory. PutObject streams fine when ContentLength is provided. Used by the
- * delivery-zip builder (galleries can exceed Node's max Buffer size).
+ * memory, no single-PUT size ceiling. Multipart via @aws-sdk/lib-storage:
+ * 64 MB parts, 4 in flight, per-part retries. Used by the delivery-zip
+ * builder (galleries reach multiple GB and used to die on Buffer limits).
  */
 export async function uploadFileToS3(key: string, filePath: string, contentType: string): Promise<string> {
   const { createReadStream } = await import("fs");
-  const { stat } = await import("fs/promises");
-  const { size } = await stat(filePath);
-  await s3Client.send(new PutObjectCommand({
-    Bucket: BUCKET,
-    Key: key,
-    Body: createReadStream(filePath),
-    ContentType: contentType,
-    ContentLength: size,
-  }));
+  const { Upload } = await import("@aws-sdk/lib-storage");
+  const upload = new Upload({
+    client: s3Client,
+    params: {
+      Bucket: BUCKET,
+      Key: key,
+      Body: createReadStream(filePath),
+      ContentType: contentType,
+    },
+    partSize: 64 * 1024 * 1024,
+    queueSize: 4,
+    leavePartsOnError: false,
+  });
+  await upload.done();
   return key;
 }
 

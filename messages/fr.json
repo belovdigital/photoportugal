@@ -3175,8 +3175,8 @@
     "peekSent": "✨ Aperçu envoyé — {count, plural, one {# photo} other {# photos}}. Continuez à téléverser vers la livraison complète.",
     "peekCopyLink": "Copier le lien de l’aperçu",
     "peekError": "Impossible de partager l’aperçu — réessayez.",
-    "smallDeliveryTitle": "Livrer seulement {count} photos ?",
-    "smallDeliveryText": "Vous êtes sur le point d’envoyer seulement {count} photos comme galerie finale COMPLÈTE — le client devra l’accepter et le paiement sera libéré. Si vous vouliez juste montrer quelques favoris en avance, utilisez le Sneak Peek.",
+    "smallDeliveryTitle": "Est-ce vraiment la galerie finale COMPLÈTE ?",
+    "smallDeliveryText": "Vous livrez seulement {count} photos comme galerie finale — est-ce bien TOUTES les photos, sans rien à ajouter ? Le client devra l’accepter et le paiement sera libéré. Pour montrer quelques favoris en avance, utilisez le Sneak Peek.",
     "smallDeliveryConfirm": "Oui, c’est la galerie complète"
   },
   "availability": {
@@ -3533,7 +3533,14 @@
     "locationLabel": "Lieu",
     "groupLabel": "Groupe",
     "tipLine": "Pourboire",
-    "peekReady": "✨ Aperçu prêt — premières photos de votre séance"
+    "peekReady": "✨ Aperçu prêt — premières photos de votre séance",
+    "promisedPhotosAsk": "Combien de photos allez-vous livrer ?",
+    "promisedPhotosHint": "Cette réservation n’a pas de forfait fixe — fixez un nombre pour que le client sache à quoi s’attendre.",
+    "promisedPhotosSave": "Enregistrer",
+    "promisedPhotosSet": "{count} photos promises au client",
+    "promisedPhotosEdit": "modifier",
+    "promisedPhotosInvalid": "Saisissez un nombre entre 5 et 1000",
+    "promisedPhotosClient": "Votre photographe livrera ~{count} photos"
   },
   "bookingJourney": {
     "cancelled": "Annulée",

@@ -2927,8 +2927,8 @@
     "peekSent": "✨ Vorschau gesendet — {count, plural, one {# Foto} other {# Fotos}}. Laden Sie weiter für die vollständige Lieferung hoch.",
     "peekCopyLink": "Vorschau-Link kopieren",
     "peekError": "Vorschau konnte nicht geteilt werden — bitte erneut versuchen.",
-    "smallDeliveryTitle": "Nur {count} Fotos liefern?",
-    "smallDeliveryText": "Sie senden nur {count} Fotos als die KOMPLETTE finale Galerie — der Kunde wird sie annehmen und die Auszahlung wird freigegeben. Wenn Sie nur einige Favoriten vorab zeigen wollten, nutzen Sie den Sneak Peek.",
+    "smallDeliveryTitle": "Ist das wirklich die KOMPLETTE finale Galerie?",
+    "smallDeliveryText": "Sie liefern nur {count} Fotos als finale Galerie — sind das ALLE Fotos, ohne dass noch etwas dazukommt? Der Kunde wird sie annehmen und die Auszahlung wird freigegeben. Für ein paar Favoriten vorab nutzen Sie den Sneak Peek.",
     "smallDeliveryConfirm": "Ja, das ist die komplette Galerie"
   },
   "availability": {
@@ -3285,7 +3285,14 @@
     "locationLabel": "Standort",
     "groupLabel": "Gruppe",
     "tipLine": "Trinkgeld",
-    "peekReady": "✨ Vorschau bereit — erste Fotos Ihrer Session"
+    "peekReady": "✨ Vorschau bereit — erste Fotos Ihrer Session",
+    "promisedPhotosAsk": "Wie viele Fotos werden Sie liefern?",
+    "promisedPhotosHint": "Diese Buchung hat kein festes Paket — legen Sie eine Zahl fest, damit der Kunde weiß, was ihn erwartet.",
+    "promisedPhotosSave": "Speichern",
+    "promisedPhotosSet": "{count} Fotos dem Kunden zugesagt",
+    "promisedPhotosEdit": "ändern",
+    "promisedPhotosInvalid": "Geben Sie eine Zahl zwischen 5 und 1000 ein",
+    "promisedPhotosClient": "Ihr Fotograf liefert ~{count} Fotos"
   },
   "bookingJourney": {
     "cancelled": "Storniert",

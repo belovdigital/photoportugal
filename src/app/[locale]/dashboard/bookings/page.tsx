@@ -3,6 +3,7 @@ import { query, queryOne } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { ReviewForm } from "@/components/ui/ReviewForm";
+import { PromisedPhotosInput } from "./PromisedPhotosInput";
 import { PayButton } from "@/components/ui/PayButton";
 import { BookingStatusButtons } from "./BookingStatusButtons";
 import { DateNegotiation } from "./DateNegotiation";
@@ -74,6 +75,7 @@ export default async function BookingsPage() {
     service_fee: number | null;
     payout_amount: number | null;
     blind_booking: boolean | null;
+    promised_photos: number | null;
     tip_amount_cents: number | null;
     tip_payout_cents: number | null;
     peek_token?: string | null;
@@ -127,7 +129,7 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.blind_booking,
+                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.blind_booking, b.promised_photos,
                   ${stripePaymentSelect},
                   b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
@@ -184,7 +186,7 @@ export default async function BookingsPage() {
       // booking in their dashboard before they got the gift email.
       bookings = await query(
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, COALESCE(b.client_sms_opt_in, false) as client_sms_opt_in, b.total_price, b.service_fee, b.payout_amount, b.blind_booking,
+                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, COALESCE(b.client_sms_opt_in, false) as client_sms_opt_in, b.total_price, b.service_fee, b.payout_amount, b.blind_booking, b.promised_photos,
                 ${stripePaymentSelect},
                 b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
@@ -494,6 +496,15 @@ export default async function BookingsPage() {
                         )}
                       </>
                     )}
+                  </div>
+                )}
+                {/* Blind bookings: photographer commits a photo count; client sees it */}
+                {booking.blind_booking && !booking.package_name && isPhotographer && booking.status === "confirmed" && (
+                  <PromisedPhotosInput bookingId={booking.id} initial={booking.promised_photos} />
+                )}
+                {booking.blind_booking && !isPhotographer && booking.promised_photos && (
+                  <div className="rounded-lg bg-warm-50 px-3 py-2 text-xs text-gray-600">
+                    📸 {t("promisedPhotosClient", { count: booking.promised_photos })}
                   </div>
                 )}
                 {booking.package_name && (

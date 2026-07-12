@@ -261,13 +261,17 @@ export async function POST(
       // media_type 'image' for photos, 'video' for videos). If the booking has
       // no package / no num_photos (e.g. legacy or unassigned), we can't
       // enforce a number, so we skip the check.
-      const pkg = await queryOne<{ num_photos: number | null }>(
-        `SELECT p.num_photos
-           FROM bookings b JOIN packages p ON p.id = b.package_id
+      const pkg = await queryOne<{ num_photos: number | null; promised_photos: number | null }>(
+        `SELECT p.num_photos, b.promised_photos
+           FROM bookings b LEFT JOIN packages p ON p.id = b.package_id
           WHERE b.id = $1`,
         [id]
       );
-      const requiredPhotos = pkg?.num_photos && Number(pkg.num_photos) > 0 ? Number(pkg.num_photos) : 0;
+      // Package minimum wins; for package-less (blind) bookings fall back to
+      // the count the photographer committed via set_promised_photos.
+      const requiredPhotos = pkg?.num_photos && Number(pkg.num_photos) > 0
+        ? Number(pkg.num_photos)
+        : (pkg?.promised_photos && Number(pkg.promised_photos) > 0 ? Number(pkg.promised_photos) : 0);
       const deliveredCnt = await queryOne<{ photos: string }>(
         `SELECT COUNT(*) FILTER (WHERE media_type <> 'video') AS photos
            FROM delivery_photos WHERE booking_id = $1`,

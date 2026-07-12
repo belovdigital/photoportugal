@@ -3175,8 +3175,8 @@
     "peekSent": "✨ Adelanto enviado — {count, plural, one {# foto} other {# fotos}}. Sigue subiendo hacia la entrega completa.",
     "peekCopyLink": "Copiar enlace del adelanto",
     "peekError": "No se pudo compartir el adelanto — inténtalo de nuevo.",
-    "smallDeliveryTitle": "¿Entregar solo {count} fotos?",
-    "smallDeliveryText": "Vas a enviar solo {count} fotos como la galería final COMPLETA — se pedirá al cliente que la acepte y se liberará el pago. Si solo querías adelantar algunos favoritos, usa el Sneak Peek.",
+    "smallDeliveryTitle": "¿Es realmente la galería final COMPLETA?",
+    "smallDeliveryText": "Estás entregando solo {count} fotos como galería final — ¿son TODAS las fotos, sin nada más que añadir? Se pedirá al cliente que la acepte y se liberará el pago. Si solo quieres adelantar algunos favoritos, usa el Sneak Peek.",
     "smallDeliveryConfirm": "Sí, es la galería completa"
   },
   "availability": {
@@ -3533,7 +3533,14 @@
     "locationLabel": "Lugar",
     "groupLabel": "Grupo",
     "tipLine": "Propina",
-    "peekReady": "✨ Adelanto listo — primeras fotos de tu sesión"
+    "peekReady": "✨ Adelanto listo — primeras fotos de tu sesión",
+    "promisedPhotosAsk": "¿Cuántas fotos vas a entregar?",
+    "promisedPhotosHint": "Esta reserva no tiene paquete fijo — fija un número para que el cliente sepa qué esperar.",
+    "promisedPhotosSave": "Guardar",
+    "promisedPhotosSet": "{count} fotos prometidas al cliente",
+    "promisedPhotosEdit": "cambiar",
+    "promisedPhotosInvalid": "Introduce un número entre 5 y 1000",
+    "promisedPhotosClient": "Tu fotógrafo entregará ~{count} fotos"
   },
   "bookingJourney": {
     "cancelled": "Cancelada",

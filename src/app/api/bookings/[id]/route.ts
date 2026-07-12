@@ -90,8 +90,30 @@ export async function PATCH(
 
   const { id } = await params;
   const userId = user.id;
-  const { status, welcome_message, reason } = await req.json();
+  const body = await req.json();
+  const { status, welcome_message, reason } = body;
   const trimmedReason = typeof reason === "string" ? reason.trim().slice(0, 500) : "";
+
+  // Standalone action: the assigned photographer commits how many photos
+  // the client should expect (blind/no-package bookings). Renders to the
+  // client and feeds the delivery minimum-photos guard.
+  if (body.action === "set_promised_photos") {
+    const n = parseInt(body.promised_photos, 10);
+    if (!Number.isFinite(n) || n < 5 || n > 1000) {
+      return NextResponse.json({ error: "promised_photos must be between 5 and 1000" }, { status: 400 });
+    }
+    const own = await queryOne<{ id: string }>(
+      `SELECT b.id FROM bookings b
+       JOIN photographer_profiles pp ON pp.id = b.photographer_id
+       WHERE b.id = $1 AND pp.user_id = $2 AND b.status IN ('confirmed', 'completed')`,
+      [id, userId]
+    );
+    if (!own) {
+      return NextResponse.json({ error: "Not authorized or booking not editable" }, { status: 403 });
+    }
+    await queryOne("UPDATE bookings SET promised_photos = $1 WHERE id = $2", [n, id]);
+    return NextResponse.json({ success: true, promised_photos: n });
+  }
 
   const validStatuses = ["pending", "confirmed", "completed", "delivered", "cancelled"];
   if (!validStatuses.includes(status)) {

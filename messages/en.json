@@ -2921,8 +2921,8 @@
     "peekSent": "✨ Sneak peek sent — {count, plural, one {# photo} other {# photos}}. Keep uploading toward the full delivery.",
     "peekCopyLink": "Copy peek link",
     "peekError": "Could not share the sneak peek — try again.",
-    "smallDeliveryTitle": "Deliver only {count} photos?",
-    "smallDeliveryText": "You are about to send just {count} photos as the FULL final gallery — the client will be asked to accept it and the payout will be released. If you only wanted to show a few favourites early, use the Sneak Peek instead.",
+    "smallDeliveryTitle": "Is this really the FULL final gallery?",
+    "smallDeliveryText": "You are delivering only {count} photos as the final gallery — are these ALL the photos, with nothing more to add? The client will be asked to accept and the payout will be released. If you just want to show a few favourites early, use the Sneak Peek instead.",
     "smallDeliveryConfirm": "Yes, this is the full gallery"
   },
   "availability": {
@@ -3279,7 +3279,14 @@
     "locationLabel": "Location",
     "groupLabel": "Group",
     "tipLine": "Tip",
-    "peekReady": "✨ Sneak peek ready — first photos from your session"
+    "peekReady": "✨ Sneak peek ready — first photos from your session",
+    "promisedPhotosAsk": "How many photos will you deliver?",
+    "promisedPhotosHint": "This booking has no fixed package — commit a number so the client knows what to expect.",
+    "promisedPhotosSave": "Save",
+    "promisedPhotosSet": "{count} photos promised to the client",
+    "promisedPhotosEdit": "change",
+    "promisedPhotosInvalid": "Enter a number between 5 and 1000",
+    "promisedPhotosClient": "Your photographer will deliver ~{count} photos"
   },
   "bookingJourney": {
     "cancelled": "Cancelled",
