@@ -133,6 +133,7 @@ export async function rollupPhotographerStats(opts: {
       `CREATE TEMP TABLE tmp_pp_views ON COMMIT DROP AS
        SELECT
          pp.id AS photographer_id,
+         pp.user_id AS photographer_user_id,
          ((elem->>'ts')::timestamptz AT TIME ZONE '${TZ}')::date::text AS day,
          vs.visitor_id,
          vs.country,
@@ -158,6 +159,26 @@ export async function rollupPhotographerStats(opts: {
          AND (vs.user_id IS NULL OR vs.user_id <> pp.user_id)
          AND ((elem->>'ts')::timestamptz AT TIME ZONE '${TZ}')::date BETWEEN $1::date AND $2::date`,
       [from, to],
+    );
+
+    // ── 1b. Purge self-visits at DEVICE level ─────────────────────────
+    // The user_id filter above only catches sessions where the
+    // photographer was logged in. Their vid cookie outlives the login:
+    // any visitor_id ever seen on a session linked to their user (or
+    // stored permanently in users.visitor_id — sessions prune at 30d,
+    // the users column doesn't) is one of their devices, so logged-out
+    // self-visits from the same browser drop out too. Incognito /
+    // someone else's machine remains indistinguishable by design (we
+    // deliberately don't match by IP — VPNs and shared networks would
+    // misattribute real visitors).
+    await client.query(
+      `DELETE FROM tmp_pp_views t
+       USING (
+         SELECT DISTINCT user_id, visitor_id FROM visitor_sessions WHERE user_id IS NOT NULL AND visitor_id IS NOT NULL
+         UNION
+         SELECT id AS user_id, visitor_id FROM users WHERE visitor_id IS NOT NULL
+       ) own
+       WHERE own.visitor_id = t.visitor_id AND own.user_id = t.photographer_user_id`,
     );
 
     // ── 2. Views / uniques ────────────────────────────────────────────
@@ -272,8 +293,13 @@ export async function rollupPhotographerStats(opts: {
            SELECT 1 FROM visitor_sessions bvs
             WHERE bvs.visitor_id = e.visitor_id AND bvs.is_bot = TRUE)
          AND NOT EXISTS (
-           SELECT 1 FROM users u JOIN photographer_profiles pp ON pp.user_id = u.id
-            WHERE pp.id = e.photographer_id AND u.visitor_id = e.visitor_id)
+           SELECT 1 FROM photographer_profiles pp
+           JOIN (
+             SELECT DISTINCT user_id, visitor_id FROM visitor_sessions WHERE user_id IS NOT NULL AND visitor_id IS NOT NULL
+             UNION
+             SELECT id AS user_id, visitor_id FROM users WHERE visitor_id IS NOT NULL
+           ) own ON own.user_id = pp.user_id
+            WHERE pp.id = e.photographer_id AND own.visitor_id = e.visitor_id)
        GROUP BY 1, 2`,
       [from, to],
     )).rows as { photographer_id: string; day: string; impressions: number; clicks: number; photo_opens: number; book_opens: number }[];

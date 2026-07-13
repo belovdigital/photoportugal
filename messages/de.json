@@ -4222,6 +4222,7 @@
     "benchViews": "Profilaufrufe",
     "benchConv": "Besucher → Anfrage",
     "benchReply": "Zeit bis zur ersten Antwort",
-    "benchMedian": "Median: {value}"
+    "benchMedian": "Median: {value}",
+    "ownVisitsNote": "Ihre eigenen Besuche zählen nicht: Jedes Gerät, auf dem Sie sich je angemeldet haben, wird ausgeschlossen — auch ausgeloggt. Privat-/Inkognito-Fenster sind nicht erkennbar; für saubere Zahlen besuchen Sie Ihr Profil eingeloggt."
   }
 }

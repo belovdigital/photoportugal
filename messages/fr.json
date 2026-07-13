@@ -4222,6 +4222,7 @@
     "benchViews": "Vues du profil",
     "benchConv": "Visiteur → demande",
     "benchReply": "Délai de première réponse",
-    "benchMedian": "médiane : {value}"
+    "benchMedian": "médiane : {value}",
+    "ownVisitsNote": "Vos propres visites ne comptent pas : tout appareil où vous vous êtes déjà connecté est exclu, même déconnecté. Les fenêtres privées/incognito ne sont pas reconnaissables — pour des chiffres propres, consultez votre profil connecté."
   }
 }

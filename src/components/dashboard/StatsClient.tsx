@@ -787,7 +787,8 @@ export function StatsClient() {
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <div className="rounded-2xl border border-warm-200 bg-white p-5">
               <h2 className="font-semibold text-gray-900">{t("returningTitle")}</h2>
-              <p className="mb-4 mt-1 text-xs text-gray-400">{t("returningHint")}</p>
+              <p className="mt-1 text-xs text-gray-400">{t("returningHint")}</p>
+              <p className="mb-4 mt-1 text-xs text-gray-400">{t("ownVisitsNote")}</p>
               {cur.uniqueVisitors > 0 ? (
                 <>
                   <div className="flex h-5 gap-0.5 overflow-hidden rounded-md">

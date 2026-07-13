@@ -4216,6 +4216,7 @@
     "benchViews": "Profile views",
     "benchConv": "Visitor → inquiry",
     "benchReply": "First reply time",
-    "benchMedian": "median: {value}"
+    "benchMedian": "median: {value}",
+    "ownVisitsNote": "Your own visits don't count: any device you've ever logged in on is excluded, even when logged out. Private/incognito windows can't be recognised — for clean numbers, browse your profile while logged in."
   }
 }
