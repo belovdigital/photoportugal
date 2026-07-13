@@ -18,7 +18,11 @@ export const maxDuration = 300;
  */
 
 const DAY_MS = 86_400_000;
-const DEFAULT_WINDOW_DAYS = 35;
+// MUST stay below the visitor_sessions retention (the reminders cron
+// deletes sessions older than 30 days). The rollup zeroes-then-recomputes
+// its whole range, so a window wider than retention would permanently
+// zero out view stats for days whose raw sessions are already pruned.
+const DEFAULT_WINDOW_DAYS = 27;
 const MAX_RANGE_DAYS = 400;
 // GSC reliably has data up to ~2 days ago; asking for fresher dates
 // returns zeros that would overwrite good rows on the next recompute.
@@ -49,6 +53,19 @@ export async function GET(req: NextRequest) {
   const rangeDays = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS);
   if (rangeDays > MAX_RANGE_DAYS) {
     return NextResponse.json({ error: `Range too large (max ${MAX_RANGE_DAYS} days per call)` }, { status: 400 });
+  }
+
+  // Dates older than the session retention hold IMPORTED history (Drive
+  // backups / local dump / GA4). Recomputing them against the pruned live
+  // table would zero the view columns. Require an explicit force=1 so
+  // that only intentional repair runs (with sessions staged back into
+  // the table first) can touch the archive.
+  const retentionFloor = shiftDays(lisbonToday(), -DEFAULT_WINDOW_DAYS);
+  if (from < retentionFloor && params.get("force") !== "1") {
+    return NextResponse.json(
+      { error: `from=${from} is older than the session retention floor (${retentionFloor}); view stats there are imported archive. Pass force=1 only if sessions for that range are present.` },
+      { status: 400 },
+    );
   }
 
   try {
