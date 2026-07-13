@@ -344,12 +344,16 @@ export async function rollupPhotographerStats(opts: {
     }
 
     // ── 9. Inquiries / paid (cohort by created day) ───────────────────
+    // photographer_id IS NULL = blind booking not yet assigned; it starts
+    // counting for the assigned photographer once the trailing-window
+    // recompute sees the assignment.
     const bookingRows = (await client.query(
       `SELECT photographer_id, ((created_at AT TIME ZONE '${TZ}')::date)::text AS day,
               COUNT(*)::int AS inquiries,
               COUNT(*) FILTER (WHERE payment_status = 'paid')::int AS paid
        FROM bookings
-       WHERE (created_at AT TIME ZONE '${TZ}')::date BETWEEN $1::date AND $2::date
+       WHERE photographer_id IS NOT NULL
+         AND (created_at AT TIME ZONE '${TZ}')::date BETWEEN $1::date AND $2::date
        GROUP BY 1, 2`,
       [from, to],
     )).rows as { photographer_id: string; day: string; inquiries: number; paid: number }[];
@@ -374,7 +378,13 @@ export async function rollupPhotographerStats(opts: {
       [from, to],
     );
 
-    const entries = [...acc.entries()];
+    // Defensive: drop any bucket without a photographer (e.g. a future
+    // query joining a nullable photographer_id) instead of failing the
+    // whole transaction on the NOT NULL constraint.
+    const entries = [...acc.entries()].filter(([k]) => {
+      const key = keys.get(k);
+      return Boolean(key?.photographerId && key.day);
+    });
     if (entries.length > 0) {
       const ks = entries.map(([k]) => keys.get(k)!);
       const vs = entries.map(([, v]) => v);
