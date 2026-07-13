@@ -430,6 +430,12 @@ export default async function PhotographerProfilePage({
   // name searches still lead to us. Image alts also keep the full name (SEO,
   // not visible to a casual browser).
   const visibleName = maskSurname(photographer.name);
+
+  // Fully-booked-this-year photographers get a positive framing badge in
+  // the packages column ("Accepting bookings for 2027–2028") instead of a
+  // visitor discovering a dead calendar on the booking page.
+  const { bookingHorizonYear } = await import("@/lib/booking-horizon");
+  const horizonYear = await bookingHorizonYear(photographer.id).catch(() => null);
   const coverageGroups = buildCoverageGroups(photographer.coverageNodeSlugs || [], photographer.locations || []);
   const coverageTitle = (() => {
     if (coverageGroups.length === 0) return "";
@@ -1089,6 +1095,13 @@ export default async function PhotographerProfilePage({
               {photographer.packages && photographer.packages.length > 0 && (
                 <>
                   <h2 className="px-4 pt-6 text-xl font-bold text-gray-900 lg:px-0 lg:pt-0">{t("packages")}</h2>
+                  {horizonYear && (
+                    <div className="mx-4 mt-3 rounded-xl bg-gray-900 px-4 py-3 lg:mx-0">
+                      <p className="text-sm font-medium text-white">
+                        {t("acceptingBookingsFor", { from: String(horizonYear), to: String(horizonYear + 1) })}
+                      </p>
+                    </div>
+                  )}
                   {/* Mobile: horizontal scroll-snap. Desktop: vertical stack. */}
                   <div className="-mx-4 sm:-mx-6 lg:-mx-0 flex gap-3 overflow-x-auto snap-x snap-mandatory overscroll-x-contain px-4 sm:px-6 pt-3 pb-2 lg:flex-col lg:gap-4 lg:overflow-x-visible lg:px-0 lg:py-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {photographer.packages.map((pkg: { id: string; slug?: string | null; name: string; description: string | null; price: number; duration_minutes: number; num_photos: number; is_popular: boolean; delivery_days?: number }) => (

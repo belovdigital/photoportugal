@@ -1283,7 +1283,8 @@
       "packageDescription": "{packageName} photography package by {name}",
       "moreInLocation": "More Photographers in {location}",
       "similarPhotographers": "Similar Photographers",
-      "from": "From"
+      "from": "From",
+      "acceptingBookingsFor": "Fully booked this year — accepting bookings for {from}–{to}"
     },
     "package": {
       "mostPopular": "Most Popular",

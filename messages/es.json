@@ -1254,7 +1254,8 @@
       "packageDescription": "Paquete de fotografía {packageName} de {name}",
       "moreInLocation": "Más fotógrafos en {location}",
       "similarPhotographers": "Fotógrafos similares",
-      "from": "Desde"
+      "from": "Desde",
+      "acceptingBookingsFor": "Agenda completa este año — aceptando reservas para {from}–{to}"
     },
     "package": {
       "mostPopular": "Más popular",

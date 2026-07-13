@@ -1715,7 +1715,8 @@
       "packageDescription": "Forfait photographie {packageName} par {name}",
       "moreInLocation": "Plus de photographes à {location}",
       "similarPhotographers": "Photographes similaires",
-      "from": "À partir de"
+      "from": "À partir de",
+      "acceptingBookingsFor": "Complet cette année — réservations ouvertes pour {from}–{to}"
     },
     "package": {
       "mostPopular": "Plus populaire",

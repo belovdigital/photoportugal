@@ -1288,7 +1288,8 @@
       "packageDescription": "{packageName}-Fotografie-Paket von {name}",
       "moreInLocation": "Weitere Fotografen in {location}",
       "similarPhotographers": "Ähnliche Fotografen",
-      "from": "Ab"
+      "from": "Ab",
+      "acceptingBookingsFor": "Dieses Jahr ausgebucht — nimmt Buchungen für {from}–{to} an"
     },
     "package": {
       "mostPopular": "Am beliebtesten",
