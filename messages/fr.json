@@ -3179,7 +3179,12 @@
     "peekError": "Impossible de partager l’aperçu — réessayez.",
     "smallDeliveryTitle": "Est-ce vraiment la galerie finale COMPLÈTE ?",
     "smallDeliveryText": "Vous livrez seulement {count} photos comme galerie finale — est-ce bien TOUTES les photos, sans rien à ajouter ? Le client devra l’accepter et le paiement sera libéré. Pour montrer quelques favoris en avance, utilisez le Sneak Peek.",
-    "smallDeliveryConfirm": "Oui, c’est la galerie complète"
+    "smallDeliveryConfirm": "Oui, c’est la galerie complète",
+    "resendToClient": "Renvoyer au client",
+    "resending": "Envoi…",
+    "resent": "Envoyé ✓",
+    "resentToast": "Un nouveau lien de livraison a été envoyé au client par e-mail.",
+    "confirmResend": "Renvoyer la galerie complète ({count} photos) au client ? Il recevra un nouvel e-mail avec un lien à jour."
   },
   "availability": {
     "pageTitle": "Disponibilités",

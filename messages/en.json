@@ -2925,7 +2925,12 @@
     "peekError": "Could not share the sneak peek — try again.",
     "smallDeliveryTitle": "Is this really the FULL final gallery?",
     "smallDeliveryText": "You are delivering only {count} photos as the final gallery — are these ALL the photos, with nothing more to add? The client will be asked to accept and the payout will be released. If you just want to show a few favourites early, use the Sneak Peek instead.",
-    "smallDeliveryConfirm": "Yes, this is the full gallery"
+    "smallDeliveryConfirm": "Yes, this is the full gallery",
+    "resendToClient": "Re-send to client",
+    "resending": "Sending…",
+    "resent": "Sent ✓",
+    "resentToast": "A fresh delivery link was emailed to the client.",
+    "confirmResend": "Re-send the full gallery ({count} photos) to the client? They'll get a new email with a fresh link."
   },
   "availability": {
     "pageTitle": "Availability",

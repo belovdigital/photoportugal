@@ -58,6 +58,8 @@ export function DeliveryUploadClient({
   // against a hard limit they had no way to see.
   const [lastUploadError, setLastUploadError] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
   const [delivered, setDelivered] = useState(initialDelivered);
 
   // canEdit: photographer can edit the deliverable up until the client
@@ -525,6 +527,54 @@ export function DeliveryUploadClient({
     setSharing(false);
   }
 
+  // Re-send an already-delivered gallery to the client. Same server path
+  // as handleShare (regenerates the link, re-emails the client, re-posts
+  // the DELIVERY chat message), but callable from the "delivered" state so
+  // a photographer who added photos — or whose delivery was re-opened by
+  // admin (which can rotate the token and kill the client's old link) —
+  // can push a fresh link without support. Only offered while the client
+  // hasn't accepted yet (canEdit).
+  async function handleResend() {
+    const pw = (galleryPassword || initialPassword || "").trim();
+    if (pw.length < 4) {
+      setError(t("setPassword"));
+      return;
+    }
+    const photoCnt = photos.filter((p) => p.media_type !== "video").length;
+    const ok = await confirm(t("resendToClient"), t("confirmResend", { count: photoCnt }), { confirmLabel: t("resendToClient") });
+    if (!ok) return;
+    setResending(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // confirm_small: true — this is an already-delivered gallery being
+        // re-sent, not a first delivery, so skip the small-gallery nag.
+        body: JSON.stringify({
+          action: "share",
+          password: pw,
+          title: deliveryTitle.trim(),
+          message: deliveryMessage.trim(),
+          confirm_small: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data?.error || "Failed to re-send delivery. Please try again.");
+        return;
+      }
+      setDeliveryToken(data.token);
+      setDeliveryUrl(data.deliveryUrl);
+      setResent(true);
+      setTimeout(() => setResent(false), 4000);
+    } catch {
+      setError("Failed to re-send delivery. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  }
+
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragOver(false);
@@ -762,12 +812,32 @@ export function DeliveryUploadClient({
                     </p>
                   )}
                 </div>
-                {deliveryUrl && (
-                  <button onClick={copyLink} className="shrink-0 rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700">
-                    {copied ? t("copied") : t("copy")} link
-                  </button>
-                )}
+                <div className="flex shrink-0 items-center gap-2">
+                  {/* Re-send only while the client can still accept — a fresh
+                      link + email, e.g. after adding photos or an admin
+                      re-open that rotated the token. */}
+                  {canEdit && (
+                    <button
+                      onClick={handleResend}
+                      disabled={resending}
+                      className="rounded-lg border border-accent-600 bg-white px-3 py-1.5 text-xs font-semibold text-accent-700 hover:bg-accent-50 disabled:opacity-50"
+                    >
+                      {resending ? t("resending") : resent ? t("resent") : t("resendToClient")}
+                    </button>
+                  )}
+                  {deliveryUrl && (
+                    <button onClick={copyLink} className="rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700">
+                      {copied ? t("copied") : t("copy")} link
+                    </button>
+                  )}
+                </div>
               </div>
+              {resent && (
+                <p className="mt-2 text-xs font-medium text-accent-700">✓ {t("resentToast")}</p>
+              )}
+              {error && (
+                <p className="mt-2 text-xs font-medium text-red-600">{error}</p>
+              )}
             </div>
           ) : (
             <>

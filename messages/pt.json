@@ -2741,7 +2741,12 @@
     "peekError": "Não foi possível partilhar a prévia — tente novamente.",
     "smallDeliveryTitle": "É mesmo a galeria final COMPLETA?",
     "smallDeliveryText": "Está a entregar apenas {count} fotos como galeria final — são TODAS as fotos, sem mais nada a acrescentar? O cliente será convidado a aceitar e o pagamento será libertado. Se só quer mostrar alguns favoritos antecipadamente, use o Sneak Peek.",
-    "smallDeliveryConfirm": "Sim, é a galeria completa"
+    "smallDeliveryConfirm": "Sim, é a galeria completa",
+    "resendToClient": "Reenviar ao cliente",
+    "resending": "A enviar…",
+    "resent": "Enviado ✓",
+    "resentToast": "Um novo link de entrega foi enviado por email ao cliente.",
+    "confirmResend": "Reenviar a galeria completa ({count} fotos) ao cliente? Vai receber um novo email com um link atualizado."
   },
   "availability": {
     "pageTitle": "Disponibilidade",

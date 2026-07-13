@@ -2931,7 +2931,12 @@
     "peekError": "Vorschau konnte nicht geteilt werden — bitte erneut versuchen.",
     "smallDeliveryTitle": "Ist das wirklich die KOMPLETTE finale Galerie?",
     "smallDeliveryText": "Sie liefern nur {count} Fotos als finale Galerie — sind das ALLE Fotos, ohne dass noch etwas dazukommt? Der Kunde wird sie annehmen und die Auszahlung wird freigegeben. Für ein paar Favoriten vorab nutzen Sie den Sneak Peek.",
-    "smallDeliveryConfirm": "Ja, das ist die komplette Galerie"
+    "smallDeliveryConfirm": "Ja, das ist die komplette Galerie",
+    "resendToClient": "Erneut an Kunden senden",
+    "resending": "Wird gesendet…",
+    "resent": "Gesendet ✓",
+    "resentToast": "Ein neuer Liefer-Link wurde per E-Mail an den Kunden gesendet.",
+    "confirmResend": "Die komplette Galerie ({count} Fotos) erneut an den Kunden senden? Er erhält eine neue E-Mail mit einem frischen Link."
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",
