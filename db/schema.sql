@@ -645,3 +645,7 @@ ALTER TABLE bookings ADD COLUMN IF NOT EXISTS offer_nudge_admin_alerted BOOLEAN 
 -- Admin analytics exclude rows where is_bot AND user_id IS NULL; ingest
 -- classification lives in src/lib/bot-detect.ts.
 ALTER TABLE visitor_sessions ADD COLUMN IF NOT EXISTS is_bot BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 2026-07-13: photographer-facing analytics (db/photographer-analytics.sql).
+-- Raw card/photo events + daily rollups behind /dashboard/stats; rollup
+-- cron at /api/cron/photographer-stats. No money columns by design.

@@ -3,8 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { localizeShootType, canonicalizeShootType } from "@/lib/shoot-type-labels";
+import { trackPhotoOpen } from "@/lib/track-events";
 
 interface PortfolioItem {
+  /** portfolio_items.id — enables per-photo open stats. Optional so
+   *  legacy callers without ids keep working (opens then count only
+   *  toward the photographer's total). */
+  id?: string;
   url: string;
   thumbnail_url?: string | null;
   caption: string | null;
@@ -128,10 +133,13 @@ export function PortfolioGallery({
   items,
   locations,
   photographerName,
+  photographerSlug,
 }: {
   items: PortfolioItem[];
   locations: LocationOption[];
   photographerName?: string;
+  /** Enables photo_open events for /dashboard/stats. */
+  photographerSlug?: string;
 }) {
   const t = useTranslations("photographers.portfolioGallery");
   const locale = useLocale();
@@ -289,7 +297,13 @@ export function PortfolioGallery({
             key={i}
             item={item}
             alt={describePhoto(item)}
-            onClick={() => setLightbox(i)}
+            onClick={() => {
+              // Position = the photo's index in the photographer's own
+              // sort order (not the filtered view) so the stats page can
+              // relate clicks to grid placement.
+              if (photographerSlug) trackPhotoOpen(photographerSlug, item.id, items.indexOf(item));
+              setLightbox(i);
+            }}
           />
         )}
       />

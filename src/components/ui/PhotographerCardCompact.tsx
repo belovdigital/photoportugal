@@ -1,5 +1,5 @@
-import { Link } from "@/i18n/navigation";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { TrackedCardLink } from "@/components/ui/TrackedCardLink";
 import { normalizeName } from "@/lib/format-name";
 import { maskSurname } from "@/lib/photographer-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
@@ -99,7 +99,7 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
         </div>
       </div>
 
-      <Link href={`/photographers/${p.slug}`} className="flex flex-col p-4 pt-8">
+      <TrackedCardLink photographerSlug={p.slug} href={`/photographers/${p.slug}`} className="flex flex-col p-4 pt-8">
         <div className="flex items-center gap-1.5">
           <h3 className="font-semibold text-gray-900 group-hover:text-primary-600 transition truncate">
             {normalizeName(maskSurname(p.name))}
@@ -153,7 +153,7 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
         {p.locations && (
           <p className="mt-1.5 truncate text-xs text-gray-400">{p.locations}</p>
         )}
-      </Link>
+      </TrackedCardLink>
 
       {/* Bottom area — when the caller passes `packages`, replace the
           single "From €X / Book" CTA with a stack of clickable package
@@ -170,8 +170,9 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
         {hasPackages ? (
           <div className="border-t border-warm-100 pt-3 space-y-2">
             {packages.slice(0, 3).map((pkg) => (
-              <Link
+              <TrackedCardLink
                 key={pkg.id}
+                photographerSlug={p.slug}
                 href={`/book/${p.slug}?package=${pkg.id}`}
                 className="flex items-center justify-between gap-3 rounded-xl border border-warm-200 bg-warm-50 px-3 py-2 text-sm transition hover:border-primary-400 hover:bg-primary-50"
               >
@@ -188,19 +189,21 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
-              </Link>
+              </TrackedCardLink>
             ))}
             {totalPackages > 3 && (
-              <Link
+              <TrackedCardLink
+                photographerSlug={p.slug}
                 href={`/photographers/${p.slug}`}
                 className="block rounded-xl border border-warm-200 bg-white px-3 py-2 text-center text-xs font-semibold text-primary-700 transition hover:border-primary-400 hover:bg-primary-50"
               >
                 {tc("viewAllPackages", { count: totalPackages })}
-              </Link>
+              </TrackedCardLink>
             )}
           </div>
         ) : (
-          <Link
+          <TrackedCardLink
+            photographerSlug={p.slug}
             href={`/photographers/${p.slug}`}
             className="flex items-center justify-between border-t border-warm-100 pt-3"
           >
@@ -215,7 +218,7 @@ export async function PhotographerCardCompact({ p }: { p: PhotographerCardCompac
             <span className="rounded bg-primary-50 px-2 py-1 text-xs font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white">
               {tc("book")}
             </span>
-          </Link>
+          </TrackedCardLink>
         )}
       </div>
     </div>

@@ -29,6 +29,7 @@ const PHOTOGRAPHER_TABS: TabItem[] = [
 ];
 
 const PHOTOGRAPHER_MORE: MoreItem[] = [
+  { href: "/dashboard/stats", labelKey: "sidebarStats", icon: "chart-bar" },
   { href: "/dashboard/portfolio", labelKey: "sidebarPortfolio", icon: "image" },
   { href: "/dashboard/packages", labelKey: "sidebarPackages", icon: "package" },
   { href: "/dashboard/availability", labelKey: "sidebarAvailability", icon: "clock" },
@@ -238,6 +239,8 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>;
     case "help-circle":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+    case "chart-bar":
+      return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
     case "dots":
       return <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h.01M12 12h.01M19 12h.01" /></svg>;
     case "external":

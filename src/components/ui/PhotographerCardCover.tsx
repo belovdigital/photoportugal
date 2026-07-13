@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { normalizeName } from "@/lib/format-name";
+import { useCardImpression } from "@/lib/track-events";
 
 // Lightbox is heavy — load only on first open.
 const PhotographerLightbox = lazy(() =>
@@ -37,6 +38,7 @@ export function PhotographerCardCover({
   coverPositionY,
   height = "h-44",
   altPrefix,
+  impressionSurface,
 }: {
   slug: string;
   name: string;
@@ -44,6 +46,9 @@ export function PhotographerCardCover({
   coverPositionY?: number | null;
   height?: string;
   altPrefix?: string;
+  /** Override the pathname-derived surface for photographer-stats
+   *  impressions (e.g. "concierge" for cards inside the chat overlay). */
+  impressionSurface?: string;
 }) {
   const t = useTranslations("photographers.card");
   const [idx, setIdx] = useState(0);
@@ -53,6 +58,10 @@ export function PhotographerCardCover({
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const total = thumbnails.length;
+
+  // Every card on the site renders this cover, so this is the single
+  // impression point for photographer stats (≥50% visible for 600ms).
+  useCardImpression(wrapRef, slug, impressionSurface);
 
   // Mount all slides as soon as the card scrolls anywhere near the viewport.
   // We could lazy-render only on swipe, but that creates a one-frame gap on

@@ -200,8 +200,8 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
     const planLimits: Record<string, number> = { free: 500, pro: 500, premium: 500 };
     const photoLimit = planLimits[profile.plan] || 500;
 
-    const portfolioItems = await query<{ url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; width: number | null; height: number | null }>(
-      "SELECT url, thumbnail_url, caption, location_slug, shoot_type, width, height FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC LIMIT $2",
+    const portfolioItems = await query<{ id: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; width: number | null; height: number | null }>(
+      "SELECT id, url, thumbnail_url, caption, location_slug, shoot_type, width, height FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC LIMIT $2",
       [profile.id, photoLimit]
     );
 
@@ -476,7 +476,7 @@ export default async function PhotographerProfilePage({
   const hiddenShootTypeChipCount = Math.max(0, shootTypeChipItems.length - 5);
   const hasExperience = photographer.experience_years > 0;
   let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string | null; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
-  const portfolioItems = (photographer as { portfolioItems?: { url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
+  const portfolioItems = (photographer as { portfolioItems?: { id?: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
 
   // Fetch real reviews from DB for DB photographers
   if (result.type === "db") {
@@ -1081,6 +1081,7 @@ export default async function PhotographerProfilePage({
                 items={portfolioItems}
                 locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
                 photographerName={normalizeName(visibleName)}
+                photographerSlug={photographer.slug}
               />
             )}
           </div>

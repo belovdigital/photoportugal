@@ -6,6 +6,7 @@ import { PhotographerProfile } from "@/types";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useSession } from "next-auth/react";
 import { trackViewPhotographer, trackCTAClick } from "@/lib/analytics";
+import { trackCardClick } from "@/lib/track-events";
 import { normalizeName } from "@/lib/format-name";
 import { maskSurname } from "@/lib/photographer-name";
 import { WishlistButton } from "@/components/ui/WishlistButton";
@@ -86,6 +87,7 @@ export function PhotographerCard({
 
       <Link
         href={`/photographers/${photographer.slug}`}
+        onClick={() => trackCardClick(photographer.slug)}
         className="flex flex-1 flex-col"
       >
       <div className="relative flex-1 p-6 pt-10 pb-3">
@@ -189,7 +191,7 @@ export function PhotographerCard({
           {!isPhotographer && (
             <Link
               href={`/photographers/${photographer.slug}#message`}
-              onClick={() => trackCTAClick("message_photographer", "photographer_card")}
+              onClick={() => { trackCardClick(photographer.slug); trackCTAClick("message_photographer", "photographer_card"); }}
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
               title={t("messagePhotographer", { name: normalizeName(displayName) })}
             >
@@ -200,7 +202,7 @@ export function PhotographerCard({
           )}
           <Link
             href={`/photographers/${photographer.slug}`}
-            onClick={() => trackCTAClick("view_profile", "photographer_card")}
+            onClick={() => { trackCardClick(photographer.slug); trackCTAClick("view_profile", "photographer_card"); }}
             className="flex h-10 items-center rounded-lg bg-primary-50 px-3 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white whitespace-nowrap"
           >
             {t("viewProfile")}

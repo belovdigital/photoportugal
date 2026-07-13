@@ -1343,6 +1343,7 @@ function PhotographerMatchCard({ p, locale, chatContext, chatId, compareSelected
             coverPositionY={p.cover_position_y ?? null}
             height="aspect-[5/3] h-auto"
             altPrefix={`${p.name} portfolio`}
+            impressionSurface="concierge"
           />
           {presence && (
             <span className="pointer-events-none absolute left-2 top-2 z-20 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-gray-700 shadow-sm backdrop-blur-sm">
