@@ -30,7 +30,7 @@ export default async function PackagesPage() {
   const locationSlugs = locRows.map((r) => r.location_slug);
   const coverageNodeSlugs = await getPhotographerCoverageNodeSlugs(profile.id, locationSlugs);
   const items = await query("SELECT id, type, url, thumbnail_url, caption, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC", [profile.id]);
-  const pkgs = await query("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, is_public, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND tier IS NULL ORDER BY sort_order, price", [profile.id]);
+  const pkgs = await query("SELECT id, name, description, duration_minutes, num_photos, price, is_popular, is_public, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND tier IS NULL AND custom_for_user_id IS NULL ORDER BY sort_order, price", [profile.id]);
 
   return (
     <div className="p-6 sm:p-8">

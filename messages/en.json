@@ -3120,7 +3120,11 @@
     "videoCallJoin": "Join call",
     "videoCallTranscript": "Call transcript",
     "videoCallButton": "Video call",
-    "viewAvatar": "View photo"
+    "viewAvatar": "View photo",
+    "inclServiceFee": "incl. service fee",
+    "offerWithdrawn": "Offer withdrawn",
+    "withdrawOffer": "Withdraw offer",
+    "withdrawOfferConfirm": "Withdraw this offer? The client will no longer be able to book it."
   },
   "settings": {
     "title": "Settings",

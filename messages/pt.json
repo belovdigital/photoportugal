@@ -2936,7 +2936,11 @@
     "videoCallJoin": "Entrar na chamada",
     "videoCallTranscript": "Transcrição da chamada",
     "videoCallButton": "Videochamada",
-    "viewAvatar": "Ver foto"
+    "viewAvatar": "Ver foto",
+    "inclServiceFee": "com taxa de serviço incluída",
+    "offerWithdrawn": "Oferta retirada",
+    "withdrawOffer": "Retirar oferta",
+    "withdrawOfferConfirm": "Retirar esta oferta? O cliente deixará de poder reservá-la."
   },
   "settings": {
     "title": "Definições",

@@ -217,6 +217,7 @@ export default async function BookingsPage() {
                   WHERE m.booking_id = b.id
                     AND m.text LIKE 'BOOKING_CARD:%'
                     AND m.text LIKE '%"is_custom":true%'
+                    AND m.text NOT LIKE '%"revoked":true%'
                     AND m.sender_id != b.client_id
                   ORDER BY m.created_at DESC LIMIT 1) as custom_package_card_payload,
                 b.payment_url, b.updated_at, b.confirmed_at,

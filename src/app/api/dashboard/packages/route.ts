@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
-import { getPricingForDuration, DURATION_OPTIONS } from "@/lib/package-pricing";
+import { DURATION_OPTIONS } from "@/lib/package-pricing";
 
 async function getProfile(userId: string) {
   return queryOne<{ id: string; plan: string; is_approved: boolean }>(
@@ -34,8 +34,12 @@ export async function GET(req: NextRequest) {
     // manager — they're platform-owned, opt-in/out lives in
     // /dashboard/subscriptions instead. Showing them here only invites
     // accidental delete attempts.
+    // Custom proposals (custom_for_user_id set) are excluded too — they
+    // are born and withdrawn in the chat, and once paid they're a spent
+    // one-off. Listing them here confused photographers ("Private" +
+    // odd names cluttering the catalog manager).
     const packages = await query(
-      "SELECT * FROM packages WHERE photographer_id = $1 AND tier IS NULL ORDER BY sort_order, price",
+      "SELECT * FROM packages WHERE photographer_id = $1 AND tier IS NULL AND custom_for_user_id IS NULL ORDER BY sort_order, price",
       [profile.id]
     );
     return NextResponse.json(packages);
@@ -70,10 +74,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid duration. Please select from the available options." }, { status: 400 });
     }
 
-    const pricing = getPricingForDuration(duration_minutes);
-    if (pricing && Math.round(price) < pricing.minPrice) {
-      return NextResponse.json({ error: `Minimum price for this duration is €${pricing.minPrice}` }, { status: 400 });
-    }
+    // Minimum-price enforcement removed 2026-07-13 (Alex's call) —
+    // recommended prices remain a hint, not a gate.
 
     const cleanFeatures = Array.isArray(features) ? features.filter((f: string) => f.trim()) : [];
 
@@ -153,10 +155,8 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Invalid duration. Please select from the available options." }, { status: 400 });
     }
 
-    const pricing = getPricingForDuration(duration_minutes);
-    if (pricing && Math.round(price) < pricing.minPrice) {
-      return NextResponse.json({ error: `Minimum price for this duration is €${pricing.minPrice}` }, { status: 400 });
-    }
+    // Minimum-price enforcement removed 2026-07-13 (Alex's call) —
+    // recommended prices remain a hint, not a gate.
 
     const cleanFeatures = Array.isArray(features) ? features.filter((f: string) => f.trim()) : [];
 

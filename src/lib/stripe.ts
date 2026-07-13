@@ -34,7 +34,11 @@ export const PLAN_PRICES: Record<string, number> = {
   premium: 59,
 };
 
-export const SERVICE_FEE_RATE = 0.15; // 15% — raised from 12.5% on 2026-06-12
+// Single source of truth lives in lib/service-fee (client-safe module —
+// chat cards etc. must not import this stripe-SDK file). Re-exported here
+// so existing server imports keep working.
+export { SERVICE_FEE_RATE } from "@/lib/service-fee";
+import { SERVICE_FEE_RATE } from "@/lib/service-fee";
 
 // Large-group surcharge: 9+ people pay an extra 50% on the package base
 // price. Applied before service fee. Smaller groups (≤8) pay the package

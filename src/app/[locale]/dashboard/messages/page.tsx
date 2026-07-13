@@ -13,6 +13,7 @@ import { useSwipeNavigation } from "@/lib/use-swipe";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import imageCompression from "browser-image-compression";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { clientPriceWithFee } from "@/lib/service-fee";
 import nextDynamic from "next/dynamic";
 
 // LiveKit bundle is heavy — load only when a call is actually opened.
@@ -1633,25 +1634,38 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                             // client). Card gets an amber "Custom" badge so
                             // both sides know it's not a public package.
                             const isCustom = !!card.is_custom;
+                            const isRevoked = !!card.revoked;
+                            const viewerIsClient = activeConvo?.other_role === "photographer";
+                            // Clients see the all-in amount on CUSTOM cards —
+                            // a negotiated price must match what checkout will
+                            // actually charge (base + 15% service fee).
+                            // Catalog-package cards keep the base price for
+                            // consistency with profile/catalog surfaces.
+                            // Photographers keep seeing their own base price.
+                            const displayPrice = isCustom && viewerIsClient
+                              ? clientPriceWithFee(Number(card.price))
+                              : Math.round(card.price);
                             return (
                               <div key={msg.id} className="flex justify-center my-3">
                                 <div className={`max-w-[90%] sm:max-w-[70%] rounded-2xl border p-5 shadow-sm ${
-                                  isCustom
+                                  isRevoked
+                                    ? "border-gray-200 bg-gray-50 opacity-80"
+                                    : isCustom
                                     ? "border-amber-300 bg-gradient-to-br from-amber-50 to-white"
                                     : "border-primary-200 bg-gradient-to-br from-primary-50 to-white"
                                 }`}>
                                   <div className="flex items-center gap-2">
-                                    <p className={`text-xs font-medium uppercase tracking-wide ${isCustom ? "text-amber-700" : "text-primary-500"}`}>
+                                    <p className={`text-xs font-medium uppercase tracking-wide ${isRevoked ? "text-gray-400" : isCustom ? "text-amber-700" : "text-primary-500"}`}>
                                       {isCustom ? t("customProposalBadge") : t("packageLabel")}
                                     </p>
-                                    {isCustom && (
+                                    {isCustom && !isRevoked && (
                                       <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">
                                         ✨
                                       </span>
                                     )}
                                   </div>
-                                  <p className="mt-1 text-base font-bold text-gray-900">{card.name}</p>
-                                  {isCustom && card.description && (
+                                  <p className={`mt-1 text-base font-bold ${isRevoked ? "text-gray-400 line-through" : "text-gray-900"}`}>{card.name}</p>
+                                  {isCustom && card.description && !isRevoked && (
                                     <p className="mt-1 text-xs text-gray-500 italic">&ldquo;{card.description}&rdquo;</p>
                                   )}
                                   <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
@@ -1659,8 +1673,16 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                     <span className="text-gray-300">&middot;</span>
                                     <span>{card.num_photos} photos</span>
                                   </div>
-                                  <p className="mt-2 text-xl font-bold text-gray-900">&euro;{Math.round(card.price)}</p>
-                                  {card.slug && activeConvo?.other_role === "photographer" && (
+                                  <p className={`mt-2 text-xl font-bold ${isRevoked ? "text-gray-400 line-through" : "text-gray-900"}`}>
+                                    &euro;{typeof displayPrice === "number" && !Number.isInteger(displayPrice) ? displayPrice.toFixed(2) : displayPrice}
+                                  </p>
+                                  {isCustom && viewerIsClient && !isRevoked && (
+                                    <p className="text-[11px] text-gray-400">{t("inclServiceFee")}</p>
+                                  )}
+                                  {isRevoked && (
+                                    <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("offerWithdrawn")}</p>
+                                  )}
+                                  {!isRevoked && card.slug && viewerIsClient && (
                                     <>
                                       <p className="mt-2 text-[11px] font-medium text-amber-700">⏳ {t("bookingCardFomo")}</p>
                                       <a href={`/book/${card.slug}?package=${card.package_id}&proposal=${msg.id}`}
@@ -1670,6 +1692,32 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                         {t("bookNow")}
                                       </a>
                                     </>
+                                  )}
+                                  {!isRevoked && isCustom && !viewerIsClient && msg.sender_id === userId && (
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        if (!window.confirm(t("withdrawOfferConfirm"))) return;
+                                        try {
+                                          const res = await fetch("/api/messages/share-package", {
+                                            method: "DELETE",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ message_id: msg.id }),
+                                          });
+                                          if (!res.ok) {
+                                            const d = await res.json().catch(() => ({}));
+                                            alert(d.error || "Failed to withdraw the offer");
+                                            return;
+                                          }
+                                          fetchMessages(activeChat!);
+                                        } catch {
+                                          alert("Failed to withdraw the offer");
+                                        }
+                                      }}
+                                      className="mt-3 text-xs font-medium text-gray-400 underline decoration-dotted underline-offset-2 hover:text-red-500 transition"
+                                    >
+                                      {t("withdrawOffer")}
+                                    </button>
                                   )}
                                 </div>
                               </div>

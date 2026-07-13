@@ -517,3 +517,87 @@ export async function PUT(req: NextRequest) {
     },
   });
 }
+
+// DELETE — photographer withdraws a previously sent custom proposal.
+// Marks the private package revoked (bookings POST refuses it) and
+// rewrites the chat card payload with revoked:true so both sides'
+// renderers flip to the "Offer withdrawn" state.
+export async function DELETE(req: NextRequest) {
+  const user = await authFromRequest(req);
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let body: { message_id?: string };
+  try { body = await req.json(); } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  if (!body.message_id) {
+    return NextResponse.json({ error: "message_id required" }, { status: 400 });
+  }
+
+  const msg = await queryOne<{ id: string; booking_id: string; sender_id: string; text: string }>(
+    "SELECT id, booking_id, sender_id, text FROM messages WHERE id = $1",
+    [body.message_id]
+  );
+  if (!msg || !msg.text.startsWith("BOOKING_CARD:")) {
+    return NextResponse.json({ error: "Proposal not found" }, { status: 404 });
+  }
+  if (msg.sender_id !== user.id) {
+    return NextResponse.json({ error: "Only the sender can withdraw this offer" }, { status: 403 });
+  }
+
+  let card: { package_id?: string; is_custom?: boolean; revoked?: boolean };
+  try { card = JSON.parse(msg.text.slice("BOOKING_CARD:".length)); } catch {
+    return NextResponse.json({ error: "Malformed card" }, { status: 400 });
+  }
+  if (!card.is_custom || !card.package_id) {
+    return NextResponse.json({ error: "Only custom proposals can be withdrawn" }, { status: 400 });
+  }
+  if (card.revoked) {
+    return NextResponse.json({ success: true, already_revoked: true });
+  }
+
+  // A proposal someone already paid for is a live deal — withdrawing the
+  // card would just desync it from reality. Unpaid inquiry-stage bookings
+  // don't block withdrawal.
+  const paid = await queryOne<{ id: string }>(
+    "SELECT id FROM bookings WHERE package_id = $1 AND payment_status = 'paid' LIMIT 1",
+    [card.package_id]
+  );
+  if (paid) {
+    return NextResponse.json({ error: "This proposal was already booked and paid — it can no longer be withdrawn." }, { status: 409 });
+  }
+
+  const revokedPkg = await queryOne<{ id: string }>(
+    `UPDATE packages p SET revoked_at = NOW()
+     FROM photographer_profiles pp
+     WHERE p.id = $1 AND p.photographer_id = pp.id AND pp.user_id = $2
+     RETURNING p.id`,
+    [card.package_id, user.id]
+  );
+  if (!revokedPkg) {
+    return NextResponse.json({ error: "Package not found" }, { status: 404 });
+  }
+
+  const newText = `BOOKING_CARD:${JSON.stringify({ ...card, revoked: true })}`;
+  await queryOne(
+    "UPDATE messages SET text = $1 WHERE id = $2 RETURNING id",
+    [newText, msg.id]
+  );
+
+  // Push the text change to open chats. ws-server's message_changed
+  // channel broadcasts {type:'message_edited'} which both web and app
+  // handlers already apply in place.
+  try {
+    await queryOne("SELECT pg_notify('message_changed', $1)", [
+      JSON.stringify({
+        booking_id: msg.booking_id,
+        kind: "edited",
+        message_id: msg.id,
+        text: newText,
+        edited_at: new Date().toISOString(),
+      }),
+    ]);
+  } catch {}
+
+  return NextResponse.json({ success: true });
+}

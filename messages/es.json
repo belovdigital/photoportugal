@@ -3374,7 +3374,11 @@
     "videoCallJoin": "Unirse a la llamada",
     "videoCallTranscript": "Transcripción de la llamada",
     "videoCallButton": "Videollamada",
-    "viewAvatar": "Ver foto"
+    "viewAvatar": "Ver foto",
+    "inclServiceFee": "con tarifa de servicio incluida",
+    "offerWithdrawn": "Oferta retirada",
+    "withdrawOffer": "Retirar oferta",
+    "withdrawOfferConfirm": "¿Retirar esta oferta? El cliente ya no podrá reservarla."
   },
   "settings": {
     "title": "Configuración",

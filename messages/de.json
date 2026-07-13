@@ -3126,7 +3126,11 @@
     "videoCallJoin": "Anruf beitreten",
     "videoCallTranscript": "Anruf-Transkript",
     "videoCallButton": "Videoanruf",
-    "viewAvatar": "Foto ansehen"
+    "viewAvatar": "Foto ansehen",
+    "inclServiceFee": "inkl. Servicegebühr",
+    "offerWithdrawn": "Angebot zurückgezogen",
+    "withdrawOffer": "Angebot zurückziehen",
+    "withdrawOfferConfirm": "Dieses Angebot zurückziehen? Der Kunde kann es dann nicht mehr buchen."
   },
   "settings": {
     "title": "Einstellungen",

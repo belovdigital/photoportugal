@@ -191,11 +191,17 @@ export async function POST(req: NextRequest) {
 
     let totalPrice = null;
     if (package_id) {
-      const pkg = await queryOne<{ price: number; custom_for_user_id: string | null; is_group_package: boolean }>(
-        "SELECT price, custom_for_user_id, COALESCE(is_group_package, FALSE) as is_group_package FROM packages WHERE id = $1 AND photographer_id = $2",
+      const pkg = await queryOne<{ price: number; custom_for_user_id: string | null; is_group_package: boolean; revoked_at: string | null }>(
+        "SELECT price, custom_for_user_id, COALESCE(is_group_package, FALSE) as is_group_package, revoked_at FROM packages WHERE id = $1 AND photographer_id = $2",
         [package_id, photographer_id]
       );
       if (pkg) {
+        if (pkg.revoked_at) {
+          return NextResponse.json({
+            error: "This offer has been withdrawn by the photographer.",
+            code: "offer_withdrawn",
+          }, { status: 410 });
+        }
         if (pkg.custom_for_user_id && pkg.custom_for_user_id !== userId) {
           return NextResponse.json({
             error: "This proposal isn't available to you.",

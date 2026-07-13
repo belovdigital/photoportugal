@@ -630,6 +630,11 @@ ALTER TABLE delivery_photos ADD COLUMN IF NOT EXISTS is_peek BOOLEAN NOT NULL DE
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS visitor_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_visitor_sessions_visitor_id ON visitor_sessions(visitor_id);
 
+-- 2026-07-13: withdrawn custom proposals (db/packages-revoked.sql).
+-- DELETE /api/messages/share-package sets it; bookings POST refuses
+-- revoked packages; chat cards render "Offer withdrawn".
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ;
+
 -- 2026-07-12: inquiry offer-nudge flags (db/inquiry-offer-nudge.sql).
 -- Photographer chatted but never sent a bookable package: nudge at 48h,
 -- admin TG at day 5. See cron/reminders "NO-OFFER NUDGE" section.
