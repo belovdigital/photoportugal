@@ -2410,6 +2410,17 @@ export async function GET(req: NextRequest) {
       WHERE b.status = 'inquiry'
         AND (b.total_price IS NULL OR b.total_price = 0)
         AND b.package_id IS NULL
+        -- A sent-but-not-yet-accepted custom offer lives as a BOOKING_CARD
+        -- message (is_system=TRUE — invisible to the is_system=FALSE checks
+        -- here), NOT in total_price/package_id (those fill on ACCEPT).
+        -- Without this exclusion the nudge fired at photographers who had
+        -- already done exactly what it asks (3 of the first 16 sends).
+        AND NOT EXISTS (
+          SELECT 1 FROM messages mo
+          WHERE mo.booking_id = b.id
+            AND mo.sender_id = pp.user_id
+            AND mo.text LIKE 'BOOKING_CARD:%'
+        )
         -- Age cap: don't resurrect the historical backlog (31 stuck rows
         -- at ship time) — nudging a photographer about a 2-month-old chat
         -- is noise, and day-5 alerts would flood admin TG on first run.
