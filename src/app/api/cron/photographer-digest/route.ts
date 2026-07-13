@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
       `SELECT pp.id AS photographer_id,
               u.email,
               u.locale,
-              split_part(COALESCE(NULLIF(pp.display_name, ''), u.name, ''), ' ', 1) AS first_name,
+              split_part(COALESCE(NULLIF(u.first_name, ''), u.name, ''), ' ', 1) AS first_name,
               COALESCE(s.views, 0)::int AS views,
               COALESCE(s.uniques, 0)::int AS uniques,
               COALESCE(s.shown, 0)::int AS shown,

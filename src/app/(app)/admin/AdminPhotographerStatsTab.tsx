@@ -24,8 +24,11 @@ interface Row {
 }
 
 export async function AdminPhotographerStatsTab() {
+  // NB: prod photographer_profiles has no display_name column (schema.sql
+  // is aspirational there) — names come from users. .catch keeps a data
+  // hiccup from 500-ing the whole admin page (matches page.tsx pattern).
   const rows = await query<Row>(
-    `SELECT pp.slug, pp.display_name,
+    `SELECT pp.slug, u.name AS display_name,
             COALESCE(SUM(s.profile_views), 0)::int AS views,
             COALESCE(SUM(s.unique_visitors), 0)::int AS uniques,
             COALESCE(SUM(s.card_impressions + s.concierge_impressions + COALESCE(s.gsc_impressions, 0)), 0)::int AS impressions,
@@ -36,12 +39,13 @@ export async function AdminPhotographerStatsTab() {
             (SELECT COUNT(*) FROM packages p WHERE p.photographer_id = pp.id AND p.is_public = TRUE AND p.revoked_at IS NULL)::int AS packages_count,
             COALESCE(array_length(pp.languages, 1), 0) AS languages_count
      FROM photographer_profiles pp
+     JOIN users u ON u.id = pp.user_id
      LEFT JOIN photographer_daily_stats s
        ON s.photographer_id = pp.id AND s.date >= (NOW() AT TIME ZONE 'Europe/Lisbon')::date - 30
      WHERE pp.is_approved = TRUE AND pp.is_test = FALSE
-     GROUP BY pp.id
+     GROUP BY pp.id, u.name
      ORDER BY 3 DESC`,
-  );
+  ).catch(() => [] as Row[]);
 
   const wasted = rows.filter((r) => r.uniques >= 15 && r.paid === 0);
 
