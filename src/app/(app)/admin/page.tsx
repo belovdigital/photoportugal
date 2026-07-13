@@ -3,6 +3,7 @@ import { query, queryOne } from "@/lib/db";
 import { AdminLoginForm } from "./AdminControls";
 import { AdminLogoutButton, AdminNotificationEmail, AdminNotificationPhone } from "./AdminControls";
 import { AdminPhotographersList } from "./AdminPhotographersList";
+import { AdminPhotographerStatsTab } from "./AdminPhotographerStatsTab";
 import { AdminClientsList } from "./AdminClientsList";
 import { AdminBookingsList } from "./AdminBookingsList";
 import { AdminInquiriesList } from "./AdminBookingsTab";
@@ -607,6 +608,7 @@ export default async function AdminPage() {
       stats={stats}
       logoutButton={<AdminLogoutButton />}
       analyticsSection={<AnalyticsDashboard />}
+      photographerStatsSection={<AdminPhotographerStatsTab />}
       photographersSection={photographersSection}
       clientsSection={clientsSection}
       bookingsSection={bookingsSection}

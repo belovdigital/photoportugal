@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
@@ -24,6 +25,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
+    logProfileChange(profile.id, "cover");
     revalidatePath(`/photographers/${profile.slug}`);
     revalidatePath("/photographers");
 

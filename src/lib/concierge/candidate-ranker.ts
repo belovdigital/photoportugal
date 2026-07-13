@@ -305,6 +305,10 @@ export function rankTopCandidates(opts: {
    *  instead of concentrating on the same 3 names. Caller queries
    *  `concierge_recommendation_events` to build it. */
   recentlyShownNewcomers?: Set<string>;
+  /** Missed-match telemetry: called once per dropped candidate with the
+   *  gate that dropped it. "location" = coverage miss on a located
+   *  intent; "outranked" = scored but didn't fit into topN. */
+  onDrop?: (photographerId: string, reason: "location" | "outranked") => void;
 }): RankedCandidate[] {
   const { photographers, intent, topN = 12, excludeSlugs, recentlyShownNewcomers } = opts;
   const rng = opts.random ?? Math.random;
@@ -313,7 +317,12 @@ export function rankTopCandidates(opts: {
   const scored = photographers
     .filter((p) => !excludeSlugs || !excludeSlugs.has(p.slug))
     .map((p) => ({ p, score: scoreCandidate(p, intent) }))
-    .filter((x) => x.score > 0)
+    .filter((x) => {
+      if (x.score > 0) return true;
+      // score 0 with a located intent = the only hard coverage drop
+      if (intent.locationSlug) opts.onDrop?.(x.p.id, "location");
+      return false;
+    })
     .sort((a, b) => b.score - a.score);
 
   if (scored.length === 0) return [];
@@ -399,6 +408,12 @@ export function rankTopCandidates(opts: {
     if (result.length >= topN) break;
     if (used.has(s.p.slug)) continue;
     pushCandidate(s);
+  }
+
+  if (opts.onDrop) {
+    for (const s of scored) {
+      if (!used.has(s.p.slug)) opts.onDrop(s.p.id, "outranked");
+    }
   }
 
   return result;

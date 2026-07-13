@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
  * resolved to ids here; events for unknown slugs are dropped.
  */
 
-const EVENT_TYPES = new Set(["card_impression", "card_click", "photo_open"]);
+const EVENT_TYPES = new Set(["card_impression", "card_click", "photo_open", "book_open"]);
 const MAX_EVENTS_PER_REQUEST = 40;
 const MAX_EVENTS_PER_VISITOR_PER_HOUR = 600;
 

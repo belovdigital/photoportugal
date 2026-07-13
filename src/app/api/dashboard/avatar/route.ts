@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
@@ -71,7 +72,10 @@ export async function POST(req: NextRequest) {
     }
 
     const profile = await queryOne<{ id: string }>("SELECT id FROM photographer_profiles WHERE user_id = $1", [userId]);
-    if (profile) checkAndNotifyChecklistComplete(profile.id).catch(() => {});
+    if (profile) {
+      checkAndNotifyChecklistComplete(profile.id).catch(() => {});
+      logProfileChange(profile.id, type === "cover" ? "cover" : "avatar");
+    }
     return NextResponse.json({ success: true, url });
   } catch (error) {
     console.error("Upload error:", error);

@@ -88,6 +88,7 @@ export async function rollupPhotographerStats(opts: {
     card_impressions: number;
     card_clicks: number;
     photo_opens: number;
+    book_opens: number;
     concierge_impressions: number;
     concierge_clicks: number;
     inquiries: number;
@@ -97,6 +98,7 @@ export async function rollupPhotographerStats(opts: {
     sources: Record<string, number>;
     intents: Record<string, number>;
     surfaces: Record<string, number>;
+    missed_matches: Record<string, number>;
   }
 
   const acc = new Map<string, DailyAccumulator>();
@@ -107,10 +109,10 @@ export async function rollupPhotographerStats(opts: {
     if (!b) {
       b = {
         profile_views: 0, unique_visitors: 0, returning_visitors: 0,
-        card_impressions: 0, card_clicks: 0, photo_opens: 0,
+        card_impressions: 0, card_clicks: 0, photo_opens: 0, book_opens: 0,
         concierge_impressions: 0, concierge_clicks: 0,
         inquiries: 0, paid_bookings: 0,
-        countries: {}, devices: {}, sources: {}, intents: {}, surfaces: {},
+        countries: {}, devices: {}, sources: {}, intents: {}, surfaces: {}, missed_matches: {},
       };
       acc.set(k, b);
       keys.set(k, { photographerId: row.photographer_id, day: row.day });
@@ -262,7 +264,8 @@ export async function rollupPhotographerStats(opts: {
               ((e.occurred_at AT TIME ZONE '${TZ}')::date)::text AS day,
               COUNT(*) FILTER (WHERE e.event_type = 'card_impression' AND COALESCE(e.surface, '') <> 'concierge')::int AS impressions,
               COUNT(*) FILTER (WHERE e.event_type = 'card_click')::int AS clicks,
-              COUNT(*) FILTER (WHERE e.event_type = 'photo_open')::int AS photo_opens
+              COUNT(*) FILTER (WHERE e.event_type = 'photo_open')::int AS photo_opens,
+              COUNT(*) FILTER (WHERE e.event_type = 'book_open')::int AS book_opens
        FROM photographer_events e
        WHERE (e.occurred_at AT TIME ZONE '${TZ}')::date BETWEEN $1::date AND $2::date
          AND NOT EXISTS (
@@ -273,12 +276,13 @@ export async function rollupPhotographerStats(opts: {
             WHERE pp.id = e.photographer_id AND u.visitor_id = e.visitor_id)
        GROUP BY 1, 2`,
       [from, to],
-    )).rows as { photographer_id: string; day: string; impressions: number; clicks: number; photo_opens: number }[];
+    )).rows as { photographer_id: string; day: string; impressions: number; clicks: number; photo_opens: number; book_opens: number }[];
     for (const r of eventRows) {
       const b = bucket(r);
       b.card_impressions = r.impressions;
       b.card_clicks = r.clicks;
       b.photo_opens = r.photo_opens;
+      b.book_opens = r.book_opens;
     }
 
     const surfaceRows = (await client.query(
@@ -343,6 +347,26 @@ export async function rollupPhotographerStats(opts: {
       b.concierge_clicks = r.clicks;
     }
 
+    // ── 8b. Missed concierge matches by reason ────────────────────────
+    const missedRows = (await client.query(
+      `SELECT photographer_id, ((occurred_at AT TIME ZONE '${TZ}')::date)::text AS day,
+              reason AS name, COUNT(*)::int AS count
+       FROM concierge_exclusion_events
+       WHERE (occurred_at AT TIME ZONE '${TZ}')::date BETWEEN $1::date AND $2::date
+       GROUP BY 1, 2, 3`,
+      [from, to],
+    )).rows as { photographer_id: string; day: string; name: string; count: number }[];
+    {
+      const grouped = new Map<string, { name: string; count: number }[]>();
+      for (const r of missedRows) {
+        const k = keyOf(r);
+        if (!grouped.has(k)) grouped.set(k, []);
+        grouped.get(k)!.push({ name: r.name, count: r.count });
+        bucket(r);
+      }
+      for (const [k, entries] of grouped) acc.get(k)!.missed_matches = foldBreakdown(entries);
+    }
+
     // ── 9. Inquiries / paid (cohort by created day) ───────────────────
     // photographer_id IS NULL = blind booking not yet assigned; it starts
     // counting for the assigned photographer once the trailing-window
@@ -369,10 +393,11 @@ export async function rollupPhotographerStats(opts: {
     await client.query(
       `UPDATE photographer_daily_stats SET
          profile_views = 0, unique_visitors = 0, returning_visitors = 0,
-         card_impressions = 0, card_clicks = 0, photo_opens = 0,
+         card_impressions = 0, card_clicks = 0, photo_opens = 0, book_opens = 0,
          concierge_impressions = 0, concierge_clicks = 0,
          inquiries = 0, paid_bookings = 0,
          countries = '{}', devices = '{}', sources = '{}', intents = '{}', surfaces = '{}',
+         missed_matches = '{}',
          computed_at = NOW()
        WHERE date BETWEEN $1::date AND $2::date`,
       [from, to],
@@ -391,14 +416,14 @@ export async function rollupPhotographerStats(opts: {
       await client.query(
         `INSERT INTO photographer_daily_stats (
            photographer_id, date, profile_views, unique_visitors, returning_visitors,
-           card_impressions, card_clicks, photo_opens,
+           card_impressions, card_clicks, photo_opens, book_opens,
            concierge_impressions, concierge_clicks, inquiries, paid_bookings,
-           countries, devices, sources, intents, surfaces, computed_at)
+           countries, devices, sources, intents, surfaces, missed_matches, computed_at)
          SELECT * , NOW() FROM UNNEST(
            $1::uuid[], $2::date[], $3::int[], $4::int[], $5::int[],
-           $6::int[], $7::int[], $8::int[],
-           $9::int[], $10::int[], $11::int[], $12::int[],
-           $13::jsonb[], $14::jsonb[], $15::jsonb[], $16::jsonb[], $17::jsonb[])
+           $6::int[], $7::int[], $8::int[], $9::int[],
+           $10::int[], $11::int[], $12::int[], $13::int[],
+           $14::jsonb[], $15::jsonb[], $16::jsonb[], $17::jsonb[], $18::jsonb[], $19::jsonb[])
          ON CONFLICT (photographer_id, date) DO UPDATE SET
            profile_views = EXCLUDED.profile_views,
            unique_visitors = EXCLUDED.unique_visitors,
@@ -406,6 +431,7 @@ export async function rollupPhotographerStats(opts: {
            card_impressions = EXCLUDED.card_impressions,
            card_clicks = EXCLUDED.card_clicks,
            photo_opens = EXCLUDED.photo_opens,
+           book_opens = EXCLUDED.book_opens,
            concierge_impressions = EXCLUDED.concierge_impressions,
            concierge_clicks = EXCLUDED.concierge_clicks,
            inquiries = EXCLUDED.inquiries,
@@ -415,6 +441,7 @@ export async function rollupPhotographerStats(opts: {
            sources = EXCLUDED.sources,
            intents = EXCLUDED.intents,
            surfaces = EXCLUDED.surfaces,
+           missed_matches = EXCLUDED.missed_matches,
            computed_at = NOW()`,
         [
           ks.map((k) => k.photographerId),
@@ -425,6 +452,7 @@ export async function rollupPhotographerStats(opts: {
           vs.map((v) => v.card_impressions),
           vs.map((v) => v.card_clicks),
           vs.map((v) => v.photo_opens),
+          vs.map((v) => v.book_opens),
           vs.map((v) => v.concierge_impressions),
           vs.map((v) => v.concierge_clicks),
           vs.map((v) => v.inquiries),
@@ -434,6 +462,7 @@ export async function rollupPhotographerStats(opts: {
           vs.map((v) => JSON.stringify(v.sources)),
           vs.map((v) => JSON.stringify(v.intents)),
           vs.map((v) => JSON.stringify(v.surfaces)),
+          vs.map((v) => JSON.stringify(v.missed_matches)),
         ],
       );
     }
@@ -449,6 +478,9 @@ export async function rollupPhotographerStats(opts: {
        SELECT COUNT(*)::text AS count FROM del`,
     );
     eventsPruned = parseInt(res[0]?.count || "0", 10);
+    await query(
+      `DELETE FROM concierge_exclusion_events WHERE occurred_at < NOW() - INTERVAL '${EVENTS_RETENTION_DAYS} days'`,
+    ).catch(() => {});
   }
 
   return { from, to, dailyRowsUpserted: acc.size, photoRowsUpserted, eventsPruned };
@@ -474,28 +506,36 @@ export async function pullGscProfileStats(from: string, to: string): Promise<{ r
   });
   const searchconsole = google.searchconsole({ version: "v1", auth });
 
-  const res = await searchconsole.searchanalytics.query({
-    siteUrl: process.env.GSC_SITE_URL || "https://photoportugal.com",
-    requestBody: {
-      startDate: from,
-      endDate: to,
-      dimensions: ["date", "page"],
-      dimensionFilterGroups: [
-        {
-          filters: [
-            {
-              dimension: "page",
-              operator: "includingRegex",
-              expression: `/${PROFILE_SEGMENTS}/[a-z0-9-]+/?$`,
-            },
-          ],
-        },
-      ],
-      rowLimit: 25000,
-    },
-  });
-
-  const rows = res.data.rows || [];
+  // Paginate: GSC caps each response at rowLimit; long backfill ranges
+  // (months × profiles × locale URLs) can exceed one page.
+  const PAGE_SIZE = 25000;
+  const rows: { keys?: string[] | null; impressions?: number | null; clicks?: number | null; position?: number | null }[] = [];
+  for (let startRow = 0; ; startRow += PAGE_SIZE) {
+    const res = await searchconsole.searchanalytics.query({
+      siteUrl: process.env.GSC_SITE_URL || "https://photoportugal.com",
+      requestBody: {
+        startDate: from,
+        endDate: to,
+        dimensions: ["date", "page"],
+        dimensionFilterGroups: [
+          {
+            filters: [
+              {
+                dimension: "page",
+                operator: "includingRegex",
+                expression: `/${PROFILE_SEGMENTS}/[a-z0-9-]+/?$`,
+              },
+            ],
+          },
+        ],
+        rowLimit: PAGE_SIZE,
+        startRow,
+      },
+    });
+    const page = res.data.rows || [];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
   if (rows.length === 0) return { rows: 0, days: 0 };
 
   // slug → per-date sums (locale variants of the same profile merge here)

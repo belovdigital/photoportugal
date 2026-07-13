@@ -38,6 +38,7 @@ interface Totals {
   gscClicks: number;
   inquiries: number;
   paidBookings: number;
+  bookOpens: number;
 }
 
 interface StatsResponse {
@@ -53,6 +54,7 @@ interface StatsResponse {
     gscImpressions: number;
     inquiries: number;
     paid: number;
+    bookOpens: number;
   }[];
   breakdowns: {
     countries: Record<string, number>;
@@ -63,6 +65,18 @@ interface StatsResponse {
   };
   platformIntents: Record<string, number>;
   photos: { id: string; thumb: string; caption: string | null; position: number | null; opens: number }[];
+  responseStats: {
+    inquiries: number;
+    offered: number;
+    medianReplyMinutes: number | null;
+    lifetimeAvgReplyMinutes: number | null;
+    platform: { medianReplyMinutes: number | null; p25ReplyMinutes: number | null; inquiries: number; offered: number };
+    offerImpact: { fast: { n: number; paid: number }; slow: { n: number; paid: number }; never: { n: number; paid: number } };
+  };
+  benchmarks: { pool: "peers" | "platform"; n: number; medViews: number | null; medConvPct: number | null; medReplyMinutes: number | null } | null;
+  score: { total: number; max: number; checks: { key: string; ok: boolean; weight: number; href: string }[]; actions: { key: string; href: string }[] };
+  annotations: { date: string; field: string }[];
+  missedMatches: Record<string, number>;
   meta: {
     today: string;
     dataSince: string | null;
@@ -97,11 +111,14 @@ function TimelineChart({
   showImpressions,
   labels,
   locale,
+  annotations = [],
 }: {
   timeline: StatsResponse["timeline"];
   showImpressions: boolean;
   labels: { views: string; impressions: string };
   locale: string;
+  /** Profile-change markers: date → joined field names for the tooltip. */
+  annotations?: { date: string; label: string }[];
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -183,6 +200,18 @@ function TimelineChart({
         )}
         <path d={linePath((d) => d.views)} fill="none" stroke={SERIES.views} strokeWidth={2} strokeLinejoin="round" />
 
+        {/* profile-change annotation markers */}
+        {annotations.map((a) => {
+          const i = timeline.findIndex((d) => d.date === a.date);
+          if (i < 0) return null;
+          return (
+            <g key={a.date}>
+              <line x1={x(i)} x2={x(i)} y1={PAD.top + 4} y2={y(0)} stroke="#b59475" strokeWidth={1} strokeDasharray="2 3" />
+              <circle cx={x(i)} cy={PAD.top + 4} r={3.5} fill="#b59475" />
+            </g>
+          );
+        })}
+
         {/* crosshair */}
         {h && hover !== null && (
           <g>
@@ -211,6 +240,11 @@ function TimelineChart({
               {labels.impressions}: <span className="font-semibold text-gray-900">{h.impressions}</span>
             </p>
           )}
+          {annotations.filter((a) => a.date === h.date).map((a) => (
+            <p key={a.label} className="mt-1 flex items-center gap-1.5 text-warm-700">
+              <span className="h-2 w-2 rounded-full bg-warm-400" /> {a.label}
+            </p>
+          ))}
         </div>
       )}
 
@@ -403,6 +437,45 @@ export function StatsClient() {
 
   const newVisitors = cur ? Math.max(0, cur.uniqueVisitors - cur.returningVisitors) : 0;
 
+  const fmtMinutes = (min: number | null): string => {
+    if (min === null || !isFinite(min)) return "—";
+    if (min < 60) return t("minutesShort", { n: Math.max(1, Math.round(min)) });
+    if (min < 48 * 60) return t("hoursShort", { n: Math.round(min / 60) });
+    return t("daysShort", { n: Math.round(min / 1440) });
+  };
+
+  const annotationLabel = (field: string): string => {
+    const known: Record<string, string> = {
+      profile: t("annProfile"),
+      cover: t("annCover"),
+      avatar: t("annAvatar"),
+      packages: t("annPackages"),
+      portfolio: t("annPortfolio"),
+    };
+    return known[field] || field;
+  };
+
+  const missedReasonLabel = (reason: string): string => {
+    const known: Record<string, string> = {
+      language: t("missedLanguage"),
+      location: t("missedLocation"),
+      outranked: t("missedOutranked"),
+      other: t("sourceOther"),
+    };
+    return known[reason] || reason;
+  };
+
+  const chartAnnotations = (data?.annotations || []).reduce<{ date: string; label: string }[]>((accum, a) => {
+    const existing = accum.find((x) => x.date === a.date);
+    const label = annotationLabel(a.field);
+    if (existing) {
+      if (!existing.label.includes(label)) existing.label += `, ${label}`;
+    } else {
+      accum.push({ date: a.date, label });
+    }
+    return accum;
+  }, []);
+
   return (
     <div className="p-6 sm:p-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -471,6 +544,54 @@ export function StatsClient() {
             ))}
           </div>
 
+          {/* Profile score + this week's actions */}
+          <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="font-semibold text-gray-900">{t("scoreTitle")}</h2>
+                <p className="mt-1 text-xs text-gray-400">{t("scoreHint")}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative h-14 w-14">
+                  <svg viewBox="0 0 36 36" className="h-14 w-14 -rotate-90">
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f3efe8" strokeWidth="4" />
+                    <circle
+                      cx="18" cy="18" r="15.5" fill="none"
+                      stroke={data.score.total >= 80 ? "#287651" : data.score.total >= 50 ? "#b59475" : "#c94536"}
+                      strokeWidth="4" strokeLinecap="round"
+                      strokeDasharray={`${(data.score.total / data.score.max) * 97.4} 97.4`}
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-gray-900">
+                    {data.score.total}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {data.score.actions.length > 0 && (
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                {data.score.actions.map((a, i) => (
+                  <a
+                    key={a.key}
+                    href={a.href}
+                    className="group flex items-start gap-2.5 rounded-xl border border-warm-200 bg-warm-50 p-3 transition hover:border-primary-400 hover:bg-primary-50"
+                  >
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-600 text-[11px] font-bold text-white">
+                      {i + 1}
+                    </span>
+                    <span className="text-sm">
+                      <span className="font-semibold text-gray-900">{t(`action_${a.key}`)}</span>
+                      <span className="mt-0.5 block text-xs text-gray-500">{t(`action_${a.key}_why`)}</span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+            )}
+            {data.score.actions.length === 0 && (
+              <p className="mt-3 text-sm text-accent-600">{t("scoreAllDone")}</p>
+            )}
+          </div>
+
           {/* Timeline */}
           <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900">{t("timelineTitle")}</h2>
@@ -483,7 +604,13 @@ export function StatsClient() {
                 showImpressions={cur.cardImpressions > 0}
                 labels={{ views: t("seriesViews"), impressions: t("seriesImpressions") }}
                 locale={locale}
+                annotations={chartAnnotations}
               />
+              {chartAnnotations.length > 0 && (
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-400">
+                  <span className="h-2 w-2 rounded-full bg-warm-400" /> {t("annLegend")}
+                </p>
+              )}
             </div>
           </div>
 
@@ -491,7 +618,7 @@ export function StatsClient() {
           <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900">{t("funnelTitle")}</h2>
             <p className="mt-1 text-xs text-gray-400">{t("funnelHint")}</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
               {(
                 [
                   { label: t("funnelImpressions"), value: cur.cardImpressions + cur.conciergeImpressions + cur.gscImpressions, rate: null as string | null },
@@ -503,6 +630,7 @@ export function StatsClient() {
                         ? pct(cur.cardClicks + cur.conciergeClicks + cur.gscClicks, cur.cardImpressions + cur.conciergeImpressions + cur.gscImpressions)
                         : null,
                   },
+                  { label: t("funnelBookOpens"), value: cur.bookOpens, rate: cur.uniqueVisitors >= MIN_VIEWS_FOR_RATE && cur.bookOpens > 0 ? pct(cur.bookOpens, cur.uniqueVisitors) : null },
                   { label: t("funnelInquiries"), value: cur.inquiries, rate: cur.uniqueVisitors >= MIN_VIEWS_FOR_RATE ? pct(cur.inquiries, cur.uniqueVisitors) : null },
                   { label: t("funnelPaid"), value: cur.paidBookings, rate: cur.inquiries > 0 ? pct(cur.paidBookings, cur.inquiries) : null },
                 ] as const
@@ -517,6 +645,65 @@ export function StatsClient() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Response speed & offers */}
+          <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
+            <h2 className="font-semibold text-gray-900">{t("replyTitle")}</h2>
+            <p className="mt-1 text-xs text-gray-400">{t("replyHint")}</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-warm-50 p-4">
+                <p className="text-xs font-medium text-gray-500">{t("replyYours")}</p>
+                <p className="mt-1 text-xl font-bold text-gray-900">
+                  {data.responseStats.inquiries >= 2 && data.responseStats.medianReplyMinutes !== null
+                    ? fmtMinutes(data.responseStats.medianReplyMinutes)
+                    : fmtMinutes(data.responseStats.lifetimeAvgReplyMinutes)}
+                </p>
+                <p className="mt-0.5 text-[11px] text-gray-400">
+                  {t("replyPlatform", {
+                    median: fmtMinutes(data.responseStats.platform.medianReplyMinutes),
+                    top: fmtMinutes(data.responseStats.platform.p25ReplyMinutes),
+                  })}
+                </p>
+              </div>
+              <div className="rounded-xl bg-warm-50 p-4">
+                <p className="text-xs font-medium text-gray-500">{t("offerRate")}</p>
+                <p className="mt-1 text-xl font-bold text-gray-900">
+                  {data.responseStats.inquiries >= 3
+                    ? pct(data.responseStats.offered, data.responseStats.inquiries)
+                    : "—"}
+                </p>
+                <p className="mt-0.5 text-[11px] text-gray-400">
+                  {data.responseStats.inquiries >= 3
+                    ? t("offerRateDetail", { offered: data.responseStats.offered, total: data.responseStats.inquiries })
+                    : t("funnelLowData")}
+                  {" · "}
+                  {t("offerRatePlatform", {
+                    rate: pct(data.responseStats.platform.offered, data.responseStats.platform.inquiries),
+                  })}
+                </p>
+              </div>
+              <div className="rounded-xl bg-primary-50 p-4">
+                <p className="text-xs font-medium text-primary-800">{t("offerImpactTitle")}</p>
+                {data.responseStats.offerImpact.fast.n >= 10 && data.responseStats.offerImpact.never.n >= 10 ? (
+                  <>
+                    <p className="mt-1 text-xl font-bold text-primary-800">
+                      {t("offerImpactX", {
+                        x: (() => {
+                          const fastRate = data.responseStats.offerImpact.fast.paid / data.responseStats.offerImpact.fast.n;
+                          const neverRate = data.responseStats.offerImpact.never.paid / Math.max(1, data.responseStats.offerImpact.never.n);
+                          if (neverRate === 0) return fastRate > 0 ? "∞" : "—";
+                          return (fastRate / neverRate).toFixed(1);
+                        })(),
+                      })}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-primary-700">{t("offerImpactDetail")}</p>
+                  </>
+                ) : (
+                  <p className="mt-1 text-sm text-primary-700">{t("offerImpactCollecting")}</p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -647,6 +834,57 @@ export function StatsClient() {
               emptyText={t("noData")}
             />
           </div>
+
+          {/* Missed concierge matches */}
+          {Object.keys(data.missedMatches).length > 0 && (
+            <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
+              <h2 className="font-semibold text-gray-900">{t("missedTitle")}</h2>
+              <p className="mb-4 mt-1 text-xs text-gray-400">{t("missedHint")}</p>
+              <BarList
+                entries={Object.entries(data.missedMatches).slice(0, 6)}
+                labelFor={missedReasonLabel}
+                emptyText={t("noData")}
+              />
+              {(data.missedMatches.language || 0) > 0 && (
+                <a href="/dashboard/profile" className="mt-3 inline-block text-sm font-semibold text-primary-600 hover:text-primary-700">
+                  {t("missedLanguageCta")} →
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Benchmarks */}
+          {data.benchmarks && data.benchmarks.n >= 5 && (
+            <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
+              <h2 className="font-semibold text-gray-900">{t("benchTitle")}</h2>
+              <p className="mb-4 mt-1 text-xs text-gray-400">
+                {data.benchmarks.pool === "peers" ? t("benchHintPeers", { n: data.benchmarks.n }) : t("benchHintPlatform", { n: data.benchmarks.n })}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {(
+                  [
+                    { label: t("benchViews"), mine: numFmt.format(cur.profileViews), med: data.benchmarks.medViews !== null ? numFmt.format(data.benchmarks.medViews) : "—" },
+                    {
+                      label: t("benchConv"),
+                      mine: cur.uniqueVisitors >= MIN_VIEWS_FOR_RATE ? pct(cur.inquiries, cur.uniqueVisitors) : "—",
+                      med: data.benchmarks.medConvPct !== null ? `${data.benchmarks.medConvPct}%` : "—",
+                    },
+                    {
+                      label: t("benchReply"),
+                      mine: fmtMinutes(data.responseStats.lifetimeAvgReplyMinutes),
+                      med: fmtMinutes(data.benchmarks.medReplyMinutes),
+                    },
+                  ] as const
+                ).map((row) => (
+                  <div key={row.label} className="rounded-xl bg-warm-50 p-4">
+                    <p className="text-xs font-medium text-gray-500">{row.label}</p>
+                    <p className="mt-1 text-lg font-bold text-gray-900">{row.mine}</p>
+                    <p className="mt-0.5 text-[11px] text-gray-400">{t("benchMedian", { value: row.med })}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Top photos */}
           <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">

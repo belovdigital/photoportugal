@@ -164,3 +164,27 @@ export const EPSILON_BY_SEGMENT: Record<TrafficSegment, number> = {
   organic: 0.30,
   returning: 0.40,
 };
+
+/**
+ * Missed-match telemetry for /dashboard/stats: photographers who were
+ * in scope for a chat but dropped by a gate (language / location /
+ * outranked). Deduped per (chat, photographer, reason) — multi-turn
+ * chats re-rank every turn. Fire-and-forget.
+ */
+export async function logConciergeExclusions(
+  chatId: string,
+  entries: { photographerId: string; reason: string }[],
+): Promise<void> {
+  if (!chatId || entries.length === 0) return;
+  const capped = entries.slice(0, 150);
+  try {
+    await query(
+      `INSERT INTO concierge_exclusion_events (chat_id, photographer_id, reason)
+       SELECT * FROM UNNEST($1::uuid[], $2::uuid[], $3::varchar[])
+       ON CONFLICT (chat_id, photographer_id, reason) DO NOTHING`,
+      [capped.map(() => chatId), capped.map((e) => e.photographerId), capped.map((e) => e.reason)],
+    );
+  } catch (err) {
+    console.error("[concierge/exclusions] log failed:", err);
+  }
+}

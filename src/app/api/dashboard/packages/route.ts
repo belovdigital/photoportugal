@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
@@ -107,6 +108,7 @@ export async function POST(req: NextRequest) {
     );
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
+    logProfileChange(profile.id, "packages");
 
     // Ping IndexNow + revalidate the photographer page so the new
     // package is crawled / surfaced quickly.
@@ -210,6 +212,7 @@ export async function PUT(req: NextRequest) {
     }
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
+    logProfileChange(profile.id, "packages");
     const nameChanged = (prev?.name || "") !== (name || "");
     const descChanged = (prev?.description || null) !== (description || null);
     if ((nameChanged || descChanged) && profile.is_approved) {
@@ -258,6 +261,7 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
+  logProfileChange(profile.id, "packages");
   return NextResponse.json({ success: true });
 }
 
@@ -316,6 +320,8 @@ export async function DELETE(req: NextRequest) {
     if (!pkg) {
       return NextResponse.json({ error: "Package not found" }, { status: 404 });
     }
+
+    logProfileChange(profile.id, "packages");
 
     return NextResponse.json({ success: true });
   } catch {

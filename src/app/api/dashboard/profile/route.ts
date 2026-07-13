@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
@@ -247,6 +248,7 @@ export async function PUT(req: NextRequest) {
     revalidatePath("/photographers");
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
+    logProfileChange(profile.id, "profile");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Profile update error:", error);

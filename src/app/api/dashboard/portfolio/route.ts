@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
@@ -186,6 +187,7 @@ export async function POST(req: NextRequest) {
     );
 
     checkAndNotifyChecklistComplete(profile.id).catch(() => {});
+    logProfileChange(profile.id, "portfolio");
     return NextResponse.json({ success: true, item });
   } catch (error) {
     console.error("Upload error:", error);
@@ -238,6 +240,7 @@ export async function DELETE(req: NextRequest) {
   await deleteByUrl(item.url);
   if (item.thumbnail_url) await deleteByUrl(item.thumbnail_url);
 
+  logProfileChange(profile.id, "portfolio");
   return NextResponse.json({ success: true });
 }
 
@@ -274,6 +277,7 @@ export async function PATCH(req: NextRequest) {
         [item.sort_order, item.id, profile.id]
       );
     }
+    logProfileChange(profile.id, "portfolio");
     return NextResponse.json({ success: true });
   }
 

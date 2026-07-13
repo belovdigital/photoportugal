@@ -188,6 +188,7 @@ const tabGroups = [
       { key: "overview", label: "Overview", icon: "home" },
       { key: "analytics", label: "Analytics", icon: "chart" },
       { key: "visitors", label: "Recent Visitors", icon: "eye" },
+      { key: "photographerStats", label: "Photographer Stats", icon: "chart" },
     ],
   },
   {
@@ -233,7 +234,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "businessInquiries" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "warnings" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
+type TabKey = "overview" | "photographerStats" | "businessInquiries" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "warnings" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -530,6 +531,7 @@ export function AdminDashboard({
   stats,
   logoutButton,
   analyticsSection,
+  photographerStatsSection,
   photographersSection,
   clientsSection,
   bookingsSection,
@@ -549,6 +551,7 @@ export function AdminDashboard({
   stats: AdminStats;
   logoutButton: ReactNode;
   analyticsSection: ReactNode;
+  photographerStatsSection?: ReactNode;
   photographersSection: ReactNode;
   clientsSection: ReactNode;
   bookingsSection: ReactNode;
@@ -837,6 +840,7 @@ export function AdminDashboard({
             </div>
           ) : <>
           {activeTab === "analytics" && analyticsSection}
+          {activeTab === "photographerStats" && photographerStatsSection}
           {activeTab === "overview" && (
             <div>
               {/* Key metrics — what actually matters: money in, money flow, photographers */}

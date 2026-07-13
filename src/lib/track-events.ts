@@ -14,7 +14,7 @@ import { useEffect, type RefObject } from "react";
  * VisitorTracker), so the payload carries no identifiers.
  */
 
-type TrackedEventType = "card_impression" | "card_click" | "photo_open";
+type TrackedEventType = "card_impression" | "card_click" | "photo_open" | "book_open";
 
 interface TrackedEvent {
   t: TrackedEventType;
@@ -115,6 +115,16 @@ export function trackCardClick(slug: string, surface?: string) {
   enqueue({ t: "card_click", slug, surface: surface || surfaceFromPath(window.location.pathname) });
   // The click likely navigates away — don't sit on the queue.
   flush();
+}
+
+/** Client opened the booking form / booking page for this photographer. */
+export function trackBookOpen(slug: string, surface?: string) {
+  if (typeof window === "undefined" || !slug) return;
+  // Once per page-load per photographer — a re-render must not double-count.
+  const key = `book|${window.location.pathname}|${slug}`;
+  if (seenImpressions.has(key)) return;
+  seenImpressions.add(key);
+  enqueue({ t: "book_open", slug, surface: surface || surfaceFromPath(window.location.pathname) });
 }
 
 export function trackPhotoOpen(slug: string, itemId: string | undefined, pos?: number) {

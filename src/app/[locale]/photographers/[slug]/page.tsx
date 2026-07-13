@@ -1024,7 +1024,7 @@ export default async function PhotographerProfilePage({
               <div id="message" className="flex shrink-0 flex-col items-end gap-1.5 sm:ml-auto sm:self-center">
                 <div className="flex items-center gap-3">
                   <WishlistButton photographerId={photographer.id} size="md" className="border border-warm-200 shadow-sm" />
-                  <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(visibleName)} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} existingBookingId={(photographer as { existingBookingId?: string | null }).existingBookingId} />
+                  <AskQuestionButton photographerId={photographer.id} photographerName={normalizeName(visibleName)} photographerSlug={photographer.slug} autoOpen={typeof window !== "undefined" && window.location.hash === "#message"} existingBookingId={(photographer as { existingBookingId?: string | null }).existingBookingId} />
                 </div>
                 <ResponseTimeBadge avgMinutes={photographer.avg_response_minutes} />
               </div>

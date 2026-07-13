@@ -6,8 +6,9 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 import { usePathname } from "next/navigation";
+import { trackBookOpen } from "@/lib/track-events";
 
-export function AskQuestionButton({ photographerId, photographerName, autoOpen, existingBookingId }: { photographerId: string; photographerName: string; autoOpen?: boolean; /** SSR-detected existing thread with this photographer — when set, the button deep-links to that chat instead of opening the inquiry modal. */ existingBookingId?: string | null }) {
+export function AskQuestionButton({ photographerId, photographerName, photographerSlug, autoOpen, existingBookingId }: { photographerId: string; photographerName: string; /** Enables photographer-stats book_open telemetry on modal open. */ photographerSlug?: string; autoOpen?: boolean; /** SSR-detected existing thread with this photographer — when set, the button deep-links to that chat instead of opening the inquiry modal. */ existingBookingId?: string | null }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   // SSR-safe pathname — window is undefined on the server, so a render-time
@@ -18,6 +19,11 @@ export function AskQuestionButton({ photographerId, photographerName, autoOpen, 
   const t = useTranslations("askQuestion");
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
   const [open, setOpen] = useState(false);
+
+  // Photographer-stats funnel: inquiry form opened.
+  useEffect(() => {
+    if (open && photographerSlug) trackBookOpen(photographerSlug, "inquiry_modal");
+  }, [open, photographerSlug]);
 
   // Auto-open when navigating from card with #message hash, AND when the
   // hash later changes to #message (e.g. the mobile StickyBookBar uses

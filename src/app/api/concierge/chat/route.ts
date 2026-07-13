@@ -8,7 +8,7 @@ import { computeBadges } from "@/lib/concierge/match-badges";
 import { pageContextToPromptString, type PageContext } from "@/lib/concierge/page-context";
 import { resolveIntent, rankTopCandidates, formatTopCandidatesBlock, extractStructuredSignals, type RankedCandidate } from "@/lib/concierge/candidate-ranker";
 import { checkPhotographersAvailability } from "@/lib/concierge/availability-check";
-import { classifyTrafficSegment, logRecommendations, type RecommendationSnapshot, type RecommendationStrategy } from "@/lib/concierge/recommendation-events";
+import { classifyTrafficSegment, logRecommendations, type RecommendationSnapshot, type RecommendationStrategy, logConciergeExclusions } from "@/lib/concierge/recommendation-events";
 import { computeLeadScore } from "@/lib/concierge/lead-score";
 import { hasCommonLanguage } from "@/lib/languages";
 
@@ -583,6 +583,20 @@ export async function POST(req: NextRequest) {
   const languageEligible = photographers.filter((p) =>
     hasCommonLanguage(detectedLang, p.languages)
   );
+  // Missed-match telemetry (→ /dashboard/stats "you weren't shown
+  // because…"). Language drops only count when the photographer would
+  // otherwise be in scope (covers the requested location, or the intent
+  // has no location) — a Porto photographer "missing" a German Algarve
+  // chat is geography, not languages.
+  const rankerExclusions: { photographerId: string; reason: string }[] = [];
+  {
+    const eligibleSlugs = new Set(languageEligible.map((p) => p.slug));
+    for (const p of photographers) {
+      if (eligibleSlugs.has(p.slug)) continue;
+      const inScope = !intent.locationSlug || (p.locations || []).includes(intent.locationSlug);
+      if (inScope) rankerExclusions.push({ photographerId: p.id, reason: "language" });
+    }
+  }
   const rankedCandidates: RankedCandidate[] = rankTopCandidates({
     photographers: languageEligible,
     intent,
@@ -590,6 +604,7 @@ export async function POST(req: NextRequest) {
     excludeSlugs: rankerExcludes,
     epsilon,
     recentlyShownNewcomers,
+    onDrop: (photographerId, reason) => rankerExclusions.push({ photographerId, reason }),
   });
   const topCandidates = rankedCandidates.map((r) => r.photographer);
   // Build a slug→strategy/fitScore map so the show_matches branch can
@@ -1237,6 +1252,9 @@ export async function POST(req: NextRequest) {
   // segment we already classified upstream for epsilon selection.
   if (chatId && recommendationSnapshots.length > 0) {
     void logRecommendations(chatId, trafficSegment, recommendationSnapshots);
+  }
+  if (chatId && rankerExclusions.length > 0) {
+    void logConciergeExclusions(chatId, rankerExclusions);
   }
 
   // Forward terminal-event chats to admins in Telegram (new "ИИ Консьерж"

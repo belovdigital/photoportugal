@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { trackBookOpen } from "@/lib/track-events";
 import { useSearchParams, usePathname } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
@@ -77,6 +78,12 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
   const tc = useTranslations("common");
   const locale = useLocale();
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
+
+  // Photographer-stats funnel: the booking form was reached (fires once
+  // per page-load; dedup inside trackBookOpen).
+  useEffect(() => {
+    if (photographer?.slug) trackBookOpen(photographer.slug, "book_page");
+  }, [photographer?.slug]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
