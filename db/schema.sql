@@ -630,6 +630,11 @@ ALTER TABLE delivery_photos ADD COLUMN IF NOT EXISTS is_peek BOOLEAN NOT NULL DE
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS visitor_id TEXT;
 CREATE INDEX IF NOT EXISTS idx_visitor_sessions_visitor_id ON visitor_sessions(visitor_id);
 
+-- 2026-07-15: video-call room instances (db/video-call-rooms.sql).
+-- Recording starts only at 2+ human participants; room_finished with 2+
+-- sends the admin TG "call happened". Keyed by LiveKit room_sid.
+-- (Full DDL in db/video-call-rooms.sql.)
+
 -- 2026-07-13: withdrawn custom proposals (db/packages-revoked.sql).
 -- DELETE /api/messages/share-package sets it; bookings POST refuses
 -- revoked packages; chat cards render "Offer withdrawn".
