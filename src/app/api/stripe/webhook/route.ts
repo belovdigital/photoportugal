@@ -757,11 +757,19 @@ export async function POST(req: NextRequest) {
             if (bookingForMsg) {
               const firstName = bookingForMsg.client_name?.split(" ")[0] || "Client";
               const phoneNote = bookingForMsg.client_phone ? `\n\nClient phone: ${bookingForMsg.client_phone}` : "";
-              const displayAmount = paidAmountLabel || `€${Number(bookingForMsg.total_price)}`;
+              // Shared chat surface — BOTH sides read this message. Show the
+              // session BASE price, never the Stripe gross: gross includes
+              // the client service fee, which photographers must not see
+              // (same policy as the photographer email below). 2026-07-15:
+              // a photographer saw "€343.85 received" for a €299 session.
+              const baseEur = bookingForMsg.total_price != null ? Number(bookingForMsg.total_price) : null;
+              const amountPart = baseEur && baseEur > 0
+                ? ` of €${Number.isInteger(baseEur) ? baseEur : baseEur.toFixed(2)}`
+                : "";
               await queryOne(
                 `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE) RETURNING id`,
                 [bookingId, bookingForMsg.client_id,
-                  `✅ Payment of ${displayAmount} received from ${firstName}.${phoneNote}`]
+                  `✅ Payment${amountPart} received from ${firstName}.${phoneNote}`]
               );
             }
           } catch (msgErr) {
@@ -1054,9 +1062,29 @@ export async function POST(req: NextRequest) {
         const subType = subscription.metadata?.type;
         const isCreated = event.type === "customer.subscription.created";
 
+        // Stripe delivers webhook events in NO guaranteed order, and a
+        // Checkout subscription is born `incomplete` two seconds before
+        // flipping `active`. Treating transient statuses as "deactivate"
+        // made the two concurrent writes race: when created(incomplete)
+        // landed after updated(active), a photographer paid for Verified
+        // and stayed unverified (Nadiya, 2026-07-13 — both events arrived
+        // in the same second). The plan branch was worse: the loser write
+        // downgraded to free, reverted the slug and emailed "downgraded".
+        // Only act on definitive states:
+        //   activate   ← active | trialing
+        //   deactivate ← canceled | unpaid | incomplete_expired
+        //   ignore     ← incomplete | past_due | paused (transient — keep current)
+        const subStatus = subscription.status as string;
+        const subActive = subStatus === "active" || subStatus === "trialing";
+        const subTerminal = ["canceled", "unpaid", "incomplete_expired"].includes(subStatus);
+        if (!subActive && !subTerminal) {
+          console.log(`[webhook] Ignoring transient subscription status '${subStatus}' for ${subscription.id}`);
+          break;
+        }
+
         if (photographerId && subType === "featured") {
           // Featured add-on subscription
-          const isFeatured = subscription.status === "active";
+          const isFeatured = subActive;
           await queryOne(
             "UPDATE photographer_profiles SET is_featured = $1 WHERE id = $2 RETURNING id",
             [isFeatured, photographerId]
@@ -1075,7 +1103,7 @@ export async function POST(req: NextRequest) {
           // checkout.session.completed, but that branch reads metadata.type
           // off the *checkout session* (which is empty), not subscription_data.
           // So Verified purchases silently failed to flip is_verified.
-          const isVerified = subscription.status === "active";
+          const isVerified = subActive;
           await queryOne(
             "UPDATE photographer_profiles SET is_verified = $1 WHERE id = $2 RETURNING id",
             [isVerified, photographerId]
@@ -1092,7 +1120,7 @@ export async function POST(req: NextRequest) {
         } else if (photographerId && subscription.metadata?.plan) {
           // Plan subscription
           const plan = subscription.metadata.plan;
-          const newPlan = subscription.status === "active" ? plan : "free";
+          const newPlan = subActive ? plan : "free";
           // On downgrade from premium: revert custom slug to default
           if (newPlan === "free") {
             const currentProfile = await queryOne<{ slug: string; user_id: string }>(
@@ -1121,7 +1149,7 @@ export async function POST(req: NextRequest) {
             );
             if (info) sendSubscriptionEmail(info.email, info.name, newPlan, newPlan === "free" ? "downgraded" : "upgraded");
           } catch {}
-          if (isCreated && subscription.status === "active") {
+          if (isCreated && subActive) {
             await notifyAdminSubscriptionEvent(
               photographerId,
               "💎",
