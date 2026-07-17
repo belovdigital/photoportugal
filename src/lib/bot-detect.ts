@@ -37,10 +37,37 @@ export function isBotUserAgent(ua: string | null | undefined): boolean {
 // "(X11; Linux x86_64)" is the bare-headless token; real desktop-Linux
 // browsers overwhelmingly carry a distro or Wayland marker (e.g.
 // "X11; Ubuntu; Linux x86_64") which does NOT match.
+// Desktop Chrome auto-updates within days of a release; anything many
+// majors behind on a DESKTOP UA is a scripted/headless client, not a real
+// browser. Real traffic here (2026-07, referrer'd or logged-in) is Chrome
+// 137-150 — 99% on 148-150. The 2nd stealth fleet (Singapore datacenter,
+// switched from the X11 UA to "Windows NT 10.0" after the Cloudflare
+// challenge) rotates through Chrome 103-133, all screen_width=1280, no
+// referrer, 1 pageview. In 3 days of prod data every session ≤ this floor
+// was that fleet; zero real users. Bump this floor as Chrome advances —
+// keep a wide margin below the real-traffic band so a neglected corporate
+// desktop is never caught (and if one is, the read-side "is_bot AND
+// user_id IS NULL" exemption un-hides it the moment they log in).
+const MIN_REAL_DESKTOP_CHROME = 135;
+
 export function isSuspectedBotSession(s: {
   userAgent: string;
   screenWidth?: number | null;
   language?: string | null;
 }): boolean {
-  return /\(X11; Linux x86_64\)/.test(s.userAgent);
+  const ua = s.userAgent || "";
+  // Fleet #1 — bare headless Linux desktop.
+  if (/\(X11; Linux x86_64\)/.test(ua)) return true;
+
+  // Fleet #2 — desktop (Windows/Mac, non-mobile) Chrome stuck on an old
+  // major. Mobile is excluded: old Android webviews legitimately report
+  // ancient Chromium majors, so this only applies to desktop platform
+  // tokens. Chrome major is the `Chrome/NNN` token (Edge/Opera reuse it
+  // but also auto-update, so the same floor holds).
+  const isDesktop = /Windows NT|Macintosh|X11/.test(ua) && !/Mobile|Android|iPhone|iPad/.test(ua);
+  if (isDesktop) {
+    const m = ua.match(/Chrome\/(\d+)/);
+    if (m && Number(m[1]) < MIN_REAL_DESKTOP_CHROME) return true;
+  }
+  return false;
 }
