@@ -157,7 +157,14 @@ export function PhotographerCatalog({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    // URL param wins; otherwise KEEP the prop-seeded location. Without the
+    // fallback this mount-effect wiped initialLocation on the
+    // /photographers/location/[slug] pages (no ?location= in the URL there),
+    // so the Porto landing listed every photographer incl. Azores ones.
     const locationsFromUrl = uniqueValues(splitParam(params.get("location")));
+    const effectiveLocations = locationsFromUrl.length > 0
+      ? locationsFromUrl
+      : uniqueValues(splitParam(initialLocation));
     const shootTypesFromUrl = uniqueValues([
       ...splitParam(params.get("shootType")),
       ...splitParam(params.get("shoot")),
@@ -168,7 +175,7 @@ export function PhotographerCatalog({
     const nextSort = params.get("sort");
     const bucket = bucketStateFor(params.get("bucket"));
 
-    setLocationFilters(locationsFromUrl);
+    setLocationFilters(effectiveLocations);
     setShootTypeFilters(uniqueValues(shootTypesFromUrl));
     setLanguageFilter(params.get("language") || "");
     setSearchQuery(params.get("q") || "");
@@ -177,7 +184,7 @@ export function PhotographerCatalog({
     setSortBy(bucket.activeBucket ? bucket.sortBy : SORT_KEYS.includes(nextSort as SortKey) ? (nextSort as SortKey) : "featured");
 
     hasReadUrl.current = true;
-  }, [shootTypes]);
+  }, [shootTypes, initialLocation]);
 
   useEffect(() => {
     if (!hasReadUrl.current) return;
