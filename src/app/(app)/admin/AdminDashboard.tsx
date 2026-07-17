@@ -856,9 +856,8 @@ export function AdminDashboard({
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Turnover</p>
-                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">&euro;{stats.turnover.toLocaleString()}</p>
-                  <p className="mt-1 text-xs text-gray-400">&euro;{stats.turnoverThisMonth.toLocaleString()} this month</p>
-                  <p className="mt-1 text-[11px] leading-tight text-gray-400">photographer base prices — client turnover incl. 15% fee is ~12% higher (Stripe is source of truth)</p>
+                  <p className="mt-1 text-xl sm:text-3xl font-bold text-gray-900">&euro;{stats.turnover.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  <p className="mt-1 text-xs text-gray-400">&euro;{stats.turnoverThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} this month</p>
                 </div>
                 <div className="rounded-xl border border-warm-200 bg-white p-3 sm:p-5">
                   <p className="text-xs sm:text-sm font-medium text-gray-500">Paid bookings</p>

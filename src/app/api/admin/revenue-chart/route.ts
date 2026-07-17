@@ -71,7 +71,10 @@ export async function GET(req: NextRequest) {
   const rows = await query<{ bucket: string; turnover: string; service_fee: string; platform_fee: string; revenue: string; count: string }>(
     `SELECT
         DATE_TRUNC($1, b.created_at)::date::text AS bucket,
-        COALESCE(SUM(b.total_price), 0) AS turnover,
+        -- Turnover = client gross (base + 15% service fee). stripe_amount_paid_cents
+        -- is the exact persisted charge (covers promo codes); older rows fall
+        -- back to base + service_fee. Matches the KPI card in admin/page.tsx.
+        COALESCE(SUM(COALESCE(b.stripe_amount_paid_cents / 100.0, b.total_price + COALESCE(b.service_fee, 0))), 0) AS turnover,
         COALESCE(SUM(b.service_fee), 0) AS service_fee,
         COALESCE(SUM(CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee ELSE 0 END), 0) AS platform_fee,
         COALESCE(SUM(b.service_fee) + SUM(CASE WHEN b.delivery_accepted = TRUE THEN b.platform_fee ELSE 0 END), 0) AS revenue,

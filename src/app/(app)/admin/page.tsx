@@ -76,8 +76,14 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status IN ('completed', 'delivered')"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE payment_status = 'paid'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)"),
-    queryOne<{ total: string }>("SELECT COALESCE(SUM(total_price), 0) as total FROM bookings WHERE payment_status = 'paid'"),
-    queryOne<{ total: string }>("SELECT COALESCE(SUM(total_price), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)"),
+    // Turnover = what CLIENTS actually paid (gross, incl. the 15% service
+    // fee). stripe_amount_paid_cents is the persisted Stripe charge (exact,
+    // covers promo codes); older pre-persistence rows fall back to
+    // base + service_fee, which reconciles to Stripe to the cent. Backfilled
+    // from Stripe 2026-07-17 so the only fallback rows are the handful with
+    // no PaymentIntent (e.g. manually-marked paid).
+    queryOne<{ total: string }>("SELECT COALESCE(SUM(COALESCE(stripe_amount_paid_cents / 100.0, total_price + COALESCE(service_fee, 0))), 0) as total FROM bookings WHERE payment_status = 'paid'"),
+    queryOne<{ total: string }>("SELECT COALESCE(SUM(COALESCE(stripe_amount_paid_cents / 100.0, total_price + COALESCE(service_fee, 0))), 0) as total FROM bookings WHERE payment_status = 'paid' AND created_at >= date_trunc('month', CURRENT_DATE)"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM reviews"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM messages"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM blog_posts WHERE is_published = TRUE"),
