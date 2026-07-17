@@ -661,8 +661,16 @@ export function PhotographerDashboardClient({
   async function savePackage(e: React.FormEvent) {
     e.preventDefault();
 
-    // Minimum-price enforcement removed 2026-07-13 (Alex's call) —
-    // photographers price freely; we only show the recommended hint.
+    // Catalog packages must meet the per-duration minimum (custom chat
+    // proposals are the only exemption). Mirror the server guard.
+    const durationMin = parseInt(pkgDuration);
+    const priceVal = parseFloat(pkgPrice);
+    const pricing = getPricingForDuration(durationMin);
+    if (pricing && priceVal < pricing.minPrice) {
+      showMessage(t("minimumPriceFor", { duration: formatDuration(durationMin, locale), price: pricing.minPrice }));
+      return;
+    }
+
     setSaving(true);
 
     const body = {
@@ -1536,13 +1544,24 @@ function PackageFormInline({
         <div>
           <label className="block text-sm font-medium text-gray-700">{t("priceEur")}</label>
           <input type="number" value={pkgPrice} onChange={(e) => setPkgPrice(e.target.value)} required
-            min="1" step="1"
+            min={pkgDuration ? (getPricingForDuration(parseInt(pkgDuration))?.minPrice || 1) : 1} step="1"
             placeholder={t("pricePlaceholder")}
-            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+            className={`mt-1 block w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 ${
+              pkgPrice && pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && parseFloat(pkgPrice) < getPricingForDuration(parseInt(pkgDuration))!.minPrice
+                ? "border-red-400 focus:border-red-500 focus:ring-red-200"
+                : "border-gray-300 focus:border-primary-500 focus:ring-primary-200"
+            }`} />
           {pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && (
-            <div className="mt-2 flex items-center gap-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
+            <div className="mt-2 flex items-center gap-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+              <span className="text-amber-600 text-sm font-medium">Min &euro;{getPricingForDuration(parseInt(pkgDuration))!.minPrice}</span>
+              <span className="text-gray-300">|</span>
               <span className="text-emerald-600 text-sm font-medium">Recommended &euro;{getPricingForDuration(parseInt(pkgDuration))!.recommendedPrice}</span>
             </div>
+          )}
+          {pkgPrice && pkgDuration && getPricingForDuration(parseInt(pkgDuration)) && parseFloat(pkgPrice) < getPricingForDuration(parseInt(pkgDuration))!.minPrice && (
+            <p className="mt-1 text-xs text-red-500 font-medium">
+              Price cannot be below the minimum of &euro;{getPricingForDuration(parseInt(pkgDuration))!.minPrice} for this duration
+            </p>
           )}
           <p className="mt-1 text-xs text-gray-400">{t("priceHint")}</p>
         </div>
@@ -1608,6 +1627,8 @@ function SortablePackageCard({
   const t = useTranslations("photographerDashboard");
   const locale = useLocale();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pkg.id });
+  const pricing = getPricingForDuration(pkg.duration_minutes);
+  const belowMin = pricing ? Number(pkg.price) < pricing.minPrice : false;
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -1615,7 +1636,7 @@ function SortablePackageCard({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="group rounded-xl border border-warm-200 bg-white p-4">
+    <div ref={setNodeRef} style={style} className={`group rounded-xl border bg-white p-4 ${belowMin ? "border-red-300 bg-red-50/30" : "border-warm-200"}`}>
       <div className="flex items-center gap-3">
         {/* Drag handle */}
         <div
@@ -1638,6 +1659,11 @@ function SortablePackageCard({
             {!pkg.is_public && (
               <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">{t("privateBadge")}</span>
             )}
+            {belowMin && (
+              <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
+                Below minimum (€{pricing!.minPrice})
+              </span>
+            )}
           </div>
           <p className="mt-0.5 text-xs text-gray-400">
             {formatDuration(pkg.duration_minutes, locale)} &middot; {pkg.num_photos} {t("photosDot")} &middot; {t("dayDelivery", { days: pkg.delivery_days || 7 })}
@@ -1646,7 +1672,7 @@ function SortablePackageCard({
 
         {/* Price + actions */}
         <div className="flex shrink-0 items-center gap-3">
-          <p className="text-lg font-bold text-gray-900">&euro;{Math.round(Number(pkg.price))}</p>
+          <p className={`text-lg font-bold ${belowMin ? "text-red-600" : "text-gray-900"}`}>&euro;{Math.round(Number(pkg.price))}</p>
           <button onClick={() => onEdit(pkg)} className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-warm-100 hover:text-primary-600" title={t("editTooltip")}>
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
           </button>

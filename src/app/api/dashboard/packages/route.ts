@@ -3,7 +3,7 @@ import { logProfileChange } from "@/lib/profile-change-log";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
-import { DURATION_OPTIONS } from "@/lib/package-pricing";
+import { DURATION_OPTIONS, getPricingForDuration } from "@/lib/package-pricing";
 
 async function getProfile(userId: string) {
   return queryOne<{ id: string; plan: string; is_approved: boolean }>(
@@ -75,8 +75,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid duration. Please select from the available options." }, { status: 400 });
     }
 
-    // Minimum-price enforcement removed 2026-07-13 (Alex's call) —
-    // recommended prices remain a hint, not a gate.
+    // Catalog packages (shown on the public profile) must respect the
+    // per-duration price floor. Custom one-off proposals sent in chat
+    // (/api/messages/share-package) are the ONLY thing exempt from this —
+    // never lift it here. (Reverted 2026-07-17; the 07-13 removal was
+    // meant for custom proposals only.)
+    const pricing = getPricingForDuration(duration_minutes);
+    if (pricing && Math.round(price) < pricing.minPrice) {
+      return NextResponse.json({ error: `Minimum price for this duration is €${pricing.minPrice}` }, { status: 400 });
+    }
 
     const cleanFeatures = Array.isArray(features) ? features.filter((f: string) => f.trim()) : [];
 
@@ -157,8 +164,15 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Invalid duration. Please select from the available options." }, { status: 400 });
     }
 
-    // Minimum-price enforcement removed 2026-07-13 (Alex's call) —
-    // recommended prices remain a hint, not a gate.
+    // Catalog packages (shown on the public profile) must respect the
+    // per-duration price floor. Custom one-off proposals sent in chat
+    // (/api/messages/share-package) are the ONLY thing exempt from this —
+    // never lift it here. (Reverted 2026-07-17; the 07-13 removal was
+    // meant for custom proposals only.)
+    const pricing = getPricingForDuration(duration_minutes);
+    if (pricing && Math.round(price) < pricing.minPrice) {
+      return NextResponse.json({ error: `Minimum price for this duration is €${pricing.minPrice}` }, { status: 400 });
+    }
 
     const cleanFeatures = Array.isArray(features) ? features.filter((f: string) => f.trim()) : [];
 
