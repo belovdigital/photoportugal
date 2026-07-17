@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { requireStripe, SERVICE_FEE_RATE } from "@/lib/stripe";
-import { queryOne } from "@/lib/db";
+import { queryOne, query } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient } from "@/lib/email";
+import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient, emailLayout } from "@/lib/email";
+import { queueNotification } from "@/lib/notification-queue";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
 import { sendTelegram } from "@/lib/telegram";
 import { bookingStripePaymentColumnsExist } from "@/lib/booking-stripe-payment-fields";
@@ -921,6 +922,54 @@ export async function POST(req: NextRequest) {
                 }
               } catch (smsErr) {
                 console.error("[webhook] payment whatsapp/sms error:", smsErr);
+              }
+
+              // ── Losing photographers: the client chose someone else ──
+              // Every OTHER photographer this client was actively talking
+              // to (open inquiry / booking request / confirmed-but-unpaid,
+              // last 60 days) gets a gentle heads-up so they stop waiting
+              // on a dead thread or holding a date. One-shot per thread via
+              // the notification-queue dedup key; nothing is cancelled or
+              // archived — purely informational (Alex, 2026-07-17).
+              try {
+                const losers = await query<{
+                  id: string; status: string;
+                  photographer_email: string; photographer_first: string;
+                }>(
+                  `SELECT b2.id, b2.status, pu.email AS photographer_email,
+                          SPLIT_PART(pu.name, ' ', 1) AS photographer_first
+                     FROM bookings b2
+                     JOIN photographer_profiles pp2 ON pp2.id = b2.photographer_id
+                     JOIN users pu ON pu.id = pp2.user_id
+                    WHERE b2.client_id = (SELECT client_id FROM bookings WHERE id = $1)
+                      AND b2.photographer_id <> (SELECT photographer_id FROM bookings WHERE id = $1)
+                      AND b2.payment_status IS DISTINCT FROM 'paid'
+                      AND b2.status IN ('inquiry', 'pending', 'confirmed')
+                      AND b2.created_at > NOW() - INTERVAL '60 days'`,
+                  [bookingId]
+                );
+                const clientFirst = (bookingInfo.client_name || "").split(" ")[0] || "The client";
+                for (const l of losers) {
+                  await queueNotification({
+                    channel: "email",
+                    recipient: l.photographer_email,
+                    subject: `${clientFirst} went with another photographer this time`,
+                    body: emailLayout(`
+                      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#C94536;">An update on ${clientFirst}</h2>
+                      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${l.photographer_first},</p>
+                      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">A quick heads-up: <strong>${clientFirst}</strong>, who you were recently in touch with, has unfortunately booked another photographer for this shoot.</p>
+                      ${l.status === "confirmed" ? `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">If you were holding a date for them, it's safe to release it.</p>` : ""}
+                      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">No action needed — these things happen. Quick replies and a concrete package offer usually make the difference, so keep that in mind for the next inquiry!</p>
+                      <p style="margin:16px 0 0;color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+                    `),
+                    dedupKey: `client_chose_other:${l.id}`,
+                  }).catch(() => {});
+                }
+                if (losers.length > 0) {
+                  console.log(`[webhook] notified ${losers.length} losing photographer(s) about booking ${bookingId}`);
+                }
+              } catch (loseErr) {
+                console.error("[webhook] losing-photographer notify error:", loseErr);
               }
 
               // Push to client — payment confirmation tap-through to
