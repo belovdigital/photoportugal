@@ -49,8 +49,12 @@ export async function POST(req: NextRequest) {
     const { normalizeAvatarUrl } = await import("@/lib/avatar-url");
     const avatarUrl = normalizeAvatarUrl(googleUser.picture || null);
 
+    let isNew = false;
     if (!user) {
-      // Create new user (default: client)
+      isNew = true;
+      // Create new user (default: client — the app shows a role-choice
+      // screen right after when is_new=true; picking Photographer calls
+      // /api/auth/mobile/set-role within the 5-minute fresh window)
       const newUser = await queryOne<{ id: string }>(
         `INSERT INTO users (name, first_name, last_name, email, google_id, avatar_url, role, email_verified)
          VALUES ($1, $2, $3, $4, $5, $6, 'client', TRUE)
@@ -115,6 +119,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       token,
+      is_new: isNew,
       user: {
         id: user.id,
         email: user.email,

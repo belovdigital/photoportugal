@@ -6,6 +6,8 @@ import { EarningsCalculator } from "./EarningsCalculator";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import { COMMISSION_RATES, PLAN_PRICES } from "@/lib/stripe";
+import { auth } from "@/lib/auth";
+import { ConvertAccountCTA } from "./ConvertAccountCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,24 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
 
   const t = await getTranslations("join");
   const tc = await getTranslations("common");
+
+  // Signed-in visitors get a smarter CTA: an empty client account can be
+  // converted in place (POST /api/auth/set-role) instead of re-registering
+  // with a second email — see the Lingyu case (4 accounts, 2026-07-17).
+  const session = await auth();
+  const viewer = session?.user as { id?: string; email?: string; role?: string } | undefined;
+  let canConvert = false;
+  if (viewer?.id && viewer.role === "client") {
+    try {
+      const activity = await queryOne<{ bookings: string; profiles: string }>(
+        `SELECT (SELECT COUNT(*) FROM bookings WHERE client_id = $1) AS bookings,
+                (SELECT COUNT(*) FROM photographer_profiles WHERE user_id = $1) AS profiles`,
+        [viewer.id]
+      );
+      canConvert = parseInt(activity?.bookings || "0") === 0 && parseInt(activity?.profiles || "0") === 0;
+    } catch {}
+  }
+  const isPhotographerViewer = viewer?.role === "photographer";
 
   let totalPhotographers = 0;
   try {
@@ -117,15 +137,26 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
           <EarlyBirdCounter totalPhotographers={totalPhotographers} />
 
           <div className="mt-10">
-            <Link
-              href="/auth/signup?role=photographer"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-10 py-4 text-base font-bold text-white shadow-lg transition hover:from-amber-600 hover:to-orange-600 hover:shadow-xl"
-            >
-              {t("claimYourSpot")}
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+            {canConvert && viewer?.email ? (
+              <ConvertAccountCTA userEmail={viewer.email} />
+            ) : isPhotographerViewer ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-10 py-4 text-base font-bold text-white shadow-lg transition hover:from-amber-600 hover:to-orange-600 hover:shadow-xl"
+              >
+                {t("alreadyPhotographerCta")}
+              </Link>
+            ) : (
+              <Link
+                href="/auth/signup?role=photographer"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-10 py-4 text-base font-bold text-white shadow-lg transition hover:from-amber-600 hover:to-orange-600 hover:shadow-xl"
+              >
+                {t("claimYourSpot")}
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -375,17 +406,21 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
             {t("finalCta.subtitle")}
           </p>
           <div className="mt-8">
-            <Link
-              href="/auth/signup?role=photographer"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-10 py-4 text-base font-bold text-white shadow-lg transition hover:from-amber-600 hover:to-orange-600"
-            >
-              {t("claimYourSpotNow")}
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+            {canConvert && viewer?.email ? (
+              <ConvertAccountCTA userEmail={viewer.email} />
+            ) : (
+              <Link
+                href={isPhotographerViewer ? "/dashboard" : "/auth/signup?role=photographer"}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-10 py-4 text-base font-bold text-white shadow-lg transition hover:from-amber-600 hover:to-orange-600"
+              >
+                {isPhotographerViewer ? t("alreadyPhotographerCta") : t("claimYourSpotNow")}
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            )}
           </div>
-          <p className="mt-4 text-sm text-gray-400">{t("finalCta.freeToSignUp")}</p>
+          {!canConvert && !isPhotographerViewer && <p className="mt-4 text-sm text-gray-400">{t("finalCta.freeToSignUp")}</p>}
         </div>
       </section>
     </>

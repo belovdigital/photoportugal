@@ -73,8 +73,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Account suspended" }, { status: 403 });
     }
 
+    let isNew = false;
     if (!user) {
-      // Create new user
+      isNew = true;
+      // Create new user (role defaults to client — the app shows the
+      // role-choice screen when is_new=true)
       if (!email) {
         return NextResponse.json({ error: "Email required for new account" }, { status: 400 });
       }
@@ -122,13 +125,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       token,
+      is_new: isNew,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
         role: user.role,
         avatar_url: null,
-        isNew: !user.role || user.role === "client",
+        // Was `!user.role || role === "client"` — that misread EVERY
+        // existing client as new. Now true only on actual creation.
+        isNew,
       },
     });
   } catch (error) {

@@ -1478,7 +1478,13 @@
     "founderQuote": "J'ai créé Photo Portugal parce que je sais à quel point il est difficile pour des photographes talentueux de trouver des clients réguliers. Cette plateforme amène les touristes directement à vous — pas de prospection, pas de négociation de prix. Vous vous concentrez sur ce que vous aimez : créer de belles photos.",
     "founderName": "Kate Belova",
     "founderRole": "Fondatrice et photographe, 10+ ans d'expérience",
-    "viewProfile": "Voir le profil de Kate →"
+    "viewProfile": "Voir le profil de Kate →",
+    "convertCta": "Devenir photographe avec ce compte",
+    "convertNote": "Vous êtes connecté en tant que {email} — un clic, sans nouvelle inscription.",
+    "convertBusy": "Conversion…",
+    "convertFailed": "Impossible de convertir le compte. Réessayez ou contactez-nous.",
+    "convertHasActivity": "Ce compte a déjà des réservations — écrivez-nous et nous vous aiderons.",
+    "alreadyPhotographerCta": "Vous êtes déjà photographe — ouvrir votre tableau de bord"
   },
   "forPhotographers": {
     "metaTitle": "Rejoindre Photo Portugal — Gagnez de l'argent en tant que photographe de vacances au Portugal",
