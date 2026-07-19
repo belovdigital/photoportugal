@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useSwipeNavigation } from "@/lib/use-swipe";
 
@@ -74,10 +74,39 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
     onDismiss: closeLightbox,
   });
 
+  // Progressive batching: with the 500-photo delivery limit, rendering
+  // everything at once means up to ~1500 DOM cells (three responsive
+  // grid variants) and a 75-150MB thumbnail stampede that OOMs mobile
+  // Safari. Render a prefix and grow it as the visitor approaches the
+  // bottom (IntersectionObserver sentinel). Slicing a PREFIX keeps the
+  // baked-in lightbox indexes valid, and the lightbox itself can still
+  // navigate the full set.
+  const BATCH = 40;
+  const [visibleCount, setVisibleCount] = useState(BATCH);
+  const visiblePhotos = useMemo(() => photos.slice(0, visibleCount), [photos, visibleCount]);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (visibleCount >= photos.length) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + BATCH, photos.length));
+        }
+      },
+      // Start fetching the next batch well before the visitor hits the
+      // bottom so scrolling never visibly stalls.
+      { rootMargin: "1800px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visibleCount, photos.length]);
+
   // Each photo gets its ORIGINAL index baked in so renderCell can open
   // the lightbox at the right slot regardless of which column it lives
   // in. Distributed once per column-count.
-  const indexed = useMemo(() => photos.map((p, i) => ({ p, i })), [photos]);
+  const indexed = useMemo(() => visiblePhotos.map((p, i) => ({ p, i })), [visiblePhotos]);
   const cols2 = useMemo(() => distributeRowMajor(indexed, 2), [indexed]);
   const cols3 = useMemo(() => distributeRowMajor(indexed, 3), [indexed]);
   const cols4 = useMemo(() => distributeRowMajor(indexed, 4), [indexed]);
@@ -96,6 +125,7 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
           src={thumb}
           alt={photo.filename}
           loading="lazy"
+          decoding="async"
           className="w-full block select-none"
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
@@ -159,6 +189,9 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
           </div>
         ))}
       </div>
+
+      {/* Batch-loading sentinel — grows the grid before the bottom is reached. */}
+      {visibleCount < photos.length && <div ref={sentinelRef} className="h-px w-full" aria-hidden="true" />}
 
       {/* Lightbox */}
       {lightboxIndex !== null && photos[lightboxIndex] && (

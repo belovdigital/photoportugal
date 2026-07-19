@@ -58,6 +58,13 @@ export function DeliveryUploadClient({
   // against a hard limit they had no way to see.
   const [lastUploadError, setLastUploadError] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+  // Progressive grid batching — 500-photo deliveries must not render (or
+  // fetch) everything at once. Fresh uploads reveal the full grid so the
+  // photographer always sees what they just added.
+  const GRID_BATCH = 60;
+  const [visibleCount, setVisibleCount] = useState(GRID_BATCH);
+  const gridSentinelRef = useRef<HTMLDivElement>(null);
+  const prevPhotoCountRef = useRef(initialPhotos.length);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
   const [delivered, setDelivered] = useState(initialDelivered);
@@ -68,6 +75,29 @@ export function DeliveryUploadClient({
   // redo request also UNLOCKS edits even after acceptance, since fixing
   // the gallery is the whole point of that flow.
   const canEdit = !clientAccepted || hasOpenDispute;
+
+  useEffect(() => {
+    // Uploads append to the end — reveal everything so new photos are
+    // visibly there (deletes shrink the list and must NOT reveal).
+    if (photos.length > prevPhotoCountRef.current) setVisibleCount(photos.length);
+    prevPhotoCountRef.current = photos.length;
+  }, [photos.length]);
+
+  useEffect(() => {
+    if (visibleCount >= photos.length) return;
+    const el = gridSentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + GRID_BATCH, photos.length));
+        }
+      },
+      { rootMargin: "1600px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visibleCount, photos.length]);
   const [deliveryToken, setDeliveryToken] = useState(initialToken);
   // `window` is undefined during SSR (Next.js still server-renders this
   // "use client" component for the initial paint), so the URL is empty
@@ -927,14 +957,15 @@ export function DeliveryUploadClient({
       {/* Photo grid */}
       {photos.length > 0 && (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {photos.map((photo) => {
+          {photos.slice(0, visibleCount).map((photo) => {
             const isVideo = photo.media_type === "video";
             // For videos use the ffmpeg-extracted poster; for photos the
             // url IS already an image (presigned). Falling back to url for
             // images preserves the existing behaviour.
-            const previewSrc = isVideo
-              ? (photo.thumbnail_url || photo.url)
-              : photo.url;
+            // ALWAYS prefer the 1200px thumbnail in the grid. Using the
+            // presigned ORIGINAL (3-20MB each) meant a 500-photo delivery
+            // pulled gigabytes into the manage page and killed mobile.
+            const previewSrc = photo.thumbnail_url || photo.url;
             return (
             <div
               key={photo.id}
@@ -944,6 +975,8 @@ export function DeliveryUploadClient({
               <img
                 src={previewSrc}
                 alt={photo.filename}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
               {isVideo && (
