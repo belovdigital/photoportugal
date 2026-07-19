@@ -640,6 +640,12 @@ export async function POST(
       // dragged 89×15MB into mobile Safari and OOM'd the page.
       let previewUrl: string | null = null;
       let cleanThumbUrl: string | null = null;
+      // Preview dims ≈ original aspect ratio — stored so the gallery can
+      // reserve cell height (aspect-ratio) instead of collapsing to 0px
+      // until thumbnails load. Legacy rows have NULLs; the gallery
+      // degrades gracefully for them.
+      let imgWidth: number | null = null;
+      let imgHeight: number | null = null;
       try {
         const previewFilename = `preview_${crypto.randomUUID()}.jpg`;
         const watermarkPath = path.join(process.cwd(), "public", "icon-512.png");
@@ -662,6 +668,8 @@ export async function POST(
           console.error("[delivery] clean thumb upload error:", thumbErr);
         }
 
+        imgWidth = previewInfo.width || null;
+        imgHeight = previewInfo.height || null;
         const previewWidth = previewInfo.width || 1200;
         const previewHeight = previewInfo.height || 800;
         const wmSize = Math.min(previewWidth, previewHeight, 256);
@@ -689,9 +697,9 @@ export async function POST(
       }
 
       const item = await queryOne<{ id: string }>(
-        `INSERT INTO delivery_photos (booking_id, url, preview_url, thumbnail_url, filename, file_size, sort_order, media_type)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, 'image') RETURNING id`,
-        [id, url, previewUrl, cleanThumbUrl, downloadName, file.size, sortOrder++]
+        `INSERT INTO delivery_photos (booking_id, url, preview_url, thumbnail_url, filename, file_size, sort_order, media_type, width, height)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'image', $8, $9) RETURNING id`,
+        [id, url, previewUrl, cleanThumbUrl, downloadName, file.size, sortOrder++, imgWidth, imgHeight]
       );
 
       const publicUrl = isS3Path(url) ? await getPresignedUrl(s3KeyFromPath(url), 3600) : url;

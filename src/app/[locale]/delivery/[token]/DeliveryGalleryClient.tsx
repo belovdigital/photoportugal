@@ -85,15 +85,29 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
   const [visibleCount, setVisibleCount] = useState(BATCH);
   const visiblePhotos = useMemo(() => photos.slice(0, visibleCount), [photos, visibleCount]);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // Growth is gated on images actually LOADING, not just the sentinel
+  // being visible: unloaded cells have zero height (dims are NULL on
+  // legacy rows), so the whole grid starts collapsed, the sentinel sits
+  // "in view", and a naive observer cascades every batch at once — the
+  // exact stampede this batching exists to prevent.
+  const sentinelVisibleRef = useRef(false);
+  const loadedCountRef = useRef(0);
+  const tryGrow = useCallback(() => {
+    if (!sentinelVisibleRef.current) return;
+    setVisibleCount((c) => {
+      if (c >= photos.length) return c;
+      if (loadedCountRef.current < c * 0.5) return c; // wait for the current window
+      return Math.min(c + BATCH, photos.length);
+    });
+  }, [photos.length]);
   useEffect(() => {
     if (visibleCount >= photos.length) return;
     const el = sentinelRef.current;
     if (!el) return;
     const io = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setVisibleCount((c) => Math.min(c + BATCH, photos.length));
-        }
+        sentinelVisibleRef.current = entries.some((e) => e.isIntersecting);
+        tryGrow();
       },
       // Start fetching the next batch well before the visitor hits the
       // bottom so scrolling never visibly stalls.
@@ -101,7 +115,7 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [visibleCount, photos.length]);
+  }, [visibleCount, photos.length, tryGrow]);
 
   // Each photo gets its ORIGINAL index baked in so renderCell can open
   // the lightbox at the right slot regardless of which column it lives
@@ -129,6 +143,9 @@ export function DeliveryGalleryClient({ photos, deliveryAccepted }: { photos: Ph
           className="w-full block select-none"
           draggable={false}
           onContextMenu={(e) => e.preventDefault()}
+          style={photo.width && photo.height ? { aspectRatio: `${photo.width} / ${photo.height}` } : undefined}
+          onLoad={() => { loadedCountRef.current += 1; tryGrow(); }}
+          onError={() => { loadedCountRef.current += 1; tryGrow(); }}
         />
         {isVideo && (
           <>
