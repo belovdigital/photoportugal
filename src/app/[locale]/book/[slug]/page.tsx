@@ -30,6 +30,7 @@ interface Package {
   price: number;
   is_popular: boolean;
   is_group_package?: boolean;
+  is_custom?: boolean;
   preview_url?: string | null;
 }
 
@@ -1014,7 +1015,9 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
         )}
         {selectedPkg && !isGiftRedemption && (() => {
           const effectiveGroup = groupSize === "larger" ? (parseInt(largeGroupSize) || 9) : (parseInt(groupSize) || 2);
-          const applySurcharge = !selectedPkg.is_group_package && effectiveGroup >= LARGE_GROUP_THRESHOLD;
+          // Custom proposals are exempt: the photographer quoted that exact
+          // price to this client for this shoot, headcount included.
+          const applySurcharge = !selectedPkg.is_group_package && !selectedPkg.is_custom && effectiveGroup >= LARGE_GROUP_THRESHOLD;
           const basePrice = Number(selectedPkg.price);
           const surcharge = applySurcharge ? basePrice * LARGE_GROUP_SURCHARGE_RATE : 0;
           const subtotal = basePrice + surcharge;
@@ -1223,7 +1226,9 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
               </>
             ) : selectedPkg ? (() => {
               const effectiveGroup = groupSize === "larger" ? (parseInt(largeGroupSize) || 9) : (parseInt(groupSize) || 2);
-              const applySurcharge = !selectedPkg.is_group_package && effectiveGroup >= LARGE_GROUP_THRESHOLD;
+              // Custom proposals are exempt: the photographer quoted that exact
+              // price to this client for this shoot, headcount included.
+              const applySurcharge = !selectedPkg.is_group_package && !selectedPkg.is_custom && effectiveGroup >= LARGE_GROUP_THRESHOLD;
               const basePrice = Number(selectedPkg.price);
               const surcharge = applySurcharge ? basePrice * LARGE_GROUP_SURCHARGE_RATE : 0;
               const subtotal = basePrice + surcharge;

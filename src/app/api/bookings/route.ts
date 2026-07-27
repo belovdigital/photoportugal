@@ -212,8 +212,16 @@ export async function POST(req: NextRequest) {
         // explicitly priced for groups (e.g. "Large Group Comporta",
         // "Big Family Photoshoot") — those already factor in the extra
         // work, double-charging would surprise both sides.
+        //
+        // Custom proposals are exempt for the same reason, more strongly:
+        // the photographer quoted that exact price to that exact client
+        // for that exact shoot, headcount included. Adding 50% on top of a
+        // number they negotiated themselves is not a surcharge, it's the
+        // platform overriding their quote.
         const { largeGroupMultiplier } = await import("@/lib/stripe");
-        const mult = pkg.is_group_package ? 1 : largeGroupMultiplier(normalizedGroupSize);
+        const mult = (pkg.is_group_package || pkg.custom_for_user_id)
+          ? 1
+          : largeGroupMultiplier(normalizedGroupSize);
         totalPrice = Math.round(Number(pkg.price) * mult * 100) / 100;
       }
     }
