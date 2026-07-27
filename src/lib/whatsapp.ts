@@ -45,10 +45,11 @@ export async function sendWhatsApp(
   // WhatsApp disabled — Meta business verification rejected.
   // Sending SMS directly. To re-enable WhatsApp, remove this block
   // and uncomment the WhatsApp sending code below.
+  // No logNotification here — sendSMS already writes its own row
+  // (sms.ts). Logging again produced two notification_logs rows for one
+  // Twilio message, which inflated the duplicate-notification numbers
+  // with phantoms and made the real duplicates harder to find.
   const sent = await sendSMS(to, smsFallbackText);
-  if (sent) {
-    import("@/lib/notification-log").then(m => m.logNotification("sms", to, template, "sent")).catch(() => {});
-  }
   return sent ? "sms" : false;
 
   /*

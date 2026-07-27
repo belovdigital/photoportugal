@@ -154,10 +154,20 @@ export async function queueNotification(opts: QueueOptions): Promise<QueueResult
   const timezone = phone ? getTimezoneForPhone(phone) : "Europe/Lisbon";
 
   if (isWithinSendingHours(timezone)) {
-    // Send immediately — insert temporarily for dedup, delete after success
+    // Send immediately — insert temporarily for dedup, delete after success.
+    //
+    // `send_after` is parked an hour out ON PURPOSE. With `NOW()` the row
+    // satisfied processNotificationQueue's `status='pending' AND
+    // send_after <= NOW()` from the instant this INSERT committed
+    // (db.ts query() autocommits), so the every-minute queue cron could
+    // pick up the row and send it a SECOND time while this send was still
+    // in flight — the whole SMTP/Twilio round-trip was an open race window.
+    // Parking it means the row exists for dedup but is invisible to the
+    // processor until we DELETE it below. If the process dies mid-send the
+    // row falls due in an hour and gets delivered, instead of vanishing.
     const inserted = await queryOne<{ id: string }>(
       `INSERT INTO notification_queue (channel, recipient, subject, body, dedup_key, recipient_timezone, send_after, status)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), 'pending')
+       VALUES ($1, $2, $3, $4, $5, $6, NOW() + INTERVAL '1 hour', 'pending')
        ON CONFLICT (dedup_key) DO NOTHING
        RETURNING id`,
       [opts.channel, opts.recipient, opts.subject || null, opts.body, opts.dedupKey, timezone]
@@ -178,9 +188,11 @@ export async function queueNotification(opts: QueueOptions): Promise<QueueResult
       await queryOne("DELETE FROM notification_queue WHERE id = $1", [inserted.id]);
     } catch (err) {
       console.error(`[notification-queue] Immediate send failed for ${opts.dedupKey}:`, err);
-      // Keep as pending so queue processor retries
+      // Keep as pending so queue processor retries — and pull send_after
+      // back to now, otherwise the row we parked above sits idle for an
+      // hour before anyone retries it.
       await queryOne(
-        "UPDATE notification_queue SET last_error = $1 WHERE id = $2",
+        "UPDATE notification_queue SET last_error = $1, send_after = NOW() WHERE id = $2",
         [String(err), inserted.id]
       );
       return { queued: true, immediate: false, skippedDuplicate: false };
@@ -353,13 +365,33 @@ export async function processNotificationQueue(): Promise<number> {
     message_id: string | null;
     booking_id: string | null;
   }>(
-    `SELECT id, channel, recipient, subject, body, dedup_key, attempts,
-            event_kind, recipient_id, message_id, booking_id
-     FROM notification_queue
-     WHERE status = 'pending' AND send_after <= NOW()
-     ORDER BY send_after ASC
-     LIMIT $1
-     FOR UPDATE SKIP LOCKED`,
+    // Claim rows by LEASE, in a single statement.
+    //
+    // The old form was a bare `SELECT ... FOR UPDATE SKIP LOCKED`. That
+    // lock was useless here: db.ts query() is a lone pool.query(), so the
+    // implicit transaction commits — and releases every row lock — the
+    // moment the SELECT returns, long before the send loop below runs.
+    // Nothing marked the rows as taken either; they stayed 'pending' from
+    // SELECT until the DELETE after sending. Two overlapping runs of this
+    // cron (it fires every minute, a drain of 50 can outlast that) both
+    // saw the same rows and both sent them.
+    //
+    // Wrapping the same SELECT inside an UPDATE makes SKIP LOCKED do real
+    // work: lock and state change happen in one statement, which is what
+    // autocommit can express. Concurrent drains now get disjoint sets.
+    // Pushing send_after out by 10 minutes is the lease — it self-expires,
+    // so a crashed run needs no reaper, the rows simply fall due again.
+    `UPDATE notification_queue q
+        SET send_after = NOW() + INTERVAL '10 minutes',
+            attempts   = q.attempts + 1
+       FROM (SELECT id FROM notification_queue
+              WHERE status = 'pending' AND send_after <= NOW()
+              ORDER BY send_after ASC
+              LIMIT $1
+              FOR UPDATE SKIP LOCKED) s
+      WHERE q.id = s.id
+     RETURNING q.id, q.channel, q.recipient, q.subject, q.body, q.dedup_key,
+               q.attempts, q.event_kind, q.recipient_id, q.message_id, q.booking_id`,
     [MAX_PER_RUN]
   );
 
@@ -401,17 +433,22 @@ export async function processNotificationQueue(): Promise<number> {
       await queryOne("DELETE FROM notification_queue WHERE id = $1", [item.id]);
       processed++;
     } catch (err) {
-      const attempts = item.attempts + 1;
+      // The claim above already bumped `attempts`, so item.attempts is the
+      // post-increment value — don't add to it again or every failure
+      // would burn two of the three allowed tries.
+      const attempts = item.attempts;
       if (attempts >= MAX_ATTEMPTS) {
         await queryOne(
-          "UPDATE notification_queue SET status = 'failed', attempts = $1, last_error = $2 WHERE id = $3",
-          [attempts, String(err), item.id]
+          "UPDATE notification_queue SET status = 'failed', last_error = $1 WHERE id = $2",
+          [String(err), item.id]
         );
         console.error(`[notification-queue] Permanently failed after ${MAX_ATTEMPTS} attempts: ${item.dedup_key}`);
       } else {
+        // Release the lease early so the retry doesn't wait out the full
+        // 10 minutes — a failed send should come back on the next tick.
         await queryOne(
-          "UPDATE notification_queue SET attempts = $1, last_error = $2 WHERE id = $3",
-          [attempts, String(err), item.id]
+          "UPDATE notification_queue SET send_after = NOW(), last_error = $1 WHERE id = $2",
+          [String(err), item.id]
         );
         console.warn(`[notification-queue] Attempt ${attempts} failed for ${item.dedup_key}: ${err}`);
       }
