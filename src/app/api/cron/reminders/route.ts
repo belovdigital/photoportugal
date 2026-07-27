@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/db";
+import { query, queryOne, withAdvisoryLock } from "@/lib/db";
 import {
   sendEmail,
   getAdminEmail,
@@ -23,22 +23,28 @@ import path from "path";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 
+const CRON_LOCK_KEY = 123456789;
+
 export async function GET(req: NextRequest) {
   // Verify cron secret
   if (req.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Prevent concurrent cron runs with advisory lock
-  try {
-    const lock = await queryOne<{ acquired: boolean }>(
-      "SELECT pg_try_advisory_lock(123456789) as acquired"
-    );
-    if (!lock?.acquired) {
-      return NextResponse.json({ error: "Cron already running", skipped: true });
-    }
-  } catch {}
+  // Prevent concurrent cron runs. withAdvisoryLock holds the lock on a
+  // dedicated connection for the whole run and releases it in a finally.
+  // Do NOT take this lock via query()/queryOne(): it then rides whatever
+  // connection the pool handed out, which is returned immediately and
+  // closed by the idle reaper ~10s in — a run of ~55s spends most of its
+  // life unprotected, which is what this used to do.
+  const run = await withAdvisoryLock(CRON_LOCK_KEY, runReminders);
+  if (!run.acquired) {
+    return NextResponse.json({ error: "Cron already running", skipped: true });
+  }
+  return run.result;
+}
 
+async function runReminders(): Promise<NextResponse> {
   const results = {
     paymentReminders: 0,
     autoCancelled: 0,
@@ -2865,6 +2871,3 @@ export async function GET(req: NextRequest) {
     queueProcessed,
   });
 }
-
-// Release advisory lock in finally-like fashion is not needed —
-// pg_try_advisory_lock is session-scoped and auto-releases when connection closes
