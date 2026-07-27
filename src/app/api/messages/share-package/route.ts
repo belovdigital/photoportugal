@@ -217,12 +217,53 @@ export async function POST(req: NextRequest) {
     photographer_id: booking.photographer_id,
   });
 
+  const cardText = `BOOKING_CARD:${cardData}`;
+
+  // Idempotency. sendEmail() below goes straight to SMTP — it is not routed
+  // through notification_queue, so nothing upstream dedupes a repeat POST,
+  // and a second one inserts a second identical card, fires a second
+  // pg_notify, a second Telegram ping and a second email to the client.
+  // The web picker now guards in-flight clicks, but the mobile app posts
+  // this same endpoint from its own screens and can't be fixed by a web
+  // deploy — and two tabs, or a retry after a request that looked like it
+  // failed but landed, defeat any client-side guard anyway.
+  //
+  // The window is deliberately tiny. Photographers legitimately re-share a
+  // byte-identical card later on (prod has two, 13h and 4.8d apart); the
+  // one real double-submit was 24s. Widening this to hours would start
+  // swallowing genuine offers, and a swallowed offer is invisible to
+  // everyone.
+  const recent = await queryOne<{ id: string; created_at: string }>(
+    `SELECT id, created_at FROM messages
+     WHERE booking_id = $1 AND sender_id = $2 AND text = $3
+       AND created_at > NOW() - INTERVAL '60 seconds'
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [booking_id, user.id, cardText]
+  );
+  if (recent) {
+    console.warn(`[share-package] deduped repeat share booking=${booking_id} package=${pkg.id} original=${recent.id}`);
+    return NextResponse.json({
+      success: true,
+      deduped: true,
+      message: {
+        id: recent.id,
+        text: cardText,
+        media_url: null,
+        sender_id: user.id,
+        created_at: recent.created_at,
+        read_at: null,
+        is_system: true,
+      },
+    });
+  }
+
   // Insert as a system message from the photographer
   const message = await queryOne<{ id: string; created_at: string }>(
     `INSERT INTO messages (booking_id, sender_id, text, is_system)
      VALUES ($1, $2, $3, TRUE)
      RETURNING id, created_at`,
-    [booking_id, user.id, `BOOKING_CARD:${cardData}`]
+    [booking_id, user.id, cardText]
   );
 
   // Notify via WebSocket

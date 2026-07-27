@@ -363,6 +363,10 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
   const [customDescription, setCustomDescription] = useState("");
   const [customSaving, setCustomSaving] = useState(false);
   const [customError, setCustomError] = useState("");
+  // In-flight guard for catalog-package shares, mirroring customSaving.
+  // Deliberately NOT cleared by resetCustomForm(): closing the picker
+  // mid-request must not re-arm the button, or reopen-and-click sends twice.
+  const [sharingPackageId, setSharingPackageId] = useState<string | null>(null);
 
   // Lightbox keyboard nav
   useEffect(() => {
@@ -1086,31 +1090,42 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
   }
 
   async function sharePackage(packageId: string) {
-    if (!activeChat) return;
-    setShowPackagePicker(false);
+    if (!activeChat || sharingPackageId) return;
+    setSharingPackageId(packageId);
     try {
       const res = await fetch("/api/messages/share-package", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ booking_id: activeChat, package_id: packageId }),
       });
-      if (res.ok) {
-        const data = await res.json().catch(() => null);
-        if (data?.message) {
-          setMessages((prev) => prev.some((m) => m.id === data.message.id) ? prev : [...prev, {
-            ...data.message,
-            sender_name: session?.user?.name || "",
-            sender_avatar: session?.user?.image || null,
-          }]);
-          setConversations((prev) => prev.map((c) =>
-            c.booking_id === activeChat
-              ? { ...c, last_message: data.message.text, last_message_at: data.message.created_at }
-              : c
-          ));
-          setTimeout(() => scrollToBottom(true), 10);
-        }
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        alert(data?.error || "Failed to share the package");
+        return;
       }
-    } catch {}
+      if (data?.message) {
+        setMessages((prev) => prev.some((m) => m.id === data.message.id) ? prev : [...prev, {
+          ...data.message,
+          sender_name: session?.user?.name || "",
+          sender_avatar: session?.user?.image || null,
+        }]);
+        setConversations((prev) => prev.map((c) =>
+          c.booking_id === activeChat
+            ? { ...c, last_message: data.message.text, last_message_at: data.message.created_at }
+            : c
+        ));
+        setTimeout(() => scrollToBottom(true), 10);
+      }
+      // Closing on success only. Closing up front (the old behaviour) meant
+      // the popover vanished the instant you clicked, with no spinner and no
+      // error on failure — so the natural move was to reopen and click again,
+      // which sent a second card and a second email to the client.
+      setShowPackagePicker(false);
+    } catch {
+      alert("Failed to share the package");
+    } finally {
+      setSharingPackageId(null);
+    }
   }
 
   function handleMediaSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -2309,7 +2324,8 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                               <button
                                 type="button"
                                 onClick={() => setCustomMode(true)}
-                                className="w-full px-4 py-2.5 text-left hover:bg-primary-50 transition flex items-center gap-2 border-b border-warm-100"
+                                disabled={sharingPackageId !== null}
+                                className="w-full px-4 py-2.5 text-left hover:bg-primary-50 transition flex items-center gap-2 border-b border-warm-100 disabled:opacity-50"
                               >
                                 <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -2327,12 +2343,15 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                               ) : (
                                 shareablePackages.map((pkg) => (
                                   <button key={pkg.id} type="button" onClick={() => sharePackage(pkg.id)}
-                                    className="w-full px-4 py-2.5 text-left hover:bg-warm-50 transition flex items-center justify-between">
+                                    disabled={sharingPackageId !== null}
+                                    className="w-full px-4 py-2.5 text-left hover:bg-warm-50 transition flex items-center justify-between disabled:opacity-50">
                                     <div>
                                       <p className="text-sm font-medium text-gray-900">{pkg.name}</p>
                                       <p className="text-xs text-gray-400">{pkg.duration_minutes >= 60 ? `${pkg.duration_minutes / 60}h` : `${pkg.duration_minutes} min`} &middot; {pkg.num_photos} photos</p>
                                     </div>
-                                    <span className="text-sm font-bold text-gray-700">&euro;{Math.round(pkg.price)}</span>
+                                    <span className="text-sm font-bold text-gray-700">
+                                      {sharingPackageId === pkg.id ? t("customProposalSending") : <>&euro;{Math.round(pkg.price)}</>}
+                                    </span>
                                   </button>
                                 ))
                               )}
