@@ -42,6 +42,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
       proposed_date = rebuilt;
     } else {
+      // No coords → the reconciliation above is a no-op and we trust the
+      // string blind. Log it: every current client sends coords, so a hit
+      // here means an old app build (or a new caller that forgot them) is
+      // proposing dates with the safety net switched off. That is how a
+      // wrong date reached a client on 2026-07-26 with nothing in the logs
+      // to show for it.
+      console.warn(`[propose-date] NO COORDS: string="${raw}" ua="${req.headers.get("user-agent") || "?"}" booking=${bookingId} user=${userId}`);
       proposed_date = raw;
     }
   }

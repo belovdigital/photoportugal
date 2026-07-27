@@ -47,8 +47,14 @@ export function DateNegotiation({
   const TIME_OPTIONS = buildTimeOptions(td("timeFlexible"));
   const [showPropose, setShowPropose] = useState(false);
   const [newDate, setNewDate] = useState("");
+  // Raw click coords from the picker, sent alongside the string so the
+  // server can rebuild the date and override a mangled string. Without
+  // these the server's reconciliation guard (propose-date/route.ts:38-46)
+  // silently no-ops and trusts whatever string arrives.
+  const [newDateCoords, setNewDateCoords] = useState<{ year: number; month: number; day: number } | null>(null);
   const [newTime, setNewTime] = useState("");
   const [note, setNote] = useState("");
+  const [error, setError] = useState("");
 
   // The "Change date" button is now a modal launched from <ChangeDateButton>
   // inside the Date card. This component only renders the
@@ -61,19 +67,24 @@ export function DateNegotiation({
 
   async function handlePropose() {
     if (!newDate) return;
+    setError("");
     setLoading(true);
     const res = await fetch(`/api/bookings/${bookingId}/propose-date`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "propose", proposed_date: newDate, proposed_time: newTime || undefined, date_note: note || undefined }),
+      body: JSON.stringify({ action: "propose", proposed_date: newDate, proposed_date_coords: newDateCoords, proposed_time: newTime || undefined, date_note: note || undefined }),
     });
     setLoading(false);
     if (res.ok) {
       setShowPropose(false);
       setNewDate("");
+      setNewDateCoords(null);
       setNewTime("");
       setNote("");
       router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || td("submitFailed"));
     }
   }
 
@@ -109,7 +120,12 @@ export function DateNegotiation({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
           <label className="block text-[11px] font-medium text-gray-500 mb-1">{td("date")}</label>
-          <DatePicker value={newDate} onChange={setNewDate} min={todayLocalISO()} placeholder={td("selectDate")} />
+          <DatePicker
+            value={newDate}
+            onChange={(v, coords) => { setNewDate(v); setNewDateCoords(coords || null); }}
+            min={todayLocalISO()}
+            placeholder={td("selectDate")}
+          />
         </div>
         <div>
           <label className="block text-[11px] font-medium text-gray-500 mb-1">{td("timePT")}</label>
@@ -134,6 +150,9 @@ export function DateNegotiation({
           />
         </div>
       </div>
+      {error && (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>
+      )}
       <div className="mt-3 flex items-center gap-3">
         <button
           type="button"
@@ -145,7 +164,7 @@ export function DateNegotiation({
         </button>
         <button
           type="button"
-          onClick={() => { setShowPropose(false); setNewDate(""); setNewTime(""); setNote(""); }}
+          onClick={() => { setShowPropose(false); setNewDate(""); setNewDateCoords(null); setNewTime(""); setNote(""); setError(""); }}
           className="text-sm text-gray-400 hover:text-gray-600 font-medium"
         >
           {td("cancel")}
