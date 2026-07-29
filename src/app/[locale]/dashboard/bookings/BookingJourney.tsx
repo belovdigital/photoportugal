@@ -24,6 +24,12 @@ interface Step {
 const STATUS_ORDER = ["inquiry", "pending", "confirmed", "completed", "delivered"];
 
 function statusIndex(status: string): number {
+  // 'disputed' is not a step backwards — the shoot happened and the photos
+  // were delivered, the delivery is just being argued about. Without this it
+  // fell to -1 and the timeline rewound all the way to "waiting for the
+  // photographer to confirm", which is a confusing thing to show a client who
+  // has just reported a problem with photos they already received.
+  if (status === "disputed") return STATUS_ORDER.indexOf("delivered");
   const idx = STATUS_ORDER.indexOf(status);
   return idx === -1 ? -1 : idx;
 }

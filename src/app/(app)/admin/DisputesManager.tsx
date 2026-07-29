@@ -50,17 +50,26 @@ export function DisputesManager() {
   const [resolutionNote, setResolutionNote] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
   const [saving, setSaving] = useState(false);
+  const [resolveError, setResolveError] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
+    // A failed load used to fall through to "No disputes yet." — the same
+    // screen as genuinely having none, which is the worst possible way to
+    // hide an open case from the person meant to resolve it.
     fetch("/api/disputes")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => { setDisputes(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setLoadError(String(e?.message || e)); setLoading(false); });
   }, []);
 
   async function handleResolve() {
     if (!selected || !resolution) return;
     setSaving(true);
+    setResolveError("");
 
     const body: Record<string, unknown> = {
       status: resolution === "rejected" ? "rejected" : "resolved",
@@ -74,14 +83,23 @@ export function DisputesManager() {
     // gross from stripe_amount_paid_cents (covers promo codes and blind
     // summer-offer bookings) and persists it onto the dispute row.
 
-    const res = await fetch(`/api/disputes/${selected.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    setSaving(false);
-    if (res.ok) {
+    // Every failure here has to be visible: this endpoint moves real money,
+    // and it can fail AFTER the Stripe refund has gone through. Silently
+    // doing nothing is the one response an operator must never get.
+    try {
+      const res = await fetch(`/api/disputes/${selected.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setResolveError(
+          (data?.error as string) ||
+            `Failed to resolve (HTTP ${res.status}). Check Stripe before retrying — a refund may already have been issued.`
+        );
+        return;
+      }
       setDisputes((prev) =>
         prev.map((d) =>
           d.id === selected.id
@@ -93,6 +111,10 @@ export function DisputesManager() {
       setResolution("");
       setResolutionNote("");
       setRefundAmount("");
+    } catch {
+      setResolveError("Network error — the request may or may not have gone through. Check Stripe before retrying.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -100,7 +122,11 @@ export function DisputesManager() {
 
   return (
     <div>
-      {disputes.length === 0 ? (
+      {loadError ? (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+          Couldn&apos;t load disputes ({loadError}). This is a load failure, not an empty list — reload before assuming there are none.
+        </p>
+      ) : disputes.length === 0 ? (
         <p className="text-sm text-gray-400">No disputes yet.</p>
       ) : (
         <div className="space-y-4">
@@ -203,6 +229,12 @@ export function DisputesManager() {
                   className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-primary-500"
                 />
               </div>
+
+              {resolveError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                  {resolveError}
+                </div>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <button

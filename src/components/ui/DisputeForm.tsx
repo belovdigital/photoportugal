@@ -12,7 +12,7 @@ const REASON_KEYS = [
   "other",
 ] as const;
 
-export function DisputeForm({ bookingId }: { bookingId: string }) {
+export function DisputeForm({ bookingId, token }: { bookingId: string; token?: string }) {
   const router = useRouter();
   const t = useTranslations("dispute");
   const [open, setOpen] = useState(false);
@@ -21,6 +21,9 @@ export function DisputeForm({ bookingId }: { bookingId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [disputeId, setDisputeId] = useState<string | null>(null);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,12 +39,43 @@ export function DisputeForm({ bookingId }: { bookingId: string }) {
     });
 
     setSubmitting(false);
+    const data = await res.json().catch(() => null);
     if (res.ok) {
+      setDisputeId((data?.id as string) || null);
       setSuccess(true);
       setTimeout(() => router.refresh(), 1500);
     } else {
-      const data = await res.json();
-      setError(data.error || t("failedToSubmit"));
+      setError(data?.error || t("failedToSubmit"));
+    }
+  }
+
+  // Reporting an issue blocks the Accept button (the payout gate), so the
+  // client needs a way back out that does not require waiting for an admin.
+  // The email already promises this; until now nothing called the endpoint.
+  async function handleWithdraw() {
+    if (!disputeId) return;
+    setWithdrawing(true);
+    setWithdrawError("");
+    try {
+      const res = await fetch("/api/disputes", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dispute_id: disputeId, token }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setWithdrawError(data?.error || t("withdrawFailed"));
+        return;
+      }
+      setSuccess(false);
+      setDisputeId(null);
+      setReason("");
+      setDescription("");
+      router.refresh();
+    } catch {
+      setWithdrawError(t("withdrawFailed"));
+    } finally {
+      setWithdrawing(false);
     }
   }
 
@@ -57,6 +91,19 @@ export function DisputeForm({ bookingId }: { bookingId: string }) {
             <p className="text-sm text-blue-600">{t("submittedDesc")}</p>
           </div>
         </div>
+        {disputeId && (
+          <div className="mt-4 border-t border-blue-200 pt-3">
+            <button
+              type="button"
+              onClick={handleWithdraw}
+              disabled={withdrawing}
+              className="text-sm font-medium text-blue-700 underline underline-offset-2 hover:text-blue-900 disabled:opacity-50"
+            >
+              {withdrawing ? t("withdrawing") : t("withdraw")}
+            </button>
+            {withdrawError && <p className="mt-2 text-sm text-red-600">{withdrawError}</p>}
+          </div>
+        )}
       </div>
     );
   }

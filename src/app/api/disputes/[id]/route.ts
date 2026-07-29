@@ -90,24 +90,51 @@ export async function PATCH(
       }
     }
 
-    // Update dispute record
-    await query(
+    // Claim the dispute atomically. The read at the top is only for a clean
+    // error message — between it and here another admin session can close the
+    // same dispute, and this is a money path, so the state change has to be
+    // the thing that decides who wins. 0 rows back means someone else got it.
+    const claimed = await queryOne<{ id: string }>(
       `UPDATE disputes
        SET status = COALESCE($1, status),
            resolution = COALESCE($2, resolution),
            resolution_note = COALESCE($3, resolution_note),
            refund_amount = COALESCE($4, refund_amount),
            resolved_at = CASE WHEN $5 THEN NOW() ELSE resolved_at END
-       WHERE id = $6`,
+       WHERE id = $6 AND status NOT IN ('resolved', 'rejected')
+       RETURNING id`,
       [status || null, resolution || null, resolution_note || null, refund_amount ?? null, isClosing, id]
     );
+    if (!claimed) {
+      return NextResponse.json({ error: "This dispute has already been closed" }, { status: 400 });
+    }
 
-    // If resolution involves a refund, issue actual Stripe refund then update booking
-    if (resolution === "full_refund" || resolution === "partial_refund") {
-      const booking = await queryOne<{ total_price: number; stripe_payment_intent_id: string | null; stripe_amount_paid_cents: number | null; blind_booking: boolean | null }>(
-        "SELECT total_price, stripe_payment_intent_id, stripe_amount_paid_cents, blind_booking FROM bookings WHERE id = $1",
+    // Refunds only ever happen as part of CLOSING the dispute. Firing on
+    // `resolution` alone let a caller send {status:'under_review',
+    // resolution:'partial_refund'} and move real money while leaving the
+    // dispute open — repeatable until the whole charge was drained, with no
+    // emails and no chat message, because those are gated on isClosing.
+    if (isClosing && (resolution === "full_refund" || resolution === "partial_refund")) {
+      const booking = await queryOne<{ total_price: number; stripe_payment_intent_id: string | null; stripe_amount_paid_cents: number | null; blind_booking: boolean | null; payout_transferred: boolean | null }>(
+        "SELECT total_price, stripe_payment_intent_id, stripe_amount_paid_cents, blind_booking, payout_transferred FROM bookings WHERE id = $1",
         [dispute.booking_id]
       );
+
+      // If the photographer has already been paid, refunding the client pays
+      // both sides out of our own balance — Stripe transfers are separate from
+      // the charge, so refunds.create does NOT claw one back, and there is no
+      // reversal code anywhere in this repo to call. Stop and make it a human
+      // decision rather than silently eating the payout.
+      if (booking?.payout_transferred) {
+        await query(
+          `UPDATE disputes SET status = 'under_review', resolution = NULL, resolution_note = NULL,
+                  refund_amount = NULL, resolved_at = NULL WHERE id = $1`,
+          [id]
+        );
+        return NextResponse.json({
+          error: "The photographer has already been paid out for this booking. Reverse the transfer in Stripe first, then resolve the dispute — refunding now would pay both sides.",
+        }, { status: 409 });
+      }
 
       // Full refund returns the GROSS the client paid, not the bare base —
       // and we persist that gross so the recorded figure matches the Stripe
@@ -135,16 +162,21 @@ export async function PATCH(
       if (booking?.stripe_payment_intent_id) {
         try {
           const stripeClient = requireStripe();
+          // idempotencyKey is keyed on the dispute, so a retry after a timeout
+          // (where the refund may already have gone through) returns the same
+          // refund instead of issuing a second one. Stripe blocks a repeat
+          // FULL refund on its own, but two partials would both succeed.
+          const idem = { idempotencyKey: `dispute_refund_${id}` };
           if (resolution === "full_refund") {
             await stripeClient.refunds.create({
               payment_intent: booking.stripe_payment_intent_id,
-            });
+            }, idem);
           } else {
             // Partial refund — amount is in EUR, Stripe expects cents
             await stripeClient.refunds.create({
               payment_intent: booking.stripe_payment_intent_id,
               amount: Math.round(amount * 100),
-            });
+            }, idem);
           }
         } catch (stripeErr) {
           console.error("[disputes] Stripe refund failed:", stripeErr);
@@ -167,14 +199,27 @@ export async function PATCH(
         }
       }
 
-      await query(
-        `UPDATE bookings
-         SET refund_amount = $1,
-             status = 'refunded',
-             payment_status = 'refunded'
-         WHERE id = $2`,
-        [amount, dispute.booking_id]
-      );
+      // bookings has no refund_amount column — the figure lives on
+      // disputes.refund_amount, which is where it was already written. Naming
+      // it here threw AFTER the money had left Stripe, so the booking stayed
+      // 'paid', neither party was notified (the mail block below never ran),
+      // and the dispute was already closed so nobody could retry.
+      //
+      // The two branches also must not share a status. Marking a partial
+      // refund as fully 'refunded' excluded the booking from every payout
+      // gate forever, so a €50 goodwill refund meant the photographer got
+      // nothing at all for the shoot.
+      if (resolution === "full_refund") {
+        await query(
+          "UPDATE bookings SET status = 'refunded', payment_status = 'refunded' WHERE id = $1",
+          [dispute.booking_id]
+        );
+      } else {
+        await query(
+          "UPDATE bookings SET status = 'delivered', payment_status = 'partially_refunded' WHERE id = $1",
+          [dispute.booking_id]
+        );
+      }
     }
 
     // If not a refund case, update booking status back to delivered (reshoot/rejected)
@@ -251,14 +296,18 @@ export async function PATCH(
       }
     }
 
-    // Audit log
+    // Audit log. The table is `admin_audit_log` — this wrote to `audit_logs`,
+    // which does not exist, so every dispute resolution (refunds included)
+    // failed to record and the try/catch hid it. Money moves must leave a
+    // trace somewhere other than Stripe.
     try {
       const adminEmail = await getAdminEmail();
       const action = isClosing ? `dispute_${status}` : "dispute_updated";
       const details = JSON.stringify({ status, resolution, resolution_note, refund_amount });
       await query(
-        "INSERT INTO audit_logs (admin_email, action, entity_type, entity_id, details) VALUES ($1, $2, $3, $4, $5)",
-        [adminEmail, action, "dispute", id, details]
+        `INSERT INTO admin_audit_log (action, entity_type, entity_id, entity_name, details, admin_email)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [action, "dispute", id, `dispute ${id}`, details, adminEmail || "admin"]
       );
     } catch (auditErr) {
       console.error("[disputes] audit log error:", auditErr);

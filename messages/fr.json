@@ -3619,7 +3619,10 @@
     "cancel": "Annuler",
     "failedToSubmit": "Échec de la soumission du litige",
     "submitted": "Litige soumis",
-    "submittedDesc": "Notre équipe examinera votre cas et reviendra vers vous sous 5 jours ouvrés."
+    "submittedDesc": "Notre équipe examinera votre cas et reviendra vers vous sous 5 jours ouvrés.",
+    "withdraw": "Retirer ce signalement",
+    "withdrawing": "Retrait…",
+    "withdrawFailed": "Impossible de retirer le signalement. Veuillez réessayer."
   },
   "reviewForm": {
     "leaveReview": "Laisser un avis",

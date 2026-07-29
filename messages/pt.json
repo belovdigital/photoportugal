@@ -3181,7 +3181,10 @@
     "cancel": "Cancelar",
     "failedToSubmit": "Falha ao submeter disputa",
     "submitted": "Disputa submetida",
-    "submittedDesc": "A nossa equipa irá analisar o seu caso e entrar em contacto em 5 dias úteis."
+    "submittedDesc": "A nossa equipa irá analisar o seu caso e entrar em contacto em 5 dias úteis.",
+    "withdraw": "Retirar esta reclamação",
+    "withdrawing": "A retirar…",
+    "withdrawFailed": "Não foi possível retirar a reclamação. Tente novamente."
   },
   "reviewForm": {
     "leaveReview": "Deixar uma Avaliação",

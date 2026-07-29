@@ -3365,7 +3365,10 @@
     "cancel": "Cancel",
     "failedToSubmit": "Failed to submit dispute",
     "submitted": "Dispute submitted",
-    "submittedDesc": "Our team will review your case and get back to you within 5 business days."
+    "submittedDesc": "Our team will review your case and get back to you within 5 business days.",
+    "withdraw": "Withdraw this report",
+    "withdrawing": "Withdrawing…",
+    "withdrawFailed": "Couldn't withdraw the report. Please try again."
   },
   "reviewForm": {
     "leaveReview": "Leave a Review",

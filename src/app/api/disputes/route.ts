@@ -186,19 +186,35 @@ export async function POST(req: NextRequest) {
 // DELETE - Cancel dispute (client only)
 export async function DELETE(req: NextRequest) {
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Please sign in" }, { status: 401 });
-  const userId = (session.user as { id?: string }).id;
-  if (!userId) return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+  const userId = (session?.user as { id?: string } | undefined)?.id || null;
 
   try {
-    const { dispute_id } = await req.json();
+    const { dispute_id, token } = await req.json();
     if (!dispute_id) return NextResponse.json({ error: "dispute_id required" }, { status: 400 });
 
     const dispute = await queryOne<{ id: string; booking_id: string; client_id: string; status: string }>(
       "SELECT id, booking_id, client_id, status FROM disputes WHERE id = $1", [dispute_id]
     );
     if (!dispute) return NextResponse.json({ error: "Dispute not found" }, { status: 404 });
-    if (dispute.client_id !== userId) return NextResponse.json({ error: "Not your dispute" }, { status: 403 });
+
+    // Two ways in, matching the two ways a client reaches their delivery:
+    // signed in on the dashboard, or holding the delivery link. The link is
+    // already enough to ACCEPT the delivery (which releases the payout), so
+    // letting it withdraw a dispute grants strictly less power. Without this
+    // the withdraw button only worked for signed-in clients, while the flow
+    // that offers it is password-gated and often session-less.
+    let authorized = !!userId && dispute.client_id === userId;
+    if (!authorized && token) {
+      const byToken = await queryOne<{ id: string }>(
+        "SELECT id FROM bookings WHERE id = $1 AND delivery_token = $2 AND delivery_token IS NOT NULL",
+        [dispute.booking_id, token]
+      );
+      authorized = !!byToken;
+    }
+    if (!authorized) {
+      return NextResponse.json({ error: "Not your dispute" }, { status: 403 });
+    }
+
     if (dispute.status !== "open" && dispute.status !== "under_review") {
       return NextResponse.json({ error: "Cannot cancel a resolved dispute" }, { status: 400 });
     }
@@ -211,7 +227,7 @@ export async function DELETE(req: NextRequest) {
     // Chat message
     await queryOne(
       `INSERT INTO messages (booking_id, sender_id, text, is_system) VALUES ($1, $2, $3, TRUE)`,
-      [dispute.booking_id, userId, "ℹ️ The reported issue has been withdrawn by the client."]
+      [dispute.booking_id, dispute.client_id, "ℹ️ The reported issue has been withdrawn by the client."]
     );
 
     return NextResponse.json({ success: true });

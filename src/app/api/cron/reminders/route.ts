@@ -1042,7 +1042,9 @@ async function runReminders(): Promise<NextResponse> {
        JOIN users cu ON cu.id = b.client_id
        WHERE b.status = 'delivered'
          AND COALESCE(b.delivery_accepted, FALSE) = FALSE
-         AND b.payment_status = 'paid'
+         -- partially_refunded still owes the photographer their share: a
+         -- goodwill refund to the client must not silently zero their payout.
+         AND b.payment_status IN ('paid', 'partially_refunded')
          AND (b.stripe_payment_intent_id IS NOT NULL OR b.gift_card_id IS NOT NULL)
          AND b.updated_at < NOW() - INTERVAL '14 days'`
     );
@@ -1237,7 +1239,7 @@ async function runReminders(): Promise<NextResponse> {
        JOIN users pu ON pu.id = pp.user_id
        JOIN users cu ON cu.id = b.client_id
        WHERE b.delivery_accepted = TRUE
-         AND b.payment_status = 'paid'
+         AND b.payment_status IN ('paid', 'partially_refunded')
          AND (b.stripe_payment_intent_id IS NOT NULL OR b.gift_card_id IS NOT NULL)
          AND COALESCE(b.payout_transferred, FALSE) = FALSE
          AND pp.stripe_account_id IS NOT NULL

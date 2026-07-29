@@ -417,7 +417,7 @@ export default async function BookingsPage() {
                       {!isPhotographer && booking.status === "confirmed" && booking.payment_status !== "paid" && booking.total_price && (
                         <PayButton bookingId={booking.id} amount={Number(booking.total_price)} blind={!!booking.blind_booking} />
                       )}
-                      {!isPhotographer && booking.status === "delivered" && booking.delivery_token && (
+                      {!isPhotographer && ["delivered", "disputed"].includes(booking.status) && booking.delivery_token && (
                         <Link
                           href={`/delivery/${booking.delivery_token}`}
                           className="inline-flex items-center gap-1.5 rounded-lg bg-accent-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-700"
@@ -600,7 +600,7 @@ export default async function BookingsPage() {
                   </svg>
                 </a>
               )}
-              {!isPhotographer && booking.delivery_token && booking.status === "delivered" && (() => {
+              {!isPhotographer && booking.delivery_token && ["delivered", "disputed"].includes(booking.status) && (() => {
                 const notExpired = !booking.delivery_expires_at || new Date(booking.delivery_expires_at) > new Date();
                 if (!notExpired) return null;
                 let pw = "";

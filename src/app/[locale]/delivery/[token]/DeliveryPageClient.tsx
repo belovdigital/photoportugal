@@ -414,7 +414,7 @@ export function DeliveryPageClient({
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <DisputeForm bookingId={gallery.booking_id} />
+                  <DisputeForm bookingId={gallery.booking_id} token={token} />
                   <button
                     onClick={handleAcceptDelivery}
                     disabled={accepting}

@@ -3371,7 +3371,10 @@
     "cancel": "Abbrechen",
     "failedToSubmit": "Reklamation konnte nicht eingereicht werden",
     "submitted": "Reklamation eingereicht",
-    "submittedDesc": "Unser Team prüft Ihren Fall und meldet sich innerhalb von 5 Werktagen bei Ihnen."
+    "submittedDesc": "Unser Team prüft Ihren Fall und meldet sich innerhalb von 5 Werktagen bei Ihnen.",
+    "withdraw": "Reklamation zurückziehen",
+    "withdrawing": "Wird zurückgezogen…",
+    "withdrawFailed": "Reklamation konnte nicht zurückgezogen werden. Bitte erneut versuchen."
   },
   "reviewForm": {
     "leaveReview": "Bewertung abgeben",

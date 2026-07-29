@@ -3619,7 +3619,10 @@
     "cancel": "Cancelar",
     "failedToSubmit": "Error al enviar la disputa",
     "submitted": "Disputa enviada",
-    "submittedDesc": "Nuestro equipo revisará su caso y le responderá en 5 días laborables."
+    "submittedDesc": "Nuestro equipo revisará su caso y le responderá en 5 días laborables.",
+    "withdraw": "Retirar esta reclamación",
+    "withdrawing": "Retirando…",
+    "withdrawFailed": "No se pudo retirar la reclamación. Inténtelo de nuevo."
   },
   "reviewForm": {
     "leaveReview": "Dejar una reseña",

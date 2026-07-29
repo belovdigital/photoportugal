@@ -812,6 +812,21 @@ export async function DELETE(
     return NextResponse.json({ error: "Delivery has been accepted by the client and can no longer be modified" }, { status: 400 });
   }
 
+  // A dispute is exactly the window where delivery_accepted is FALSE, so the
+  // guard above lets it through — and this deletes from R2 with no deleted_at
+  // and no backup. The photographer could erase the evidence of the delivery
+  // being argued about, while it is being argued about.
+  const disputed = await queryOne<{ id: string }>(
+    "SELECT id FROM disputes WHERE booking_id = $1 AND status IN ('open', 'under_review') LIMIT 1",
+    [id]
+  );
+  if (disputed) {
+    return NextResponse.json(
+      { error: "This delivery is under review after the client reported an issue. Photos can't be removed until it's resolved." },
+      { status: 409 }
+    );
+  }
+
   const photo = await queryOne<{ url: string; preview_url: string | null }>(
     "DELETE FROM delivery_photos WHERE id = $1 AND booking_id = $2 RETURNING url, preview_url",
     [photoId, id]

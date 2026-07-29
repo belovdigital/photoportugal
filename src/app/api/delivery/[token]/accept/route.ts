@@ -85,6 +85,25 @@ export async function POST(
     }
   }
 
+  // Refuse while a dispute is open. Accepting is what releases the
+  // photographer's payout below, and Stripe transfers are separate from the
+  // charge — refunds.create does not claw one back, and this repo has no
+  // reversal code. So a client who reported a problem and then clicked the
+  // still-enabled Accept button (it sits right next to the dispute form, and
+  // accepting is the only way to unlock full-res downloads) would leave us
+  // paying both sides. The 14-day auto-release cron already excludes disputed
+  // bookings via `status='delivered'`; this path was the one that did not.
+  const openDispute = await queryOne<{ id: string }>(
+    "SELECT id FROM disputes WHERE booking_id = $1 AND status IN ('open', 'under_review') LIMIT 1",
+    [booking.id]
+  );
+  if (openDispute) {
+    return NextResponse.json({
+      error: "You've reported an issue with this delivery. Our team is reviewing it — once it's resolved you'll be able to accept.",
+      dispute_open: true,
+    }, { status: 409 });
+  }
+
   // Check if already accepted (early check before transaction)
   if (booking.delivery_accepted) {
     return NextResponse.json({ error: "Delivery already accepted", already_accepted: true }, { status: 400 });
@@ -138,7 +157,8 @@ export async function POST(
   // hand-edited, partially-recovered from a webhook failure, or test
   // data; in any case we should NOT be transferring to the photographer.
   const hasValidFunding = !!booking.stripe_payment_intent_id || !!booking.gift_card_id;
-  if (booking.payment_status === "paid" && hasValidFunding && !booking.payout_transferred && booking.photographer_stripe_id) {
+  const fundedStatus = booking.payment_status === "paid" || booking.payment_status === "partially_refunded";
+  if (fundedStatus && hasValidFunding && !booking.payout_transferred && booking.photographer_stripe_id) {
     // Check if photographer completed Stripe onboarding
     if (!booking.photographer_stripe_ready) {
       console.log(`[delivery/accept] Photographer Stripe not ready for booking ${booking.id}, skipping payout`);
