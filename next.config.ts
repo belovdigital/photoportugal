@@ -18,6 +18,14 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // node-ical 0.26 pulls in temporal-polyfill, which reaches BigInt through an
+  // internal module: `var s = e.r(406443); let l = s.BigInt(0), ...`. Bundling
+  // resolves that import to a namespace object with no BigInt export, so every
+  // parse died with "s.BigInt is not a function" and calendar sync silently ran
+  // on its regex fallback — which cannot expand RRULE, so recurring events
+  // never blocked bookings. The identical call works under plain node, so the
+  // fix is to stop bundling it and let it be require()d at runtime.
+  serverExternalPackages: ["node-ical"],
   // Strip console.log / .info / .debug from production bundles. Keeps
   // .error and .warn so real failures still surface in the user's
   // DevTools (useful when triaging issue reports). The removeConsole
