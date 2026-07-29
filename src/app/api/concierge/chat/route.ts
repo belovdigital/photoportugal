@@ -233,9 +233,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "OpenAI not configured" }, { status: 500 });
   }
 
-  // Anti-abuse rate limit. Each LLM call costs real money (gpt-4o-mini
-  // ~$0.005 per round-trip with our prompt size), so a bot loop could
-  // burn through OpenAI budget fast. Bucket per visitor_id when present
+  // Anti-abuse rate limit. Each LLM call costs real money (at gpt-5.4's
+  // $3/$12 per 1M, a few cents per round-trip with our prompt size), so a
+  // bot loop could burn through OpenAI budget fast. Bucket per visitor_id when present
   // (lets a single human keep typing), else fall back to IP. Generous
   // enough that a human pasting + retrying doesn't hit it, tight enough
   // that an attacker can't sustain meaningful spend.
