@@ -231,6 +231,15 @@ export async function POST(req: NextRequest) {
     // no concierge chat.
     const visitorId = (req.cookies.get("vid")?.value || "").slice(0, 64) || null;
 
+    // Ad click id, from the 90-day cookie VisitorTracker sets (same source
+    // concierge/chat reads). This funnel recorded utm_source but never the
+    // gclid, so every quick booking — the cheapest, most-advertised path —
+    // was invisible to Google Ads: no "Booking Created" upload here, and
+    // the Stripe webhook's `SELECT b.gclid` found NULL so no "Payment
+    // Completed" either. Google's own diagnostics showed no offline
+    // conversion data for 28 days while paid quick bookings were landing.
+    const gclid = ((body as { gclid?: string }).gclid || req.cookies.get("gclid")?.value || "").slice(0, 512) || null;
+
     // Bind the (previously anonymous) concierge chat to this client and
     // store its id on the booking for a hard link, so the admin card can
     // show the exact conversation.
@@ -289,10 +298,10 @@ export async function POST(req: NextRequest) {
       `INSERT INTO bookings (
          client_id, photographer_id, location_slug, shoot_date,
          group_size, occasion, message, total_price, service_fee, status,
-         confirmed_at, blind_booking, utm_source, utm_medium, concierge_chat_id, visitor_id
+         confirmed_at, blind_booking, utm_source, utm_medium, concierge_chat_id, visitor_id, gclid
        ) VALUES (
          $1, NULL, $2, $3, $4, $5, $6, $7, $8, 'confirmed',
-         NOW(), TRUE, $10, 'blind_booking', $9, $11
+         NOW(), TRUE, $10, 'blind_booking', $9, $11, $12
        ) RETURNING id`,
       [
         user.id,
@@ -311,11 +320,23 @@ export async function POST(req: NextRequest) {
         // stays 'blind_booking' for both so blind-funnel filters keep working.
         holdId ? "concierge" : "quick_booking",
         visitorId,
+        gclid,
       ]
     );
 
     if (!booking) {
       return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
+    }
+
+    // Tell Google Ads this click turned into a booking. Fire-and-forget:
+    // the visitor is waiting on a Stripe redirect, and a Google outage must
+    // never cost us the booking. "Payment Completed" needs nothing here —
+    // the Stripe webhook already uploads it off bookings.gclid, which this
+    // row now carries.
+    if (gclid) {
+      import("@/lib/google-ads-conversions").then(({ uploadBookingCreatedConversion }) => {
+        uploadBookingCreatedConversion(gclid, hold.price_eur, { email: user.email }, `booking:${booking.id}:created`);
+      }).catch((err) => console.error("[blind-accept] gads conversion upload error:", err));
     }
 
     // Stripe Checkout — capture_method=manual. We charge €price_eur
