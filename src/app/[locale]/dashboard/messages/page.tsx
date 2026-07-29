@@ -864,7 +864,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
       if (res && !res.ok) {
         try {
           const errData = await res.json();
-          if (errData.error === "social_platform_blocked") {
+          if (errData.error === "social_platform_blocked" || errData.error === "offplatform_payment_blocked") {
             // Remove temp message and show the warning instead
             setMessages((prev) => [
               ...prev.filter((m) => m.id !== textTempId),

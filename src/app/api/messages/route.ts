@@ -4,6 +4,55 @@ import { queryOne, query } from "@/lib/db";
 import { sendNewMessageNotification } from "@/lib/email";
 import { detectContactInfo, detectSocialPlatform } from "@/lib/content-filter";
 import { maskSurname } from "@/lib/photographer-name";
+import {
+  mentionsPaymentRail,
+  classifyOffPlatformPayment,
+  blockedCopy,
+  type OffPlatformVerdict,
+} from "@/lib/off-platform-payment";
+
+/** UI locale of the person sending, so the notice isn't English at a German client. */
+async function senderLocale(userId: string): Promise<string> {
+  const u = await queryOne<{ locale: string | null }>(
+    "SELECT locale FROM users WHERE id = $1",
+    [userId]
+  );
+  return u?.locale || "en";
+}
+
+interface OffPlatformAlertInput {
+  booking: { client_name?: string | null; photographer_name?: string | null; photographer_slug?: string | null; status?: string | null; payment_status?: string | null; total_price?: number | string | null };
+  booking_id: string;
+  senderRole: "client" | "photographer";
+  text: string;
+  verdict: OffPlatformVerdict;
+  /** false = caught by the post-delivery scan, so the message is already in the thread. */
+  blocked: boolean;
+}
+
+async function alertOffPlatform(i: OffPlatformAlertInput) {
+  try {
+    const { sendTelegram } = await import("@/lib/telegram");
+    const esc = (s: string) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const preview = i.text.trim().length > 320 ? i.text.trim().slice(0, 320) + "…" : i.text.trim();
+    const who = i.senderRole === "client" ? "Client" : "Photographer";
+    const lines = [
+      `💸 <b>Off-platform payment attempt</b> — ${i.blocked ? "message BLOCKED" : "caught after delivery, notice posted"}`,
+      ``,
+      `<b>From:</b> ${who} · <b>${esc(i.verdict.kind)}</b> — ${esc(i.verdict.reason)}`,
+      `<b>Photographer:</b> ${esc(i.booking.photographer_name || "—")}`,
+      `<b>Client:</b> ${esc(i.booking.client_name || "—")}`,
+      `<b>Booking:</b> ${esc(i.booking.status || "—")} · payment ${esc(i.booking.payment_status || "unpaid")}${i.booking.total_price ? ` · ${esc(String(i.booking.total_price))}€` : ""}`,
+      ``,
+      `<i>"${esc(preview)}"</i>`,
+      ``,
+      `<a href="https://photoportugal.com/admin?tab=bookings&booking=${i.booking_id}">Open booking in admin →</a>`,
+    ];
+    await sendTelegram(lines.join("\n"), "alerts");
+  } catch (err) {
+    console.error("[messages] off-platform alert failed:", err);
+  }
+}
 
 // Get messages for a booking
 export async function GET(req: NextRequest) {
@@ -182,6 +231,28 @@ export async function POST(req: NextRequest) {
         // (handled below after message insert)
         contactWarning = `⚠️ Reminder: sharing social media handles or directing clients off-platform is against Photo Portugal's terms. Repeated violations may result in account suspension.`;
       }
+
+      // Off-platform PAYMENT attempts. detectSocialPlatform/detectContactInfo
+      // above only look for contact details, so "can I pay you directly via
+      // PayPal?" passed straight through — it names no email, phone or link.
+      //
+      // Only messages that trip the cheap keyword gate are classified here, so
+      // <1% of sends pay the ~1s round-trip. The rest are classified after
+      // delivery (see the fire-and-forget block below), which is what catches
+      // the phrasings with no payment word in them at all.
+      if (mentionsPaymentRail(text)) {
+        const verdict = await classifyOffPlatformPayment(text, senderRole);
+        if (verdict.violation) {
+          const locale = await senderLocale(userId);
+          void alertOffPlatform({
+            booking, booking_id, senderRole, text, verdict, blocked: true,
+          });
+          return NextResponse.json({
+            error: "offplatform_payment_blocked",
+            warning: blockedCopy(senderRole, locale),
+          }, { status: 400 });
+        }
+      }
     }
 
     const message = await queryOne<{ id: string; created_at: string; media_url: string | null }>(
@@ -214,6 +285,40 @@ export async function POST(req: NextRequest) {
           );
         } catch (err) {
           console.error("[messages] translate fire-and-forget error:", err);
+        }
+      })();
+    }
+
+    // Safety net for everything the keyword gate never saw. Measured over the
+    // full 1945-message history: 3 of 13 real attempts contain no payment word
+    // at all ("Is payment though this service ok or do you prefer another
+    // method?", "cancel and refund the booking here … then I will book …"), so
+    // a gate alone leaves roughly a quarter of them through.
+    //
+    // This runs after delivery, so it cannot un-send. It posts the same notice
+    // into the thread and alerts admin. Full-corpus cost was $1.10 for 1945
+    // messages, and none of it lands on the send path.
+    if (text?.trim() && message && !mentionsPaymentRail(text)) {
+      const msgId = (message as { id: string }).id;
+      const senderRole: "client" | "photographer" =
+        userId === booking.client_id ? "client" : "photographer";
+      void (async () => {
+        try {
+          const verdict = await classifyOffPlatformPayment(text!, senderRole);
+          if (!verdict.violation) return;
+          const locale = await senderLocale(userId);
+          await queryOne(
+            `INSERT INTO messages (booking_id, sender_id, text, is_system, client_id, photographer_id)
+             VALUES ($1, $2, $3, TRUE, $4, $5)`,
+            [booking_id, userId, blockedCopy(senderRole, locale, "delivered"), booking.client_id, booking.photographer_id]
+          );
+          await queryOne(
+            "SELECT pg_notify('message_updated', $1)",
+            [JSON.stringify({ booking_id, message_id: msgId, client_id: booking.client_id, photographer_id: booking.photographer_id })]
+          );
+          await alertOffPlatform({ booking, booking_id, senderRole, text: text!, verdict, blocked: false });
+        } catch (err) {
+          console.error("[messages] off-platform async scan error:", err);
         }
       })();
     }

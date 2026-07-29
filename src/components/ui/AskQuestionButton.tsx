@@ -112,7 +112,10 @@ export function AskQuestionButton({ photographerId, photographerName, photograph
       router.push(`/dashboard/messages/${data.booking_id}`);
     } else {
       const data = await res.json();
-      setError(data.error || t("failedToSend"));
+      // `warning` carries the human, already-localized explanation (currently
+      // the off-platform payment block). `error` is a machine code — showing it
+      // raw would put "offplatform_payment_blocked" in front of the visitor.
+      setError(data.warning || data.error || t("failedToSend"));
     }
   }
 
@@ -137,7 +140,9 @@ export function AskQuestionButton({ photographerId, photographerName, photograph
             <h2 className="text-lg font-bold text-gray-900">{t("dialogTitle", { name: photographerName })}</h2>
             <p className="mt-1 text-sm text-gray-500">{t("dialogSubtitle")}</p>
 
-            {error && <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+            {/* whitespace-pre-line: the policy explanation is several paragraphs
+                and collapses into a wall of text without it. */}
+            {error && <div className="mt-3 whitespace-pre-line rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}
 
             <form onSubmit={handleSend} className="mt-4">
               <textarea

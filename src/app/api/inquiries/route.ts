@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail, sendAdminNewInquiryNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
+import { mentionsPaymentRail, classifyOffPlatformPayment, blockedCopy } from "@/lib/off-platform-payment";
 
 const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
 
@@ -31,6 +32,32 @@ export async function POST(req: NextRequest) {
     }
     if (photographer.user_id === userId) {
       return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 });
+    }
+
+    // Same off-platform payment gate as /api/messages. This is the FIRST
+    // message a client ever sends, which is exactly where "is there a way to
+    // pay you directly" turns up — leaving it unguarded would have covered
+    // only half the ways a message reaches a photographer.
+    //
+    // Runs BEFORE the inquiry booking is created: blocking after that point
+    // would leave an empty 'inquiry' row behind with no message attached.
+    if (mentionsPaymentRail(message)) {
+      const verdict = await classifyOffPlatformPayment(message, "client");
+      if (verdict.violation) {
+        const u = await queryOne<{ locale: string | null }>("SELECT locale FROM users WHERE id = $1", [userId]);
+        try {
+          const { sendTelegram } = await import("@/lib/telegram");
+          const esc = (s: string) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          await sendTelegram(
+            `💸 <b>Off-platform payment attempt</b> — inquiry BLOCKED\n\n<b>From:</b> Client · <b>${esc(verdict.kind)}</b> — ${esc(verdict.reason)}\n\n<i>"${esc(message.trim().slice(0, 320))}"</i>`,
+            "alerts",
+          );
+        } catch { /* alert is best-effort; the block is what matters */ }
+        return NextResponse.json({
+          error: "offplatform_payment_blocked",
+          warning: blockedCopy("client", u?.locale || "en"),
+        }, { status: 400 });
+      }
     }
 
     // Check if there's already a booking of ANY status between these two —
