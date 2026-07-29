@@ -384,15 +384,17 @@ export default async function middleware(request: NextRequest) {
       return attachAbCookie(NextResponse.redirect(rootUrl, 302));
     }
 
-    if (urlLocale && pref && pref !== urlLocale) {
-      // User on a locale-prefixed URL that doesn't match their preference.
-      const target = remapPath(urlLocale, urlRest, pref);
-      if (target) {
-        const url = new URL(target, request.url);
-        url.search = request.nextUrl.search;
-        return attachAbCookie(NextResponse.redirect(url, 302));
-      }
-    }
+    // A locale prefix in the URL is the most explicit signal there is — more
+    // explicit than a stored cookie and far more than an Accept-Language header.
+    // We used to redirect /de/... to the visitor's preferred locale whenever the
+    // two disagreed, which meant no one could open a language other than their
+    // own: a PT browser (or any request with no Accept-Language, where the CF
+    // geo fallback picks the country) hitting /de/fotografen/x landed on
+    // /pt/photographers/x. Sharing a link across languages was impossible, and
+    // because bots are excluded above, the SEO canonicals looked fine the whole
+    // time. Explicit URL locale is now served as-is; auto-detection still runs
+    // for un-prefixed URLs below and for bare `/`.
+    void urlRest;
 
     // Edge case: explicit choice points away from a no-prefix EN URL — honour it.
     if (!urlLocale && explicitChoice && explicitChoice !== "en" && pathname !== "/") {
