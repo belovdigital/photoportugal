@@ -23,6 +23,11 @@ import { locations } from "@/lib/locations-data";
 //   - Rolling 14-45 day window, not "live" — real volume is ~1-2 events/day,
 //     so a curated recent feed is both honest and avoids an empty/looping
 //     widget. Relative time is concrete ("3 days ago"), never a fake "just now".
+//
+// ORDER MATTERS: the feed comes back strictly freshest-first. The wide query
+// windows exist only as a tail fallback for slow weeks — on a normal week the
+// head of the feed is all events from the last few days, and the client shows
+// cards from the head. Do not reorder this by kind (see `freshestFirst`).
 // ---------------------------------------------------------------------------
 
 export type SocialProofLocale = "en" | "pt" | "de" | "es" | "fr";
@@ -43,6 +48,7 @@ export interface SocialProofEvent {
   href: string | null; // /photographers/<slug>
   post: string;
   meta: string; // small secondary line — relative time, e.g. "Yesterday"
+  ageDays: number; // whole days since the event; the feed is sorted by this
 }
 
 const LOCALES: SocialProofLocale[] = ["en", "pt", "de", "es", "fr"];
@@ -150,13 +156,38 @@ function timeMeta(ageSec: number, s: Strings): string {
   return s.daysAgo(days);
 }
 
-// Round-robin interleave so the feed mixes kinds instead of showing a run
-// of identical "booked" cards.
-function interleave<T>(groups: T[][]): T[] {
-  const out: T[] = [];
-  const max = Math.max(0, ...groups.map((g) => g.length));
-  for (let i = 0; i < max; i++) {
-    for (const g of groups) if (i < g.length) out.push(g[i]);
+// Freshest first — full stop. The previous version round-robined by kind
+// (booked, delivered, review, booked, ...), which put a 40-day-old review in
+// slot 3 while a 1-day-old booking sat at slot 5. Sorting globally by age is
+// what makes the widget read as "this place is busy right now".
+//
+// The one concession to variety: never show three cards of the same kind in a
+// row. When that's about to happen we look a SHORT distance ahead for a
+// different kind — the lookahead is capped so an older event can only ever
+// jump a couple of slots forward. Freshness always dominates.
+const MAX_SAME_KIND_RUN = 2;
+const KIND_LOOKAHEAD = 3;
+
+function freshestFirst(events: SocialProofEvent[]): SocialProofEvent[] {
+  const pool = [...events].sort((a, b) => a.ageDays - b.ageDays);
+  const out: SocialProofEvent[] = [];
+  let runKind: SocialProofKind | null = null;
+  let runLen = 0;
+
+  while (pool.length > 0) {
+    let idx = 0;
+    if (runKind !== null && runLen >= MAX_SAME_KIND_RUN && pool[0].kind === runKind) {
+      const alt = pool.slice(0, KIND_LOOKAHEAD + 1).findIndex((e) => e.kind !== runKind);
+      if (alt > 0) idx = alt;
+    }
+    const [ev] = pool.splice(idx, 1);
+    out.push(ev);
+    if (ev.kind === runKind) {
+      runLen += 1;
+    } else {
+      runKind = ev.kind;
+      runLen = 1;
+    }
   }
   return out;
 }
@@ -257,17 +288,23 @@ export async function buildSocialProofFeed(localeIn: string): Promise<SocialProo
     return true;
   });
 
+  // Delivery ordering falls back to updated_at when delivery_accepted_at is
+  // missing; clamp so an unrelated row touch can never fake a "Today" card.
+  const ageOf = (raw: unknown) => Math.max(0, Math.floor(Number(raw) / 86400));
+
   const delivered = take(deliveredRows).map<SocialProofEvent>((r) => ({
     id: `d_${r.id}`,
     kind: "delivered",
     ...splitForLink(s.delivered(r.client!, NAME_SLOT, cityName(r.slug, locale)), r.photographer!, r.photog_slug),
     meta: timeMeta(Number(r.age), s),
+    ageDays: ageOf(r.age),
   }));
   const booked = take(bookedRows).map<SocialProofEvent>((r) => ({
     id: `b_${r.id}`,
     kind: "booked",
     ...splitForLink(s.booked(r.client!, NAME_SLOT, cityName(r.slug, locale)), r.photographer!, r.photog_slug),
     meta: timeMeta(Number(r.age), s),
+    ageDays: ageOf(r.age),
   }));
   const reviews = reviewRows
     .filter((r) => r.client && r.photographer)
@@ -276,16 +313,12 @@ export async function buildSocialProofFeed(localeIn: string): Promise<SocialProo
       kind: "review",
       ...splitForLink(s.review(r.client!, NAME_SLOT, r.rating), r.photographer!, r.photog_slug),
       meta: timeMeta(Number(r.age), s),
+      ageDays: ageOf(r.age),
     }));
 
-  const aggregate: SocialProofEvent[] =
-    countRows[0] && countRows[0].n >= 5
-      ? [{ id: "agg_30d", kind: "aggregate", pre: s.aggregate(countRows[0].n), name: null, href: null, post: "", meta: s.stats }]
-      : [];
-
-  // Interleave to mix kinds, then drop any accidental duplicate sentences.
+  // Sort everything by age, then drop any accidental duplicate sentences.
   const seenText = new Set<string>();
-  const feed = interleave([booked, delivered, reviews, aggregate])
+  const feed = freshestFirst([...booked, ...delivered, ...reviews])
     .filter((e) => {
       const key = `${e.pre}${e.name ?? ""}${e.post}`;
       if (seenText.has(key)) return false;
@@ -293,5 +326,23 @@ export async function buildSocialProofFeed(localeIn: string): Promise<SocialProo
       return true;
     })
     .slice(0, 24);
+
+  // The 30-day rolling counter is never stale, but it isn't an *event* either —
+  // it must not displace a fresh named card. Park it just past the head the
+  // client draws from, so it surfaces occasionally and leads only when there
+  // are no real events at all.
+  if (countRows[0] && countRows[0].n >= 5) {
+    const agg: SocialProofEvent = {
+      id: "agg_30d",
+      kind: "aggregate",
+      pre: s.aggregate(countRows[0].n),
+      name: null,
+      href: null,
+      post: "",
+      meta: s.stats,
+      ageDays: 0,
+    };
+    feed.splice(Math.min(4, feed.length), 0, agg);
+  }
   return feed;
 }

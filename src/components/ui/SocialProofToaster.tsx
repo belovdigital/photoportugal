@@ -48,13 +48,23 @@ function isAllowedPath(path: string): boolean {
   );
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+// /api/social-proof returns the feed strictly freshest-first. We only ever
+// show MAX_PER_SESSION cards, so shuffling the whole 24-event feed (what this
+// used to do) meant a visitor was as likely to see a 16-day-old review as
+// yesterday's booking. Instead: the newest event ALWAYS leads, and the rest are
+// sampled from a short fresh head, then replayed in feed order (newest first).
+const HEAD = MAX_PER_SESSION + 4;
+
+function pickFreshest(events: SPEvent[], n: number): SPEvent[] {
+  if (events.length <= n) return events;
+  const head = events.slice(0, HEAD);
+  const rest = head.map((_, i) => i).slice(1);
+  for (let i = rest.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [rest[i], rest[j]] = [rest[j], rest[i]];
   }
-  return a;
+  const picked = rest.slice(0, n - 1).sort((a, b) => a - b);
+  return [head[0], ...picked.map((i) => head[i])];
 }
 
 export function SocialProofToaster() {
@@ -91,7 +101,7 @@ export function SocialProofToaster() {
         const res = await fetch(`/api/social-proof?locale=${encodeURIComponent(locale)}`);
         if (!res.ok) return;
         const data = (await res.json()) as { events?: SPEvent[] };
-        queue = shuffle(data.events || []);
+        queue = pickFreshest(data.events || [], MAX_PER_SESSION);
       } catch {
         return; // network hiccup — just don't show anything
       }
