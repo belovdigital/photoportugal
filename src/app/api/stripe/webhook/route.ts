@@ -777,14 +777,26 @@ export async function POST(req: NextRequest) {
             console.error("[webhook] system message error:", msgErr);
           }
 
-          // Upload "Payment Completed" offline conversion to Google Ads
+          // Upload "Payment Completed" offline conversion to Google Ads.
+          //
+          // NOT for a blind booking still waiting on a photographer: those
+          // go to Stripe with capture_method='manual' (checkout/route.ts:143),
+          // so this event fires on the AUTHORISATION, not on money actually
+          // taken — and if no admin assigns within 24h the auto-refund cron
+          // voids the hold. Uploading here would teach Smart Bidding to chase
+          // clicks that produce a hold and nothing else. The real capture
+          // happens at admin assign (admin/bookings/route.ts), which uploads
+          // it there instead.
           try {
-            const gclidBooking = await queryOne<{ gclid: string | null; total_price: number; client_email: string | null; client_phone: string | null }>(
-              `SELECT b.gclid, b.total_price, u.email as client_email, u.phone as client_phone
+            const gclidBooking = await queryOne<{ gclid: string | null; total_price: number; client_email: string | null; client_phone: string | null; blind_pending: boolean }>(
+              `SELECT b.gclid, b.total_price, u.email as client_email, u.phone as client_phone,
+                      (COALESCE(b.blind_booking, FALSE) AND b.photographer_id IS NULL) AS blind_pending
                FROM bookings b JOIN users u ON u.id = b.client_id WHERE b.id = $1`,
               [bookingId]
             );
-            if (gclidBooking?.gclid) {
+            if (gclidBooking?.blind_pending) {
+              console.log(`[webhook] blind hold authorised, deferring Payment Completed until capture: booking=${bookingId}`);
+            } else if (gclidBooking?.gclid) {
               const conversionValue = paymentAmountFromStripe(paymentSummary.amountTotal, gclidBooking.total_price);
               const { uploadPaymentCompletedConversion } = await import("@/lib/google-ads-conversions");
               await uploadPaymentCompletedConversion(gclidBooking.gclid, conversionValue, {

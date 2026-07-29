@@ -245,6 +245,24 @@ async function handleAssignPhotographer(opts: {
     if (booking.stripe_payment_intent_id && booking.payment_status === "paid") {
       try {
         await capturePaymentIntent(booking.stripe_payment_intent_id);
+        // This is the moment a blind booking's money actually moves — the
+        // checkout.session.completed event only authorised a hold, and the
+        // webhook deliberately skips the conversion there because ~half of
+        // those holds get voided by the 24h auto-refund cron. Upload now.
+        const conv = await queryOne<{ gclid: string | null; total_price: number | null; client_email: string | null; client_phone: string | null }>(
+          `SELECT b.gclid, b.total_price, u.email AS client_email, u.phone AS client_phone
+             FROM bookings b JOIN users u ON u.id = b.client_id WHERE b.id = $1`,
+          [bookingId]
+        );
+        if (conv?.gclid) {
+          const { uploadPaymentCompletedConversion } = await import("@/lib/google-ads-conversions");
+          uploadPaymentCompletedConversion(
+            conv.gclid,
+            conv.total_price ? Math.round((Number(conv.total_price) / 0.85) * 100) / 100 : 0,
+            { email: conv.client_email, phone: conv.client_phone },
+            `booking:${bookingId}:paid`
+          ).catch((e) => console.error("[admin/bookings/assign] gads upload error:", e));
+        }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         if (!/already.*captur/i.test(msg)) {
