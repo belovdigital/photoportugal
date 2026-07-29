@@ -6,7 +6,10 @@ import { query, queryOne } from "@/lib/db";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MODEL = "gpt-4o-mini";
+// gpt-5.6-luna: cheapest tier of the current family, and fast enough for the
+// per-message path. It rejects any temperature but the default, so the calls
+// below deliberately omit it — passing one 400s the whole request.
+const MODEL = "gpt-5.6-luna";
 
 // Booking-intent sidebar (Phase 3): the photographer opens a chat and sees a
 // compact summary of what the client actually wants — extracted from the
@@ -100,7 +103,6 @@ export async function GET(req: NextRequest) {
   try {
     const completion = await openai.chat.completions.create({
       model: MODEL,
-      temperature: 0,
       max_completion_tokens: 400,
       response_format: { type: "json_object" },
       messages: [

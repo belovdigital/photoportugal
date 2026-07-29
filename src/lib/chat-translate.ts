@@ -1,7 +1,10 @@
 import OpenAI from "openai";
 import { query, queryOne } from "@/lib/db";
 
-const MODEL = "gpt-4o-mini";
+// gpt-5.6-luna: cheapest tier of the current family, and fast enough for the
+// per-message path. It rejects any temperature but the default, so the calls
+// below deliberately omit it — passing one 400s the whole request.
+const MODEL = "gpt-5.6-luna";
 
 // Supported chat languages on the platform. Photographers pick PT or EN as
 // their UI locale; clients write in any of the five — we translate only into
@@ -55,8 +58,11 @@ async function detectLanguage(openai: OpenAI, text: string): Promise<string | nu
   try {
     const res = await openai.chat.completions.create({
       model: MODEL,
-      temperature: 0,
-      max_completion_tokens: 4,
+      // Was 4. On the 5.6 family a budget that tight is swallowed whole by
+      // reasoning tokens: the call returns finish_reason "length" and an EMPTY
+      // string, so detection silently degraded to null instead of erroring.
+      // 16 is enough for reasoning to come back at 0; 24 leaves headroom.
+      max_completion_tokens: 24,
       messages: [
         {
           role: "system",
@@ -77,7 +83,6 @@ async function translateText(openai: OpenAI, text: string, targetLang: string): 
   try {
     const res = await openai.chat.completions.create({
       model: MODEL,
-      temperature: 0.2,
       max_completion_tokens: 400,
       messages: [
         {

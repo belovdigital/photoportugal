@@ -5,7 +5,10 @@ import { authFromRequest } from "@/lib/mobile-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MODEL = "gpt-4o-mini";
+// gpt-5.6-luna: cheapest tier of the current family, and fast enough for the
+// per-message path. It rejects any temperature but the default, so the calls
+// below deliberately omit it — passing one 400s the whole request.
+const MODEL = "gpt-5.6-luna";
 
 // "Polish to English" with tone variants (Phase 6). The photographer types a
 // rough English draft; we return TWO polished versions: warm and
@@ -45,7 +48,6 @@ export async function POST(req: NextRequest) {
   try {
     const completion = await openai.chat.completions.create({
       model: MODEL,
-      temperature: 0.3,
       max_completion_tokens: 600,
       response_format: { type: "json_object" },
       messages: [

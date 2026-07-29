@@ -1,9 +1,12 @@
 // Trigger-based content translator for photographer/package/review save events.
-// Uses OpenAI gpt-4o-mini (cheap, fast). Only invoked at save time via fire-and-forget;
-// if it fails, the original text remains as fallback (COALESCE(_loc, original) handles it).
+// Only invoked at save time via fire-and-forget; if it fails, the original text
+// remains as fallback (COALESCE(_loc, original) handles it).
 
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL = "gpt-4o-mini";
+// gpt-5.6-terra: the balanced tier. This copy is user-visible in four
+// languages and gets written once per save, so quality beats per-call cost.
+// The 5.6 family rejects any temperature but the default — do not add one back.
+const OPENAI_MODEL = "gpt-5.6-terra";
 
 const TARGET_LOCALES = ["pt", "de", "es", "fr"] as const;
 type TargetLocale = (typeof TARGET_LOCALES)[number];
@@ -54,7 +57,6 @@ Return ONLY valid JSON: { "pt": {...same keys...}, "de": {...}, "es": {...}, "fr
       body: JSON.stringify({
         model: OPENAI_MODEL,
         response_format: { type: "json_object" },
-        temperature: 0.3,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -196,7 +198,6 @@ Return ONLY valid JSON: { ${targets.map((l) => `"${l}": {...same keys...}`).join
     body: JSON.stringify({
       model: OPENAI_MODEL,
       response_format: { type: "json_object" },
-      temperature: 0.3,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Translate the following strings:\n${JSON.stringify(cleaned, null, 2)}` },
