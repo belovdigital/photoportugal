@@ -59,13 +59,13 @@ export async function fetchIcalBusySlots(icalUrl: string): Promise<BusySlot[]> {
 
   const slots: BusySlot[] = [];
 
-  // Outer try/catch as last-ditch defense. node-ical 0.26 has internals
-  // that throw `s.BigInt is not a function` during rrule expansion on
-  // certain Apple iCloud feeds when bundled by Next.js webpack — and
-  // sometimes the throw is async-tinted enough to slip past finer-grained
-  // try/catches. If the library blows up entirely, fall back to a regex
-  // parser that handles non-recurring VEVENTs (covers the vast majority
-  // of personal calendar entries — birthdays/holidays/single bookings).
+  // Outer try/catch as last-ditch defense. This used to fire on every single
+  // sync: node-ical 0.26 pulls in temporal-polyfill, and bundling it broke the
+  // polyfill's internal BigInt import, so parseICS died with "s.BigInt is not a
+  // function" and every calendar silently ran on the regex fallback below —
+  // which cannot expand RRULE. Fixed by keeping node-ical in
+  // serverExternalPackages (next.config.ts); do not remove that entry.
+  // The fallback stays as defence for genuinely malformed feeds.
   try {
     const ical = await import("node-ical");
     let parsed: Record<string, unknown> = {};
@@ -295,26 +295,62 @@ async function fetchGoogleBusySlots(connection: ConnectionRow): Promise<BusySlot
   // selection so future syncs don't keep spamming logs.
   const notFoundIds = new Set<string>();
 
+  // Google returns a per-calendar `internalError` on freeBusy every so often —
+  // roughly one chunk in a few thousand, and it clears on an immediate retry.
+  // It used to be logged and skipped, which is the dangerous way to handle it:
+  // syncConnection replaces the whole slot set, so one skipped chunk wrote a
+  // slot set missing a 30-day window of busy time. The calendar looked synced
+  // while that month silently accepted bookings until the next run 15 min later.
+  const TRANSIENT = new Set(["internalError", "backendError", "rateLimitExceeded", "quotaExceeded"]);
+  const MAX_ATTEMPTS = 3;
+
+  type FreeBusyResponse = {
+    calendars: Record<string, { busy?: { start: string; end: string }[]; errors?: { reason: string }[] }>;
+  };
+
   for (const chunk of chunks) {
-    const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        timeMin: chunk.start.toISOString(),
-        timeMax: chunk.end.toISOString(),
-        items: resolvedIds.map((id) => ({ id })),
-      }),
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      if (res.status === 403) {
-        throw new Error("Google didn't grant Calendar permission. Click Disconnect, then Connect Google Calendar again and make sure the \"See and download any calendar\" box stays ticked.");
+    let data: FreeBusyResponse | null = null;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          timeMin: chunk.start.toISOString(),
+          timeMax: chunk.end.toISOString(),
+          items: resolvedIds.map((id) => ({ id })),
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        if (res.status === 403) {
+          throw new Error("Google didn't grant Calendar permission. Click Disconnect, then Connect Google Calendar again and make sure the \"See and download any calendar\" box stays ticked.");
+        }
+        throw new Error(`freeBusy failed: ${res.status} ${txt.slice(0, 200)}`);
       }
-      throw new Error(`freeBusy failed: ${res.status} ${txt.slice(0, 200)}`);
+      const body = await res.json() as FreeBusyResponse;
+
+      const retryable = resolvedIds.filter((id) => {
+        const errs = body.calendars[id]?.errors;
+        return errs?.length ? errs.some((e) => TRANSIENT.has(e.reason)) : false;
+      });
+      if (retryable.length === 0 || attempt === MAX_ATTEMPTS) {
+        if (retryable.length > 0) {
+          // Out of attempts. Throw rather than persist a knowingly-incomplete
+          // set: syncConnection only DELETEs after this function returns, so
+          // failing here keeps the last complete slots in place and surfaces
+          // last_sync_error on the dashboard. Stale-but-complete blocks
+          // correctly; partial does not.
+          throw new Error(
+            `freeBusy kept failing for ${retryable.join(", ")} on ${chunk.start.toISOString().slice(0, 10)}..${chunk.end.toISOString().slice(0, 10)} after ${MAX_ATTEMPTS} attempts`,
+          );
+        }
+        data = body;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 300 * attempt));
     }
-    const data = await res.json() as {
-      calendars: Record<string, { busy?: { start: string; end: string }[]; errors?: { reason: string }[] }>;
-    };
+    if (!data) continue;
 
     for (const calId of resolvedIds) {
       const cal = data.calendars[calId];
