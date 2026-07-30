@@ -68,9 +68,15 @@ export function AdminStripeHealthTab() {
 
   useEffect(() => { load(false); }, [load]);
 
-  const problems = rows?.filter((r) => r.severity !== "ok") ?? [];
-  const okCount = rows?.filter((r) => r.severity === "ok").length ?? 0;
-  const visible = showOk ? rows ?? [] : problems;
+  // Only photographers actually live on the site. `is_approved` is the same
+  // gate the public listing uses (/api/photographers), so this board matches
+  // what visitors can book. Banned and never-approved accounts are dropped:
+  // a Stripe restriction on someone nobody can book isn't a problem to chase.
+  const live = rows?.filter((r) => r.is_approved && !r.is_banned) ?? [];
+  const hiddenCount = (rows?.length ?? 0) - live.length;
+  const problems = live.filter((r) => r.severity !== "ok");
+  const okCount = live.filter((r) => r.severity === "ok").length;
+  const visible = showOk ? live : problems;
   const counts = {
     blocked: problems.filter((r) => r.severity === "blocked").length,
     deadline: problems.filter((r) => r.severity === "deadline").length,
@@ -83,8 +89,9 @@ export function AdminStripeHealthTab() {
         <div>
           <h2 className="text-lg font-bold text-gray-900">Stripe health</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Live from the Stripe API — not the cached DB flag.
+            Live from the Stripe API — not the cached DB flag. Approved photographers only.
             {fetchedAt && ` Last checked ${new Date(fetchedAt).toLocaleTimeString()}.`}
+            {hiddenCount > 0 && ` ${hiddenCount} banned or unapproved account${hiddenCount === 1 ? "" : "s"} hidden.`}
           </p>
         </div>
         <button
@@ -122,7 +129,7 @@ export function AdminStripeHealthTab() {
 
           {visible.length === 0 ? (
             <p className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-              Every connected account is in good standing.
+              Every photographer live on the site is in good standing with Stripe.
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -148,8 +155,6 @@ export function AdminStripeHealthTab() {
                             <span className={`h-1.5 w-1.5 rounded-full ${sev.dot}`} />
                             {sev.label}
                           </span>
-                          {r.is_banned && <div className="mt-1 text-[11px] text-gray-400">banned</div>}
-                          {!r.is_approved && !r.is_banned && <div className="mt-1 text-[11px] text-gray-400">not approved</div>}
                         </td>
                         <td className="py-3 pr-3">
                           <a
