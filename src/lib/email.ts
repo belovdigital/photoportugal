@@ -2063,3 +2063,91 @@ export async function sendSocialPermissionEmail(
     import("@/lib/notification-log").then(m => m.logNotification("email", to, subject, "failed", undefined, String(err))).catch(() => {});
   }
 }
+
+/**
+ * Calendar sync has been failing for this photographer for a while.
+ *
+ * Sent by the reminders cron, not at the moment of failure: a single hiccup
+ * fixes itself on the next run 15 minutes later and is not worth an email.
+ * What matters is a connection that stays broken — one sat dead for 2.5 months
+ * showing only Google's raw `{"error":"invalid_grant"}` on the dashboard, and
+ * nobody noticed. While it's broken the cached busy slots go stale, so the
+ * booking check can accept a slot the photographer is not actually free for.
+ */
+export async function sendCalendarSyncBrokenEmail(
+  to: string,
+  photographerName: string,
+  connectionLabel: string,
+  brokenSinceDays: number,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const url = `https://photoportugal.com${locale === "en" ? "" : `/${locale}`}/dashboard/calendar-sync`;
+
+  const C = {
+    en: {
+      subject: "Your calendar stopped syncing — reconnect it",
+      h2: "Your calendar stopped syncing",
+      greet: `Hi ${firstName},`,
+      p1: `We haven't been able to read <strong>${connectionLabel}</strong> for ${brokenSinceDays} day${brokenSinceDays === 1 ? "" : "s"}.`,
+      p2: "That matters because we use your calendar to block times you're already busy. While it's disconnected we're working from an old copy, so a client could book a slot you can't actually do.",
+      p3: "Reconnecting takes about ten seconds.",
+      cta: "Reconnect my calendar",
+      p4: "If you meant to disconnect it, you can ignore this — but please block your busy dates manually under Availability so nothing gets double-booked.",
+    },
+    pt: {
+      subject: "O seu calendário deixou de sincronizar — volte a ligá-lo",
+      h2: "O seu calendário deixou de sincronizar",
+      greet: `Olá ${firstName},`,
+      p1: `Há ${brokenSinceDays} dia${brokenSinceDays === 1 ? "" : "s"} que não conseguimos ler <strong>${connectionLabel}</strong>.`,
+      p2: "Isto é importante porque usamos o seu calendário para bloquear as horas em que já está ocupado. Enquanto estiver desligado, estamos a trabalhar com uma cópia antiga — um cliente pode reservar um horário que na verdade não tem livre.",
+      p3: "Voltar a ligar demora cerca de dez segundos.",
+      cta: "Voltar a ligar o calendário",
+      p4: "Se desligou de propósito, ignore este email — mas bloqueie as suas datas ocupadas manualmente em Disponibilidade para não haver reservas duplicadas.",
+    },
+    de: {
+      subject: "Ihr Kalender synchronisiert nicht mehr — bitte neu verbinden",
+      h2: "Ihr Kalender synchronisiert nicht mehr",
+      greet: `Hallo ${firstName},`,
+      p1: `Seit ${brokenSinceDays} Tag${brokenSinceDays === 1 ? "" : "en"} können wir <strong>${connectionLabel}</strong> nicht mehr auslesen.`,
+      p2: "Das ist wichtig, weil wir Ihren Kalender nutzen, um bereits belegte Zeiten zu sperren. Solange die Verbindung fehlt, arbeiten wir mit einem alten Stand — ein Kunde könnte einen Termin buchen, den Sie gar nicht wahrnehmen können.",
+      p3: "Das Neuverbinden dauert etwa zehn Sekunden.",
+      cta: "Kalender neu verbinden",
+      p4: "Falls Sie die Verbindung absichtlich getrennt haben, können Sie diese E-Mail ignorieren — tragen Sie Ihre belegten Tage dann bitte manuell unter Verfügbarkeit ein, damit nichts doppelt gebucht wird.",
+    },
+    es: {
+      subject: "Tu calendario dejó de sincronizarse — vuelve a conectarlo",
+      h2: "Tu calendario dejó de sincronizarse",
+      greet: `Hola ${firstName},`,
+      p1: `Llevamos ${brokenSinceDays} día${brokenSinceDays === 1 ? "" : "s"} sin poder leer <strong>${connectionLabel}</strong>.`,
+      p2: "Esto importa porque usamos tu calendario para bloquear las horas en las que ya estás ocupado. Mientras esté desconectado trabajamos con una copia antigua, así que un cliente podría reservar un hueco que en realidad no tienes libre.",
+      p3: "Volver a conectarlo lleva unos diez segundos.",
+      cta: "Reconectar mi calendario",
+      p4: "Si lo desconectaste a propósito, puedes ignorar este correo — pero bloquea tus fechas ocupadas manualmente en Disponibilidad para que no haya reservas duplicadas.",
+    },
+    fr: {
+      subject: "Votre agenda ne se synchronise plus — reconnectez-le",
+      h2: "Votre agenda ne se synchronise plus",
+      greet: `Bonjour ${firstName},`,
+      p1: `Depuis ${brokenSinceDays} jour${brokenSinceDays === 1 ? "" : "s"}, nous n'arrivons plus à lire <strong>${connectionLabel}</strong>.`,
+      p2: "C'est important, car nous utilisons votre agenda pour bloquer les créneaux où vous êtes déjà pris. Tant que la connexion est coupée, nous travaillons sur une copie ancienne : un client pourrait réserver un créneau que vous ne pouvez pas assurer.",
+      p3: "La reconnexion prend une dizaine de secondes.",
+      cta: "Reconnecter mon agenda",
+      p4: "Si vous l'avez déconnecté volontairement, ignorez cet e-mail — mais pensez à bloquer vos dates occupées manuellement dans Disponibilité pour éviter les doubles réservations.",
+    },
+  }[locale];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${C.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p1}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p2}</p>
+      <p style="margin:0 0 4px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p3}</p>
+      ${emailButton(url, C.cta)}
+      <p style="margin:0;font-size:13px;color:#9B8E82;line-height:1.6;">${C.p4}</p>
+    `, locale),
+  );
+}

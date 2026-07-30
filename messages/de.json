@@ -2316,7 +2316,10 @@
     "signOut": "Abmelden",
     "needHelp": "Brauchen Sie Hilfe?",
     "helpCenterLink": "Besuchen Sie unser Hilfe-Center",
-    "sidebarStats": "Statistiken"
+    "sidebarStats": "Statistiken",
+    "calendarBrokenTitle": "{name} synchronisiert nicht mehr",
+    "calendarBrokenBody": "Seit {days} Tagen können wir ihn nicht mehr auslesen. Bis Sie neu verbinden, arbeiten wir mit einem alten Stand — ein Kunde könnte einen Termin buchen, den Sie nicht wahrnehmen können.",
+    "calendarBrokenCta": "Neu verbinden"
   },
   "matchRequests": {
     "title": "Meine Vermittlungen",

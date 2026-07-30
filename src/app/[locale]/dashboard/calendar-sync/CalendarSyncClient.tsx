@@ -13,6 +13,7 @@ type Connection = {
   last_synced_at: string | null;
   last_sync_error: string | null;
   last_sync_event_count: number | null;
+  sync_error_since?: string | null;
 };
 
 type GoogleCal = { id: string; summary: string; primary: boolean; selected: boolean };
@@ -337,18 +338,29 @@ export function CalendarSyncClient() {
                 <p className="mt-0.5 text-xs text-gray-500 break-all">
                   {c.type === "ical" ? c.ical_url : c.google_email}
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  {c.last_sync_error ? (
-                    <span className="text-red-600">⚠ {c.last_sync_error}</span>
-                  ) : (
-                    <>
-                      Synced {timeAgo(c.last_synced_at)}
-                      {c.last_sync_event_count != null && (
-                        <span className="text-gray-400"> · {c.last_sync_event_count} events tracked</span>
-                      )}
-                    </>
-                  )}
-                </p>
+                {c.last_sync_error ? (
+                  // A one-line red string was too easy to skim past — one
+                  // connection stayed broken for months while showing exactly
+                  // that. Spell out the consequence, not just the error.
+                  <div className="mt-2 rounded-lg border border-red-200 bg-red-50 p-3">
+                    <p className="text-xs font-semibold text-red-800">
+                      ⚠ Not syncing
+                      {c.sync_error_since ? ` — stopped ${timeAgo(c.sync_error_since)}` : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-red-700">{c.last_sync_error}</p>
+                    <p className="mt-1.5 text-xs text-red-600">
+                      Until this is fixed we&apos;re using an old copy of your calendar, so a client
+                      could book a time you&apos;re not actually free for.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Synced {timeAgo(c.last_synced_at)}
+                    {c.last_sync_event_count != null && (
+                      <span className="text-gray-400"> · {c.last_sync_event_count} events tracked</span>
+                    )}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0 flex-wrap">
                 {c.type === "google" && (

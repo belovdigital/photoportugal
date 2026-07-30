@@ -2818,6 +2818,7 @@ async function runReminders(): Promise<NextResponse> {
   // surface in the dashboard; we just count outcomes here for the summary.
   let calendarSynced = 0;
   let calendarFailed = 0;
+  let calendarBrokenEmails = 0;
   try {
     const { syncConnection } = await import("@/lib/calendar-sync");
     type Conn = Parameters<typeof syncConnection>[0];
@@ -2840,11 +2841,53 @@ async function runReminders(): Promise<NextResponse> {
     // Cleanup: drop slots whose end is in the past — they can't conflict
     // with any future booking and just bloat the table.
     await query("DELETE FROM calendar_busy_slots WHERE ends_at < NOW() - INTERVAL '1 day'");
+
+    // Tell the photographer their calendar is dead. Deliberately not sent the
+    // moment a sync fails — a transient Google error clears itself on the next
+    // run and isn't worth an email. The 24h threshold means only genuinely
+    // broken connections get one; the 7-day gap stops it becoming noise.
+    //
+    // This exists because nothing surfaced a broken connection at all: one sat
+    // dead for 2.5 months while its cached busy slots aged, and stale slots are
+    // what the booking check reads.
+    const broken = await query<{
+      id: string; display_name: string; type: string; email: string; name: string;
+      locale: string | null; days: number;
+    }>(
+      `SELECT cc.id, cc.display_name, cc.type, u.email, u.name, u.locale,
+              GREATEST(1, FLOOR(EXTRACT(EPOCH FROM (NOW() - cc.sync_error_since)) / 86400))::int AS days
+         FROM calendar_connections cc
+         JOIN photographer_profiles pp ON pp.id = cc.photographer_id
+         JOIN users u ON u.id = pp.user_id
+        WHERE cc.is_active
+          AND cc.last_sync_error IS NOT NULL
+          AND cc.sync_error_since < NOW() - INTERVAL '24 hours'
+          AND (cc.sync_error_notified_at IS NULL OR cc.sync_error_notified_at < NOW() - INTERVAL '7 days')
+          AND COALESCE(u.is_banned, FALSE) = FALSE
+          AND u.deactivated_at IS NULL`
+    );
+    for (const c of broken) {
+      try {
+        const { sendCalendarSyncBrokenEmail } = await import("@/lib/email");
+        const label = c.display_name || (c.type === "google" ? "Google Calendar" : "iCal calendar");
+        const loc = (["en", "pt", "de", "es", "fr"] as const).includes(c.locale as "en")
+          ? (c.locale as "en" | "pt" | "de" | "es" | "fr")
+          : "en";
+        await sendCalendarSyncBrokenEmail(c.email, c.name, label, c.days, loc);
+        await query(
+          "UPDATE calendar_connections SET sync_error_notified_at = NOW() WHERE id = $1",
+          [c.id]
+        );
+        calendarBrokenEmails++;
+      } catch (err) {
+        console.error("[cron/reminders] calendar broken email failed:", c.email, err);
+      }
+    }
   } catch (err) {
     results.errors.push(`Calendar sync: ${err}`);
   }
 
-  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, offerNudges, offerNudgeAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, conciergeMatchesEmails, readyToBookNudges });
+  console.log("[cron/reminders]", results, { earlyBirdExpired, expiredDeliveriesCleaned, zipsBuilt, checklistDeadlineEmails, checklistDeactivated, deliveryReviewReminders, reviewReminders, smsReviewReminders, unverifiedCleaned, abandonedBookingEmails, noBookingNudges, newClientNotifications, paymentFinalReminders, unansweredReminders6h, unansweredReminders12h, unansweredAdminAlerts, offerNudges, offerNudgeAdminAlerts, clientFollowUps, queueProcessed, calendarSynced, calendarFailed, calendarBrokenEmails, conciergeMatchesEmails, readyToBookNudges });
 
   return NextResponse.json({
     success: true,

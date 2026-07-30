@@ -2564,7 +2564,10 @@
     "signOut": "Cerrar sesión",
     "needHelp": "¿Necesita ayuda?",
     "helpCenterLink": "Visite nuestro Centro de ayuda",
-    "sidebarStats": "Estadísticas"
+    "sidebarStats": "Estadísticas",
+    "calendarBrokenTitle": "{name} dejó de sincronizarse",
+    "calendarBrokenBody": "Llevamos {days} días sin poder leerlo. Hasta que lo reconectes usamos una copia antigua: un cliente podría reservar un hueco que no tienes libre.",
+    "calendarBrokenCta": "Reconectar"
   },
   "matchRequests": {
     "title": "Mis matches",

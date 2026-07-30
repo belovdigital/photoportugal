@@ -2316,7 +2316,10 @@
     "signOut": "Sair",
     "needHelp": "Precisa de ajuda?",
     "helpCenterLink": "Visite o nosso Centro de Ajuda",
-    "sidebarStats": "Estatísticas"
+    "sidebarStats": "Estatísticas",
+    "calendarBrokenTitle": "{name} deixou de sincronizar",
+    "calendarBrokenBody": "Há {days} dias que não a conseguimos ler. Até voltar a ligar, estamos a usar uma cópia antiga — um cliente pode reservar um horário que não tem livre.",
+    "calendarBrokenCta": "Voltar a ligar"
   },
   "matchRequests": {
     "title": "As Minhas Sugestões",

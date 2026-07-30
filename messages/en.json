@@ -2311,7 +2311,10 @@
     "signOut": "Sign out",
     "needHelp": "Need help?",
     "helpCenterLink": "Visit our Help Center",
-    "sidebarStats": "Statistics"
+    "sidebarStats": "Statistics",
+    "calendarBrokenTitle": "{name} stopped syncing",
+    "calendarBrokenBody": "We haven't been able to read it for {days} days. Until you reconnect, we're using an old copy — a client could book a time you're not actually free for.",
+    "calendarBrokenCta": "Reconnect"
   },
   "matchRequests": {
     "title": "My Matches",

@@ -20,6 +20,10 @@ export type ConnectionRow = {
   last_synced_at: string | null;
   last_sync_error: string | null;
   last_sync_event_count: number | null;
+  /** When the current run of failures started. NULL while healthy. */
+  sync_error_since?: string | null;
+  /** Last time we emailed the photographer about it, so we don't nag. */
+  sync_error_notified_at?: string | null;
 };
 
 export type BusySlot = {
@@ -436,8 +440,16 @@ export async function syncConnection(connection: ConnectionRow): Promise<{ ok: t
     // fetchers, so reaching this branch genuinely means the sync didn't
     // produce anything we can use.
     const msg = err instanceof Error ? err.message : String(err);
+    // sync_error_since marks when the CURRENT run of failures began, so the
+    // cron can tell "failed once just now" from "dead for weeks" — last_synced_at
+    // can't, because it advances on failed attempts too. COALESCE keeps the
+    // original timestamp across repeated failures.
     await queryOne(
-      "UPDATE calendar_connections SET last_sync_error = $1, last_synced_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id",
+      `UPDATE calendar_connections
+          SET last_sync_error = $1,
+              sync_error_since = COALESCE(sync_error_since, NOW()),
+              last_synced_at = NOW(), updated_at = NOW()
+        WHERE id = $2 RETURNING id`,
       [msg.slice(0, 500), connection.id]
     );
     return { ok: false, error: msg };
@@ -462,7 +474,10 @@ export async function syncConnection(connection: ConnectionRow): Promise<{ ok: t
   }
 
   await queryOne(
-    "UPDATE calendar_connections SET last_synced_at = NOW(), last_sync_error = NULL, last_sync_event_count = $1, updated_at = NOW() WHERE id = $2 RETURNING id",
+    `UPDATE calendar_connections
+        SET last_synced_at = NOW(), last_sync_error = NULL, last_sync_event_count = $1,
+            sync_error_since = NULL, sync_error_notified_at = NULL, updated_at = NOW()
+      WHERE id = $2 RETURNING id`,
     [slots.length, connection.id]
   );
 

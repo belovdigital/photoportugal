@@ -26,6 +26,7 @@ function publicShape(row: ConnectionRow & { google_refresh_token: string | null;
     last_synced_at: row.last_synced_at,
     last_sync_error: row.last_sync_error,
     last_sync_event_count: row.last_sync_event_count,
+    sync_error_since: row.sync_error_since ?? null,
   };
 }
 
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
   const rows = await query<ConnectionRow>(
     `SELECT id, photographer_id, type, display_name, google_email, google_refresh_token,
             google_access_token, google_access_token_expires_at, selected_calendar_ids,
-            ical_url, is_active, last_synced_at, last_sync_error, last_sync_event_count
+            ical_url, is_active, last_synced_at, last_sync_error, last_sync_event_count, sync_error_since
        FROM calendar_connections
       WHERE photographer_id = $1
       ORDER BY created_at`,
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
        VALUES ($1, 'ical', $2, $3)
        RETURNING id, photographer_id, type, display_name, google_email, google_refresh_token,
                  google_access_token, google_access_token_expires_at, selected_calendar_ids,
-                 ical_url, is_active, last_synced_at, last_sync_error, last_sync_event_count`,
+                 ical_url, is_active, last_synced_at, last_sync_error, last_sync_event_count, sync_error_since`,
       [profile.id, displayName, normalized]
     );
   } catch (err: unknown) {
@@ -107,7 +108,7 @@ export async function POST(req: NextRequest) {
   const refreshed = await queryOne<ConnectionRow>(
     `SELECT id, photographer_id, type, display_name, google_email, google_refresh_token,
             google_access_token, google_access_token_expires_at, selected_calendar_ids,
-            ical_url, is_active, last_synced_at, last_sync_error, last_sync_event_count
+            ical_url, is_active, last_synced_at, last_sync_error, last_sync_event_count, sync_error_since
        FROM calendar_connections WHERE id = $1`,
     [row.id]
   );

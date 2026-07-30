@@ -2564,7 +2564,10 @@
     "signOut": "Déconnexion",
     "needHelp": "Besoin d'aide ?",
     "helpCenterLink": "Visitez notre Centre d'aide",
-    "sidebarStats": "Statistiques"
+    "sidebarStats": "Statistiques",
+    "calendarBrokenTitle": "{name} ne se synchronise plus",
+    "calendarBrokenBody": "Depuis {days} jours, nous n'arrivons plus à le lire. Tant que vous ne l'avez pas reconnecté, nous utilisons une copie ancienne : un client pourrait réserver un créneau que vous ne pouvez pas assurer.",
+    "calendarBrokenCta": "Reconnecter"
   },
   "matchRequests": {
     "title": "Mes matchs",

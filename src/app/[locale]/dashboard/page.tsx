@@ -162,6 +162,18 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
   const locale = await getLocale();
   const tasks = await getPhotographerTasks(profile.id, userId);
 
+  // A calendar that stopped syncing is invisible otherwise: the connection
+  // still shows as connected, and the cached busy slots quietly go stale while
+  // the booking check keeps reading them. One sat broken for 2.5 months.
+  const brokenCalendar = await queryOne<{ display_name: string; type: string; days: number }>(
+    `SELECT display_name, type,
+            GREATEST(1, FLOOR(EXTRACT(EPOCH FROM (NOW() - sync_error_since)) / 86400))::int AS days
+       FROM calendar_connections
+      WHERE photographer_id = $1 AND is_active AND last_sync_error IS NOT NULL
+      ORDER BY sync_error_since NULLS LAST LIMIT 1`,
+    [profile.id]
+  );
+
   const [pendingBookings, totalBookings, portfolioCount, packageCount, locationCount] = await Promise.all([
     queryOne<{ count: string }>(
       // Pending = awaiting photographer action. 'inquiry' is admin-only (pre-booking chat) and must not show up here.
@@ -213,6 +225,36 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
         </div>
         <p className="mt-1 text-gray-500">{t("managePhotographyBusiness")}</p>
       </div>
+
+      {/* Calendar disconnected — sits above the checklist because stale busy
+          slots can cost a double-booking, which outranks profile polish. */}
+      {brokenCalendar && (
+        <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-red-800">
+                  {t("calendarBrokenTitle", {
+                    name: brokenCalendar.display_name || (brokenCalendar.type === "google" ? "Google Calendar" : "iCal"),
+                  })}
+                </p>
+                <p className="mt-1 text-sm text-red-700">
+                  {t("calendarBrokenBody", { days: brokenCalendar.days })}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/calendar-sync"
+              className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-red-700"
+            >
+              {t("calendarBrokenCta")}
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Onboarding Checklist */}
       <div className="mt-6">
