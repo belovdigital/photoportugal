@@ -6,6 +6,7 @@ import { AuditLog as AuditLogTab } from "./AuditLog";
 import AdminCalendarTab from "./AdminCalendarTab";
 import { AdminConciergeTab } from "./AdminConciergeTab";
 import { AdminWarningsTab } from "./AdminWarningsTab";
+import { AdminStripeHealthTab } from "./AdminStripeHealthTab";
 import type { PhotographerOption } from "./IssueWarningModal";
 // AdminPopupStats removed 2026-05-07 — feature retired. File kept for reference.
 import { RedirectsManager } from "./RedirectsManager";
@@ -207,6 +208,7 @@ const tabGroups = [
     label: "People",
     items: [
       { key: "photographers", label: "Photographers", icon: "camera" },
+      { key: "stripeHealth", label: "Stripe health", icon: "tag" },
       { key: "warnings", label: "Warnings", icon: "flag" },
       { key: "clients", label: "Clients", icon: "users" },
     ],
@@ -234,7 +236,7 @@ const tabGroups = [
 
 const tabs = tabGroups.flatMap(g => g.items);
 
-type TabKey = "overview" | "photographerStats" | "businessInquiries" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "warnings" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
+type TabKey = "overview" | "photographerStats" | "businessInquiries" | "analytics" | "visitors" | "calendar" | "bookings" | "inquiries" | "matchRequests" | "concierge" | "disputes" | "reviews" | "photographers" | "stripeHealth" | "warnings" | "clients" | "blog" | "promos" | "giftCards" | "makealbum" | "locations" | "redirects" | "notFound" | "logs" | "settings";
 
 type LogSubTab = "audit" | "email" | "sms" | "telegram" | "queue";
 
@@ -949,6 +951,7 @@ export function AdminDashboard({
             </div>
           )}
           {activeTab === "photographers" && photographersSection}
+          {activeTab === "stripeHealth" && <AdminStripeHealthTab />}
           {activeTab === "warnings" && <AdminWarningsTab photographerRoster={warningsPhotographerRoster || []} />}
           {activeTab === "clients" && clientsSection}
           {activeTab === "calendar" && <AdminCalendarTab />}
