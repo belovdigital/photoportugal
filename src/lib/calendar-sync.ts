@@ -189,6 +189,18 @@ async function refreshGoogleAccessToken(connectionId: string, refreshToken: stri
   });
   if (!res.ok) {
     const txt = await res.text();
+    // invalid_grant means the refresh token is dead for good — access revoked
+    // in the Google account, password changed, or 6 months unused. Retrying
+    // never helps, only reconnecting does. This surfaces verbatim on the
+    // photographer's Calendar Sync page, and the raw JSON body Google returns
+    // ({"error":"invalid_grant","error_description":"Bad Request"}) tells them
+    // nothing they can act on — one connection sat broken for 2.5 months
+    // showing exactly that.
+    if (txt.includes("invalid_grant")) {
+      throw new Error(
+        "Google revoked our access to this calendar, so it stopped updating. Click Disconnect and then Connect Google Calendar again to restore it. Until you do, your Google events won't block bookings.",
+      );
+    }
     throw new Error(`token refresh failed: ${res.status} ${txt.slice(0, 200)}`);
   }
   const data = await res.json() as { access_token: string; expires_in: number };
