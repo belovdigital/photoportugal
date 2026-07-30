@@ -103,12 +103,38 @@ export async function GET() {
           m.checkAndNotifyChecklistComplete(updated.id)
         ).catch(e => console.error("[stripe/connect] checklist notify error:", e));
       }
+    } else if (!onboarded && profile.stripe_onboarding_complete) {
+      // Stripe restricted an account we still had marked as complete —
+      // clear the flag so the checklist and admin board stop showing green.
+      await queryOne(
+        "UPDATE photographer_profiles SET stripe_onboarding_complete = FALSE WHERE user_id = $1 RETURNING id",
+        [userId]
+      );
     }
+
+    // Outstanding requirements are reported even when the account is still
+    // fully usable: Stripe sets `current_deadline` weeks before it disables
+    // anything, and that window is the only chance the photographer has to
+    // fix it without losing payouts.
+    const req = account.requirements;
+    const future = account.future_requirements;
+    const deadline = req?.current_deadline ?? future?.current_deadline ?? null;
+    const dueNow = req?.currently_due?.length ? req.currently_due : (future?.currently_due ?? []);
+    const pastDue = req?.past_due ?? [];
 
     return NextResponse.json({
       connected: true,
       onboarded,
       account_id: profile.stripe_account_id,
+      charges_enabled: !!account.charges_enabled,
+      payouts_enabled: !!account.payouts_enabled,
+      requirements: {
+        disabled_reason: req?.disabled_reason ?? null,
+        deadline: deadline ? new Date(deadline * 1000).toISOString() : null,
+        currently_due: dueNow,
+        past_due: pastDue,
+        pending_verification: req?.pending_verification ?? [],
+      },
     });
   } catch (error) {
     console.error("[stripe/connect] GET error:", error);

@@ -1349,13 +1349,22 @@ export async function POST(req: NextRequest) {
 
       case "account.updated": {
         const account = event.data.object;
-        if (account.charges_enabled && account.payouts_enabled) {
-          await queryOne(
-            "UPDATE photographer_profiles SET stripe_onboarding_complete = TRUE WHERE stripe_account_id = $1 RETURNING id",
-            [account.id]
-          );
-          console.log(`[webhook] Stripe account ${account.id} onboarding complete`);
-        }
+        // Two-way sync. This used to only ever flip the flag TRUE, so an
+        // account that Stripe later restricted (KYC re-verification, expired
+        // documents, past-due requirements) kept a green checkmark in our
+        // dashboard forever. On 2026-07-30 that hid a photographer whose
+        // payouts had been off for 17 days plus 7 more with a live deadline.
+        const usable = !!(account.charges_enabled && account.payouts_enabled);
+        await queryOne(
+          `UPDATE photographer_profiles SET stripe_onboarding_complete = $2
+           WHERE stripe_account_id = $1 AND COALESCE(stripe_onboarding_complete, FALSE) <> $2
+           RETURNING id`,
+          [account.id, usable]
+        );
+        console.log(
+          `[webhook] Stripe account ${account.id} usable=${usable} ` +
+            `(charges=${account.charges_enabled} payouts=${account.payouts_enabled})`
+        );
         break;
       }
     }
