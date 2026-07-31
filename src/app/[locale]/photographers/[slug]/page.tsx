@@ -193,7 +193,7 @@ async function getPhotographer(slug: string, canViewUnapproved = false, viewerUs
       delivery_days: number;
       features: string[];
     }>(
-      `SELECT id, ${pkgNameCol} as name, ${pkgDescCol} as description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND is_public = TRUE ORDER BY sort_order, price`,
+      `SELECT id, ${pkgNameCol} as name, ${pkgDescCol} as description, duration_minutes, num_photos, price, is_popular, COALESCE(delivery_days, 7) as delivery_days, COALESCE(features, '{}') as features FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL ORDER BY sort_order, price`,
       [profile.id]
     );
 
@@ -579,7 +579,7 @@ export default async function PhotographerProfilePage({
                 pp.tagline, pp.rating, pp.review_count,
                 COALESCE(pp.languages, '{}') as languages,
                 u.last_seen_at as last_active_at, pp.avg_response_minutes,
-                (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
+                (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
                 (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                  FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
                 ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs

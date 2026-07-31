@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
               pp.session_count, pp.plan, u.phone,
               (pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE) as stripe_ready,
               (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id)::int as portfolio_count,
-              (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id)::int as package_count,
+              (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL)::int as package_count,
               (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id)::int as location_count,
               COALESCE((SELECT array_agg(location_slug) FROM photographer_locations WHERE photographer_id = pp.id), ARRAY[]::text[]) as locations
        FROM photographer_profiles pp

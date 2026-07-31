@@ -285,7 +285,7 @@ export default async function SpotPage({
     `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url, pp.cover_position_y,
             pp.is_featured, pp.is_verified, COALESCE(pp.is_founding, FALSE) as is_founding,
             ${taglineSql} as tagline, pp.rating, pp.review_count,
-            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as min_price,
+            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as min_price,
             u.last_seen_at as last_active_at, pp.avg_response_minutes,
             COALESCE(pp.languages, '{}') as languages,
             (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)

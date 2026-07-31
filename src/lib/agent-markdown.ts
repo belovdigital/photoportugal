@@ -41,7 +41,7 @@ function photographerLine(p: CatalogRow): string {
 async function catalogRows(where = "", params: unknown[] = []): Promise<CatalogRow[]> {
   return query<CatalogRow>(
     `SELECT pp.slug, u.name, pp.tagline, pp.rating, pp.review_count,
-            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,
+            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL) as min_price,
             pp.shoot_types, pp.languages,
             ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id ORDER BY l.location_slug) as locations
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
@@ -73,7 +73,7 @@ export async function photographerProfileMarkdown(slug: string): Promise<string 
     p = await queryOne<ProfileRow>(
       `SELECT pp.id, pp.slug, u.name, pp.tagline, pp.bio, pp.rating, pp.review_count,
               pp.experience_years, pp.is_verified, pp.shoot_types, pp.languages,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL) as min_price,
               ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id ORDER BY l.location_slug) as locations
        FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
        WHERE pp.slug = $1 AND pp.is_approved = TRUE`,
@@ -87,7 +87,7 @@ export async function photographerProfileMarkdown(slug: string): Promise<string 
   try {
     packages = await query<PackageRow>(
       `SELECT name, description, duration_minutes, num_photos, price, delivery_days
-       FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL
+       FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL AND custom_for_user_id IS NULL
        ORDER BY sort_order, price`,
       [p.id]
     );

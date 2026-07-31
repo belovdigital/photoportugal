@@ -39,7 +39,7 @@ export async function GET(
   }>(
     `SELECT pp.id, pp.slug, u.name, u.avatar_url, pp.cover_url,
             pp.rating, pp.review_count,
-            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text AS min_price,
+            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text AS min_price,
             COALESCE(pp.is_featured, FALSE) AS is_featured,
             COALESCE(pp.is_verified, FALSE) AS is_verified
        FROM photographer_profiles pp

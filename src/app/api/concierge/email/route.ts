@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       `SELECT pp.slug, u.name, pp.tagline,
               COALESCE(pp.rating, 0)::text AS rating,
               COALESCE(pp.review_count, 0) AS review_count,
-              (SELECT MIN(price)::text FROM packages WHERE photographer_id = pp.id) AS min_price,
+              (SELECT MIN(price)::text FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) AS min_price,
               (SELECT url FROM portfolio_items WHERE photographer_id = pp.id AND type = 'photo' ORDER BY sort_order, created_at LIMIT 1) AS sample_url,
               pp.cover_url,
               ARRAY(SELECT location_slug FROM photographer_locations WHERE photographer_id = pp.id) AS locations

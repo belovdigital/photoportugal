@@ -190,7 +190,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
       [profile.id]
     ),
     queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM packages WHERE photographer_id = $1",
+      "SELECT COUNT(*) as count FROM packages WHERE photographer_id = $1 AND custom_for_user_id IS NULL",
       [profile.id]
     ),
     queryOne<{ count: string }>(

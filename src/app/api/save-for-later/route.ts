@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       min_price: number | null;
     }>(
       `SELECT pp.id, pp.slug, pu.name, pp.tagline, pp.cover_url,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id) AS min_price
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) AS min_price
        FROM photographer_profiles pp
        JOIN users pu ON pu.id = pp.user_id
        WHERE pp.slug = $1 AND pp.is_approved = TRUE

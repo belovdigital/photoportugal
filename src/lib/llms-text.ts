@@ -24,7 +24,7 @@ export async function buildLlmsText(): Promise<string> {
         COUNT(*) as photographer_count,
         COALESCE(SUM(review_count), 0) as review_count,
         AVG(rating) FILTER (WHERE rating IS NOT NULL AND review_count > 0) as avg_rating,
-        (SELECT MIN(price) FROM packages pk JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id WHERE pp2.is_approved = TRUE) as min_price
+        (SELECT MIN(price) FROM packages pk JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id WHERE pp2.is_approved = TRUE AND pk.custom_for_user_id IS NULL) as min_price
       FROM photographer_profiles
       WHERE is_approved = TRUE`
     );
@@ -47,7 +47,7 @@ export async function buildLlmsText(): Promise<string> {
   try {
     topPhotographers = await query<PhotographerRow>(
       `SELECT pp.slug, u.name, pp.rating, pp.review_count,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL) as min_price,
               pp.shoot_types,
               ARRAY(SELECT l.location_slug FROM photographer_locations l WHERE l.photographer_id = pp.id ORDER BY l.location_slug LIMIT 5) as locations,
               pp.languages

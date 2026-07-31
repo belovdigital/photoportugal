@@ -18,7 +18,7 @@ export async function GET() {
       `SELECT pp.id, u.name, pp.slug, u.avatar_url,
         COALESCE(pp.rating, 0) as rating,
         COALESCE(pp.review_count, 0) as review_count,
-        (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) as min_price,
+        (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL) as min_price,
         (SELECT array_agg(location_slug) FROM photographer_locations WHERE photographer_id = pp.id) as locations
       FROM photographer_profiles pp
       JOIN users u ON u.id = pp.user_id

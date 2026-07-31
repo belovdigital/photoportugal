@@ -78,7 +78,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
     }>(
       `SELECT id, photographer_id, ${pkgNameSql} as name, ${pkgDescSql} as description,
               duration_minutes, num_photos, price, is_popular
-       FROM packages ORDER BY sort_order, price`
+       FROM packages WHERE custom_for_user_id IS NULL ORDER BY sort_order, price`
     );
 
     return profiles.map((p) => {

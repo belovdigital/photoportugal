@@ -370,7 +370,7 @@ export default async function LocationPage({
               ${taglineSql} as tagline, pp.rating, pp.review_count,
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
               COALESCE(pp.languages, '{}') as languages,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::text as starting_price,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
               ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
@@ -393,7 +393,7 @@ export default async function LocationPage({
                 WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE
               ), '[]'::json) as packages,
               -- Kept for back-compat (not displayed) — could be removed.
-              (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)::int as packages_count
+              (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::int as packages_count
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        JOIN users u ON u.id = pp.user_id

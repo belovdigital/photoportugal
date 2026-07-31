@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       SELECT
         (SELECT COUNT(*) FROM photographer_profiles WHERE is_approved = TRUE)::int as photographers,
         (SELECT COUNT(*) FROM reviews WHERE is_approved = TRUE)::int as reviews,
-        COALESCE((SELECT MIN(price) FROM packages), 150)::int as min_price,
+        COALESCE((SELECT MIN(price) FROM packages WHERE custom_for_user_id IS NULL), 150)::int as min_price,
         COALESCE((SELECT ROUND(AVG(rating)::numeric, 1) FROM reviews WHERE is_approved = TRUE), 5.0)::float as avg_rating
     `);
     if (stats) {

@@ -60,7 +60,7 @@ export default async function MatchRequestsPage() {
           'avatar_url', u.avatar_url,
           'rating', COALESCE(pp.rating, 0),
           'review_count', COALESCE(pp.review_count, 0),
-          'price', COALESCE(mrp.price, (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)),
+          'price', COALESCE(mrp.price, (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)),
           'bio', LEFT(pp.bio, 150),
           'last_seen_at', u.last_seen_at
         ))

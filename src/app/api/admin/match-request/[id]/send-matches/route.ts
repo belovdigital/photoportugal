@@ -105,7 +105,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const photographerDetails = await Promise.all(
       photographers.map(async (p) => {
         const info = await queryOne<{ min_price: number | null; bio: string | null }>(
-          `SELECT (SELECT MIN(price) FROM packages WHERE photographer_id = $1 AND is_public = TRUE) as min_price,
+          `SELECT (SELECT MIN(price) FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL) as min_price,
                   pp.bio FROM photographer_profiles pp WHERE pp.id = $1`,
           [p.id]
         );
@@ -424,7 +424,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       const photographerDetails = await Promise.all(
         photographers.map(async (p) => {
           const info = await queryOne<{ min_price: number | null; bio: string | null }>(
-            `SELECT (SELECT MIN(price) FROM packages WHERE photographer_id = $1 AND is_public = TRUE) as min_price,
+            `SELECT (SELECT MIN(price) FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL) as min_price,
                     pp.bio FROM photographer_profiles pp WHERE pp.id = $1`,
             [p.id]
           );

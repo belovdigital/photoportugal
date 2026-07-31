@@ -26,7 +26,7 @@ export async function GET() {
         COUNT(*) as photographer_count,
         COALESCE(SUM(review_count), 0) as review_count,
         AVG(rating) FILTER (WHERE rating IS NOT NULL AND review_count > 0) as avg_rating,
-        (SELECT MIN(price) FROM packages pk JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id WHERE pp2.is_approved = TRUE) as min_price
+        (SELECT MIN(price) FROM packages pk JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id WHERE pp2.is_approved = TRUE AND pk.custom_for_user_id IS NULL) as min_price
       FROM photographer_profiles
       WHERE is_approved = TRUE`
     );

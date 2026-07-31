@@ -312,7 +312,7 @@ export async function GET(req: NextRequest) {
         "SELECT COUNT(*)::int AS n FROM portfolio_items WHERE photographer_id = $1", [profile.id],
       ),
       queryOne<{ n: number }>(
-        "SELECT COUNT(*)::int AS n FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND revoked_at IS NULL", [profile.id],
+        "SELECT COUNT(*)::int AS n FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL AND revoked_at IS NULL", [profile.id],
       ),
       queryOne<{ n: number }>(
         "SELECT COUNT(*)::int AS n FROM photographer_locations WHERE photographer_id = $1", [profile.id],

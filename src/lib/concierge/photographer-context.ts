@@ -66,7 +66,7 @@ export async function loadPhotographersForConcierge(): Promise<ConciergePhotogra
        ARRAY(SELECT location_slug FROM photographer_locations WHERE photographer_id = pp.id) AS locations,
        COALESCE(pp.shoot_types, '{}') AS shoot_types,
        COALESCE(pp.languages, '{}') AS languages,
-       (SELECT MIN(price)::text FROM packages WHERE photographer_id = pp.id) AS min_price,
+       (SELECT MIN(price)::text FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) AS min_price,
        u.avatar_url,
        pp.cover_url,
        pp.cover_position_y,

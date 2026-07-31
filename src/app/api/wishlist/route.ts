@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
             u.avatar_url, pp.cover_url,
             pp.is_verified, pp.is_featured,
             pp.rating, pp.review_count,
-            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE) AS min_price,
+            (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL) AS min_price,
             ARRAY(SELECT pl.location_slug FROM photographer_locations pl WHERE pl.photographer_id = pp.id) AS locations,
             COALESCE((
               SELECT array_agg(url ORDER BY shuffle, sort_order NULLS LAST, created_at)

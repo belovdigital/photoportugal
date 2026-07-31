@@ -21,7 +21,7 @@ export async function GET() {
             'avatar_url', u.avatar_url,
             'rating', COALESCE(pp.rating, 0),
             'review_count', COALESCE(pp.review_count, 0),
-            'min_price', (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE)
+            'min_price', (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)
           ))
           FROM match_request_photographers mrp
           JOIN photographer_profiles pp ON pp.id = mrp.photographer_id

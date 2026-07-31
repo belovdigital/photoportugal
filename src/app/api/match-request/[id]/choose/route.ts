@@ -50,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Get price from match_request_photographers (admin-set), falling back to min package price
     const priceRow = await queryOne<{ price: number | null }>(
-      `SELECT COALESCE(mrp.price, (SELECT MIN(price) FROM packages WHERE photographer_id = $1 AND is_public = TRUE)) as price
+      `SELECT COALESCE(mrp.price, (SELECT MIN(price) FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL)) as price
        FROM match_request_photographers mrp
        WHERE mrp.match_request_id = $2 AND mrp.photographer_id = $1`,
       [photographer_id, id]

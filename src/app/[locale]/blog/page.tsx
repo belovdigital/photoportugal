@@ -147,7 +147,7 @@ export default async function BlogPage({
               p.rating, p.review_count,
               u.last_seen_at as last_active_at, p.avg_response_minutes,
               COALESCE(p.languages, '{}') as languages,
-              (SELECT MIN(price) FROM packages WHERE photographer_id = p.id AND is_public = TRUE)::text as starting_price,
+              (SELECT MIN(price) FROM packages WHERE photographer_id = p.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = p.id LIMIT 3) as locations,
               ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = p.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs

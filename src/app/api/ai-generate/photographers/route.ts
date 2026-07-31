@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
               u.avatar_url,
               pp.rating::text AS rating,
               pp.review_count,
-              (SELECT MIN(pk.price)::text FROM packages pk WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE) AS min_price,
+              (SELECT MIN(pk.price)::text FROM packages pk WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL) AS min_price,
               pp.tagline
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
               u.avatar_url,
               pp.rating::text AS rating,
               pp.review_count,
-              (SELECT MIN(pk.price)::text FROM packages pk WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE) AS min_price,
+              (SELECT MIN(pk.price)::text FROM packages pk WHERE pk.photographer_id = pp.id AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL) AS min_price,
               pp.tagline
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
