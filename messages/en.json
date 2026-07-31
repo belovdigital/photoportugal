@@ -2523,7 +2523,7 @@
     "earlyAdopter": "Early Bird",
     "first100": "First 100",
     "foundingPlanFree": "Your {plan} plan is free forever as a Founding Photographer.",
-    "earlyBirdPlanFree": "As an Early Bird, your {plan} plan is free for 3 years — until {date}. After that, you can choose any plan.",
+    "earlyBirdPlanFree": "Your {plan} plan is free until {date}. After that, you can choose any plan.",
     "approvalRequiredTitle": "Approval required",
     "blockedPendingApproval": "Paid plans, Verified and Featured will become available once an admin approves your profile. Finish your onboarding checklist and we'll review it.",
     "blockedSuspended": "Your account is currently suspended. Contact support to resolve this before purchasing any paid features.",
