@@ -12,7 +12,7 @@ interface Plan {
   features: string[];
 }
 
-export function PlanCard({ plan, currentPlan, earlyBirdActive, purchaseBlockedReason }: { plan: Plan; currentPlan: string; earlyBirdActive?: boolean; purchaseBlockedReason?: string | null }) {
+export function PlanCard({ plan, currentPlan, earlyBirdActive, earlyBirdLabel, purchaseBlockedReason }: { plan: Plan; currentPlan: string; earlyBirdActive?: boolean; earlyBirdLabel?: string | null; purchaseBlockedReason?: string | null }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const t = useTranslations("subscriptions");
@@ -90,7 +90,11 @@ export function PlanCard({ plan, currentPlan, earlyBirdActive, purchaseBlockedRe
         {plan.current ? (
           <>
             <p className="text-center text-sm font-semibold text-primary-600">
-              {earlyBirdActive ? t("activeEarlyBird") : t("currentPlan")}
+              {earlyBirdActive
+                ? earlyBirdLabel
+                  ? t("activePlanTier", { tier: earlyBirdLabel })
+                  : t("activeEarlyBird")
+                : t("currentPlan")}
             </p>
             {currentPlan !== "free" && !earlyBirdActive && (
               <button

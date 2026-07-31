@@ -2648,7 +2648,8 @@
     "reqBankAccount": "A sua conta bancária (IBAN)",
     "reqBusinessUrl": "Um link para o seu site ou portefólio",
     "reqBusinessCategory": "A categoria da sua atividade",
-    "reqOther": "Informação adicional pedida pela Stripe"
+    "reqOther": "Informação adicional pedida pela Stripe",
+    "activePlanTier": "Ativo ({tier})"
   },
   "payouts": {
     "title": "Pagamentos",

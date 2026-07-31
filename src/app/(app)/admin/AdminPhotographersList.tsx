@@ -362,12 +362,15 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
                       ⚠ {p.warning_open_count}
                     </a>
                   )}
-                  {p.is_founding && (
+                  {(p.is_founding || p.early_bird_tier === "founding") && (
                     <span className="shrink-0 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
                       Founding
                     </span>
                   )}
-                  {!p.is_founding && p.early_bird_tier && (
+                  {/* Anything not founding is named from the tier itself — the
+                      old `early50 ? … : "First 100"` fallback labelled a
+                      founding row with a false is_founding flag "First 100". */}
+                  {!p.is_founding && p.early_bird_tier && p.early_bird_tier !== "founding" && (
                     <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                       p.early_bird_tier === "early50" ? "bg-primary-100 text-primary-700" : "bg-accent-50 text-accent-700"
                     }`}>

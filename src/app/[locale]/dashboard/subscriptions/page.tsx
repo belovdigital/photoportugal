@@ -81,11 +81,21 @@ export default async function SubscriptionPage() {
   ];
 
   const planLabel = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-  const earlyBirdBannerText = isFounding
+  // `is_founding` and `early_bird_tier` disagree on a few legacy rows, so treat
+  // either one as founding rather than silently falling through to "First 100".
+  const isFoundingTier = isFounding || earlyBirdTier === "founding";
+  const tierLabel = isFoundingTier
+    ? t("foundingPhotographer")
+    : earlyBirdTier === "early50"
+      ? t("earlyAdopter")
+      : t("first100");
+  // No expiry means the grant never ends — the same thing "founding" means.
+  // Without this guard a null date formatted as 1 January 1970.
+  const earlyBirdBannerText = isFoundingTier || !earlyBirdExpires
     ? t("foundingPlanFree", { plan: planLabel })
     : t("earlyBirdPlanFree", {
         plan: planLabel,
-        date: new Date(earlyBirdExpires!).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" }),
+        date: new Date(earlyBirdExpires).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" }),
       });
 
   return (
@@ -95,13 +105,13 @@ export default async function SubscriptionPage() {
 
       {/* Early bird banner */}
       {earlyBirdTier && (
-        <div className={`mt-6 rounded-xl border p-5 ${isFounding ? "border-amber-200 bg-amber-50" : "border-primary-200 bg-primary-50"}`}>
+        <div className={`mt-6 rounded-xl border p-5 ${isFoundingTier ? "border-amber-200 bg-amber-50" : "border-primary-200 bg-primary-50"}`}>
           <div className="flex items-center gap-3">
-            <span className={`rounded-full px-3 py-1 text-xs font-bold text-white ${isFounding ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-primary-600"}`}>
-              {isFounding ? t("foundingPhotographer") : earlyBirdTier === "early50" ? t("earlyAdopter") : t("first100")}
+            <span className={`rounded-full px-3 py-1 text-xs font-bold text-white ${isFoundingTier ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-primary-600"}`}>
+              {tierLabel}
             </span>
           </div>
-          <p className={`mt-2 text-sm font-medium ${isFounding ? "text-amber-800" : "text-primary-800"}`}>
+          <p className={`mt-2 text-sm font-medium ${isFoundingTier ? "text-amber-800" : "text-primary-800"}`}>
             {earlyBirdBannerText}
           </p>
         </div>
@@ -119,7 +129,7 @@ export default async function SubscriptionPage() {
       {/* Plans with buttons inline */}
       <div className="mt-8 grid gap-6 sm:grid-cols-3">
         {plans.map((plan) => (
-          <PlanCard key={plan.key} plan={plan} currentPlan={currentPlan} earlyBirdActive={!!earlyBirdTier} purchaseBlockedReason={purchaseBlocked} />
+          <PlanCard key={plan.key} plan={plan} currentPlan={currentPlan} earlyBirdActive={!!earlyBirdTier} earlyBirdLabel={tierLabel} purchaseBlockedReason={purchaseBlocked} />
         ))}
       </div>
 

@@ -2642,7 +2642,8 @@
     "reqBankAccount": "Your bank account (IBAN)",
     "reqBusinessUrl": "A link to your website or portfolio",
     "reqBusinessCategory": "Your business category",
-    "reqOther": "Additional information requested by Stripe"
+    "reqOther": "Additional information requested by Stripe",
+    "activePlanTier": "Active ({tier})"
   },
   "payouts": {
     "title": "Payouts",
