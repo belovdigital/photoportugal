@@ -2020,6 +2020,12 @@ export async function sendReviewApprovedToPhotographer(
 // Kate's personal-tone ask sent ~48h after the client accepts delivery.
 // Always English (Kate's call). Sends from ceo@photoportugal.com so the
 // reply lands in her mailbox, not the shared support inbox.
+//
+// Asks for blanket permission, not per-frame approval: the earlier copy
+// promised to send candidate photos back for sign-off, which meant a second
+// round-trip and manual work for Kate on every "yes". The photographer now
+// picks the frames, and the client keeps a veto they rarely use. Nothing
+// downstream parses the replies — Kate reads them herself.
 export async function sendSocialPermissionEmail(
   to: string,
   firstName: string,
@@ -2037,17 +2043,17 @@ export async function sendSocialPermissionEmail(
 
   const body = `
     <p style="margin:0 0 18px;font-size:16px;line-height:1.55;color:#1F1F1F;">Hi ${safeFirst},</p>
-    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">It's Kate, founder of Photo Portugal. I hope you've been enjoying the photos from your session with <strong>${safePhotog}</strong>${locationPhrase} ✨</p>
-    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">I'm writing personally because we'd love your permission to feature <strong>a few of your photos</strong> on Photo Portugal's social media (Instagram and our website).</p>
-    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">We'd choose carefully — only the most natural, tasteful shots, nothing too personal or revealing. You'd see exactly which ones before anything goes live.</p>
-    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">If that sounds OK, just reply <strong>"yes"</strong> to this email and we'll send you the candidate photos for approval. If not, no problem at all — just reply <strong>"no thanks"</strong> and that's the end of it.</p>
-    <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#2A2A2A;">Either way, thank you for choosing us — hearing that our photographers made your trip a little more memorable is honestly the best part of running this thing.</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">It's Kate, founder of Photo Portugal. I've just been through the photos <strong>${safePhotog}</strong> made with you${locationPhrase} — genuinely lovely work ✨</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">We're still a young platform, and the honest truth is that good photos are what bring new clients to our photographers. So: would you let us feature a few of yours on our Instagram and website?</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;"><strong>${safePhotog}</strong> would pick the frames they're proudest of — the most natural and flattering ones, never anything personal or revealing. Nothing for you to approve; just reply <strong>"yes"</strong> and we'll handle it from there. And if there's a particular shot you'd rather keep to yourself, just tell me which and we'll leave it out.</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">Prefer not to? Reply <strong>"no thanks"</strong> and that's the end of it — no hard feelings, and I won't ask twice.</p>
+    <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#2A2A2A;">Either way, thank you for choosing us. Every booking through our platform goes to an independent photographer here in Portugal, and that's the whole point of what we're building 🌸</p>
     <p style="margin:0;font-size:15px;line-height:1.55;color:#2A2A2A;">Warmly,</p>
     <p style="margin:4px 0 2px;font-size:15px;line-height:1.4;color:#1F1F1F;font-weight:600;">Kate</p>
     <p style="margin:0;font-size:13px;line-height:1.4;color:#9B8E82;">Founder · Photo Portugal</p>
   `;
 
-  const subject = "Could we share one of your photos? 🌸";
+  const subject = `May we show off ${safePhotog}'s work? 🌸`;
   try {
     await ceoTransporter.sendMail({
       from: "Kate Belova <ceo@photoportugal.com>",
