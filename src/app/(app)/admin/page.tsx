@@ -473,9 +473,14 @@ export default async function AdminPage() {
     funnelReviewed: parseInt((await queryOne<{ count: string }>("SELECT COUNT(DISTINCT client_id) as count FROM reviews").catch(() => null))?.count || "0"),
   };
 
-  // Check for below-minimum packages per photographer
+  // Check for below-minimum packages per photographer.
+  // Custom proposals are excluded: they are negotiated one-to-one for a
+  // specific client, never listed in the catalogue, and the pricing floor was
+  // never meant to apply to them. The photographer's own package list already
+  // filters them out the same way (api/dashboard/packages), so without this
+  // the warning existed only in admin and only ever fired on custom offers.
   const allPkgs = await query<{ photographer_id: string; duration_minutes: number; price: number; name: string }>(
-    "SELECT photographer_id, duration_minutes, price, name FROM packages"
+    "SELECT photographer_id, duration_minutes, price, name FROM packages WHERE custom_for_user_id IS NULL"
   ).catch(() => []);
 
   const belowMinByPhotographer: Record<string, { name: string; duration_minutes: number; price: number }[]> = {};
