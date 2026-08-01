@@ -209,7 +209,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const blogPosts = await query<{ slug: string; published_at: string; locale: string | null; category: string | null }>(
       "SELECT slug, published_at, locale, category FROM blog_posts WHERE is_published = TRUE ORDER BY published_at DESC"
     );
-    for (const post of blogPosts) if (post.category) populatedCategories.add(post.category);
+    for (const post of blogPosts) if (post.category) populatedCategories.add(`${(post.locale || "en").toLowerCase()}:${post.category}`);
     // Each blog post exists in ONE locale only — emit a single URL for that locale,
     // not all-locale localized() output (would create false 404s for the other locales).
     blogPages = blogPosts.map((p) => {
@@ -246,11 +246,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
   // Only categories that actually have a published post. Listing all eleven
   // meant 44 empty index pages (11 categories x 4 locales) in a 407-URL sitemap.
-  const blogCategoryPages = blogCategories
-    .filter((cat) => populatedCategories.has(cat))
-    .flatMap((cat) =>
-      localized(`/blog/category/${cat}`, { lastModified: blogLastModified, changeFrequency: "weekly", priority: 0.7 })
-    );
+  // Per LOCALE, not per category: a category with an English post still has an
+  // empty German page. Filtering globally left 12 empty category URLs in the
+  // sitemap — the same mistake in miniature as listing the empty photographer
+  // pages.
+  const blogCategoryPages = blogCategories.flatMap((cat) =>
+    LOCALES.filter((loc) => populatedCategories.has(`${loc}:${cat}`)).map((loc) => ({
+      url: urlFor(`/blog/category/${cat}`, loc),
+      lastModified: blogLastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }))
+  );
 
   return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...spotPages, ...photographerLocationPages, ...photographerPages, ...blogPages, ...blogCategoryPages];
 }

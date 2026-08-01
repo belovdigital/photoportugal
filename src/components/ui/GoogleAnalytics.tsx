@@ -4,8 +4,20 @@ import Script from "next/script";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
-const GA_ID = "G-DV5MQ9MZ54";
-const ADS_ID = "AW-18043729532";
+/**
+ * Both IDs were hardcoded, so photospain.co was reporting every Spanish visit
+ * into Photo Portugal's GA4 property AND firing Portugal's Google Ads
+ * conversion tag. Two markets' traffic in one property cannot be separated
+ * after the fact, and the Ads side was worse: Spanish sessions were being
+ * counted as conversions against Portuguese ad spend.
+ *
+ * Defaults are Portugal's existing IDs, so an unset environment reproduces
+ * today's Portuguese behaviour exactly. Spain sets its own GA and deliberately
+ * sets NO ads ID — it runs no campaigns, and an empty value must not fall back
+ * to Portugal's.
+ */
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-DV5MQ9MZ54";
+const ADS_ID = process.env.NEXT_PUBLIC_ADS_ID ?? "AW-18043729532";
 
 export function GoogleAnalytics() {
   const [consent, setConsent] = useState<string | null>(null);
@@ -47,7 +59,7 @@ export function GoogleAnalytics() {
       {utmScript}
       <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
       <Script id="gtag-init" strategy="afterInteractive">
-        {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');gtag('config','${ADS_ID}');`}
+        {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}');${ADS_ID ? `gtag('config','${ADS_ID}');` : ""}`}
       </Script>
     </>
   );
