@@ -224,4 +224,171 @@ export const photoSpotsES: Record<string, PhotoSpot[]> = {
       address: "Plaza de la Encarnación, Sevilla",
     },
   ],
+
+  granada: [
+    {
+      name: "Mirador de San Nicolás",
+      description:
+        "The Alhambra across the valley with the snow line of the Sierra Nevada behind it — the view the city is famous for.",
+      nameEs: "Mirador de San Nicolás",
+      descriptionEs:
+        "La Alhambra al otro lado del valle con la Sierra Nevada nevada detrás: la vista por la que se conoce a Granada.",
+      long_description:
+        "A small terrace at the top of the Albaicín, and one of the rare places where the famous viewpoint and the correct viewpoint are the same one. The Alhambra faces roughly west toward it, so at the end of the day the light lands on the palace walls while you shoot from the shaded side — warm stone, long shadows, mountains behind.\n\nThe terrace is genuinely small. Before sunset it fills with visitors and buskers, and the low wall everyone leans on is the only clean foreground. Sunrise is the same view with nobody on it, and the Sierra Nevada is usually clearer before the day heats up.\n\nBetween November and May the mountains normally still carry snow, which is what turns that background from a brown ridge into the photograph people have in mind.",
+      long_description_es:
+        "Una pequeña explanada en lo alto del Albaicín, y uno de los pocos sitios donde el mirador famoso y el mirador correcto son el mismo. La Alhambra mira hacia el oeste, así que al final del día la luz cae sobre los muros del palacio mientras se fotografía desde el lado en sombra: piedra cálida, sombras largas y montañas al fondo.\n\nLa explanada es pequeña de verdad. Antes del atardecer se llena de visitantes y músicos, y el murete donde todos se apoyan es el único primer plano limpio. Al amanecer es la misma vista sin nadie, y la Sierra Nevada suele verse más limpia antes de que apriete el calor.\n\nEntre noviembre y mayo la sierra normalmente conserva nieve, que es lo que convierte ese fondo en la foto que la gente tiene en la cabeza.",
+      best_time: "Sunrise for an empty terrace, or the hour before sunset if you accept the crowd",
+      best_timeEs: "Al amanecer para tenerlo vacío, o la hora antes del atardecer si acepta la gente",
+      tips: "Free, no ticket, open at any hour. The walk up through the Albaicín is steep cobblestone — flat shoes. If the crowd would ruin it, Mirador de San Miguel Alto is higher and far quieter, with the Alhambra smaller in frame.",
+      tipsEs:
+        "Gratis, sin entrada y abierto a cualquier hora. La subida por el Albaicín es de adoquín y empinada: calzado cómodo. Si la gente le estropea la foto, el Mirador de San Miguel Alto está más alto y mucho más tranquilo, con la Alhambra más pequeña en el encuadre.",
+      tags: ["couples", "proposal", "engagement", "solo"],
+      coordinates: { lat: 37.1809, lng: -3.5924 },
+      address: "Mirador de San Nicolás, Albaicín, Granada",
+    },
+    {
+      name: "The Albaicín lanes",
+      description:
+        "A hillside of whitewashed lanes and walled gardens whose high walls keep the light soft when everywhere else is blown out.",
+      nameEs: "Las calles del Albaicín",
+      descriptionEs:
+        "Una ladera de callejuelas encaladas y cármenes cuyos muros altos mantienen la luz suave cuando todo lo demás está quemado.",
+      long_description:
+        "Granada's old Moorish quarter, and the answer to what a session does between eleven and five. The lanes are narrow and the walls are high and white, so direct sun rarely reaches the floor — you are working with soft bounced light for most of the day, which is the opposite of what the viewpoints offer.\n\nLook for the carmenes: walled houses with private gardens whose bougainvillea, jasmine and cypress spill over into the street. Placeta de San Miguel Bajo is a small square that stays shaded and has none of the mirador crowd.\n\nIt is a maze, and it is steep throughout. A photographer who knows it will route the session downhill.",
+      long_description_es:
+        "El antiguo barrio morisco de Granada, y la respuesta a qué hacer en una sesión entre las once y las cinco. Las calles son estrechas y los muros altos y blancos, así que el sol directo casi nunca llega al suelo: se trabaja con luz rebotada suave casi todo el día, justo lo contrario que en los miradores.\n\nBusque los cármenes: casas con jardín privado cuyas buganvillas, jazmines y cipreses se asoman por encima de la tapia. La Placeta de San Miguel Bajo es una plaza pequeña que se mantiene en sombra y no tiene nada de la aglomeración del mirador.\n\nEs un laberinto y sube constantemente. Un fotógrafo que lo conozca planteará el recorrido cuesta abajo.",
+      best_time: "Late morning through mid-afternoon — the hours that do not work anywhere else",
+      best_timeEs: "De media mañana a media tarde: las horas que no funcionan en ningún otro sitio",
+      tips: "Steep cobblestone everywhere, no shade breaks on the climb. Say up front if anyone in the group has trouble with stairs. Carry water in summer.",
+      tipsEs:
+        "Adoquín empinado por todas partes y sin sombra en la subida. Avise si alguien del grupo lleva mal las escaleras. En verano, agua.",
+      tags: ["couples", "family", "solo", "engagement"],
+      coordinates: { lat: 37.1836, lng: -3.5936 },
+      address: "Albaicín, Granada",
+    },
+    {
+      name: "Sacromonte",
+      description:
+        "Whitewashed cave houses cut into the hillside above the Albaicín — the least photographed angle on the Alhambra.",
+      nameEs: "Sacromonte",
+      descriptionEs:
+        "Casas cueva encaladas excavadas en la ladera sobre el Albaicín, y el ángulo menos fotografiado de la Alhambra.",
+      long_description:
+        "Past the Albaicín the hill turns into Sacromonte, where the houses are cut into the rock. It is the historic Roma quarter and the birthplace of the Granada flamenco style, and it looks like nowhere else in Spain: white cave facades, prickly pear, agave, and a view back across at the Alhambra from an angle almost nobody uses.\n\nQuieter and rougher than the Albaicín, with fewer people and more space to work. The light is open here rather than bounced — the hillside faces the valley, so it takes sun for most of the day and comes into its own late.\n\nPeople live here. Treat it as a neighbourhood rather than a set and it gives you the most distinctive frames in Granada.",
+      long_description_es:
+        "Pasado el Albaicín, la ladera se convierte en el Sacromonte, donde las casas están excavadas en la roca. Es el barrio gitano histórico y la cuna del flamenco granadino, y no se parece a ningún otro sitio de España: fachadas blancas de cueva, chumberas, pitas y una vista de la Alhambra desde un ángulo que casi nadie usa.\n\nMás tranquilo y más áspero que el Albaicín, con menos gente y más espacio para trabajar. Aquí la luz es abierta, no rebotada: la ladera mira al valle, recibe sol casi todo el día y se pone interesante al final de la tarde.\n\nAquí vive gente. Trátelo como un barrio y no como un decorado, y le dará los encuadres más distintos de Granada.",
+      best_time: "Late afternoon, when the hillside takes warm light",
+      best_timeEs: "A última hora de la tarde, cuando la ladera recibe luz cálida",
+      tips: "Uphill from the Albaicín and exposed — no shade on the walk. Ask before photographing near occupied cave houses; several are private homes, not attractions.",
+      tipsEs:
+        "Se sube desde el Albaicín y está expuesto: sin sombra en el camino. Pregunte antes de fotografiar junto a cuevas habitadas; varias son viviendas particulares, no atracciones.",
+      tags: ["couples", "solo", "content-creator"],
+      coordinates: { lat: 37.1823, lng: -3.5852 },
+      address: "Camino del Sacromonte, Granada",
+    },
+  ],
+  mallorca: [
+    {
+      name: "Deià",
+      description:
+        "A village of honey-coloured stone stacked on a Tramuntana hillside, with the sea at the bottom of it.",
+      nameEs: "Deià",
+      descriptionEs:
+        "Un pueblo de piedra dorada apilado en una ladera de la Tramuntana, con el mar al fondo.",
+      long_description:
+        "The most photogenic village on Mallorca and the reason most elopements end up in the Serra de Tramuntana. Stone houses in a warm ochre that holds evening colour long after white render has gone flat, terraces of olive and almond behind, and a drop down to Cala Deià below.\n\nThe lanes climbing to the church at the top are narrow and shaded for most of the day, which makes them workable when the open hillside is not. The cemetery terrace beside the church has the view down the valley to the water — the frame the village is known for.\n\nDeià is small and it knows what it is. Expect other people with cameras, especially in the shoulder months when the light is best.",
+      long_description_es:
+        "El pueblo más fotogénico de Mallorca y la razón por la que la mayoría de las bodas íntimas acaban en la Serra de Tramuntana. Casas de piedra de un ocre cálido que conserva el color del atardecer mucho después de que el revoco blanco se haya apagado, bancales de olivo y almendro detrás, y la bajada hasta la Cala Deià.\n\nLas callejuelas que suben a la iglesia son estrechas y están en sombra casi todo el día, así que funcionan cuando la ladera abierta no. La terraza del cementerio junto a la iglesia tiene la vista del valle hasta el agua: el encuadre por el que se conoce el pueblo.\n\nDeià es pequeño y sabe lo que es. Habrá más gente con cámaras, sobre todo en los meses de temporada media, que es cuando mejor está la luz.",
+      best_time: "The last two hours of light, when the stone turns",
+      best_timeEs: "Las dos últimas horas de luz, cuando la piedra cambia de color",
+      tips: "Parking in the village is very limited and the road through the Tramuntana is slow — allow far more travel time than the distance suggests. Cala Deià is a twenty-minute walk down and a harder walk back up.",
+      tipsEs:
+        "El aparcamiento en el pueblo es muy limitado y la carretera de la Tramuntana es lenta: calcule mucho más tiempo de trayecto del que sugiere la distancia. A la Cala Deià se baja en veinte minutos y se sube en bastante más.",
+      tags: ["couples", "elopement", "honeymoon", "wedding"],
+      coordinates: { lat: 39.7486, lng: 2.6489 },
+      address: "Deià, Serra de Tramuntana, Mallorca",
+    },
+    {
+      name: "Cap de Formentor",
+      description:
+        "A road along a knife-edge ridge to a lighthouse, with drops to the sea on both sides — the most dramatic place on the island.",
+      nameEs: "Cap de Formentor",
+      descriptionEs:
+        "Una carretera por una cresta afilada hasta un faro, con caídas al mar a ambos lados: el sitio más dramático de la isla.",
+      long_description:
+        "Mallorca's northern tip, where the Tramuntana runs out into the sea. The road out to the lighthouse follows a ridge with cliffs falling away on both sides, and the Mirador Es Colomer partway along gives you the view back down the coast that appears on every Mallorca poster.\n\nThe scale is the point. Two people on that ridge read as very small against the drop, which is exactly what an elopement portrait wants and exactly what a family session usually does not.\n\nIt is also the most exposed place on the island. The wind here is genuinely strong most days — fabric and hair will move whether you want them to or not, which is either the best thing about the location or the reason to choose another one.",
+      long_description_es:
+        "El extremo norte de Mallorca, donde la Tramuntana se acaba en el mar. La carretera hasta el faro recorre una cresta con acantilados a ambos lados, y el Mirador Es Colomer, a mitad de camino, da la vista de la costa que aparece en todos los carteles de la isla.\n\nLa escala es lo que importa. Dos personas en esa cresta se ven muy pequeñas contra la caída, que es justo lo que quiere un retrato de boda íntima y justo lo que no suele querer una sesión familiar.\n\nTambién es el punto más expuesto de la isla. El viento aquí es fuerte de verdad casi todos los días: la ropa y el pelo se van a mover, lo quiera o no, y eso es lo mejor del sitio o la razón para elegir otro.",
+      best_time: "Sunrise for calm air, or late afternoon for warm light on the cliffs",
+      best_timeEs: "Al amanecer si quiere aire en calma, o al final de la tarde por la luz cálida en los acantilados",
+      tips: "An hour and a half from Deià on a slow single-lane road, and in peak season car access is restricted in favour of shuttle buses — check before building a day around it. No shade, no shelter, strong wind.",
+      tipsEs:
+        "A hora y media de Deià por una carretera lenta de un solo carril, y en temporada alta el acceso en coche se restringe a favor de las lanzaderas: compruébelo antes de montar el día alrededor. Sin sombra, sin refugio y con viento fuerte.",
+      tags: ["couples", "elopement", "honeymoon"],
+      coordinates: { lat: 39.9601, lng: 3.2131 },
+      address: "Cap de Formentor, Pollença, Mallorca",
+    },
+    {
+      name: "Port de Sóller and the valley",
+      description:
+        "A horseshoe harbour reached through citrus groves, joined to the town by a wooden tram that has run since 1913.",
+      nameEs: "Port de Sóller y el valle",
+      descriptionEs:
+        "Un puerto en herradura al que se llega entre naranjos, unido al pueblo por un tranvía de madera que funciona desde 1913.",
+      long_description:
+        "The Sóller valley is a bowl of orange and lemon groves surrounded by mountains, and the port at the bottom is an almost enclosed horseshoe bay. The two are joined by an open wooden tram that has been running since 1913 and is, unavoidably, a good photograph.\n\nThe bay faces roughly north-west, so it holds light late and the water stays calm when the rest of the coast does not — useful when Formentor is being blown sideways.\n\nThe town square in Sóller, with the church facade and cafés under plane trees, is a completely different register from the harbour twenty minutes away. Two locations, one short tram ride, no driving.",
+      long_description_es:
+        "El valle de Sóller es una hondonada de naranjos y limoneros rodeada de montañas, y el puerto al fondo es una bahía en herradura casi cerrada. Los une un tranvía de madera abierto que circula desde 1913 y que, inevitablemente, es una buena foto.\n\nLa bahía mira más o menos al noroeste, así que aguanta la luz hasta tarde y el agua se mantiene tranquila cuando el resto de la costa no lo está: útil cuando en Formentor sopla de lado.\n\nLa plaza de Sóller, con la fachada de la iglesia y las terrazas bajo los plátanos, es un registro completamente distinto del puerto que está a veinte minutos. Dos escenarios, un trayecto corto en tranvía y nada de coche.",
+      best_time: "Late afternoon in the port; morning in the town square",
+      best_timeEs: "Última hora de la tarde en el puerto; por la mañana en la plaza del pueblo",
+      tips: "The tram runs to a timetable and fills in summer — check times rather than turning up. Parking in the port is easier than in the town.",
+      tipsEs:
+        "El tranvía funciona con horario y se llena en verano: consulte los horarios en vez de presentarse. Aparcar en el puerto es más fácil que en el pueblo.",
+      tags: ["couples", "family", "honeymoon", "engagement"],
+      coordinates: { lat: 39.7959, lng: 2.6926 },
+      address: "Port de Sóller, Mallorca",
+    },
+  ],
+  ronda: [
+    {
+      name: "Puente Nuevo",
+      description:
+        "A stone bridge thrown across a 120-metre gorge that splits the town in two — the most dramatic backdrop in Andalusia.",
+      nameEs: "Puente Nuevo",
+      descriptionEs:
+        "Un puente de piedra sobre un tajo de 120 metros que parte el pueblo en dos: el fondo más dramático de Andalucía.",
+      long_description:
+        "Ronda sits on a plateau split by El Tajo, a gorge 120 metres deep, and the Puente Nuevo spans it in three arches of pale stone. It took forty years to build and finished in 1793, and nothing else in Spain looks like it.\n\nThere are two completely different photographs here. From the town side you shoot along the bridge with the houses balanced on the cliff edge behind. From the Mirador de Aldehuela, and better still from the path that drops below the bridge, you shoot up at the whole span with the gorge underneath — this is the frame that makes people book Ronda in the first place.\n\nThe path down is steep and gravelly and takes fifteen minutes each way. It is worth every one of them, and it is where the light is best in the late afternoon when the gorge walls go gold.",
+      long_description_es:
+        "Ronda se asienta sobre una meseta partida por El Tajo, un desfiladero de 120 metros, y el Puente Nuevo lo cruza con tres arcos de piedra clara. Se tardó cuarenta años en construirlo y se terminó en 1793, y no hay nada parecido en España.\n\nAquí hay dos fotografías completamente distintas. Desde el pueblo se dispara a lo largo del puente con las casas asomadas al borde del acantilado detrás. Desde el Mirador de Aldehuela, y mejor aún desde el sendero que baja por debajo del puente, se dispara hacia arriba con todo el vano y el tajo debajo: ese es el encuadre por el que la gente reserva Ronda.\n\nEl sendero de bajada es empinado y con grava, y son quince minutos en cada sentido. Merecen la pena, y es donde mejor está la luz al final de la tarde, cuando las paredes del tajo se vuelven doradas.",
+      best_time: "Late afternoon, when the gorge walls take colour",
+      best_timeEs: "Al final de la tarde, cuando las paredes del tajo cogen color",
+      tips: "The viewpoints on the town side are small and busy at midday. The path below the bridge is steep, loose underfoot and has no railing in places — flat shoes, and not the option to choose in a long dress unless you change at the bottom.",
+      tipsEs:
+        "Los miradores del lado del pueblo son pequeños y se llenan a mediodía. El sendero de debajo del puente es empinado, con piedra suelta y sin barandilla en algunos tramos: calzado plano, y no es la opción para un vestido largo salvo que se cambie abajo.",
+      tags: ["couples", "proposal", "elopement", "engagement"],
+      coordinates: { lat: 36.7413, lng: -5.1659 },
+      address: "Puente Nuevo, Ronda, Málaga",
+    },
+    {
+      name: "The old town and the Alameda",
+      description:
+        "Whitewashed lanes on the far side of the bridge, and a clifftop promenade with the whole valley below it.",
+      nameEs: "La ciudad vieja y la Alameda",
+      descriptionEs:
+        "Callejuelas encaladas al otro lado del puente y un paseo sobre el acantilado con todo el valle debajo.",
+      long_description:
+        "Across the bridge from the newer town, Ronda's old quarter is quiet in a way the viewpoints are not: whitewashed walls, wrought-iron balconies, the Palacio de Mondragón, and lanes that hold shade through the middle of the day.\n\nOn the other side, the Alameda del Tajo is a formal nineteenth-century promenade that ends at a balcony on the cliff edge, looking out over the Serranía. It is the easy version of the Puente Nuevo view — no steep path, railings throughout, and the same valley.\n\nThe two together give a session both registers: enclosed and intimate in the old lanes, then wide open with a hundred kilometres of Andalusia behind you.",
+      long_description_es:
+        "Al otro lado del puente, el casco antiguo de Ronda está tranquilo de una forma que los miradores no lo están: paredes encaladas, balcones de forja, el Palacio de Mondragón y calles que conservan la sombra a mediodía.\n\nEn el otro extremo, la Alameda del Tajo es un paseo decimonónico que termina en un balcón al borde del acantilado, sobre la Serranía. Es la versión fácil de la vista del Puente Nuevo: sin sendero empinado, con barandilla y el mismo valle.\n\nLos dos juntos dan a la sesión los dos registros: recogido e íntimo en las callejuelas, y después abierto de par en par con cien kilómetros de Andalucía detrás.",
+      best_time: "Old lanes at midday, the Alameda balcony an hour before sunset",
+      best_timeEs: "Las callejuelas a mediodía, el balcón de la Alameda una hora antes del atardecer",
+      tips: "Ronda is a day-trip town — coaches arrive late morning and leave mid-afternoon. Before ten and after five it is a different, much emptier place.",
+      tipsEs:
+        "Ronda es pueblo de excursión: los autocares llegan a media mañana y se van a media tarde. Antes de las diez y después de las cinco es un sitio distinto y mucho más vacío.",
+      tags: ["couples", "family", "solo", "engagement"],
+      coordinates: { lat: 36.7371, lng: -5.1663 },
+      address: "Ciudad Vieja, Ronda, Málaga",
+    },
+  ],
 };
