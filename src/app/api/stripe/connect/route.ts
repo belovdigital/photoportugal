@@ -3,15 +3,30 @@ export const dynamic = "force-dynamic";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
+import { country } from "@/lib/country";
 
 // Create Stripe Connect Express account for photographer
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // The connected account's country decides which ID documents and which bank
+  // account Stripe asks the photographer for. It is NOT the platform's country:
+  // a Portuguese-registered platform onboards Spanish photographers into ES
+  // accounts with Spanish IBANs, which is the whole reason Connect works here.
+  //
+  // This defaulted to the literal "PT" and no caller ever sent a value, so on
+  // the Spanish site every photographer would have been sent to Stripe asking
+  // for a Portuguese IBAN. Defaults to the market now; an explicit body value
+  // still wins, for a photographer who is resident elsewhere.
+  const marketCountry = country.code.toUpperCase();
   let locale = "en";
-  let country = "PT";
-  try { const body = await req.json(); locale = body.locale || "en"; country = body.country || "PT"; } catch {}
+  let accountCountry = marketCountry;
+  try {
+    const body = await req.json();
+    locale = body.locale || "en";
+    accountCountry = body.country || marketCountry;
+  } catch {}
 
   const userId = (session.user as { id?: string }).id;
 
@@ -37,7 +52,7 @@ export async function POST(req: NextRequest) {
     if (!accountId) {
       const account = await stripeClient.accounts.create({
         type: "express",
-        country,
+        country: accountCountry,
         email: session.user.email!,
         capabilities: {
           card_payments: { requested: true },

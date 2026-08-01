@@ -13,8 +13,6 @@ import { RedirectsManager } from "./RedirectsManager";
 import { BusinessInquiriesManager } from "./BusinessInquiriesManager";
 import { SERVICE_FEE_RATE } from "@/lib/stripe";
 import { NotFoundManager } from "./NotFoundManager";
-import { ManualPayoutsTab } from "./ManualPayoutsTab";
-import { isManualPayout } from "@/lib/payout";
 
 function NotificationLogsTab({ channel, title }: { channel: "email" | "sms" | "telegram"; title: string }) {
   const [logs, setLogs] = useState<{ id: string; channel: string; recipient: string; event: string; status: string; error_code: string | null; error_message?: string | null; from?: string; created_at: string; price?: string | null; direction?: string }[]>([]);
@@ -223,7 +221,6 @@ const tabGroups = [
       { key: "giftCards", label: "Gift cards", icon: "gift" },
       // Manual-payout markets only: in Portugal Stripe Connect moves the money
       // and there is nothing to queue.
-      ...(isManualPayout ? [{ key: "manualPayouts", label: "Payouts", icon: "gift" }] : []),
       { key: "makealbum", label: "MakeAlbum", icon: "book" },
       { key: "locations", label: "Locations", icon: "map" },
       { key: "redirects", label: "Redirects", icon: "search" },
@@ -971,7 +968,6 @@ export function AdminDashboard({
           {activeTab === "blog" && blogSection}
           {activeTab === "promos" && promosSection}
           {activeTab === "giftCards" && giftCardsSection}
-          {activeTab === "manualPayouts" && <ManualPayoutsTab />}
           {activeTab === "makealbum" && makealbumSection}
           {activeTab === "locations" && locationsSection}
           {activeTab === "redirects" && <RedirectsManager />}

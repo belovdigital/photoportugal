@@ -445,7 +445,6 @@
   },
   "subscriptions": {
     "phoneAutoPrefix": "Spanische Nummern erhalten automatisch +34. Für andere Länder bitte die Vorwahl angeben, z. B. +49.",
-    "connectWithStripe": "Bankdaten hinzufügen",
     "enterValidPhone": "Geben Sie eine gültige Telefonnummer mit Ländervorwahl ein (z. B. +34...)"
   },
   "supportPage": {
@@ -464,9 +463,6 @@
         },
         "externalLinks": {
           "answer": "Nein. Fotografen ist es nicht gestattet, URLs persönlicher Websites, Social-Media-Links (Instagram, Facebook, TikTok usw.), E-Mail-Adressen oder Telefonnummern an irgendeiner Stelle ihres Profils anzugeben – einschließlich Bio, Slogan, Paketbeschreibungen und Portfolio-Bildunterschriften.\n\nDie gesamte Kommunikation mit Kunden muss über das integrierte Nachrichtensystem von Photo Spain erfolgen. Dies schützt beide Parteien, indem Gespräche dokumentiert, Zahlungen sicher und Streitfälle lösbar bleiben.\n\nProfile, in denen externe Links oder Kontaktdaten gefunden werden, werden zur Entfernung aufgefordert. Wiederholte Verstöße können zur Kontosperrung führen."
-        },
-        "getStarted": {
-          "answer": "Der Einstieg ist einfach:\n\n1. **Konto erstellen** – Registrieren Sie sich und wählen Sie „Ich mache Fotos\"\n2. **Profil vervollständigen** – Fügen Sie ein Foto, ein Titelbild, eine Bio und einen Slogan hinzu\n3. **Portfolio hochladen** – Zeigen Sie mindestens 15–20 Ihrer besten Aufnahmen\n4. **Pakete erstellen** – Richten Sie 2–3 Pakete zu unterschiedlichen Preisen ein\n5. **Standorte auswählen** – Markieren Sie, wo Sie für Shootings verfügbar sind\n6. **Bankdaten hinzufügen** – Die IBAN, auf die wir Ihre Einnahmen überweisen\n\nSobald Ihr Profil vollständig und von unserem Team freigegeben ist, erscheinen Sie in den Suchergebnissen und können Buchungen erhalten."
         }
       },
       "general": {

@@ -340,10 +340,6 @@
       "steps": {
         "setupProfile": {
           "desc": "Añada bio, avatar, foto de portada y seleccione sus lugares en España."
-        },
-        "connectStripe": {
-          "title": "Añade tus datos bancarios",
-          "desc": "Facilítanos el IBAN donde quieres cobrar. Es todo lo que necesitamos para enviarte tus ingresos."
         }
       }
     },
@@ -533,9 +529,6 @@
         },
         "externalLinks": {
           "answer": "No. Los fotógrafos no pueden incluir URLs de sitios web personales, enlaces a redes sociales (Instagram, Facebook, TikTok, etc.), correos electrónicos o números de teléfono en ninguna parte de su perfil — incluyendo bio, slogan, descripciones de paquetes y leyendas del portafolio.\n\nToda comunicación con clientes debe pasar por el sistema de mensajería integrado de Photo Spain. Esto protege a ambas partes manteniendo conversaciones documentadas, pagos seguros y disputas resolubles.\n\nLos perfiles que contengan enlaces externos o datos de contacto serán requeridos para retirarlos. Las violaciones repetidas pueden resultar en suspensión de cuenta."
-        },
-        "getStarted": {
-          "answer": "Empezar es simple:\n\n1. **Cree su cuenta** — Regístrese y seleccione 'Hago fotos'\n2. **Complete su perfil** — Añada foto, imagen de portada, bio y slogan\n3. **Suba su portafolio** — Presente al menos 15-20 de sus mejores fotos\n4. **Cree paquetes** — Configure 2-3 paquetes a diferentes niveles de precio\n5. **Seleccione sus lugares** — Marque dónde está disponible para fotografiar\n6. **Añada sus datos bancarios** — El IBAN al que le transferimos sus ingresos\n\nUna vez que su perfil esté completo y aprobado por nuestro equipo, aparecerá en los resultados de búsqueda y podrá empezar a recibir reservas."
         }
       },
       "general": {
@@ -607,12 +600,6 @@
     },
     "heroTitleRich": "Fotografía profesional para tu empresa, <accent>en cualquier punto de España</accent>",
     "trustPhotographers": "{count} fotógrafos verificados en toda España"
-  },
-  "onboarding": {
-    "photographer": {
-      "connectStripe": "Añade tus datos bancarios para los cobros",
-      "connectStripeTip": "Necesario para transferirte tus ingresos después de cada sesión"
-    }
   },
   "tryYourself": {
     "metaTitle": "Pruébate en España — Selfie de viaje con IA",

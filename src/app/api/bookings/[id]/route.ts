@@ -6,7 +6,7 @@ import { sendSMS } from "@/lib/sms";
 import { maskSurname } from "@/lib/photographer-name";
 import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
-import { isManualPayout, payoutSetupCopy } from "@/lib/payout";
+import { payoutSetupCopy } from "@/lib/payout";
 import { country } from "@/lib/country";
 
 const BASE_URL = process.env.AUTH_URL || country.baseUrl;
@@ -212,8 +212,8 @@ export async function PATCH(
     // booking is confirmed. What "able" means depends on the market — a Stripe
     // Connect account in Portugal, bank details in Spain. See src/lib/payout.ts.
     if (status === "confirmed") {
-      const photographerProfile = await queryOne<{ stripe_account_id: string | null; stripe_onboarding_complete: boolean; payout_iban: string | null }>(
-        `SELECT pp.stripe_account_id, pp.stripe_onboarding_complete, pp.payout_iban
+      const photographerProfile = await queryOne<{ stripe_account_id: string | null; stripe_onboarding_complete: boolean }>(
+        `SELECT pp.stripe_account_id, pp.stripe_onboarding_complete
          FROM photographer_profiles pp
          JOIN bookings b ON b.photographer_id = pp.id
          WHERE b.id = $1`,
@@ -225,18 +225,15 @@ export async function PATCH(
       // only that an account EXISTS, not that onboarding finished. A stale
       // completion flag is handled by the live re-check below, and tightening
       // this to "fully onboarded" would make that recovery path unreachable.
-      const payoutBlocked = isManualPayout
-        ? !photographerProfile?.payout_iban?.trim()
-        : !photographerProfile?.stripe_account_id;
+      const payoutBlocked = !photographerProfile?.stripe_account_id;
 
       if (bookingPrice?.total_price && payoutBlocked) {
         return NextResponse.json({ error: payoutSetupCopy.blockedError }, { status: 400 });
       }
 
-      // Connect-only: if stripe_account_id exists but the onboarding flag is
-      // stale, verify live with the Stripe API and auto-sync. Manual-payout
-      // markets have no Stripe account to reconcile, so this is skipped whole.
-      if (!isManualPayout && bookingPrice?.total_price && photographerProfile?.stripe_account_id && !photographerProfile.stripe_onboarding_complete) {
+      // If stripe_account_id exists but the onboarding flag is stale, verify
+      // live with the Stripe API and auto-sync.
+      if (bookingPrice?.total_price && photographerProfile?.stripe_account_id && !photographerProfile.stripe_onboarding_complete) {
         try {
           const stripeClient = requireStripe();
           const account = await stripeClient.accounts.retrieve(photographerProfile.stripe_account_id);

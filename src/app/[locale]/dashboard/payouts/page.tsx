@@ -2,8 +2,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { StripeConnectSection } from "../subscriptions/StripeConnectSection";
-import { PayoutDetailsSection } from "./PayoutDetailsSection";
-import { isManualPayout } from "@/lib/payout";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
@@ -22,11 +20,7 @@ export default async function PayoutsPage() {
       <h1 className="font-display text-2xl font-bold text-gray-900">{t("title")}</h1>
       <p className="mt-1 text-gray-500">{t("subtitle")}</p>
 
-      {/* Spain has no Stripe Connect to offer — the company isn't registered
-          there — so the whole Connect surface is replaced rather than hidden.
-          Rendering both would give photographers two contradictory answers to
-          "how do I get paid". */}
-      {isManualPayout ? <PayoutDetailsSection /> : <StripeConnectSection />}
+      <StripeConnectSection />
     </div>
   );
 }

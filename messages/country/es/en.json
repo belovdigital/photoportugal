@@ -198,10 +198,6 @@
       "steps": {
         "setupProfile": {
           "desc": "Add your bio, avatar, cover photo, and select your locations in Spain."
-        },
-        "connectStripe": {
-          "title": "Add your bank details",
-          "desc": "Give us the IBAN to pay you into. That's all we need to send your earnings."
         }
       }
     },
@@ -486,9 +482,6 @@
         },
         "externalLinks": {
           "answer": "No. Photographers are not allowed to include personal website URLs, social media links (Instagram, Facebook, TikTok, etc.), email addresses, or phone numbers anywhere on their profile — including bio, tagline, package descriptions, and portfolio captions.\n\nAll communication with clients must go through Photo Spain's built-in messaging system. This protects both parties by keeping conversations documented, payments secure, and disputes resolvable.\n\nProfiles found to contain external links or contact information will be asked to remove them. Repeated violations may result in account suspension."
-        },
-        "getStarted": {
-          "answer": "Getting started is simple:\n\n1. **Create your account** — Sign up and select 'I take photos'\n2. **Complete your profile** — Add a photo, cover image, bio, and tagline\n3. **Upload your portfolio** — Showcase at least 15–20 of your best shots\n4. **Create packages** — Set up 2–3 packages at different price points\n5. **Select your locations** — Mark where you're available to shoot\n6. **Add your bank details** — The IBAN we transfer your earnings to\n\nOnce your profile is complete and approved by our team, you'll appear in search results and can start receiving bookings."
         }
       },
       "general": {
@@ -613,12 +606,6 @@
     },
     "heroTitleRich": "Professional photography for your company, <accent>anywhere in Spain</accent>",
     "trustPhotographers": "{count} vetted photographers across Spain"
-  },
-  "onboarding": {
-    "photographer": {
-      "connectStripe": "Add bank details for withdrawals",
-      "connectStripeTip": "Required so we can transfer your earnings after each shoot"
-    }
   },
   "tryYourself": {
     "metaTitle": "Try Yourself in Spain — AI Travel Selfie",

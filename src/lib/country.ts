@@ -18,13 +18,6 @@ import { portugalCoverageStats } from "./location-coverage-stats";
 
 export type CountryCode = "pt" | "es";
 
-/** How photographers get paid out. */
-export type PayoutMode =
-  /** Stripe Connect express accounts; Stripe moves the money. */
-  | "connect"
-  /** No Connect: we collect, then pay each photographer by bank transfer. */
-  | "manual";
-
 export interface CountryPack {
   code: CountryCode;
   /** Brand name as shown to users, in emails and in structured data. */
@@ -100,7 +93,6 @@ export interface CountryPack {
   locales: readonly string[];
   /** IANA timezone used for business-hours logic and date formatting. */
   timezone: string;
-  payoutMode: PayoutMode;
 }
 
 const PACKS: Record<CountryCode, CountryPack> = {
@@ -149,7 +141,6 @@ const PACKS: Record<CountryCode, CountryPack> = {
     logoIconPath: "/favicon.svg",
     locales: ["en", "pt", "de", "es", "fr"],
     timezone: "Europe/Lisbon",
-    payoutMode: "connect",
   },
   es: {
     code: "es",
@@ -199,7 +190,6 @@ const PACKS: Record<CountryCode, CountryPack> = {
     // The operating company is Portuguese and is not registered in Spain, so
     // Stripe Connect onboarding is not available to Spanish photographers.
     // They are paid by bank transfer after the money clears. See docs/SPAIN.md §6.2.
-    payoutMode: "manual",
   },
 };
 
@@ -221,5 +211,15 @@ export const country: CountryPack = resolve(
 export const isSpain = country.code === "es";
 export const isPortugal = country.code === "pt";
 
-/** True when photographers are paid by hand rather than through Stripe Connect. */
-export const isManualPayout = country.payoutMode === "manual";
+/**
+ * Every market pays photographers through Stripe Connect.
+ *
+ * Spain briefly shipped a manual IBAN-transfer mode, on the assumption that a
+ * Portuguese-registered platform could not onboard Spanish photographers. That
+ * assumption was wrong: the platform's own country constrains only the platform
+ * account, and a connected account carries its own country, identity and bank
+ * details. Verified by creating a real ES connected account from the PT
+ * platform key. The manual mode and its IBAN screens were removed rather than
+ * left switched off, because a dormant second payout path is exactly the kind
+ * of code that drifts out of sync and then fails silently the day it is used.
+ */
