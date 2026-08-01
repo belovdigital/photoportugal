@@ -31,6 +31,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { parsePhone } from "@/lib/phone-codes";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { DURATION_OPTIONS, getPricingForDuration, formatDuration } from "@/lib/package-pricing";
+import { country } from "@/lib/country";
 import {
   LOCATION_TREE,
   expandLocationCoverageToLegacySlugs,
@@ -170,7 +171,7 @@ export function PhotographerDashboardClient({
   // Profile form state
   const [firstName, setFirstName] = useState(profile.first_name || "");
   const [lastName, setLastName] = useState(profile.last_name || "");
-  const [phoneCode, setPhoneCode] = useState("+351");
+  const [phoneCode, setPhoneCode] = useState(country.dialCode);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [displayName, setDisplayName] = useState(profile.name);
 

@@ -59,7 +59,7 @@ export default async function AboutPage({
             url: country.baseUrl,
             logo: `${country.baseUrl}/logo.svg`,
             description:
-              `${country.brand} connects tourists visiting Portugal with talented local photographers for professional vacation photoshoots.`,
+              `${country.brand} connects tourists visiting ${country.areaServed} with talented local photographers for professional vacation photoshoots.`,
             founder: {
               "@type": "Person",
               name: "Kate Belova",

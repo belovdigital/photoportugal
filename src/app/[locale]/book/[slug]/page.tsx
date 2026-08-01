@@ -20,6 +20,7 @@ import { maskSurname } from "@/lib/photographer-name";
 import { type BusyWindow, hasAvailableBookingStart } from "@/lib/booking-time-windows";
 import { hasCommonLanguage } from "@/lib/languages";
 import { localizeLanguageNames } from "@/lib/languages-i18n";
+import { country } from "@/lib/country";
 
 interface Package {
   id: string;
@@ -845,7 +846,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
             type="tel"
             value={clientPhone}
             onChange={(e) => setClientPhone(e.target.value)}
-            placeholder="+351 912 345 678"
+            placeholder={country.phonePlaceholder}
             required
             className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
           />
@@ -944,7 +945,7 @@ export default function BookPage({ params }: { params: Promise<{ slug: string }>
                   type="tel"
                   value={giftRecipientPhone}
                   onChange={(e) => setGiftRecipientPhone(e.target.value)}
-                  placeholder="+351 912 345 678"
+                  placeholder={country.phonePlaceholder}
                   required={isGift}
                   className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none focus:border-primary-500 md:text-sm"
                 />

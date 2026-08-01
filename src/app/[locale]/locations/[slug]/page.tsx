@@ -73,7 +73,7 @@ export async function generateMetadata({
       description: seoDescription,
       type: "website",
       url: `${country.baseUrl}/locations/${slug}`,
-      images: [{ url: location.cover_image || country.ogImage, width: 1200, height: 630, alt: `${location.name}, Portugal` }],
+      images: [{ url: location.cover_image || country.ogImage, width: 1200, height: 630, alt: `${location.name}, ${country.areaServed}` }],
     },
   };
 }
@@ -517,7 +517,7 @@ export default async function LocationPage({
   const jsonLdDestination = {
     "@context": "https://schema.org",
     "@type": "TouristDestination",
-    name: `${location.name}, Portugal`,
+    name: `${location.name}, ${country.areaServed}`,
     description: description,
     geo: {
       "@type": "GeoCoordinates",
@@ -540,7 +540,7 @@ export default async function LocationPage({
       name: location.name,
       containedInPlace: {
         "@type": "Country",
-        name: "Portugal",
+        name: country.areaServed,
       },
     },
     offers: {
@@ -680,7 +680,7 @@ export default async function LocationPage({
           <div className="absolute inset-0">
             <OptimizedImage
               src={locationImage(location.slug, "hero")}
-              alt={`Vacation photography session in ${location.name}, Portugal`}
+              alt={`Vacation photography session in ${location.name}, ${country.areaServed}`}
               priority
               className="h-full w-full"
             />

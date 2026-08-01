@@ -1,5 +1,6 @@
 import twilio from "twilio";
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -31,11 +32,15 @@ export function normalizePhone(raw: string): string {
   return "+" + digits;
 }
 
+// Alphanumeric sender ID, max 11 chars. Named per market so a Spanish
+// recipient does not get an SMS signed "PHOTO PT".
+const ALPHA_SENDER = country.code === "pt" ? "PHOTO PT" : "PHOTO ES";
+
 function getSender(toE164: string): string {
   for (const prefix of NUMERIC_ONLY_COUNTRIES) {
     if (toE164.startsWith(prefix)) return US_TOLL_FREE;
   }
-  return phoneNumber || "PHOTO PT";
+  return phoneNumber || ALPHA_SENDER;
 }
 
 export async function sendSMS(to: string, message: string): Promise<boolean> {

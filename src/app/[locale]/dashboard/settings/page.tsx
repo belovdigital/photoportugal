@@ -7,6 +7,7 @@ import { parsePhone } from "@/lib/phone-codes";
 import { useTranslations } from "next-intl";
 import { convertHeicIfNeeded } from "@/lib/convert-heic";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
+import { country } from "@/lib/country";
 
 function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -83,7 +84,7 @@ export default function SettingsPage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [phoneCode, setPhoneCode] = useState("+351");
+  const [phoneCode, setPhoneCode] = useState(country.dialCode);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [nameLoaded, setNameLoaded] = useState(false);
 

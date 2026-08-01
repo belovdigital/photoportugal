@@ -356,7 +356,7 @@ function OffPlatformMockup() {
     <div className="rounded-xl border border-red-200 bg-red-50/40 p-4 space-y-3">
       <div className="flex justify-end">
         <div className="max-w-[75%] rounded-2xl rounded-br-sm bg-red-100 border border-red-200 px-3 py-2 text-sm text-red-900 line-through opacity-70">
-          Sure! WhatsApp me at +351 91...
+          Sure! WhatsApp me at {country.dialCode} 91...
         </div>
       </div>
       <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[12px] text-amber-900">

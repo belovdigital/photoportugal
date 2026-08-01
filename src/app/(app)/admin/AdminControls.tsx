@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
+import { country } from "@/lib/country";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -350,7 +351,7 @@ export function AdminNotificationPhone({ initialValue }: { initialValue: string 
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={addPhone}
-          placeholder={phones.length === 0 ? "+351... and press Enter" : "Add another..."}
+          placeholder={phones.length === 0 ? `${country.dialCode}... and press Enter` : "Add another..."}
           className="min-w-[180px] flex-1 border-none bg-transparent text-sm outline-none placeholder:text-gray-400"
         />
       </div>

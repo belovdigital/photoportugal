@@ -38,15 +38,22 @@ const COMBO_OCCASIONS = new Set([
 // Per-locale "in" preposition ("Portugal Photographer in Portugal" reads
 // fine in EN; other languages need the localized connector). Same scheme
 // as the combo page.
-const IN_PREP: Record<string, string> = {
-  en: "in", pt: "em", de: "in", es: "en", fr: "à",
-};
+//
+// The French connector depends on the country's gender, not just the locale:
+// "à Portugal" was already loose, but Spain needs "en Espagne", so the
+// preposition is picked per market rather than assumed.
+const IN_PREP: Record<string, string> =
+  country.code === "es"
+    ? { en: "in", pt: "em", de: "in", es: "en", fr: "en" }
+    : { en: "in", pt: "em", de: "in", es: "en", fr: "à" };
 
-// Localized "Portugal" — same in all 5 locales right now, but keeping the
-// map in case we ever want "Portugal" / "Portugalia" / etc.
-const PORTUGAL_LABEL: Record<string, string> = {
-  en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal",
-};
+// The country name as written in each locale. It happened to be identical in
+// all five for Portugal, which is why every consumer could treat it as a
+// constant — Spain is the first market where it actually differs.
+const PORTUGAL_LABEL: Record<string, string> =
+  country.code === "es"
+    ? { en: "Spain", pt: "Espanha", de: "Spanien", es: "España", fr: "Espagne" }
+    : { en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal" };
 
 export function generateStaticParams() {
   return shootTypes.map((t) => ({ type: t.slug }));
@@ -438,7 +445,7 @@ export default async function ShootTypePage({
       name: country.brand,
       url: country.baseUrl,
     },
-    areaServed: { "@type": "Country", name: "Portugal" },
+    areaServed: { "@type": "Country", name: country.areaServed },
     ...(minPrice ? {
       offers: {
         "@type": "Offer",
@@ -467,7 +474,7 @@ export default async function ShootTypePage({
     description: stl.metaDescription,
     priceRange: "€€",
     address: { "@type": "PostalAddress", addressLocality: country.city, addressCountry: country.code.toUpperCase() },
-    areaServed: { "@type": "Country", name: "Portugal" },
+    areaServed: { "@type": "Country", name: country.areaServed },
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: avgRating.toFixed(1),

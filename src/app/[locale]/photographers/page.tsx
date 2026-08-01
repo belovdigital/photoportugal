@@ -195,7 +195,7 @@ export default async function PhotographersPage({
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "Professional Photographers in Portugal",
+    name: `Professional Photographers in ${country.areaServed}`,
     numberOfItems: dbPhotographers.length,
     itemListElement: dbPhotographers.slice(0, 20).map((p, i) => {
       const imgSrc = p.cover_url || p.avatar_url;

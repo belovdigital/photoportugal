@@ -48,7 +48,7 @@ const L: Record<string, {
   },
   pt: {
     badge: "Casamentos",
-    title: "Vão casar em Portugal?",
+    title: `Vão casar em ${CN.pt}?`,
     subtitle: "Fotógrafos de casamento locais que conhecem cada espaço, miradouro e luz dourada — de elopements intimistas a celebrações de dia inteiro.",
     cta: "Explorar fotografia de casamento",
     photographersLabel: (n) => `${n} fotógrafos de casamento`,
@@ -57,7 +57,7 @@ const L: Record<string, {
   },
   de: {
     badge: "Hochzeiten",
-    title: "Ihr heiratet in Portugal?",
+    title: `Ihr heiratet in ${CN.de}?`,
     subtitle: "Lokale Hochzeitsfotografen, die jede Location, jeden Aussichtspunkt und jeden Golden-Hour-Spot kennen — von intimen Elopements bis zur ganztägigen Begleitung.",
     cta: "Hochzeitsfotografie entdecken",
     photographersLabel: (n) => `${n} Hochzeitsfotografen`,
@@ -75,7 +75,7 @@ const L: Record<string, {
   },
   fr: {
     badge: "Mariages",
-    title: "Vous vous mariez au Portugal ?",
+    title: country.code === "es" ? `Vous vous mariez en ${CN.fr} ?` : `Vous vous mariez au ${CN.fr} ?`,
     subtitle: "Des photographes de mariage locaux qui connaissent chaque lieu, point de vue et lumière dorée — des elopements intimes aux célébrations d'une journée complète.",
     cta: "Découvrir la photographie de mariage",
     photographersLabel: (n) => `${n} photographes de mariage`,

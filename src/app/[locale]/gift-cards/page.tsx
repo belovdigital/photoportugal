@@ -13,11 +13,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     : locale === "es" ? `Regale una sesión ${country.brand} — Tarjetas regalo`
     : locale === "fr" ? `Offrez une séance ${country.brand} — Cartes cadeaux`
     : `Gift a ${country.brand} session — Gift cards`;
-  const description = locale === "pt" ? "Ofereça uma sessão fotográfica de 1 ou 2 horas em Portugal. O destinatário escolhe o fotógrafo; você prepara a surpresa."
-    : locale === "de" ? "Verschenken Sie eine 1- oder 2-stündige Fotoshooting-Session in Portugal. Die Empfänger:in wählt den Fotografen; Sie sorgen für die Überraschung."
-    : locale === "es" ? "Regale una sesión fotográfica de 1 o 2 horas en Portugal. La persona elige al fotógrafo; usted prepara la sorpresa."
-    : locale === "fr" ? "Offrez une séance photo d'1 ou 2 heures au Portugal. Le destinataire choisit le photographe ; vous préparez la surprise."
-    : "Gift a 1-hour or 2-hour photo session in Portugal. Recipient picks the photographer; you handle the surprise.";
+  const cn = { en: country.areaServed, pt: country.code === "es" ? "Espanha" : "Portugal", de: country.code === "es" ? "Spanien" : "Portugal", es: country.code === "es" ? "España" : "Portugal", fr: country.code === "es" ? "Espagne" : "Portugal" }[locale] || country.areaServed;
+  const description = locale === "pt" ? `Ofereça uma sessão fotográfica de 1 ou 2 horas em ${cn}. O destinatário escolhe o fotógrafo; você prepara a surpresa.`
+    : locale === "de" ? `Verschenken Sie eine 1- oder 2-stündige Fotoshooting-Session in ${cn}. Die Empfänger:in wählt den Fotografen; Sie sorgen für die Überraschung.`
+    : locale === "es" ? `Regale una sesión fotográfica de 1 o 2 horas en ${cn}. La persona elige al fotógrafo; usted prepara la sorpresa.`
+    : locale === "fr" ? `Offrez une séance photo d'1 ou 2 heures ${country.code === "es" ? "en" : "au"} ${cn}. Le destinataire choisit le photographe ; vous préparez la surprise.`
+    : `Gift a 1-hour or 2-hour photo session in ${cn}. Recipient picks the photographer; you handle the surprise.`;
   return {
     title,
     description,
@@ -48,7 +49,7 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
     "@context": "https://schema.org",
     "@type": "Product",
     name: `${country.brand} Gift Card`,
-    description: `Photoshoot gift card valid for any participating ${country.brand} photographer in Portugal. Valid 12 months from purchase.`,
+    description: `Photoshoot gift card valid for any participating ${country.brand} photographer in ${country.areaServed}. Valid 12 months from purchase.`,
     image: `${base}${country.ogImage}`,
     brand: { "@type": "Brand", name: `${country.brand}` },
     offers: {
@@ -154,7 +155,7 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
       {
         "@type": "Question",
         name: "Can the recipient pick any photographer?",
-        acceptedAnswer: { "@type": "Answer", text: `Yes — the gift card works with any participating ${country.brand} photographer across Portugal. The recipient browses the catalog and picks the one whose style they love.` },
+        acceptedAnswer: { "@type": "Answer", text: `Yes — the gift card works with any participating ${country.brand} photographer across ${country.areaServed}. The recipient browses the catalog and picks the one whose style they love.` },
       },
       {
         "@type": "Question",

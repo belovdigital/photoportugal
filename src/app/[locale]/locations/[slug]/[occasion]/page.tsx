@@ -864,7 +864,7 @@ export default async function OccasionPage({
   const jsonLdService = {
     "@context": "https://schema.org",
     "@type": "Service",
-    name: `${occT} in ${location.name}, Portugal`,
+    name: `${occT} in ${location.name}, ${country.areaServed}`,
     description: occD,
     url: `${country.baseUrl}/locations/${slug}/${occasion}`,
     serviceType: occ.title,
@@ -876,7 +876,7 @@ export default async function OccasionPage({
     areaServed: {
       "@type": "City",
       name: location.name,
-      containedInPlace: { "@type": "Country", name: "Portugal" },
+      containedInPlace: { "@type": "Country", name: country.areaServed },
     },
     ...(!isWedding && minPrice ? {
       offers: {
@@ -964,7 +964,7 @@ export default async function OccasionPage({
           <div className="absolute inset-0">
             <OptimizedImage
               src={locationImage(location.slug, "hero")}
-              alt={`${occT} in ${location.name}, Portugal`}
+              alt={`${occT} in ${location.name}, ${country.areaServed}`}
               priority
               className="h-full w-full"
             />

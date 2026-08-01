@@ -1,4 +1,5 @@
 import { country } from "./country";
+import { photoSpotsES } from "./photo-spots-data-es";
 /** A single curated image of the spot (Wikimedia / Unsplash / photographer
  *  portfolio). Attribution is required because Wikimedia CC-BY-SA images
  *  must show photographer credit + license to stay legal. */
@@ -664,11 +665,12 @@ const photoSpotsPT: Record<string, PhotoSpot[]> = {
 };
 
 /**
- * Curated photo spots are Portugal-only for now: each entry names a specific
- * viewpoint or landmark, so substitution cannot produce a Spanish version —
- * it would invent places. Spain therefore ships no spot pages until a real
- * Spanish list is written, rather than 360 sitemap URLs about another country.
+ * Curated photo spots name a specific viewpoint or landmark, so substitution
+ * cannot produce a Spanish version — it would invent places. The Spanish list
+ * is therefore hand-written and currently covers Barcelona, Madrid and Seville;
+ * cities without an entry simply have no spot pages, which is correct — better
+ * than sitemap URLs about another country.
  */
 export const photoSpots: Record<string, PhotoSpot[]> =
-  country.code === "es" ? {} : photoSpotsPT;
+  country.code === "es" ? photoSpotsES : photoSpotsPT;
 

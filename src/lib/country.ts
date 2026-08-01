@@ -72,6 +72,19 @@ export interface CountryPack {
   geo: { lat: number; lng: number };
   /** Public phone number, or null where the market has none yet. */
   phone: string | null;
+  /**
+   * International dial code for this market, e.g. "+351".
+   *
+   * Used when a photographer types a bare local number with no country code.
+   * This was hardcoded to +351 everywhere, so a Spanish photographer entering
+   * "612345678" had it silently turned into a Portuguese number: the SMS went
+   * to a stranger in Portugal (or nowhere) and verification could never pass.
+   */
+  dialCode: string;
+  /** Placeholder showing this market's number format, e.g. "+351 912 345 678". */
+  phonePlaceholder: string;
+  /** Flag emoji for the dial-code picker. */
+  flag: string;
   /** Social profiles for schema.org sameAs. Empty until a market has them. */
   socialLinks: string[];
   /** Languages the support desk actually answers in. */
@@ -109,6 +122,9 @@ const PACKS: Record<CountryCode, CountryPack> = {
     city: "Lisbon",
     geo: { lat: 38.7223, lng: -9.1393 },
     phone: "+351 308 800 496",
+    dialCode: "+351",
+    phonePlaceholder: "+351 912 345 678",
+    flag: "🇵🇹",
     socialLinks: [
       "https://www.facebook.com/photoportugalofficial",
       "https://www.instagram.com/photoportugal_com/",
@@ -155,6 +171,9 @@ const PACKS: Record<CountryCode, CountryPack> = {
     city: "Madrid",
     geo: { lat: 40.4168, lng: -3.7038 },
     phone: null,
+    dialCode: "+34",
+    phonePlaceholder: "+34 612 345 678",
+    flag: "🇪🇸",
     socialLinks: [],
     contactLanguages: ["English", "Spanish"],
     seo: {

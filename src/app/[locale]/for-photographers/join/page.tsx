@@ -84,7 +84,7 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: `Join ${country.brand} — Early Bird Program`,
-    description: "Be among the first photographers on Portugal's newest photography marketplace.",
+    description: `Be among the first photographers on ${country.areaServed}’s newest photography marketplace.`,
     url: `${country.baseUrl}/for-photographers/join`,
   };
 

@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import fs from "node:fs";
+import path from "node:path";
 import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
@@ -26,6 +28,27 @@ const CITIES: Record<string, string> = {
   pt: "Lisbon · Porto · Algarve · Sintra · Madeira · 30+ locations.",
 };
 
+/**
+ * The real wordmark, inlined as a data URI.
+ *
+ * This card used to draw its own lockup: the Unicode glyph "⛶" centred in a red
+ * circle, with the brand name beside it in whatever sans-serif the renderer
+ * picked. It read as a rough imitation of the logo rather than the logo — the
+ * corner marks sat off-centre and the type was the wrong face entirely.
+ *
+ * Read from disk at module load (this route is `runtime = "nodejs"`) rather than
+ * fetched, so the card cannot render logo-less if the network hiccups.
+ */
+const logoDataUri = (() => {
+  if (!country.logoPath.endsWith(".png")) return null;
+  try {
+    const file = path.join(process.cwd(), "public", country.logoPath.replace(/^\//, ""));
+    return `data:image/png;base64,${fs.readFileSync(file).toString("base64")}`;
+  } catch {
+    return null;
+  }
+})();
+
 export async function GET() {
   const cities = CITIES[country.code] || CITIES.pt;
 
@@ -50,25 +73,16 @@ export async function GET() {
 
         <div style={{ display: "flex", flexDirection: "column", flex: 1, paddingRight: 40 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 36 }}>
-          <div
-            style={{
-              width: 84,
-              height: 84,
-              borderRadius: 42,
-              background: "#C94536",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              fontSize: 44,
-              fontWeight: 700,
-            }}
-          >
-            ⛶
-          </div>
-          <div style={{ display: "flex", fontSize: 46, fontWeight: 700, color: "#C94536" }}>
-            {country.brand}
-          </div>
+          {logoDataUri ? (
+            // Wordmark already contains the mark AND the brand name — drawing
+            // the name again beside it would duplicate it.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoDataUri} alt={country.brand} height={84} style={{ height: 84 }} />
+          ) : (
+            <div style={{ display: "flex", fontSize: 46, fontWeight: 700, color: "#C94536" }}>
+              {country.brand}
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", fontSize: 68, fontWeight: 700, color: "#1F1F1F", lineHeight: 1.1 }}>

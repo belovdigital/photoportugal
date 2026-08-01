@@ -21,7 +21,8 @@
   "giftCardsPage": {
     "h1": "Gift a Photo Spain session",
     "subtitle": "Give someone a photoshoot in Spain. They pick the photographer, the date, the location — your gift covers it in full.",
-    "personalMessagePlaceholder": "Happy birthday! Have fun shooting in Madrid ✨"
+    "personalMessagePlaceholder": "Happy birthday! Have fun shooting in Madrid ✨",
+    "recipientPhonePlaceholder": "+34 612 345 678"
   },
   "home": {
     "heroTitleHighlight": "Spain",
@@ -107,8 +108,8 @@
         "location": "Toledo"
       },
       "david": {
-        "location": "Barcelona",
-        "text": "We booked a sunrise session at the La Rioja riverfront. The golden light, the reflections — absolutely magical. Our photographer captured our engagement perfectly."
+        "location": "Seville",
+        "text": "We booked a sunrise session on the Guadalquivir riverfront. The golden light, the reflections — absolutely magical. Our photographer captured our engagement perfectly."
       },
       "anna": {
         "location": "Marbella"
@@ -412,7 +413,7 @@
     "metaDescription": "Photo Spain terms of service — booking, payments, cancellations, refunds, and platform rules.",
     "sections": {
       "overview": {
-        "content": "Photo Spain (\"we,\" \"us,\" \"our\") operates a marketplace platform at photoportugal.com that connects tourists (\"clients\") with professional photographers (\"photographers\") in Spain. By using our platform, you agree to these terms."
+        "content": "Photo Spain (\"we,\" \"us,\" \"our\") operates a marketplace platform at photospain.co that connects tourists (\"clients\") with professional photographers (\"photographers\") in Spain. By using our platform, you agree to these terms."
       },
       "forPhotographers": {
         "items": {
@@ -466,7 +467,8 @@
     "taglinePlaceholder": "e.g., Capturing Madrid's soul through light and emotion"
   },
   "subscriptions": {
-    "phoneAutoPrefix": "Spanish numbers get +351 automatically. For other countries, include your code, e.g. +49."
+    "phoneAutoPrefix": "Spanish numbers get +34 automatically. For other countries, include your code, e.g. +49.",
+    "enterValidPhone": "Enter a valid phone number with country code (e.g. +34...)"
   },
   "supportPage": {
     "metaTitle": "Help Center — Photo Spain",
@@ -492,6 +494,9 @@
       "general": {
         "forcesMajeure": {
           "answer": "In case of force majeure events — natural disasters, severe weather warnings, pandemics, or other circumstances beyond anyone's control — both parties are entitled to a full refund or free reschedule with no penalties.\n\nPhoto Spain will work with both parties to find the best solution."
+        },
+        "contactSupport": {
+          "answer": "You can reach our support team through:\n\n• **Email:** info@photospain.co\n• **Dashboard:** Photographers can submit support tickets directly from their dashboard\n• **Contact page:** Visit our contact page to send us a message\n\nWe aim to respond to all inquiries within 24 hours during business days."
         }
       },
       "gifts": {
@@ -503,8 +508,9 @@
   },
   "delivery": {
     "titlePlaceholder": "Title — e.g. \"Your magical Madrid evening\"",
-    "brandFooter": "Photo Spain — photoportugal.com",
-    "titleHelp": "Shown as the headline above your gallery. Keep it short and personal — e.g. \"Your magical Madrid evening\"."
+    "brandFooter": "Photo Spain — photospain.co",
+    "titleHelp": "Shown as the headline above your gallery. Keep it short and personal — e.g. \"Your magical Madrid evening\".",
+    "galleryPasswordPlaceholder": "e.g. barcelona2026"
   },
   "messages": {
     "founderRole": "Founder of Photo Spain",
@@ -598,7 +604,8 @@
     },
     "whyTitle": "Why companies choose Photo Spain",
     "form": {
-      "locationPh": "Madrid, Costa del Sol…"
+      "locationPh": "Madrid, Costa del Sol…",
+      "submitFailed": "Could not send your request. Please try again or email info@photospain.co."
     },
     "band": {
       "kicker": "Photo Spain for Business",
@@ -616,6 +623,47 @@
   "tryYourself": {
     "metaTitle": "Try Yourself in Spain — AI Travel Selfie",
     "metaDescription": "Upload a selfie and see yourself at the Alhambra, Park Güell, Ronda and Mallorca. Then book a real photographer for the real thing.",
-    "stat_locations": "📍 Barcelona · Madrid · Seville · Granada · Mallorca · Tenerife"
+    "stat_locations": "📍 Barcelona · Madrid · Seville · Granada · Mallorca · Tenerife",
+    "title2": "in Spain",
+    "limitReachedBody": "You've used your free AI previews. Want the real thing? A handpicked Spain photographer is just a click away.",
+    "whileYouWait": "While you wait, meet some Spain photographers",
+    "stat_photographers": "✨ Hand-picked photographers across Spain",
+    "scenes": {
+      "alhambra-granada": {
+        "name": "The Alhambra, Granada",
+        "subtitle": "Moorish palace on the ridge, Sierra Nevada behind"
+      },
+      "park-guell-barcelona": {
+        "name": "Park Güell, Barcelona",
+        "subtitle": "Gaudí mosaics above the whole city"
+      },
+      "plaza-espana-seville": {
+        "name": "Plaza de España, Seville",
+        "subtitle": "Tiled bridges over the canal"
+      },
+      "ronda-bridge": {
+        "name": "Puente Nuevo, Ronda",
+        "subtitle": "A stone bridge over a 120-metre gorge"
+      },
+      "mallorca-cala": {
+        "name": "A Mallorca cove",
+        "subtitle": "Turquoise water between pine-backed cliffs"
+      },
+      "madrid-debod": {
+        "name": "Templo de Debod, Madrid",
+        "subtitle": "Egyptian temple reflected at sunset"
+      },
+      "teide-tenerife": {
+        "name": "Mount Teide, Tenerife",
+        "subtitle": "Volcanic desert above a sea of cloud"
+      },
+      "toledo-old-town": {
+        "name": "Toledo, walled city",
+        "subtitle": "Medieval stone above a river bend"
+      }
+    }
+  },
+  "support": {
+    "errorMessage": "Something went wrong. Please try again or email us at info@photospain.co."
   }
 }

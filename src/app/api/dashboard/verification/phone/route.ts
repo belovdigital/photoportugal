@@ -5,6 +5,7 @@ import { queryOne } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import twilio from "twilio";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { country } from "@/lib/country";
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -27,21 +28,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid phone number" }, { status: 400 });
   }
 
-  // Normalize to E.164. Strip spaces/dashes/parens/dots, then:
+  // Normalize to E.164. Strip spaces/dashes/parens/dots, then (for Portugal,
+  // where `dialCode` is "+351"):
   //   "+49179…"   -> kept (already international)
   //   "0049179…"  -> "+49179…"    (00 = international access code)
-  //   "351912…"   -> "+351912…"   (PT country code typed without the +)
-  //   "912345678" -> "+351912345678" (bare Portuguese local number)
+  //   "351912…"   -> "+351912…"   (home country code typed without the +)
+  //   "912345678" -> "+351912345678" (bare local number)
   // Previously we blindly prepended +351 to ANYTHING without a leading "+",
   // which turned a German "00491797489111" into "+35100491797489111" and
   // Twilio rejected it ("Invalid parameter `To`").
+  //
+  // The home code comes from the country pack rather than a literal: on the
+  // Spanish site a bare "612345678" was being turned into "+351612345678",
+  // sending every Spanish photographer's verification code to a Portuguese
+  // number, so verification could not be completed at all.
+  const homeCode = country.dialCode.replace("+", "");
   let formattedPhone = phone.trim().replace(/[\s\-().]/g, "");
   if (formattedPhone.startsWith("00")) {
     formattedPhone = "+" + formattedPhone.slice(2);
   } else if (!formattedPhone.startsWith("+")) {
-    formattedPhone = formattedPhone.startsWith("351")
+    formattedPhone = formattedPhone.startsWith(homeCode)
       ? "+" + formattedPhone
-      : "+351" + formattedPhone;
+      : country.dialCode + formattedPhone;
   }
 
   // Reject obviously-invalid E.164 (8-15 digits) up front, so we return a
@@ -49,7 +57,7 @@ export async function POST(req: NextRequest) {
   const digitCount = formattedPhone.replace(/\D/g, "").length;
   if (digitCount < 8 || digitCount > 15) {
     return NextResponse.json(
-      { error: "Invalid phone number. Include your country code, e.g. +49… or +351…" },
+      { error: `Invalid phone number. Include your country code, e.g. +49… or ${country.dialCode}…` },
       { status: 400 }
     );
   }
@@ -83,7 +91,7 @@ export async function POST(req: NextRequest) {
     console.error("[verification/phone] error:", error);
     const msg = error instanceof Error ? error.message : "Failed to send SMS";
     try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(error, { path: "/api/dashboard/verification/phone", method: req.method, statusCode: 500 }); } catch {}
-    return NextResponse.json({ error: msg.includes("Invalid") ? "Invalid phone number format. Use +351..." : "Failed to send code" }, { status: 500 });
+    return NextResponse.json({ error: msg.includes("Invalid") ? `Invalid phone number format. Use ${country.dialCode}...` : "Failed to send code" }, { status: 500 });
   }
 }
 

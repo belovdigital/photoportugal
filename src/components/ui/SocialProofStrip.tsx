@@ -68,7 +68,7 @@ export function SocialProofStrip({
                 >
                   <OptimizedImage
                     src={avatar.avatar_url}
-                    alt={`${avatar.name} photographer in Portugal`}
+                    alt={`${avatar.name} photographer in ${country.areaServed}`}
                     width={120}
                     className="h-full w-full object-cover transition group-hover:scale-105"
                   />

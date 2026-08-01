@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { country } from "@/lib/country";
 
 const EVENT_TYPES = ["corporate_event", "conference", "team_headshots", "brand_content", "real_estate", "other"] as const;
 
@@ -86,7 +87,7 @@ export function BusinessInquiryForm({ source = "business_page" }: { source?: str
         </div>
         <div>
           <label className={labelCls}>{t("phone")}</label>
-          <input maxLength={50} className={inputCls} value={fields.phone} onChange={set("phone")} placeholder="+351 …" />
+          <input maxLength={50} className={inputCls} value={fields.phone} onChange={set("phone")} placeholder={`${country.dialCode} …`} />
         </div>
         <div>
           <label className={labelCls}>{t("eventType")}</label>
