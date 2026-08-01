@@ -17,6 +17,7 @@ import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/u
 import { SpotHeroCarousel } from "@/components/ui/SpotHeroCarousel";
 import { SpotMap } from "@/components/ui/SpotMap";
 import { country } from "@/lib/country";
+import { locationCoverUrl } from "@/lib/location-cover";
 
 const L = {
   en: {
@@ -208,7 +209,7 @@ export async function generateMetadata({
   const title = `${t.photoshootAt} ${s.name}, ${location.name} — ${t.titleSuffix}`;
   const description = `${t.hireDesc} ${s.name}, ${location.name}, ${country.areaServed}. ${s.description.slice(0, 140)}`;
   const alt = localeAlternates(`/spots/${city}/${spot}`, locale);
-  const ogImage = spotData.images?.[0]?.url || location.cover_image || country.ogImage;
+  const ogImage = spotData.images?.[0]?.url || locationCoverUrl(location);
 
   return {
     title,
@@ -253,9 +254,9 @@ export default async function SpotPage({
   }));
   // No curated images? Fall back to a single placeholder slide using the
   // city cover so the hero never renders empty.
-  if (carouselImages.length === 0 && location.cover_image) {
+  if (carouselImages.length === 0) {
     carouselImages.push({
-      url: location.cover_image,
+      url: locationCoverUrl(location),
       alt: `${location.name}, ${country.areaServed}`,
       attribution: "",
       source: "photographer" as const,
@@ -370,7 +371,7 @@ export default async function SpotPage({
     address: {
       "@type": "PostalAddress",
       addressLocality: location.name,
-      addressCountry: "PT",
+      addressCountry: country.code.toUpperCase(),
       streetAddress: spotData.address,
     },
     geo: spotData.coordinates ? {

@@ -59,17 +59,17 @@ export async function GET() {
       if (p.cover_url) {
         images.push(`<image:image>
     <image:loc>${escape(resolveImageUrl(p.cover_url))}</image:loc>
-    <image:title>${escape(`${p.name} — ${p.tagline || "Professional photographer in Portugal"}`)}</image:title>
+    <image:title>${escape(`${p.name} — ${p.tagline || `Professional photographer in ${country.areaServed}`}`)}</image:title>
   </image:image>`);
       }
 
       for (const photo of photos) {
         const url = resolveImageUrl(photo.url);
         if (!url) continue;
-        const caption = photo.caption || `Photo by ${p.name} — vacation photography in Portugal`;
+        const caption = photo.caption || `Photo by ${p.name} — vacation photography in ${country.areaServed}`;
         images.push(`<image:image>
     <image:loc>${escape(url)}</image:loc>
-    <image:title>${escape(`${p.name} — Photo Portugal`)}</image:title>
+    <image:title>${escape(`${p.name} — ${country.brand}`)}</image:title>
     <image:caption>${escape(caption)}</image:caption>
   </image:image>`);
       }
@@ -93,8 +93,8 @@ export async function GET() {
   <loc>${BASE}/locations/${escape(loc.slug)}</loc>
   <image:image>
     <image:loc>${escape(imgUrl)}</image:loc>
-    <image:title>${escape(`Vacation photography in ${loc.name}, Portugal`)}</image:title>
-    <image:caption>${escape(`${loc.name} — ${loc.description || "professional photoshoot location in Portugal"}`)}</image:caption>
+    <image:title>${escape(`Vacation photography in ${loc.name}, ${country.areaServed}`)}</image:title>
+    <image:caption>${escape(`${loc.name} — ${loc.description || `professional photoshoot location in ${country.areaServed}`}`)}</image:caption>
   </image:image>
 </url>`);
   }

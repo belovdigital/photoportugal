@@ -32,6 +32,7 @@ import { locationImage } from "@/lib/unsplash-images";
 import { getComboIntro } from "@/lib/location-occasion-intros";
 import { country } from "@/lib/country";
 import { regionLabel } from "@/lib/region-labels";
+import { locationCoverUrl } from "@/lib/location-cover";
 
 // Combo /locations/[slug]/[occasion] is the SEO + paid-ad sitelink target
 // for queries like "Couples photographer Algarve" or "Family photoshoot
@@ -425,7 +426,7 @@ export async function generateMetadata({
       title,
       description,
       url: `${country.baseUrl}/locations/${slug}/${occasion}`,
-      images: [{ url: location.cover_image || country.ogImage, width: 1200, height: 630, alt: `${occT} in ${locName}, Portugal` }],
+      images: [{ url: locationCoverUrl(location), width: 1200, height: 630, alt: `${occT} in ${locName}, ${country.areaServed}` }],
     },
   };
 }

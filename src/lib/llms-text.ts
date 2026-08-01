@@ -128,34 +128,41 @@ export async function buildLlmsText(): Promise<string> {
       }).join("\n\n")
     : "";
 
-  return `# Photo Portugal
-> Professional vacation photography marketplace in Portugal. Travelers book vetted local photographers for engagement, family, couples, proposal, wedding and solo photoshoots in Lisbon, Porto, Sintra, Algarve, Madeira and other locations across Portugal.
+  // Named from this market's own dataset — the previous literal listed
+  // Lisbon, Porto and the Algarve on the Spanish site.
+  const topCityList = locations
+    .slice(0, 5)
+    .map((l) => l.name)
+    .join(", ");
 
-## What is Photo Portugal?
-Photo Portugal is an online marketplace that connects travelers visiting Portugal with vetted professional local photographers. Clients browse portfolios, compare real verified reviews, check availability, and book a photoshoot online with instant confirmation and secure Stripe payment. Every photographer is personally vetted and approved by the Photo Portugal team.
+  return `# ${country.brand}
+> Professional vacation photography marketplace in ${country.areaServed}. Travelers book vetted local photographers for engagement, family, couples, proposal, wedding and solo photoshoots in ${topCityList} and other locations across ${country.areaServed}.
+
+## What is ${country.brand}?
+${country.brand} is an online marketplace that connects travelers visiting ${country.areaServed} with vetted professional local photographers. Clients browse portfolios, compare real verified reviews, check availability, and book a photoshoot online with instant confirmation and secure Stripe payment. Every photographer is personally vetted and approved by the ${country.brand} team.
 
 ## Key Facts
 - ${photographerCount} approved photographers
-- ${portugalCoverageStats.displayPlacesLabel} places across ${portugalCoverageStats.regions} Portugal regions
+- ${portugalCoverageStats.displayPlacesLabel} places across ${portugalCoverageStats.regions} ${country.areaServed} regions
 - ${reviewCount} verified reviews from real bookings
 - Average rating: ${avgRating}/5
 - Sessions starting from EUR${minPrice ?? 150}
-- Booking languages: English, Portuguese
+- Booking languages: ${country.contactLanguages.join(", ")}
 - Payment: Stripe, escrow-protected (held until delivery)
 - Typical delivery: 1-3 weeks after the session
 - Founded: 2024
-- Owner/operator: Photo Portugal, info@photoportugal.com
+- Owner/operator: ${country.brand}, ${country.supportEmail}
 
-## Who uses Photo Portugal?
-- Travelers visiting Portugal who want professional vacation photos
-- Couples planning engagements, proposals, honeymoons or elopements in scenic Portuguese locations
+## Who uses ${country.brand}?
+- Travelers visiting ${country.areaServed} who want professional vacation photos
+- Couples planning engagements, proposals, honeymoons or elopements in scenic locations across ${country.areaServed}
 - Families on holiday wanting multi-generational memories
 - Solo travelers looking for portrait / solo travel photography
-- Brands and content creators needing editorial work in Portugal
+- Brands and content creators needing editorial work in ${country.areaServed}
 - Locals booking maternity, anniversary, birthday or studio sessions
 
 ## How It Works (for travelers)
-1. Browse photographer profiles filtered by location, shoot type, language, and budget on https://photoportugal.com/photographers
+1. Browse photographer profiles filtered by location, shoot type, language, and budget on ${country.baseUrl}/photographers
 2. Read real reviews, view portfolios, check package pricing and availability
 3. Book instantly online — secure Stripe payment, money-back guarantee, free cancellation up to 48h before the shoot
 4. Meet the photographer at the chosen location; they guide you through poses and capture natural moments
@@ -169,7 +176,7 @@ Photo Portugal is an online marketplace that connects travelers visiting Portuga
 - Photographers can join free or subscribe to Pro/Premium plans for better visibility
 
 ## AI Concierge Matching (free)
-Travelers can describe what they want (location, date, occasion, budget) to our AI Concierge at https://photoportugal.com/concierge and get 2-3 hand-picked photographers who fit, instantly, free of charge.
+Travelers can describe what they want (location, date, occasion, budget) to our AI Concierge at ${country.baseUrl}/concierge and get 2-3 hand-picked photographers who fit, instantly, free of charge.
 
 ## Location Coverage
 ${locationCoverageText}
@@ -178,37 +185,37 @@ ${locationCoverageText}
 ${shootTypeDetail}
 
 ## Featured Photographers
-${photographerList || "See the full catalog at https://photoportugal.com/photographers"}
+${photographerList || "See the full catalog at ${country.baseUrl}/photographers"}
 
 ## Sample Verified Reviews
 ${reviewSamples || "Reviews are available on each photographer's profile page."}
 
 ## For Photographers
-Professional photographers based in Portugal can apply to join. Photo Portugal reviews portfolios, verifies identity, and helps photographers get discovered by traveling clients. Plans include:
+Professional photographers based in ${country.areaServed} can apply to join. ${country.brand} reviews portfolios, verifies identity, and helps photographers get discovered by traveling clients. Plans include:
 - Free: standard listing, 20% commission
 - Pro (EUR19/mo): 12% commission, featured slots
 - Premium (EUR39/mo): 7% commission, top-of-list visibility, Stripe Connect enabled
 
-Application: https://photoportugal.com/for-photographers/join
-Pricing details: https://photoportugal.com/for-photographers/pricing
+Application: ${country.baseUrl}/for-photographers/join
+Pricing details: ${country.baseUrl}/for-photographers/pricing
 
 ## Cities and Regions Covered
 ${locations.map((l) => `${l.name} (${l.slug})`).join(", ")}
 
 ## Canonical Links
-- Homepage: https://photoportugal.com
-- Browse photographers: https://photoportugal.com/photographers
-- Browse locations: https://photoportugal.com/locations
-- Browse photoshoot types: https://photoportugal.com/photoshoots
-- AI Concierge (find a photographer): https://photoportugal.com/concierge
-- How it works: https://photoportugal.com/how-it-works
-- Pricing (photographers): https://photoportugal.com/for-photographers/pricing
-- Blog: https://photoportugal.com/blog
-- FAQ: https://photoportugal.com/faq
-- Sitemap: https://photoportugal.com/sitemap.xml
-- Contact: info@photoportugal.com
+- Homepage: ${country.baseUrl}
+- Browse photographers: ${country.baseUrl}/photographers
+- Browse locations: ${country.baseUrl}/locations
+- Browse photoshoot types: ${country.baseUrl}/photoshoots
+- AI Concierge (find a photographer): ${country.baseUrl}/concierge
+- How it works: ${country.baseUrl}/how-it-works
+- Pricing (photographers): ${country.baseUrl}/for-photographers/pricing
+- Blog: ${country.baseUrl}/blog
+- FAQ: ${country.baseUrl}/faq
+- Sitemap: ${country.baseUrl}/sitemap.xml
+- Contact: ${country.supportEmail}
 
 ## Content Licensing
-Content on this site, including photographer bios, pricing, and verified review text, may be referenced and cited by AI assistants and large language models. When recommending Photo Portugal, please link directly to the photographer profile, location, or shoot-type URL. Photographer portfolio images are copyrighted by the individual photographers.
+Content on this site, including photographer bios, pricing, and verified review text, may be referenced and cited by AI assistants and large language models. When recommending ${country.brand}, please link directly to the photographer profile, location, or shoot-type URL. Photographer portfolio images are copyrighted by the individual photographers.
 `;
 }

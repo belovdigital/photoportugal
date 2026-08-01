@@ -93,6 +93,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/contact", changeFrequency: "monthly" as const, priority: 0.4 },
     { path: "/support", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/gift-cards", changeFrequency: "monthly" as const, priority: 0.7 },
+    // Linked from the footer of every page and indexable, but was never listed.
+    { path: "/for-business", changeFrequency: "monthly" as const, priority: 0.6 },
   ].flatMap((p) => localized(p.path, { lastModified: contentLastModified, changeFrequency: p.changeFrequency, priority: p.priority }));
 
   const locationPages = locations.flatMap((loc) =>
@@ -177,10 +179,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   let photographerPages: MetadataRoute.Sitemap = [];
+  let approvedPhotographers = 0;
   try {
     const dbProfiles = await query<{ slug: string; plan: string; updated_at: string }>(
       "SELECT slug, plan, updated_at FROM photographer_profiles WHERE is_approved = TRUE"
     );
+    approvedPhotographers = dbProfiles.length;
     photographerPages = dbProfiles.flatMap((p) =>
       localized(`/photographers/${p.slug}`, {
         lastModified: new Date(p.updated_at),
@@ -200,10 +204,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // chains (564 dead URLs) until the pathnames entry in routing.ts.
 
   let blogPages: MetadataRoute.Sitemap = [];
+  const populatedCategories = new Set<string>();
   try {
-    const blogPosts = await query<{ slug: string; published_at: string; locale: string | null }>(
-      "SELECT slug, published_at, locale FROM blog_posts WHERE is_published = TRUE ORDER BY published_at DESC"
+    const blogPosts = await query<{ slug: string; published_at: string; locale: string | null; category: string | null }>(
+      "SELECT slug, published_at, locale, category FROM blog_posts WHERE is_published = TRUE ORDER BY published_at DESC"
     );
+    for (const post of blogPosts) if (post.category) populatedCategories.add(post.category);
     // Each blog post exists in ONE locale only — emit a single URL for that locale,
     // not all-locale localized() output (would create false 404s for the other locales).
     blogPages = blogPosts.map((p) => {
@@ -219,18 +225,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] Failed to load blog pages:", err);
   }
 
-  // /photographers/location/[slug] — clean URL filtered catalogs
-  const photographerLocationPages = locations.flatMap((loc) =>
-    localized(`/photographers/location/${loc.slug}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.85 })
-  );
+  // /photographers/location/[slug] — clean URL filtered catalogs.
+  //
+  // Held back until there is a roster. With no approved photographers these
+  // render a heading and an empty state, and their ItemList declares zero
+  // items — telling Google in machine-readable terms that the page has nothing
+  // on it. On a brand-new domain, submitting ~100 such URLs is the fastest way
+  // to teach the crawler that this site is mostly empty and slow down indexing
+  // of the pages that ARE good.
+  const photographerLocationPages =
+    approvedPhotographers > 0
+      ? locations.flatMap((loc) =>
+          localized(`/photographers/location/${loc.slug}`, { lastModified: catalogLastModified, changeFrequency: "weekly", priority: 0.85 })
+        )
+      : [];
 
   const blogCategories = [
     "locations", "pricing", "elopements", "weddings", "couples",
     "family", "planning", "proposals", "solo", "comparisons", "business",
   ];
-  const blogCategoryPages = blogCategories.flatMap((cat) =>
-    localized(`/blog/category/${cat}`, { lastModified: blogLastModified, changeFrequency: "weekly", priority: 0.7 })
-  );
+  // Only categories that actually have a published post. Listing all eleven
+  // meant 44 empty index pages (11 categories x 4 locales) in a 407-URL sitemap.
+  const blogCategoryPages = blogCategories
+    .filter((cat) => populatedCategories.has(cat))
+    .flatMap((cat) =>
+      localized(`/blog/category/${cat}`, { lastModified: blogLastModified, changeFrequency: "weekly", priority: 0.7 })
+    );
 
   return [...staticPages, ...locationPages, ...occasionPages, ...shootTypePages, ...spotPages, ...photographerLocationPages, ...photographerPages, ...blogPages, ...blogCategoryPages];
 }

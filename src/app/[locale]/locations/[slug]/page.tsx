@@ -42,6 +42,7 @@ import { country } from "@/lib/country";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 import { regionLabel } from "@/lib/region-labels";
+import { locationCoverUrl } from "@/lib/location-cover";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -74,7 +75,7 @@ export async function generateMetadata({
       description: seoDescription,
       type: "website",
       url: `${country.baseUrl}/locations/${slug}`,
-      images: [{ url: location.cover_image || country.ogImage, width: 1200, height: 630, alt: `${location.name}, ${country.areaServed}` }],
+      images: [{ url: locationCoverUrl(location), width: 1200, height: 630, alt: `${location.name}, ${country.areaServed}` }],
     },
   };
 }
@@ -561,7 +562,7 @@ export default async function LocationPage({
     address: {
       "@type": "PostalAddress",
       addressLocality: location.name,
-      addressCountry: "PT",
+      addressCountry: country.code.toUpperCase(),
     },
     geo: {
       "@type": "GeoCoordinates",
@@ -569,7 +570,7 @@ export default async function LocationPage({
       longitude: location.lng,
     },
     priceRange: "$$",
-    image: location.cover_image?.startsWith("http") ? location.cover_image : `${country.baseUrl}${location.cover_image}`,
+    image: locationCoverUrl(location),
     hasOfferCatalog: {
       "@type": "OfferCatalog",
       name: `Photography Services in ${location.name}`,
@@ -580,9 +581,12 @@ export default async function LocationPage({
         { "@type": "Offer", itemOffered: { "@type": "Service", name: `Solo Travel Photoshoot in ${location.name}` } },
       ],
     },
-    sameAs: [
-      "https://www.instagram.com/photoportugal_com",
-    ],
+    // sameAs comes from the country pack: hardcoding Photo Portugal's Instagram
+    // here published it on ~200 Spanish pages, telling Google that the Photo
+    // Spain entity and the Photo Portugal entity are the same thing. Spain has
+    // no social profiles yet, so the property is omitted entirely rather than
+    // emitted empty — an empty sameAs is worse than none.
+    ...(country.socialLinks.length > 0 ? { sameAs: country.socialLinks } : {}),
   };
 
   if (totalReviews > 0 && avgRating > 0) {

@@ -48,9 +48,12 @@ export default async function ContactPage({
         areaServed: country.code.toUpperCase(),
       },
     ],
-    sameAs: [
-      "https://www.instagram.com/photoportugal",
-    ],
+    // sameAs comes from the country pack: hardcoding Photo Portugal's Instagram
+    // here published it on ~200 Spanish pages, telling Google that the Photo
+    // Spain entity and the Photo Portugal entity are the same thing. Spain has
+    // no social profiles yet, so the property is omitted entirely rather than
+    // emitted empty — an empty sameAs is worse than none.
+    ...(country.socialLinks.length > 0 ? { sameAs: country.socialLinks } : {}),
   };
 
   return (
