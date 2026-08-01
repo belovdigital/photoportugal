@@ -118,3 +118,34 @@ export function localeAlternatesFiltered(
     languages,
   };
 }
+
+/**
+ * The OpenGraph half of a page's identity: its own canonical URL and its own
+ * locale.
+ *
+ * The root layout used to supply both as defaults, which meant any page that
+ * forgot its own `openGraph` block silently claimed to be the English homepage.
+ * Facebook and WhatsApp previews for /photoshoots, /for-business and
+ * /try-yourself all resolved to the homepage, and every Spanish, German and
+ * French page advertised og:locale="en_US" against its own <html lang>.
+ *
+ * Spread this into `openGraph` alongside title/description/images:
+ *
+ *   openGraph: { title, description, ...openGraphIdentity(path, locale) }
+ */
+const OG_LOCALES: Record<string, string> = {
+  en: "en_GB",
+  pt: "pt_PT",
+  es: "es_ES",
+  de: "de_DE",
+  fr: "fr_FR",
+};
+
+export function openGraphIdentity(path: string, locale: string) {
+  const safeLocale = LOCALES.includes(locale as Locale) ? (locale as Locale) : "en";
+  return {
+    url: localizedUrl(path, safeLocale),
+    locale: OG_LOCALES[safeLocale] ?? OG_LOCALES.en,
+    alternateLocale: LOCALES.filter((l) => l !== safeLocale).map((l) => OG_LOCALES[l]),
+  };
+}

@@ -6,7 +6,7 @@ import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
-import { localeAlternates, localeAlternatesFiltered } from "@/lib/seo";
+import { localeAlternates, localeAlternatesFiltered, openGraphIdentity } from "@/lib/seo";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { deriveBlogTopic } from "@/lib/blog-topic";
@@ -128,9 +128,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: pageDescription,
     alternates: localeAlternatesFiltered(`/blog/${post.slug}`, locale, availableLocales),
     openGraph: {
+      ...openGraphIdentity(`/blog/${post.slug}`, locale),
       title: pageTitle,
       description: pageDescription,
-      url: `${country.baseUrl}/blog/${post.slug}`,
       type: "article",
       // pg returns timestamp columns as Date objects despite the string
       // type annotation — without toISOString() the OG meta renders

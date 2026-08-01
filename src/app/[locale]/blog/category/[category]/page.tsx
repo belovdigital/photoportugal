@@ -5,7 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
 import { country } from "@/lib/country";
 
@@ -40,9 +40,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     alternates: localeAlternates(`/blog/category/${category}`, locale),
     openGraph: {
+      ...openGraphIdentity(`/blog/category/${category}`, locale),
       title,
       description,
-      url: `${country.baseUrl}/blog/category/${category}`,
       type: "website",
     },
   };

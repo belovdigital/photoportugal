@@ -5,7 +5,7 @@ import { Cormorant_Garamond } from "next/font/google";
 import { getShootTypeBySlug, shootTypeLocalized } from "@/lib/shoot-types-data";
 import { getReviewsForShootType } from "@/lib/reviews-data";
 import { locations } from "@/lib/locations-data";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { queryOne, query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
@@ -578,10 +578,10 @@ export async function generateMetadata({
     description: loc.metaDescription,
     alternates: localeAlternates("/weddings", locale),
     openGraph: {
+      ...openGraphIdentity("/weddings", locale),
       title: loc.title,
       description: loc.metaDescription,
       type: "website",
-      url: `${country.baseUrl}/weddings`,
     },
   };
 }

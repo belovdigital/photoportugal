@@ -4,7 +4,7 @@ import { StripeLogo } from "@/components/ui/StripeLogo";
 import { EarlyBirdCounter } from "./EarlyBirdCounter";
 import { EarningsCalculator } from "./EarningsCalculator";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { COMMISSION_RATES, PLAN_PRICES } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
 import { ConvertAccountCTA } from "./ConvertAccountCTA";
@@ -20,9 +20,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description: t("heroSubtitle"),
     alternates: localeAlternates("/for-photographers/join", locale),
     openGraph: {
+      ...openGraphIdentity("/for-photographers/join", locale),
       title: t("heroTitle") + ` — ${country.brand}`,
       description: t("heroSubtitle"),
-      url: `${country.baseUrl}/for-photographers/join`,
       images: [country.ogImage],
     },
   };

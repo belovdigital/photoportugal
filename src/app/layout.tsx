@@ -26,11 +26,21 @@ export const metadata: Metadata = {
   metadataBase: new URL(country.baseUrl),
   openGraph: {
     type: "website",
-    locale: "en_US",
     siteName: country.brand,
     title: country.seo.title,
     description: country.seo.ogDescription,
-    url: country.baseUrl,
+    // NOTE: no `url` and no `locale` here on purpose.
+    //
+    // A default `url` is not a fallback, it is a wrong answer that never
+    // errors: any page that forgets its own openGraph block inherited
+    // og:url = the homepage, so /photoshoots, /for-business and /try-yourself
+    // all told Facebook and WhatsApp they were the homepage. Omitting it means
+    // a page with no OG url simply has none, which is visible and fixable,
+    // instead of silently claiming to be a different page.
+    //
+    // A default `locale` of "en_US" was worse: it was emitted on Spanish,
+    // German and French pages, contradicting their own <html lang>. Each page's
+    // generateMetadata sets its own.
     images: [{ url: country.ogImage, width: 1200, height: 630, alt: country.brand }],
   },
   twitter: { card: "summary_large_image" },

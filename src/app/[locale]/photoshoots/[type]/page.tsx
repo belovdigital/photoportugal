@@ -8,7 +8,7 @@ import { getReviewsForShootType } from "@/lib/reviews-data";
 import { locations } from "@/lib/locations-data";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { ConciergeInvitePlaque } from "@/components/concierge/ConciergeInvitePlaque";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { queryOne, query } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { normalizeName } from "@/lib/format-name";
@@ -74,10 +74,10 @@ export async function generateMetadata({
     description: loc.metaDescription,
     alternates: localeAlternates(`/photoshoots/${type}`, locale),
     openGraph: {
+      ...openGraphIdentity(`/photoshoots/${type}`, locale),
       title: loc.title,
       description: loc.metaDescription,
       type: "website",
-      url: `${country.baseUrl}/photoshoots/${type}`,
     },
   };
 }

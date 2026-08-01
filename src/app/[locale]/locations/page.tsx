@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { locations, locField } from "@/lib/locations-data";
 import { LocationCard } from "@/components/ui/LocationCard";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
 import { locationImage, IMAGE_SIZES } from "@/lib/unsplash-images";
@@ -154,25 +154,27 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const title = t("mapMetaTitle");
   const description = t("mapMetaDescription");
   const alternates = localeAlternates("/locations", locale);
-  const image = locationImage("lisbon", "hero");
+  // Was locationImage("lisbon") — the share card for "Spain Photo Map" was a
+  // photo of tram 28 in Alfama, with an "Alfama" street sign legible in frame.
+  const image = `${country.baseUrl}${country.ogImage}`;
 
   return {
     title,
     description,
     alternates,
     openGraph: {
+      ...openGraphIdentity("/locations", locale),
       title,
       description,
-      url: alternates.canonical,
       siteName: `${country.brand}`,
       type: "website",
-      images: image ? [{ url: image, width: 1600, height: 900, alt: t("mapOgAlt") }] : undefined,
+      images: [{ url: image, width: 1200, height: 630, alt: t("mapOgAlt") }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: image ? [image] : undefined,
+      images: [image],
     },
   };
 }

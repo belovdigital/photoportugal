@@ -5,7 +5,7 @@ import { locations } from "@/lib/locations-data";
 import { SHOOT_TYPES, PhotographerProfile } from "@/types";
 import { PhotographerCatalog } from "../../PhotographerCatalog";
 import { query } from "@/lib/db";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { getTranslations } from "next-intl/server";
 import { locField } from "@/lib/locations-data";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
@@ -33,9 +33,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description,
     alternates: localeAlternates(`/photographers/location/${slug}`, locale),
     openGraph: {
+      ...openGraphIdentity(`/photographers/location/${slug}`, locale),
       title,
       description,
-      url: `${country.baseUrl}${localePrefix}/photographers/location/${slug}`,
       images: [{ url: location?.cover_image || country.ogImage, width: 1200, height: 630, alt: t("ogAlt", { location: localizedName }) }],
     },
   };

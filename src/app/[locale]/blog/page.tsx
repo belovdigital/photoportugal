@@ -6,7 +6,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
 import { maskSurname } from "@/lib/photographer-name";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { country } from "@/lib/country";
 
 const POSTS_PER_PAGE = 48;
@@ -23,9 +23,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description: t("subtitle"),
     alternates: localeAlternates("/blog", locale),
     openGraph: {
+      ...openGraphIdentity("/blog", locale),
       title: t("title"),
       description: t("subtitle"),
-      url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/blog`,
       type: "website",
       images: [{ url: country.ogImage, width: 1200, height: 630, alt: `${country.brand} Blog` }],
     },

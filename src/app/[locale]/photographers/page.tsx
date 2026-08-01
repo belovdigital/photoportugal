@@ -6,7 +6,7 @@ import { PhotographerCatalog } from "./PhotographerCatalog";
 import { getOneLinerQuotesForPhotographers } from "@/lib/reviews-data";
 import { query } from "@/lib/db";
 import { maskSurname } from "@/lib/photographer-name";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 import { getActiveGiftCard } from "@/lib/gift-card-session";

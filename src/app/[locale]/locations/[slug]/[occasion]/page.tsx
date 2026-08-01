@@ -14,7 +14,7 @@ import { photoSpots, sortSpotsByOccasion, spotSlug, spotLocalized } from "@/lib/
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { queryOne, query } from "@/lib/db";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
@@ -423,9 +423,9 @@ export async function generateMetadata({
     description,
     alternates: localeAlternates(`/locations/${slug}/${occasion}`, locale),
     openGraph: {
+      ...openGraphIdentity(`/locations/${slug}/${occasion}`, locale),
       title,
       description,
-      url: `${country.baseUrl}/locations/${slug}/${occasion}`,
       images: [{ url: locationCoverUrl(location), width: 1200, height: 630, alt: `${occT} in ${locName}, ${country.areaServed}` }],
     },
   };

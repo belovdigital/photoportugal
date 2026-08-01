@@ -24,7 +24,7 @@ const SHOOT_TYPE_IMAGES: Record<string, string> = {
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { queryOne, query } from "@/lib/db";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
@@ -71,10 +71,10 @@ export async function generateMetadata({
     description: seoDescription,
     alternates: localeAlternates(`/locations/${slug}`, locale),
     openGraph: {
+      ...openGraphIdentity(`/locations/${slug}`, locale),
       title: seoTitle,
       description: seoDescription,
       type: "website",
-      url: `${country.baseUrl}/locations/${slug}`,
       images: [{ url: locationCoverUrl(location), width: 1200, height: 630, alt: `${location.name}, ${country.areaServed}` }],
     },
   };

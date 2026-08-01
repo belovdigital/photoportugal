@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { GiftCardCheckoutForm } from "./GiftCardCheckoutForm";
 import { GIFT_CARD_TIERS } from "@/lib/gift-card";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { getSiteReviewStats } from "@/lib/reviews-data";
 import { country } from "@/lib/country";
 
@@ -24,9 +24,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description,
     alternates: localeAlternates("/gift-cards", locale),
     openGraph: {
+      ...openGraphIdentity("/gift-cards", locale),
       title,
       description,
-      url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/gift-cards`,
       images: [{ url: country.ogImage, width: 1200, height: 630, alt: `${country.brand}` }],
     },
   };
@@ -61,10 +61,10 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
       availability: "https://schema.org/InStock",
       // Google's Merchant-listings parser wants these on every offer it
       // sees as a "product". Gift cards are digital — instant delivery
-      // by email, no shipping, refundable within 14 days (PT consumer law).
+      // by email, no shipping, refundable within 14 days (EU consumer law).
       hasMerchantReturnPolicy: {
         "@type": "MerchantReturnPolicy",
-        applicableCountry: "PT",
+        applicableCountry: country.code.toUpperCase(),
         returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
         merchantReturnDays: 14,
         returnMethod: "https://schema.org/ReturnByMail",
@@ -73,7 +73,7 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "EUR" },
-        shippingDestination: { "@type": "DefinedRegion", addressCountry: "PT" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: country.code.toUpperCase() },
         deliveryTime: {
           "@type": "ShippingDeliveryTime",
           handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
@@ -90,7 +90,7 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
         url: pageUrl,
         hasMerchantReturnPolicy: {
           "@type": "MerchantReturnPolicy",
-          applicableCountry: "PT",
+          applicableCountry: country.code.toUpperCase(),
           returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
           merchantReturnDays: 14,
           returnMethod: "https://schema.org/ReturnByMail",
@@ -99,7 +99,7 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
         shippingDetails: {
           "@type": "OfferShippingDetails",
           shippingRate: { "@type": "MonetaryAmount", value: 0, currency: "EUR" },
-          shippingDestination: { "@type": "DefinedRegion", addressCountry: "PT" },
+          shippingDestination: { "@type": "DefinedRegion", addressCountry: country.code.toUpperCase() },
           deliveryTime: {
             "@type": "ShippingDeliveryTime",
             handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },

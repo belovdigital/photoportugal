@@ -32,20 +32,40 @@ const TOP_SHOOT_TYPES: { slug: string; key: string }[] = [
 // the foot of the footer. These are the paid-ad sitelink targets, so
 // having them on every page (= every footer render) gives Google strong
 // internal-link signals to the combo URLs.
-const FEATURED_COMBOS: { city: string; occ: string }[] = [
-  { city: "lisbon", occ: "couples" },
-  { city: "lisbon", occ: "proposal" },
-  { city: "lisbon", occ: "family" },
-  { city: "porto", occ: "couples" },
-  { city: "porto", occ: "engagement" },
-  { city: "sintra", occ: "proposal" },
-  { city: "sintra", occ: "engagement" },
-  { city: "algarve", occ: "couples" },
-  { city: "algarve", occ: "proposal" },
-  { city: "algarve", occ: "honeymoon" },
-  { city: "cascais", occ: "family" },
-  { city: "madeira", occ: "honeymoon" },
-];
+// City slugs are market-specific. The Portuguese list was rendering on the
+// Spanish site too, where `locations.find()` matched none of them, every pill
+// returned null, and the footer of every page carried a "Popular Searches"
+// heading above an empty box.
+const FEATURED_COMBOS: { city: string; occ: string }[] =
+  country.code === "es"
+    ? [
+        { city: "barcelona", occ: "couples" },
+        { city: "barcelona", occ: "proposal" },
+        { city: "barcelona", occ: "family" },
+        { city: "madrid", occ: "couples" },
+        { city: "madrid", occ: "engagement" },
+        { city: "seville", occ: "proposal" },
+        { city: "seville", occ: "couples" },
+        { city: "granada", occ: "proposal" },
+        { city: "granada", occ: "honeymoon" },
+        { city: "mallorca", occ: "honeymoon" },
+        { city: "mallorca", occ: "family" },
+        { city: "ronda", occ: "proposal" },
+      ]
+    : [
+        { city: "lisbon", occ: "couples" },
+        { city: "lisbon", occ: "proposal" },
+        { city: "lisbon", occ: "family" },
+        { city: "porto", occ: "couples" },
+        { city: "porto", occ: "engagement" },
+        { city: "sintra", occ: "proposal" },
+        { city: "sintra", occ: "engagement" },
+        { city: "algarve", occ: "couples" },
+        { city: "algarve", occ: "proposal" },
+        { city: "algarve", occ: "honeymoon" },
+        { city: "cascais", occ: "family" },
+        { city: "madeira", occ: "honeymoon" },
+      ];
 
 export function Footer() {
   const t = useTranslations("footer");

@@ -16,7 +16,7 @@ import { maskSurname } from "@/lib/photographer-name";
 import { LARGE_GROUP_SURCHARGE_RATE, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { inferPackageTags, locationDisplayName } from "@/lib/package-photo-matching";
 import { PackageHeroCarousel } from "./PackageHeroCarousel";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
@@ -198,6 +198,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description,
     alternates: localeAlternates(`/photographers/${slug}`, locale),
     openGraph: {
+      ...openGraphIdentity(`/photographers/${slug}`, locale),
       title,
       description,
       url: ogCanonical,

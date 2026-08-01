@@ -20,7 +20,7 @@ import { ProfileTabs } from "@/components/ui/ProfileTabs";
 import { PackageCard } from "@/components/ui/PackageCard";
 import { RequestCustomPackageCard } from "@/components/ui/RequestCustomPackageCard";
 import { BusinessQuoteCard } from "@/components/ui/BusinessQuoteCard";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { normalizeName } from "@/lib/format-name";
 import { ActiveBadge, ResponseTimeBadge } from "@/components/ui/ActiveBadge";
 import { StickyBookBar } from "@/components/ui/StickyBookBar";
@@ -317,6 +317,7 @@ export async function generateMetadata({
     description,
     alternates: localeAlternates(`/photographers/${slug}`, locale),
     openGraph: {
+      ...openGraphIdentity(`/photographers/${slug}`, locale),
       title,
       description,
       type: "profile",

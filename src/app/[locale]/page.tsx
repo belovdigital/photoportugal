@@ -22,7 +22,7 @@ import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { HeroSingleVariant } from "@/components/ui/HeroSingleVariant";
 import { BrandHero } from "@/components/ui/BrandHero";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 
 // Force-dynamic so the random Hero photographer reshuffles on every request
@@ -78,6 +78,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     description,
     alternates: localeAlternates("/", locale),
     openGraph: {
+      ...openGraphIdentity("/", locale),
       title: t("ogTitle"),
       description:
         photographerCount > 0 ? t("ogDescription", params2) : t("ogDescriptionNoRoster", params2),
