@@ -645,4 +645,131 @@ export const photoSpotsES: Record<string, PhotoSpot[]> = {
       address: "Vila Vella, Tossa de Mar, Girona",
     },
   ],
+
+  tenerife: [
+    {
+      name: "Teide National Park",
+      description:
+        "A volcanic desert at 2,000 metres, above the cloud layer — the closest thing in Europe to photographing on another planet.",
+      nameEs: "El Parque Nacional del Teide",
+      descriptionEs:
+        "Un desierto volcánico a 2.000 metros, por encima del mar de nubes: lo más parecido en Europa a fotografiar en otro planeta.",
+      long_description:
+        "The caldera around Spain's highest mountain is a plain of ochre, rust and black rock studded with lava formations, and for most of the year you reach it by driving up through the cloud layer and coming out above it. That drive is the point: the sea of cloud below you is what makes these photographs unlike anything else in the catalogue.\n\nThe Roques de García, a group of eroded rock towers with Teide behind them, are the classic frame and the easiest to reach. Further along, the Minas de San José is a field of pale pumice that reads almost as sand dunes.\n\nThe altitude changes the light. It is harder and clearer than at sea level, shadows are very deep, and the temperature drops sharply once the sun goes — bring a layer even in August.",
+      long_description_es:
+        "La caldera que rodea la montaña más alta de España es una llanura de ocre, óxido y roca negra salpicada de formaciones de lava, y buena parte del año se llega subiendo a través del mar de nubes y saliendo por encima. Ese trayecto es lo importante: el manto de nubes debajo es lo que hace que estas fotos no se parezcan a ninguna otra del catálogo.\n\nLos Roques de García, un grupo de torres de roca erosionada con el Teide detrás, son el encuadre clásico y el más fácil de alcanzar. Más adelante, las Minas de San José son un campo de pumita clara que se lee casi como dunas.\n\nLa altitud cambia la luz: es más dura y más limpia que a nivel del mar, las sombras son muy profundas y la temperatura cae en cuanto se va el sol. Lleve una capa incluso en agosto.",
+      best_time: "Sunrise or the last hour — midday at altitude is unusably hard",
+      best_timeEs: "Al amanecer o la última hora: el mediodía en altura es imposible de suave",
+      tips: "An hour and a half of mountain road from the coastal resorts. Cold and windy year-round at 2,000 m. Access to the peak cable car and certain trails needs booking; the caldera floor and the Roques do not.",
+      tipsEs:
+        "Hora y media de carretera de montaña desde la costa. Frío y viento todo el año a 2.000 m. El teleférico y ciertos senderos requieren reserva; el fondo de la caldera y los Roques no.",
+      tags: ["couples", "elopement", "solo", "content-creator"],
+      coordinates: { lat: 28.2725, lng: -16.6425 },
+      address: "Roques de García, Parque Nacional del Teide, Tenerife",
+    },
+    {
+      name: "Anaga laurel forest",
+      description:
+        "A prehistoric cloud forest of moss, laurel and fog in the north-east — the opposite of everything else on the island.",
+      nameEs: "El bosque de laurisilva de Anaga",
+      descriptionEs:
+        "Un bosque de niebla prehistórico de musgo, laurel y bruma en el noreste: lo contrario de todo lo demás de la isla.",
+      long_description:
+        "The Anaga massif holds one of the last laurisilva forests, a woodland type that covered the Mediterranean before the Ice Age and now survives on a handful of Atlantic islands. Twisted trunks, moss on everything, and fog that comes and goes within minutes.\n\nIt photographs completely unlike the rest of Tenerife: cool, green, soft-lit and enclosed, where the south of the island is hot, bright and open. A session that visits both has more range than most whole cities can offer.\n\nThe fog is the variable. It is what makes the place, and it cannot be scheduled — some days the forest is clear and ordinary, some days it is extraordinary. Treat it as a bonus location rather than the centrepiece.",
+      long_description_es:
+        "El macizo de Anaga conserva uno de los últimos bosques de laurisilva, un tipo de bosque que cubría el Mediterráneo antes de la glaciación y que hoy sobrevive en unas pocas islas atlánticas. Troncos retorcidos, musgo en todo y una niebla que aparece y desaparece en minutos.\n\nSe fotografía de forma completamente distinta al resto de Tenerife: fresco, verde, de luz suave y cerrado, donde el sur de la isla es caluroso, brillante y abierto. Una sesión que visite ambos tiene más registro que ciudades enteras.\n\nLa niebla es la variable. Es lo que hace el sitio y no se puede programar: hay días en que el bosque está despejado y corriente, y días en que es extraordinario. Trátelo como un extra, no como el eje de la sesión.",
+      best_time: "Mid-morning, when fog is most likely and the light is already up",
+      best_timeEs: "A media mañana, cuando es más probable la niebla y ya hay luz",
+      tips: "Winding mountain roads and frequently damp underfoot — proper shoes. It is genuinely cooler here than on the coast; bring a layer.",
+      tipsEs:
+        "Carreteras de montaña con muchas curvas y suelo a menudo húmedo: calzado adecuado. Aquí hace de verdad más fresco que en la costa; lleve una capa.",
+      tags: ["couples", "solo", "content-creator", "elopement"],
+      coordinates: { lat: 28.5333, lng: -16.2333 },
+      address: "Parque Rural de Anaga, Tenerife",
+    },
+  ],
+  "gran-canaria": [
+    {
+      name: "Maspalomas dunes",
+      description:
+        "Four square kilometres of shifting sand running straight into the Atlantic, protected and completely unbuilt.",
+      nameEs: "Las dunas de Maspalomas",
+      descriptionEs:
+        "Cuatro kilómetros cuadrados de arena en movimiento que llegan hasta el Atlántico, protegidos y sin construir.",
+      long_description:
+        "A genuine dune field on the southern tip of the island — not a beach with sand hills behind it, but a protected reserve of moving dunes that runs down to the sea. Walk five minutes in and the resorts disappear behind a ridge; what is left is sand, sky and the line where they meet.\n\nIt is the simplest location in this catalogue and one of the strongest. There is nothing in the frame except your subjects and the shape of the land, which means the photographs depend entirely on light and on where you place people. Low sun rakes across the ridges and turns every crest into a line.\n\nMidday flattens it completely — the dunes lose their shape when the light comes from overhead, and the sand throws heat and glare. This is a sunrise and last-hour location and nothing else.",
+      long_description_es:
+        "Un campo de dunas de verdad en el extremo sur de la isla: no una playa con montículos detrás, sino una reserva protegida de dunas móviles que baja hasta el mar. Cinco minutos caminando hacia dentro y los complejos hoteleros desaparecen tras una cresta; queda arena, cielo y la línea donde se juntan.\n\nEs el escenario más simple de este catálogo y uno de los más potentes. En el encuadre no hay nada salvo los protagonistas y la forma del terreno, así que la foto depende por completo de la luz y de dónde se coloque a la gente. El sol bajo peina las crestas y convierte cada una en una línea.\n\nEl mediodía lo aplana del todo: las dunas pierden la forma con luz cenital, y la arena devuelve calor y deslumbra. Es sitio de amanecer y de última hora, y de nada más.",
+      best_time: "The first or last hour of light — nothing else works here",
+      best_timeEs: "La primera o la última hora de luz: aquí no funciona nada más",
+      tips: "A protected reserve — stay on marked routes and do not climb the fenced dunes. Sand gets everywhere; a long dress will collect it. No shade at all.",
+      tipsEs:
+        "Es reserva protegida: manténgase en los recorridos señalizados y no suba a las dunas valladas. La arena se mete en todo y un vestido largo la recoge. Sin nada de sombra.",
+      tags: ["couples", "honeymoon", "elopement", "solo"],
+      coordinates: { lat: 27.7383, lng: -15.5844 },
+      address: "Dunas de Maspalomas, San Bartolomé de Tirajana, Gran Canaria",
+    },
+    {
+      name: "Roque Nublo",
+      description:
+        "An eighty-metre volcanic monolith on the island's central ridge, often standing above the clouds.",
+      nameEs: "El Roque Nublo",
+      descriptionEs:
+        "Un monolito volcánico de ochenta metros en la cresta central de la isla, a menudo por encima de las nubes.",
+      long_description:
+        "A free-standing basalt tower left behind when the softer rock around it eroded away, sitting near the highest point of Gran Canaria at around 1,800 metres. On a clear day Teide is visible across the water on Tenerife; on a cloudy one the ridge sits above the cloud layer and the rock rises out of white.\n\nThe walk in is about half an hour on a well-made path, mostly gentle with a steeper final stretch. That filters the crowd — far fewer people make it here than to the dunes — and it means a session has the place largely to itself.\n\nAs with Teide, altitude hardens the light and drops the temperature. Sunset is the classic time and also the coldest and windiest.",
+      long_description_es:
+        "Una torre de basalto que quedó en pie cuando se erosionó la roca más blanda de alrededor, cerca del punto más alto de Gran Canaria, sobre los 1.800 metros. En día despejado se ve el Teide al otro lado del mar, en Tenerife; en día nublado la cresta queda sobre el manto de nubes y la roca emerge del blanco.\n\nLa aproximación es de media hora por un sendero bien hecho, suave casi todo y con un tramo final más empinado. Eso filtra a la gente —llega mucha menos que a las dunas— y una sesión se queda prácticamente sola.\n\nComo en el Teide, la altitud endurece la luz y baja la temperatura. El atardecer es la hora clásica y también la más fría y ventosa.",
+      best_time: "The hour before sunset, allowing thirty minutes to walk in",
+      best_timeEs: "La hora antes del atardecer, contando treinta minutos de aproximación",
+      tips: "Half an hour each way on foot from the car park, with a steeper final section — trainers, not sandals. Cold and exposed at 1,800 m; walking back after sunset needs a torch.",
+      tipsEs:
+        "Media hora a pie en cada sentido desde el aparcamiento, con un tramo final más duro: zapatilla, no sandalia. Frío y expuesto a 1.800 m; volver después del atardecer requiere linterna.",
+      tags: ["couples", "elopement", "solo"],
+      coordinates: { lat: 27.9686, lng: -15.6156 },
+      address: "Roque Nublo, Tejeda, Gran Canaria",
+    },
+  ],
+  lanzarote: [
+    {
+      name: "Timanfaya lava fields",
+      description:
+        "Black and rust-red lava from the eighteenth-century eruptions, with almost nothing growing on it three centuries later.",
+      nameEs: "Los campos de lava de Timanfaya",
+      descriptionEs:
+        "Lava negra y roja de las erupciones del siglo XVIII, en la que tres siglos después casi no crece nada.",
+      long_description:
+        "Between 1730 and 1736 a quarter of Lanzarote was buried in lava, and the result is a landscape that still looks freshly made: cones, ropes of frozen rock, and colour that runs from black through rust to ochre with almost no vegetation to interrupt it.\n\nFor a photographer the appeal is total simplicity. There is nothing in these frames but ground, sky and people, and the ground is a colour no other Spanish location offers. Light coloured clothing reads strongly against it; dark clothing disappears.\n\nThe national park itself is coach-tour territory with restricted access, but the lava fields extend far beyond the park boundary and much of that is freely accessible from the roadside — which is where sessions actually happen.",
+      long_description_es:
+        "Entre 1730 y 1736 una cuarta parte de Lanzarote quedó enterrada bajo la lava, y el resultado es un paisaje que aún parece recién hecho: conos, cuerdas de roca congelada y un color que va del negro al óxido y al ocre casi sin vegetación que lo interrumpa.\n\nPara un fotógrafo el atractivo es la simplicidad total. En estos encuadres no hay más que suelo, cielo y personas, y el suelo tiene un color que no ofrece ningún otro sitio de España. La ropa clara destaca con fuerza; la oscura desaparece.\n\nEl parque nacional en sí es territorio de autocar con acceso restringido, pero los campos de lava se extienden mucho más allá de sus límites y buena parte es de acceso libre desde la carretera: ahí es donde ocurren las sesiones.",
+      best_time: "Late afternoon, when low light brings out the rust tones",
+      best_timeEs: "Al final de la tarde, cuando la luz baja saca los tonos óxido",
+      tips: "Inside the national park you must stay with the official route; outside it, roadside access is open. Lava is sharp — proper shoes, and do not sit directly on it in fine fabric.",
+      tipsEs:
+        "Dentro del parque nacional hay que ceñirse al recorrido oficial; fuera, el acceso desde la carretera es libre. La lava corta: calzado adecuado, y no se siente directamente sobre ella con tejidos finos.",
+      tags: ["couples", "elopement", "content-creator", "solo"],
+      coordinates: { lat: 29.0136, lng: -13.7583 },
+      address: "Timanfaya, Tinajo, Lanzarote",
+    },
+    {
+      name: "La Geria vineyards",
+      description:
+        "Vines grown one to a pit in black volcanic gravel, each behind its own low crescent wall — farming that looks like land art.",
+      nameEs: "Los viñedos de La Geria",
+      descriptionEs:
+        "Viñas plantadas de una en una en hoyos de picón negro, cada una tras su muro bajo en media luna: agricultura que parece land art.",
+      long_description:
+        "The strangest agricultural landscape in Spain and one of the strangest anywhere. Because Lanzarote has almost no rain, vines are planted singly in conical pits dug into black volcanic gravel, each sheltered from the trade winds by a low crescent wall of stacked stone. Thousands of them, across a whole valley.\n\nWhat that gives a photographer is repetition and rhythm: identical shapes marching away across black ground, with a single green vine in each. It reads as pattern from a distance and as something almost sculptural up close.\n\nThe black gravel is the technical thing to know. It absorbs light rather than reflecting it, so faces need to be turned toward the sun or lifted — otherwise the ground takes the fill light away and leaves people underexposed against a bright sky.",
+      long_description_es:
+        "El paisaje agrícola más extraño de España y uno de los más extraños de cualquier sitio. Como en Lanzarote casi no llueve, las viñas se plantan de una en una en hoyos cónicos excavados en el picón negro, cada uno protegido del alisio por un muro bajo en media luna de piedra apilada. Miles de ellos, por todo un valle.\n\nLo que eso da a un fotógrafo es repetición y ritmo: formas idénticas alejándose sobre suelo negro, con una sola viña verde en cada una. De lejos se lee como patrón y de cerca como algo casi escultórico.\n\nEl picón negro es el detalle técnico a tener en cuenta: absorbe la luz en vez de reflejarla, así que hay que girar o levantar las caras hacia el sol; si no, el suelo se lleva el relleno y las personas quedan subexpuestas contra un cielo brillante.",
+      best_time: "Late afternoon; the black gravel needs low, direct light",
+      best_timeEs: "Al final de la tarde; el picón negro necesita luz baja y directa",
+      tips: "Working vineyards — stay on the tracks and out of the pits. Several bodegas along the road allow visits and make a good indoor alternative if the wind is up.",
+      tipsEs:
+        "Son viñedos en producción: manténgase en los caminos y fuera de los hoyos. Varias bodegas de la carretera admiten visitas y son una buena alternativa a cubierto si sopla viento.",
+      tags: ["couples", "elopement", "honeymoon", "content-creator"],
+      coordinates: { lat: 29.0000, lng: -13.6833 },
+      address: "La Geria, Lanzarote",
+    },
+  ],
 };
