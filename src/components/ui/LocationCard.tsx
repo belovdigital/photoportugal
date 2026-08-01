@@ -4,6 +4,7 @@ import { locationImage } from "@/lib/unsplash-images";
 import { locField } from "@/lib/locations-data";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useTranslations } from "next-intl";
+import { regionLabel } from "@/lib/region-labels";
 
 export function LocationCard({ location, locale }: { location: Location; locale?: string }) {
   const tc = useTranslations("common");
@@ -32,7 +33,7 @@ export function LocationCard({ location, locale }: { location: Location; locale?
       <div className="absolute bottom-0 left-0 right-0 p-6">
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-            {location.region}
+            {regionLabel(location.region, locale)}
           </span>
         </div>
         <h3 className="mt-2 font-display text-2xl font-bold text-white">

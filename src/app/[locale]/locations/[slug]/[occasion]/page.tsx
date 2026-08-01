@@ -31,6 +31,7 @@ import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 import { locationImage } from "@/lib/unsplash-images";
 import { getComboIntro } from "@/lib/location-occasion-intros";
 import { country } from "@/lib/country";
+import { regionLabel } from "@/lib/region-labels";
 
 // Combo /locations/[slug]/[occasion] is the SEO + paid-ad sitelink target
 // for queries like "Couples photographer Algarve" or "Family photoshoot
@@ -686,7 +687,7 @@ export default async function OccasionPage({
   const heroLocationContext: HeroLocationContext = {
     slug,
     name: localizedName,
-    region: location.region,
+    region: regionLabel(location.region, locale),
     photographerCount,
     minPrice: isWedding ? null : minPrice,
     durationText: isWedding ? null : durationText,
@@ -972,7 +973,7 @@ export default async function OccasionPage({
           </div>
           <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
             <div className="max-w-3xl">
-              <p className="text-sm font-semibold text-primary-300">{location.region}</p>
+              <p className="text-sm font-semibold text-primary-300">{regionLabel(location.region, locale)}</p>
               <h1 className="mt-2 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
                 <span className="text-primary-300">{occT}</span> {tL.inLocation} {localizedName}
               </h1>

@@ -16,6 +16,7 @@ import { LocationExplorer, type LocationExplorerPhotographer } from "@/component
 import { LOCATION_EXPLORER_REGIONS } from "@/lib/location-explorer-data";
 import { getCompatibleCoverageNodeSlugs } from "@/lib/location-hierarchy";
 import { country } from "@/lib/country";
+import { regionLabel } from "@/lib/region-labels";
 
 /** Market name in Spanish, for the hardcoded copy dictionary below. */
 const ES_NAME = country.code === "es" ? "España" : "Portugal";
@@ -373,7 +374,7 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
                   {/* Bottom overlay text */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <p className="text-xs font-semibold uppercase tracking-wider text-primary-300">
-                      {loc.region}
+                      {regionLabel(loc.region, locale)}
                     </p>
                     <h3 className="mt-1 font-display text-2xl font-bold text-white">
                       {localizedName}

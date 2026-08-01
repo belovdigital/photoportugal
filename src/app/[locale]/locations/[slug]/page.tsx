@@ -41,6 +41,7 @@ import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { country } from "@/lib/country";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
+import { regionLabel } from "@/lib/region-labels";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -334,7 +335,7 @@ export default async function LocationPage({
   const heroLocationContext: HeroLocationContext = {
     slug,
     name: localizedName,
-    region: location.region,
+    region: regionLabel(location.region, locale),
     photographerCount,
     minPrice,
     durationText,
@@ -688,7 +689,7 @@ export default async function LocationPage({
           </div>
           <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
             <div className="max-w-3xl">
-              <p className="text-sm font-semibold text-primary-300">{location.region}</p>
+              <p className="text-sm font-semibold text-primary-300">{regionLabel(location.region, locale)}</p>
               <h1 className="mt-2 font-display text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
                 {tc("photographersIn", { location: localizedName })}
               </h1>
