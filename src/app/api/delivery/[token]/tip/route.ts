@@ -4,6 +4,7 @@ import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -111,7 +112,7 @@ export async function POST(
   );
   if (!tip) return NextResponse.json({ error: "Failed to create tip" }, { status: 500 });
 
-  const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+  const BASE_URL = process.env.AUTH_URL || country.baseUrl;
   const firstName = booking.photographer_name.split(" ")[0];
   const loc = booking.locale && ["pt", "de", "es", "fr"].includes(booking.locale) ? booking.locale : null;
 

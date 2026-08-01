@@ -4,11 +4,15 @@ import { shootTypes } from "@/lib/shoot-types-data";
 import { photoSpots, spotSlug } from "@/lib/photo-spots-data";
 import { query } from "@/lib/db";
 import { localizedUrl } from "@/lib/seo";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
-const LOCALES = ["en", "pt", "de", "es", "fr"] as const;
+// Locales this market actually serves. Hardcoding all five made the Spanish
+// sitemap advertise /pt/ URLs that 404 — submitting known-dead links to Google
+// is worse than omitting them.
+const LOCALES = country.locales as readonly ["en", "pt", "de", "es", "fr"][number][];
 const HREFLANGS: Record<(typeof LOCALES)[number], string[]> = {
   en: ["en-GB", "en-US"],
   pt: ["pt-PT"],

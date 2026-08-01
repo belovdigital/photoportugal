@@ -10,6 +10,7 @@ import { getTranslations } from "next-intl/server";
 import { locField } from "@/lib/locations-data";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 import { flattenLocationNodes, getLocationDisplayName, getLocationNode } from "@/lib/location-hierarchy";
+import { country } from "@/lib/country";
 
 export async function generateStaticParams() {
   const nodeSlugs = flattenLocationNodes().map((node) => node.slug);
@@ -34,8 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title,
       description,
-      url: `https://photoportugal.com${localePrefix}/photographers/location/${slug}`,
-      images: [{ url: location?.cover_image || "/og-image.png", width: 1200, height: 630, alt: t("ogAlt", { location: localizedName }) }],
+      url: `${country.baseUrl}${localePrefix}/photographers/location/${slug}`,
+      images: [{ url: location?.cover_image || country.ogImage, width: 1200, height: 630, alt: t("ogAlt", { location: localizedName }) }],
     },
   };
 }
@@ -120,7 +121,7 @@ export default async function LocationPhotographersPage({
 
   const dbPhotographers = await getDbPhotographers(locale);
 
-  const base = "https://photoportugal.com";
+  const base = country.baseUrl;
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",

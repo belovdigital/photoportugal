@@ -20,6 +20,7 @@ import { queueNotification, processNotificationQueue } from "@/lib/notification-
 import { requireStripe, calculatePayment, SERVICE_FEE_RATE, payoutBreakdownTelegram } from "@/lib/stripe";
 import { rm } from "fs/promises";
 import path from "path";
+import { country } from "@/lib/country";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 
@@ -108,11 +109,11 @@ async function runReminders(): Promise<NextResponse> {
             const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price * (1 + SERVICE_FEE_RATE))})` : "";
             const maskedPhotog = maskSurname(booking.photographer_name);
             const smsBody = pickT({
-              en: `Photo Portugal: Your slot with ${maskedPhotog}${priceStr} isn't locked yet — secure it now. Auto-cancel in ~18h if unpaid: https://photoportugal.com/dashboard/bookings`,
-              pt: `Photo Portugal: O seu horário com ${maskedPhotog}${priceStr} ainda não está bloqueado — garanta-o agora. Cancelamento automático em ~18h: https://photoportugal.com/dashboard/bookings`,
-              de: `Photo Portugal: Ihr Termin mit ${maskedPhotog}${priceStr} ist noch nicht gesperrt — jetzt sichern. Auto-Storno in ~18h: https://photoportugal.com/dashboard/bookings`,
-              es: `Photo Portugal: Su sesión con ${maskedPhotog}${priceStr} aún no está bloqueada — asegúrela ahora. Cancelación automática en ~18h: https://photoportugal.com/dashboard/bookings`,
-              fr: `Photo Portugal : Votre créneau avec ${maskedPhotog}${priceStr} n'est pas encore verrouillé — réservez-le maintenant. Annulation automatique dans ~18h : https://photoportugal.com/dashboard/bookings`,
+              en: `${country.brand}: Your slot with ${maskedPhotog}${priceStr} isn't locked yet — secure it now. Auto-cancel in ~18h if unpaid: ${country.baseUrl}/dashboard/bookings`,
+              pt: `${country.brand}: O seu horário com ${maskedPhotog}${priceStr} ainda não está bloqueado — garanta-o agora. Cancelamento automático em ~18h: ${country.baseUrl}/dashboard/bookings`,
+              de: `${country.brand}: Ihr Termin mit ${maskedPhotog}${priceStr} ist noch nicht gesperrt — jetzt sichern. Auto-Storno in ~18h: ${country.baseUrl}/dashboard/bookings`,
+              es: `${country.brand}: Su sesión con ${maskedPhotog}${priceStr} aún no está bloqueada — asegúrela ahora. Cancelación automática en ~18h: ${country.baseUrl}/dashboard/bookings`,
+              fr: `${country.brand} : Votre créneau avec ${maskedPhotog}${priceStr} n'est pas encore verrouillé — réservez-le maintenant. Annulation automatique dans ~18h : ${country.baseUrl}/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -170,7 +171,7 @@ async function runReminders(): Promise<NextResponse> {
 
     for (const booking of finalReminderBookings) {
       try {
-        const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+        const BASE_URL = process.env.AUTH_URL || country.baseUrl;
         const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
         const cLocale = await getUserLocaleByEmail(booking.client_email);
         const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price * (1 + SERVICE_FEE_RATE))})` : "";
@@ -193,7 +194,7 @@ async function runReminders(): Promise<NextResponse> {
             <p style="background: #FEF3C7; border-left: 4px solid #D97706; padding: 12px 14px; margin: 12px 0; color: #92400E; font-weight: 600; font-size: 14px;">⏳ ${T.fomo}</p>
             <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">${T.cta}</a></p>
             <p style="color: #999; font-size: 12px;">${T.footer}</p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
         // SMS final reminder
@@ -205,11 +206,11 @@ async function runReminders(): Promise<NextResponse> {
           if (smsPrefs?.sms_bookings !== false) {
             const maskedPhotog1b = maskSurname(booking.photographer_name);
             const smsBody = pickT({
-              en: `Photo Portugal: Last chance! Booking with ${maskedPhotog1b} auto-cancels in 6h if unpaid — slot isn't locked yet. Pay now: https://photoportugal.com/dashboard/bookings`,
-              pt: `Photo Portugal: Última oportunidade! Reserva com ${maskedPhotog1b} cancela-se em 6h se não for paga — o horário ainda não está bloqueado. Pague: https://photoportugal.com/dashboard/bookings`,
-              de: `Photo Portugal: Letzte Chance! Buchung mit ${maskedPhotog1b} storniert in 6h, wenn unbezahlt — Termin noch nicht gesperrt. Zahlen: https://photoportugal.com/dashboard/bookings`,
-              es: `Photo Portugal: ¡Última oportunidad! Reserva con ${maskedPhotog1b} se cancela en 6h si no se paga — plaza no bloqueada aún. Pague: https://photoportugal.com/dashboard/bookings`,
-              fr: `Photo Portugal : Dernière chance ! Réservation avec ${maskedPhotog1b} annulée dans 6h si non payée — créneau pas encore verrouillé. Payez : https://photoportugal.com/dashboard/bookings`,
+              en: `${country.brand}: Last chance! Booking with ${maskedPhotog1b} auto-cancels in 6h if unpaid — slot isn't locked yet. Pay now: ${country.baseUrl}/dashboard/bookings`,
+              pt: `${country.brand}: Última oportunidade! Reserva com ${maskedPhotog1b} cancela-se em 6h se não for paga — o horário ainda não está bloqueado. Pague: ${country.baseUrl}/dashboard/bookings`,
+              de: `${country.brand}: Letzte Chance! Buchung mit ${maskedPhotog1b} storniert in 6h, wenn unbezahlt — Termin noch nicht gesperrt. Zahlen: ${country.baseUrl}/dashboard/bookings`,
+              es: `${country.brand}: ¡Última oportunidad! Reserva con ${maskedPhotog1b} se cancela en 6h si no se paga — plaza no bloqueada aún. Pague: ${country.baseUrl}/dashboard/bookings`,
+              fr: `${country.brand} : Dernière chance ! Réservation avec ${maskedPhotog1b} annulée dans 6h si non payée — créneau pas encore verrouillé. Payez : ${country.baseUrl}/dashboard/bookings`,
             }, cLocale);
             sendSMS(
               booking.client_phone,
@@ -258,7 +259,7 @@ async function runReminders(): Promise<NextResponse> {
 
     for (const booking of criticalBookings) {
       try {
-        const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+        const BASE_URL = process.env.AUTH_URL || country.baseUrl;
         const { getUserLocaleByEmail, pickT } = await import("@/lib/email-locale");
         const cLocale = await getUserLocaleByEmail(booking.client_email);
         const priceStr = booking.total_price ? ` (€${Math.round(booking.total_price * (1 + SERVICE_FEE_RATE))})` : "";
@@ -280,7 +281,7 @@ async function runReminders(): Promise<NextResponse> {
             <p style="font-size: 15px; font-weight: bold; color: #DC2626;">${T.body2}</p>
             <p style="background: #FEE2E2; border-left: 4px solid #DC2626; padding: 12px 14px; margin: 12px 0; color: #991B1B; font-weight: 600; font-size: 14px;">⏳ ${T.fomo}</p>
             <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #DC2626; color: white; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 17px;">${T.cta}</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
 
@@ -293,11 +294,11 @@ async function runReminders(): Promise<NextResponse> {
           if (smsPrefs?.sms_bookings !== false) {
             const maskedPhotog30 = maskSurname(booking.photographer_name);
             const smsBody = pickT({
-              en: `🚨 Photo Portugal: FINAL WARNING — booking with ${maskedPhotog30} auto-cancels in ~30 min if unpaid, and the slot reopens to other clients. Pay NOW: https://photoportugal.com/dashboard/bookings`,
-              pt: `🚨 Photo Portugal: AVISO FINAL — reserva com ${maskedPhotog30} cancela-se em ~30 min se não for paga, e o horário fica disponível a outros clientes. Pague JÁ: https://photoportugal.com/dashboard/bookings`,
-              de: `🚨 Photo Portugal: LETZTE WARNUNG — Buchung mit ${maskedPhotog30} storniert in ~30 Min, wenn unbezahlt, und der Termin wird für andere Kunden freigegeben. JETZT zahlen: https://photoportugal.com/dashboard/bookings`,
-              es: `🚨 Photo Portugal: AVISO FINAL — reserva con ${maskedPhotog30} se cancela en ~30 min si no se paga, y el horario vuelve a estar disponible. Pague YA: https://photoportugal.com/dashboard/bookings`,
-              fr: `🚨 Photo Portugal : DERNIER AVERTISSEMENT — réservation avec ${maskedPhotog30} annulée dans ~30 min si non payée, et le créneau redevient disponible. Payez MAINTENANT : https://photoportugal.com/dashboard/bookings`,
+              en: `🚨 ${country.brand}: FINAL WARNING — booking with ${maskedPhotog30} auto-cancels in ~30 min if unpaid, and the slot reopens to other clients. Pay NOW: ${country.baseUrl}/dashboard/bookings`,
+              pt: `🚨 ${country.brand}: AVISO FINAL — reserva com ${maskedPhotog30} cancela-se em ~30 min se não for paga, e o horário fica disponível a outros clientes. Pague JÁ: ${country.baseUrl}/dashboard/bookings`,
+              de: `🚨 ${country.brand}: LETZTE WARNUNG — Buchung mit ${maskedPhotog30} storniert in ~30 Min, wenn unbezahlt, und der Termin wird für andere Kunden freigegeben. JETZT zahlen: ${country.baseUrl}/dashboard/bookings`,
+              es: `🚨 ${country.brand}: AVISO FINAL — reserva con ${maskedPhotog30} se cancela en ~30 min si no se paga, y el horario vuelve a estar disponible. Pague YA: ${country.baseUrl}/dashboard/bookings`,
+              fr: `🚨 ${country.brand} : DERNIER AVERTISSEMENT — réservation avec ${maskedPhotog30} annulée dans ~30 min si non payée, et le créneau redevient disponible. Payez MAINTENANT : ${country.baseUrl}/dashboard/bookings`,
             }, cLocale);
             sendSMS(booking.client_phone, smsBody).catch(err => console.error("[cron] critical sms error:", err));
           }
@@ -374,7 +375,7 @@ async function runReminders(): Promise<NextResponse> {
                 `Client: ${r.client_name}\n` +
                 `Amount: ${priceLabel}\n` +
                 `Time to auto-refund: <b>${timeLeft}</b>\n` +
-                `<a href="https://photoportugal.com/admin">Open admin → Bookings</a>`,
+                `<a href="${country.baseUrl}/admin">Open admin → Bookings</a>`,
                 "bookings"
               )
             ).catch((err) => console.error("[cron/blind-escalation] telegram error:", err));
@@ -442,7 +443,7 @@ async function runReminders(): Promise<NextResponse> {
           "UPDATE bookings SET soft_followup_sent = TRUE WHERE id = $1",
           [inq.id]
         );
-        const threadUrl = `${process.env.AUTH_URL || "https://photoportugal.com"}/dashboard/messages/${inq.id}`;
+        const threadUrl = `${process.env.AUTH_URL || country.baseUrl}/dashboard/messages/${inq.id}`;
         const firstName = (inq.client_name || "").split(" ")[0] || null;
         const rendered = renderReadyToBookNudge(firstName, inq.photographer_name, threadUrl);
         await queueNotification({
@@ -516,8 +517,8 @@ async function runReminders(): Promise<NextResponse> {
             <p>${Tcancel.greet}</p>
             <p>${Tcancel.body1}</p>
             <p>${Tcancel.body2}</p>
-            <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">${Tcancel.cta}</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p><a href="${process.env.AUTH_URL || country.baseUrl}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">${Tcancel.cta}</a></p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
 
@@ -529,8 +530,8 @@ async function runReminders(): Promise<NextResponse> {
             <h2 style="color: #C94536;">Booking Auto-Cancelled</h2>
             <p>Hi ${booking.photographer_name},</p>
             <p>The booking with <strong>${booking.client_name}</strong> has been automatically cancelled because payment was not received within 24 hours.</p>
-            <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p><a href="${process.env.AUTH_URL || country.baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
 
@@ -555,7 +556,7 @@ async function runReminders(): Promise<NextResponse> {
             queueNotification({
               channel: "sms",
               recipient: photographerPhone.phone,
-              body: `Photo Portugal: Booking with ${booking.client_name} has been auto-cancelled (payment not received within 24h). Log in to view: https://photoportugal.com/dashboard/bookings`,
+              body: `${country.brand}: Booking with ${booking.client_name} has been auto-cancelled (payment not received within 24h). Log in to view: ${country.baseUrl}/dashboard/bookings`,
               dedupKey: `auto_cancel_sms:${booking.id}`,
             }).catch(err => console.error("[cron] sms auto-cancel error:", err));
           }
@@ -567,7 +568,7 @@ async function runReminders(): Promise<NextResponse> {
         import("@/lib/notify-photographer").then(m =>
           m.notifyPhotographerViaTelegram(
             booking.photographer_profile_id,
-            `⏰ Booking auto-cancelled\n\nClient: ${booking.client_name}\nReason: Payment not received within 24h\n\nView: https://photoportugal.com/dashboard/bookings`
+            `⏰ Booking auto-cancelled\n\nClient: ${booking.client_name}\nReason: Payment not received within 24h\n\nView: ${country.baseUrl}/dashboard/bookings`
           )
         ).catch((err) => console.error("[cron] telegram photographer auto-cancel error:", err));
       } catch (err) {
@@ -666,7 +667,7 @@ async function runReminders(): Promise<NextResponse> {
                 queueNotification({
                   channel: "sms",
                   recipient: smsInfo.photographer_phone,
-                  body: `Photo Portugal: Reminder — you have a photoshoot with ${booking.client_name} tomorrow. Check your dashboard for details.`,
+                  body: `${country.brand}: Reminder — you have a photoshoot with ${booking.client_name} tomorrow. Check your dashboard for details.`,
                   dedupKey: `shoot_reminder_sms_photographer:${booking.id}`,
                 }).catch(err => console.error("[sms] error:", err));
               }
@@ -682,10 +683,10 @@ async function runReminders(): Promise<NextResponse> {
                 const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
                 const cLocale = await getUserLocaleById(smsInfo.client_id);
                 const body = pickT({
-                  en: `Photo Portugal: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`,
-                  pt: `Photo Portugal: Lembrete — a sua sessão fotográfica com ${booking.photographer_name} é amanhã! Veja os detalhes no seu painel.`,
-                  de: `Photo Portugal: Erinnerung — Ihr Fotoshooting mit ${booking.photographer_name} ist morgen! Details im Dashboard.`,
-                  fr: `Photo Portugal : Rappel — votre séance photo avec ${booking.photographer_name} est demain ! Détails sur votre tableau de bord.`,
+                  en: `${country.brand}: Reminder — your photoshoot with ${booking.photographer_name} is tomorrow! Check your dashboard for details.`,
+                  pt: `${country.brand}: Lembrete — a sua sessão fotográfica com ${booking.photographer_name} é amanhã! Veja os detalhes no seu painel.`,
+                  de: `${country.brand}: Erinnerung — Ihr Fotoshooting mit ${booking.photographer_name} ist morgen! Details im Dashboard.`,
+                  fr: `${country.brand} : Rappel — votre séance photo avec ${booking.photographer_name} est demain ! Détails sur votre tableau de bord.`,
                 }, cLocale);
                 queueNotification({
                   channel: "sms",
@@ -770,7 +771,7 @@ async function runReminders(): Promise<NextResponse> {
         const dateDisplay = formatShootDate(booking.shoot_date, "en", dateOpts)
           || formatShootDate(booking.flexible_date_to, "en", dateOpts)
           || "your scheduled date";
-        const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+        const baseUrl = process.env.AUTH_URL || country.baseUrl;
 
         await sendEmail(
           booking.photographer_email,
@@ -892,8 +893,8 @@ async function runReminders(): Promise<NextResponse> {
             <p style="padding: 12px; background: #fef2f2; border-radius: 8px; color: #991b1b; font-size: 13px;">
               <strong>Warning:</strong> If photos are not delivered within 21 days, the booking will be automatically cancelled and the client will receive a full refund.
             </p>
-            <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Bookings</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p><a href="${process.env.AUTH_URL || country.baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Bookings</a></p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
 
@@ -909,7 +910,7 @@ async function runReminders(): Promise<NextResponse> {
               <p>Photographer <strong>${booking.photographer_name}</strong> (${booking.photographer_email}) has not delivered photos for booking ${booking.id}.</p>
               <p>Client: <strong>${booking.client_name}</strong> (${booking.client_email})</p>
               <p>The booking will be auto-refunded at 21 days if not resolved.</p>
-              <p><a href="${process.env.AUTH_URL || "https://photoportugal.com"}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin</a></p>
+              <p><a href="${process.env.AUTH_URL || country.baseUrl}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Go to Admin</a></p>
             </div>`
           );
         }
@@ -972,7 +973,7 @@ async function runReminders(): Promise<NextResponse> {
           [booking.id]
         );
 
-        const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+        const baseUrl = process.env.AUTH_URL || country.baseUrl;
 
         // Email client
         sendEmail(
@@ -984,7 +985,7 @@ async function runReminders(): Promise<NextResponse> {
             <p>Your booking with <strong>${booking.photographer_name}</strong> has been automatically cancelled because the photos were not delivered within 21 days.</p>
             ${booking.payment_status === "paid" ? `<p>A full refund has been issued. The refund should appear in your account within 5-10 business days.</p>` : ""}
             <p><a href="${baseUrl}/photographers" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Browse Photographers</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
 
@@ -997,7 +998,7 @@ async function runReminders(): Promise<NextResponse> {
             <p>Hi ${booking.photographer_name},</p>
             <p>Your booking with <strong>${booking.client_name}</strong> has been automatically cancelled because photos were not delivered within 21 days.</p>
             ${booking.payment_status === "paid" ? `<p>The client's payment has been refunded.</p>` : ""}
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
 
@@ -1133,7 +1134,7 @@ async function runReminders(): Promise<NextResponse> {
           [newExpiry.toISOString(), booking.id]
         );
 
-        const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+        const baseUrl = process.env.AUTH_URL || country.baseUrl;
 
         // Email client
         sendEmail(
@@ -1145,7 +1146,7 @@ async function runReminders(): Promise<NextResponse> {
             <p>Your photos from <strong>${booking.photographer_name}</strong> have been automatically accepted after 14 days. The payment has been released to the photographer.</p>
             <p>Your photos are still available for download for 90 days.</p>
             <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
 
@@ -1158,7 +1159,7 @@ async function runReminders(): Promise<NextResponse> {
             <p>Hi ${booking.photographer_name},</p>
             <p>The photos for <strong>${booking.client_name}</strong> have been automatically accepted after 14 days. Your payment has been transferred to your Stripe account.</p>
             <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Dashboard</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
 
@@ -1194,7 +1195,7 @@ async function runReminders(): Promise<NextResponse> {
 
     for (const booking of unacceptedDeliveries) {
       try {
-        const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+        const baseUrl = process.env.AUTH_URL || country.baseUrl;
         await sendEmail(
           booking.client_email,
           `Don't forget to review your photos from ${booking.photographer_name}!`,
@@ -1203,7 +1204,7 @@ async function runReminders(): Promise<NextResponse> {
             <p>Hi ${booking.client_name.split(" ")[0]},</p>
             <p>Your photo previews from <strong>${booking.photographer_name}</strong> are ready and waiting for your review. Accept them to download the full-resolution versions.</p>
             <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review Your Photos</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
         await queryOne(
@@ -1305,7 +1306,7 @@ async function runReminders(): Promise<NextResponse> {
               <h2 style="color: #C94536;">Payment Transferred!</h2>
               <p>Hi ${booking.photographer_name.split(" ")[0]},</p>
               <p>Your payment of <strong>€${Math.round(payoutAmount)}</strong> has been transferred to your Stripe account.</p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>`
           );
           console.log(`[cron] Retry payout success for booking ${booking.id}: €${payoutAmount}`);
@@ -1371,7 +1372,7 @@ async function runReminders(): Promise<NextResponse> {
         );
 
         const first = (b.client_name || "there").split(" ")[0];
-        const url = `https://photoportugal.com/delivery/${b.delivery_token}`;
+        const url = `${country.baseUrl}/delivery/${b.delivery_token}`;
         const isFinal = b.stage === "12d";
         const p = (t: string) => `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#2A2A2A;">${t}</p>`;
         const html = `
@@ -1509,7 +1510,7 @@ async function runReminders(): Promise<NextResponse> {
          AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.booking_id = b.id)`
     );
 
-    const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+    const baseUrl = process.env.AUTH_URL || country.baseUrl;
 
     for (const booking of needsReviewReminder) {
       try {
@@ -1526,7 +1527,7 @@ async function runReminders(): Promise<NextResponse> {
             <p style="background: #FFF8E1; border: 1px solid #FFE082; border-radius: 10px; padding: 12px 16px; font-size: 14px;">🎁 As a thank-you, you'll get a <strong>10% off code</strong> for your next session — valid for 12 months.</p>
             <p><a href="${reviewUrl}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px;">Leave a Review</a></p>
             <p style="color: #666; font-size: 13px;">It only takes a minute and makes a big difference.</p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         );
         await queryOne("UPDATE bookings SET review_requested = TRUE WHERE id = $1 RETURNING id", [booking.id]);
@@ -1825,7 +1826,7 @@ async function runReminders(): Promise<NextResponse> {
          AND EXISTS (SELECT 1 FROM delivery_photos dp WHERE dp.booking_id = b.id)`
     );
 
-    const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+    const baseUrl = process.env.AUTH_URL || country.baseUrl;
     for (const booking of expiringSoon) {
       try {
         let pw = "";
@@ -1857,7 +1858,7 @@ async function runReminders(): Promise<NextResponse> {
             <p>Make sure to download the full ZIP to keep them forever:</p>
             ${ctaBlock}
             <p style="font-size: 13px; color: #666;">After ${expiresOn}, the public link stops working. We keep a hidden backup for another 3 months in case anything goes wrong, but the cleanest path is to download now.</p>
-            <p style="color: #999; font-size: 12px; margin-top: 24px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px; margin-top: 24px;">${country.brand} — ${country.host}</p>
           </div>`
         );
         await query("UPDATE bookings SET delivery_expiry_warning_sent = TRUE WHERE id = $1", [booking.id]);
@@ -1899,7 +1900,7 @@ async function runReminders(): Promise<NextResponse> {
 
         // Delete blobs from R2 (current) and local disk (legacy fallback).
         const { deleteFromS3 } = await import("@/lib/s3");
-        const R2_PUBLIC_PREFIX = (process.env.R2_PUBLIC_URL || "https://files.photoportugal.com") + "/";
+        const R2_PUBLIC_PREFIX = (process.env.R2_PUBLIC_URL || `https://${country.filesHost}`) + "/";
         const allUrls = [
           ...blobs.flatMap((b) => [b.url, b.preview_url].filter((u): u is string => !!u)),
           zipRow?.zip_path || null,
@@ -1984,13 +1985,13 @@ async function runReminders(): Promise<NextResponse> {
         await queryOne("UPDATE photographer_profiles SET checklist_deadline_emailed = TRUE WHERE id = $1", [p.id]);
         await sendEmail(
           p.email,
-          "Complete your Photo Portugal profile today",
+          `Complete your ${country.brand} profile today`,
           `<p>Hi ${p.name},</p>
 <p>Your photographer profile on Photo Portugal is almost ready, but some steps are still incomplete.</p>
 <p><strong>Please complete your profile today</strong> to avoid account deactivation. Once your checklist is done, our team will review and approve your profile so you can start receiving bookings.</p>
-<p><a href="https://photoportugal.com/dashboard" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Complete My Profile</a></p>
-<p>If you need help, reply to this email or visit our <a href="https://photoportugal.com/support">Help Center</a>.</p>
-<p>Best,<br>Photo Portugal Team</p>`
+<p><a href="${country.baseUrl}/dashboard" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Complete My Profile</a></p>
+<p>If you need help, reply to this email or visit our <a href="${country.baseUrl}/support">Help Center</a>.</p>
+<p>Best,<br>${country.brand} Team</p>`
         );
         checklistDeadlineEmails++;
         console.log(`[cron/reminders] checklist deadline email sent to ${p.email}`);
@@ -2087,11 +2088,11 @@ async function runReminders(): Promise<NextResponse> {
         await query("UPDATE users SET is_banned = TRUE WHERE id = (SELECT user_id FROM photographer_profiles WHERE id = $1)", [p.id]);
         await sendEmail(
           p.email,
-          "Your Photo Portugal account has been deactivated",
+          `Your ${country.brand} account has been deactivated`,
           `<p>Hi ${p.name},</p>
 <p>Your photographer profile on Photo Portugal has been deactivated because the onboarding checklist was not completed within 7 days of registration.</p>
 <p>If you'd like to reactivate your account, please contact us at <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> and we'll help you get started again.</p>
-<p>Best,<br>Photo Portugal Team</p>`
+<p>Best,<br>${country.brand} Team</p>`
         );
         checklistDeactivated++;
         console.log(`[cron/reminders] deactivated incomplete photographer ${p.name} (${p.email})`);
@@ -2294,7 +2295,7 @@ async function runReminders(): Promise<NextResponse> {
         AND EXTRACT(EPOCH FROM (NOW() - first_client_msg.created_at))/3600 >= 6
     `);
 
-    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+    const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
     for (const u of unanswered) {
       try {
@@ -2307,7 +2308,7 @@ async function runReminders(): Promise<NextResponse> {
             await queueNotification({
               channel: "sms",
               recipient: u.photographer_phone,
-              body: `Hi ${firstName}! ${u.client_name} is waiting for your reply on Photo Portugal. Please respond soon: ${BASE_URL}/dashboard/messages`,
+              body: `Hi ${firstName}! ${u.client_name} is waiting for your reply on ${country.brand}. Please respond soon: ${BASE_URL}/dashboard/messages`,
               dedupKey: `unanswered_6h_sms:${u.booking_id}`,
             }).catch(console.error);
           }
@@ -2335,7 +2336,7 @@ async function runReminders(): Promise<NextResponse> {
             await queueNotification({
               channel: "sms",
               recipient: u.photographer_phone,
-              body: `Reminder: ${u.client_name} has been waiting ${Math.round(u.hours_since)}h for your reply on Photo Portugal. Respond now to avoid losing this client: ${BASE_URL}/dashboard/messages`,
+              body: `Reminder: ${u.client_name} has been waiting ${Math.round(u.hours_since)}h for your reply on ${country.brand}. Respond now to avoid losing this client: ${BASE_URL}/dashboard/messages`,
               dedupKey: `unanswered_12h_sms:${u.booking_id}`,
             }).catch(console.error);
           }
@@ -2440,7 +2441,7 @@ async function runReminders(): Promise<NextResponse> {
       LIMIT 50
     `);
 
-    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+    const BASE_URL = process.env.AUTH_URL || country.baseUrl;
     for (const o of noOffer) {
       try {
         const firstName = o.photographer_name.split(" ")[0];
@@ -2450,7 +2451,7 @@ async function runReminders(): Promise<NextResponse> {
             await queueNotification({
               channel: "sms",
               recipient: o.photographer_phone,
-              body: `Hi ${firstName}! You've been chatting with ${o.client_name} on Photo Portugal but haven't sent them a package yet — they can only book once you do: ${BASE_URL}/dashboard/messages`,
+              body: `Hi ${firstName}! You've been chatting with ${o.client_name} on ${country.brand} but haven't sent them a package yet — they can only book once you do: ${BASE_URL}/dashboard/messages`,
               dedupKey: `offer_nudge_sms:${o.booking_id}`,
             }).catch(console.error);
           }
@@ -2542,7 +2543,7 @@ async function runReminders(): Promise<NextResponse> {
         )
     `);
 
-    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+    const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
     for (const c of silentClients) {
       try {
@@ -2569,10 +2570,10 @@ async function runReminders(): Promise<NextResponse> {
           const url = localizedUrl("/dashboard/messages", cLocale);
           const maskedPhotog = maskSurname(c.photographer_name);
           const smsBody = pickT({
-            en: `Hi ${firstName}! ${maskedPhotog} replied to your message on Photo Portugal and is waiting for you. Check it out: ${url}`,
-            pt: `Olá ${firstName}! ${maskedPhotog} respondeu à sua mensagem na Photo Portugal e está à sua espera. Veja: ${url}`,
-            de: `Hallo ${firstName}! ${maskedPhotog} hat Ihrer Nachricht auf Photo Portugal geantwortet und wartet auf Sie. Hier ansehen: ${url}`,
-            fr: `Bonjour ${firstName} ! ${maskedPhotog} a répondu à votre message sur Photo Portugal et vous attend. À voir : ${url}`,
+            en: `Hi ${firstName}! ${maskedPhotog} replied to your message on ${country.brand} and is waiting for you. Check it out: ${url}`,
+            pt: `Olá ${firstName}! ${maskedPhotog} respondeu à sua mensagem na ${country.brand} e está à sua espera. Veja: ${url}`,
+            de: `Hallo ${firstName}! ${maskedPhotog} hat Ihrer Nachricht auf ${country.brand} geantwortet und wartet auf Sie. Hier ansehen: ${url}`,
+            fr: `Bonjour ${firstName} ! ${maskedPhotog} a répondu à votre message sur ${country.brand} et vous attend. À voir : ${url}`,
           }, cLocale);
           await queueNotification({
             channel: "sms",
@@ -2636,7 +2637,7 @@ async function runReminders(): Promise<NextResponse> {
         )
     `);
 
-    const BASE_URL2 = process.env.AUTH_URL || "https://photoportugal.com";
+    const BASE_URL2 = process.env.AUTH_URL || country.baseUrl;
 
     for (const c of silent7d) {
       try {
@@ -2743,7 +2744,7 @@ async function runReminders(): Promise<NextResponse> {
          AND chosen_photographer_id IS NULL`
     );
 
-    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+    const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
     for (const mr of pendingChoices) {
       try {
@@ -2765,7 +2766,7 @@ async function runReminders(): Promise<NextResponse> {
           await queueNotification({
             channel: "sms",
             recipient: mr.phone,
-            body: `Hi ${firstName}! Your photographer matches on Photo Portugal are waiting. Our photographers are in high demand — choose yours now: ${BASE_URL}/dashboard/match-requests`,
+            body: `Hi ${firstName}! Your photographer matches on ${country.brand} are waiting. Our photographers are in high demand — choose yours now: ${BASE_URL}/dashboard/match-requests`,
             dedupKey: `match_choice_reminder_sms:${mr.id}`,
           }).catch(console.error);
         }

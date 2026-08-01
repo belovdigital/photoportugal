@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { voidUncapturedPaymentIntent } from "@/lib/stripe";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -138,7 +139,7 @@ export async function GET(req: NextRequest) {
         );
         if (ctx?.email) {
           import("@/lib/email").then(({ sendEmail }) => {
-            const BASE = process.env.AUTH_URL || "https://photoportugal.com";
+            const BASE = process.env.AUTH_URL || country.baseUrl;
             return sendEmail(
               ctx.email,
               "Your booking was refunded — let's find another way",
@@ -148,7 +149,7 @@ export async function GET(req: NextRequest) {
                 <p>Our team couldn't confirm a photographer for your ${ctx.location_slug || "photoshoot"} session ${ctx.shoot_date ? `on ${ctx.shoot_date}` : ""} within the 24-hour window. Your card was authorised but never charged — the hold has been released and you'll see it drop off within a few days.</p>
                 <p>If you'd still like to book, our directory is right here — many photographers are available for the same date:</p>
                 <p><a href="${BASE}/find-photographer" style="display:inline-block;background:#C94536;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Browse photographers</a></p>
-                <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+                <p style="color:#999;font-size:12px;">${country.brand} — ${country.host}</p>
               </div>`
             );
           }).catch((err) => console.error("[cron/auto-refund-blind] email error:", err));

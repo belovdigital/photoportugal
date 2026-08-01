@@ -6,8 +6,10 @@ import { sendSMS } from "@/lib/sms";
 import { maskSurname } from "@/lib/photographer-name";
 import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
+import { isManualPayout, payoutSetupCopy } from "@/lib/payout";
+import { country } from "@/lib/country";
 
-const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
 // Get a single booking by ID
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -206,10 +208,12 @@ export async function PATCH(
       }
     }
 
-    // Check: photographer must have Stripe connected before confirming a paid booking
+    // Check: the photographer must be able to receive money before a paid
+    // booking is confirmed. What "able" means depends on the market — a Stripe
+    // Connect account in Portugal, bank details in Spain. See src/lib/payout.ts.
     if (status === "confirmed") {
-      const photographerProfile = await queryOne<{ stripe_account_id: string | null; stripe_onboarding_complete: boolean }>(
-        `SELECT pp.stripe_account_id, pp.stripe_onboarding_complete
+      const photographerProfile = await queryOne<{ stripe_account_id: string | null; stripe_onboarding_complete: boolean; payout_iban: string | null }>(
+        `SELECT pp.stripe_account_id, pp.stripe_onboarding_complete, pp.payout_iban
          FROM photographer_profiles pp
          JOIN bookings b ON b.photographer_id = pp.id
          WHERE b.id = $1`,
@@ -217,15 +221,22 @@ export async function PATCH(
       );
       const bookingPrice = await queryOne<{ total_price: number | null }>("SELECT total_price FROM bookings WHERE id = $1", [id]);
 
-      if (bookingPrice?.total_price && !photographerProfile?.stripe_account_id) {
-        return NextResponse.json(
-          { error: "Please connect your Stripe account before confirming bookings. Go to Dashboard → Subscription → Stripe Connect to set up payments." },
-          { status: 400 }
-        );
+      // Deliberately mirrors the original Connect condition exactly: it tests
+      // only that an account EXISTS, not that onboarding finished. A stale
+      // completion flag is handled by the live re-check below, and tightening
+      // this to "fully onboarded" would make that recovery path unreachable.
+      const payoutBlocked = isManualPayout
+        ? !photographerProfile?.payout_iban?.trim()
+        : !photographerProfile?.stripe_account_id;
+
+      if (bookingPrice?.total_price && payoutBlocked) {
+        return NextResponse.json({ error: payoutSetupCopy.blockedError }, { status: 400 });
       }
 
-      // If stripe_account_id exists but onboarding flag is stale, verify live with Stripe API and auto-sync
-      if (bookingPrice?.total_price && photographerProfile?.stripe_account_id && !photographerProfile.stripe_onboarding_complete) {
+      // Connect-only: if stripe_account_id exists but the onboarding flag is
+      // stale, verify live with the Stripe API and auto-sync. Manual-payout
+      // markets have no Stripe account to reconcile, so this is skipped whole.
+      if (!isManualPayout && bookingPrice?.total_price && photographerProfile?.stripe_account_id && !photographerProfile.stripe_onboarding_complete) {
         try {
           const stripeClient = requireStripe();
           const account = await stripeClient.accounts.retrieve(photographerProfile.stripe_account_id);
@@ -387,7 +398,7 @@ export async function PATCH(
               <p>A booking with <strong>${cancelInfo.client_name}</strong> has been cancelled by the ${cancelledBy}.</p>
               <p>${refundText}</p>
               <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>`
           );
 
@@ -403,7 +414,7 @@ export async function PATCH(
               <p>Your booking with <strong>${cancelInfo.photographer_name}</strong> has been cancelled.</p>
               <p>${clientRefundText}</p>
               <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>`
           );
 
@@ -438,7 +449,7 @@ export async function PATCH(
             if (photographerPhone?.phone && smsPrefs?.sms_bookings !== false) {
               sendSMS(
                 photographerPhone.phone,
-                `Photo Portugal: Booking with ${cancelInfo.client_name} has been cancelled by the ${cancelledBy}. Log in to view: https://photoportugal.com/dashboard/bookings`
+                `Photo Portugal: Booking with ${cancelInfo.client_name} has been cancelled by the ${cancelledBy}. Log in to view: ${country.baseUrl}/dashboard/bookings`
               ).catch(err => console.error("[sms] cancellation error:", err));
             }
           } catch (smsErr) {
@@ -477,7 +488,7 @@ export async function PATCH(
           import("@/lib/notify-photographer").then(m =>
             m.notifyPhotographerViaTelegram(
               cancelInfo!.photographer_profile_id,
-              `❌ Booking cancelled\n\nClient: ${cancelInfo!.client_name}\nCancelled by: ${cancelledBy}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)\n\nView: https://photoportugal.com/dashboard/bookings`
+              `❌ Booking cancelled\n\nClient: ${cancelInfo!.client_name}\nCancelled by: ${cancelledBy}\nRefund: €${refundAmount.toFixed(2)} (${refundPercent}%)\n\nView: ${country.baseUrl}/dashboard/bookings`
             )
           ).catch((err) => console.error("[bookings] telegram photographer cancel error:", err));
         }
@@ -563,7 +574,7 @@ export async function PATCH(
               <p>Hi ${otherName},</p>
               <p>The booking with <strong>${cancellerDisplay}</strong> has been cancelled by the ${cancelledBy}.</p>
               <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>`
           );
 
@@ -597,7 +608,7 @@ export async function PATCH(
             if (photographerPhone?.phone && smsPrefs?.sms_bookings !== false) {
               sendSMS(
                 photographerPhone.phone,
-                `Photo Portugal: Booking with ${cancellerName} has been cancelled by the ${cancelledBy}. Log in to view: https://photoportugal.com/dashboard/bookings`
+                `Photo Portugal: Booking with ${cancellerName} has been cancelled by the ${cancelledBy}. Log in to view: ${country.baseUrl}/dashboard/bookings`
               ).catch(err => console.error("[sms] cancellation error:", err));
             }
           } catch (smsErr) {
@@ -629,7 +640,7 @@ export async function PATCH(
           import("@/lib/notify-photographer").then(m =>
             m.notifyPhotographerViaTelegram(
               cancelInfo!.photographer_profile_id,
-              `❌ Booking cancelled\n\nClient: ${cancelInfo!.client_name}\nCancelled by: ${cancelledBy}\n\nView: https://photoportugal.com/dashboard/bookings`
+              `❌ Booking cancelled\n\nClient: ${cancelInfo!.client_name}\nCancelled by: ${cancelledBy}\n\nView: ${country.baseUrl}/dashboard/bookings`
             )
           ).catch((err) => console.error("[bookings] telegram photographer cancel error:", err));
         }
@@ -663,7 +674,7 @@ export async function PATCH(
           [id]
         );
         if (completedInfo) {
-          const baseUrl = process.env.AUTH_URL || "https://photoportugal.com";
+          const baseUrl = process.env.AUTH_URL || country.baseUrl;
           const firstName = completedInfo.photographer_name.split(" ")[0];
           const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
           await sendEmail(
@@ -878,7 +889,7 @@ export async function PATCH(
                 emailLayout(`
                   <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
                   <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
-                  ${emailButton("https://photoportugal.com/dashboard/bookings", T.cta)}
+                  ${emailButton(`${country.baseUrl}/dashboard/bookings`, T.cta)}
                 `, loc)
               );
             }).catch((err) => console.error("[bookings] gift-card confirm email error:", err));

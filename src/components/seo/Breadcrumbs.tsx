@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { country } from "@/lib/country";
 
 export interface BreadcrumbItem {
   name: string;
@@ -19,7 +20,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      item: `https://photoportugal.com${item.href === "/" ? "" : item.href}`,
+      item: `${country.baseUrl}${item.href === "/" ? "" : item.href}`,
     })),
   };
 

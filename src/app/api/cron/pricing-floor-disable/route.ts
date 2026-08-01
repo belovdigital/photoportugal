@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
+import { country } from "@/lib/country";
 
 // One-shot cron — fires 2026-06-19 09:00 UTC (crontab `0 9 19 6 *`).
 //
@@ -183,7 +184,7 @@ function renderEmail(firstName: string, packages: PkgRow[]): string {
     <p style="font-size:15px;line-height:1.7;color:#3a3a3a;margin:0 0 18px 0;">
       You can fine-tune the price, duration or details of any package anytime in your dashboard.
     </p>
-    ${emailButton("https://photoportugal.com/dashboard/photographer", "Open my dashboard")}
+    ${emailButton(`${country.baseUrl}/dashboard/photographer`, "Open my dashboard")}
     <p style="font-size:14px;line-height:1.7;color:#5c5247;margin:22px 0 0 0;">
       Questions? Just reply to this email or ping us on WhatsApp.<br/><br/>
       Thank you for being part of Photo Portugal.<br/>— The team

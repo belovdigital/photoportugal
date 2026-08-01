@@ -4,6 +4,7 @@ import { TrackedCTALink } from "@/components/ui/TrackedCTALink";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
 import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
 import { locations } from "@/lib/locations-data";
+import { locationImage } from "@/lib/unsplash-images";
 import { resolveImageUrl } from "@/lib/image-url";
 import { PortfolioMosaic, type MosaicPhoto } from "@/components/ui/PortfolioMosaic";
 import { LocationCard } from "@/components/ui/LocationCard";
@@ -15,9 +16,11 @@ import { WeddingBand } from "@/components/ui/WeddingBand";
 import { FeaturedPhotographers } from "@/components/ui/FeaturedPhotographers";
 import { FeaturedQuote } from "@/components/ui/FeaturedQuote";
 import { getHomepageReviews, getSiteReviewStats } from "@/lib/reviews-data";
-import { heroImages } from "@/lib/hero-images";
+import { heroImages, heroImagesES } from "@/lib/hero-images";
+import { isSpain, country } from "@/lib/country";
 import { SocialProofStrip } from "@/components/ui/SocialProofStrip";
 import { HeroSingleVariant } from "@/components/ui/HeroSingleVariant";
+import { BrandHero } from "@/components/ui/BrandHero";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
@@ -30,7 +33,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const base = "https://photoportugal.com";
+  const base = country.baseUrl;
   const url = locale === "en" ? base : `${base}/${locale}`;
   const t = await getTranslations({ locale, namespace: "homepageMeta" });
 
@@ -70,7 +73,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title: t("ogTitle"),
       description: t("ogDescription", params2),
       url,
-      images: [{ url: `${base}/og-image.png`, width: 1200, height: 630 }],
+      images: [{ url: `${base}${country.ogImage}`, width: 1200, height: 630 }],
     },
   };
 }
@@ -87,21 +90,21 @@ async function SchemaLdScripts({ locale }: { locale: string }) {
     getHomepageReviews(3, locale),
     getTranslations({ locale, namespace: "homepageMeta" }),
   ]);
-  const base = "https://photoportugal.com";
+  const base = country.baseUrl;
   const schemaRating = siteStats.avgRating.toFixed(1);
   const schemaReviewCount = String(siteStats.count);
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Photo Portugal",
+    name: country.brand,
     url: base,
     description: t("schemaWebsite"),
     inLanguage: t("inLanguage"),
     publisher: {
       "@type": "Organization",
-      name: "Photo Portugal",
-      logo: { "@type": "ImageObject", url: `${base}/logo.svg` },
+      name: country.brand,
+      logo: { "@type": "ImageObject", url: `${base}${country.logoPath}` },
     },
     potentialAction: {
       "@type": "SearchAction",
@@ -113,23 +116,32 @@ async function SchemaLdScripts({ locale }: { locale: string }) {
   const serviceJsonLd = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
-    name: "Photo Portugal",
+    name: country.brand,
     url: base,
-    image: `${base}/og-image.png`,
+    image: `${base}${country.ogImage}`,
     description: t("schemaService", { locations: portugalCoverageStats.displayPlaces }),
     priceRange: "€€",
-    address: { "@type": "PostalAddress", addressLocality: "Lisbon", addressCountry: "PT" },
-    geo: { "@type": "GeoCoordinates", latitude: 38.7223, longitude: -9.1393 },
-    areaServed: { "@type": "Country", name: "Portugal" },
+    address: { "@type": "PostalAddress", addressLocality: country.city, addressCountry: country.code.toUpperCase() },
+    geo: { "@type": "GeoCoordinates", latitude: country.geo.lat, longitude: country.geo.lng },
+    areaServed: { "@type": "Country", name: country.areaServed },
     // Link to external profiles so Google can connect the website to the GMB
     // listing and other social properties — strengthens entity signal in SERP.
-    sameAs: [
-      "https://g.page/r/CbWG7PogT_K2EBM",
-      "https://www.instagram.com/photoportugal_com",
-      "https://www.facebook.com/photoportugalofficial",
-      "https://www.linkedin.com/company/photoportugal",
-      "https://www.tiktok.com/@photoportugal_com",
-    ],
+    // The homepage's ProfessionalService lists a DIFFERENT set of profiles from
+    // the Organization block in layout.tsx — it includes the Google Business
+    // Profile and TikTok, and omits Trustpilot. Collapsing both onto one pack
+    // field silently rewrote Portugal's structured data, so the homepage keeps
+    // its own list. Emitted only where the market actually has profiles.
+    ...(country.code === "pt"
+      ? {
+          sameAs: [
+            "https://g.page/r/CbWG7PogT_K2EBM",
+            "https://www.instagram.com/photoportugal_com",
+            "https://www.facebook.com/photoportugalofficial",
+            "https://www.linkedin.com/company/photoportugal",
+            "https://www.tiktok.com/@photoportugal_com",
+          ],
+        }
+      : {}),
     ...(siteStats.count > 0 && {
       aggregateRating: {
         "@type": "AggregateRating",
@@ -274,10 +286,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   // The `ab_hero` cookie is still set in middleware for any back-compat
   // analytics, but the page no longer branches on it.
 
+  // The hero collage is hand-picked Portuguese portfolio work. Spain shows the
+  // same pictures for now (no Spanish roster yet) but must NOT carry the credit:
+  // those photographers have no profile in the Spanish database, so every link
+  // would 404, and naming them implies they shoot in Spain, which they don't.
+  // Photos stay, attribution goes, until Spanish work replaces them.
   const heroCovers = heroImages.map((h) => ({
     cover_url: h.url,
-    slug: h.photographerSlug,
-    name: h.photographerName,
+    slug: isSpain ? "" : h.photographerSlug,
+    name: isSpain ? "" : h.photographerName,
     alt: h.alt,
   }));
 
@@ -422,6 +439,20 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     });
   } catch {}
 
+  // Pre-launch fallback: a market with no approved roster yet has no portfolio
+  // to show, and the mosaic is a 140vh column beside the fold — empty, the page
+  // reads as broken. Fill it with the destination photography instead. No slug
+  // and no name: these are location shots, not anyone's portfolio, and
+  // attributing them to a photographer who isn't on the platform would be false.
+  if (mosaicPhotos.length === 0) {
+    mosaicPhotos = locations
+      .map((l) => ({ url: locationImage(l.slug, "card"), slug: "", name: "", location: l.name }))
+      .filter((p) => !!p.url);
+  }
+
+  try {
+  } catch {}
+
   // LCP image preload hint (desktop only via media query). Must match the URL
   // that the hero will actually render first — that's the live photographer's
   // first portfolio photo, falling back to their cover, and only then to the
@@ -463,7 +494,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <SchemaLdScripts locale={locale} />
       </Suspense>
 
-      {/* ===== HERO ===== Single photographer, picked fresh per request. */}
+      {/* ===== HERO ===== Single photographer, picked fresh per request.
+          A market with no approved roster falls back to BrandHero: same weight,
+          same offer, but it names no photographer and repeats no copy from the
+          value-prop section below (which owns the page H1). */}
+      {!heroPhotographer && <BrandHero photos={(isSpain ? heroImagesES : heroImages).map((h) => h.url)} />}
       {heroPhotographer && (
         <HeroSingleVariant
           photographer={heroPhotographer}
@@ -651,7 +686,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <div className="relative rotate-[2deg] overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500 via-rose-500 to-amber-500 p-7 shadow-2xl">
                 <div className="flex items-start justify-between text-white">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-widest opacity-90">Photo Portugal</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest opacity-90">{country.brand}</p>
                     <p className="mt-0.5 text-[11px] uppercase tracking-wider opacity-75">Gift Card</p>
                   </div>
                   <span className="text-3xl">🎁</span>
@@ -666,7 +701,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     <span className="text-xs opacity-80">2 hours</span>
                   </div>
                 </div>
-                <p className="mt-6 text-[10px] uppercase tracking-widest text-white/70">Valid 12 months · Portugal-wide</p>
+                <p className="mt-6 text-[10px] uppercase tracking-widest text-white/70">Valid 12 months · {country.areaServed}-wide</p>
               </div>
             </div>
           </div>

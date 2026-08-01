@@ -10,6 +10,7 @@ import { localeAlternates } from "@/lib/seo";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { getCoverageNodeSlugsByPhotographerIds } from "@/lib/photographer-location-coverage";
 import { getActiveGiftCard } from "@/lib/gift-card-session";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("title"),
     description: t("description"),
     alternates: localeAlternates("/photographers", locale),
-    openGraph: { title: t("title"), description: t("description"), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/photographers`, images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal" }] },
+    openGraph: { title: t("title"), description: t("description"), url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/photographers`, images: [{ url: country.ogImage, width: 1200, height: 630, alt: `${country.brand}` }] },
   };
 }
 
@@ -190,7 +191,7 @@ export default async function PhotographersPage({
   const resolvedShootType = resolveShootType(initialShootType);
   const localePrefix = locale === "en" ? "" : `/${locale}`;
 
-  const base = "https://photoportugal.com";
+  const base = country.baseUrl;
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",

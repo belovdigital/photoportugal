@@ -1,0 +1,616 @@
+{
+  "common": {
+    "siteName": "Photo Spain",
+    "newOnPhotoPortugal": "Nuevo en Photo Spain",
+    "photographyIn": "Fotografía en {location}, España"
+  },
+  "nav": {
+    "announcementSuffix": "en {count} lugares espectaculares de España",
+    "aboutDesc": "Nuestra historia y el equipo detrás de Photo Spain",
+    "photoMap": "Mapa fotográfico de España",
+    "megaAboutDesc": "Nuestra historia y el equipo detrás de Photo Spain",
+    "megaWhyJoin": "Por qué Photo Spain",
+    "giftCardsDesc": "Regala una sesión de fotos en España"
+  },
+  "footer": {
+    "tagline": "Conectamos viajeros con fotógrafos locales de talento por toda España. Captura tus momentos perfectos.",
+    "copyright": "Photo Spain. Todos los derechos reservados.",
+    "legalEntityLocation": "Portugal",
+    "appTitle": "Lleve Photo Spain con usted"
+  },
+  "giftCardsPage": {
+    "h1": "Regala una sesión Photo Spain",
+    "subtitle": "Regala una sesión fotográfica en España. El destinatario elige el fotógrafo, la fecha y el lugar — tu regalo lo cubre todo.",
+    "personalMessagePlaceholder": "¡Feliz cumpleaños! Disfruta de la sesión en Madrid ✨"
+  },
+  "home": {
+    "heroTitleHighlight": "España",
+    "heroDescription": "La forma más fácil de reservar un fotógrafo de viaje o una sesión de fotos de vacaciones en España — profesionales locales seleccionados, reseñas verificadas, reserva instantánea. Cada fotógrafo es verificado personalmente por su calidad, fiabilidad y estilo.",
+    "floatingReviews": [
+      {
+        "location": "Madrid"
+      },
+      {
+        "location": "Costa del Sol"
+      },
+      {
+        "text": "Monica conocía los rincones más bonitos y escondidos de Toledo. ¡Una sesión absolutamente mágica!",
+        "location": "Toledo"
+      },
+      {
+        "location": "Madrid"
+      },
+      {
+        "text": "Jonathan hizo de nuestra sesión al atardecer en Lagos una experiencia inolvidable. ¡Verdaderamente talentoso!",
+        "author": "David K.",
+        "location": "Lagos"
+      },
+      {
+        "text": "Elena hizo los retratos individuales más espectaculares en Barcelona. ¡El mejor recuerdo posible!",
+        "location": "Barcelona"
+      }
+    ],
+    "socialProofStrip": {
+      "portugalWide": "Todo España",
+      "coverage": "península, Baleares y Canarias",
+      "islandsCovered": "Cobertura en Baleares y Canarias"
+    },
+    "featured": {
+      "title": "Mejores fotógrafos de España",
+      "portfolioAlt": "{name} — portafolio de fotógrafo profesional en España"
+    },
+    "locations": {
+      "title": "Los lugares más fotogénicos de España",
+      "subtitle": "Desde las calles empedradas de Madrid hasta los acantilados dorados del Costa del Sol — cada destino ofrece escenarios únicos"
+    },
+    "heroImages": {
+      "alt1": "Sesión de fotos familiar en una playa dorada del Costa del Sol, España",
+      "alt2": "Sesión de fotos de pareja en las históricas calles de los tranvías de Madrid, España",
+      "alt3": "Sesión de fotos de vacaciones en la costa española",
+      "alt4": "Fotografía de viaje en un lago volcánico de España",
+      "alt5": "Sesión de fotos romántica en un palacio histórico español"
+    },
+    "cta": {
+      "title": "¿Listo para capturar su historia en España?",
+      "subtitle": "Únase a cientos de viajeros felices que contrataron a su fotógrafo profesional ideal a través de Photo Spain."
+    },
+    "giftPromo": {
+      "title": "Regala una sesión de fotos en España"
+    }
+  },
+  "heroSearch": {
+    "placeholder": "¿Dónde en España?"
+  },
+  "shootTypes": {
+    "altSuffix": "Sesión de fotos {title} en España",
+    "types": {
+      "honeymoon": {
+        "description": "Celebre su historia de amor en España"
+      },
+      "engagement": {
+        "description": "Diga sí con España de fondo"
+      },
+      "anniversary": {
+        "description": "Celebre su hito en España"
+      }
+    }
+  },
+  "chooseBookingType": {
+    "metaTitle": "Reservar una sesión de fotos en España",
+    "subtitle": "Dos formas de encontrar a su fotógrafo perfecto en España."
+  },
+  "findPhotographer": {
+    "metaTitle": "Encuéntreme un fotógrafo en España",
+    "metaDescription": "Cuéntenos sobre su sesión y le pondremos en contacto con 2-3 fotógrafos seleccionados a mano en España. Servicio de matching gratuito.",
+    "locationLabel": "¿Dónde en España?"
+  },
+  "concierge": {
+    "metaTitle": "Encuentre su fotógrafo en España en 30 segundos | Photo Spain",
+    "title1": "Encuentre su fotógrafo en España",
+    "openingMessage": "¡Hola! Soy su Smart Concierge para Photo Spain. Dígame dónde estará y la ocasión — le encontraré los fotógrafos adecuados al instante. ✨",
+    "conciergeBadge": "Lens · Photo Spain",
+    "nudge": {
+      "body": "Hola 👋 Sin vergüenza — soy **Lens**, la IA de Photo Spain. Hable cualquier idioma, escriba como le sea natural — formal, casual, inglés imperfecto, da igual. Su mensaje queda entre nosotros, ningún humano lo lee. Conozco a cada fotógrafo de la plataforma, los mejores lugares de cada ciudad y lo que hace una sesión inolvidable. Cuénteme sobre su viaje y encuentro su match al instante.",
+      "chipProposal": "💍 Pedida sorpresa al atardecer en Madrid",
+      "chipCouples": "❤️ Sesión de pareja en Costa del Sol, hora dorada",
+      "chipFamily": "👨‍👩‍👧 Sesión familiar en Toledo para 4"
+    },
+    "whatsappGreeting": "¡Hola! Acabo de hablar con el concierge IA de Photo Spain y me gustaría continuar con usted.",
+    "suggestion1": "Sesión de pareja en Madrid el próximo mes",
+    "suggestion2": "Pedida de mano en Toledo al atardecer",
+    "suggestion3": "Sesión familiar en Sitges",
+    "suggestion4": "Boda en el valle del La Rioja",
+    "why": {
+      "title": "Por qué Photo Spain"
+    },
+    "askHumanCta": "Hablar con el equipo de Photo Spain",
+    "plaque": {
+      "homepagePlaceholder": "p. ej. sesión de pareja en Toledo el próximo sábado",
+      "homepageChips": [
+        "Pareja en Madrid",
+        "Pedida 💍",
+        "Familia en el Costa del Sol",
+        "Ayúdame a elegir"
+      ],
+      "occasionPlaceholder": "p. ej. {occasion} en Madrid el próximo mes",
+      "occasionChips": [
+        "Madrid",
+        "Costa del Sol",
+        "Toledo",
+        "Ayúdame a elegir"
+      ]
+    },
+    "blindBookingAllIn": "Todo incluido — elegimos a tu fotógrafo entre el top 1% verificado de los profesionales de España."
+  },
+  "lp": {
+    "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Spain",
+    "metaTitleGeneric": "Fotógrafos en {city} — Reserva instantánea | Photo Spain",
+    "metaDescriptionPortugalTyped": "Fotógrafos profesionales {shootTypeLower} en todo España — Madrid, Barcelona, Costa del Sol, Toledo y más. Seleccionados a mano, verificados, reserva instantánea. Pago seguro, garantía de devolución.",
+    "metaDescriptionPortugalGeneric": "Fotógrafos profesionales para sesiones en todo España — Madrid, Barcelona, Costa del Sol, Toledo y más. Seleccionados a mano, verificados, reserva instantánea. Pago seguro, garantía de devolución.",
+    "heroSubtitlePortugalWithPrice": "Fotógrafos seleccionados a mano y verificados en todo España — desde {price}. Reserve al instante, pague de forma segura.",
+    "heroSubtitlePortugalNoPrice": "Fotógrafos seleccionados a mano y verificados en todo España — reserve al instante, pague de forma segura.",
+    "viewAllPortugalTyped": "Ver los {count} fotógrafos {shootTypeLower} en todo España",
+    "viewAllPortugalGeneric": "Ver los {count} fotógrafos en todo España",
+    "reviewsTitlePortugal": "Lo que dicen los viajeros sobre Photo Spain",
+    "reviewsSubtitleCity": "Reseñas verificadas de reservas reales de Photo Spain",
+    "howItWorks": {
+      "step1DescPortugal": "Vea fotógrafos reales en todo España con precios reales."
+    }
+  },
+  "testimonials": {
+    "subtitle": "Historias reales de viajeros que capturaron recuerdos inolvidables en España",
+    "items": {
+      "sarah": {
+        "location": "Madrid"
+      },
+      "martinez": {
+        "location": "Costa del Sol"
+      },
+      "emily": {
+        "location": "Toledo"
+      },
+      "david": {
+        "location": "Barcelona",
+        "text": "Reservamos una sesión al amanecer en la ribera del La Rioja. La luz dorada, los reflejos — absolutamente mágico. Nuestro fotógrafo capturó nuestro compromiso a la perfección."
+      },
+      "tanaka": {
+        "location": "Sitges"
+      }
+    }
+  },
+  "howItWorks": {
+    "whyUsTitle": "¿Por qué Photo Spain?",
+    "page": {
+      "metaTitle": "Cómo reservar un fotógrafo en España — 4 pasos simples",
+      "metaDescription": "Reserve un fotógrafo profesional en España en 4 pasos simples. Explore portafolios, reserve al instante con pagos seguros Stripe, disfrute de su sesión y reciba las fotos editadas en una galería privada.",
+      "title": "Cómo reservar un fotógrafo en España",
+      "subtitle": "Reservar un fotógrafo profesional en España es simple, seguro y divertido. Aquí todo lo que necesita saber.",
+      "forPhotographersSubtitle": "Únase a la comunidad creciente de fotógrafos de vacaciones en España y llegue a clientes internacionales."
+    }
+  },
+  "about": {
+    "metaTitle": "Sobre Photo Spain — Nuestra historia y misión",
+    "metaDescription": "Photo Spain conecta a turistas con fotógrafos locales talentosos en todo España. Conozca nuestra misión y por qué los viajeros confían en nosotros.",
+    "heroTitleHighlight": "Photo Spain",
+    "theProblem": {
+      "text": "España es uno de los países más fotogénicos de Europa. La luz dorada de Madrid, el dramático paseo fluvial de Barcelona, los palacios de cuento de Toledo, la belleza costera de Costa del Sol — un sueño para cualquier fotógrafo. Sin embargo, cada año millones de turistas vuelven a casa con nada más que selfies borrosos y fotos incómodas tomadas por desconocidos."
+    },
+    "ourMission": {
+      "text1": "Creemos que cada viaje a España merece ser capturado magníficamente. Por eso creamos Photo Spain — una plataforma donde los viajeros pueden encontrar y reservar al instante fotógrafos locales talentosos que conocen los mejores lugares, el momento perfecto y cómo hacer que se sienta cómodo frente a la cámara."
+    },
+    "trustPoints": {
+      "locationsCovered": {
+        "text": "Desde las calles de Madrid hasta los acantilados del Costa del Sol, desde los viñedos del valle del La Rioja hasta las volcánicas Islas Canarias — cubrimos todo España."
+      }
+    },
+    "ctaTitle": "¿Listo para capturar su historia en España?",
+    "founder": {
+      "alt": "Kate Belova, fundadora de Photo Spain",
+      "bio1": "<strong>Kate Belova</strong> es fotógrafa profesional de retratos y lifestyle con más de 10 años de experiencia, basada en Madrid, España. Conocida por su estilo \"retrato del alma\", Kate tiene la rara capacidad de hacer que la gente se sienta completamente cómoda frente a la cámara — revelando emociones auténticas y personalidad genuina en cada toma.",
+      "bio2": "Tras años fotografiando sesiones familiares y lifestyle en Madrid, Toledo y Sitges, Kate se dio cuenta de que los turistas que visitaban España querían fotos bonitas, pero encontrar un fotógrafo local fiable era sorprendentemente difícil. Creó Photo Spain para resolver esto — un marketplace seleccionado donde cada fotógrafo está personalmente verificado y cada sesión ofrece una experiencia excepcional."
+    }
+  },
+  "contact": {
+    "metaTitle": "Contáctenos — Photo Spain",
+    "metaDescription": "Póngase en contacto con Photo Spain. ¿Preguntas sobre reservas, cuentas de fotógrafos o colaboraciones? Estamos aquí para ayudar."
+  },
+  "photographers": {
+    "card": {
+      "coverAlt": "{name} — fotógrafo de vacaciones en España"
+    },
+    "profile": {
+      "coverageRegionsMany": "Cubre {count} regiones en España"
+    }
+  },
+  "locations": {
+    "title": "Mejores lugares para fotografiar en España",
+    "subtitle": "Desde las calles empedradas de Madrid hasta los acantilados dorados del Costa del Sol — {count}+ de los mejores lugares para fotografiar en España, seleccionados a mano para sesiones de vacaciones, parejas, familias y viajeros en solitario.",
+    "mapMetaTitle": "Mapa fotográfico de España — Explore lugares para sesiones",
+    "mapMetaDescription": "Explore regiones, ciudades e islas de España en un mapa interactivo. Encuentre fotógrafos disponibles en Madrid, Barcelona, Costa del Sol, Tenerife, Islas Canarias y más.",
+    "mapOgAlt": "Mapa fotográfico interactivo de España con lugares para sesiones",
+    "detail": {
+      "realPhotos": {
+        "subtitle": "Por los fotógrafos de Photo Spain — toca una foto para abrir el perfil"
+      },
+      "altProfessionalShoot": "Sesión fotográfica de vacaciones profesional en {location}, España"
+    }
+  },
+  "blog": {
+    "subtitle": "Consejos, guías e inspiración para capturar sus momentos perfectos en España. Desde los mejores spots fotográficos hasta planificar su sesión soñada."
+  },
+  "blogCategories": {
+    "locationsDesc": "Descubra los mejores spots fotográficos y guías de lugares en todo España",
+    "pricingDesc": "Cuánto cuestan las sesiones en España — desgloses tarifarios transparentes",
+    "elopementsDesc": "Todo lo que necesita saber para casarse íntimamente en España",
+    "weddingsDesc": "Guías de fotografía de bodas de destino en España",
+    "couplesDesc": "Ideas e inspiración románticas para sesiones de pareja en España",
+    "familyDesc": "Consejos, lugares e ideas para sesiones familiares en España",
+    "planningDesc": "Qué ponerse, cuándo fotografiar y cómo planificar su sesión en España",
+    "proposalsDesc": "Planifique la pedida de mano sorpresa perfecta en España",
+    "soloDesc": "Viaje en solitario y fotografía de creadores de contenido en España",
+    "comparisonsDesc": "Comparación de Photo Spain con otros servicios de fotografía de vacaciones",
+    "businessDesc": "Eventos corporativos, retratos de equipo y contenido de marca — fotografía para empresas en España."
+  },
+  "chooseRole": {
+    "title": "¡Bienvenido a Photo Spain!",
+    "touristDesc": "Busco un fotógrafo para capturar mi viaje a España."
+  },
+  "heroSingle": {
+    "siteAvailableChip": "{count, plural, =1 {# fotógrafo disponible} other {# fotógrafos disponibles}} para reservar en todo España",
+    "browseAll": "O <link>explore los {count} fotógrafos</link> en todo España"
+  },
+  "auth": {
+    "signIn": {
+      "subtitle": "Inicie sesión en su cuenta de Photo Spain"
+    },
+    "signUp": {
+      "subtitle": "Únase a Photo Spain como viajero o fotógrafo",
+      "lookingForPhotographerDesc": "Reserve una sesión de fotos profesional en España"
+    }
+  },
+  "shootTypesPage": {
+    "title": "Tipos de sesiones de vacaciones en España",
+    "subtitle": "Sea cual sea el motivo de su viaje a España, tenemos el fotógrafo perfecto para su ocasión. Desde sesiones románticas de pareja hasta divertidas fotos con amigos, explore todas las formas de capturar su experiencia en España.",
+    "bestLocationsTitle": "Mejores lugares para fotografía {name} en España",
+    "bestLocationsSubtitle": "Nuestros fotógrafos operan en todo España. Estos son los mejores destinos para su sesión {name}.",
+    "stepBrowseDesc": "Vea portafolios de fotógrafos con experiencia en fotografía {name} en todo España.",
+    "photographersTitle": "Fotógrafos {name} en España",
+    "reviewsSubtitleClients": "De clientes que reservaron a través de Photo Spain",
+    "guidesSubtitle": "Consejos e inspiración para su sesión de {nameLower} en España",
+    "popularPackagesSub": "Precios reales de fotógrafos verificados que ofrecen sesiones de {nameLower} en España."
+  },
+  "blogDetail": {
+    "readyToBookSubtitle": "Explore nuestros talentosos fotógrafos en todo España y capture sus recuerdos de vacaciones perfectos.",
+    "blogCta": {
+      "title": "¿Listo para capturar su viaje a España?"
+    }
+  },
+  "exitIntent": {
+    "conciergePlaceholder": "ej. sesión de pareja en Madrid el próximo sábado a la hora dorada",
+    "photographerConciergePlaceholder": "ej. ¿{name} encaja para una sesión familiar en Madrid?"
+  },
+  "photographersMeta": {
+    "title": "Contrate un fotógrafo en España — Madrid, Barcelona, Costa del Sol",
+    "description": "Encuentre y contrate un fotógrafo profesional en Madrid, Barcelona, Toledo, Costa del Sol y más de 40 lugares de España. Explore portafolios, compare precios, lea reseñas verificadas. Reserve su sesión de vacaciones online — pareja, familia, boda, boda íntima. Desde 299 €.",
+    "locationDescription": "Encuentre y reserve fotógrafos verificados en {location}, España. Vea portafolios, lea reseñas, compare paquetes. Desde 299 €. Reserva al instante.",
+    "ogAlt": "Fotógrafos en {location}, España",
+    "browseByCitySub": "Explore fotógrafos verificados en las principales ciudades de España."
+  },
+  "faq": {
+    "metaTitle": "FAQ Sesión de fotos de vacaciones en España — Precios, reservas y más",
+    "metaDescription": "Encuentre respuestas a preguntas frecuentes sobre reservar un fotógrafo de vacaciones en España. Precios, política de cancelación, plazos de entrega, lugares y más.",
+    "subtitle": "Sesión de fotos de vacaciones en España — Precios, reservas, entrega y más",
+    "questions": {
+      "howDoesItWork": {
+        "question": "¿Cómo funciona Photo Spain?"
+      },
+      "reviewsVerified": {
+        "answer": "Sí. Todas las reseñas en Photo Spain están vinculadas a reservas terminadas. Solo los clientes que han tenido una sesión confirmada pueden dejar una reseña, garantizando opiniones auténticas y fiables."
+      },
+      "locationsAvailable": {
+        "answer": "Cubrimos más de {locationCount} destinos por toda España, incluyendo <a href=\"/photographers/location/barcelona\">Barcelona</a>, <a href=\"/photographers/location/madrid\">Madrid</a>, <a href=\"/photographers/location/seville\">Sevilla</a>, <a href=\"/photographers/location/granada\">Granada</a>, <a href=\"/photographers/location/mallorca\">Mallorca</a>, <a href=\"/photographers/location/tenerife\">Tenerife</a> y muchos más."
+      },
+      "speakEnglish": {
+        "answer": "La mayoría de los fotógrafos de nuestra plataforma hablan inglés. Puede filtrar fotógrafos por idioma en la <a href=\"/photographers\">página catálogo</a>. Muchos también hablan español, español, francés y alemán."
+      },
+      "becomePhotographer": {
+        "question": "¿Cómo me convierto en fotógrafo en Photo Spain?"
+      }
+    }
+  },
+  "pricing": {
+    "metaTitle": "Paquetes y precios de fotografía — Sesiones de vacaciones en España",
+    "metaDescription": "Paquetes de sesiones de fotos en España desde 299 €. Pareja, familia, solo y pedida de mano. Compare fotógrafos, lea reseñas verificadas. Cancelación gratuita disponible."
+  },
+  "join": {
+    "heroSubtitle": "Estamos construyendo el marketplace fotográfico número uno en España para turistas. Únase ahora y asegure beneficios exclusivos antes del lanzamiento público.",
+    "whatYouGet": {
+      "touristClients": {
+        "desc": "Traemos viajeros internacionales que buscan fotógrafos profesionales en España. Sin necesidad de prospección."
+      },
+      "securePayments": {
+        "desc": "Stripe gestiona todos los pagos del cliente. El dinero queda retenido en custodia hasta que el cliente acepta las fotos, y después te transferimos tu parte a tu cuenta bancaria."
+      }
+    },
+    "calculator": {
+      "subtitle": "Ajuste los controles para ver sus ingresos potenciales en Photo Spain."
+    },
+    "gettingStarted": {
+      "steps": {
+        "setupProfile": {
+          "desc": "Añada bio, avatar, foto de portada y seleccione sus lugares en España."
+        },
+        "connectStripe": {
+          "title": "Añade tus datos bancarios",
+          "desc": "Facilítanos el IBAN donde quieres cobrar. Es todo lo que necesitamos para enviarte tus ingresos."
+        }
+      }
+    },
+    "founderAlt": "Kate Belova, fundadora de Photo Spain",
+    "founderQuote": "Creé Photo Spain porque sé lo difícil que es para fotógrafos talentosos encontrar clientes regulares. Esta plataforma trae turistas directamente a usted — sin perseguir leads, sin negociar precios. Usted se concentra en lo que ama: crear fotos hermosas.",
+    "howPaymentsWork": {
+      "subtitle": "Transparente, seguro y protegido — los pagos del cliente pasan por Stripe",
+      "steps": {
+        "clientBooks": {
+          "desc": "El cliente selecciona tu paquete y paga. El importe completo queda retenido de forma segura por Stripe."
+        },
+        "youGetPaid": {
+          "desc": "Cuando el cliente acepta las fotos, transferimos tu parte a la cuenta bancaria que nos hayas facilitado, menos nuestra comisión."
+        }
+      }
+    }
+  },
+  "forPhotographers": {
+    "metaTitle": "Únase a Photo Spain — Gane dinero como fotógrafo de vacaciones en España",
+    "metaDescription": "Únase al marketplace creciente de fotógrafos en España. Conéctese con viajeros internacionales, gestione reservas y haga crecer su negocio fotográfico. Registro gratuito.",
+    "heroSubtitle": "Miles de turistas sueñan con fotos hermosas en los lugares más espectaculares de España — y le están buscando. Traemos los clientes, gestionamos las reservas, gestionamos los pagos y le dejamos hacer lo que ama.",
+    "whyJoin": {
+      "title": "¿Por qué unirse a Photo Spain?",
+      "benefits": {
+        "clients": {
+          "desc": "Turistas de EE.UU., Reino Unido, Alemania y más — todos buscando activamente fotógrafos en España. Solo confirma el horario."
+        },
+        "seo": {
+          "desc": "Su página de perfil está optimizada para Google. Los clientes que buscan 'fotógrafo en Madrid' le encontrarán de forma orgánica."
+        },
+        "payments": {
+          "desc": "Los clientes pagan por adelantado con Stripe. Cuando aceptan las fotos, transferimos tu parte directamente a tu banco. Sin facturas, sin perseguir cobros."
+        }
+      }
+    },
+    "community": {
+      "description": "Estamos construyendo una comunidad para fotógrafos basados en España — con encuentros, talleres y sesiones de aprendizaje. Conéctese con otros creativos, comparta experiencias y crezca junto a ellos."
+    },
+    "faq": {
+      "items": [
+        {
+          "q": "¿Necesito ser fotógrafo profesional?",
+          "a": "Sí. Verificamos a cada fotógrafo a mano. Debe tener un portafolio sólido, equipo profesional y experiencia en sesiones pagadas. No aceptamos aficionados."
+        },
+        {
+          "q": "¿Necesito vivir en España?",
+          "a": "Debe estar basado en España o legalmente autorizado a trabajar aquí. La mayoría de nuestros fotógrafos viven en o cerca de las ciudades que cubren (Madrid, Barcelona, Costa del Sol, etc.)."
+        },
+        {
+          "q": "¿Cuánto se llevan de cada reserva?",
+          "a": "Cobramos una tarifa de plataforma del 15% sobre cada reserva (reducida al 10% para el plan Premium). Usted se queda con el resto. Sin costes iniciales y sin suscripción requerida para empezar."
+        },
+        {
+          "q": "¿Cómo y cuándo cobro?",
+          "a": "Los clientes pagan con Stripe al reservar. Tu parte se transfiere a tu cuenta bancaria después de que el cliente acepte las fotos entregadas."
+        },
+        {
+          "q": "¿Cómo consigo clientes?",
+          "a": "Dos formas: (1) Los clientes exploran nuestro catálogo y le reservan directamente, y (2) Nuestro equipo concierge selecciona fotógrafos para las solicitudes de los clientes — usted solo confirma la reserva."
+        },
+        {
+          "q": "¿Cuánto tarda la aprobación?",
+          "a": "Normalmente 1-3 días laborables. Revisamos su portafolio, verificamos su identidad y nos aseguramos de que su perfil cumple nuestros estándares de calidad."
+        }
+      ]
+    },
+    "howWeSelect": {
+      "metaDescription": "Cada fotógrafo en Photo Spain es evaluado personalmente por nuestro equipo fundador. Conozca nuestro riguroso proceso de selección.",
+      "steps": {
+        "portfolio": {
+          "desc": "Comenzamos revisando todo el trabajo de cada fotógrafo, no solo lo más destacado. Buscamos consistencia en la calidad, dominio de la luz natural, emoción genuina en los retratos y la capacidad de capturar el carácter único de España."
+        }
+      },
+      "founderBody": "Photo Spain fue fundada por Kate Belova, fotógrafa profesional con más de 10 años de experiencia. Kate sabe de primera mano lo que hace una gran sesión fotográfica: la habilidad técnica, la capacidad de conectar con las personas y el instinto para encontrar la luz perfecta. Por eso supervisa personalmente el proceso de selección de fotógrafos.",
+      "aboutCta": "Sobre Photo Spain"
+    }
+  },
+  "privacy": {
+    "metaDescription": "Política de privacidad de Photo Spain — cómo recopilamos, usamos y protegemos sus datos personales.",
+    "sections": {
+      "informationWeCollect": {
+        "intro": "Cuando usa Photo Spain, podemos recopilar la siguiente información:"
+      },
+      "legalBasis": {
+        "items": {
+          "legalObligation": "<strong>Obligación legal (Artículo 6(1)(c)):</strong> para cumplir requisitos fiscales, contables y otras obligaciones legales aplicables en España y la UE."
+        }
+      },
+      "informationSharing": {
+        "legalRequirements": "<strong>Requisitos legales:</strong> si lo requiere la ley, regulación, proceso legal o solicitud gubernamental ejecutable, o para proteger los derechos, propiedad o seguridad de Photo Spain, nuestros usuarios o el público."
+      },
+      "internationalTransfers": {
+        "intro": "Photo Spain está basada en España y almacena principalmente los datos en la Unión Europea. Sin embargo, algunos de nuestros encargados de terceros pueden tratar datos personales fuera de la UE/EEE:"
+      },
+      "dataRetention": {
+        "items": {
+          "booking": "<strong>Datos de reserva y transacción:</strong> conservados 7 años tras la fecha de reserva para cumplir obligaciones fiscales y contables españolas."
+        }
+      },
+      "complaint": {
+        "intro": "Si cree que nuestro tratamiento de sus datos personales infringe el RGPD, tiene derecho a presentar una reclamación ante una autoridad de control. En España, la autoridad competente es:",
+        "cnpdAddress2": "28001 Madrid, España",
+        "cnpdName": "Agencia Española de Protección de Datos (AEPD)",
+        "cnpdAddress1": "C/ Jorge Juan, 6"
+      },
+      "children": {
+        "content": "Photo Spain no está destinado a niños menores de 18 años. No recopilamos a sabiendas datos personales de niños menores de 18 años. Si es padre o tutor y cree que su hijo nos ha proporcionado datos personales, contáctenos en"
+      },
+      "businessTransfers": {
+        "content": "Si Photo Spain se ve involucrada en una fusión, adquisición, venta de activos o quiebra, sus datos personales pueden transferirse como parte de esa transacción. En tal caso, notificaremos a todos los usuarios afectados al menos 30 días antes de la transferencia y antes de que entre en vigor cualquier nueva política de privacidad. Tendrá la opción de eliminar su cuenta y datos antes de que se complete la transferencia."
+      },
+      "changes": {
+        "content": "Podemos actualizar esta Política de privacidad de vez en cuando para reflejar cambios en nuestras prácticas, tecnología, requisitos legales u otros factores. Si realizamos cambios materiales, le notificaremos por correo o publicando un aviso destacado en nuestra plataforma al menos 14 días antes de que los cambios entren en vigor. Su uso continuado de Photo Spain tras la fecha de efecto constituye aceptación de la política actualizada."
+      }
+    }
+  },
+  "terms": {
+    "metaDescription": "Términos de servicio de Photo Spain — reservas, pagos, cancelaciones, reembolsos y reglas de la plataforma.",
+    "sections": {
+      "overview": {
+        "content": "Photo Spain (\"nosotros\", \"nuestro\") opera una plataforma marketplace en photoportugal.com que conecta a turistas (\"clientes\") con fotógrafos profesionales (\"fotógrafos\") en España. Al usar nuestra plataforma, acepta estos términos."
+      },
+      "forPhotographers": {
+        "items": {
+          "noOffPlatform": "Se le prohíbe estrictamente solicitar o realizar negocios con clientes que le contactaron a través de Photo Spain fuera de la plataforma. Esto incluye el intercambio de datos de contacto, redirigir clientes a sitios web personales o aceptar pagos directos. La violación resultará en la terminación inmediata y permanente de la cuenta"
+        }
+      },
+      "paymentsEscrow": {
+        "intro": "Todos los pagos se procesan de forma segura a través de Stripe. Cuando un cliente reserva una sesión, el monto total se cobra y queda en custodia por Photo Spain. El flujo de pago funciona así:"
+      },
+      "commission": {
+        "intro": "Photo Spain cobra una comisión sobre cada reserva completada. Las tasas dependen del plan del fotógrafo:"
+      },
+      "cancellationByPhotographer": {
+        "items": {
+          "replacement": "Si el fotógrafo cancela menos de 48 horas antes de la sesión, Photo Spain intentará encontrar un fotógrafo de reemplazo"
+        }
+      },
+      "photoDelivery": {
+        "items": {
+          "gallery": "Las fotos se entregan vía una galería privada protegida con contraseña en Photo Spain"
+        }
+      },
+      "disputes": {
+        "intro": "Si no está satisfecho con las fotos entregadas, puede abrir una disputa en 7 días tras la entrega. Photo Spain revisará la disputa y responderá en <strong>5 días laborables</strong>, trabajando con ambas partes para alcanzar una resolución justa."
+      },
+      "intellectualProperty": {
+        "photographerUse": "Al reservar una sesión, el cliente acepta que el fotógrafo pueda usar las fotos de la sesión en su portafolio, perfil de Photo Spain y para fines de marketing profesional (sitio web, redes sociales, materiales promocionales). Si el cliente no desea que sus fotos sean publicadas, debe informar al fotógrafo antes o durante la sesión. El fotógrafo está obligado a respetar esta solicitud.",
+        "platformDisclaimer": "Photo Spain no reclama propiedad sobre ninguna foto creada durante sesiones reservadas a través de la plataforma. Cualquier disputa sobre el uso de imágenes es entre el cliente y el fotógrafo. Photo Spain puede ayudar a resolver tales disputas pero no es responsable del uso no autorizado de imágenes por cualquier parte."
+      },
+      "prohibitedContent": {
+        "items": {
+          "externalLinks": "Incluir URL de sitios web personales, enlaces a redes sociales (Instagram, Facebook, etc.), correos electrónicos o números de teléfono en la bio del perfil, slogan, descripciones de paquetes o leyendas del portafolio. Toda comunicación con el cliente debe pasar por el sistema de mensajería de Photo Spain."
+        }
+      },
+      "platformRole": {
+        "content": "Photo Spain es un marketplace que facilita conexiones entre clientes y fotógrafos. Aunque verificamos perfiles de fotógrafos, moderamos reseñas y proporcionamos resolución de disputas, no somos parte del contrato de servicio entre clientes y fotógrafos. Photo Spain se proporciona \"tal cual\" sin garantías de ningún tipo. Nuestra responsabilidad total se limita al monto de la reserva en cuestión."
+      },
+      "disputeResolution": {
+        "content1": "Todas las disputas entre usuarios deben resolverse primero a través del proceso interno de resolución de disputas de Photo Spain descrito en la Sección 11. Si el proceso interno no lleva a una resolución satisfactoria, las partes acuerdan intentar la mediación antes de iniciar acciones legales.",
+        "content2": "Estos términos se rigen por las leyes de España. Cualquier procedimiento legal se llevará ante los tribunales de Madrid, España."
+      },
+      "chargebacks": {
+        "content": "Si un cliente inicia una devolución de cargo a través de su banco o proveedor de tarjeta de crédito en lugar de usar el proceso de disputa de Photo Spain, nos reservamos el derecho de suspender su cuenta pendiente de investigación. Los fotógrafos afectados por devoluciones de cargo serán notificados y podrán proporcionar pruebas para impugnar. Las devoluciones fraudulentas pueden resultar en suspensión permanente de la cuenta."
+      }
+    }
+  },
+  "dashboard": {
+    "findPhotographer": "Encuentre su fotógrafo perfecto en España"
+  },
+  "photographerDashboard": {
+    "taglinePlaceholder": "ej.: Capturando el alma de Madrid con luz y emoción"
+  },
+  "supportPage": {
+    "metaTitle": "Centro de ayuda — Photo Spain",
+    "metaDescription": "Encuentre respuestas a preguntas frecuentes sobre reservar fotógrafos, pagos, cancelaciones y más en Photo Spain.",
+    "subtitle": "Todo lo que necesita saber sobre reservas, pagos y aprovechar al máximo Photo Spain",
+    "articles": {
+      "clients": {
+        "cancelReschedule": {
+          "answer": "Sí. Puede cancelar o reprogramar desde su panel.\n\n**Reembolsos por cancelación:**\n• 7+ días antes de la sesión — reembolso del 100%\n• 3-7 días antes — reembolso del 50%\n• Menos de 3 días — sin reembolso\n• No presentación — sin reembolso\n\n**Reprogramación:** Tiene derecho a una reprogramación gratuita si la solicita 48+ horas antes de la sesión. La reprogramación dentro de 48 horas queda a discreción del fotógrafo. La reprogramación por meteorología siempre es gratis.\n\n**Si el fotógrafo cancela o reprograma:** Siempre recibe un reembolso completo del 100%, sin importar el momento. Si la cancelación ocurre menos de 48 horas antes de la sesión, Photo Spain intentará encontrarle un fotógrafo de reemplazo."
+        }
+      },
+      "photographers": {
+        "photographerCancels": {
+          "answer": "Si necesita cancelar, hágalo desde su panel lo antes posible. El cliente siempre recibe un reembolso del 100% sin importar el momento.\n\nSi cancela menos de 48 horas antes de la sesión, Photo Spain puede intentar encontrar un fotógrafo de reemplazo para el cliente.\n\n**Importante:** Cancelaciones repetidas (3 o más en 3 meses) pueden resultar en pérdida del estado Destacado, visibilidad reducida o suspensión de cuenta."
+        },
+        "externalLinks": {
+          "answer": "No. Los fotógrafos no pueden incluir URLs de sitios web personales, enlaces a redes sociales (Instagram, Facebook, TikTok, etc.), correos electrónicos o números de teléfono en ninguna parte de su perfil — incluyendo bio, slogan, descripciones de paquetes y leyendas del portafolio.\n\nToda comunicación con clientes debe pasar por el sistema de mensajería integrado de Photo Spain. Esto protege a ambas partes manteniendo conversaciones documentadas, pagos seguros y disputas resolubles.\n\nLos perfiles que contengan enlaces externos o datos de contacto serán requeridos para retirarlos. Las violaciones repetidas pueden resultar en suspensión de cuenta."
+        },
+        "getStarted": {
+          "answer": "Empezar es simple:\n\n1. **Cree su cuenta** — Regístrese y seleccione 'Hago fotos'\n2. **Complete su perfil** — Añada foto, imagen de portada, bio y slogan\n3. **Suba su portafolio** — Presente al menos 15-20 de sus mejores fotos\n4. **Cree paquetes** — Configure 2-3 paquetes a diferentes niveles de precio\n5. **Seleccione sus lugares** — Marque dónde está disponible para fotografiar\n6. **Añada sus datos bancarios** — El IBAN al que le transferimos sus ingresos\n\nUna vez que su perfil esté completo y aprobado por nuestro equipo, aparecerá en los resultados de búsqueda y podrá empezar a recibir reservas."
+        }
+      },
+      "general": {
+        "forcesMajeure": {
+          "answer": "En caso de eventos de fuerza mayor — desastres naturales, alertas meteorológicas, pandemias u otras circunstancias fuera del control de cualquiera — ambas partes tienen derecho a un reembolso completo o reprogramación gratuita sin penalizaciones.\n\nPhoto Spain trabajará con ambas partes para encontrar la mejor solución."
+        }
+      },
+      "gifts": {
+        "chooseAnyPhotographer": {
+          "answer": "Sí — la tarjeta regalo funciona con cualquier fotógrafo **participante** de Photo Spain en todo España. El destinatario explora el catálogo completo en modo regalo y reserva como una sesión normal. Los fotógrafos participan por defecto; unos pocos prefieren no participar y simplemente quedan ocultos del catálogo de regalos.\n\nLibertad total para el destinatario: cualquier fotógrafo, en cualquier parte de España, en la fecha que funcione para ambos."
+        }
+      }
+    }
+  },
+  "delivery": {
+    "brandFooter": "Photo Spain — photoportugal.com",
+    "titlePlaceholder": "Título — p. ej. «Tu noche mágica en Madrid»",
+    "titleHelp": "Se muestra como el título encima de la galería. Corto y personal — p. ej. \"Tu mágica noche en Madrid\"."
+  },
+  "messages": {
+    "founderRole": "Fundadora de Photo Spain",
+    "customProposalNamePlaceholder": "p. ej. atardecer en Sitges 1h30 para la familia García"
+  },
+  "settings": {
+    "calendarBufferDesc": "Proteja este tiempo antes y después de eventos del calendario y reservas de Photo Spain."
+  },
+  "askQuestion": {
+    "placeholder": "¡Hola! Estoy planeando un viaje a España y me gustaría hablar de una sesión de fotos..."
+  },
+  "quickBooking": {
+    "trust": "Pago procesado por Stripe. Photo Spain selecciona su fotógrafo entre profesionales verificados.",
+    "allInclusive": "Un precio único todo incluido — elegimos a tu fotógrafo entre el top 1% verificado de los profesionales de España. Sin tarifas extra."
+  },
+  "homepageMeta": {
+    "title": "Fotógrafo de viajes y vacaciones en España — Reserva online",
+    "description": "Contrate un fotógrafo profesional de viajes o vacaciones en España. {photographers}+ fotógrafos seleccionados a mano en Madrid, Barcelona, Costa del Sol, Toledo y {locations}+ lugares. {reviews}Parejas, familias y viajeros solos. Desde {price} €.",
+    "ogTitle": "Fotógrafo de viajes y vacaciones en España — Reserva online",
+    "ogDescription": "{photographers}+ fotógrafos profesionales de viajes y vacaciones en España. {reviews}Desde {price} €.",
+    "schemaWebsite": "Encuentre y reserve fotógrafos profesionales en todo España para sesiones de vacaciones.",
+    "schemaService": "Marketplace de fotografía de vacaciones en España. Reserve fotógrafos profesionales en Madrid, Barcelona, Costa del Sol y más de {locations} lugares."
+  },
+  "peek": {
+    "bookYourOwn": "Reserva tu propia sesión de fotos en España →",
+    "expiredCta": "Explorar Photo Spain"
+  },
+  "videoCall": {
+    "consentText": "Por la seguridad de todos, las llamadas en Photo Spain pueden grabarse y transcribirse. La transcripción se adjunta a este chat y la grabación se elimina justo después. Al unirte, aceptas esto."
+  },
+  "business": {
+    "metaTitle": "Photo Spain para Empresas — Fotografía Corporativa y de Eventos",
+    "metaDescription": "Fotografía corporativa en todo España: eventos, conferencias, retratos de equipo, contenido de marca. Un contrato, una factura, un gestor de cuenta personal. Presupuesto en un día laborable.",
+    "heroTitle": "Fotografía profesional para tu empresa, en cualquier punto de España",
+    "how3Text": "Photo Spain es tu contraparte única: contrato, factura con IVA, plazos de entrega y calidad corren de nuestra cuenta.",
+    "cases": {
+      "offsitesText": "Team-building, viajes de incentivo y retiros en el Costa del Sol, Tenerife y más allá."
+    },
+    "whyTitle": "Por qué las empresas eligen Photo Spain",
+    "form": {
+      "locationPh": "Madrid, Costa del Sol…"
+    },
+    "band": {
+      "kicker": "Photo Spain para Empresas",
+      "text": "Un contrato, una factura, fotógrafos verificados en todo España. Un gestor de cuenta humano se encarga de todo."
+    },
+    "heroTitleRich": "Fotografía profesional para tu empresa, <accent>en cualquier punto de España</accent>",
+    "trustPhotographers": "{count} fotógrafos verificados en todo España"
+  },
+  "onboarding": {
+    "photographer": {
+      "connectStripe": "Añade tus datos bancarios para los cobros",
+      "connectStripeTip": "Necesario para transferirte tus ingresos después de cada sesión"
+    }
+  },
+  "tryYourself": {
+    "metaTitle": "Pruébate en España — Selfie de viaje con IA",
+    "metaDescription": "Sube un selfie y verte en la Alhambra, el Park Güell, Ronda y Mallorca. Después reserva un fotógrafo real para hacerlo de verdad.",
+    "stat_locations": "📍 Barcelona · Madrid · Sevilla · Granada · Mallorca · Tenerife"
+  }
+}

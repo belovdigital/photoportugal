@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 import { getScene } from "@/lib/ai-scenes";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
-const PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 
 // Free quota WITHOUT email; quota WITH email; absolute hard cap per session+ip per day.
 const FREE_NO_EMAIL = 1;

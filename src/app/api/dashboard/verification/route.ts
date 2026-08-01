@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { country } from "@/lib/country";
 
 // Request verification
 export async function POST(req: NextRequest) {
@@ -31,9 +32,9 @@ export async function POST(req: NextRequest) {
       "SELECT name, email FROM users WHERE id = $1", [userId]
     );
     if (user) {
-      const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+      const BASE_URL = process.env.AUTH_URL || country.baseUrl;
       await sendEmail(
-        "info@photoportugal.com",
+        country.supportEmail,
         `Verification request from ${user.name}`,
         `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
           <h2 style="color: #C94536;">New Verification Request</h2>

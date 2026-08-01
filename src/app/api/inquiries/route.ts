@@ -4,8 +4,9 @@ import { queryOne } from "@/lib/db";
 import { sendEmail, sendAdminNewInquiryNotification } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { mentionsPaymentRail, classifyOffPlatformPayment, blockedCopy } from "@/lib/off-platform-payment";
+import { country } from "@/lib/country";
 
-const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
 export async function POST(req: NextRequest) {
   const user = await authFromRequest(req);
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
               <p style="color: #333; margin: 0; font-style: italic;">"${msgPreview}"</p>
             </div>
             <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reply Now</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         ).catch(err => console.error("[inquiry] email error:", err));
       }
@@ -185,7 +186,7 @@ export async function POST(req: NextRequest) {
       // Admin notifications (new inquiries only)
       if (isNewInquiry) {
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`💬 <b>New Inquiry</b>\n\n<b>Client:</b> ${senderName}\n<b>Photographer:</b> ${recipient!.name}\n\n"${msgPreview}"\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`, "clients");
+          sendTelegram(`💬 <b>New Inquiry</b>\n\n<b>Client:</b> ${senderName}\n<b>Photographer:</b> ${recipient!.name}\n\n"${msgPreview}"\n\n<a href="${country.baseUrl}/admin">Open Admin →</a>`, "clients");
         }).catch((err) => console.error("[inquiries] telegram admin error:", err));
         sendAdminNewInquiryNotification(senderName, recipient!.name, msgPreview)
           .catch((err) => console.error("[inquiries] admin email error:", err));

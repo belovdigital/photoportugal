@@ -9,6 +9,7 @@
 
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
 import { pickT, normalizeLocale, localizedUrl, type Locale } from "@/lib/email-locale";
+import { country } from "@/lib/country";
 
 interface FollowupMatch {
   slug: string;
@@ -141,7 +142,7 @@ export async function sendConciergeFollowup24h(opts: {
         h1: opts.firstName ? `Hi ${opts.firstName}` : "Hi",
         intro: "Yesterday Lens (our AI concierge) sent you a few photographer matches. If you're still on the fence, our team can help you compare or set up a call.",
         cta: "Reply and chat with a human",
-        replyEmail: "info@photoportugal.com",
+        replyEmail: country.supportEmail,
         humanLine: "Or reply to this email with any questions — we usually respond within an hour.",
         ps: "Not the right time? No worries — we'll be here when you're ready.",
         from: "From",
@@ -152,7 +153,7 @@ export async function sendConciergeFollowup24h(opts: {
         h1: opts.firstName ? `Olá ${opts.firstName}` : "Olá",
         intro: "Ontem o Lens (o nosso concierge IA) enviou-lhe alguns fotógrafos. Se ainda está na dúvida, a nossa equipa pode ajudar a comparar ou marcar uma chamada.",
         cta: "Responder e falar com alguém",
-        replyEmail: "info@photoportugal.com",
+        replyEmail: country.supportEmail,
         humanLine: "Ou responda a este email com qualquer dúvida — costumamos responder em uma hora.",
         ps: "Não é o momento certo? Sem problema — estaremos aqui quando estiver pronto.",
         from: "Desde",
@@ -163,7 +164,7 @@ export async function sendConciergeFollowup24h(opts: {
         h1: opts.firstName ? `Hallo ${opts.firstName}` : "Hallo",
         intro: "Gestern hat Lens (unser KI-Concierge) Ihnen ein paar Fotografen-Vorschläge gesendet. Wenn Sie noch unschlüssig sind, hilft Ihnen unser Team beim Vergleich oder organisiert ein Gespräch.",
         cta: "Antworten und mit jemandem sprechen",
-        replyEmail: "info@photoportugal.com",
+        replyEmail: country.supportEmail,
         humanLine: "Oder antworten Sie einfach auf diese E-Mail mit Ihren Fragen — wir antworten meistens innerhalb einer Stunde.",
         ps: "Falscher Zeitpunkt? Kein Problem — wir sind da, wenn Sie bereit sind.",
         from: "Ab",
@@ -174,7 +175,7 @@ export async function sendConciergeFollowup24h(opts: {
         h1: opts.firstName ? `Hola ${opts.firstName}` : "Hola",
         intro: "Ayer Lens (nuestro concierge IA) le envió algunos fotógrafos. Si todavía está dudando, nuestro equipo puede ayudarle a comparar o organizar una llamada.",
         cta: "Responder y hablar con alguien",
-        replyEmail: "info@photoportugal.com",
+        replyEmail: country.supportEmail,
         humanLine: "O responda a este correo con cualquier duda — solemos responder en una hora.",
         ps: "¿No es el momento? Sin problema — estaremos aquí cuando esté listo.",
         from: "Desde",
@@ -185,7 +186,7 @@ export async function sendConciergeFollowup24h(opts: {
         h1: opts.firstName ? `Bonjour ${opts.firstName}` : "Bonjour",
         intro: "Hier, Lens (notre concierge IA) vous a envoyé quelques propositions de photographes. Si vous hésitez encore, notre équipe peut vous aider à comparer ou organiser un appel.",
         cta: "Répondre et parler à quelqu'un",
-        replyEmail: "info@photoportugal.com",
+        replyEmail: country.supportEmail,
         humanLine: "Ou répondez à cet e-mail avec vos questions — nous répondons généralement en une heure.",
         ps: "Ce n'est pas le bon moment ? Pas de souci — nous serons là quand vous serez prêt(e).",
         from: "À partir de",
@@ -233,7 +234,7 @@ export async function sendConciergeWeddingNurture(opts: {
     {
       en: {
         subject: {
-          d4: "Still dreaming about your Portugal wedding?",
+          d4: `Still dreaming about your ${country.areaServed} wedding?`,
           d11: "Your wedding photographer shortlist",
           d21: "Shall we hold your wedding date?",
         }[opts.stage],
@@ -250,7 +251,7 @@ export async function sendConciergeWeddingNurture(opts: {
       },
       pt: {
         subject: {
-          d4: "Ainda a sonhar com o vosso casamento em Portugal?",
+          d4: `Ainda a sonhar com o vosso casamento em ${country.areaServed}?`,
           d11: "A vossa lista de fotógrafos de casamento",
           d21: "Reservamos a data do vosso casamento?",
         }[opts.stage],
@@ -267,7 +268,7 @@ export async function sendConciergeWeddingNurture(opts: {
       },
       de: {
         subject: {
-          d4: "Träumt ihr noch von eurer Hochzeit in Portugal?",
+          d4: `Träumt ihr noch von eurer Hochzeit in ${country.areaServed}?`,
           d11: "Eure Auswahl an Hochzeitsfotografen",
           d21: "Sollen wir euren Hochzeitstermin sichern?",
         }[opts.stage],
@@ -284,7 +285,7 @@ export async function sendConciergeWeddingNurture(opts: {
       },
       es: {
         subject: {
-          d4: "¿Aún soñando con vuestra boda en Portugal?",
+          d4: `¿Aún soñando con vuestra boda en ${country.areaServed}?`,
           d11: "Vuestra lista de fotógrafos de boda",
           d21: "¿Reservamos la fecha de vuestra boda?",
         }[opts.stage],
@@ -301,7 +302,7 @@ export async function sendConciergeWeddingNurture(opts: {
       },
       fr: {
         subject: {
-          d4: "Vous rêvez encore de votre mariage au Portugal ?",
+          d4: `Vous rêvez encore de votre mariage au ${country.areaServed} ?`,
           d11: "Votre sélection de photographes de mariage",
           d21: "On réserve la date de votre mariage ?",
         }[opts.stage],

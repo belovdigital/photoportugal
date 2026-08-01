@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("metaTitle"),
     description: t("metaDescription"),
     alternates: localeAlternates("/about", locale),
-    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/about` },
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/about` },
   };
 }
 
@@ -54,20 +55,20 @@ export default async function AboutPage({
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
-            name: "Photo Portugal",
-            url: "https://photoportugal.com",
-            logo: "https://photoportugal.com/logo.svg",
+            name: country.brand,
+            url: country.baseUrl,
+            logo: `${country.baseUrl}/logo.svg`,
             description:
-              "Photo Portugal connects tourists visiting Portugal with talented local photographers for professional vacation photoshoots.",
+              `${country.brand} connects tourists visiting Portugal with talented local photographers for professional vacation photoshoots.`,
             founder: {
               "@type": "Person",
               name: "Kate Belova",
               jobTitle: "Founder & Photographer",
-              url: "https://photoportugal.com/photographers/kate-belova",
+              url: `${country.baseUrl}/photographers/kate-belova`,
             },
             contactPoint: {
               "@type": "ContactPoint",
-              email: "info@photoportugal.com",
+              email: country.supportEmail,
               contactType: "customer service",
             },
           }),

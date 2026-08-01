@@ -10,22 +10,44 @@
 import { Pool } from "pg";
 import nodemailer from "nodemailer";
 
+
+/**
+ * Fail loudly rather than falling back. Every default in this file used to name
+ * Portugal, so a misconfigured run in another market would have quietly used
+ * Portugal's database and sent mail as Photo Portugal.
+ */
+function requireEnv(name: string): string {
+  const v = process.env[name];
+  if (!v) {
+    console.error(`[cron] ${name} is not set — refusing to run rather than guessing.`);
+    process.exit(1);
+  }
+  return v;
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://photoportugal:PhotoPortugal2026Secure@localhost:5432/photoportugal",
+  // No fallback on purpose. This script used to default to the Portuguese
+  // production database; run on any other machine with DATABASE_URL unset it
+  // would silently connect to Portugal and email its clients.
+  connectionString: requireEnv("DATABASE_URL"),
 });
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.migadu.com",
   port: parseInt(process.env.SMTP_PORT || "465"),
-  secure: true,
+  // 465 is implicit TLS, 587 is STARTTLS. Hardcoding `true` breaks 587, which
+  // is the only outbound mail port open on the Spanish box (Hetzner blocks 465
+  // and 25 there).
+  secure: parseInt(process.env.SMTP_PORT || "465") === 465,
   auth: {
-    user: process.env.SMTP_USER || "info@photoportugal.com",
+    user: requireEnv("SMTP_USER"),
     pass: process.env.SMTP_PASS || "",
   },
 });
 
-const FROM = "Photo Portugal <info@photoportugal.com>";
-const BASE_URL = "https://photoportugal.com";
+const FROM = requireEnv("SMTP_FROM");
+const BASE_URL = requireEnv("BASE_URL");
+const BRAND = FROM.replace(/\s*<.*$/, "").trim();
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!process.env.SMTP_PASS) {
@@ -73,7 +95,7 @@ async function sendReminders() {
           <li>Wear comfortable, photogenic clothing</li>
         </ul>
         <p><a href="${BASE_URL}/dashboard/messages" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Message Your Photographer</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+        <p style="color: #999; font-size: 12px;">${BRAND} — ${new URL(BASE_URL).host}</p>
       </div>`
     );
 
@@ -86,7 +108,7 @@ async function sendReminders() {
         <p>Hi ${b.photographer_name},</p>
         <p>Reminder: you have a photoshoot with <strong>${b.client_name}</strong> scheduled for tomorrow${b.shoot_time ? ` (${b.shoot_time})` : ""}.</p>
         <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+        <p style="color: #999; font-size: 12px;">${BRAND} — ${new URL(BASE_URL).host}</p>
       </div>`
     );
 
@@ -135,7 +157,7 @@ async function sendReviewRequests() {
         <p>We hope you loved your photos from <strong>${b.photographer_name}</strong>!</p>
         <p>Your feedback helps other travelers find great photographers and helps ${b.photographer_name} grow their business.</p>
         <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Leave a Review</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+        <p style="color: #999; font-size: 12px;">${BRAND} — ${new URL(BASE_URL).host}</p>
       </div>`
     );
 

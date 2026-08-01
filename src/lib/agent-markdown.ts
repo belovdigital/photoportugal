@@ -2,6 +2,7 @@ import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
 import { maskSurname } from "@/lib/photographer-name";
+import { country } from "@/lib/country";
 
 // Markdown representations of key public pages, served via content
 // negotiation (`Accept: text/markdown`) for AI agents. English only —
@@ -10,7 +11,7 @@ import { maskSurname } from "@/lib/photographer-name";
 // Names are masked with maskSurname(): agents relay this text directly to
 // clients, so it is a visible discovery surface, not an SEO meta surface.
 
-const SITE = "https://photoportugal.com";
+const SITE = country.baseUrl;
 
 interface CatalogRow {
   slug: string; name: string; tagline: string | null; rating: number; review_count: number;

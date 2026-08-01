@@ -1,4 +1,5 @@
 import { type Locale } from "@/lib/email-locale";
+import { country } from "@/lib/country";
 
 // Localised thank-you email for clients who left a review and earned
 // a Stripe promo code. Photo reviews get 10%, video reviews get 15% and
@@ -20,7 +21,7 @@ const BUTTON = "background: #C94536; color: white; padding: 14px 28px; border-ra
 function wrap(inner: string): string {
   return `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 540px; margin: 0 auto; color: #1F1F1F;">
 ${inner}
-<p style="color: #999; font-size: 12px; margin-top: 24px;">Photo Portugal — <a href="https://photoportugal.com" style="color: #999; text-decoration: underline;">photoportugal.com</a></p>
+<p style="color: #999; font-size: 12px; margin-top: 24px;">${country.brand} — <a href="${country.baseUrl}" style="color: #999; text-decoration: underline;">${country.host}</a></p>
 </div>`;
 }
 
@@ -42,7 +43,7 @@ function photoEmail(args: Args): { subject: string; html: string } {
       subject: `Your ${percentOff}% off code is here`,
       heading: `Thanks for the review${greet}!`,
       body: `Reviews like yours help travelers find the right photographer. Really, thank you.`,
-      promise: `As promised, here's your <strong>${percentOff}% off code</strong> for any future booking on Photo Portugal:`,
+      promise: `As promised, here's your <strong>${percentOff}% off code</strong> for any future booking on ${country.brand}:`,
       codeLabel: "YOUR CODE",
       validLabel: "Valid for 12 months",
       oneUseLabel: "One use",
@@ -53,7 +54,7 @@ function photoEmail(args: Args): { subject: string; html: string } {
       subject: `O seu código de ${percentOff}% de desconto chegou`,
       heading: `Obrigado pela avaliação${greet}!`,
       body: `Avaliações como a sua ajudam outros viajantes a encontrar o fotógrafo certo. Muito obrigado.`,
-      promise: `Como prometido, aqui está o seu <strong>código de ${percentOff}% de desconto</strong> para a próxima reserva na Photo Portugal:`,
+      promise: `Como prometido, aqui está o seu <strong>código de ${percentOff}% de desconto</strong> para a próxima reserva na ${country.brand}:`,
       codeLabel: "O SEU CÓDIGO",
       validLabel: "Válido por 12 meses",
       oneUseLabel: "Utilização única",
@@ -64,7 +65,7 @@ function photoEmail(args: Args): { subject: string; html: string } {
       subject: `Ihr ${percentOff}%-Rabattcode ist da`,
       heading: `Vielen Dank für die Bewertung${greet}!`,
       body: `Bewertungen wie Ihre helfen anderen Reisenden, den richtigen Fotografen zu finden. Wirklich, danke.`,
-      promise: `Wie versprochen, hier ist Ihr <strong>${percentOff}%-Rabattcode</strong> für eine zukünftige Buchung bei Photo Portugal:`,
+      promise: `Wie versprochen, hier ist Ihr <strong>${percentOff}%-Rabattcode</strong> für eine zukünftige Buchung bei ${country.brand}:`,
       codeLabel: "IHR CODE",
       validLabel: "12 Monate gültig",
       oneUseLabel: "Einmalig verwendbar",
@@ -75,7 +76,7 @@ function photoEmail(args: Args): { subject: string; html: string } {
       subject: `Aquí está su código de ${percentOff}% de descuento`,
       heading: `¡Gracias por la reseña${greet}!`,
       body: `Reseñas como la suya ayudan a otros viajeros a encontrar al fotógrafo adecuado. De verdad, gracias.`,
-      promise: `Como prometido, aquí tiene su <strong>código de ${percentOff}% de descuento</strong> para su próxima reserva en Photo Portugal:`,
+      promise: `Como prometido, aquí tiene su <strong>código de ${percentOff}% de descuento</strong> para su próxima reserva en ${country.brand}:`,
       codeLabel: "SU CÓDIGO",
       validLabel: "Válido durante 12 meses",
       oneUseLabel: "Un único uso",
@@ -86,7 +87,7 @@ function photoEmail(args: Args): { subject: string; html: string } {
       subject: `Votre code de réduction de ${percentOff}% est là`,
       heading: `Merci pour l'avis${greet} !`,
       body: `Des avis comme le vôtre aident les autres voyageurs à trouver le bon photographe. Vraiment, merci.`,
-      promise: `Comme promis, voici votre <strong>code de réduction de ${percentOff}%</strong> pour votre prochaine réservation sur Photo Portugal :`,
+      promise: `Comme promis, voici votre <strong>code de réduction de ${percentOff}%</strong> pour votre prochaine réservation sur ${country.brand} :`,
       codeLabel: "VOTRE CODE",
       validLabel: "Valable 12 mois",
       oneUseLabel: "Utilisation unique",
@@ -101,7 +102,7 @@ function photoEmail(args: Args): { subject: string; html: string } {
 <p>${t.promise}</p>
 ${codeBlock(code, t.validLabel, t.oneUseLabel, t.codeLabel)}
 <p>${t.apply}</p>
-<p><a href="https://photoportugal.com" style="${BUTTON}">${t.cta}</a></p>`);
+<p><a href="${country.baseUrl}" style="${BUTTON}">${t.cta}</a></p>`);
   return { subject: t.subject, html };
 }
 
@@ -115,7 +116,7 @@ function videoEmail(args: Args): { subject: string; html: string } {
       subject: `Your ${percentOff}% off code — thanks for the video review!`,
       heading: `That video meant a lot${greet} 🎥`,
       body: `Video reviews are real effort, and they make a real difference. Travelers trust a face and a voice in a way text can't match — yours is going to help someone book the right photographer.`,
-      promise: `That's why your reward is <strong>${percentOff}% off</strong> — a little bigger than the standard thank-you. Use it on any future Photo Portugal booking:`,
+      promise: `That's why your reward is <strong>${percentOff}% off</strong> — a little bigger than the standard thank-you. Use it on any future ${country.brand} booking:`,
       codeLabel: "YOUR CODE",
       validLabel: "Valid for 12 months",
       oneUseLabel: "One use",
@@ -126,7 +127,7 @@ function videoEmail(args: Args): { subject: string; html: string } {
       subject: `O seu código de ${percentOff}% — obrigado pelo vídeo!`,
       heading: `Esse vídeo significou muito${greet} 🎥`,
       body: `Avaliações em vídeo exigem esforço real e fazem uma diferença real. Os viajantes confiam num rosto e numa voz de uma forma que o texto não consegue — o seu vai ajudar alguém a reservar o fotógrafo certo.`,
-      promise: `Por isso a sua recompensa é de <strong>${percentOff}% de desconto</strong> — um pouco maior que o agradecimento padrão. Use-o em qualquer reserva futura na Photo Portugal:`,
+      promise: `Por isso a sua recompensa é de <strong>${percentOff}% de desconto</strong> — um pouco maior que o agradecimento padrão. Use-o em qualquer reserva futura na ${country.brand}:`,
       codeLabel: "O SEU CÓDIGO",
       validLabel: "Válido por 12 meses",
       oneUseLabel: "Utilização única",
@@ -137,7 +138,7 @@ function videoEmail(args: Args): { subject: string; html: string } {
       subject: `Ihr ${percentOff}%-Code — danke für das Video!`,
       heading: `Dieses Video hat viel bedeutet${greet} 🎥`,
       body: `Video-Bewertungen sind echte Mühe und machen einen echten Unterschied. Reisende vertrauen einem Gesicht und einer Stimme auf eine Weise, die Text nicht erreicht — Ihres wird jemandem helfen, den richtigen Fotografen zu buchen.`,
-      promise: `Deshalb ist Ihre Belohnung <strong>${percentOff}% Rabatt</strong> — etwas mehr als das übliche Dankeschön. Nutzbar bei jeder zukünftigen Buchung bei Photo Portugal:`,
+      promise: `Deshalb ist Ihre Belohnung <strong>${percentOff}% Rabatt</strong> — etwas mehr als das übliche Dankeschön. Nutzbar bei jeder zukünftigen Buchung bei ${country.brand}:`,
       codeLabel: "IHR CODE",
       validLabel: "12 Monate gültig",
       oneUseLabel: "Einmalig verwendbar",
@@ -148,7 +149,7 @@ function videoEmail(args: Args): { subject: string; html: string } {
       subject: `Su código de ${percentOff}% — ¡gracias por el vídeo!`,
       heading: `Ese vídeo significó mucho${greet} 🎥`,
       body: `Las reseñas en vídeo requieren esfuerzo real y marcan una diferencia real. Los viajeros confían en una cara y una voz de un modo que el texto no logra — la suya va a ayudar a alguien a reservar al fotógrafo adecuado.`,
-      promise: `Por eso su recompensa es <strong>${percentOff}% de descuento</strong> — un poco más que el agradecimiento estándar. Úselo en cualquier futura reserva en Photo Portugal:`,
+      promise: `Por eso su recompensa es <strong>${percentOff}% de descuento</strong> — un poco más que el agradecimiento estándar. Úselo en cualquier futura reserva en ${country.brand}:`,
       codeLabel: "SU CÓDIGO",
       validLabel: "Válido durante 12 meses",
       oneUseLabel: "Un único uso",
@@ -159,7 +160,7 @@ function videoEmail(args: Args): { subject: string; html: string } {
       subject: `Votre code de ${percentOff}% — merci pour la vidéo !`,
       heading: `Cette vidéo a beaucoup compté${greet} 🎥`,
       body: `Les avis vidéo demandent un vrai effort et font une vraie différence. Les voyageurs font confiance à un visage et à une voix d'une manière que le texte ne peut atteindre — le vôtre va aider quelqu'un à réserver le bon photographe.`,
-      promise: `C'est pourquoi votre récompense est de <strong>${percentOff}% de réduction</strong> — un peu plus que le remerciement habituel. Utilisable sur toute future réservation Photo Portugal :`,
+      promise: `C'est pourquoi votre récompense est de <strong>${percentOff}% de réduction</strong> — un peu plus que le remerciement habituel. Utilisable sur toute future réservation ${country.brand} :`,
       codeLabel: "VOTRE CODE",
       validLabel: "Valable 12 mois",
       oneUseLabel: "Utilisation unique",
@@ -174,7 +175,7 @@ function videoEmail(args: Args): { subject: string; html: string } {
 <p>${t.promise}</p>
 ${codeBlock(code, t.validLabel, t.oneUseLabel, t.codeLabel)}
 <p>${t.apply}</p>
-<p><a href="https://photoportugal.com" style="${BUTTON}">${t.cta}</a></p>`);
+<p><a href="${country.baseUrl}" style="${BUTTON}">${t.cta}</a></p>`);
   return { subject: t.subject, html };
 }
 

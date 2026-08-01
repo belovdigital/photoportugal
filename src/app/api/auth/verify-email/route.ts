@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { sendWelcomeEmail, sendAdminNewPhotographerNotification, sendAdminNewClientNotification } from "@/lib/email";
+import { country } from "@/lib/country";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
-  const base = process.env.AUTH_URL || "https://photoportugal.com";
+  const base = process.env.AUTH_URL || country.baseUrl;
 
   if (!token) {
     return NextResponse.redirect(`${base}/auth/signin?error=invalid-token`);
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
           console.error("[verify-email] Failed to send admin notification:", err)
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`, "photographers");
+          sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${user.name}\n<b>Email:</b> ${user.email}\n\n<a href="${country.baseUrl}/admin">Open Admin Panel →</a>`, "photographers");
         }).catch((err) => console.error("[verify-email] telegram error:", err));
       } else {
         sendAdminNewClientNotification(user.name, user.email).catch((err) =>

@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe, calculatePayment, SERVICE_FEE_RATE } from "@/lib/stripe";
+import { country } from "@/lib/country";
 
 export async function POST(req: NextRequest) {
   // Accept both NextAuth (web) and Bearer JWT (mobile) — mobile booking flow
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
       await queryOne("UPDATE users SET stripe_customer_id = $1 WHERE id = $2 RETURNING id", [customerId, userId]);
     }
 
-    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+    const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
     // Create Stripe Checkout Session — payment collected on platform, transferred to photographer on delivery acceptance
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

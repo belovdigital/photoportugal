@@ -17,6 +17,7 @@ import { LARGE_GROUP_SURCHARGE_RATE, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { inferPackageTags, locationDisplayName } from "@/lib/package-photo-matching";
 import { PackageHeroCarousel } from "./PackageHeroCarousel";
 import { localeAlternates } from "@/lib/seo";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -173,12 +174,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const { pkg, photographer, locations, portfolio } = data;
   const where = locations.slice(0, 2).map((l) => l.name).filter(Boolean).join(" & ") || "Portugal";
-  const title = `${pkg.name} by ${photographer.display_name} in ${where} — €${Math.round(Number(pkg.price))} | Photo Portugal`;
+  const title = `${pkg.name} by ${photographer.display_name} in ${where} — €${Math.round(Number(pkg.price))} | ${country.brand}`;
   const description = pkg.description
     ? pkg.description.slice(0, 160).replace(/\s+/g, " ").trim()
     : `Book ${pkg.name} (${pkg.duration_minutes} min · ${pkg.num_photos} photos) with ${photographer.display_name} in ${where}. From €${Math.round(Number(pkg.price))}.`;
-  const ogImage = portfolio[0]?.url || photographer.cover_url || photographer.avatar_url || "https://photoportugal.com/og-image.png";
-  const ogImageAbs = ogImage.startsWith("http") ? ogImage : `https://photoportugal.com${ogImage}`;
+  const ogImage = portfolio[0]?.url || photographer.cover_url || photographer.avatar_url || `${country.baseUrl}${country.ogImage}`;
+  const ogImageAbs = ogImage.startsWith("http") ? ogImage : `${country.baseUrl}${ogImage}`;
 
   // Canonical: consolidate the per-package page into the parent
   // photographer profile. The package page has ~70% overlapping
@@ -190,7 +191,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // locale its own per-locale canonical (pointing to the profile in
   // that locale) plus a full hreflang cluster, matching the profile
   // page's working pattern.
-  const ogCanonical = `https://photoportugal.com${locale === "en" ? "" : `/${locale}`}/photographers/${slug}`;
+  const ogCanonical = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/photographers/${slug}`;
 
   return {
     title,
@@ -253,14 +254,14 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
   // Product is on Google's whitelist for review snippets, so this is what
   // gives our package SERP entries star ratings. Image array, offers,
   // aggregateRating, and inlined review array all conform to spec.
-  const canonical = `https://photoportugal.com/photographers/${slug}/${pkgSlug}`;
+  const canonical = `${country.baseUrl}/photographers/${slug}/${pkgSlug}`;
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: pkg.name,
     description: pkg.description || `${pkg.name} by ${photographer.display_name}`,
     url: canonical,
-    image: portfolio.slice(0, 6).map((p) => (p.url.startsWith("http") ? p.url : `https://photoportugal.com${p.url}`)),
+    image: portfolio.slice(0, 6).map((p) => (p.url.startsWith("http") ? p.url : `${country.baseUrl}${p.url}`)),
     // "brand" must be a Brand or Organization, not Person — Search Console
     // flagged the Person variant as "Invalid object type for field brand".
     brand: { "@type": "Brand", name: photographer.display_name },
@@ -269,7 +270,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
       priceCurrency: "EUR",
       price: String(Math.round(Number(pkg.price))),
       availability: "https://schema.org/InStock",
-      url: `https://photoportugal.com/book/${slug}?package=${pkg.id}`,
+      url: `${country.baseUrl}/book/${slug}?package=${pkg.id}`,
       seller: { "@type": "Person", name: photographer.display_name },
       // Google's Merchant-listings parser sees any priced Offer as a
       // potential product listing and demands these fields. We're a
@@ -319,9 +320,9 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://photoportugal.com/" },
-      { "@type": "ListItem", position: 2, name: "Photographers", item: "https://photoportugal.com/photographers" },
-      { "@type": "ListItem", position: 3, name: photographer.display_name, item: `https://photoportugal.com/photographers/${slug}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: `${country.baseUrl}/` },
+      { "@type": "ListItem", position: 2, name: "Photographers", item: `${country.baseUrl}/photographers` },
+      { "@type": "ListItem", position: 3, name: photographer.display_name, item: `${country.baseUrl}/photographers/${slug}` },
       { "@type": "ListItem", position: 4, name: pkg.name, item: canonical },
     ],
   };
@@ -332,14 +333,14 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
     name: `${pkg.name} — Sample Photos`,
     image: portfolio.slice(0, 12).map((p) => ({
       "@type": "ImageObject",
-      contentUrl: p.url.startsWith("http") ? p.url : `https://photoportugal.com${p.url}`,
+      contentUrl: p.url.startsWith("http") ? p.url : `${country.baseUrl}${p.url}`,
       ...(p.thumbnail_url ? { thumbnailUrl: p.thumbnail_url } : {}),
       ...(p.caption ? { caption: p.caption } : {}),
       creator: { "@type": "Person", name: photographer.display_name },
       copyrightHolder: { "@type": "Person", name: photographer.display_name },
       copyrightNotice: `© ${new Date().getFullYear()} ${photographer.display_name} — All rights reserved`,
-      creditText: `${photographer.display_name} — Photo Portugal`,
-      license: "https://photoportugal.com/terms",
+      creditText: `${photographer.display_name} — ${country.brand}`,
+      license: `${country.baseUrl}/terms`,
       acquireLicensePage: canonical,
     })),
   } : null;
@@ -355,7 +356,7 @@ export default async function PackagePage({ params }: { params: Promise<{ slug: 
       {/* Hero — swipeable carousel covers above the fold, with the package
           name + photographer + price overlay. On mobile takes ~80% of
           viewport height to maximise the visual punch. */}
-      <PackageHeroCarousel photos={heroPhotos.length ? heroPhotos : [{ url: photographer.cover_url || photographer.avatar_url || "/og-image.png", alt: pkg.name }]}>
+      <PackageHeroCarousel photos={heroPhotos.length ? heroPhotos : [{ url: photographer.cover_url || photographer.avatar_url || country.ogImage, alt: pkg.name }]}>
         <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-5 pb-10 pt-24 sm:px-10 sm:pb-14 sm:pt-32">
           <div className="mx-auto max-w-5xl">
             {pkg.is_popular && (

@@ -11,6 +11,7 @@ import {
   hasAvailableBookingStart,
   lisbonLocalMinutesToUtc,
 } from "@/lib/booking-availability";
+import { country } from "@/lib/country";
 
 // Create a booking request
 export async function POST(req: NextRequest) {
@@ -617,7 +618,7 @@ export async function POST(req: NextRequest) {
           dateDisplay
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`📅 <b>New Booking!</b>\n\n<b>Client:</b> ${clientInfo!.name}\n<b>Photographer:</b> ${photographerInfo!.display_name}\n<b>Package:</b> ${pkgInfo?.name || "Custom"}\n<b>Date:</b> ${dateDisplay || "Flexible"}\n\n<a href="https://photoportugal.com/admin">Open Admin →</a>`, "bookings");
+          sendTelegram(`📅 <b>New Booking!</b>\n\n<b>Client:</b> ${clientInfo!.name}\n<b>Photographer:</b> ${photographerInfo!.display_name}\n<b>Package:</b> ${pkgInfo?.name || "Custom"}\n<b>Date:</b> ${dateDisplay || "Flexible"}\n\n<a href="${country.baseUrl}/admin">Open Admin →</a>`, "bookings");
         }).catch((err) => console.error("[bookings] telegram new booking error:", err));
       }
 
@@ -642,7 +643,7 @@ export async function POST(req: NextRequest) {
         if (photographerPhone?.phone) {
           sendSMS(
             photographerPhone.phone,
-            `New booking request on Photo Portugal from ${clientInfo.name}. Log in to review: https://photoportugal.com/dashboard/bookings`
+            `New booking request on Photo Portugal from ${clientInfo.name}. Log in to review: ${country.baseUrl}/dashboard/bookings`
           ).catch(err => console.error("[sms] new booking error:", err));
         }
       }
@@ -684,7 +685,7 @@ export async function POST(req: NextRequest) {
         import("@/lib/notify-photographer").then(m =>
           m.notifyPhotographerViaTelegram(
             photographer_id,
-            `New booking request from ${clientFirst}!\n\nPackage: ${pkgInfo?.name || "Custom"}\nDate: ${dateDisplay || "Flexible"}\n\nView: https://photoportugal.com/dashboard/bookings`
+            `New booking request from ${clientFirst}!\n\nPackage: ${pkgInfo?.name || "Custom"}\nDate: ${dateDisplay || "Flexible"}\n\nView: ${country.baseUrl}/dashboard/bookings`
           )
         ).catch((err) => console.error("[bookings] telegram photographer notify error:", err));
       }

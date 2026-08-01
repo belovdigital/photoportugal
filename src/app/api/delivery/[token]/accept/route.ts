@@ -6,6 +6,7 @@ import { sendDeliveryAcceptedToPhotographer, sendDeliveryAcceptedToClient } from
 import { sendBookingStatusMessage } from "@/lib/booking-messages";
 import { auth } from "@/lib/auth";
 import crypto from "crypto";
+import { country } from "@/lib/country";
 
 // POST: Accept delivery — verify password, mark accepted, trigger payout
 export async function POST(
@@ -169,9 +170,9 @@ export async function POST(
             <h2 style="color: #C94536;">Payment Pending — Action Required</h2>
             <p>Hi ${booking.photographer_name.split(" ")[0]},</p>
             <p><strong>${booking.client_name}</strong> has accepted your photo delivery! However, we can't transfer your payment yet because your Stripe account setup is incomplete.</p>
-            <p><a href="https://photoportugal.com/dashboard/settings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Complete Stripe Setup</a></p>
+            <p><a href="${country.baseUrl}/dashboard/settings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Complete Stripe Setup</a></p>
             <p style="color: #666; font-size: 13px;">Once your Stripe account is verified, the payment will be transferred automatically.</p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`)
       ).catch(e => console.error("[delivery/accept] stripe setup email error:", e));
 
@@ -285,7 +286,7 @@ export async function POST(
     booking.client_name,
     booking.photographer_name,
     booking.delivery_password_plain
-      ? `https://photoportugal.com/delivery/${token}?pw=${encodeURIComponent(booking.delivery_password_plain)}&tip=1`
+      ? `${country.baseUrl}/delivery/${token}?pw=${encodeURIComponent(booking.delivery_password_plain)}&tip=1`
       : null
   );
 
@@ -316,7 +317,7 @@ export async function POST(
       import("@/lib/notify-photographer").then(m =>
         m.notifyPhotographerViaTelegram(
           photographerProfileForTg.id,
-          `${clientFirst} accepted your delivery!${payoutInfo}\n\nView: https://photoportugal.com/dashboard/bookings`
+          `${clientFirst} accepted your delivery!${payoutInfo}\n\nView: ${country.baseUrl}/dashboard/bookings`
         )
       ).catch((err) => console.error("[delivery/accept] telegram photographer error:", err));
     }

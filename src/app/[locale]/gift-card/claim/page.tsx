@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { country } from "@/lib/country";
 
 type TierMeta = {
   code: "express" | "full";
@@ -117,7 +118,7 @@ function GiftCardClaimPage() {
           Welcome, {verified.name.split(" ")[0]}!
         </h1>
         <p className="text-base text-gray-600 text-center">
-          <strong>{verified.buyer_name}</strong> sent you a Photo Portugal gift session.
+          <strong>{verified.buyer_name}</strong> sent you a {country.brand} gift session.
         </p>
 
         <div className="mt-6 rounded-xl border border-warm-200 bg-warm-50 p-4">

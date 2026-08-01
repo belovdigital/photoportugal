@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { query, queryOne } from "@/lib/db";
 import { sendTelegram } from "@/lib/telegram";
 import { maskSurname } from "@/lib/photographer-name";
+import { country } from "@/lib/country";
 
 // GET /api/wishlist — list wishlisted photographers
 // GET /api/wishlist?check=id1,id2 — bulk check which IDs are wishlisted
@@ -127,7 +128,7 @@ export async function POST(req: NextRequest) {
       [user.id, photographer_id]
     );
     if (info) {
-      sendTelegram(`❤️ <b>${info.client_name}</b> saved <b>${info.photographer_name}</b> to wishlist\nhttps://photoportugal.com/photographers/${info.slug}`, "clients").catch((err) => console.error("[wishlist] telegram error:", err));
+      sendTelegram(`❤️ <b>${info.client_name}</b> saved <b>${info.photographer_name}</b> to wishlist\n${country.baseUrl}/photographers/${info.slug}`, "clients").catch((err) => console.error("[wishlist] telegram error:", err));
     }
 
     return NextResponse.json({ wishlisted: true });

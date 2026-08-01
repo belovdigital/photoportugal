@@ -1,8 +1,9 @@
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
 import { pickT, normalizeLocale } from "@/lib/email-locale";
 import { signGiftToken } from "@/lib/gift-token";
+import { country } from "@/lib/country";
 
-const BASE_URL = "https://photoportugal.com";
+const BASE_URL = country.baseUrl;
 
 export type GiftRevealPayload = {
   recipientUserId: string;
@@ -35,7 +36,7 @@ export async function sendGiftRevealEmail(toEmail: string, p: GiftRevealPayload)
       subject: `🎁 ${p.buyerName} sent you a photo session`,
       h1: `${p.buyerName} just gifted you a photo session 🎁`,
       intro: `Hi ${p.recipientName.split(" ")[0]} —`,
-      body: `${p.buyerName} booked a photoshoot for you on Photo Portugal. Here are the details:`,
+      body: `${p.buyerName} booked a photoshoot for you on ${country.brand}. Here are the details:`,
       who: "Photographer",
       pkg: "Package",
       when: "Date",
@@ -48,7 +49,7 @@ export async function sendGiftRevealEmail(toEmail: string, p: GiftRevealPayload)
       subject: `🎁 ${p.buyerName} ofereceu-lhe uma sessão fotográfica`,
       h1: `${p.buyerName} ofereceu-lhe uma sessão fotográfica 🎁`,
       intro: `Olá ${p.recipientName.split(" ")[0]} —`,
-      body: `${p.buyerName} reservou uma sessão fotográfica para si na Photo Portugal. Detalhes:`,
+      body: `${p.buyerName} reservou uma sessão fotográfica para si na ${country.brand}. Detalhes:`,
       who: "Fotógrafo",
       pkg: "Pacote",
       when: "Data",
@@ -61,7 +62,7 @@ export async function sendGiftRevealEmail(toEmail: string, p: GiftRevealPayload)
       subject: `🎁 ${p.buyerName} hat Ihnen ein Fotoshooting geschenkt`,
       h1: `${p.buyerName} hat Ihnen ein Fotoshooting geschenkt 🎁`,
       intro: `Hallo ${p.recipientName.split(" ")[0]} —`,
-      body: `${p.buyerName} hat für Sie auf Photo Portugal ein Fotoshooting gebucht. Details:`,
+      body: `${p.buyerName} hat für Sie auf ${country.brand} ein Fotoshooting gebucht. Details:`,
       who: "Fotograf",
       pkg: "Paket",
       when: "Datum",
@@ -74,7 +75,7 @@ export async function sendGiftRevealEmail(toEmail: string, p: GiftRevealPayload)
       subject: `🎁 ${p.buyerName} le ha regalado una sesión fotográfica`,
       h1: `${p.buyerName} le ha regalado una sesión fotográfica 🎁`,
       intro: `Hola ${p.recipientName.split(" ")[0]} —`,
-      body: `${p.buyerName} reservó una sesión fotográfica para usted en Photo Portugal. Detalles:`,
+      body: `${p.buyerName} reservó una sesión fotográfica para usted en ${country.brand}. Detalles:`,
       who: "Fotógrafo",
       pkg: "Paquete",
       when: "Fecha",
@@ -87,7 +88,7 @@ export async function sendGiftRevealEmail(toEmail: string, p: GiftRevealPayload)
       subject: `🎁 ${p.buyerName} vous a offert une séance photo`,
       h1: `${p.buyerName} vous a offert une séance photo 🎁`,
       intro: `Bonjour ${p.recipientName.split(" ")[0]} —`,
-      body: `${p.buyerName} a réservé pour vous une séance photo sur Photo Portugal. Détails :`,
+      body: `${p.buyerName} a réservé pour vous une séance photo sur ${country.brand}. Détails :`,
       who: "Photographe",
       pkg: "Forfait",
       when: "Date",

@@ -7,6 +7,7 @@ import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
 import { maskSurname } from "@/lib/photographer-name";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { localeAlternates } from "@/lib/seo";
+import { country } from "@/lib/country";
 
 const POSTS_PER_PAGE = 48;
 
@@ -24,9 +25,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title: t("title"),
       description: t("subtitle"),
-      url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog`,
+      url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/blog`,
       type: "website",
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal Blog" }],
+      images: [{ url: country.ogImage, width: 1200, height: 630, alt: `${country.brand} Blog` }],
     },
   };
 }
@@ -93,13 +94,13 @@ export default async function BlogPage({
         "@type": "ListItem",
         position: 1,
         name: tc("home"),
-        item: "https://photoportugal.com",
+        item: country.baseUrl,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: tc("blog"),
-        item: "https://photoportugal.com/blog",
+        item: `${country.baseUrl}/blog`,
       },
     ],
   };
@@ -107,17 +108,17 @@ export default async function BlogPage({
   const blogJsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: "Photo Portugal Blog",
+    name: `${country.brand} Blog`,
     description: t("subtitle"),
-    url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog`,
+    url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/blog`,
     blogPost: posts.map((p) => ({
       "@type": "BlogPosting",
       headline: p.title,
       ...(p.excerpt ? { description: p.excerpt } : {}),
-      ...(p.cover_image_url ? { image: p.cover_image_url.startsWith("http") ? p.cover_image_url : `https://photoportugal.com${p.cover_image_url}` } : {}),
+      ...(p.cover_image_url ? { image: p.cover_image_url.startsWith("http") ? p.cover_image_url : `${country.baseUrl}${p.cover_image_url}` } : {}),
       datePublished: new Date(p.published_at).toISOString(),
       author: { "@type": "Person", name: p.author },
-      url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog/${p.slug}`,
+      url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/blog/${p.slug}`,
     })),
   };
 

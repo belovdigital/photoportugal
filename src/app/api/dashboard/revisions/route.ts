@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendEmail, emailLayout, emailButton, getAdminEmail } from "@/lib/email";
+import { country } from "@/lib/country";
 
 // GET — fetch current revision for authenticated photographer
 export async function GET(req: NextRequest) {
@@ -94,12 +95,12 @@ export async function PATCH(req: NextRequest) {
           emailLayout(`
             <h2 style="margin:0 0 16px;font-size:20px;color:#1F1F1F;">Revisions Resolved</h2>
             <p style="color:#6B7280;margin:0 0 16px;"><strong>${photographerInfo.name}</strong> (${photographerInfo.email}) has resolved all revision items and is ready for re-review.</p>
-            ${emailButton("https://photoportugal.com/admin", "Review in Admin")}
+            ${emailButton(`${country.baseUrl}/admin`, "Review in Admin")}
           `)
         ).catch(e => console.error("[dashboard/revisions] admin email error:", e));
 
         import("@/lib/telegram").then(({ sendTelegram }) => {
-          sendTelegram(`📸 <b>Revisions Resolved!</b>\n\n<b>Name:</b> ${photographerInfo.name}\n<b>Email:</b> ${photographerInfo.email}\n\nAll items fixed. Ready for re-review.\n\n<a href="https://photoportugal.com/admin">Review in Admin →</a>`, "photographers");
+          sendTelegram(`📸 <b>Revisions Resolved!</b>\n\n<b>Name:</b> ${photographerInfo.name}\n<b>Email:</b> ${photographerInfo.email}\n\nAll items fixed. Ready for re-review.\n\n<a href="${country.baseUrl}/admin">Review in Admin →</a>`, "photographers");
         }).catch(e => console.error("[dashboard/revisions] telegram error:", e));
       }
     } else {

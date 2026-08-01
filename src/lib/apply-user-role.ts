@@ -1,5 +1,6 @@
 import { query, queryOne, withTransaction } from "@/lib/db";
 import { sendWelcomeEmail, sendAdminNewPhotographerNotification, sendAdminNewClientNotification } from "@/lib/email";
+import { country } from "@/lib/country";
 
 /**
  * Single source of truth for assigning/switching a user's role.
@@ -105,12 +106,12 @@ export async function applyUserRole(
         console.error("[apply-role] admin notification:", err)
       );
       import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`, "photographers");
+        sendTelegram(`👤 <b>New Photographer!</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}\n\n<a href="${country.baseUrl}/admin">Open Admin Panel →</a>`, "photographers");
       }).catch((err) => console.error("[apply-role] telegram:", err));
       query("UPDATE users SET admin_notified = TRUE WHERE id = $1", [user.id]).catch(() => {});
     } else {
       import("@/lib/telegram").then(({ sendTelegram }) => {
-        sendTelegram(`🔁 <b>Role changed: Client → Photographer</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}\n\n<a href="https://photoportugal.com/admin">Open Admin Panel →</a>`, "photographers");
+        sendTelegram(`🔁 <b>Role changed: Client → Photographer</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}\n\n<a href="${country.baseUrl}/admin">Open Admin Panel →</a>`, "photographers");
       }).catch((err) => console.error("[apply-role] telegram role-change:", err));
     }
   } else {

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 
 interface Row {
   session_id: string;

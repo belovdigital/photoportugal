@@ -20,6 +20,7 @@ import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationCont
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { formatDuration } from "@/lib/package-pricing";
+import { country } from "@/lib/country";
 
 // Force-dynamic so the hero photographer reshuffles on every request.
 // Same rationale as the location page: paid-ad / sitelink landing prefers
@@ -69,7 +70,7 @@ export async function generateMetadata({
       title: loc.title,
       description: loc.metaDescription,
       type: "website",
-      url: `https://photoportugal.com/photoshoots/${type}`,
+      url: `${country.baseUrl}/photoshoots/${type}`,
     },
   };
 }
@@ -431,11 +432,11 @@ export default async function ShootTypePage({
     serviceType: shootType.name,
     name: stl.title,
     description: stl.metaDescription,
-    url: `https://photoportugal.com/photoshoots/${type}`,
+    url: `${country.baseUrl}/photoshoots/${type}`,
     provider: {
       "@type": "Organization",
-      name: "Photo Portugal",
-      url: "https://photoportugal.com",
+      name: country.brand,
+      url: country.baseUrl,
     },
     areaServed: { "@type": "Country", name: "Portugal" },
     ...(minPrice ? {
@@ -444,7 +445,7 @@ export default async function ShootTypePage({
         priceCurrency: "EUR",
         price: String(minPrice),
         availability: "https://schema.org/InStock",
-        url: `https://photoportugal.com/photographers?shootType=${type}`,
+        url: `${country.baseUrl}/photographers?shootType=${type}`,
       },
     } : {}),
     // aggregateRating intentionally omitted on Service nodes — Google's
@@ -459,13 +460,13 @@ export default async function ShootTypePage({
   const jsonLdBusiness = totalReviews > 0 && avgRating > 0 ? {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
-    "@id": `https://photoportugal.com/photoshoots/${type}#business`,
-    name: `Photo Portugal — ${stl.name}`,
-    url: `https://photoportugal.com/photoshoots/${type}`,
-    image: "https://photoportugal.com/og-image.png",
+    "@id": `${country.baseUrl}/photoshoots/${type}#business`,
+    name: `${country.brand} — ${stl.name}`,
+    url: `${country.baseUrl}/photoshoots/${type}`,
+    image: `${country.baseUrl}${country.ogImage}`,
     description: stl.metaDescription,
     priceRange: "€€",
-    address: { "@type": "PostalAddress", addressLocality: "Lisbon", addressCountry: "PT" },
+    address: { "@type": "PostalAddress", addressLocality: country.city, addressCountry: country.code.toUpperCase() },
     areaServed: { "@type": "Country", name: "Portugal" },
     aggregateRating: {
       "@type": "AggregateRating",

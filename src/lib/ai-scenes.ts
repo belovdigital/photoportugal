@@ -1,3 +1,4 @@
+import { SCENES_ES } from "./ai-scenes-es";
 // Scene presets for the /try-yourself AI feature.
 // Each preset is a fixed prompt template — users only choose a scene,
 // they don't write free-form prompts (avoids abuse, content moderation, etc).
@@ -18,7 +19,7 @@ export interface Scene {
   conciergeLoc: string;
 }
 
-export const SCENES: Scene[] = [
+const SCENES_PT: Scene[] = [
   {
     id: "sintra-palace",
     nameEn: "Sintra Palace at sunset",
@@ -140,6 +141,15 @@ export const SCENES: Scene[] = [
     conciergeLoc: "evora",
   },
 ];
+
+/**
+ * Country pack switch. Scenes name real places, so each market needs its own
+ * list — a substituted prompt would ask the image model for "Benagil Cave in
+ * Spain" and it would invent one.
+ */
+export const SCENES: Scene[] =
+  process.env.NEXT_PUBLIC_COUNTRY === "es" ? SCENES_ES : SCENES_PT;
+
 
 export function getScene(id: string): Scene | undefined {
   return SCENES.find((s) => s.id === id);

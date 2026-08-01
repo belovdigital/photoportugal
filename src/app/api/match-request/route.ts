@@ -4,10 +4,11 @@ import { sendEmail, getAdminEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
 import { getLocationDisplayName, isKnownLocationSlug } from "@/lib/location-hierarchy";
+import { country } from "@/lib/country";
 
 const VALID_BUDGETS = ["150-299", "300-599", "600+"];
 const VALID_SHOOT_TYPES = ["couples", "family", "proposal", "wedding", "honeymoon", "elopement", "solo", "engagement", "birthday", "friends"];
-const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
         </div>
         <p style="font-size:13px;color:#999;">In the meantime, feel free to browse our photographers:</p>
         <p><a href="${BASE_URL}/photographers?location=${encodeURIComponent(location_slug)}" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Browse Photographers</a></p>
-        <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+        <p style="color:#999;font-size:12px;">${country.brand} — ${country.host}</p>
       </div>`
     ).catch(err => console.error("[match-request] client email error:", err));
 

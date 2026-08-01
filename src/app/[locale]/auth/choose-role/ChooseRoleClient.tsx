@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Camera, MapPin } from "lucide-react";
+import { country } from "@/lib/country";
 
 export function ChooseRoleClient({ callbackUrl }: { callbackUrl?: string }) {
   const [loading, setLoading] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export function ChooseRoleClient({ callbackUrl }: { callbackUrl?: string }) {
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
       <div className="w-full max-w-lg text-center">
-        <img src="/logo.svg" alt="Photo Portugal" className="mx-auto mb-8 h-8" />
+        <img src={country.logoPath} alt={country.brand} className="mx-auto mb-8 h-8" />
         <h1 className="font-display text-3xl font-bold text-gray-900">{t("title")}</h1>
         <p className="mt-2 text-gray-500">{t("subtitle")}</p>
 

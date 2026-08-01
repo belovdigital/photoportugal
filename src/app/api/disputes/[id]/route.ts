@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { requireStripe, SERVICE_FEE_RATE } from "@/lib/stripe";
+import { country } from "@/lib/country";
 
 const VALID_STATUSES = ["under_review", "resolved", "rejected"] as const;
 const VALID_RESOLUTIONS = ["reshoot", "partial_refund", "full_refund", "rejected"] as const;
@@ -263,8 +264,8 @@ export async function PATCH(
               <p>Hi ${info.client_name?.split(" ")[0]},</p>
               <p>${resText}</p>
               ${resolution_note ? `<p style="margin-top: 12px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px;"><strong>Note from our team:</strong> ${resolution_note}</p>` : ""}
-              <p>If you have any questions, please <a href="https://photoportugal.com/contact" style="color: #C94536;">contact us</a>.</p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p>If you have any questions, please <a href="${country.baseUrl}/contact" style="color: #C94536;">contact us</a>.</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>`
           ).catch(e => console.error("[dispute] resolve client email:", e));
 
@@ -275,7 +276,7 @@ export async function PATCH(
               <p>The delivery issue reported by ${info.client_name?.split(" ")[0]} has been resolved.</p>
               <p><strong>Resolution:</strong> ${resolution.replace("_", " ")}</p>
               ${resolution_note ? `<p style="margin-top: 12px; padding: 12px; background: #faf8f5; border-radius: 8px; font-size: 13px;"><strong>Note:</strong> ${resolution_note}</p>` : ""}
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>`
           ).catch(e => console.error("[dispute] resolve photographer email:", e));
 

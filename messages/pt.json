@@ -4259,5 +4259,26 @@
     "benchReply": "Tempo da primeira resposta",
     "benchMedian": "mediana: {value}",
     "ownVisitsNote": "As suas próprias visitas não contam: qualquer dispositivo onde já iniciou sessão é excluído, mesmo sem sessão iniciada. Janelas privadas/incógnito não são reconhecidas — para números limpos, veja o seu perfil com sessão iniciada."
+  },
+  "gettingStarted": {
+    "eyebrow": "Primeiros passos",
+    "welcome": "Bem-vindo à {brand}, {name} 👋",
+    "intro": "Oito coisas que os fotógrafos com mais reservas fazem de forma diferente. Percorra a página — leva cerca de 4 minutos. Cada dica liga ao sítio onde o trabalho acontece.",
+    "s1title": "Responda depressa e quebre o gelo",
+    "s1body": "Quem mais reserva responde em menos de 60 minutos. Medimos o seu tempo médio de resposta e colocamos mais acima nas pesquisas quem responde mais depressa. Instale a app e ative as notificações (passo 8) — é a alavanca que mais pesa.",
+    "s2title": "Ligue o seu calendário",
+    "s2body": "Sincronize o Google Calendar para que os clientes só possam pedir horários em que está mesmo livre. Os eventos pessoais continuam privados: vemos apenas ocupado/livre, nunca os títulos. Atualiza a cada 15 minutos e inclui uma margem automática à volta das sessões para deslocação e preparação (define-se nas definições do calendário). Também pode bloquear datas específicas à mão para férias ou assuntos pessoais. Resultado: zero reservas duplicadas, menos emails de \"lamento, já estou ocupado\" e clientes mais satisfeitos.",
+    "s3title": "Desenhe os pacotes à volta da ocasião",
+    "s3body": "Dê nome aos pacotes pelo momento, não pela duração. \"Pedido de casamento · 1 hora\" converte muito melhor do que \"sessão de 1 hora\" — o cliente percebe logo que é para ele. Os pacotes mais reservados na {brand} assentam em ocasiões concretas: Essencial, Sessão à Hora Dourada, Grande Sessão de Família, Pôr do Sol a Dois. O preço segue o valor do momento, não o relógio. Quando um cliente perguntar preços, carregue no + na caixa de mensagem e escolha um pacote — recebe um cartão com o botão de reserva incluído. Preço à medida? Envie uma proposta pontual pelo valor que quiser.",
+    "s4title": "Use as sugestões de resposta com IA",
+    "s4body": "Em cada mensagem de cliente verá três rascunhos curtos gerados a partir do contexto da conversa e da sua biografia. Toque num para preencher a caixa de resposta — edite antes de enviar, nunca é enviado sozinho.",
+    "s5title": "Mantenha a conversa pré-pagamento na plataforma",
+    "s5body": "Partilhar o seu WhatsApp, Instagram ou email ANTES do pagamento é automaticamente sinalizado aos administradores e põe a sua conta em risco, além de perder a proteção da Stripe se algo correr mal na sessão. DEPOIS do pagamento, trocar WhatsApp para coordenar o dia (ponto de encontro, previsão do tempo, ajustes de última hora) é perfeitamente normal — a proteção da Stripe já está ativa.",
+    "s6title": "As avaliações mexem com o seu lugar",
+    "s6body": "Enviamos a cada cliente um pedido de avaliação 3 horas depois de aceitar a entrega (com 10% de desconto na reserva seguinte como agradecimento). Não precisa de pedir, mas um lembrete simpático na sua última mensagem aumenta muito a taxa de resposta. Modelo que pode copiar e personalizar (troque o nome, ajuste o tom):",
+    "s7title": "Melhorias Verificado e Destaque",
+    "s7body": "O selo Verificado (19 €/ano) acrescenta um visto azul ao lado do seu nome — os clientes confiam 2 a 3 vezes mais em fotógrafos verificados. Destaque (19 €/mês) fixa-o no topo das pesquisas das suas localizações. Ambos se pagam depressa se já tiver reservas a entrar.",
+    "s8title": "Instale a aplicação móvel",
+    "s8body": "As notificações push chegam em segundos, muito antes de um email. Pode responder da praia, do ginásio ou de onde estiver. Procure \"{brand}\" na App Store ou Play Store, ou toque nos botões abaixo."
   }
 }

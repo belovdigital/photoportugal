@@ -5,13 +5,23 @@ import { queryOne } from "@/lib/db";
 // 7 buckets before pricing. Centralised here so adding a new region
 // is a one-line change.
 export type Region =
+  // Portugal
   | "greater-lisbon"
   | "northern-portugal"
   | "central-portugal"
   | "alentejo"
   | "algarve"
   | "madeira"
-  | "azores";
+  | "azores"
+  // Spain
+  | "catalonia"
+  | "madrid-region"
+  | "andalusia"
+  | "balearic-islands"
+  | "canary-islands"
+  | "valencia-region"
+  | "basque-country"
+  | "galicia";
 
 // Single source of truth — every slug (canonical region, tree-region,
 // city, island, group, legacy alias) maps to one of the 7 canonical
@@ -81,7 +91,55 @@ const SLUG_TO_REGION: Record<string, Region> = {
   "corvo": "azores",
 };
 
+
+// Spain. Same shape as the Portuguese table above: every tree node, city and
+// island resolves to one billable region. Without these, Quick Booking in Spain
+// fell through to the null branch and could not price anything.
+const ES_SLUG_TO_REGION: Record<string, Region> = {
+  catalonia: "catalonia",
+  barcelona: "catalonia",
+  sitges: "catalonia",
+  girona: "catalonia",
+  "costa-brava": "catalonia",
+
+  "madrid-region": "madrid-region",
+  madrid: "madrid-region",
+  toledo: "madrid-region",
+  segovia: "madrid-region",
+
+  andalusia: "andalusia",
+  seville: "andalusia",
+  granada: "andalusia",
+  malaga: "andalusia",
+  marbella: "andalusia",
+  ronda: "andalusia",
+  cordoba: "andalusia",
+  cadiz: "andalusia",
+
+  "balearic-islands": "balearic-islands",
+  mallorca: "balearic-islands",
+  ibiza: "balearic-islands",
+  menorca: "balearic-islands",
+
+  "canary-islands": "canary-islands",
+  tenerife: "canary-islands",
+  "gran-canaria": "canary-islands",
+  lanzarote: "canary-islands",
+
+  "valencia-region": "valencia-region",
+  valencia: "valencia-region",
+
+  "basque-country": "basque-country",
+  "san-sebastian": "basque-country",
+  bilbao: "basque-country",
+
+  galicia: "galicia",
+  "santiago-de-compostela": "galicia",
+};
+
 export function slugToRegion(slug: string): Region | null {
+  const es = ES_SLUG_TO_REGION[slug];
+  if (es) return es;
   const norm = String(slug || "").trim().toLowerCase();
   if (!norm) return null;
   return SLUG_TO_REGION[norm] ?? null;

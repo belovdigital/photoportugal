@@ -13,6 +13,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { LocationTreeSelect } from "@/components/ui/LocationTreeSelect";
 import DatePicker from "@/components/ui/DatePicker";
+import { country } from "@/lib/country";
+import { getLocationNode } from "@/lib/location-hierarchy";
+import { locations } from "@/lib/locations-data";
 
 const OCCASIONS = [
   "couples",
@@ -304,7 +307,16 @@ function QuickBookingModalImpl({ onClose }: { onClose: () => void }) {
   // Load any saved draft once at mount; saved values win over URL
   // detection (visitor's explicit prior input > inferred default).
   const draft = useMemo(() => loadDraft(), []);
-  const [region, setRegion] = useState<string>(draft?.region || detected.slug || "greater-lisbon");
+  // A draft saved before this market existed (or by an older build) can hold a
+  // slug this country has never heard of. Unvalidated, the modal opened showing
+  // "Greater Lisbon" on the Spanish site — getLocationDisplayName falls back to
+  // title-casing the raw slug, so it looked like a real choice rather than junk.
+  const knownRegion = (slug: string | undefined | null) =>
+    !!slug && (!!getLocationNode(slug) || locations.some((l) => l.slug === slug));
+  const [region, setRegion] = useState<string>(() => {
+    const candidate = draft?.region || detected.slug;
+    return knownRegion(candidate) ? candidate! : country.defaultRegionSlug;
+  });
   const [occasion, setOccasion] = useState<string>(draft?.occasion || normalizeOccasion(detected.occasion));
   const [duration, setDuration] = useState<60 | 120 | 180>(draft?.duration ?? 60);
   const [date, setDate] = useState<string>(draft?.date || "");

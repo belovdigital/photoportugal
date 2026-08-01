@@ -1,3 +1,4 @@
+import { shootTypesES } from "./shoot-types-data-es";
 export interface ShootType {
   slug: string;
   name: string;
@@ -59,7 +60,7 @@ export interface ShootType {
   heroText_fr?: string;
 }
 
-export const shootTypes: ShootType[] = [
+const shootTypesPT: ShootType[] = [
   {
     slug: "couples",
     name: "Couples",
@@ -828,6 +829,17 @@ export const shootTypes: ShootType[] = [
     ],
   },
 ];
+
+/**
+ * Country pack switch. NEXT_PUBLIC_ prefix is required — this module reaches
+ * client components, and a server-only variable reads as undefined in the
+ * browser bundle, silently falling back to Portugal. See docs/SPAIN.md §6.4.
+ *
+ * Portugal stays the default: absent or unrecognised value → the PT dataset.
+ */
+export const shootTypes: ShootType[] =
+  process.env.NEXT_PUBLIC_COUNTRY === "es" ? shootTypesES : shootTypesPT;
+
 
 export function getShootTypeBySlug(slug: string): ShootType | undefined {
   return shootTypes.find((t) => t.slug === slug);

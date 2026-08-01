@@ -3,7 +3,13 @@
 // Number of reviews intentionally not shown until we cross a meaningful
 // threshold (currently 3) — rating + verifiability is the signal.
 
-const GOOGLE_PROFILE_URL = "https://g.page/r/CbWG7PogT_K2EBM";
+import { country } from "@/lib/country";
+
+// Per market. Spain has no Google Business Profile yet, and Portugal's rating
+// is Portugal's — showing it on the Spanish site would be borrowed credibility
+// for a roster that has not taken a single booking. Rendering nothing is the
+// honest state until the Spanish profile exists.
+const GOOGLE_PROFILE_URL = country.googleProfileUrl;
 
 function GoogleG({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -36,6 +42,10 @@ export function GoogleReviewsBadge({
   variant?: "full" | "compact";
   className?: string;
 }) {
+  // No profile for this market → no badge at all, rather than a badge that
+  // links nowhere or borrows another country's rating.
+  if (!GOOGLE_PROFILE_URL) return null;
+
   if (variant === "compact") {
     return (
       <a

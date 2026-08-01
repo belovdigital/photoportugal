@@ -14,6 +14,17 @@ import {
   type LocationExplorerChild,
   type LocationExplorerRegion,
 } from "@/lib/location-explorer-data";
+import { country } from "@/lib/country";
+
+// The country name declined per language. This component carries its own copy
+// block (it predates the messages catalogue), so the market name has to be
+// substituted here rather than through the override layer.
+const ES_COUNTRY = country.code === "es" ? "España" : "Portugal";
+const PT_COUNTRY = country.code === "es" ? "Espanha" : "Portugal";
+const DE_COUNTRY = country.code === "es" ? "Spanien" : "Portugal";
+const FR_COUNTRY = country.code === "es" ? "l'Espagne" : "le Portugal";
+
+
 
 type Props = {
   locale: string;
@@ -42,10 +53,10 @@ const REGION_IMAGE_SLUGS: Record<string, string> = {
 
 const COPY = {
   en: {
-    eyebrow: "Portugal photo map",
+    eyebrow: `${country.areaServed} photo map`,
     title: "Choose the place by feeling",
-    subtitle: "Swipe through Portugal's regions, tap the map, then open photographers where the trip actually happens.",
-    search: "Search Lisbon, Azores, Algarve...",
+    subtitle: `Swipe through ${country.areaServed}'s regions, tap the map, then open photographers where the trip actually happens.`,
+    search: country.code === "es" ? "Search Barcelona, Madrid, Mallorca..." : "Search Lisbon, Azores, Algarve...",
     all: "All",
     mainland: "Mainland",
     islands: "Islands",
@@ -57,16 +68,16 @@ const COPY = {
     islandInsets: "Islands",
     noResults: "No location matches these filters.",
     mapUnavailable: "Map is unavailable because the Mapbox token is missing.",
-    portugalWide: "Portugal-wide",
+    portugalWide: `${country.areaServed}-wide`,
     reviewed: "Reviewed profiles",
     filters: "Filters",
     swipe: "Destinations",
   },
   pt: {
-    eyebrow: "Mapa fotográfico de Portugal",
+    eyebrow: `Mapa fotográfico de ${ES_COUNTRY}`,
     title: "Escolha o lugar pela sensação",
     subtitle: "Explore as regiões, toque no mapa e veja fotógrafos onde a viagem acontece.",
-    search: "Pesquisar Lisboa, Açores, Algarve...",
+    search: country.code === "es" ? "Pesquisar Barcelona, Madrid, Maiorca..." : "Pesquisar Lisboa, Açores, Algarve...",
     all: "Tudo",
     mainland: "Continente",
     islands: "Ilhas",
@@ -78,16 +89,16 @@ const COPY = {
     islandInsets: "Ilhas",
     noResults: "Nenhuma localização corresponde aos filtros.",
     mapUnavailable: "O mapa está indisponível porque falta o token Mapbox.",
-    portugalWide: "Portugal inteiro",
+    portugalWide: `${PT_COUNTRY} inteiro`,
     reviewed: "Perfis revistos",
     filters: "Filtros",
     swipe: "Destinos",
   },
   de: {
-    eyebrow: "Portugal-Fotokarte",
+    eyebrow: `${DE_COUNTRY}-Fotokarte`,
     title: "Waehlen Sie den Ort nach Gefuehl",
     subtitle: "Durch Regionen swipen, Karte antippen und Fotografen dort oeffnen, wo die Reise passiert.",
-    search: "Lissabon, Azoren, Algarve suchen...",
+    search: country.code === "es" ? "Barcelona, Madrid, Mallorca suchen..." : "Lissabon, Azoren, Algarve suchen...",
     all: "Alle",
     mainland: "Festland",
     islands: "Inseln",
@@ -99,16 +110,16 @@ const COPY = {
     islandInsets: "Inseln",
     noResults: "Keine Location passt zu diesen Filtern.",
     mapUnavailable: "Die Karte ist nicht verfuegbar, weil der Mapbox-Token fehlt.",
-    portugalWide: "Portugalweit",
+    portugalWide: `${DE_COUNTRY}weit`,
     reviewed: "Gepruefte Profile",
     filters: "Filter",
     swipe: "Ziele",
   },
   es: {
-    eyebrow: "Mapa fotografico de Portugal",
+    eyebrow: `Mapa fotografico de ${ES_COUNTRY}`,
     title: "Elija el lugar por sensacion",
     subtitle: "Deslice regiones, toque el mapa y vea fotografos donde sucede el viaje.",
-    search: "Buscar Lisboa, Azores, Algarve...",
+    search: country.code === "es" ? "Buscar Barcelona, Madrid, Mallorca..." : "Buscar Lisboa, Azores, Algarve...",
     all: "Todo",
     mainland: "Continente",
     islands: "Islas",
@@ -120,16 +131,16 @@ const COPY = {
     islandInsets: "Islas",
     noResults: "Ninguna ubicacion coincide con los filtros.",
     mapUnavailable: "El mapa no esta disponible porque falta el token de Mapbox.",
-    portugalWide: "Todo Portugal",
+    portugalWide: `Todo ${ES_COUNTRY}`,
     reviewed: "Perfiles revisados",
     filters: "Filtros",
     swipe: "Destinos",
   },
   fr: {
-    eyebrow: "Carte photo du Portugal",
+    eyebrow: `Carte photo de ${FR_COUNTRY}`,
     title: "Choisissez le lieu par l'ambiance",
     subtitle: "Faites defiler les regions, touchez la carte et ouvrez les photographes la ou le voyage se passe.",
-    search: "Rechercher Lisbonne, Acores, Algarve...",
+    search: country.code === "es" ? "Rechercher Barcelone, Madrid, Majorque..." : "Rechercher Lisbonne, Acores, Algarve...",
     all: "Tout",
     mainland: "Continent",
     islands: "Iles",
@@ -141,7 +152,7 @@ const COPY = {
     islandInsets: "Iles",
     noResults: "Aucune destination ne correspond aux filtres.",
     mapUnavailable: "La carte est indisponible car le token Mapbox manque.",
-    portugalWide: "Tout le Portugal",
+    portugalWide: `Tout ${FR_COUNTRY}`,
     reviewed: "Profils verifies",
     filters: "Filtres",
     swipe: "Destinations",

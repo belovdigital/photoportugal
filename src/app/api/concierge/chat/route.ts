@@ -11,6 +11,7 @@ import { checkPhotographersAvailability } from "@/lib/concierge/availability-che
 import { classifyTrafficSegment, logRecommendations, type RecommendationSnapshot, type RecommendationStrategy, logConciergeExclusions } from "@/lib/concierge/recommendation-events";
 import { computeLeadScore } from "@/lib/concierge/lead-score";
 import { hasCommonLanguage } from "@/lib/languages";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,7 +32,7 @@ const tools = [
     type: "function" as const,
     function: {
       name: "show_locations",
-      description: "Suggest 2-4 PUBLIC Portugal destination cards when the visitor is undecided WHERE to shoot. ONLY use slugs from this public-card list: lisbon, sintra, cascais, douro-valley, porto, algarve, lagos, faro, albufeira, tavira, madeira, comporta, caparica, setubal, arrabida, aveiro, guimaraes, coimbra, nazare, evora, obidos, ericeira, sesimbra, peniche, geres, funchal, ponta-delgada, azores, tomar. Do NOT use new coverage-only slugs such as lisbon-region, porto-north, azores-central-group, terceira, pico, faial, sao-miguel here because they do not have public cards yet. Use show_matches for confirmed coverage-only locations.",
+      description: `Suggest 2-4 PUBLIC ${country.areaServed} destination cards when the visitor is undecided WHERE to shoot. ONLY use slugs from this public-card list: lisbon, sintra, cascais, douro-valley, porto, algarve, lagos, faro, albufeira, tavira, madeira, comporta, caparica, setubal, arrabida, aveiro, guimaraes, coimbra, nazare, evora, obidos, ericeira, sesimbra, peniche, geres, funchal, ponta-delgada, azores, tomar. Do NOT use new coverage-only slugs such as lisbon-region, porto-north, azores-central-group, terceira, pico, faial, sao-miguel here because they do not have public cards yet. Use show_matches for confirmed coverage-only locations.`,
       parameters: {
         type: "object",
         properties: {
@@ -309,14 +310,14 @@ export async function POST(req: NextRequest) {
   if (jailbreakPatterns.some(rx => rx.test(lower))) {
     return NextResponse.json({
       chat_id: undefined,
-      reply: "I'm just the photographer matchmaker — let's stick to finding you the right pro. Where in Portugal are you going?",
+      reply: `I'm just the photographer matchmaker — let's stick to finding you the right pro. Where in ${country.areaServed} are you going?`,
       action: null,
       usage: null,
     });
   }
   if (lastUser.length > 1500) {
     return NextResponse.json({
-      reply: "Let's keep things short — give me a sentence or two about your Portugal trip and I'll find you 3 great photographers.",
+      reply: `Let's keep things short — give me a sentence or two about your ${country.areaServed} trip and I'll find you 3 great photographers.`,
       action: null,
       usage: null,
     });
@@ -492,7 +493,7 @@ export async function POST(req: NextRequest) {
     viewedPhotographer = photographers.find((p) => p.slug === page_context_obj.photographerSlug) || null;
     if (viewedPhotographer && resolvedPageContext) {
       const v = viewedPhotographer;
-      const locs = (v.locations || []).slice(0, 4).join(", ") || "Portugal";
+      const locs = (v.locations || []).slice(0, 4).join(", ") || `${country.areaServed}`;
       const types = (v.shoot_types || []).slice(0, 4).join(", ") || "general";
       const langs = (v.languages || []).slice(0, 4).join(", ") || "EN";
       const reviews = Number(v.review_count) > 0
@@ -1382,7 +1383,7 @@ async function notifyConciergeAdmins(opts: {
   if (phone) {
     const digits = phone.replace(/\D/g, "");
     meta.push(digits.length >= 6
-      ? `<a href="https://wa.me/${digits}?text=${encodeURIComponent("Hi! This is Photo Portugal — about your photoshoot inquiry.")}">📱 ${escapeHtml(phone)}</a>`
+      ? `<a href="https://wa.me/${digits}?text=${encodeURIComponent("Hi! This is ${country.brand} — about your photoshoot inquiry.")}">📱 ${escapeHtml(phone)}</a>`
       : `📱 ${escapeHtml(phone)}`);
   }
   if (opts.detectedLang) meta.push(`🌐 ${opts.detectedLang}`);
@@ -1408,7 +1409,7 @@ async function notifyConciergeAdmins(opts: {
       for (const m of matches) {
         const p = opts.photographers.find((x) => x.slug === m.slug);
         const name = p?.name || m.slug;
-        lines.push(`• <b>${escapeHtml(name)}</b> (<a href="https://photoportugal.com/photographers/${m.slug}">${escapeHtml(m.slug)}</a>)`);
+        lines.push(`• <b>${escapeHtml(name)}</b> (<a href="${country.baseUrl}/photographers/${m.slug}">${escapeHtml(m.slug)}</a>)`);
         if (m.reasoning) lines.push(`  <i>${escapeHtml(m.reasoning.slice(0, 220))}</i>`);
       }
     }
@@ -1436,7 +1437,7 @@ async function notifyConciergeAdmins(opts: {
 
   if (opts.chatId) {
     lines.push("");
-    lines.push(`<a href="https://photoportugal.com/admin?tab=concierge&chat=${opts.chatId}">Open in admin →</a>`);
+    lines.push(`<a href="${country.baseUrl}/admin?tab=concierge&chat=${opts.chatId}">Open in admin →</a>`);
   }
 
   await sendTelegram(lines.join("\n"), "concierge");

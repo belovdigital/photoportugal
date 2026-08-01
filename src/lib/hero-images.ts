@@ -50,3 +50,36 @@ export const heroImages: HeroImage[] = [
     photographerName: "Kate Belova",
   },
 ];
+
+/**
+ * Hero photos for the Spanish market, until Spanish work exists.
+ *
+ * Hand-picked rather than reusing the Portuguese collage: those five included a
+ * black-and-white dune abstract and a man leaning on a tree, which read as a
+ * portfolio dump rather than a hero. Every shot here was checked by eye against
+ * two rules — it must look like vacation photography, and it must contain NO
+ * identifiable Portuguese landmark. Porto's Dom Luís bridge, the Sé cathedral
+ * and any azulejo wall were rejected on the second rule.
+ */
+export const heroImagesES: HeroImage[] = [
+  {
+    // Lead / background: couple silhouetted at sunset, no landmark, dark on the
+    // left where the offer card sits.
+    url: "https://files.photoportugal.com/portfolio/4498c496-0b00-438b-a9cd-52dc37fb3792/4bb6595f-04b8-4989-af65-8cf2e0dadb78.jpg",
+    alt: "Couple photoshoot at sunset on the coast",
+    photographerSlug: "",
+    photographerName: "",
+  },
+  {
+    url: "https://files.photoportugal.com/portfolio/48741d30-a7b2-401e-bdee-a88eae7e5eff/e2b61b6b-71a8-43c8-ae21-df281f7b5d9c.jpg",
+    alt: "Father and daughter playing during a family photoshoot by the sea",
+    photographerSlug: "",
+    photographerName: "",
+  },
+  {
+    url: "https://files.photoportugal.com/portfolio/5d7d110d-ee1a-464d-9a74-fb3bf1eb0381/19baf116-a7ae-43f9-b0a7-0631aba64141.jpg",
+    alt: "Expecting couple on the sand during a maternity photoshoot",
+    photographerSlug: "",
+    photographerName: "",
+  },
+];

@@ -5,7 +5,7 @@ import { locationImage } from "@/lib/unsplash-images";
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
-const BASE = "https://photoportugal.com";
+const BASE = country.baseUrl;
 
 function escape(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -13,6 +13,7 @@ function escape(s: string): string {
 
 // Resolve image URL for sitemap — strip s3:// prefix and use our /api/img for local uploads.
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
+import { country } from "@/lib/country";
 
 function resolveImageUrl(raw: string): string {
   if (!raw) return "";
@@ -20,7 +21,7 @@ function resolveImageUrl(raw: string): string {
     // s3://bucket/key → our public R2 bucket URL
     const parts = raw.slice(5).split("/");
     parts.shift(); // drop bucket name
-    return `https://files.photoportugal.com/${parts.join("/")}`;
+    return `https://${country.filesHost}/${parts.join("/")}`;
   }
   return resolveAbsoluteImageUrl(raw, BASE) || "";
 }

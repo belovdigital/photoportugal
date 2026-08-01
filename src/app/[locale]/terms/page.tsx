@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -237,7 +238,7 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
           <h2 className="text-xl font-bold text-gray-900">{t("sections.contact.title")}</h2>
           <p className="mt-3">
             {t("sections.contact.intro")}{" "}
-            <a href="mailto:info@photoportugal.com" className="text-primary-600 hover:underline">info@photoportugal.com</a>{" "}
+            <a href={`mailto:${country.supportEmail}`} className="text-primary-600 hover:underline">{country.supportEmail}</a>{" "}
             {t("sections.contact.orThrough")}{" "}
             <Link href="/contact" className="text-primary-600 hover:underline">{t("sections.contact.contactPage")}</Link>.
           </p>

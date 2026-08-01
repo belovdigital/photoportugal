@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-static";
 
@@ -7,7 +8,7 @@ export const dynamic = "force-static";
 // application/linkset+json media type, which static file serving can't set.
 // Lists the only machine interface we actually offer: the read-only
 // markdown-negotiated content API described by /.well-known/openapi.json.
-const BASE = "https://photoportugal.com";
+const BASE = country.baseUrl;
 
 const catalog = {
   linkset: [

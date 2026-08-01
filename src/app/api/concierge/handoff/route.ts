@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { computeLeadScore } from "@/lib/concierge/lead-score";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
       const items = ids
         .map((id) => byId.get(id))
         .filter(Boolean)
-        .map((p) => `  • <b>${escapeHtml(p!.name)}</b> (<a href="https://photoportugal.com/photographers/${p!.slug}">${escapeHtml(p!.slug)}</a>)`);
+        .map((p) => `  • <b>${escapeHtml(p!.name)}</b> (<a href="${country.baseUrl}/photographers/${p!.slug}">${escapeHtml(p!.slug)}</a>)`);
       if (items.length > 0) photogLines = `<b>Photographers shown:</b>\n${items.join("\n")}`;
     }
 
@@ -169,7 +170,7 @@ export async function POST(req: NextRequest) {
       photogLines ? `\n${photogLines}` : null,
       sourceParts ? `\n<b>Source:</b> ${escapeHtml(sourceParts)}` : null,
       "",
-      `<a href="https://photoportugal.com/admin?tab=concierge&chat=${chat_id}">Open in admin →</a>`,
+      `<a href="${country.baseUrl}/admin?tab=concierge&chat=${chat_id}">Open in admin →</a>`,
     ];
     await sendTelegram(lines.filter((l) => l !== null).join("\n"), "concierge").catch(() => {});
   } catch (err) {

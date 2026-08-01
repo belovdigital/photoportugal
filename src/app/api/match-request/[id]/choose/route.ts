@@ -5,8 +5,9 @@ import { sendEmail, sendBookingConfirmationWithPayment, sendAdminBookingConfirme
 import { sendSMS } from "@/lib/sms";
 import { formatShootDate } from "@/lib/format-shoot-date";
 import { getLocationDisplayName } from "@/lib/location-hierarchy";
+import { country } from "@/lib/country";
 
-const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await authFromRequest(req);
@@ -121,7 +122,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           ${price ? `<p style="margin:0;font-size:14px;"><strong>Price:</strong> €${price}</p>` : ""}
         </div>
         <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+        <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
       </div>`
     ).catch((err) => console.error("[match-request/choose] photographer email error:", err));
 

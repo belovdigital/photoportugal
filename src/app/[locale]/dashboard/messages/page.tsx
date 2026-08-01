@@ -15,6 +15,7 @@ import imageCompression from "browser-image-compression";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { clientPriceWithFee } from "@/lib/service-fee";
 import nextDynamic from "next/dynamic";
+import { country } from "@/lib/country";
 
 // LiveKit bundle is heavy — load only when a call is actually opened.
 const VideoCallModal = nextDynamic(() => import("./VideoCallModal"), { ssr: false });
@@ -1759,7 +1760,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                     <Avatar src={msg.sender_avatar} alt={msg.sender_name || "Kate"} fallback={msg.sender_name || "K"} size="sm" />
                                     <div className="flex-1 min-w-0">
                                       <p className="text-sm font-bold text-gray-900">{msg.sender_name || "Kate Belova"}</p>
-                                      <p className="text-xs text-gray-500">{t("founderRole") || "Founder of Photo Portugal"}</p>
+                                      <p className="text-xs text-gray-500">{t("founderRole") || `Founder of ${country.brand}`}</p>
                                     </div>
                                   </div>
                                   <p className="mt-2 text-xs text-gray-600">{firstName
@@ -1776,7 +1777,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
                                   <Avatar src={msg.sender_avatar} alt={msg.sender_name || "Kate"} fallback={msg.sender_name || "K"} size="md" />
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-bold text-gray-900">{msg.sender_name || "Kate Belova"}</p>
-                                    <p className="text-xs text-gray-500">{t("founderRole") || "Founder of Photo Portugal"}</p>
+                                    <p className="text-xs text-gray-500">{t("founderRole") || `Founder of ${country.brand}`}</p>
                                   </div>
                                 </div>
                                 <p className="mt-3 text-sm text-gray-700">{firstName
@@ -2492,7 +2493,7 @@ export function MessagesContent({ initialChatId }: { initialChatId?: string } = 
         // any `?w=200` query for a larger size. Otherwise keep as-is.
         let bigSrc = zoomedAvatar.src;
         try {
-          const u = new URL(zoomedAvatar.src, "https://photoportugal.com");
+          const u = new URL(zoomedAvatar.src, `${country.baseUrl}`);
           if (u.searchParams.has("w")) {
             u.searchParams.set("w", "800");
             bigSrc = u.toString();

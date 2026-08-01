@@ -4,8 +4,9 @@ import { queryOne } from "@/lib/db";
 import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
+import { country } from "@/lib/country";
 
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "heif", "gif", "pdf"];
 const ALLOWED_MIME_TYPES = [

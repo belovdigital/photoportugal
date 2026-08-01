@@ -10,6 +10,7 @@ import {
   blockedCopy,
   type OffPlatformVerdict,
 } from "@/lib/off-platform-payment";
+import { country } from "@/lib/country";
 
 /** UI locale of the person sending, so the notice isn't English at a German client. */
 async function senderLocale(userId: string): Promise<string> {
@@ -46,7 +47,7 @@ async function alertOffPlatform(i: OffPlatformAlertInput) {
       ``,
       `<i>"${esc(preview)}"</i>`,
       ``,
-      `<a href="https://photoportugal.com/admin?tab=bookings&booking=${i.booking_id}">Open booking in admin →</a>`,
+      `<a href="${country.baseUrl}/admin?tab=bookings&booking=${i.booking_id}">Open booking in admin →</a>`,
     ];
     await sendTelegram(lines.join("\n"), "alerts");
   } catch (err) {
@@ -360,7 +361,7 @@ export async function POST(req: NextRequest) {
             const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             const preview = text.trim().length > 280 ? text.trim().slice(0, 280) + "…" : text.trim();
             const profileLink = booking.photographer_slug
-              ? `https://photoportugal.com/photographers/${booking.photographer_slug}`
+              ? `${country.baseUrl}/photographers/${booking.photographer_slug}`
               : null;
             const lines = [
               `🚨 <b>Possible off-platform attempt</b> — photographer shared <b>${esc(contactType)}</b> BEFORE payment`,
@@ -372,7 +373,7 @@ export async function POST(req: NextRequest) {
               `<b>Message:</b>`,
               `<i>"${esc(preview)}"</i>`,
               ``,
-              `<a href="https://photoportugal.com/admin?tab=bookings&booking=${booking_id}">Open booking in admin →</a>`,
+              `<a href="${country.baseUrl}/admin?tab=bookings&booking=${booking_id}">Open booking in admin →</a>`,
             ];
             sendTelegram(lines.join("\n"), "alerts").catch(() => {});
           } catch (alertErr) {
@@ -526,7 +527,7 @@ export async function POST(req: NextRequest) {
             import("@/lib/notify-photographer").then(m =>
               m.notifyPhotographerViaTelegram(
                 photographerProfile.id,
-                `New message from ${senderFirst}\n\nView: https://photoportugal.com/dashboard/messages`
+                `New message from ${senderFirst}\n\nView: ${country.baseUrl}/dashboard/messages`
               )
             ).catch((err) => console.error("[messages] telegram photographer error:", err));
           }
@@ -556,10 +557,10 @@ export async function POST(req: NextRequest) {
           const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "Someone";
           const rLocale = await getUserLocaleById(recipientId);
           const smsBody = pickT({
-            en: `Photo Portugal: New message from ${senderName}. Reply: https://photoportugal.com/dashboard/messages`,
-            pt: `Photo Portugal: Nova mensagem de ${senderName}. Responda: https://photoportugal.com/dashboard/messages`,
-            de: `Photo Portugal: Neue Nachricht von ${senderName}. Antworten: https://photoportugal.com/dashboard/messages`,
-            fr: `Photo Portugal : Nouveau message de ${senderName}. Répondre : https://photoportugal.com/dashboard/messages`,
+            en: `Photo Portugal: New message from ${senderName}. Reply: ${country.baseUrl}/dashboard/messages`,
+            pt: `Photo Portugal: Nova mensagem de ${senderName}. Responda: ${country.baseUrl}/dashboard/messages`,
+            de: `Photo Portugal: Neue Nachricht von ${senderName}. Antworten: ${country.baseUrl}/dashboard/messages`,
+            fr: `Photo Portugal : Nouveau message de ${senderName}. Répondre : ${country.baseUrl}/dashboard/messages`,
           }, rLocale);
           await enqueueNewMessageNotif({
             recipientId,

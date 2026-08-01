@@ -3,6 +3,7 @@ import { query } from "@/lib/db";
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
 import { normalizeLocale, pickT, localizedUrl, type Locale } from "@/lib/email-locale";
 import { notifyPhotographerViaTelegram } from "@/lib/notify-photographer";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -41,7 +42,7 @@ interface DigestCopy {
 
 const T: Record<Locale, DigestCopy> = {
   en: {
-    subject: (views: number) => `Your week on Photo Portugal: ${views} profile views`,
+    subject: (views: number) => `Your week on ${country.brand}: ${views} profile views`,
     heading: "Your weekly stats",
     intro: "Here's how your profile performed over the last 7 days:",
     views: "Profile views",
@@ -54,7 +55,7 @@ const T: Record<Locale, DigestCopy> = {
     outro: "Tip: your stats page shows which photos get opened most, where visitors come from, and what to improve next.",
   },
   pt: {
-    subject: (views: number) => `A sua semana na Photo Portugal: ${views} visualizações do perfil`,
+    subject: (views: number) => `A sua semana na ${country.brand}: ${views} visualizações do perfil`,
     heading: "As suas estatísticas semanais",
     intro: "Eis o desempenho do seu perfil nos últimos 7 dias:",
     views: "Visualizações do perfil",
@@ -67,7 +68,7 @@ const T: Record<Locale, DigestCopy> = {
     outro: "Dica: a página de estatísticas mostra as fotos mais abertas, de onde vêm os visitantes e o que melhorar a seguir.",
   },
   de: {
-    subject: (views: number) => `Ihre Woche auf Photo Portugal: ${views} Profilaufrufe`,
+    subject: (views: number) => `Ihre Woche auf ${country.brand}: ${views} Profilaufrufe`,
     heading: "Ihre Wochenstatistik",
     intro: "So hat Ihr Profil in den letzten 7 Tagen abgeschnitten:",
     views: "Profilaufrufe",
@@ -80,7 +81,7 @@ const T: Record<Locale, DigestCopy> = {
     outro: "Tipp: Die Statistikseite zeigt, welche Fotos am häufigsten geöffnet werden, woher Besucher kommen und was Sie als Nächstes verbessern können.",
   },
   es: {
-    subject: (views: number) => `Tu semana en Photo Portugal: ${views} vistas del perfil`,
+    subject: (views: number) => `Tu semana en ${country.brand}: ${views} vistas del perfil`,
     heading: "Tus estadísticas semanales",
     intro: "Así ha funcionado tu perfil en los últimos 7 días:",
     views: "Vistas del perfil",
@@ -93,7 +94,7 @@ const T: Record<Locale, DigestCopy> = {
     outro: "Consejo: la página de estadísticas muestra qué fotos se abren más, de dónde vienen los visitantes y qué mejorar a continuación.",
   },
   fr: {
-    subject: (views: number) => `Votre semaine sur Photo Portugal : ${views} vues du profil`,
+    subject: (views: number) => `Votre semaine sur ${country.brand} : ${views} vues du profil`,
     heading: "Vos statistiques hebdomadaires",
     intro: "Voici les performances de votre profil ces 7 derniers jours :",
     views: "Vues du profil",

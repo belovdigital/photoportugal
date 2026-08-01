@@ -16,6 +16,7 @@ import { ConciergeInvitePlaque } from "@/components/concierge/ConciergeInvitePla
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { SpotHeroCarousel } from "@/components/ui/SpotHeroCarousel";
 import { SpotMap } from "@/components/ui/SpotMap";
+import { country } from "@/lib/country";
 
 const L = {
   en: {
@@ -207,7 +208,7 @@ export async function generateMetadata({
   const title = `${t.photoshootAt} ${s.name}, ${location.name} — ${t.titleSuffix}`;
   const description = `${t.hireDesc} ${s.name}, ${location.name}, Portugal. ${s.description.slice(0, 140)}`;
   const alt = localeAlternates(`/spots/${city}/${spot}`, locale);
-  const ogImage = spotData.images?.[0]?.url || location.cover_image || "/og-image.png";
+  const ogImage = spotData.images?.[0]?.url || location.cover_image || country.ogImage;
 
   return {
     title,
@@ -378,7 +379,7 @@ export default async function SpotPage({
       longitude: spotData.coordinates.lng,
     } : undefined,
     image: firstCuratedImage?.url || (photographers[0]?.cover_url
-      ? (photographers[0].cover_url.startsWith("http") ? photographers[0].cover_url : `https://photoportugal.com${photographers[0].cover_url}`)
+      ? (photographers[0].cover_url.startsWith("http") ? photographers[0].cover_url : `${country.baseUrl}${photographers[0].cover_url}`)
       : undefined),
   };
 
@@ -389,10 +390,10 @@ export default async function SpotPage({
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: "https://photoportugal.com/" },
-          { "@type": "ListItem", position: 2, name: "Locations", item: "https://photoportugal.com/locations" },
-          { "@type": "ListItem", position: 3, name: location.name, item: `https://photoportugal.com/locations/${city}` },
-          { "@type": "ListItem", position: 4, name: s.name, item: `https://photoportugal.com/spots/${city}/${spot}` },
+          { "@type": "ListItem", position: 1, name: "Home", item: `${country.baseUrl}/` },
+          { "@type": "ListItem", position: 2, name: "Locations", item: `${country.baseUrl}/locations` },
+          { "@type": "ListItem", position: 3, name: location.name, item: `${country.baseUrl}/locations/${city}` },
+          { "@type": "ListItem", position: 4, name: s.name, item: `${country.baseUrl}/spots/${city}/${spot}` },
         ],
       }) }} />
 

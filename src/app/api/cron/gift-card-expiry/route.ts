@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, withAdvisoryLock } from "@/lib/db";
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
 import { pickT, normalizeLocale, getUserLocaleById } from "@/lib/email-locale";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -75,31 +76,31 @@ async function runGiftCardExpiry(): Promise<NextResponse> {
         });
         const T = pickT({
           en: {
-            subject: `Your Photo Portugal gift card expires in ${tier.label}`,
+            subject: `Your ${country.brand} gift card expires in ${tier.label}`,
             h2: `Your gift is waiting — ${tier.label} left`,
             body: `Just a reminder, ${card.recipient_name.split(" ")[0]}: the gift session from ${card.buyer_name} expires on ${expiry}. Pick a photographer and book a date before then and you're set.`,
             cta: "Pick a photographer",
           },
           pt: {
-            subject: `O seu cartão Photo Portugal expira em ${tier.label === "30 days" ? "30 dias" : tier.label === "7 days" ? "7 dias" : "1 dia"}`,
+            subject: `O seu cartão ${country.brand} expira em ${tier.label === "30 days" ? "30 dias" : tier.label === "7 days" ? "7 dias" : "1 dia"}`,
             h2: `O seu presente está à espera — falta${tier.label === "1 day" ? "" : "m"} ${tier.label === "30 days" ? "30 dias" : tier.label === "7 days" ? "7 dias" : "1 dia"}`,
             body: `Apenas um lembrete, ${card.recipient_name.split(" ")[0]}: a sessão oferecida por ${card.buyer_name} expira em ${expiry}. Escolha um fotógrafo e marque uma data antes disso.`,
             cta: "Escolher fotógrafo",
           },
           de: {
-            subject: `Ihre Photo Portugal Geschenkkarte läuft in ${tier.label === "30 days" ? "30 Tagen" : tier.label === "7 days" ? "7 Tagen" : "1 Tag"} ab`,
+            subject: `Ihre ${country.brand} Geschenkkarte läuft in ${tier.label === "30 days" ? "30 Tagen" : tier.label === "7 days" ? "7 Tagen" : "1 Tag"} ab`,
             h2: `Ihr Geschenk wartet — noch ${tier.label === "30 days" ? "30 Tage" : tier.label === "7 days" ? "7 Tage" : "1 Tag"}`,
             body: `Nur zur Erinnerung, ${card.recipient_name.split(" ")[0]}: die Session von ${card.buyer_name} läuft am ${expiry} ab. Wählen Sie vorher einen Fotografen und buchen Sie ein Datum.`,
             cta: "Fotografen wählen",
           },
           es: {
-            subject: `Su tarjeta Photo Portugal expira en ${tier.label === "30 days" ? "30 días" : tier.label === "7 days" ? "7 días" : "1 día"}`,
+            subject: `Su tarjeta ${country.brand} expira en ${tier.label === "30 days" ? "30 días" : tier.label === "7 days" ? "7 días" : "1 día"}`,
             h2: `Su regalo le espera — falta${tier.label === "1 day" ? "" : "n"} ${tier.label === "30 days" ? "30 días" : tier.label === "7 days" ? "7 días" : "1 día"}`,
             body: `Solo un recordatorio, ${card.recipient_name.split(" ")[0]}: la sesión de ${card.buyer_name} expira el ${expiry}. Elija un fotógrafo y reserve una fecha antes.`,
             cta: "Elegir fotógrafo",
           },
           fr: {
-            subject: `Votre carte cadeau Photo Portugal expire dans ${tier.label === "30 days" ? "30 jours" : tier.label === "7 days" ? "7 jours" : "1 jour"}`,
+            subject: `Votre carte cadeau ${country.brand} expire dans ${tier.label === "30 days" ? "30 jours" : tier.label === "7 days" ? "7 jours" : "1 jour"}`,
             h2: `Votre cadeau vous attend — ${tier.label === "30 days" ? "30 jours" : tier.label === "7 days" ? "7 jours" : "1 jour"} restant${tier.label === "1 day" ? "" : "s"}`,
             body: `Juste un rappel, ${card.recipient_name.split(" ")[0]} : la séance offerte par ${card.buyer_name} expire le ${expiry}. Choisissez un photographe et réservez une date avant cette échéance.`,
             cta: "Choisir un photographe",
@@ -108,7 +109,7 @@ async function runGiftCardExpiry(): Promise<NextResponse> {
         const html = emailLayout(`
           <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
           <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
-          ${emailButton("https://photoportugal.com/photographers", T.cta)}
+          ${emailButton(`${country.baseUrl}/photographers`, T.cta)}
         `, loc);
         await sendEmail(card.recipient_email, T.subject, html);
         warnings++;

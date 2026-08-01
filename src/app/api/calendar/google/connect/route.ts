@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
-const REDIRECT_URI = "https://photoportugal.com/api/calendar/google/callback";
+const REDIRECT_URI = `${country.baseUrl}/api/calendar/google/callback`;
 
 /**
  * Kicks off the Google OAuth flow for connecting a calendar. Photographer
@@ -18,7 +19,7 @@ const REDIRECT_URI = "https://photoportugal.com/api/calendar/google/callback";
 export async function GET(req: NextRequest) {
   // Use canonical public host for relative redirects — `req.url` is
   // localhost:3000 behind nginx, which would send the user there.
-  const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+  const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || country.baseUrl;
 
   const user = await authFromRequest(req);
   if (!user) return NextResponse.redirect(new URL("/auth/signin", base));

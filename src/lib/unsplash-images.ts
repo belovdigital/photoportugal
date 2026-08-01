@@ -42,6 +42,42 @@ const baseUrls: Record<string, string> = {
 // Fallback aliases — slugs that borrow images from a nearby region until dedicated
 // photos are added. Keeps /locations grid visually complete (no card-without-bg).
 const aliasMap: Record<string, string> = {
+  // ── Spain: temporary stand-ins ──────────────────────────────────────────
+  // Photo Spain has no Spanish imagery yet, and `locationImage` returns an
+  // empty string for an unmapped slug — so without these every Spanish
+  // location card would render with no picture at all. Each Spanish slug is
+  // pointed at the Portuguese photo whose *character* is closest (capital to
+  // capital, coast to coast, mountain village to mountain village) so the
+  // cards read as intended until real photos land.
+  //
+  // These are placeholders and must be replaced before any paid traffic:
+  // the pictures show Portugal, so no caption or alt text anywhere may name a
+  // Spanish landmark over them. See docs/SPAIN.md.
+  barcelona: "porto",
+  madrid: "lisbon",
+  seville: "evora",
+  granada: "guimaraes",
+  malaga: "algarve",
+  marbella: "algarve",
+  ronda: "guimaraes",
+  cordoba: "evora",
+  cadiz: "peniche",
+  valencia: "porto",
+  "san-sebastian": "nazare",
+  bilbao: "porto",
+  "santiago-de-compostela": "braga",
+  mallorca: "madeira",
+  ibiza: "algarve",
+  menorca: "comporta",
+  tenerife: "madeira",
+  "gran-canaria": "madeira",
+  lanzarote: "azores",
+  toledo: "obidos",
+  segovia: "guimaraes",
+  sitges: "cascais",
+  girona: "guimaraes",
+  "costa-brava": "algarve",
+
   portimao: "algarve",
   albufeira: "algarve",
   faro: "algarve",

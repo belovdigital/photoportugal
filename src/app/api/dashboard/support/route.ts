@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { sendEmail, getAdminEmail } from "@/lib/email";
+import { country } from "@/lib/country";
 
 export async function POST(req: NextRequest) {
   const authUser = await authFromRequest(req);
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
       <p style="white-space: pre-wrap;">${message.trim()}</p>
       <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />
       <p style="color: #999; font-size: 12px;">You can reply directly to this user at: ${user.email || "N/A"}</p>
-      <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+      <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
     </div>
     `;
 

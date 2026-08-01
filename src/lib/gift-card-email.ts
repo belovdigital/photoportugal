@@ -1,8 +1,9 @@
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
 import { pickT, normalizeLocale } from "@/lib/email-locale";
 import { signGiftCardClaimToken, GIFT_CARD_TIERS, type GiftCardTier } from "@/lib/gift-card";
+import { country } from "@/lib/country";
 
-const BASE_URL = "https://photoportugal.com";
+const BASE_URL = country.baseUrl;
 
 export type GiftCardEmailPayload = {
   recipientUserId: string;
@@ -33,8 +34,8 @@ export async function sendGiftCardEmail(p: GiftCardEmailPayload): Promise<void> 
 
   const T = pickT({
     en: {
-      subject: `🎁 ${p.buyerName} sent you a Photo Portugal gift card`,
-      h1: `${p.buyerName} sent you a Photo Portugal gift card 🎁`,
+      subject: `🎁 ${p.buyerName} sent you a ${country.brand} gift card`,
+      h1: `${p.buyerName} sent you a ${country.brand} gift card 🎁`,
       hi: `Hi ${p.recipientName.split(" ")[0]},`,
       body: `You've received a <strong>${tierMeta.label} photo session</strong> in Portugal — choose any participating photographer, anywhere in the country, and the entire session is on ${p.buyerName}.`,
       includes: "What's included",
@@ -45,8 +46,8 @@ export async function sendGiftCardEmail(p: GiftCardEmailPayload): Promise<void> 
       footer: "Click the button to set up your account, then browse our photographers and book your session whenever you're ready.",
     },
     pt: {
-      subject: `🎁 ${p.buyerName} ofereceu-lhe um cartão Photo Portugal`,
-      h1: `${p.buyerName} ofereceu-lhe um cartão Photo Portugal 🎁`,
+      subject: `🎁 ${p.buyerName} ofereceu-lhe um cartão ${country.brand}`,
+      h1: `${p.buyerName} ofereceu-lhe um cartão ${country.brand} 🎁`,
       hi: `Olá ${p.recipientName.split(" ")[0]},`,
       body: `Recebeu uma <strong>sessão fotográfica ${tierMeta.label}</strong> em Portugal — escolha qualquer fotógrafo participante, em qualquer cidade, e ${p.buyerName} cobre tudo.`,
       includes: "O que está incluído",
@@ -57,8 +58,8 @@ export async function sendGiftCardEmail(p: GiftCardEmailPayload): Promise<void> 
       footer: "Clique no botão para configurar a sua conta, depois escolha um fotógrafo e marque a sessão quando quiser.",
     },
     de: {
-      subject: `🎁 ${p.buyerName} hat Ihnen eine Photo Portugal Geschenkkarte geschenkt`,
-      h1: `${p.buyerName} hat Ihnen eine Photo Portugal Geschenkkarte geschenkt 🎁`,
+      subject: `🎁 ${p.buyerName} hat Ihnen eine ${country.brand} Geschenkkarte geschenkt`,
+      h1: `${p.buyerName} hat Ihnen eine ${country.brand} Geschenkkarte geschenkt 🎁`,
       hi: `Hallo ${p.recipientName.split(" ")[0]},`,
       body: `Sie haben eine <strong>${tierMeta.label} Fotoshooting-Session</strong> in Portugal erhalten — wählen Sie einen teilnehmenden Fotografen überall im Land, und ${p.buyerName} übernimmt die gesamte Session.`,
       includes: "Was ist enthalten",
@@ -69,8 +70,8 @@ export async function sendGiftCardEmail(p: GiftCardEmailPayload): Promise<void> 
       footer: "Klicken Sie auf den Button, um Ihr Konto einzurichten, dann wählen Sie einen Fotografen und buchen Sie die Session, wann immer Sie bereit sind.",
     },
     es: {
-      subject: `🎁 ${p.buyerName} le ha regalado una tarjeta Photo Portugal`,
-      h1: `${p.buyerName} le ha regalado una tarjeta Photo Portugal 🎁`,
+      subject: `🎁 ${p.buyerName} le ha regalado una tarjeta ${country.brand}`,
+      h1: `${p.buyerName} le ha regalado una tarjeta ${country.brand} 🎁`,
       hi: `Hola ${p.recipientName.split(" ")[0]},`,
       body: `Ha recibido una <strong>sesión fotográfica ${tierMeta.label}</strong> en Portugal — elija a cualquier fotógrafo participante, en cualquier ciudad, y ${p.buyerName} cubre toda la sesión.`,
       includes: "Qué se incluye",
@@ -81,8 +82,8 @@ export async function sendGiftCardEmail(p: GiftCardEmailPayload): Promise<void> 
       footer: "Pulse el botón para configurar su cuenta, luego elija un fotógrafo y reserve la sesión cuando lo desee.",
     },
     fr: {
-      subject: `🎁 ${p.buyerName} vous a offert une carte cadeau Photo Portugal`,
-      h1: `${p.buyerName} vous a offert une carte cadeau Photo Portugal 🎁`,
+      subject: `🎁 ${p.buyerName} vous a offert une carte cadeau ${country.brand}`,
+      h1: `${p.buyerName} vous a offert une carte cadeau ${country.brand} 🎁`,
       hi: `Bonjour ${p.recipientName.split(" ")[0]},`,
       body: `Vous avez reçu une <strong>séance photo ${tierMeta.label}</strong> au Portugal — choisissez n'importe quel photographe participant, dans n'importe quelle ville, et ${p.buyerName} couvre toute la séance.`,
       includes: "Ce qui est inclus",
@@ -167,7 +168,7 @@ export async function sendGiftCardBuyerReceipt(p: GiftCardBuyerReceiptPayload): 
     en: {
       subject: `Your gift was delivered to ${p.recipientName}`,
       h1: `Thanks for your gift, ${buyerFirst} 🎁`,
-      body: `Your Photo Portugal gift card has been delivered to <strong>${recipientNameSafe}</strong> at <strong>${recipientEmailSafe}</strong>. They have 12 months to redeem it with any participating photographer in Portugal.`,
+      body: `Your ${country.brand} gift card has been delivered to <strong>${recipientNameSafe}</strong> at <strong>${recipientEmailSafe}</strong>. They have 12 months to redeem it with any participating photographer in Portugal.`,
       detailsLabel: "Gift details",
       tierLabel: "Tier",
       amountLabel: "Amount paid",
@@ -175,13 +176,13 @@ export async function sendGiftCardBuyerReceipt(p: GiftCardBuyerReceiptPayload): 
       expiresLabel: "Valid until",
       sentToLabel: "Sent to",
       noteLabel: "Your note",
-      footer: `If the recipient didn&rsquo;t see the email, ask them to check spam — or forward your card code <code>${p.code}</code> to <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> and we&rsquo;ll personally help them claim it.`,
-      cta: "View on Photo Portugal",
+      footer: `If the recipient didn&rsquo;t see the email, ask them to check spam — or forward your card code <code>${p.code}</code> to <a href="mailto:${country.supportEmail}">${country.supportEmail}</a> and we&rsquo;ll personally help them claim it.`,
+      cta: `View on ${country.brand}`,
     },
     pt: {
       subject: `O seu presente foi entregue a ${p.recipientName}`,
       h1: `Obrigado pelo presente, ${buyerFirst} 🎁`,
-      body: `O seu cartão Photo Portugal foi entregue a <strong>${recipientNameSafe}</strong> em <strong>${recipientEmailSafe}</strong>. Tem 12 meses para resgatá-lo com qualquer fotógrafo participante em Portugal.`,
+      body: `O seu cartão ${country.brand} foi entregue a <strong>${recipientNameSafe}</strong> em <strong>${recipientEmailSafe}</strong>. Tem 12 meses para resgatá-lo com qualquer fotógrafo participante em Portugal.`,
       detailsLabel: "Detalhes do presente",
       tierLabel: "Plano",
       amountLabel: "Valor pago",
@@ -189,13 +190,13 @@ export async function sendGiftCardBuyerReceipt(p: GiftCardBuyerReceiptPayload): 
       expiresLabel: "Válido até",
       sentToLabel: "Enviado para",
       noteLabel: "A sua mensagem",
-      footer: `Se a pessoa não viu o email, peça-lhe para verificar o spam — ou envie o código <code>${p.code}</code> para <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> e ajudamos a resgatar pessoalmente.`,
-      cta: "Ver no Photo Portugal",
+      footer: `Se a pessoa não viu o email, peça-lhe para verificar o spam — ou envie o código <code>${p.code}</code> para <a href="mailto:${country.supportEmail}">${country.supportEmail}</a> e ajudamos a resgatar pessoalmente.`,
+      cta: `Ver no ${country.brand}`,
     },
     de: {
       subject: `Ihr Geschenk wurde an ${p.recipientName} geliefert`,
       h1: `Danke für Ihr Geschenk, ${buyerFirst} 🎁`,
-      body: `Ihre Photo Portugal Geschenkkarte wurde an <strong>${recipientNameSafe}</strong> unter <strong>${recipientEmailSafe}</strong> geliefert. Sie hat 12 Monate Zeit, sie bei einem teilnehmenden Fotografen in Portugal einzulösen.`,
+      body: `Ihre ${country.brand} Geschenkkarte wurde an <strong>${recipientNameSafe}</strong> unter <strong>${recipientEmailSafe}</strong> geliefert. Sie hat 12 Monate Zeit, sie bei einem teilnehmenden Fotografen in Portugal einzulösen.`,
       detailsLabel: "Geschenkdetails",
       tierLabel: "Tier",
       amountLabel: "Bezahlter Betrag",
@@ -203,13 +204,13 @@ export async function sendGiftCardBuyerReceipt(p: GiftCardBuyerReceiptPayload): 
       expiresLabel: "Gültig bis",
       sentToLabel: "Gesendet an",
       noteLabel: "Ihre Nachricht",
-      footer: `Falls die Empfänger:in die E-Mail nicht sieht, bitten Sie sie, den Spam-Ordner zu prüfen — oder senden Sie den Code <code>${p.code}</code> an <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> und wir helfen persönlich.`,
-      cta: "Auf Photo Portugal ansehen",
+      footer: `Falls die Empfänger:in die E-Mail nicht sieht, bitten Sie sie, den Spam-Ordner zu prüfen — oder senden Sie den Code <code>${p.code}</code> an <a href="mailto:${country.supportEmail}">${country.supportEmail}</a> und wir helfen persönlich.`,
+      cta: `Auf ${country.brand} ansehen`,
     },
     es: {
       subject: `Su regalo fue entregado a ${p.recipientName}`,
       h1: `Gracias por su regalo, ${buyerFirst} 🎁`,
-      body: `Su tarjeta Photo Portugal ha sido entregada a <strong>${recipientNameSafe}</strong> en <strong>${recipientEmailSafe}</strong>. Tiene 12 meses para canjearla con cualquier fotógrafo participante en Portugal.`,
+      body: `Su tarjeta ${country.brand} ha sido entregada a <strong>${recipientNameSafe}</strong> en <strong>${recipientEmailSafe}</strong>. Tiene 12 meses para canjearla con cualquier fotógrafo participante en Portugal.`,
       detailsLabel: "Detalles del regalo",
       tierLabel: "Plan",
       amountLabel: "Importe pagado",
@@ -217,13 +218,13 @@ export async function sendGiftCardBuyerReceipt(p: GiftCardBuyerReceiptPayload): 
       expiresLabel: "Válido hasta",
       sentToLabel: "Enviado a",
       noteLabel: "Su mensaje",
-      footer: `Si la persona no ve el email, pídale que revise el spam — o envíe el código <code>${p.code}</code> a <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> y le ayudaremos personalmente.`,
-      cta: "Ver en Photo Portugal",
+      footer: `Si la persona no ve el email, pídale que revise el spam — o envíe el código <code>${p.code}</code> a <a href="mailto:${country.supportEmail}">${country.supportEmail}</a> y le ayudaremos personalmente.`,
+      cta: `Ver en ${country.brand}`,
     },
     fr: {
       subject: `Votre cadeau a été livré à ${p.recipientName}`,
       h1: `Merci pour votre cadeau, ${buyerFirst} 🎁`,
-      body: `Votre carte cadeau Photo Portugal a été livrée à <strong>${recipientNameSafe}</strong> à <strong>${recipientEmailSafe}</strong>. Il/elle a 12 mois pour l&rsquo;utiliser auprès de n&rsquo;importe quel photographe participant au Portugal.`,
+      body: `Votre carte cadeau ${country.brand} a été livrée à <strong>${recipientNameSafe}</strong> à <strong>${recipientEmailSafe}</strong>. Il/elle a 12 mois pour l&rsquo;utiliser auprès de n&rsquo;importe quel photographe participant au Portugal.`,
       detailsLabel: "Détails du cadeau",
       tierLabel: "Formule",
       amountLabel: "Montant payé",
@@ -231,8 +232,8 @@ export async function sendGiftCardBuyerReceipt(p: GiftCardBuyerReceiptPayload): 
       expiresLabel: "Valable jusqu&rsquo;au",
       sentToLabel: "Envoyé à",
       noteLabel: "Votre message",
-      footer: `Si la personne ne voit pas l&rsquo;e-mail, demandez-lui de vérifier le spam — ou envoyez le code <code>${p.code}</code> à <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> et nous l&rsquo;aiderons personnellement.`,
-      cta: "Voir sur Photo Portugal",
+      footer: `Si la personne ne voit pas l&rsquo;e-mail, demandez-lui de vérifier le spam — ou envoyez le code <code>${p.code}</code> à <a href="mailto:${country.supportEmail}">${country.supportEmail}</a> et nous l&rsquo;aiderons personnellement.`,
+      cta: `Voir sur ${country.brand}`,
     },
   }, loc);
 
@@ -262,7 +263,7 @@ export async function sendGiftCardBuyerReceipt(p: GiftCardBuyerReceiptPayload): 
     </div>
 
     ${noteBlock}
-    ${emailButton("https://photoportugal.com", T.cta)}
+    ${emailButton(`${country.baseUrl}`, T.cta)}
 
     <p style="margin:16px 0 0;font-size:13px;color:#9B8E82;line-height:1.5;">${T.footer}</p>
   `;
@@ -280,11 +281,11 @@ export function buildGiftCardSms(buyerName: string, tier: GiftCardTier, locale: 
   const loc = normalizeLocale(locale);
   const tierLabel = GIFT_CARD_TIERS[tier].label;
   return pickT({
-    en: `🎁 ${buyerName} sent you a Photo Portugal ${tierLabel} gift session. Check your email to claim it: photoportugal.com`,
-    pt: `🎁 ${buyerName} ofereceu-lhe uma sessão Photo Portugal (${tierLabel}). Veja o seu email para resgatar: photoportugal.com`,
-    de: `🎁 ${buyerName} hat Ihnen eine Photo Portugal ${tierLabel}-Session geschenkt. E-Mail prüfen zum Einlösen: photoportugal.com`,
-    es: `🎁 ${buyerName} le ha regalado una sesión Photo Portugal (${tierLabel}). Revise su email para canjear: photoportugal.com`,
-    fr: `🎁 ${buyerName} vous a offert une séance Photo Portugal (${tierLabel}). Vérifiez votre email pour l'utiliser : photoportugal.com`,
+    en: `🎁 ${buyerName} sent you a ${country.brand} ${tierLabel} gift session. Check your email to claim it: photoportugal.com`,
+    pt: `🎁 ${buyerName} ofereceu-lhe uma sessão ${country.brand} (${tierLabel}). Veja o seu email para resgatar: photoportugal.com`,
+    de: `🎁 ${buyerName} hat Ihnen eine ${country.brand} ${tierLabel}-Session geschenkt. E-Mail prüfen zum Einlösen: photoportugal.com`,
+    es: `🎁 ${buyerName} le ha regalado una sesión ${country.brand} (${tierLabel}). Revise su email para canjear: photoportugal.com`,
+    fr: `🎁 ${buyerName} vous a offert une séance ${country.brand} (${tierLabel}). Vérifiez votre email pour l'utiliser : photoportugal.com`,
   }, loc);
 }
 

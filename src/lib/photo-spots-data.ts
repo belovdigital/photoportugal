@@ -1,3 +1,4 @@
+import { country } from "./country";
 /** A single curated image of the spot (Wikimedia / Unsplash / photographer
  *  portfolio). Attribution is required because Wikimedia CC-BY-SA images
  *  must show photographer credit + license to stay legal. */
@@ -152,7 +153,7 @@ export function spotLocalized(spot: PhotoSpot, locale: string) {
 }
 
 /** Top photography spots per location slug */
-export const photoSpots: Record<string, PhotoSpot[]> = {
+const photoSpotsPT: Record<string, PhotoSpot[]> = {
   lisbon: [
     { name: "Miradouro da Graca", namePt: "Miradouro da Graça", nameDe: "Miradouro da Graça", nameEs: "Miradouro da Graça", nameFr: "Miradouro da Graça",
       description: "One of Lisbon's most scenic viewpoints with panoramic views over the city rooftops and the Tagus River — perfect for golden hour portraits.",
@@ -661,3 +662,13 @@ export const photoSpots: Record<string, PhotoSpot[]> = {
       descriptionFr: "Les ruines d'un château maure au sommet d'une colline, entourées de jardins, offrant des vues panoramiques sur les maisons aux toits pyramidaux de la ville." },
   ],
 };
+
+/**
+ * Curated photo spots are Portugal-only for now: each entry names a specific
+ * viewpoint or landmark, so substitution cannot produce a Spanish version —
+ * it would invent places. Spain therefore ships no spot pages until a real
+ * Spanish list is written, rather than 360 sitemap URLs about another country.
+ */
+export const photoSpots: Record<string, PhotoSpot[]> =
+  country.code === "es" ? {} : photoSpotsPT;
+

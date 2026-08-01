@@ -3,6 +3,17 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { TrackedCTALink } from "@/components/ui/TrackedCTALink";
 import { unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 import { locations } from "@/lib/locations-data";
+import { country } from "@/lib/country";
+
+/** Market name, declined per language for the hardcoded copy blocks below. */
+const CN = {
+  en: country.code === "es" ? "Spain" : "Portugal",
+  pt: country.code === "es" ? "Espanha" : "Portugal",
+  es: country.code === "es" ? "España" : "Portugal",
+  de: country.code === "es" ? "Spanien" : "Portugal",
+  fr: country.code === "es" ? "Espagne" : "Portugal",
+} as const;
+
 
 // Homepage band for the wedding funnel → /weddings landing. Dark and
 // editorial on purpose: it sits between How-It-Works and the pastel
@@ -28,7 +39,7 @@ const L: Record<string, {
 }> = {
   en: {
     badge: "Weddings",
-    title: "Getting married in Portugal?",
+    title: `Getting married in ${CN.en}?`,
     subtitle: "Local wedding photographers who know every venue, viewpoint, and golden-hour spot — from intimate elopements to full-day celebrations.",
     cta: "Explore wedding photography",
     photographersLabel: (n) => `${n} wedding photographers`,
@@ -55,7 +66,7 @@ const L: Record<string, {
   },
   es: {
     badge: "Bodas",
-    title: "¿Os casáis en Portugal?",
+    title: `¿Os casáis en ${CN.es}?`,
     subtitle: "Fotógrafos de boda locales que conocen cada espacio, mirador y luz dorada — desde elopements íntimos hasta celebraciones de día completo.",
     cta: "Explorar fotografía de boda",
     photographersLabel: (n) => `${n} fotógrafos de boda`,

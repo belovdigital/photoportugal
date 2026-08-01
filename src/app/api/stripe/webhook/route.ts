@@ -8,6 +8,7 @@ import { queueNotification } from "@/lib/notification-queue";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
 import { sendTelegram } from "@/lib/telegram";
 import { bookingStripePaymentColumnsExist } from "@/lib/booking-stripe-payment-fields";
+import { country } from "@/lib/country";
 
 // Stripe events we surface in the `stripe` Telegram topic. Anything
 // not listed (most notably payment_intent.created — fires on every
@@ -332,7 +333,7 @@ async function notifyAdminSubscriptionEvent(
     const safeEmail = String(info.email || "").replace(/[<>]/g, "");
     const safeDetail = detail.replace(/[<>]/g, "");
     await sendTelegram(
-      `${emoji} <b>${title}</b>\n\nName: ${safeName}\nEmail: ${safeEmail}\n${safeDetail}\n\n👉 <a href="https://photoportugal.com/admin#${info.slug}">View in Admin</a>`,
+      `${emoji} <b>${title}</b>\n\nName: ${safeName}\nEmail: ${safeEmail}\n${safeDetail}\n\n👉 <a href="${country.baseUrl}/admin#${info.slug}">View in Admin</a>`,
       "photographers"
     );
   } catch (e) {
@@ -599,8 +600,8 @@ export async function POST(req: NextRequest) {
                       <p><strong>${ctx.client_name.replace(/[<>]/g, "")}</strong> loved your photos so much they added a <strong style="color:#D97706;">€${tipEur}</strong> tip.</p>
                       <p><strong>€${payoutEur}</strong> is on its way to your Stripe account (after the 10% platform fee) and will arrive with your regular payout schedule.</p>
                       <p>Moments like this deserve a reply — a quick thank-you in the chat goes a long way.</p>
-                      <p><a href="https://photoportugal.com/dashboard/messages" style="display:inline-block;background:#D97706;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Say thanks →</a></p>
-                      <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+                      <p><a href="${country.baseUrl}/dashboard/messages" style="display:inline-block;background:#D97706;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Say thanks →</a></p>
+                      <p style="color:#999;font-size:12px;">${country.brand} — ${country.host}</p>
                     </div>`
                   )
                 ).catch((e) => console.error("[webhook] tip email error:", e));
@@ -650,7 +651,7 @@ export async function POST(req: NextRequest) {
               : "(no price)";
             import("@/lib/telegram").then(({ sendTelegram }) =>
               sendTelegram(
-                `<b>🎯 Blind booking authorised — needs admin assignment</b>\nBooking: <code>${bookingId}</code>\nAmount: ${amtLabel} (auth-hold, not captured)\nDeadline: 24h to assign a photographer or auto-refund.\n<a href="https://photoportugal.com/admin">Open admin queue</a>`,
+                `<b>🎯 Blind booking authorised — needs admin assignment</b>\nBooking: <code>${bookingId}</code>\nAmount: ${amtLabel} (auth-hold, not captured)\nDeadline: 24h to assign a photographer or auto-refund.\n<a href="${country.baseUrl}/admin">Open admin queue</a>`,
                 "bookings"
               )
             ).catch((err) => console.error("[webhook] blind-booking telegram error:", err));
@@ -668,7 +669,7 @@ export async function POST(req: NextRequest) {
                   <h2 style="color:#C94536;">Blind booking authorised — needs assignment</h2>
                   <p>Booking ID: <code>${bookingId}</code><br/>Amount: ${amtLabel} (auth-hold, not captured)</p>
                   <p><strong>Deadline: 24 hours</strong> to assign a photographer, otherwise the hold auto-refunds.</p>
-                  <p><a href="https://photoportugal.com/admin" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open admin queue</a></p>
+                  <p><a href="${country.baseUrl}/admin" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open admin queue</a></p>
                 </div>`
               );
             }).catch((err) => console.error("[webhook] blind-booking admin email error:", err));
@@ -682,7 +683,7 @@ export async function POST(req: NextRequest) {
                 [bookingId]
               );
               if (!ctx?.email) return;
-              const BASE = process.env.AUTH_URL || "https://photoportugal.com";
+              const BASE = process.env.AUTH_URL || country.baseUrl;
               // Show the all-in amount the client's card is authorised for.
               // total_price holds the derived photographer base (summer
               // offer: inclusive × 0.85), so client total = base / 0.85 —
@@ -697,7 +698,7 @@ export async function POST(req: NextRequest) {
                   <p>Your ${ctx.location_slug || "Portugal"} photoshoot ${ctx.shoot_date ? `on ${ctx.shoot_date}` : ""} is authorised (${priceText}). Our team is hand-picking the right photographer for you and will confirm within 24 hours by email.</p>
                   <p>You'll only be charged once we confirm your photographer. If we can't match you in time, the hold is released automatically.</p>
                   <p><a href="${BASE}/dashboard/bookings" style="display:inline-block;background:#C94536;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">View your booking</a></p>
-                  <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+                  <p style="color:#999;font-size:12px;">${country.brand} — ${country.host}</p>
                 </div>`
               );
             }).catch((err) => console.error("[webhook] blind-booking client email error:", err));
@@ -862,7 +863,7 @@ export async function POST(req: NextRequest) {
                     `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
                       <h2 style="color: #16a34a;">Payment Received</h2>
                       <p><strong>${bookingInfo.client_name}</strong> paid <strong>${displayPaidAmount}</strong> for a booking with <strong>${bookingInfo.photographer_name}</strong>.</p>
-                      <p><a href="https://photoportugal.com/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View in Admin</a></p>
+                      <p><a href="${country.baseUrl}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View in Admin</a></p>
                     </div>`
                   );
                 }
@@ -972,7 +973,7 @@ export async function POST(req: NextRequest) {
                       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">A quick heads-up: <strong>${clientFirst}</strong>, who you were recently in touch with, has unfortunately booked another photographer for this shoot.</p>
                       ${l.status === "confirmed" ? `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">If you were holding a date for them, it's safe to release it.</p>` : ""}
                       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">No action needed — these things happen. Quick replies and a concrete package offer usually make the difference, so keep that in mind for the next inquiry!</p>
-                      <p style="margin:16px 0 0;color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+                      <p style="margin:16px 0 0;color:#999;font-size:12px;">${country.brand} — ${country.host}</p>
                     `),
                     dedupKey: `client_chose_other:${l.id}`,
                   }).catch(() => {});
@@ -1017,7 +1018,7 @@ export async function POST(req: NextRequest) {
                   import("@/lib/notify-photographer").then(m =>
                     m.notifyPhotographerViaTelegram(
                       photographerProfileId.photographer_id,
-                      `Payment received from ${clientFirst}!\n\nYour payout: ${payoutLabel}\n\nView: https://photoportugal.com/dashboard/bookings`
+                      `Payment received from ${clientFirst}!\n\nYour payout: ${payoutLabel}\n\nView: ${country.baseUrl}/dashboard/bookings`
                     )
                   ).catch((err) => console.error("[webhook] telegram photographer payment error:", err));
                 }

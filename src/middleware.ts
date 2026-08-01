@@ -1,7 +1,9 @@
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
+import { locales as activeLocales } from "./i18n/config";
 import { NextRequest, NextResponse } from "next/server";
 import { getRedirect } from "./lib/redirects-cache";
+import { country } from "@/lib/country";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -221,7 +223,7 @@ export default async function middleware(request: NextRequest) {
     pathname === "/robots.txt" ||
     pathname === "/llms.txt" ||
     pathname === "/llms.json" ||
-    pathname === "/og-image.png" ||
+    pathname === country.ogImage ||
     pathname === "/logo.svg" ||
     pathname === "/hero-family.webp"
   ) {
@@ -321,7 +323,10 @@ export default async function middleware(request: NextRequest) {
   // Returns "pt" | "de" | "es" | "fr" | "en" — null means user has no preference signal.
   function preferredLocale(): "en" | "pt" | "de" | "es" | "fr" | null {
     const accept = request.headers.get("accept-language") || "";
-    const SUPPORTED = new Set(["en", "pt", "de", "es", "fr"]);
+    // Only locales this market actually serves. Hardcoding all five here sent
+    // Spanish visitors with a Portuguese browser preference to /pt on
+    // photospain.co — a locale that market does not ship.
+    const SUPPORTED = new Set<string>(activeLocales);
     // Parse "en-US,en;q=0.9,fr;q=0.8" into ranked tags
     const parts = accept.split(",").map((p) => {
       const [tag, ...params] = p.trim().split(";");
@@ -336,10 +341,14 @@ export default async function middleware(request: NextRequest) {
     // Fallback: CF geo only if no Accept-Language at all
     if (parts.length === 0 || !parts[0].lang) {
       const cf = request.headers.get("cf-ipcountry");
-      if (cf === "DE" || cf === "AT") return "de";
-      if (cf === "PT" || cf === "BR") return "pt";
-      if (cf === "ES" || cf === "MX" || cf === "AR" || cf === "CL" || cf === "CO" || cf === "PE") return "es";
-      if (cf === "FR" || cf === "BE" || cf === "CH" || cf === "LU" || cf === "MC") return "fr";
+      let geo: string | null = null;
+      if (cf === "DE" || cf === "AT") geo = "de";
+      else if (cf === "PT" || cf === "BR") geo = "pt";
+      else if (cf === "ES" || cf === "MX" || cf === "AR" || cf === "CL" || cf === "CO" || cf === "PE") geo = "es";
+      else if (cf === "FR" || cf === "BE" || cf === "CH" || cf === "LU" || cf === "MC") geo = "fr";
+      // Same filter as above: a market that does not ship this locale must not
+      // be sent to it, however the preference was expressed.
+      if (geo && SUPPORTED.has(geo)) return geo as "en" | "pt" | "de" | "es" | "fr";
     }
     return null;
   }

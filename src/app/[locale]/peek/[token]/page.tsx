@@ -5,6 +5,7 @@ import { getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
 import { maskSurname } from "@/lib/photographer-name";
 import { normalizeName } from "@/lib/format-name";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -74,13 +75,13 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const { token } = await params;
   const data = await getPeek(token);
   if (!data || "expired" in data) {
-    return { title: "Sneak peek | Photo Portugal", robots: { index: false, follow: false } };
+    return { title: `Sneak peek | ${country.brand}`, robots: { index: false, follow: false } };
   }
   const loc = data.booking.location_slug ? data.booking.location_slug.replace(/-/g, " ") : "Portugal";
   const occ = data.booking.occasion ? `${data.booking.occasion} ` : "";
   // og:image presigned for 6 days — link-preview scrapers fetch at share
   // time, well inside the window.
-  let og = data.photos[0]?.src || "/og-image.png";
+  let og = data.photos[0]?.src || country.ogImage;
   try {
     const raw = await queryOne<{ thumbnail_url: string | null }>(
       "SELECT thumbnail_url FROM delivery_photos WHERE booking_id = $1 AND is_peek = TRUE ORDER BY sort_order, created_at LIMIT 1",
@@ -91,11 +92,11 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
     }
   } catch {}
   return {
-    title: `Sneak peek — ${occ}photoshoot in ${loc} | Photo Portugal`,
+    title: `Sneak peek — ${occ}photoshoot in ${loc} | ${country.brand}`,
     robots: { index: false, follow: false },
     openGraph: {
       title: `✨ Sneak peek — ${occ}photoshoot in ${loc}`,
-      description: "A first look from a Photo Portugal session.",
+      description: `A first look from a ${country.brand} session.`,
       images: [{ url: og, width: 1200, height: 800 }],
     },
   };
@@ -183,7 +184,7 @@ export default async function PeekPage({ params }: { params: Promise<{ token: st
           {t("bookYourOwn")}
         </a>
         <p className="mt-6 text-xs text-gray-400">
-          {t("deliveredVia")} <a href="https://photoportugal.com" className="text-primary-600 hover:underline">Photo Portugal</a>
+          {t("deliveredVia")} <a href={`${country.baseUrl}`} className="text-primary-600 hover:underline">{country.brand}</a>
         </p>
       </div>
     </div>

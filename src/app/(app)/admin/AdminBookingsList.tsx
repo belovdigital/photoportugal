@@ -189,6 +189,7 @@ export function AdminBookingsList({
   const [assignDraft, setAssignDraft] = useState<Record<string, string>>({});
   const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
   const [submittingAssignId, setSubmittingAssignId] = useState<string | null>(null);
+  const [cancellingBlindId, setCancellingBlindId] = useState<string | null>(null);
   const roster = photographerRoster || [];
 
   const filtered = useMemo(() => {
@@ -406,6 +407,64 @@ export function AdminBookingsList({
                       notes={notesDraft[b.id] ?? (b.admin_notes || "")}
                       onNotes={(v) => setNotesDraft((prev) => ({ ...prev, [b.id]: v }))}
                       submitting={submittingAssignId === b.id}
+                      cancelling={cancellingBlindId === b.id}
+                      onCancel={async () => {
+                        // The hold is real money sitting on the client's card.
+                        // Spell out what the click does before doing it.
+                        const reason = window.prompt(
+                          "Cancel this blind booking and release the Stripe hold?\n\n" +
+                            "The client is charged nothing — the authorisation is voided, " +
+                            "not refunded, so the money frees up immediately instead of " +
+                            "waiting for the 24h auto-refund.\n\n" +
+                            "Reason (optional, included in the client email):",
+                          ""
+                        );
+                        if (reason === null) return; // dismissed the dialog
+                        setCancellingBlindId(b.id);
+                        try {
+                          const res = await fetch("/api/admin/bookings", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              // `cancel` reads `id`; only `assign_photographer`
+                              // takes `booking_id`. Sending the wrong one gets
+                              // "Missing id or action".
+                              action: "cancel",
+                              id: b.id,
+                              reason: reason.trim() || undefined,
+                            }),
+                          });
+                          const data = await res.json().catch(() => ({}));
+                          if (!res.ok) {
+                            alert(`Cancel failed: ${data?.error || res.status}`);
+                          } else {
+                            window.location.reload();
+                          }
+                        } catch (err) {
+                          alert(`Network error: ${err instanceof Error ? err.message : err}`);
+                        }
+                        setCancellingBlindId(null);
+                      }}
+                      onDelete={async () => {
+                        if (!window.confirm("Delete this booking permanently? No payment was taken, so nothing is refunded.")) return;
+                        setCancellingBlindId(b.id);
+                        try {
+                          const res = await fetch("/api/admin/bookings", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ action: "delete", id: b.id }),
+                          });
+                          const data = await res.json().catch(() => ({}));
+                          if (!res.ok) {
+                            alert(`Delete failed: ${data?.error || res.status}`);
+                          } else {
+                            window.location.reload();
+                          }
+                        } catch (err) {
+                          alert(`Network error: ${err instanceof Error ? err.message : err}`);
+                        }
+                        setCancellingBlindId(null);
+                      }}
                       onAssign={async () => {
                         const photographerId = assignDraft[b.id];
                         if (!photographerId) return;
@@ -720,6 +779,9 @@ function BlindAssignPanel({
   onNotes,
   submitting,
   onAssign,
+  cancelling,
+  onCancel,
+  onDelete,
 }: {
   booking: AdminBooking;
   photographers: AdminPhotographerRosterRow[];
@@ -729,6 +791,9 @@ function BlindAssignPanel({
   onNotes: (v: string) => void;
   submitting: boolean;
   onAssign: () => void;
+  cancelling: boolean;
+  onCancel: () => void;
+  onDelete: () => void;
 }) {
   // Slugs that map to the booking's location_slug parent region — used
   // to bubble likely-fits to the top of the dropdown. Loose match; the
@@ -767,6 +832,15 @@ function BlindAssignPanel({
           assign or capture. Auto-cancels ~2h after creation if payment never
           arrives. If they pay, this turns into the assign panel automatically.
         </p>
+        {/* Nothing is held here, so there is no money to release — the only
+            useful action is clearing the row out of the queue by hand. */}
+        <button
+          onClick={onDelete}
+          disabled={cancelling}
+          className="mt-2 rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+        >
+          {cancelling ? "Deleting…" : "Delete booking"}
+        </button>
       </div>
     );
   }
@@ -818,6 +892,16 @@ function BlindAssignPanel({
           className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
         >
           {submitting ? "Assigning…" : "Assign & capture"}
+        </button>
+        {/* Escape hatch for the common case where the client backs out before
+            anyone is assigned. Without it the only way out was waiting for the
+            24h auto-refund cron, leaving their money on hold the whole time. */}
+        <button
+          onClick={onCancel}
+          disabled={submitting || cancelling}
+          className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+        >
+          {cancelling ? "Cancelling…" : "Cancel & release hold"}
         </button>
       </div>
     </div>
