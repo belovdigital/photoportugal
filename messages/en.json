@@ -4253,5 +4253,26 @@
     "benchReply": "First reply time",
     "benchMedian": "median: {value}",
     "ownVisitsNote": "Your own visits don't count: any device you've ever logged in on is excluded, even when logged out. Private/incognito windows can't be recognised — for clean numbers, browse your profile while logged in."
+  },
+  "gettingStarted": {
+    "eyebrow": "Getting started",
+    "welcome": "Welcome to {brand}, {name} 👋",
+    "intro": "Eight things the photographers who book the most do differently. Scroll through — should take 4 minutes. Each tip links to where the work happens.",
+    "s1title": "Reply fast, warm up the room",
+    "s1body": "Top performers reply in under 60 minutes. We track your average response time and surface faster repliers higher in search. Install the mobile app and turn on push (Step 8) — that's the single biggest lever.",
+    "s2title": "Connect your calendar",
+    "s2body": "Sync your Google Calendar so clients can only request slots you're actually free. Personal events stay private — we only see busy/free, not event titles. Pulls in every 15 min, plus an auto-buffer around shoots for travel/prep (set in calendar settings). You can also block specific dates manually for vacation or personal stuff. Net result: zero double-bookings, fewer \"sorry I'm booked\" emails, happier clients.",
+    "s3title": "Design packages around the occasion",
+    "s3body": "Name packages by the moment, not by duration. \"Proposal · 1 hour\" converts much better than \"1-hour session\" — the client instantly knows it's for them. The top-booked packages on {brand} anchor to specific occasions: Essential, Golden Hour Session, Big Family Photoshoot, Couples Sunset. Pricing follows the value of the moment, not the clock. When a client asks about pricing, hit the + in the message box and pick a package — they get a card with Book Now baked in. Custom price? Send a one-off proposal at any number.",
+    "s4title": "Use AI reply suggestions",
+    "s4body": "On every client message you'll see three short draft replies generated from the conversation context and your bio. Tap one to prefill the reply box — edit before sending, never auto-sent.",
+    "s5title": "Keep pre-payment chat on-platform",
+    "s5body": "Sharing your WhatsApp/Instagram/email BEFORE payment is auto-flagged to admins and risks your account — and you lose Stripe protection if anything goes wrong with the shoot. AFTER payment, exchanging WhatsApp for day-of coordination (meet-up point, weather updates, last-minute timing) is totally fine — Stripe protection has already kicked in.",
+    "s6title": "Reviews drive ranking",
+    "s6body": "We send every client a review request 3 hours after they accept their delivery (10% off their next booking as a thank-you). You don't have to ask — but a friendly nudge from you in your last chat message lifts response rate a lot. Template you can copy and personalize (swap the name, tweak the wording):",
+    "s7title": "Verified & Featured upgrades",
+    "s7body": "Verified badge (€19/year) adds a blue checkmark next to your name — clients trust verified photographers 2-3× more. Featured (€19/month) pins you to the top of search for your locations. Both pay for themselves quickly if you've got bookings flowing.",
+    "s8title": "Install the mobile app",
+    "s8body": "Push notifications hit you within seconds — way faster than email. You can reply from a beach, the gym, anywhere. Search \"{brand}\" on App Store or Play Store, or tap the badges below."
   }
 }

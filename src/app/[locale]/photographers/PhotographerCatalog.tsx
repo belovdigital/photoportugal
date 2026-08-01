@@ -13,6 +13,7 @@ import {
   getLocationTreeLabel,
   locationMatchesSelection,
 } from "@/components/ui/LocationTreeOptions";
+import { country } from "@/lib/country";
 
 function TeamOnlineIndicator() {
   const t = useTranslations("photographers");
@@ -845,7 +846,7 @@ export function PhotographerCatalog({
               Reset filters
             </button>
             <a
-              href={`mailto:info@photoportugal.com?subject=Gift card support — ${giftMode.tierLabel} tier&body=Hi, I have a Photo Portugal ${giftMode.tierLabel} gift card and can't find a photographer matching my filters. Can you help?`}
+              href={`mailto:${country.supportEmail}?subject=Gift card support — ${giftMode.tierLabel} tier&body=Hi, I have a ${country.brand} ${giftMode.tierLabel} gift card and can't find a photographer matching my filters. Can you help?`}
               className="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
             >
               Email support

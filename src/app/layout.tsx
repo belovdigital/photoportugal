@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { country } from "@/lib/country";
 import { Inter, Playfair_Display } from "next/font/google";
 import { getLocale } from "next-intl/server";
-import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,28 +18,20 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
-    template: "%s | Photo Portugal",
+    default: country.seo.title,
+    template: `%s | ${country.brand}`,
   },
-  description:
-    `Book a hand-picked vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places. Every photographer personally vetted. Verified reviews, secure payments, private photo gallery. From EUR299.`,
-  keywords: [
-    "photographer portugal",
-    "vacation photographer lisbon",
-    "photoshoot portugal",
-    "couples photographer porto",
-    "family photographer algarve",
-    "professional photographer portugal",
-  ],
-  metadataBase: new URL("https://photoportugal.com"),
+  description: country.seo.description,
+  keywords: country.seo.keywords,
+  metadataBase: new URL(country.baseUrl),
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Photo Portugal",
-    title: "Vacation Photographer Portugal — Book Professional Photoshoots | Photo Portugal",
-    description: `Book a professional vacation photographer in Portugal. Lisbon, Porto, Algarve, Sintra & ${portugalCoverageStats.displayPlacesLabel} places.`,
-    url: "https://photoportugal.com",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal" }],
+    siteName: country.brand,
+    title: country.seo.title,
+    description: country.seo.ogDescription,
+    url: country.baseUrl,
+    images: [{ url: country.ogImage, width: 1200, height: 630, alt: country.brand }],
   },
   twitter: { card: "summary_large_image" },
   icons: {
@@ -66,8 +58,8 @@ export default async function RootLayout({
         {/* R2 CDN — serves every photographer cover + portfolio image.
             Single biggest LCP source on photographer detail pages, so
             preconnect saves ~150-300ms vs cold DNS+TLS. */}
-        <link rel="preconnect" href="https://files.photoportugal.com" />
-        <link rel="dns-prefetch" href="https://files.photoportugal.com" />
+        <link rel="preconnect" href={`https://${country.filesHost}`} />
+        <link rel="dns-prefetch" href={`https://${country.filesHost}`} />
       </head>
       <body className="flex min-h-screen flex-col font-sans">
         {/* Recover from blue-green chunk-mismatch errors. After a deploy
@@ -109,26 +101,21 @@ export default async function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              name: "Photo Portugal",
-              url: "https://photoportugal.com",
-              logo: "https://photoportugal.com/logo.svg",
-              image: "https://photoportugal.com/og-image.png",
-              telephone: "+351 308 800 496",
-              email: "info@photoportugal.com",
-              areaServed: { "@type": "Country", name: "Portugal" },
-              sameAs: [
-                "https://www.facebook.com/photoportugalofficial",
-                "https://www.instagram.com/photoportugal_com/",
-                "https://www.linkedin.com/company/photoportugal",
-                "https://www.trustpilot.com/review/photoportugal.com",
-              ],
+              name: country.brand,
+              url: country.baseUrl,
+              logo: `${country.baseUrl}${country.logoPath}`,
+              image: `${country.baseUrl}${country.ogImage}`,
+              ...(country.phone ? { telephone: country.phone } : {}),
+              email: country.supportEmail,
+              areaServed: { "@type": "Country", name: country.areaServed },
+              ...(country.socialLinks.length ? { sameAs: country.socialLinks } : {}),
               contactPoint: {
                 "@type": "ContactPoint",
                 contactType: "customer service",
-                email: "info@photoportugal.com",
-                telephone: "+351 308 800 496",
-                areaServed: "PT",
-                availableLanguage: ["English", "Portuguese"],
+                email: country.supportEmail,
+                ...(country.phone ? { telephone: country.phone } : {}),
+                areaServed: country.code.toUpperCase(),
+                availableLanguage: country.contactLanguages,
               },
             }),
           }}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -105,7 +106,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           </ul>
           <p className="mt-2">
             {t("sections.internationalTransfers.safeguards")}{" "}
-            <a href="mailto:info@photoportugal.com" className="text-primary-600 hover:underline">info@photoportugal.com</a>.
+            <a href={`mailto:${country.supportEmail}`} className="text-primary-600 hover:underline">{country.supportEmail}</a>.
           </p>
         </section>
 
@@ -163,7 +164,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           </ul>
           <p className="mt-2">
             {t("sections.yourRights.exercise")}{" "}
-            <a href="mailto:info@photoportugal.com" className="text-primary-600 hover:underline">info@photoportugal.com</a>.{" "}
+            <a href={`mailto:${country.supportEmail}`} className="text-primary-600 hover:underline">{country.supportEmail}</a>.{" "}
             {t("sections.yourRights.responseTime")}
           </p>
         </section>
@@ -176,7 +177,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
             <p className="font-semibold text-gray-900">{t("sections.complaint.cnpdName")}</p>
             <p className="mt-1">{t("sections.complaint.cnpdAddress1")}</p>
             <p>{t("sections.complaint.cnpdAddress2")}</p>
-            <p className="mt-1">{t("sections.complaint.cnpdWebsite")}{" "}<a href="https://www.cnpd.pt" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">www.cnpd.pt</a></p>
+            <p className="mt-1">{t("sections.complaint.cnpdWebsite")}{" "}<a href={country.dpaUrl} className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">{country.dpaName}</a></p>
           </div>
           <p className="mt-3">{t("sections.complaint.otherAuthority")}</p>
         </section>
@@ -184,7 +185,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
         {/* 12. Children's Privacy */}
         <section>
           <h2 className="text-xl font-bold text-gray-900">{t("sections.children.title")}</h2>
-          <p className="mt-3">{t("sections.children.content")}{" "}<a href="mailto:info@photoportugal.com" className="text-primary-600 hover:underline">info@photoportugal.com</a>{t("sections.children.contentAfterEmail")}</p>
+          <p className="mt-3">{t("sections.children.content")}{" "}<a href={`mailto:${country.supportEmail}`} className="text-primary-600 hover:underline">{country.supportEmail}</a>{t("sections.children.contentAfterEmail")}</p>
         </section>
 
         {/* 13. Business Transfers */}
@@ -204,9 +205,9 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
           <h2 className="text-xl font-bold text-gray-900">{t("sections.contact.title")}</h2>
           <p className="mt-3">{t("sections.contact.intro")}</p>
           <div className="mt-3 rounded-lg bg-gray-50 p-4 text-sm">
-            <p className="font-semibold text-gray-900">Photo Portugal</p>
-            <p className="mt-1">Email:{" "}<a href="mailto:info@photoportugal.com" className="text-primary-600 hover:underline">info@photoportugal.com</a></p>
-            <p>Website: <a href="https://photoportugal.com" className="text-primary-600 hover:underline">photoportugal.com</a></p>
+            <p className="font-semibold text-gray-900">{country.brand}</p>
+            <p className="mt-1">Email:{" "}<a href={`mailto:${country.supportEmail}`} className="text-primary-600 hover:underline">{country.supportEmail}</a></p>
+            <p>Website: <a href={country.baseUrl} className="text-primary-600 hover:underline">{country.host}</a></p>
           </div>
         </section>
       </div>

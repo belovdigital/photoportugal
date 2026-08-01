@@ -11,6 +11,17 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
 import { locationImage, unsplashUrl, IMAGE_SIZES } from "@/lib/unsplash-images";
 import { WeddingMatchPanel } from "@/components/ui/WeddingMatchPanel";
+import { country } from "@/lib/country";
+
+/** Market name, declined per language for the hardcoded copy blocks below. */
+const CN = {
+  en: country.code === "es" ? "Spain" : "Portugal",
+  pt: country.code === "es" ? "Espanha" : "Portugal",
+  es: country.code === "es" ? "España" : "Portugal",
+  de: country.code === "es" ? "Spanien" : "Portugal",
+  fr: country.code === "es" ? "Espagne" : "Portugal",
+} as const;
+
 
 // Force-dynamic: hero frames and real-wedding stories reshuffle as
 // photographers tag work; this is also a paid-ad landing — freshness over
@@ -48,7 +59,7 @@ const IN_PREP: Record<string, string> = {
 
 // ─── Wedding destinations → /locations/[slug]/wedding ──────────────────
 type DestinationReason = { en: string; pt: string; de: string; es: string; fr: string };
-const WEDDING_DESTINATIONS: { slug: string; reason: DestinationReason }[] = [
+const WEDDING_DESTINATIONS_PT: { slug: string; reason: DestinationReason }[] = [
   {
     slug: "sintra",
     reason: {
@@ -171,6 +182,75 @@ const WEDDING_DESTINATIONS: { slug: string; reason: DestinationReason }[] = [
   },
 ];
 
+// Spanish wedding destinations. Slugs must exist in the Spanish locations
+// dataset, otherwise every card here links to a 404.
+const WEDDING_DESTINATIONS_ES: { slug: string; reason: DestinationReason }[] = [
+  {
+    slug: "mallorca",
+    reason: {
+      en: "Finca estates, Tramuntana backdrops, sea-view terraces",
+      pt: "Quintas rurais, cenários da Tramuntana, terraços com vista para o mar",
+      de: "Finca-Anwesen, Tramuntana-Kulissen, Terrassen mit Meerblick",
+      es: "Fincas señoriales, telón de fondo de la Tramuntana, terrazas con vistas al mar",
+      fr: "Domaines de fincas, décors de la Tramuntana, terrasses vue mer",
+    },
+  },
+  {
+    slug: "seville",
+    reason: {
+      en: "Palace courtyards, orange-tree patios, warm evening light",
+      pt: "Pátios de palácio, pátios de laranjeiras, luz quente ao fim do dia",
+      de: "Palasthöfe, Orangenbaum-Patios, warmes Abendlicht",
+      es: "Patios de palacio, patios de naranjos, luz cálida al atardecer",
+      fr: "Cours de palais, patios d'orangers, lumière chaude du soir",
+    },
+  },
+  {
+    slug: "ronda",
+    reason: {
+      en: "Gorge-edge ceremonies, the Puente Nuevo, vineyard estates below",
+      pt: "Cerimónias à beira da ravina, a Puente Nuevo, quintas vinícolas em baixo",
+      de: "Zeremonien am Schluchtrand, die Puente Nuevo, Weingüter darunter",
+      es: "Ceremonias al borde del tajo, el Puente Nuevo, viñedos abajo",
+      fr: "Cérémonies au bord des gorges, le Puente Nuevo, domaines viticoles en contrebas",
+    },
+  },
+  {
+    slug: "marbella",
+    reason: {
+      en: "Beach-club receptions, Sierra Blanca backdrops, barefoot luxury",
+      pt: "Receções em beach clubs, cenários da Sierra Blanca, luxo descalço",
+      de: "Beachclub-Empfänge, Sierra-Blanca-Kulissen, Luxus auf nackten Füßen",
+      es: "Recepciones en beach club, telón de la Sierra Blanca, lujo descalzo",
+      fr: "Réceptions en beach club, décors de la Sierra Blanca, luxe pieds nus",
+    },
+  },
+  {
+    slug: "girona",
+    reason: {
+      en: "Medieval walls, masia farmhouses, Costa Brava a half-hour away",
+      pt: "Muralhas medievais, masias, Costa Brava a meia hora",
+      de: "Mittelalterliche Mauern, Masia-Landhäuser, Costa Brava eine halbe Stunde entfernt",
+      es: "Murallas medievales, masías, Costa Brava a media hora",
+      fr: "Remparts médiévaux, mas catalans, Costa Brava à une demi-heure",
+    },
+  },
+  {
+    slug: "toledo",
+    reason: {
+      en: "Walled-city ceremonies, cloisters, the whole town as a backdrop",
+      pt: "Cerimónias na cidade amuralhada, claustros, a cidade inteira como cenário",
+      de: "Zeremonien in der ummauerten Altstadt, Kreuzgänge, die ganze Stadt als Kulisse",
+      es: "Ceremonias en la ciudad amurallada, claustros, el pueblo entero como telón",
+      fr: "Cérémonies en cité fortifiée, cloîtres, toute la ville en toile de fond",
+    },
+  },
+];
+
+const WEDDING_DESTINATIONS: { slug: string; reason: DestinationReason }[] =
+  country.code === "es" ? WEDDING_DESTINATIONS_ES : WEDDING_DESTINATIONS_PT;
+
+
 // ─── Page copy — inline per locale (nothing reads messages/*.json) ─────
 type Tier = { name: string; hours: string; range: string; bullets: string[] };
 type Strings = {
@@ -211,9 +291,9 @@ type Strings = {
 
 const L: Record<string, Strings> = {
   en: {
-    eyebrow: "Wedding photographers in Portugal",
-    heroTitle: ["Married", "in Portugal"],
-    heroSub: "Hand-picked local wedding photographers — from Sintra's palaces to the cliffs of the Algarve.",
+    eyebrow: `Wedding photographers in ${CN.en}`,
+    heroTitle: ["Married", `in ${CN.en}`],
+    heroSub: "Hand-picked local wedding photographers, in the country's most beautiful settings.",
     heroCta: "Find your photographer",
     trustReviews: (r, c) => `★ ${r} from ${c} verified reviews`,
     trustPhotographers: (n) => `${n} wedding photographers`,
@@ -231,10 +311,10 @@ const L: Record<string, Strings> = {
     destCta: "Wedding photographers",
     realTitle: "Real weddings",
     realSub: "Not styled shoots. Real couples, real ceremonies — photographed by the people you can book here.",
-    weddingIn: (loc) => `Wedding ${loc ? `in ${loc}` : "in Portugal"}`,
+    weddingIn: (loc) => `Wedding ${loc ? `in ${loc}` : `in ${CN.en}`}`,
     photographedBy: "Photographed by",
     viewProfile: "View profile",
-    whyTitle: "Why couples book through Photo Portugal",
+    whyTitle: `Why couples book through ${country.brand}`,
     why: [
       {
         title: "Locals who know your venue",
@@ -257,15 +337,15 @@ const L: Record<string, Strings> = {
       { name: "Half day", hours: "5–6 hours", range: "€1,250 – €1,600", bullets: ["Getting ready through cocktail hour", "250+ edited photos", "Private online gallery"] },
       { name: "Full day", hours: "8–12 hours", range: "€1,600 – €2,000+", bullets: ["From preparations to the last dance", "400+ edited photos", "Second photographer on request"] },
     ],
-    investNote: "Typical investment for wedding photography in Portugal.",
+    investNote: `Typical investment for wedding photography in ${CN.en}.`,
     faqTitle: "Good to know",
     finalTitle: "Let's find your photographer",
     finalSub: "Tell us where and when — see who's free for your date.",
   },
   pt: {
-    eyebrow: "Fotógrafos de casamento em Portugal",
-    heroTitle: ["Casar", "em Portugal"],
-    heroSub: "Fotógrafos de casamento locais, escolhidos a dedo — dos palácios de Sintra às falésias do Algarve.",
+    eyebrow: `Fotógrafos de casamento em ${CN.pt}`,
+    heroTitle: ["Casar", `em ${CN.pt}`],
+    heroSub: "Fotógrafos de casamento locais, escolhidos a dedo, nos cenários mais bonitos do país.",
     heroCta: "Encontrar o vosso fotógrafo",
     trustReviews: (r, c) => `★ ${r} em ${c} avaliações verificadas`,
     trustPhotographers: (n) => `${n} fotógrafos de casamento`,
@@ -283,10 +363,10 @@ const L: Record<string, Strings> = {
     destCta: "Fotógrafos de casamento",
     realTitle: "Casamentos reais",
     realSub: "Não são sessões encenadas. Casais reais, cerimónias reais — fotografadas por quem podem reservar aqui.",
-    weddingIn: (loc) => `Casamento ${loc ? `em ${loc}` : "em Portugal"}`,
+    weddingIn: (loc) => `Casamento ${loc ? `em ${loc}` : `em ${CN.pt}`}`,
     photographedBy: "Fotografado por",
     viewProfile: "Ver perfil",
-    whyTitle: "Porque é que os casais reservam na Photo Portugal",
+    whyTitle: `Porque é que os casais reservam na ${country.brand}`,
     why: [
       {
         title: "Locais que conhecem o vosso espaço",
@@ -309,15 +389,15 @@ const L: Record<string, Strings> = {
       { name: "Meio dia", hours: "5–6 horas", range: "1.250 € – 1.600 €", bullets: ["Dos preparativos ao cocktail", "Mais de 250 fotos editadas", "Galeria online privada"] },
       { name: "Dia inteiro", hours: "8–12 horas", range: "1.600 € – 2.000 €+", bullets: ["Dos preparativos à última dança", "Mais de 400 fotos editadas", "Segundo fotógrafo a pedido"] },
     ],
-    investNote: "Investimento típico em fotografia de casamento em Portugal.",
+    investNote: `Investimento típico em fotografia de casamento em ${CN.pt}.`,
     faqTitle: "Bom saber",
     finalTitle: "Vamos encontrar o vosso fotógrafo",
     finalSub: "Digam-nos onde e quando — vejam quem está livre na vossa data.",
   },
   de: {
-    eyebrow: "Hochzeitsfotografen in Portugal",
-    heroTitle: ["Heiraten", "in Portugal"],
-    heroSub: "Handverlesene lokale Hochzeitsfotografen — von Sintras Palästen bis zu den Klippen der Algarve.",
+    eyebrow: `Hochzeitsfotografen in ${CN.de}`,
+    heroTitle: ["Heiraten", `in ${CN.de}`],
+    heroSub: "Handverlesene lokale Hochzeitsfotografen an den schönsten Orten des Landes.",
     heroCta: "Euren Fotografen finden",
     trustReviews: (r, c) => `★ ${r} aus ${c} verifizierten Bewertungen`,
     trustPhotographers: (n) => `${n} Hochzeitsfotografen`,
@@ -335,10 +415,10 @@ const L: Record<string, Strings> = {
     destCta: "Hochzeitsfotografen",
     realTitle: "Echte Hochzeiten",
     realSub: "Keine gestellten Shootings. Echte Paare, echte Zeremonien — fotografiert von denen, die ihr hier buchen könnt.",
-    weddingIn: (loc) => `Hochzeit ${loc ? `in ${loc}` : "in Portugal"}`,
+    weddingIn: (loc) => `Hochzeit ${loc ? `in ${loc}` : `in ${CN.de}`}`,
     photographedBy: "Fotografiert von",
     viewProfile: "Profil ansehen",
-    whyTitle: "Warum Paare über Photo Portugal buchen",
+    whyTitle: `Warum Paare über ${country.brand} buchen`,
     why: [
       {
         title: "Locals, die eure Location kennen",
@@ -361,15 +441,15 @@ const L: Record<string, Strings> = {
       { name: "Halber Tag", hours: "5–6 Stunden", range: "1.250 € – 1.600 €", bullets: ["Vom Getting-Ready bis zum Sektempfang", "250+ bearbeitete Fotos", "Private Online-Galerie"] },
       { name: "Ganzer Tag", hours: "8–12 Stunden", range: "1.600 € – 2.000 €+", bullets: ["Von den Vorbereitungen bis zum letzten Tanz", "400+ bearbeitete Fotos", "Zweiter Fotograf auf Anfrage"] },
     ],
-    investNote: "Typische Investition für Hochzeitsfotografie in Portugal.",
+    investNote: `Typische Investition für Hochzeitsfotografie in ${CN.de}.`,
     faqTitle: "Gut zu wissen",
     finalTitle: "Finden wir euren Fotografen",
     finalSub: "Sagt uns wo und wann — seht, wer an eurem Datum frei ist.",
   },
   es: {
-    eyebrow: "Fotógrafos de boda en Portugal",
-    heroTitle: ["Casarse", "en Portugal"],
-    heroSub: "Fotógrafos de boda locales, escogidos a mano — de los palacios de Sintra a los acantilados del Algarve.",
+    eyebrow: `Fotógrafos de boda en ${CN.es}`,
+    heroTitle: ["Casarse", `en ${CN.es}`],
+    heroSub: "Fotógrafos de boda locales, escogidos a mano, en los escenarios más bonitos del país.",
     heroCta: "Encontrad a vuestro fotógrafo",
     trustReviews: (r, c) => `★ ${r} de ${c} reseñas verificadas`,
     trustPhotographers: (n) => `${n} fotógrafos de boda`,
@@ -387,10 +467,10 @@ const L: Record<string, Strings> = {
     destCta: "Fotógrafos de boda",
     realTitle: "Bodas reales",
     realSub: "No son sesiones de estilismo. Parejas reales, ceremonias reales — fotografiadas por quienes podéis reservar aquí.",
-    weddingIn: (loc) => `Boda ${loc ? `en ${loc}` : "en Portugal"}`,
+    weddingIn: (loc) => `Boda ${loc ? `en ${loc}` : `en ${CN.es}`}`,
     photographedBy: "Fotografiado por",
     viewProfile: "Ver perfil",
-    whyTitle: "Por qué las parejas reservan en Photo Portugal",
+    whyTitle: `Por qué las parejas reservan en ${country.brand}`,
     why: [
       {
         title: "Locales que conocen vuestro espacio",
@@ -413,15 +493,15 @@ const L: Record<string, Strings> = {
       { name: "Medio día", hours: "5–6 horas", range: "1.250 € – 1.600 €", bullets: ["De los preparativos al cóctel", "Más de 250 fotos editadas", "Galería online privada"] },
       { name: "Día completo", hours: "8–12 horas", range: "1.600 € – 2.000 €+", bullets: ["De los preparativos al último baile", "Más de 400 fotos editadas", "Segundo fotógrafo bajo petición"] },
     ],
-    investNote: "Inversión típica en fotografía de boda en Portugal.",
+    investNote: `Inversión típica en fotografía de boda en ${CN.es}.`,
     faqTitle: "Conviene saber",
     finalTitle: "Encontremos a vuestro fotógrafo",
     finalSub: "Decidnos dónde y cuándo — ved quién está libre en vuestra fecha.",
   },
   fr: {
-    eyebrow: "Photographes de mariage au Portugal",
-    heroTitle: ["Se marier", "au Portugal"],
-    heroSub: "Des photographes de mariage locaux, triés sur le volet — des palais de Sintra aux falaises de l'Algarve.",
+    eyebrow: `Photographes de mariage en ${CN.fr}`,
+    heroTitle: ["Se marier", `en ${CN.fr}`],
+    heroSub: "Des photographes de mariage locaux, triés sur le volet, dans les plus beaux décors du pays.",
     heroCta: "Trouver votre photographe",
     trustReviews: (r, c) => `★ ${r} sur ${c} avis vérifiés`,
     trustPhotographers: (n) => `${n} photographes de mariage`,
@@ -439,10 +519,10 @@ const L: Record<string, Strings> = {
     destCta: "Photographes de mariage",
     realTitle: "Vrais mariages",
     realSub: "Pas de séances stylisées. De vrais couples, de vraies cérémonies — photographiés par ceux que vous pouvez réserver ici.",
-    weddingIn: (loc) => `Mariage ${loc ? `à ${loc}` : "au Portugal"}`,
+    weddingIn: (loc) => `Mariage ${loc ? `à ${loc}` : `en ${CN.fr}`}`,
     photographedBy: "Photographié par",
     viewProfile: "Voir le profil",
-    whyTitle: "Pourquoi les couples réservent via Photo Portugal",
+    whyTitle: `Pourquoi les couples réservent via ${country.brand}`,
     why: [
       {
         title: "Des locaux qui connaissent votre lieu",
@@ -465,7 +545,7 @@ const L: Record<string, Strings> = {
       { name: "Demi-journée", hours: "5–6 heures", range: "1 250 € – 1 600 €", bullets: ["Des préparatifs au cocktail", "Plus de 250 photos retouchées", "Galerie en ligne privée"] },
       { name: "Journée complète", hours: "8–12 heures", range: "1 600 € – 2 000 €+", bullets: ["Des préparatifs à la dernière danse", "Plus de 400 photos retouchées", "Second photographe sur demande"] },
     ],
-    investNote: "Investissement typique pour la photographie de mariage au Portugal.",
+    investNote: `Investissement typique pour la photographie de mariage en ${CN.fr}.`,
     faqTitle: "Bon à savoir",
     finalTitle: "Trouvons votre photographe",
     finalSub: "Dites-nous où et quand — voyez qui est libre à votre date.",
@@ -501,7 +581,7 @@ export async function generateMetadata({
       title: loc.title,
       description: loc.metaDescription,
       type: "website",
-      url: "https://photoportugal.com/weddings",
+      url: `${country.baseUrl}/weddings`,
     },
   };
 }
@@ -674,21 +754,21 @@ export default async function WeddingsPage({
     serviceType: "Wedding Photography",
     name: stl.title,
     description: stl.metaDescription,
-    url: "https://photoportugal.com/weddings",
-    provider: { "@type": "Organization", name: "Photo Portugal", url: "https://photoportugal.com" },
-    areaServed: { "@type": "Country", name: "Portugal" },
+    url: `${country.baseUrl}/weddings`,
+    provider: { "@type": "Organization", name: country.brand, url: country.baseUrl },
+    areaServed: { "@type": "Country", name: country.areaServed },
   };
   const jsonLdBusiness = totalReviews > 0 && avgRating > 0 ? {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
-    "@id": "https://photoportugal.com/weddings#business",
-    name: `Photo Portugal — ${stl.name}`,
-    url: "https://photoportugal.com/weddings",
-    image: "https://photoportugal.com/og-image.png",
+    "@id": `${country.baseUrl}/weddings#business`,
+    name: `${country.brand} — ${stl.name}`,
+    url: `${country.baseUrl}/weddings`,
+    image: `${country.baseUrl}${country.ogImage}`,
     description: stl.metaDescription,
     priceRange: "€€€",
-    address: { "@type": "PostalAddress", addressLocality: "Lisbon", addressCountry: "PT" },
-    areaServed: { "@type": "Country", name: "Portugal" },
+    address: { "@type": "PostalAddress", addressLocality: country.city, addressCountry: country.code.toUpperCase() },
+    areaServed: { "@type": "Country", name: country.areaServed },
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: avgRating.toFixed(1),
@@ -781,7 +861,7 @@ export default async function WeddingsPage({
       <section id="find" className="scroll-mt-20 border-b border-[#1F1B17]/10">
         <div className="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-24">
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#6B1F2E]">
-            Photo Portugal · {stl.name}
+            {country.brand} · {stl.name}
           </p>
           <h2 className={`${serif.className} mt-4 text-4xl font-medium sm:text-5xl`}>{ll.findTitle}</h2>
           <p className="mt-4 max-w-xl text-[#1F1B17]/65">{ll.findSub}</p>

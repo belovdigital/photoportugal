@@ -7,6 +7,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
 import { localeAlternates } from "@/lib/seo";
 import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
+import { country } from "@/lib/country";
 
 const POSTS_PER_PAGE = 48;
 
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title: `${t("title")} — Page ${page}`,
       description: t("subtitle"),
-      url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog/page/${page}`,
+      url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/blog/page/${page}`,
       type: "website",
     },
     robots: { index: false },
@@ -90,8 +91,8 @@ export default async function BlogPaginatedPage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: tc("home"), item: "https://photoportugal.com" },
-      { "@type": "ListItem", position: 2, name: tc("blog"), item: "https://photoportugal.com/blog" },
+      { "@type": "ListItem", position: 1, name: tc("home"), item: country.baseUrl },
+      { "@type": "ListItem", position: 2, name: tc("blog"), item: `${country.baseUrl}/blog` },
       { "@type": "ListItem", position: 3, name: `Page ${currentPage}` },
     ],
   };

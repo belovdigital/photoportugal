@@ -9,6 +9,7 @@ import { trackDeliveryAccepted } from "@/lib/analytics";
 import { normalizeName } from "@/lib/format-name";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import { useSession } from "next-auth/react";
+import { country } from "@/lib/country";
 
 interface Photo {
   id: string;
@@ -315,7 +316,7 @@ export function DeliveryPageClient({
           {normalizeName(gallery.photographer_name)} &middot;{" "}
           {gallery.shoot_date
             ? new Date(gallery.shoot_date).toLocaleDateString(dateLocale, { month: "long", day: "numeric", year: "numeric" })
-            : "Photo Portugal"}
+            : `${country.brand}`}
         </p>
         {deliveryMessage?.trim() && (
           <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-warm-200 bg-warm-50 px-5 py-4 text-left">
@@ -445,7 +446,7 @@ export function DeliveryPageClient({
       {/* Footer */}
       <div className="mt-12 text-center">
         <p className="text-sm text-gray-400">
-          {t("deliveredVia")} <a href="https://photoportugal.com" className="text-primary-600 hover:underline">Photo Portugal</a>
+          {t("deliveredVia")} <a href={`${country.baseUrl}`} className="text-primary-600 hover:underline">{country.brand}</a>
         </p>
       </div>
       {modal}

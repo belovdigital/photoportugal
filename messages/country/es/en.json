@@ -1,0 +1,621 @@
+{
+  "common": {
+    "siteName": "Photo Spain",
+    "newOnPhotoPortugal": "New on Photo Spain",
+    "photographyIn": "Photography in {location}, Spain"
+  },
+  "nav": {
+    "announcementSuffix": "across {count} stunning locations in Spain",
+    "aboutDesc": "Our story and the team behind Photo Spain",
+    "photoMap": "Spain Photo Map",
+    "megaAboutDesc": "Our story and the team behind Photo Spain",
+    "megaWhyJoin": "Why Photo Spain",
+    "giftCardsDesc": "Gift a photoshoot in Spain"
+  },
+  "footer": {
+    "tagline": "Connecting travellers with talented local photographers across Spain. Capture your perfect moments.",
+    "copyright": "Photo Spain. All rights reserved.",
+    "legalEntityLocation": "Portugal",
+    "appTitle": "Take Photo Spain with you"
+  },
+  "giftCardsPage": {
+    "h1": "Gift a Photo Spain session",
+    "subtitle": "Give someone a photoshoot in Spain. They pick the photographer, the date, the location — your gift covers it in full.",
+    "personalMessagePlaceholder": "Happy birthday! Have fun shooting in Madrid ✨"
+  },
+  "home": {
+    "heroTitleHighlight": "Spain",
+    "heroDescription": "The easiest way to book a travel photographer or vacation photoshoot in Spain — hand-picked local pros, verified reviews, instant booking. Every photographer is personally vetted for quality, reliability, and style.",
+    "floatingReviews": [
+      {
+        "location": "Madrid"
+      },
+      {
+        "location": "Costa del Sol"
+      },
+      {
+        "text": "Monica knew the most beautiful hidden spots in Toledo. Absolutely magical session!",
+        "location": "Toledo"
+      },
+      {
+        "location": "Madrid"
+      },
+      {
+        "text": "Jonathan made our sunset shoot in Marbella an unforgettable experience. Truly talented!",
+        "location": "Marbella"
+      },
+      {
+        "text": "Elena took the most stunning solo portraits of me in Barcelona. Best souvenir ever!",
+        "location": "Barcelona"
+      }
+    ],
+    "socialProofStrip": {
+      "portugalWide": "Spain-wide",
+      "coverage": "mainland, the Balearics and the Canary Islands",
+      "islandsCovered": "Balearic & Canary island coverage"
+    },
+    "featured": {
+      "title": "Top Photographers in Spain",
+      "portfolioAlt": "{name} — professional photographer portfolio in Spain"
+    },
+    "locations": {
+      "title": "Spain's Most Photogenic Locations",
+      "subtitle": "From Madrid's cobblestone streets to the Costa del Sol's golden cliffs — each destination offers unique backdrops"
+    },
+    "heroImages": {
+      "alt1": "Family vacation photoshoot on a golden Costa del Sol beach in Spain",
+      "alt2": "Couple photography session in Madrid's historic tram streets, Spain",
+      "alt3": "Vacation photoshoot on the Spanish coast",
+      "alt4": "Travel photography at a volcanic crater lake in Spain",
+      "alt5": "Romantic photoshoot at a historic Spanish palace"
+    },
+    "cta": {
+      "title": "Ready to Capture Your Spain Story?",
+      "subtitle": "Join hundreds of happy travelers who hired their perfect professional photographer through Photo Spain."
+    },
+    "giftPromo": {
+      "title": "Give a photoshoot in Spain"
+    }
+  },
+  "heroSearch": {
+    "placeholder": "Where in Spain?"
+  },
+  "shootTypes": {
+    "altSuffix": "{title} photoshoot in Spain",
+    "types": {
+      "honeymoon": {
+        "description": "Celebrate your love story in Spain"
+      },
+      "engagement": {
+        "description": "Say yes with Spain as your backdrop"
+      },
+      "anniversary": {
+        "description": "Celebrate your milestone in Spain"
+      }
+    }
+  },
+  "testimonials": {
+    "subtitle": "Real stories from real travelers who captured unforgettable memories in Spain",
+    "items": {
+      "sarah": {
+        "location": "Madrid"
+      },
+      "martinez": {
+        "location": "Costa del Sol"
+      },
+      "emily": {
+        "location": "Toledo"
+      },
+      "david": {
+        "location": "Barcelona",
+        "text": "We booked a sunrise session at the La Rioja riverfront. The golden light, the reflections — absolutely magical. Our photographer captured our engagement perfectly."
+      },
+      "anna": {
+        "location": "Marbella"
+      },
+      "tanaka": {
+        "location": "Sitges"
+      }
+    }
+  },
+  "howItWorks": {
+    "whyUsTitle": "Why Photo Spain?",
+    "page": {
+      "metaTitle": "How to Book a Photographer in Spain — 4 Simple Steps",
+      "metaDescription": "Book a professional photographer in Spain in 4 simple steps. Browse portfolios, book instantly with secure Stripe payments, enjoy your photoshoot, and receive edited photos in a private gallery.",
+      "title": "How to Book a Photographer in Spain",
+      "subtitle": "Booking a professional photographer in Spain is simple, safe, and fun. Here's everything you need to know.",
+      "forPhotographersSubtitle": "Join Spain's growing community of vacation photographers and reach international clients."
+    }
+  },
+  "faq": {
+    "metaTitle": "Vacation Photoshoot Spain FAQ — Pricing, Booking & More",
+    "metaDescription": "Find answers to common questions about booking a vacation photographer in Spain. Pricing, cancellation policy, delivery times, locations, and more.",
+    "subtitle": "Vacation Photoshoot in Spain — Pricing, Booking, Delivery & More",
+    "questions": {
+      "howDoesItWork": {
+        "question": "How does Photo Spain work?"
+      },
+      "reviewsVerified": {
+        "answer": "Yes. All reviews on Photo Spain are tied to completed bookings. Only clients who have had a confirmed photoshoot can leave a review, ensuring authentic and trustworthy feedback."
+      },
+      "locationsAvailable": {
+        "answer": "We cover {locationCount}+ locations across Spain, including <a href=\"/photographers/location/barcelona\">Barcelona</a>, <a href=\"/photographers/location/madrid\">Madrid</a>, <a href=\"/photographers/location/seville\">Seville</a>, <a href=\"/photographers/location/granada\">Granada</a>, <a href=\"/photographers/location/mallorca\">Mallorca</a>, <a href=\"/photographers/location/tenerife\">Tenerife</a>, and many more."
+      },
+      "speakEnglish": {
+        "answer": "Most photographers on our platform speak English. You can filter photographers by language on the <a href=\"/photographers\">catalog page</a>. Many also speak Spanish, French, and German."
+      },
+      "becomePhotographer": {
+        "question": "How do I become a photographer on Photo Spain?"
+      }
+    }
+  },
+  "about": {
+    "metaTitle": "About Photo Spain — Our Story & Mission",
+    "metaDescription": "Photo Spain connects tourists with talented local photographers across Spain. Learn about our mission and why travelers trust us.",
+    "heroTitleHighlight": "Photo Spain",
+    "theProblem": {
+      "text": "Spain is one of the most photogenic countries in Europe. Madrid's golden light, Barcelona's dramatic riverfront, Toledo's fairytale palaces, the Costa del Sol's raw coastal beauty — it's a photographer's dream. Yet every year, millions of tourists come home with nothing but blurry selfies and awkward \"can you take our photo?\" shots from strangers."
+    },
+    "ourMission": {
+      "text1": "We believe every trip to Spain deserves to be captured beautifully. That's why we created Photo Spain — a platform where travelers can instantly find and book talented local photographers who know the best spots, the perfect timing, and how to make you feel comfortable in front of the camera."
+    },
+    "trustPoints": {
+      "locationsCovered": {
+        "text": "From the streets of Madrid to the cliffs of the Costa del Sol, from La Rioja vineyards to the volcanic Canary Islands — we cover all of Spain."
+      }
+    },
+    "ctaTitle": "Ready to capture your Spain story?",
+    "founder": {
+      "alt": "Kate Belova, founder of Photo Spain",
+      "bio1": "<strong>Kate Belova</strong> is a professional portrait and lifestyle photographer with over 10 years of experience, based in Madrid, Spain. Known for her \"soul portrait\" style, Kate has a rare ability to make people feel completely at ease in front of the camera — revealing authentic emotions and genuine personality in every frame.",
+      "bio2": "After years of shooting family and lifestyle sessions across Madrid, Toledo, and Sitges, Kate realized that tourists visiting Spain wanted beautiful photos but finding a trustworthy local photographer was surprisingly hard. She created Photo Spain to solve this — a curated marketplace where every photographer is personally vetted and every session delivers an exceptional experience."
+    }
+  },
+  "contact": {
+    "metaTitle": "Contact Us — Photo Spain",
+    "metaDescription": "Get in touch with Photo Spain. Questions about bookings, photographer accounts, or partnerships? We're here to help."
+  },
+  "pricing": {
+    "metaTitle": "Photography Packages & Pricing — Vacation Photoshoots in Spain",
+    "metaDescription": "Vacation photoshoot packages in Spain from EUR299. Couples, family, solo & proposal photography. Compare photographers, read verified reviews. Free cancellation available."
+  },
+  "join": {
+    "heroSubtitle": "We're building Spain's premier photography marketplace for tourists. Join now and lock in exclusive benefits before we launch publicly.",
+    "whatYouGet": {
+      "touristClients": {
+        "desc": "We bring international travelers looking for professional photographers in Spain. No cold outreach needed."
+      },
+      "securePayments": {
+        "desc": "Stripe handles all client payments. Money is held in escrow until the client accepts the photos, then we transfer your share to your bank account."
+      }
+    },
+    "calculator": {
+      "subtitle": "Adjust the sliders to see your potential earnings on Photo Spain."
+    },
+    "gettingStarted": {
+      "steps": {
+        "setupProfile": {
+          "desc": "Add your bio, avatar, cover photo, and select your locations in Spain."
+        },
+        "connectStripe": {
+          "title": "Add your bank details",
+          "desc": "Give us the IBAN to pay you into. That's all we need to send your earnings."
+        }
+      }
+    },
+    "founderAlt": "Kate Belova, founder of Photo Spain",
+    "founderQuote": "I built Photo Spain because I know how hard it is for talented photographers to find consistent clients. This platform brings tourists directly to you — no chasing leads, no haggling over prices. You focus on what you love: creating beautiful photos.",
+    "howPaymentsWork": {
+      "subtitle": "Transparent, secure and protected — client payments run through Stripe",
+      "steps": {
+        "clientBooks": {
+          "desc": "Client selects your package and pays. The full amount is securely held by Stripe."
+        },
+        "youGetPaid": {
+          "desc": "Once the client accepts the photos, your share is transferred to the bank account you gave us, minus our commission."
+        }
+      }
+    }
+  },
+  "forPhotographers": {
+    "metaTitle": "Join Photo Spain — Earn Money as a Vacation Photographer in Spain",
+    "metaDescription": "Join Spain's growing photographer marketplace. Connect with international travelers, manage bookings, and grow your photography business. Free to get started.",
+    "heroSubtitle": "Thousands of tourists dream of beautiful photos from Spain's most stunning locations — and they're looking for you. We bring the clients, manage bookings, handle payments, and let you do what you love.",
+    "whyJoin": {
+      "title": "Why join Photo Spain?",
+      "benefits": {
+        "clients": {
+          "desc": "Tourists from the US, UK, Germany, and beyond — all actively searching for photographers in Spain. You just confirm the time."
+        },
+        "seo": {
+          "desc": "Your profile page is optimized for Google. Clients searching 'photographer in Madrid' will find you organically."
+        },
+        "payments": {
+          "desc": "Clients pay upfront through Stripe. Once the photos are accepted we transfer your share straight to your bank. No invoicing, no chasing."
+        }
+      }
+    },
+    "community": {
+      "description": "We're building a community for Spain-based photographers — with meetups, workshops, and learning sessions. Connect with fellow creatives, share experiences, and grow together."
+    },
+    "faq": {
+      "items": [
+        {
+          "q": "Do I need to be a professional photographer?",
+          "a": "Yes. We hand-vet every photographer. You should have a strong portfolio, professional equipment, and experience shooting paid sessions. Hobbyists are not accepted."
+        },
+        {
+          "q": "Do I need to live in Spain?",
+          "a": "You must be based in Spain or legally able to work here. Most of our photographers live in or near the cities they serve (Madrid, Barcelona, Costa del Sol, etc.)."
+        },
+        {
+          "q": "How much do you take from each booking?",
+          "a": "We charge a 15% platform fee on each booking (reduced to 10% for Premium plan). You keep the rest. No upfront costs and no subscription required to get started."
+        },
+        {
+          "q": "How and when do I get paid?",
+          "a": "Clients pay through Stripe when they book. Your share is transferred to your bank account after the client accepts the delivered photos."
+        },
+        {
+          "q": "How do I get clients?",
+          "a": "Two ways: (1) Clients browse our catalog and book you directly, and (2) Our concierge team hand-picks photographers for client requests — you just confirm the booking."
+        },
+        {
+          "q": "How long does approval take?",
+          "a": "Usually 1–3 business days. We review your portfolio, check your identity, and make sure your profile meets our quality standards."
+        }
+      ]
+    },
+    "howWeSelect": {
+      "metaDescription": "Every photographer on Photo Spain is personally vetted by our founding team. Learn about our rigorous selection process.",
+      "steps": {
+        "portfolio": {
+          "desc": "We start by reviewing each photographer's complete body of work — not just the highlights. We look for consistency in quality, natural lighting skills, genuine emotion in portraits, and the ability to capture Spain's unique character."
+        }
+      },
+      "founderBody": "Photo Spain was founded by Kate Belova, a professional photographer with over 10 years of experience. Kate knows firsthand what makes a great photoshoot — the technical skill, the ability to connect with people, and the instinct for finding the perfect light. That's why she personally oversees the photographer selection process.",
+      "aboutCta": "About Photo Spain"
+    }
+  },
+  "photographers": {
+    "card": {
+      "coverAlt": "{name} — vacation photographer in Spain"
+    },
+    "profile": {
+      "coverageRegionsMany": "Covers {count} regions in Spain"
+    }
+  },
+  "locations": {
+    "title": "Best Places to Photograph in Spain",
+    "subtitle": "From Madrid's cobblestone streets to the Costa del Sol's golden cliffs — {count}+ of the best places to photograph in Spain, hand-picked for vacation photoshoots, couples, families and solo travelers.",
+    "mapMetaTitle": "Spain Photo Map — Explore Photoshoot Locations",
+    "mapMetaDescription": "Explore Spain's photoshoot regions, cities and islands on an interactive map. Find available photographers in Madrid, Barcelona, Costa del Sol, Tenerife, the Canary Islands and more.",
+    "mapOgAlt": "Interactive Spain photo map with photoshoot locations",
+    "detail": {
+      "realPhotos": {
+        "subtitle": "By the photographers on Photo Spain — tap any photo to open their profile"
+      },
+      "altProfessionalShoot": "Professional vacation photoshoot in {location}, Spain"
+    }
+  },
+  "blog": {
+    "subtitle": "Tips, guides, and inspiration for capturing your perfect moments in Spain. From the best photo spots to planning your dream photoshoot."
+  },
+  "blogCategories": {
+    "locationsDesc": "Discover the best photo spots and location guides across Spain",
+    "pricingDesc": "How much photoshoots cost in Spain — transparent pricing breakdowns",
+    "elopementsDesc": "Everything you need to know about eloping in Spain",
+    "weddingsDesc": "Destination wedding photography guides for Spain",
+    "couplesDesc": "Romantic couples photoshoot ideas and inspiration in Spain",
+    "familyDesc": "Family photoshoot tips, locations, and ideas across Spain",
+    "planningDesc": "What to wear, when to shoot, and how to plan your Spain photoshoot",
+    "proposalsDesc": "Plan the perfect surprise proposal in Spain",
+    "soloDesc": "Solo travel and content creator photography in Spain",
+    "comparisonsDesc": "How Photo Spain compares to other vacation photography services",
+    "businessDesc": "Corporate events, team headshots and brand content — photography for companies in Spain."
+  },
+  "chooseBookingType": {
+    "metaTitle": "Book a Photoshoot in Spain",
+    "subtitle": "Two ways to find your perfect photographer in Spain."
+  },
+  "chooseRole": {
+    "title": "Welcome to Photo Spain!",
+    "touristDesc": "Looking for a photographer to capture my trip to Spain."
+  },
+  "heroSingle": {
+    "siteAvailableChip": "{count, plural, =1 {# photographer} other {# photographers}} across Spain available to book",
+    "browseAll": "Or <link>browse all {count} photographers</link> across Spain"
+  },
+  "findPhotographer": {
+    "metaTitle": "Find Me a Photographer in Spain",
+    "metaDescription": "Tell us about your photoshoot and we'll match you with 2-3 hand-picked photographers in Spain. Free concierge matching service.",
+    "locationLabel": "Where in Spain?"
+  },
+  "auth": {
+    "signIn": {
+      "subtitle": "Sign in to your Photo Spain account"
+    },
+    "signUp": {
+      "subtitle": "Join Photo Spain as a traveler or photographer",
+      "lookingForPhotographerDesc": "Book a professional photoshoot in Spain"
+    }
+  },
+  "shootTypesPage": {
+    "title": "Vacation Photoshoot Types in Spain",
+    "subtitle": "Whatever brings you to Spain, we have the perfect photographer for your occasion. From romantic couples sessions to fun friends trip photos, explore all the ways to capture your Spain experience.",
+    "bestLocationsTitle": "Best Locations for {name} Photography in Spain",
+    "bestLocationsSubtitle": "Our photographers operate across Spain. Here are the top destinations for your {name} photoshoot.",
+    "stepBrowseDesc": "View portfolios of photographers experienced in {name} photography across Spain.",
+    "photographersTitle": "{name} Photographers in Spain",
+    "reviewsSubtitleClients": "From clients who booked through Photo Spain",
+    "guidesSubtitle": "Tips and inspiration for your {nameLower} photoshoot in Spain",
+    "popularPackagesSub": "Real prices from verified photographers offering {nameLower} photography packages in Spain."
+  },
+  "blogDetail": {
+    "readyToBookSubtitle": "Browse our talented photographers across Spain and capture your perfect vacation memories.",
+    "blogCta": {
+      "title": "Ready to capture your Spain trip?"
+    }
+  },
+  "exitIntent": {
+    "conciergePlaceholder": "e.g. couples shoot in Madrid next Saturday at sunset",
+    "photographerConciergePlaceholder": "e.g. Is {name} good for a family shoot in Madrid?"
+  },
+  "photographersMeta": {
+    "title": "Hire a Photographer in Spain — Madrid, Barcelona, Costa del Sol",
+    "description": "Find and hire a professional photographer in Madrid, Barcelona, Toledo, Costa del Sol and 40+ places across Spain. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €299.",
+    "locationDescription": "Find and book verified photographers in {location}, Spain. Browse portfolios, read reviews, compare packages. From €299. Instant booking.",
+    "ogAlt": "Photographers in {location}, Spain",
+    "browseByCitySub": "Explore verified photographers in Spain's top destinations."
+  },
+  "privacy": {
+    "metaDescription": "Photo Spain privacy policy — how we collect, use, and protect your personal data.",
+    "sections": {
+      "informationWeCollect": {
+        "intro": "When you use Photo Spain, we may collect the following information:"
+      },
+      "legalBasis": {
+        "items": {
+          "legalObligation": "<strong>Legal obligation (Article 6(1)(c)):</strong> to comply with tax, accounting, and other legal requirements applicable under Spanish and EU law."
+        }
+      },
+      "informationSharing": {
+        "legalRequirements": "<strong>Legal requirements:</strong> if required by law, regulation, legal process, or enforceable governmental request, or to protect the rights, property, or safety of Photo Spain, our users, or the public."
+      },
+      "internationalTransfers": {
+        "intro": "Photo Spain is based in Spain and primarily stores data within the European Union. However, some of our third-party processors may process personal data outside the EU/EEA:"
+      },
+      "dataRetention": {
+        "items": {
+          "booking": "<strong>Booking and transaction data:</strong> retained for 7 years after the booking date to comply with Spanish tax and accounting obligations."
+        }
+      },
+      "complaint": {
+        "intro": "If you believe that our processing of your personal data infringes the GDPR, you have the right to lodge a complaint with a supervisory authority. In Spain, the competent authority is:",
+        "cnpdAddress2": "28001 Madrid, Spain",
+        "cnpdName": "Agencia Española de Protección de Datos (AEPD)",
+        "cnpdAddress1": "C/ Jorge Juan, 6"
+      },
+      "children": {
+        "content": "Photo Spain is not intended for use by children under the age of 18. We do not knowingly collect personal data from children under 18. If you are a parent or guardian and believe your child has provided us with personal data, please contact us at"
+      },
+      "businessTransfers": {
+        "content": "If Photo Spain is involved in a merger, acquisition, asset sale, or bankruptcy, your personal data may be transferred as part of that transaction. In such an event, we will notify all affected users at least 30 days before the transfer of personal data and before any new privacy policy takes effect. You will have the option to delete your account and data before the transfer is completed."
+      },
+      "changes": {
+        "content": "We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or other factors. If we make material changes, we will notify you by email or by posting a prominent notice on our platform at least 14 days before the changes take effect. Your continued use of Photo Spain after the effective date constitutes acceptance of the updated policy."
+      }
+    }
+  },
+  "terms": {
+    "metaDescription": "Photo Spain terms of service — booking, payments, cancellations, refunds, and platform rules.",
+    "sections": {
+      "overview": {
+        "content": "Photo Spain (\"we,\" \"us,\" \"our\") operates a marketplace platform at photoportugal.com that connects tourists (\"clients\") with professional photographers (\"photographers\") in Spain. By using our platform, you agree to these terms."
+      },
+      "forPhotographers": {
+        "items": {
+          "noOffPlatform": "You are strictly prohibited from soliciting or conducting business with clients who contacted you through Photo Spain outside of the platform. This includes exchanging contact details, redirecting clients to personal websites, or accepting direct payments. Violation of this policy will result in immediate and permanent account termination"
+        }
+      },
+      "paymentsEscrow": {
+        "intro": "All payments are processed securely through Stripe. When a client books a photoshoot, the full amount is charged and held in escrow by Photo Spain. The payment flow works as follows:"
+      },
+      "commission": {
+        "intro": "Photo Spain charges a commission on each completed booking. Commission rates depend on the photographer's plan:"
+      },
+      "cancellationByPhotographer": {
+        "items": {
+          "replacement": "If the photographer cancels less than 48 hours before the shoot, Photo Spain will attempt to find a replacement photographer"
+        }
+      },
+      "photoDelivery": {
+        "items": {
+          "gallery": "Photos are delivered via a private, password-protected gallery on Photo Spain"
+        }
+      },
+      "disputes": {
+        "intro": "If you are unsatisfied with the delivered photos, you may open a dispute within 7 days of delivery. Photo Spain will review the dispute and respond within <strong>5 business days</strong>, working with both parties to reach a fair resolution."
+      },
+      "intellectualProperty": {
+        "photographerUse": "By booking a session, the client agrees that the photographer may use photos from the session in their portfolio, on their Photo Spain profile, and for professional marketing purposes (website, social media, promotional materials). If the client does not wish their photos to be published, they must inform the photographer before or during the session. The photographer is obligated to respect this request.",
+        "platformDisclaimer": "Photo Spain does not claim ownership of any photos created during sessions booked through the platform. Any disputes regarding image usage are between the client and the photographer. Photo Spain may assist in resolving such disputes but is not liable for unauthorized use of images by either party."
+      },
+      "prohibitedContent": {
+        "items": {
+          "externalLinks": "Including personal website URLs, social media links (Instagram, Facebook, etc.), email addresses, or phone numbers in your profile bio, tagline, package descriptions, or portfolio captions. All client communication must go through Photo Spain's messaging system."
+        }
+      },
+      "platformRole": {
+        "content": "Photo Spain is a marketplace that facilitates connections between clients and photographers. While we verify photographer profiles, moderate reviews, and provide dispute resolution, we are not a party to the service agreement between clients and photographers. Photo Spain is provided \"as is\" without warranties of any kind. Our total liability is limited to the amount of the booking in question."
+      },
+      "disputeResolution": {
+        "content1": "All disputes between users shall first be resolved through Photo Spain's internal dispute resolution process as described in Section 11. If the internal process does not lead to a satisfactory resolution, parties agree to attempt mediation before pursuing legal action.",
+        "content2": "These terms are governed by the laws of Spain. Any legal proceedings shall be brought in the courts of Madrid, Spain."
+      },
+      "chargebacks": {
+        "content": "If a client initiates a chargeback through their bank or credit card provider instead of using Photo Spain's dispute process, we reserve the right to suspend their account pending investigation. Photographers affected by chargebacks will be notified and may provide evidence to contest the chargeback. Fraudulent chargebacks may result in permanent account suspension."
+      }
+    }
+  },
+  "dashboard": {
+    "findPhotographer": "Find your perfect photographer in Spain"
+  },
+  "photographerDashboard": {
+    "taglinePlaceholder": "e.g., Capturing Madrid's soul through light and emotion"
+  },
+  "subscriptions": {
+    "phoneAutoPrefix": "Spanish numbers get +351 automatically. For other countries, include your code, e.g. +49."
+  },
+  "supportPage": {
+    "metaTitle": "Help Center — Photo Spain",
+    "metaDescription": "Find answers to common questions about booking photographers, payments, cancellations, and more on Photo Spain.",
+    "subtitle": "Everything you need to know about booking, payments, and getting the most out of Photo Spain",
+    "articles": {
+      "clients": {
+        "cancelReschedule": {
+          "answer": "Yes. You can cancel or reschedule through your dashboard.\n\n**Cancellation refunds:**\n• 7+ days before the shoot — 100% refund\n• 3–7 days before — 50% refund\n• Less than 3 days — No refund\n• No-show — No refund\n\n**Rescheduling:** You get one free reschedule if requested 48+ hours before the session. Rescheduling within 48 hours is at the photographer's discretion. Weather-related rescheduling is always free.\n\n**If the photographer cancels or reschedules:** You always receive a 100% full refund, regardless of timing. If the cancellation happens less than 48 hours before the shoot, Photo Spain will try to find a replacement photographer for you."
+        }
+      },
+      "photographers": {
+        "photographerCancels": {
+          "answer": "If you need to cancel, do so through your dashboard as early as possible. The client always receives a 100% refund regardless of timing.\n\nIf you cancel less than 48 hours before the shoot, Photo Spain may attempt to find a replacement photographer for the client.\n\n**Important:** Repeated cancellations (3 or more in 3 months) may result in loss of Featured status, reduced search visibility, or account suspension."
+        },
+        "externalLinks": {
+          "answer": "No. Photographers are not allowed to include personal website URLs, social media links (Instagram, Facebook, TikTok, etc.), email addresses, or phone numbers anywhere on their profile — including bio, tagline, package descriptions, and portfolio captions.\n\nAll communication with clients must go through Photo Spain's built-in messaging system. This protects both parties by keeping conversations documented, payments secure, and disputes resolvable.\n\nProfiles found to contain external links or contact information will be asked to remove them. Repeated violations may result in account suspension."
+        },
+        "getStarted": {
+          "answer": "Getting started is simple:\n\n1. **Create your account** — Sign up and select 'I take photos'\n2. **Complete your profile** — Add a photo, cover image, bio, and tagline\n3. **Upload your portfolio** — Showcase at least 15–20 of your best shots\n4. **Create packages** — Set up 2–3 packages at different price points\n5. **Select your locations** — Mark where you're available to shoot\n6. **Add your bank details** — The IBAN we transfer your earnings to\n\nOnce your profile is complete and approved by our team, you'll appear in search results and can start receiving bookings."
+        }
+      },
+      "general": {
+        "forcesMajeure": {
+          "answer": "In case of force majeure events — natural disasters, severe weather warnings, pandemics, or other circumstances beyond anyone's control — both parties are entitled to a full refund or free reschedule with no penalties.\n\nPhoto Spain will work with both parties to find the best solution."
+        }
+      },
+      "gifts": {
+        "chooseAnyPhotographer": {
+          "answer": "Yes — the gift card works with any **participating** Photo Spain photographer across Spain. The recipient browses our full catalog in gift mode and books like a normal session. Photographers opt in by default; a small number choose to opt out, and those are simply hidden from the gift catalog.\n\nThe recipient has full freedom: pick anyone, anywhere in Spain, any date that works for both of you."
+        }
+      }
+    }
+  },
+  "delivery": {
+    "titlePlaceholder": "Title — e.g. \"Your magical Madrid evening\"",
+    "brandFooter": "Photo Spain — photoportugal.com",
+    "titleHelp": "Shown as the headline above your gallery. Keep it short and personal — e.g. \"Your magical Madrid evening\"."
+  },
+  "messages": {
+    "founderRole": "Founder of Photo Spain",
+    "customProposalNamePlaceholder": "e.g. 1.5h Sitges sunset for the Smiths"
+  },
+  "settings": {
+    "calendarBufferDesc": "Protect this much time before and after calendar events and Photo Spain bookings."
+  },
+  "askQuestion": {
+    "placeholder": "Hi! I'm planning a trip to Spain and would love to discuss a photoshoot..."
+  },
+  "quickBooking": {
+    "trust": "Payment processed by Stripe. Photo Spain handpicks your photographer from verified pros.",
+    "allInclusive": "One all-in price — we hand-pick your photographer from our vetted top 1% of Spain pros. No extra fees."
+  },
+  "concierge": {
+    "metaTitle": "Find your Spain photographer in 30 seconds | Photo Spain",
+    "title1": "Find your Spain photographer",
+    "openingMessage": "Hi! I'm your Smart Concierge for Photo Spain. Tell me where you'll be and the occasion — I'll match you with the right photographers instantly. ✨",
+    "conciergeBadge": "Lens · Photo Spain",
+    "nudge": {
+      "body": "Hey 👋 Don't be shy — I'm **Lens**, the Photo Spain AI. Speak any language, write however feels natural — formal, casual, broken English, doesn't matter. Your message stays between us, no humans reading. I know every photographer on the platform, the best spots in each city, and what makes a shoot memorable. Tell me about your trip and I'll find your match instantly.",
+      "chipProposal": "💍 Surprise proposal at sunset in Madrid",
+      "chipCouples": "❤️ Couples shoot in Costa del Sol, golden hour",
+      "chipFamily": "👨‍👩‍👧 Family photoshoot in Toledo for 4"
+    },
+    "whatsappGreeting": "Hi! I just chatted with Photo Spain's AI concierge and I'd like to continue with you.",
+    "suggestion1": "Couples shoot in Madrid next month",
+    "suggestion2": "Proposal in Toledo at sunset",
+    "suggestion3": "Family photoshoot in Sitges",
+    "suggestion4": "Wedding in La Rioja",
+    "why": {
+      "title": "Why Photo Spain"
+    },
+    "askHumanCta": "Ask the Photo Spain team",
+    "plaque": {
+      "homepagePlaceholder": "e.g. couples shoot in Toledo next Saturday",
+      "homepageChips": [
+        "Couples in Madrid",
+        "Proposal 💍",
+        "Family in Costa del Sol",
+        "Help me choose"
+      ],
+      "occasionPlaceholder": "e.g. {occasion} in Madrid next month",
+      "occasionChips": [
+        "Madrid",
+        "Costa del Sol",
+        "Toledo",
+        "Help me choose"
+      ]
+    },
+    "blindBookingAllIn": "All-inclusive — we hand-pick your photographer from our vetted top 1% of Spain pros."
+  },
+  "lp": {
+    "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Spain",
+    "metaTitleGeneric": "Photographers in {city} — Book Instantly | Photo Spain",
+    "metaDescriptionPortugalTyped": "Professional {shootTypeLower} photographers across Spain — Madrid, Barcelona, Costa del Sol, Toledo & more. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
+    "metaDescriptionPortugalGeneric": "Professional photoshoot photographers across Spain — Madrid, Barcelona, Costa del Sol, Toledo & more. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
+    "heroSubtitlePortugalWithPrice": "Hand-picked, verified photographers across Spain — from {price}. Book instantly, pay securely.",
+    "heroSubtitlePortugalNoPrice": "Hand-picked, verified photographers across Spain — book instantly, pay securely.",
+    "viewAllPortugalTyped": "View all {count} {shootTypeLower} photographers across Spain",
+    "viewAllPortugalGeneric": "View all {count} photographers across Spain",
+    "reviewsTitlePortugal": "What travelers say about Photo Spain",
+    "reviewsSubtitleCity": "Real reviews from verified Photo Spain bookings",
+    "howItWorks": {
+      "step1DescPortugal": "See real photographers across Spain with real prices."
+    }
+  },
+  "homepageMeta": {
+    "title": "Travel & Vacation Photographer in Spain — Book Online",
+    "description": "Hire a professional travel or vacation photographer in Spain. {photographers}+ hand-picked photographers in Madrid, Barcelona, Costa del Sol, Toledo & {locations}+ locations. {reviews}Couples, families & solo travelers. From €{price}.",
+    "ogTitle": "Travel & Vacation Photographer in Spain — Book Online",
+    "ogDescription": "{photographers}+ professional travel & vacation photographers in Spain. {reviews}From €{price}.",
+    "schemaWebsite": "Find and book professional photographers across Spain for vacation photoshoots.",
+    "schemaService": "Vacation photography marketplace in Spain. Book professional photographers in Madrid, Barcelona, Costa del Sol and {locations}+ places."
+  },
+  "peek": {
+    "bookYourOwn": "Book your own photoshoot in Spain →",
+    "expiredCta": "Explore Photo Spain"
+  },
+  "videoCall": {
+    "consentText": "To keep everyone safe, calls on Photo Spain may be recorded and transcribed. The transcript is attached to this chat and the recording is deleted right after. By joining you agree to this."
+  },
+  "business": {
+    "metaTitle": "Photo Spain for Business — Corporate & Event Photography",
+    "metaDescription": "Corporate photography across Spain: events, conferences, team headshots, brand content. One contract, one invoice, a personal account manager. Get a quote within one business day.",
+    "heroTitle": "Professional photography for your company, anywhere in Spain",
+    "how3Text": "Photo Spain is your single counterparty: contract, VAT invoice, delivery deadlines and quality are on us.",
+    "cases": {
+      "offsitesText": "Team-building, incentive trips and retreats across the Costa del Sol, Tenerife and beyond."
+    },
+    "whyTitle": "Why companies choose Photo Spain",
+    "form": {
+      "locationPh": "Madrid, Costa del Sol…"
+    },
+    "band": {
+      "kicker": "Photo Spain for Business",
+      "text": "One contract, one invoice, vetted photographers anywhere in Spain. A human account manager handles everything."
+    },
+    "heroTitleRich": "Professional photography for your company, <accent>anywhere in Spain</accent>",
+    "trustPhotographers": "{count} vetted photographers across Spain"
+  },
+  "onboarding": {
+    "photographer": {
+      "connectStripe": "Add bank details for withdrawals",
+      "connectStripeTip": "Required so we can transfer your earnings after each shoot"
+    }
+  },
+  "tryYourself": {
+    "metaTitle": "Try Yourself in Spain — AI Travel Selfie",
+    "metaDescription": "Upload a selfie and see yourself at the Alhambra, Park Güell, Ronda and Mallorca. Then book a real photographer for the real thing.",
+    "stat_locations": "📍 Barcelona · Madrid · Seville · Granada · Mallorca · Tenerife"
+  }
+}

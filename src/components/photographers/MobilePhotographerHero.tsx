@@ -4,6 +4,7 @@ import { useState } from "react";
 import { lazy, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { normalizeName } from "@/lib/format-name";
+import { resolveImageUrl } from "@/lib/image-url";
 import { ActiveBadge } from "@/components/ui/ActiveBadge";
 import { LanguageBadge } from "@/components/ui/LanguageBadge";
 
@@ -27,6 +28,7 @@ const PhotographerLightbox = lazy(() =>
 export function MobilePhotographerHero({
   slug,
   name,
+  avatarUrl,
   isVerified,
   isFeatured,
   isFounding,
@@ -41,6 +43,10 @@ export function MobilePhotographerHero({
 }: {
   slug: string;
   name: string;
+  /** Photographer's face. Desktop always showed one; mobile shipped without,
+      which cost the page its strongest trust signal on the surface where most
+      of the traffic actually lands. */
+  avatarUrl: string | null;
   isVerified: boolean;
   isFeatured: boolean;
   isFounding: boolean;
@@ -118,6 +124,26 @@ export function MobilePhotographerHero({
       {/* Bottom-overlay info bar */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-4 pt-12 pb-4">
         <div className="flex items-center gap-2">
+          {/* Face first, then the name — the avatar is the trust anchor and it
+              has to survive being laid over a photo, hence the white ring and
+              the drop shadow. `shrink-0` keeps it circular when the name is
+              long enough to truncate. */}
+          <div className="shrink-0 h-11 w-11 overflow-hidden rounded-full bg-primary-100 ring-2 ring-white/90 shadow-md flex items-center justify-center text-base font-bold text-primary-600">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={resolveImageUrl(avatarUrl)}
+                alt={cleanName}
+                width={88}
+                height={88}
+                loading="eager"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              cleanName.charAt(0)
+            )}
+          </div>
           <h1 className="font-display text-2xl font-bold text-white drop-shadow truncate">
             {cleanName}
           </h1>

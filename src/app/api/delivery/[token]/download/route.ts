@@ -4,9 +4,10 @@ import { queryOne, query } from "@/lib/db";
 import { createReadStream } from "fs";
 import { stat } from "fs/promises";
 import path from "path";
+import { country } from "@/lib/country";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 const R2_PUBLIC_PREFIX = R2_PUBLIC_URL + "/";
 
 /** Convert a stored URL into a fetchable HTTP(S) URL.

@@ -7,8 +7,9 @@ import { uploadToS3, deleteFromS3 } from "@/lib/s3";
 import { canonicalizeShootType } from "@/lib/shoot-type-labels";
 import crypto from "crypto";
 import sharp from "sharp";
+import { country } from "@/lib/country";
 
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB per portfolio photo
 const PORTFOLIO_LIMITS: Record<string, number> = {
   free: 500,

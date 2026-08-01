@@ -1,3 +1,4 @@
+import { locationServicesES } from "./location-services-data-es";
 export interface LocationService {
   /** Shoot-type slug matching shoot-types-data.ts (e.g. "couples", "family") */
   shootTypeSlug: string;
@@ -22,7 +23,7 @@ export function serviceDescription(s: LocationService, locale: string): string {
  * Key = location slug, value = array of relevant service types.
  * Locations not listed here simply skip the section.
  */
-export const locationServices: Record<string, LocationService[]> = {
+const locationServicesPT: Record<string, LocationService[]> = {
   lisbon: [
     {
       shootTypeSlug: "couples",
@@ -267,6 +268,17 @@ export const locationServices: Record<string, LocationService[]> = {
     },
   ],
 };
+
+/**
+ * Country pack switch. NEXT_PUBLIC_ prefix is required — this module reaches
+ * client components, and a server-only variable reads as undefined in the
+ * browser bundle, silently falling back to Portugal. See docs/SPAIN.md §6.4.
+ *
+ * Portugal stays the default: absent or unrecognised value → the PT dataset.
+ */
+export const locationServices: Record<string, LocationService[]> =
+  process.env.NEXT_PUBLIC_COUNTRY === "es" ? locationServicesES : locationServicesPT;
+
 
 /**
  * Returns the service-type content for a location, or an empty array

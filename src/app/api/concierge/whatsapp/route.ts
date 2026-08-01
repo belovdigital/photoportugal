@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { computeLeadScore } from "@/lib/concierge/lead-score";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
         photogLines = ids
           .map((id) => byId.get(id))
           .filter(Boolean)
-          .map((p) => `• <b>${escapeHtml(p!.name)}</b> (<a href="https://photoportugal.com/photographers/${p!.slug}">${escapeHtml(p!.slug)}</a>)`);
+          .map((p) => `• <b>${escapeHtml(p!.name)}</b> (<a href="${country.baseUrl}/photographers/${p!.slug}">${escapeHtml(p!.slug)}</a>)`);
       }
 
       // Lead heat — same heuristic the admin dashboard uses, so Telegram
@@ -147,7 +148,7 @@ export async function POST(req: NextRequest) {
         recentMsgs.length > 0 ? `<b>What they said:</b>\n${recentMsgs.join("\n")}` : null,
         photogLines.length > 0 ? `<b>Photographers shown:</b>\n${photogLines.join("\n")}` : null,
         "",
-        `<a href="https://photoportugal.com/admin?tab=concierge&chat=${chat.id}">Open in admin →</a>`,
+        `<a href="${country.baseUrl}/admin?tab=concierge&chat=${chat.id}">Open in admin →</a>`,
       ].filter(Boolean).join("\n");
       await sendTelegram(lines, "concierge");
     } catch (err) {

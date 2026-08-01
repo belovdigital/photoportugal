@@ -1,5 +1,6 @@
 import { query, withTransaction } from "@/lib/db";
 import { canonicalizeShootType } from "@/lib/shoot-type-labels";
+import { country } from "@/lib/country";
 
 /**
  * Rollup behind /dashboard/stats: recomputes photographer_daily_stats
@@ -538,7 +539,7 @@ export async function pullGscProfileStats(from: string, to: string): Promise<{ r
   const rows: { keys?: string[] | null; impressions?: number | null; clicks?: number | null; position?: number | null }[] = [];
   for (let startRow = 0; ; startRow += PAGE_SIZE) {
     const res = await searchconsole.searchanalytics.query({
-      siteUrl: process.env.GSC_SITE_URL || "https://photoportugal.com",
+      siteUrl: process.env.GSC_SITE_URL || country.baseUrl,
       requestBody: {
         startDate: from,
         endDate: to,

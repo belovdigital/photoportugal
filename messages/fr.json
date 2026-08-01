@@ -4259,5 +4259,26 @@
     "benchReply": "Délai de première réponse",
     "benchMedian": "médiane : {value}",
     "ownVisitsNote": "Vos propres visites ne comptent pas : tout appareil où vous vous êtes déjà connecté est exclu, même déconnecté. Les fenêtres privées/incognito ne sont pas reconnaissables — pour des chiffres propres, consultez votre profil connecté."
+  },
+  "gettingStarted": {
+    "eyebrow": "Premiers pas",
+    "welcome": "Bienvenue chez {brand}, {name} 👋",
+    "intro": "Huit choses que font différemment les photographes qui réservent le plus. Faites défiler — comptez 4 minutes. Chaque conseil renvoie là où le travail se fait.",
+    "s1title": "Répondez vite, créez le lien",
+    "s1body": "Les meilleurs répondent en moins de 60 minutes. Nous mesurons votre temps de réponse moyen et remontons les plus rapides dans les résultats. Installez l'application et activez les notifications (étape 8) — c'est le levier le plus puissant.",
+    "s2title": "Connectez votre agenda",
+    "s2body": "Synchronisez votre Google Agenda pour que les clients ne puissent demander que des créneaux où vous êtes réellement libre. Vos événements personnels restent privés : nous voyons seulement occupé/libre, jamais les intitulés. Mise à jour toutes les 15 minutes, avec une marge automatique autour des séances pour le trajet et la préparation (réglable dans les paramètres de l'agenda). Vous pouvez aussi bloquer des dates à la main pour des vacances ou du personnel. Résultat : zéro double réservation, moins d'emails \"désolé, je suis déjà pris\", des clients plus contents.",
+    "s3title": "Construisez les forfaits autour de l'occasion",
+    "s3body": "Nommez les forfaits par le moment, pas par la durée. \"Demande en mariage · 1 heure\" convertit bien mieux que \"séance d'1 heure\" — le client comprend immédiatement que c'est pour lui. Les forfaits les plus réservés sur {brand} s'appuient sur des occasions précises : Essentiel, Séance à l'heure dorée, Grande séance famille, Coucher de soleil en amoureux. Le prix suit la valeur du moment, pas l'horloge. Quand un client demande les tarifs, appuyez sur le + dans la zone de message et choisissez un forfait — il reçoit une carte avec le bouton de réservation intégré. Prix sur mesure ? Envoyez une proposition ponctuelle au montant de votre choix.",
+    "s4title": "Utilisez les suggestions de réponse IA",
+    "s4body": "Sur chaque message client, vous verrez trois brouillons courts générés à partir du fil de conversation et de votre bio. Touchez-en un pour préremplir la zone de réponse — modifiable avant envoi, jamais envoyé automatiquement.",
+    "s5title": "Gardez les échanges avant paiement sur la plateforme",
+    "s5body": "Partager votre WhatsApp, Instagram ou email AVANT le paiement est automatiquement signalé aux administrateurs et met votre compte en danger — vous perdez aussi la protection Stripe si la séance tourne mal. APRÈS le paiement, échanger un WhatsApp pour la coordination du jour J (point de rendez-vous, météo, horaires de dernière minute) est tout à fait normal — la protection Stripe est déjà active.",
+    "s6title": "Les avis pilotent le classement",
+    "s6body": "Nous envoyons à chaque client une demande d'avis 3 heures après qu'il a accepté sa livraison (avec 10 % de remise sur sa prochaine réservation en remerciement). Vous n'avez pas à la demander, mais un rappel sympathique dans votre dernier message augmente beaucoup le taux de réponse. Modèle à copier et personnaliser (changez le prénom, ajustez le ton) :",
+    "s7title": "Options Vérifié et Mis en avant",
+    "s7body": "Le badge Vérifié (19 €/an) ajoute une coche bleue à côté de votre nom — les clients font 2 à 3 fois plus confiance aux photographes vérifiés. Mis en avant (19 €/mois) vous place en tête des recherches sur vos lieux. Les deux se rentabilisent vite si les réservations arrivent.",
+    "s8title": "Installez l'application mobile",
+    "s8body": "Les notifications push arrivent en quelques secondes, bien avant un email. Vous pouvez répondre depuis la plage, la salle de sport, n'importe où. Cherchez \"{brand}\" sur l'App Store ou Play Store, ou touchez les badges ci-dessous."
   }
 }

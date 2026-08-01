@@ -7,6 +7,7 @@ import { usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { unsplashUrl } from "@/lib/unsplash-images";
 import { locations } from "@/lib/locations-data";
+import { country } from "@/lib/country";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { trackCTAClick } from "@/lib/analytics";
@@ -16,17 +17,35 @@ import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
 import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
 import { Compass, Search, ShieldCheck, HelpCircle, Users, Mail, LifeBuoy, MapPin, Heart, UserRound, Baby, Gem, Sparkles, Sun, UserPlus, CreditCard, Camera, BookOpen, TreePine, PartyPopper, Cake, Gift } from "lucide-react";
 
-const TOP_DESTINATIONS = [
-  { slug: "lisbon", name: "Lisbon", img: "photo-1536663060084-a0d9eeeaf44b" },
-  { slug: "porto", name: "Porto", img: "photo-1756765786971-384a44daf35d" },
-  { slug: "algarve", name: "Algarve", img: "photo-1560242374-7befcc667b39" },
-  { slug: "sintra", name: "Sintra", img: "photo-1697394494123-c6c1323a14f7" },
-  { slug: "madeira", name: "Madeira", img: "photo-1721241843813-c54b77496005" },
-  { slug: "azores", name: "Azores", img: "photo-1542575749037-7ef4545e897d" },
-  { slug: "cascais", name: "Cascais", img: "photo-1748792753424-38cbb745508a" },
-  { slug: "lagos", name: "Lagos", img: "photo-1593897810048-0195fd308ee6" },
-  { slug: "douro-valley", name: "Douro Valley", img: "photo-1693825208005-02563f6a95ce" },
-];
+// Mega-menu destinations, per market. Spain reuses Portuguese photography for
+// now (see the alias table in unsplash-images.ts) but must list Spanish cities —
+// a Spanish visitor offered "Madeira" and "Azores" has landed on the wrong site.
+const DESTINATIONS_BY_COUNTRY: Record<string, Array<{ slug: string; name: string; img: string }>> = {
+  pt: [
+    { slug: "lisbon", name: "Lisbon", img: "photo-1536663060084-a0d9eeeaf44b" },
+    { slug: "porto", name: "Porto", img: "photo-1756765786971-384a44daf35d" },
+    { slug: "algarve", name: "Algarve", img: "photo-1560242374-7befcc667b39" },
+    { slug: "sintra", name: "Sintra", img: "photo-1697394494123-c6c1323a14f7" },
+    { slug: "madeira", name: "Madeira", img: "photo-1721241843813-c54b77496005" },
+    { slug: "azores", name: "Azores", img: "photo-1542575749037-7ef4545e897d" },
+    { slug: "cascais", name: "Cascais", img: "photo-1748792753424-38cbb745508a" },
+    { slug: "lagos", name: "Lagos", img: "photo-1593897810048-0195fd308ee6" },
+    { slug: "douro-valley", name: "Douro Valley", img: "photo-1693825208005-02563f6a95ce" },
+  ],
+  es: [
+    { slug: "barcelona", name: "Barcelona", img: "photo-1756765786971-384a44daf35d" },
+    { slug: "madrid", name: "Madrid", img: "photo-1536663060084-a0d9eeeaf44b" },
+    { slug: "seville", name: "Seville", img: "photo-1560242374-7befcc667b39" },
+    { slug: "granada", name: "Granada", img: "photo-1697984431654-d234e3ca432b" },
+    { slug: "mallorca", name: "Mallorca", img: "photo-1721241843813-c54b77496005" },
+    { slug: "ibiza", name: "Ibiza", img: "photo-1593897810048-0195fd308ee6" },
+    { slug: "malaga", name: "Málaga", img: "photo-1560242374-7befcc667b39" },
+    { slug: "valencia", name: "Valencia", img: "photo-1748792753424-38cbb745508a" },
+    { slug: "tenerife", name: "Tenerife", img: "photo-1542575749037-7ef4545e897d" },
+  ],
+};
+
+const TOP_DESTINATIONS = DESTINATIONS_BY_COUNTRY[country.code] || DESTINATIONS_BY_COUNTRY.pt;
 
 const SHOOT_TYPES_DATA = [
   { key: "couples", href: "/photoshoots/couples", icon: Heart },
@@ -81,12 +100,13 @@ export function Header() {
 
   function switchLocale(target?: string) {
     // Default: toggle between EN/PT (legacy 2-button behavior)
-    const newLocale = target ?? (locale === "en" ? "pt" : "en");
+    const secondaryLocale = country.locales.find((l) => l !== "en") || "en";
+    const newLocale = target ?? (locale === "en" ? secondaryLocale : "en");
     const currentPath = window.location.pathname;
     // Strip any locale prefix (en is implicit)
     const cleanPath =
       currentPath
-        .replace(/^\/(pt|de|es|fr)(\/|$)/, "/")
+        .replace(new RegExp(`^/(${country.locales.filter((l) => l !== "en").join("|")})(/|$)`), "/")
         .replace(/\/+$/, "") || "/";
     const newPath =
       newLocale === "en"
@@ -100,13 +120,21 @@ export function Header() {
     window.location.href = newPath;
   }
 
-  const availableLocales: Array<{ code: string; label: string; flag: string }> = [
+  // Filtered by the country pack: offering a language the market does not ship
+  // sends the visitor to a 404 (Spain has no /pt route at all).
+  const ALL_LOCALE_OPTIONS: Array<{ code: string; label: string; flag: string }> = [
     { code: "en", label: "EN", flag: "🇬🇧" },
     { code: "pt", label: "PT", flag: "🇵🇹" },
     { code: "de", label: "DE", flag: "🇩🇪" },
     { code: "es", label: "ES", flag: "🇪🇸" },
     { code: "fr", label: "FR", flag: "🇫🇷" },
   ];
+  // Order comes from the country pack, not from the master list — filtering the
+  // master list preserved ITS order (en, pt, de, es, fr) and pushed Spanish
+  // below German on the Spanish site.
+  const availableLocales = (country.locales as readonly string[])
+    .map((code) => ALL_LOCALE_OPTIONS.find((l) => l.code === code))
+    .filter((l): l is (typeof ALL_LOCALE_OPTIONS)[number] => !!l);
   const [langOpen, setLangOpen] = useState(false);
 
   return (
@@ -116,8 +144,8 @@ export function Header() {
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo — favicon on small screens, full logo on larger */}
           <Link href="/" className="shrink-0" onClick={() => setActiveMenu(null)}>
-            <img src="/logo.svg" alt="Photo Portugal" width={140} height={28} className="hidden h-7 w-auto min-[440px]:block" />
-            <img src="/favicon.svg" alt="Photo Portugal" width={28} height={28} className="h-7 w-7 min-[440px]:hidden" />
+            <img src={country.logoPath} alt={country.brand} width={140} height={28} className="hidden h-7 w-auto min-[440px]:block" />
+            <img src={country.logoIconPath} alt={country.brand} width={28} height={28} className="h-7 w-7 min-[440px]:hidden" />
           </Link>
 
           {/* Desktop nav */}

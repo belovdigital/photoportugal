@@ -1,3 +1,4 @@
+import { LOCATION_EXPLORER_REGIONS_ES } from "./location-explorer-data-es";
 export type LocationExplorerChild = {
   slug: string;
   name: string;
@@ -20,7 +21,7 @@ export type LocationExplorerRegion = {
   children: LocationExplorerChild[];
 };
 
-export const LOCATION_EXPLORER_REGIONS: LocationExplorerRegion[] = [
+const LOCATION_EXPLORER_REGIONSPT: LocationExplorerRegion[] = [
   {
     slug: "lisbon-region",
     name: "Lisbon Region",
@@ -188,6 +189,17 @@ export const LOCATION_EXPLORER_REGIONS: LocationExplorerRegion[] = [
     ],
   },
 ];
+
+/**
+ * Country pack switch. NEXT_PUBLIC_ prefix is required — this module reaches
+ * client components, and a server-only variable reads as undefined in the
+ * browser bundle, silently falling back to Portugal. See docs/SPAIN.md §6.4.
+ *
+ * Portugal stays the default: absent or unrecognised value → the PT dataset.
+ */
+export const LOCATION_EXPLORER_REGIONS: LocationExplorerRegion[] =
+  process.env.NEXT_PUBLIC_COUNTRY === "es" ? LOCATION_EXPLORER_REGIONS_ES : LOCATION_EXPLORER_REGIONSPT;
+
 
 export const LOCATION_EXPLORER_SHOOT_FILTERS = [
   "Couples",

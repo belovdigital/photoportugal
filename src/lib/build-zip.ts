@@ -5,9 +5,10 @@ import { mkdtemp, rm, stat } from "fs/promises";
 import os from "os";
 import path from "path";
 import { uploadFileToS3 } from "@/lib/s3";
+import { country } from "@/lib/country";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 const R2_PUBLIC_PREFIX = R2_PUBLIC_URL + "/";
 
 /**
@@ -145,7 +146,7 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
     if (booking.delivery_token && booking.client_email) {
       try {
         const { sendEmail, emailLayout, emailButton } = await import("@/lib/email");
-        const galleryUrl = `https://photoportugal.com/delivery/${booking.delivery_token}`;
+        const galleryUrl = `${country.baseUrl}/delivery/${booking.delivery_token}`;
         const sizeMB = (zipSize / 1024 / 1024).toFixed(0);
         const firstName = booking.client_name?.split(" ")[0] || "there";
         await sendEmail(

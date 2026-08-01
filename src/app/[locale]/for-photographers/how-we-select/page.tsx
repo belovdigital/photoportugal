@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates } from "@/lib/seo";
 import { Link } from "@/i18n/navigation";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -32,11 +33,11 @@ export default async function HowWeSelectPage({ params }: { params: Promise<{ lo
     "@type": "WebPage",
     name: t("metaTitle"),
     description: t("metaDescription"),
-    url: `https://photoportugal.com/${locale === "en" ? "" : locale + "/"}for-photographers/how-we-select`,
+    url: `${country.baseUrl}/${locale === "en" ? "" : locale + "/"}for-photographers/how-we-select`,
     publisher: {
       "@type": "Organization",
-      name: "Photo Portugal",
-      url: "https://photoportugal.com",
+      name: country.brand,
+      url: country.baseUrl,
     },
   };
 

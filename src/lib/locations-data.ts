@@ -1,6 +1,7 @@
 import { Location } from "@/types";
+import { locationsES } from "./locations-data-es";
 
-export const locations: Location[] = [
+const locationsPT: Location[] = [
   // Greater Lisbon
   {
     id: "lisbon",
@@ -1612,6 +1613,21 @@ export const locations: Location[] = [
       "Trouvez des photographes professionnels aux Açores et à São Miguel, Portugal. Réservez des séances uniques à Sete Cidades, lacs volcaniques et paysages insulaires spectaculaires.",
   },
 ];
+
+/**
+ * Country pack switch.
+ *
+ * NEXT_PUBLIC_ prefix is REQUIRED and not cosmetic: Header, Footer and the
+ * admin LocationsManager are client components that import this list. A bare
+ * `COUNTRY` is stripped from the browser bundle, so it would read as undefined
+ * on the client and the Spanish site would silently render Portuguese cities
+ * in its own header — with no error anywhere.
+ *
+ * Portugal stays the default: absent or unrecognised value → the PT dataset,
+ * i.e. today's behaviour, unchanged.
+ */
+export const locations: Location[] =
+  process.env.NEXT_PUBLIC_COUNTRY === "es" ? locationsES : locationsPT;
 
 export const regions = [...new Set(locations.map((l) => l.region))];
 

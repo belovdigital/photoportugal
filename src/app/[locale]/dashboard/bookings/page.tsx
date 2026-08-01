@@ -17,6 +17,7 @@ import { ProposalSmsToggle } from "./ProposalSmsToggle";
 import { normalizeName } from "@/lib/format-name";
 import { bookingStripePaymentSelect } from "@/lib/booking-stripe-payment-fields";
 import { bookingGroupSizeEstimateSelect } from "@/lib/booking-group-size-fields";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -264,7 +265,7 @@ export default async function BookingsPage() {
               // a generic profile pic the photographer can't use to
                // recognize them. Only treat the step as done when the user
               // has uploaded an avatar to our own storage (R2).
-              avatar: !!user?.avatar_url && user.avatar_url.includes("files.photoportugal.com"),
+              avatar: !!user?.avatar_url && user.avatar_url.includes(country.filesHost),
               cover: false,
               bio: false,
               portfolio: 0,
@@ -322,7 +323,7 @@ export default async function BookingsPage() {
                     )}
                     {/* Gift CARD redemption tag — separate from gift booking.
                         A "Gift Card" booking is one where the client paid €0
-                        because they redeemed a Photo Portugal gift card.
+                        because they redeemed a {country.brand} gift card.
                         Photographer payout is the flat tier amount. */}
                     {booking.gift_card_id && (
                       <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">

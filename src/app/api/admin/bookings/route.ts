@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
-import { calculatePayment, capturePaymentIntent, requireStripe } from "@/lib/stripe";
+import { calculatePayment, capturePaymentIntent, requireStripe, voidUncapturedPaymentIntent } from "@/lib/stripe";
 import { revalidatePath } from "next/cache";
+import { country } from "@/lib/country";
 
 async function isAdmin() {
   const cookieStore = await cookies();
@@ -43,28 +44,33 @@ export async function PATCH(req: NextRequest) {
     if (action === "cancel") {
       // Pull both parties' contact info so we can email + Telegram after
       // the cancellation lands.
+      // LEFT JOIN, not JOIN: blind bookings carry photographer_id = NULL until
+      // an admin assigns one, so an inner join returned zero rows and the admin
+      // got "Booking not found" — which made it impossible to cancel exactly the
+      // bookings where cancelling matters most, the ones holding client money.
       const booking = await queryOne<{
         status: string;
         payment_status: string | null;
         stripe_payment_intent_id: string | null;
         total_price: number | null;
         service_fee: number | null;
+        photographer_id: string | null;
         client_email: string;
         client_name: string;
         client_phone: string | null;
-        photographer_email: string;
-        photographer_name: string;
-        photographer_user_id: string;
+        photographer_email: string | null;
+        photographer_name: string | null;
+        photographer_user_id: string | null;
       }>(
         `SELECT b.status, b.payment_status, b.stripe_payment_intent_id,
-                b.total_price, b.service_fee,
+                b.total_price, b.service_fee, b.photographer_id,
                 cu.email AS client_email, cu.name AS client_name, cu.phone AS client_phone,
                 pu.email AS photographer_email, pu.name AS photographer_name,
                 pp.user_id AS photographer_user_id
            FROM bookings b
            JOIN users cu ON cu.id = b.client_id
-           JOIN photographer_profiles pp ON pp.id = b.photographer_id
-           JOIN users pu ON pu.id = pp.user_id
+           LEFT JOIN photographer_profiles pp ON pp.id = b.photographer_id
+           LEFT JOIN users pu ON pu.id = pp.user_id
           WHERE b.id = $1`,
         [id]
       );
@@ -73,12 +79,31 @@ export async function PATCH(req: NextRequest) {
       const wasPaid = booking.payment_status === "paid";
       const totalPaid = Number(booking.total_price ?? 0) + Number(booking.service_fee ?? 0);
 
-      // Refund if paid — admin override always issues 100% (no
-      // policy-based partial refunds at this level).
-      if (wasPaid && booking.stripe_payment_intent_id) {
+      // A blind booking with no photographer yet holds an UNCAPTURED Stripe
+      // authorisation — the money never left the client's card. Releasing that
+      // is `paymentIntents.cancel`, not `refunds.create`: there is no charge to
+      // refund, so the refund call errors and the hold stays up for the full
+      // auto-refund window. Matched bookings are captured and keep the original
+      // refund path, byte for byte.
+      const isUnmatchedBlind = !booking.photographer_id;
+
+      if (booking.stripe_payment_intent_id && (wasPaid || isUnmatchedBlind)) {
         try {
-          const stripe = requireStripe();
-          await stripe.refunds.create({ payment_intent: booking.stripe_payment_intent_id });
+          if (isUnmatchedBlind) {
+            try {
+              await voidUncapturedPaymentIntent(booking.stripe_payment_intent_id);
+            } catch (voidErr) {
+              // The hold may have been captured seconds ago by a racing
+              // assign. Then a real refund IS the right instrument — but only
+              // for that specific failure; anything else must surface.
+              const msg = voidErr instanceof Error ? voidErr.message : String(voidErr);
+              if (!/already\s*captur|already_captured|has already been captured/i.test(msg)) throw voidErr;
+              await requireStripe().refunds.create({ payment_intent: booking.stripe_payment_intent_id });
+            }
+          } else {
+            const stripe = requireStripe();
+            await stripe.refunds.create({ payment_intent: booking.stripe_payment_intent_id });
+          }
         } catch (err) {
           console.error("[admin/bookings] Refund failed:", err);
           try { const { logServerError } = await import("@/lib/error-logger"); await logServerError(err, { path: "/api/admin/bookings", method: req.method, statusCode: 500 }); } catch {}
@@ -104,13 +129,18 @@ export async function PATCH(req: NextRequest) {
       // 100% refund, no cancellation-policy text).
       try {
         const { sendEmail } = await import("@/lib/email");
-        const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+        const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || country.baseUrl;
         const refundLine = wasPaid
           ? `The full payment of <strong>&euro;${totalPaid.toFixed(2)}</strong> has been refunded — it should appear in the original payment method within 5-10 business days.`
           : `No payment had been collected, so there's nothing to refund.`;
         const adminNote = trimmedReason
-          ? `<p><strong>Note from Photo Portugal:</strong> ${trimmedReason.replace(/[<>]/g, "")}</p>`
+          ? `<p><strong>Note from ${country.brand}:</strong> ${trimmedReason.replace(/[<>]/g, "")}</p>`
           : "";
+        // Blind bookings have no photographer to name — and no photographer to
+        // email at all. Both are guarded below rather than rendering "null".
+        const photographerLine = booking.photographer_name
+          ? `Your booking with <strong>${booking.photographer_name}</strong> has been cancelled by ${country.brand}.`
+          : `Your booking has been cancelled by ${country.brand}.`;
 
         sendEmail(
           booking.client_email,
@@ -120,29 +150,30 @@ export async function PATCH(req: NextRequest) {
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #C94536;">Booking cancelled</h2>
             <p>Hi ${booking.client_name.split(" ")[0] || "there"},</p>
-            <p>Your booking with <strong>${booking.photographer_name}</strong> has been cancelled by Photo Portugal.</p>
+            <p>${photographerLine}</p>
             <p>${refundLine}</p>
             ${adminNote}
             <p>If you have any questions, just reply to this email.</p>
             <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         ).catch((err) => console.error("[admin/bookings] client email error:", err));
 
-        sendEmail(
+        // No photographer on an unassigned blind booking — nobody to notify.
+        if (booking.photographer_email) sendEmail(
           booking.photographer_email,
           wasPaid
             ? `Booking cancelled by admin — €${totalPaid.toFixed(2)} refunded to client`
             : `Booking cancelled by admin`,
           `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
             <h2 style="color: #C94536;">Booking cancelled</h2>
-            <p>Hi ${booking.photographer_name.split(" ")[0] || "there"},</p>
-            <p>The Photo Portugal team cancelled a booking with <strong>${booking.client_name}</strong>.</p>
+            <p>Hi ${booking.photographer_name?.split(" ")[0] || "there"},</p>
+            <p>The ${country.brand} team cancelled a booking with <strong>${booking.client_name}</strong>.</p>
             <p>${wasPaid ? `A full refund of <strong>&euro;${totalPaid.toFixed(2)}</strong> was issued to the client.` : "No payment had been collected on this booking."}</p>
             ${adminNote}
             <p>If anything looks off, reply to this email and we'll look into it.</p>
             <p><a href="${baseUrl}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Bookings</a></p>
-            <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
           </div>`
         ).catch((err) => console.error("[admin/bookings] photographer email error:", err));
       } catch (err) {
@@ -154,7 +185,7 @@ export async function PATCH(req: NextRequest) {
         const lines = [
           `🛠️ <b>Admin cancelled booking</b>`,
           ``,
-          `${booking.client_name} → ${booking.photographer_name}`,
+          `${booking.client_name} → ${booking.photographer_name || "(no photographer — blind booking)"}`,
           wasPaid ? `Refund: €${totalPaid.toFixed(2)} (full)` : `No payment to refund`,
         ];
         if (trimmedReason) {

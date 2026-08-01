@@ -1,6 +1,7 @@
 import { queryOne } from "@/lib/db";
 import { sendEmail, getAdminEmail } from "@/lib/email";
 import { sendAdminSMS } from "@/lib/sms";
+import { country } from "@/lib/country";
 
 /**
  * Check if a photographer just completed their onboarding checklist.
@@ -46,7 +47,7 @@ export async function checkAndNotifyChecklistComplete(photographerId: string) {
       `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2 style="color: #16a34a;">Photographer Ready for Approval</h2>
         <p><strong>${profile.name}</strong> (${profile.email}) has completed all onboarding steps and is ready to be reviewed.</p>
-        <p><a href="https://photoportugal.com/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
+        <p><a href="${country.baseUrl}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
       </div>`
     );
 
@@ -55,7 +56,7 @@ export async function checkAndNotifyChecklistComplete(photographerId: string) {
     );
 
     import("@/lib/telegram").then(({ sendTelegram }) => {
-      sendTelegram(`📸 <b>Photographer Ready for Approval!</b>\n\n<b>Name:</b> ${profile!.name}\n<b>Email:</b> ${profile!.email}\n\nAll onboarding steps completed.\n\n<a href="https://photoportugal.com/admin">Review in Admin →</a>`, "photographers");
+      sendTelegram(`📸 <b>Photographer Ready for Approval!</b>\n\n<b>Name:</b> ${profile!.name}\n<b>Email:</b> ${profile!.email}\n\nAll onboarding steps completed.\n\n<a href="${country.baseUrl}/admin">Review in Admin →</a>`, "photographers");
     }).catch(e => console.error("[checklist-notify] telegram error:", e));
   } catch (err) {
     console.error("[checklist-notify] error:", err);

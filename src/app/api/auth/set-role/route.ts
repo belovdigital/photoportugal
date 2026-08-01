@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { applyUserRole } from "@/lib/apply-user-role";
+import { country } from "@/lib/country";
 
 // GET — the onboarding flow (choose-role screen redirects through here so
 // the JWT picks the fresh role up from the DB sync on the next request).
@@ -8,13 +9,13 @@ import { applyUserRole } from "@/lib/apply-user-role";
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.email) {
-    const base = process.env.AUTH_URL || "https://photoportugal.com";
+    const base = process.env.AUTH_URL || country.baseUrl;
     return NextResponse.redirect(`${base}/auth/signin`);
   }
 
   const role = request.nextUrl.searchParams.get("role");
   let redirectPath = request.nextUrl.searchParams.get("redirect") || "/dashboard";
-  const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+  const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || country.baseUrl;
 
   // Validate redirect path to prevent open redirect attacks
   if (

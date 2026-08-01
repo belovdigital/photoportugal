@@ -22,6 +22,7 @@ import {
   BlogStickyMobileBar,
 } from "@/components/blog/BlogConversionBlocks";
 import sanitize from "sanitize-html";
+import { country } from "@/lib/country";
 
 export const revalidate = 300; // ISR: refresh every 5 minutes
 
@@ -68,7 +69,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const pageTitle = post.meta_title || post.title;
-  const pageDescription = post.meta_description || post.excerpt || `Read "${post.title}" on the Photo Portugal blog.`;
+  const pageDescription = post.meta_description || post.excerpt || `Read "${post.title}" on the ${country.brand} blog.`;
 
   // Resolve og:image: prefer the explicit cover_image_url, but for posts
   // where it's NULL (e.g. native long-form posts that rely on a runtime
@@ -79,7 +80,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (post.cover_image_url) {
     ogImageUrl = post.cover_image_url.startsWith("http")
       ? post.cover_image_url
-      : `https://photoportugal.com${post.cover_image_url}`;
+      : `${country.baseUrl}${post.cover_image_url}`;
   } else {
     const topic = deriveBlogTopic(post);
     const locSlugs = topic.primaryLocation ? [topic.primaryLocation.slug] : [];
@@ -129,7 +130,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: pageTitle,
       description: pageDescription,
-      url: `https://photoportugal.com/blog/${post.slug}`,
+      url: `${country.baseUrl}/blog/${post.slug}`,
       type: "article",
       // pg returns timestamp columns as Date objects despite the string
       // type annotation — without toISOString() the OG meta renders
@@ -774,19 +775,19 @@ export default async function BlogPostPage({ params }: PageProps) {
         "@type": "ListItem",
         position: 1,
         name: tc("home"),
-        item: "https://photoportugal.com",
+        item: country.baseUrl,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: tc("blog"),
-        item: "https://photoportugal.com/blog",
+        item: `${country.baseUrl}/blog`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: post.title,
-        item: `https://photoportugal.com/blog/${post.slug}`,
+        item: `${country.baseUrl}/blog/${post.slug}`,
       },
     ],
   };
@@ -828,27 +829,27 @@ export default async function BlogPostPage({ params }: PageProps) {
     description: post.meta_description || post.excerpt || "",
     author: {
       "@type": "Organization",
-      name: "Photo Portugal",
-      url: "https://photoportugal.com",
+      name: country.brand,
+      url: country.baseUrl,
     },
     publisher: {
       "@type": "Organization",
-      name: "Photo Portugal",
+      name: country.brand,
       logo: {
         "@type": "ImageObject",
-        url: "https://photoportugal.com/logo.svg",
+        url: `${country.baseUrl}/logo.svg`,
       },
     },
     datePublished: post.published_at,
     dateModified: post.updated_at || post.published_at,
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://photoportugal.com/blog/${post.slug}`,
+      "@id": `${country.baseUrl}/blog/${post.slug}`,
     },
     ...((post.cover_image_url || heroSrc) && {
       image: (post.cover_image_url || heroSrc)!.startsWith("http")
         ? (post.cover_image_url || heroSrc)!
-        : `https://photoportugal.com${post.cover_image_url || heroSrc}`,
+        : `${country.baseUrl}${post.cover_image_url || heroSrc}`,
     }),
   };
 
@@ -1032,7 +1033,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             {/* B2B mid-article CTA — the only injected block on business posts */}
             {isBusinessPost && (
               <div className="my-10 rounded-2xl bg-gray-900 p-8 text-center sm:p-10">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-warm-200">Photo Portugal for Business</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-warm-200">{country.brand} for Business</p>
                 <h3 className="mt-3 font-display text-2xl font-bold text-white">{t("blogCta.businessTitle")}</h3>
                 <p className="mx-auto mt-2 max-w-md text-sm text-gray-300">{t("blogCta.businessText")}</p>
                 <Link

@@ -8,6 +8,7 @@
 import { locations as ALL_LOCATIONS } from "@/lib/locations-data";
 import { shootTypes as ALL_SHOOT_TYPES } from "@/lib/shoot-types-data";
 import { photoSpots, spotSlug as makeSpotSlug } from "@/lib/photo-spots-data";
+import { country } from "@/lib/country";
 
 export type PageContextType =
   | "homepage"
@@ -118,7 +119,7 @@ export function derivePageContext(pathname: string): PageContext {
 export function pageContextToPromptString(ctx: PageContext): string {
   switch (ctx.type) {
     case "homepage":
-      return "User is on the Photo Portugal homepage.";
+      return `User is on the ${country.brand} homepage.`;
     case "location":
       return `User is on the location page for ${ctx.location?.name} (${ctx.location?.slug}). Treat ${ctx.location?.name} as their preferred location unless they say otherwise.`;
     case "location_occasion":
@@ -154,7 +155,7 @@ export function pageContextToPromptString(ctx: PageContext): string {
         : undefined;
       const spotName = spotData?.name || ctx.spotSlug;
       const spotDesc = spotData?.description ? ` — ${spotData.description}` : "";
-      const cityName = ctx.location?.name || "Portugal";
+      const cityName = ctx.location?.name || `${country.areaServed}`;
       return `User is on the spot page for **${spotName}** in ${cityName}${spotDesc}. They're considering shooting at this exact landmark. When they ask "best time", "where exactly", "is it open" — answer using the spot's known info. If they ask "what other places nearby" — recommend other spots in ${cityName} via show_spots. When they're ready for a photographer, call show_matches for ${cityName}.`;
     }
     case "unknown":

@@ -28,6 +28,7 @@ import { MobilePhotographerHero } from "@/components/photographers/MobilePhotogr
 import { flattenLocationNodes, getAncestorNodeSlugs, getLocationNode, type LocationNode } from "@/lib/location-hierarchy";
 import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
 import { ExpandableChipList } from "@/components/ui/ExpandableChipList";
+import { country } from "@/lib/country";
 
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
@@ -279,8 +280,8 @@ export async function generateMetadata({
     : "";
   const description = `${t("metaDescription", { name: normalizeName(p.name), locations: locationNames || "Portugal" })}${priceText}${shootTypeText}${ratingText} ${p.tagline || ""}`.trim();
   const rawImage = p.cover_url || p.avatar_url;
-  const ogImage = resolveAbsoluteImageUrl(rawImage) || "https://photoportugal.com/og-image.png";
-  const profileUrl = `https://photoportugal.com/photographers/${slug}`;
+  const ogImage = resolveAbsoluteImageUrl(rawImage) || `${country.baseUrl}${country.ogImage}`;
+  const profileUrl = `${country.baseUrl}/photographers/${slug}`;
 
   // Pull a handful of public review photos to enrich social previews.
   let reviewPhotoUrls: string[] = [];
@@ -294,7 +295,7 @@ export async function generateMetadata({
         [p.id]
       );
       reviewPhotoUrls = rps.map((x) => {
-        return resolveAbsoluteImageUrl(x.url) || `https://photoportugal.com${x.url}`;
+        return resolveAbsoluteImageUrl(x.url) || `${country.baseUrl}${x.url}`;
       });
     } catch {}
   }
@@ -321,7 +322,7 @@ export async function generateMetadata({
       type: "profile",
       url: profileUrl,
       images: ogImages,
-      siteName: "Photo Portugal",
+      siteName: `${country.brand}`,
     },
     twitter: {
       card: "summary_large_image",
@@ -598,9 +599,9 @@ export default async function PhotographerProfilePage({
     } catch {}
   }
 
-  const profileUrl = `https://photoportugal.com/photographers/${slug}`;
+  const profileUrl = `${country.baseUrl}/photographers/${slug}`;
   const toAbsoluteUrl = (src: string) =>
-    src.startsWith("http") ? src : `https://photoportugal.com${src}`;
+    src.startsWith("http") ? src : `${country.baseUrl}${src}`;
   const reviewPhotoAbsolute = reviews
     .flatMap((r) => (r.photos || []).map((p: { url: string }) => p.url))
     .map(toAbsoluteUrl);
@@ -662,9 +663,9 @@ export default async function PhotographerProfilePage({
                   creator: { "@type": "Person", name: normalizeName(photographer.name) },
                   copyrightHolder: { "@type": "Person", name: normalizeName(photographer.name) },
                   copyrightNotice: `© ${new Date().getFullYear()} ${normalizeName(photographer.name)} — All rights reserved`,
-                  creditText: `${normalizeName(photographer.name)} — Photo Portugal`,
-                  license: "https://photoportugal.com/terms",
-                  acquireLicensePage: `https://photoportugal.com/photographers/${slug}`,
+                  creditText: `${normalizeName(photographer.name)} — ${country.brand}`,
+                  license: `${country.baseUrl}/terms`,
+                  acquireLicensePage: `${country.baseUrl}/photographers/${slug}`,
                 })),
               } : {}),
             };
@@ -692,7 +693,7 @@ export default async function PhotographerProfilePage({
   // and Search Console–quiet.
 
   const avatarAbsoluteUrl = photographer.avatar_url
-    ? (photographer.avatar_url.startsWith("http") ? photographer.avatar_url : `https://photoportugal.com${photographer.avatar_url}`)
+    ? (photographer.avatar_url.startsWith("http") ? photographer.avatar_url : `${country.baseUrl}${photographer.avatar_url}`)
     : undefined;
 
   const personJsonLd = {
@@ -701,7 +702,7 @@ export default async function PhotographerProfilePage({
     name: normalizeName(photographer.name),
     ...(avatarAbsoluteUrl && { image: avatarAbsoluteUrl }),
     jobTitle: "Photographer",
-    url: `https://photoportugal.com/photographers/${slug}`,
+    url: `${country.baseUrl}/photographers/${slug}`,
     ...(photographer.locations && photographer.locations.length > 0 && {
       workLocation: photographer.locations.map((l: { name: string }) => ({
         "@type": "City",
@@ -730,9 +731,9 @@ export default async function PhotographerProfilePage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: tc("home"), item: "https://photoportugal.com" },
-      { "@type": "ListItem", position: 2, name: tc("photographers"), item: "https://photoportugal.com/photographers" },
-      { "@type": "ListItem", position: 3, name: normalizeName(photographer.name), item: `https://photoportugal.com/photographers/${slug}` },
+      { "@type": "ListItem", position: 1, name: tc("home"), item: country.baseUrl },
+      { "@type": "ListItem", position: 2, name: tc("photographers"), item: `${country.baseUrl}/photographers` },
+      { "@type": "ListItem", position: 3, name: normalizeName(photographer.name), item: `${country.baseUrl}/photographers/${slug}` },
     ],
   };
 
@@ -864,7 +865,7 @@ export default async function PhotographerProfilePage({
             "@context": "https://schema.org",
             "@type": "ImageGallery",
             name: `${normalizeName(photographer.name)} — Portfolio`,
-            url: `https://photoportugal.com/photographers/${slug}#portfolio`,
+            url: `${country.baseUrl}/photographers/${slug}#portfolio`,
             image: portfolioItems.slice(0, 24).map((it) => ({
               "@type": "ImageObject",
               contentUrl: toAbsoluteUrl(it.url),
@@ -874,9 +875,9 @@ export default async function PhotographerProfilePage({
               creator: { "@type": "Person", name: normalizeName(photographer.name) },
               copyrightHolder: { "@type": "Person", name: normalizeName(photographer.name) },
               copyrightNotice: `© ${new Date().getFullYear()} ${normalizeName(photographer.name)} — All rights reserved`,
-              creditText: `${normalizeName(photographer.name)} — Photo Portugal`,
-              license: "https://photoportugal.com/terms",
-              acquireLicensePage: `https://photoportugal.com/photographers/${slug}`,
+              creditText: `${normalizeName(photographer.name)} — ${country.brand}`,
+              license: `${country.baseUrl}/terms`,
+              acquireLicensePage: `${country.baseUrl}/photographers/${slug}`,
             })),
           }) }}
         />
@@ -898,6 +899,7 @@ export default async function PhotographerProfilePage({
           <MobilePhotographerHero
             slug={slug}
             name={visibleName}
+            avatarUrl={photographer.avatar_url}
             isVerified={!!photographer.is_verified}
             isFeatured={!!photographer.is_featured}
             isFounding={!!photographer.is_founding}
@@ -1143,7 +1145,7 @@ export default async function PhotographerProfilePage({
                 <div className="mx-4 mt-6 rounded-xl border border-amber-200 bg-amber-50 p-6 sm:mx-6 lg:mx-0 lg:mt-0">
                   <h2 className="text-lg font-bold text-gray-900">{photographer.name.split(" ")[0]} doesn&rsquo;t accept gift cards</h2>
                   <p className="mt-2 text-sm text-gray-700">
-                    This photographer isn&rsquo;t currently participating in our gift card program. <a href="/photographers" className="text-primary-600 hover:underline">Browse other photographers</a> or <a href="mailto:info@photoportugal.com?subject=Gift card support" className="text-primary-600 hover:underline">email support</a>.
+                    This photographer isn&rsquo;t currently participating in our gift card program. <a href="/photographers" className="text-primary-600 hover:underline">Browse other photographers</a> or <a href={`mailto:${country.supportEmail}?subject=Gift card support`} className="text-primary-600 hover:underline">email support</a>.
                   </p>
                 </div>
               )}

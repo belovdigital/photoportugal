@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
-const REDIRECT_URI = "https://photoportugal.com/api/calendar/google/callback";
+const REDIRECT_URI = `${country.baseUrl}/api/calendar/google/callback`;
 
 /**
  * Mobile-friendly variant of /api/calendar/google/connect.

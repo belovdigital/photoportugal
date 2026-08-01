@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { emailLayout, emailButton, sendEmail } from "@/lib/email";
 import { maskSurname } from "@/lib/photographer-name";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
   const greeting = chat.first_name ? `Hi ${chat.first_name},` : "Hi,";
   const cardsHtml = cards.map((c) => {
     const imgUrl = c.sample_url || c.cover_url;
-    const fullImg = imgUrl?.startsWith("http") ? imgUrl : `https://photoportugal.com${imgUrl}`;
+    const fullImg = imgUrl?.startsWith("http") ? imgUrl : `${country.baseUrl}${imgUrl}`;
     const locs = c.locations.slice(0, 3).map((l) => l.charAt(0).toUpperCase() + l.slice(1).replace(/-/g, " ")).join(" · ");
     return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;border:1px solid #F3EDE6;border-radius:12px;overflow:hidden;">
       ${imgUrl ? `<tr><td><img src="${fullImg}" alt="${c.name}" width="520" style="display:block;width:100%;max-height:200px;object-fit:cover;"></td></tr>` : ""}
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4A;">${greeting}</p>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#4A4A4A;">Based on your latest preferences, here are your updated 3 matches.</p>
     ${cardsHtml}
-    ${emailButton("https://photoportugal.com/concierge", "Continue chatting", "#C94536")}
+    ${emailButton(`${country.baseUrl}/concierge`, "Continue chatting", "#C94536")}
     <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#9B8E82;">Sent because you used our AI concierge.</p>
   `);
 

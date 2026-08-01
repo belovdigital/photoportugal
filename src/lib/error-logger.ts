@@ -7,6 +7,7 @@
 // the window bump occurrence_count instead of sending another email.
 
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 // djb2 hash — works in both Node and Edge runtimes; fingerprint doesn't need
 // to be cryptographically strong, just stable across requests.
@@ -173,7 +174,7 @@ async function sendErrorEmail(
   isFirstOccurrence: boolean
 ) {
   const { sendEmail } = await import("@/lib/email");
-  const baseUrl = process.env.AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || "https://photoportugal.com";
+  const baseUrl = process.env.AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || country.baseUrl;
 
   const path = ctx.path || "(unknown path)";
   const status = ctx.statusCode || 500;

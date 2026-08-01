@@ -1,11 +1,12 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { country } from "@/lib/country";
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "0cea0c23984642ede738bd16609d2e6b";
 const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY_ID || "";
 const R2_SECRET_KEY = process.env.R2_SECRET_ACCESS_KEY || "";
 const BUCKET = process.env.R2_BUCKET || "photoportugal-delivery";
-const PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 
 const s3Client = new S3Client({
   region: "auto",

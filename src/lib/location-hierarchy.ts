@@ -1,3 +1,4 @@
+import { LOCATION_TREE_ES } from "./location-hierarchy-es";
 import { locations } from "@/lib/locations-data";
 
 export type LocationNodeType = "region" | "group" | "island" | "city" | "spot";
@@ -16,7 +17,7 @@ function legacy(slug: string): string[] {
   return legacyLocationSlugs.has(slug) ? [slug] : [];
 }
 
-export const LOCATION_TREE: LocationNode[] = [
+const LOCATION_TREEPT: LocationNode[] = [
   {
     slug: "lisbon-region",
     name: "Lisbon Region",
@@ -141,6 +142,17 @@ export const LOCATION_TREE: LocationNode[] = [
     ],
   },
 ];
+
+/**
+ * Country pack switch. NEXT_PUBLIC_ prefix is required — this module reaches
+ * client components, and a server-only variable reads as undefined in the
+ * browser bundle, silently falling back to Portugal. See docs/SPAIN.md §6.4.
+ *
+ * Portugal stays the default: absent or unrecognised value → the PT dataset.
+ */
+export const LOCATION_TREE: LocationNode[] =
+  process.env.NEXT_PUBLIC_COUNTRY === "es" ? LOCATION_TREE_ES : LOCATION_TREEPT;
+
 
 export function flattenLocationNodes(nodes: LocationNode[] = LOCATION_TREE): LocationNode[] {
   return nodes.flatMap((node) => [node, ...flattenLocationNodes(node.children || [])]);

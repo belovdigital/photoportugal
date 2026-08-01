@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { requireStripe, largeGroupMultiplier } from "@/lib/stripe";
 import { blindBaseFromTotal, blindServiceFeeFromTotal } from "@/lib/blind-booking/pricing";
 import { consumeHold } from "@/lib/blind-booking/holds";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -342,7 +343,7 @@ export async function POST(req: NextRequest) {
     // Stripe Checkout — capture_method=manual. We charge €price_eur
     // straight (no service fee added on top — blind price IS the
     // all-in price the visitor saw on the card).
-    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+    const BASE_URL = process.env.AUTH_URL || country.baseUrl;
     const localePrefix = locale !== "en" ? `/${locale}` : "";
 
     // Get or create Stripe customer
@@ -429,7 +430,7 @@ export async function POST(req: NextRequest) {
       const factsText = `${hold.occasion} · ${hold.region} · ${hold.date} · ${hold.party_size} ppl · ${hold.duration_minutes} min · €${hold.price_eur} all-in`;
       import("@/lib/telegram").then(({ sendTelegram }) =>
         sendTelegram(
-          `<b>🕐 Blind booking created — awaiting payment</b>\nBooking: <code>${booking.id}</code>\n${factsText}\nClient: ${clientLabel}\nNo Stripe hold yet — client is in checkout. If it never turns "authorised", they abandoned payment.\n<a href="https://photoportugal.com/admin">Open admin queue</a>`,
+          `<b>🕐 Blind booking created — awaiting payment</b>\nBooking: <code>${booking.id}</code>\n${factsText}\nClient: ${clientLabel}\nNo Stripe hold yet — client is in checkout. If it never turns "authorised", they abandoned payment.\n<a href="${country.baseUrl}/admin">Open admin queue</a>`,
           "bookings"
         )
       ).catch((err) => console.error("[blind-booking/accept] admin telegram error:", err));
@@ -444,7 +445,7 @@ export async function POST(req: NextRequest) {
             <p><strong>${factsText}</strong></p>
             <p>Client: ${clientLabel}<br/>Booking ID: <code>${booking.id}</code></p>
             <p>No Stripe authorisation yet — the client is in checkout. A separate "authorised" notification follows if they complete payment.</p>
-            <p><a href="https://photoportugal.com/admin" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open admin queue</a></p>
+            <p><a href="${country.baseUrl}/admin" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open admin queue</a></p>
           </div>`
         );
       }).catch((err) => console.error("[blind-booking/accept] admin email error:", err));
@@ -463,7 +464,7 @@ export async function POST(req: NextRequest) {
             <p>We've received your booking request. Our team is hand-picking the right photographer for you and will confirm within 24 hours.</p>
             <p>To access your booking dashboard, you'll need to set a password — click the link below:</p>
             <p><a href="${BASE_URL}${localePrefix}/auth/forgot-password?email=${encodeURIComponent(email)}" style="display: inline-block; background: #C94536; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">Set your password</a></p>
-            <p style="color:#999;font-size:12px;">Photo Portugal — photoportugal.com</p>
+            <p style="color:#999;font-size:12px;">${country.brand} — ${country.host}</p>
           </div>`
         ).catch((err: unknown) => console.error("[blind-booking/accept] welcome email error:", err))
       );

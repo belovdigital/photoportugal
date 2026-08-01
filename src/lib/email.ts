@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { queryOne } from "@/lib/db";
 import { formatShootDate } from "@/lib/format-shoot-date";
 import { maskSurname } from "@/lib/photographer-name";
+import { country } from "@/lib/country";
 
 // Default to 587 + STARTTLS — Hetzner blocks the implicit-TLS port 465
 // outbound by default (their anti-abuse policy), so we use the submission
@@ -13,13 +14,13 @@ const transporter = nodemailer.createTransport({
   port: SMTP_PORT,
   secure: SMTP_PORT === 465,
   auth: {
-    user: process.env.SMTP_USER || "info@photoportugal.com",
+    user: process.env.SMTP_USER || country.supportEmail,
     pass: process.env.SMTP_PASS || "",
   },
 });
 
-const FROM = "Photo Portugal <info@photoportugal.com>";
-const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+const FROM = country.emailFrom;
+const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
 // Kate's personal-tone emails (e.g. social-permission ask after delivery)
 // send from ceo@photoportugal.com so replies come back to her directly.
@@ -83,8 +84,8 @@ export function emailLayout(body: string, locale: "en" | "pt" | "de" | "es" | "f
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
         <!-- Header -->
         <tr><td style="padding:28px 32px 20px;border-bottom:1px solid #F3EDE6;">
-          <a href="https://photoportugal.com" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
-            <img src="https://photoportugal.com/logo-icon.png" width="28" height="28" alt="" style="border-radius:6px;">
+          <a href="${country.baseUrl}" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
+            <img src="${country.baseUrl}/logo-icon.png" width="28" height="28" alt="" style="border-radius:6px;">
             <span style="font-size:17px;font-weight:700;color:#1F1F1F;letter-spacing:-0.3px;">Photo Portugal</span>
           </a>
         </td></tr>
@@ -97,7 +98,7 @@ export function emailLayout(body: string, locale: "en" | "pt" | "de" | "es" | "f
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td style="font-size:13px;color:#9B8E82;">
-                <a href="https://photoportugal.com" style="color:#9B8E82;text-decoration:none;font-weight:500;">photoportugal.com</a>
+                <a href="${country.baseUrl}" style="color:#9B8E82;text-decoration:none;font-weight:500;">photoportugal.com</a>
               </td>
               <td align="right" style="font-size:13px;color:#C4B8AD;">
                 <a href="https://photoportugal.com${L.helpUrl}" style="color:#C4B8AD;text-decoration:none;">${L.help}</a>
@@ -744,10 +745,10 @@ export async function sendDeliveryAcceptedToClient(
       greeting: `Hi ${firstName},`,
       body: `You've accepted the photo delivery from <strong>${photographerName}</strong>. We hope you love your photos!`,
       downloadNote: `Your photos will be available for download for <strong>90 days</strong>. Make sure to download them before then!`,
-      reviewIntro: "If you enjoyed your experience, we'd love to hear from you! Reviews help other travelers discover Photo Portugal.",
+      reviewIntro: `If you enjoyed your experience, we'd love to hear from you! Reviews help other travelers discover ${country.brand}.`,
       reviewOnLabel: "Leave a review on:",
       googleCta: "⭐ Review us on Google",
-      ppCta: `Review ${photographerName} on Photo Portugal`,
+      ppCta: `Review ${photographerName} on ${country.brand}`,
     },
     pt: {
       subject: `Entrega aceite — obrigado!`,
@@ -755,10 +756,10 @@ export async function sendDeliveryAcceptedToClient(
       greeting: `Olá ${firstName},`,
       body: `Aceitou a entrega das fotos de <strong>${photographerName}</strong>. Esperamos que adore as suas fotos!`,
       downloadNote: `As suas fotos ficarão disponíveis para download durante <strong>90 dias</strong>. Não se esqueça de as descarregar antes desse prazo!`,
-      reviewIntro: "Se gostou da experiência, adorávamos ouvir a sua opinião! As avaliações ajudam outros viajantes a descobrir a Photo Portugal.",
+      reviewIntro: `Se gostou da experiência, adorávamos ouvir a sua opinião! As avaliações ajudam outros viajantes a descobrir a ${country.brand}.`,
       reviewOnLabel: "Deixe uma avaliação em:",
       googleCta: "⭐ Avalie-nos no Google",
-      ppCta: `Avaliar ${photographerName} na Photo Portugal`,
+      ppCta: `Avaliar ${photographerName} na ${country.brand}`,
     },
     de: {
       subject: `Lieferung angenommen — vielen Dank!`,
@@ -766,10 +767,10 @@ export async function sendDeliveryAcceptedToClient(
       greeting: `Hallo ${firstName},`,
       body: `Sie haben die Fotolieferung von <strong>${photographerName}</strong> angenommen. Wir hoffen, dass Ihnen Ihre Fotos gefallen!`,
       downloadNote: `Ihre Fotos stehen <strong>90 Tage</strong> zum Download bereit. Bitte laden Sie sie vorher herunter!`,
-      reviewIntro: "Wenn Ihnen die Erfahrung gefallen hat, würden wir gerne von Ihnen hören! Bewertungen helfen anderen Reisenden, Photo Portugal zu entdecken.",
+      reviewIntro: `Wenn Ihnen die Erfahrung gefallen hat, würden wir gerne von Ihnen hören! Bewertungen helfen anderen Reisenden, ${country.brand} zu entdecken.`,
       reviewOnLabel: "Bewertung abgeben auf:",
       googleCta: "⭐ Bewerten Sie uns auf Google",
-      ppCta: `${photographerName} auf Photo Portugal bewerten`,
+      ppCta: `${photographerName} auf ${country.brand} bewerten`,
     },
     fr: {
       subject: `Livraison acceptée — merci !`,
@@ -777,10 +778,10 @@ export async function sendDeliveryAcceptedToClient(
       greeting: `Bonjour ${firstName},`,
       body: `Vous avez accepté la livraison des photos de <strong>${photographerName}</strong>. Nous espérons que vous adorez vos photos !`,
       downloadNote: `Vos photos seront disponibles au téléchargement pendant <strong>90 jours</strong>. Pensez à les télécharger avant cette date !`,
-      reviewIntro: "Si vous avez aimé votre expérience, nous serions ravis d'avoir votre retour ! Les avis aident d'autres voyageurs à découvrir Photo Portugal.",
+      reviewIntro: `Si vous avez aimé votre expérience, nous serions ravis d'avoir votre retour ! Les avis aident d'autres voyageurs à découvrir ${country.brand}.`,
       reviewOnLabel: "Laissez un avis sur :",
       googleCta: "⭐ Évaluez-nous sur Google",
-      ppCta: `Évaluer ${photographerName} sur Photo Portugal`,
+      ppCta: `Évaluer ${photographerName} sur ${country.brand}`,
     },
     es: {
       subject: `Entrega aceptada — ¡gracias!`,
@@ -788,10 +789,10 @@ export async function sendDeliveryAcceptedToClient(
       greeting: `Hola ${firstName},`,
       body: `Ha aceptado la entrega de las fotos de <strong>${photographerName}</strong>. ¡Esperamos que le encanten sus fotos!`,
       downloadNote: `Sus fotos estarán disponibles para descarga durante <strong>90 días</strong>. ¡Asegúrese de descargarlas antes!`,
-      reviewIntro: "Si disfrutó la experiencia, ¡nos encantaría conocer su opinión! Las reseñas ayudan a otros viajeros a descubrir Photo Portugal.",
+      reviewIntro: `Si disfrutó la experiencia, ¡nos encantaría conocer su opinión! Las reseñas ayudan a otros viajeros a descubrir ${country.brand}.`,
       reviewOnLabel: "Deje una reseña en:",
       googleCta: "⭐ Reséñenos en Google",
-      ppCta: `Reseñar a ${photographerName} en Photo Portugal`,
+      ppCta: `Reseñar a ${photographerName} en ${country.brand}`,
     },
   }, locale);
 
@@ -829,7 +830,7 @@ export async function sendTrustpilotFollowUpToClient(
       h2: "Thank You for Your Review!",
       greeting: `Hi ${firstName},`,
       body1: `We really appreciate you sharing your experience with <strong>${photographerName}</strong> on our platform.`,
-      body2: "We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover Photo Portugal:",
+      body2: `We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover ${country.brand}:`,
       googleCta: "Review Us on Google",
       trustpilotCta: "Review Us on Trustpilot",
       footer: "Even a few words make a huge difference. Thank you for supporting independent photography in Portugal!",
@@ -839,7 +840,7 @@ export async function sendTrustpilotFollowUpToClient(
       h2: "Obrigado pela Sua Avaliação!",
       greeting: `Olá ${firstName},`,
       body1: `Agradecemos imenso por partilhar a sua experiência com <strong>${photographerName}</strong> na nossa plataforma.`,
-      body2: "Temos um pequeno favor a pedir — significaria o mundo para o nosso pequeno negócio se pudesse deixar uma breve avaliação no Google ou Trustpilot. Demora menos de um minuto e ajuda outros viajantes a descobrir a Photo Portugal:",
+      body2: `Temos um pequeno favor a pedir — significaria o mundo para o nosso pequeno negócio se pudesse deixar uma breve avaliação no Google ou Trustpilot. Demora menos de um minuto e ajuda outros viajantes a descobrir a ${country.brand}:`,
       googleCta: "Avalie-nos no Google",
       trustpilotCta: "Avalie-nos no Trustpilot",
       footer: "Mesmo algumas palavras fazem uma enorme diferença. Obrigado por apoiar a fotografia independente em Portugal!",
@@ -849,7 +850,7 @@ export async function sendTrustpilotFollowUpToClient(
       h2: "Vielen Dank für Ihre Bewertung!",
       greeting: `Hallo ${firstName},`,
       body1: `Wir freuen uns sehr, dass Sie Ihre Erfahrung mit <strong>${photographerName}</strong> auf unserer Plattform geteilt haben.`,
-      body2: "Wir haben eine kleine Bitte — es würde unserem kleinen Unternehmen sehr viel bedeuten, wenn Sie eine kurze Bewertung auf Google oder Trustpilot hinterlassen könnten. Es dauert weniger als eine Minute und hilft anderen Reisenden, Photo Portugal zu entdecken:",
+      body2: `Wir haben eine kleine Bitte — es würde unserem kleinen Unternehmen sehr viel bedeuten, wenn Sie eine kurze Bewertung auf Google oder Trustpilot hinterlassen könnten. Es dauert weniger als eine Minute und hilft anderen Reisenden, ${country.brand} zu entdecken:`,
       googleCta: "Bewerten Sie uns auf Google",
       trustpilotCta: "Bewerten Sie uns auf Trustpilot",
       footer: "Schon ein paar Worte machen einen riesigen Unterschied. Vielen Dank, dass Sie unabhängige Fotografie in Portugal unterstützen!",
@@ -859,7 +860,7 @@ export async function sendTrustpilotFollowUpToClient(
       h2: "Merci pour votre avis !",
       greeting: `Bonjour ${firstName},`,
       body1: `Nous apprécions vraiment que vous ayez partagé votre expérience avec <strong>${photographerName}</strong> sur notre plateforme.`,
-      body2: "Nous avons une petite faveur à demander — cela signifierait énormément pour notre petite entreprise si vous pouviez laisser un court avis sur Google ou Trustpilot. Cela prend moins d'une minute et aide d'autres voyageurs à découvrir Photo Portugal :",
+      body2: `Nous avons une petite faveur à demander — cela signifierait énormément pour notre petite entreprise si vous pouviez laisser un court avis sur Google ou Trustpilot. Cela prend moins d'une minute et aide d'autres voyageurs à découvrir ${country.brand} :`,
       googleCta: "Évaluez-nous sur Google",
       trustpilotCta: "Évaluez-nous sur Trustpilot",
       footer: "Même quelques mots font une énorme différence. Merci de soutenir la photographie indépendante au Portugal !",
@@ -869,7 +870,7 @@ export async function sendTrustpilotFollowUpToClient(
       h2: "¡Gracias por su reseña!",
       greeting: `Hola ${firstName},`,
       body1: `Apreciamos enormemente que haya compartido su experiencia con <strong>${photographerName}</strong> en nuestra plataforma.`,
-      body2: "Tenemos un pequeño favor que pedirle — significaría muchísimo para nuestro pequeño negocio si pudiera dejar una breve reseña en Google o Trustpilot. Lleva menos de un minuto y ayuda a otros viajeros a descubrir Photo Portugal:",
+      body2: `Tenemos un pequeño favor que pedirle — significaría muchísimo para nuestro pequeño negocio si pudiera dejar una breve reseña en Google o Trustpilot. Lleva menos de un minuto y ayuda a otros viajeros a descubrir ${country.brand}:`,
       googleCta: "Reséñenos en Google",
       trustpilotCta: "Reséñenos en Trustpilot",
       footer: "Incluso unas pocas palabras marcan una gran diferencia. ¡Gracias por apoyar la fotografía independiente en Portugal!",
@@ -900,11 +901,11 @@ export async function sendTrustpilotFollowUpToPhotographer(
   const locale = await getUserLocaleByEmail(photographerEmail);
 
   const T = pickT({
-    en: { subject: `Quick favour, ${photographerName}?`, h2: "Help Us Grow!", greeting: `Hi ${photographerName},`, body1: "Thank you for being part of Photo Portugal. Your work is what makes this platform great.", body2: "We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:", googleCta: "Review Us on Google", trustpilotCta: "Review Us on Trustpilot", footer: "It takes less than a minute. Thank you for your support!" },
-    pt: { subject: `Pequeno favor, ${photographerName}?`, h2: "Ajude-nos a Crescer!", greeting: `Olá ${photographerName},`, body1: "Obrigado por fazer parte da Photo Portugal. O seu trabalho é o que torna esta plataforma especial.", body2: "Adorávamos que partilhasse a sua experiência como fotógrafo no Google ou Trustpilot. Uma avaliação genuína de um profissional como o(a) ajuda a construir confiança e atrai mais clientes — o que significa mais reservas para todos:", googleCta: "Avalie-nos no Google", trustpilotCta: "Avalie-nos no Trustpilot", footer: "Demora menos de um minuto. Obrigado pelo seu apoio!" },
-    de: { subject: `Kleiner Gefallen, ${photographerName}?`, h2: "Helfen Sie uns zu wachsen!", greeting: `Hallo ${photographerName},`, body1: "Vielen Dank, dass Sie Teil von Photo Portugal sind. Ihre Arbeit macht diese Plattform großartig.", body2: "Wir würden uns sehr freuen, wenn Sie Ihre Erfahrung als Fotograf auf Google oder Trustpilot teilen. Eine ehrliche Bewertung von einem Profi wie Ihnen schafft Vertrauen und bringt mehr Kunden auf die Plattform — was mehr Buchungen für alle bedeutet:", googleCta: "Bewerten Sie uns auf Google", trustpilotCta: "Bewerten Sie uns auf Trustpilot", footer: "Es dauert weniger als eine Minute. Danke für Ihre Unterstützung!" },
-    es: { subject: `Un pequeño favor, ${photographerName}`, h2: "¡Ayúdenos a crecer!", greeting: `Hola ${photographerName},`, body1: "Gracias por formar parte de Photo Portugal. Su trabajo es lo que hace que esta plataforma sea genial.", body2: "Nos encantaría que compartiera su experiencia como fotógrafo en Google o Trustpilot. Una reseña genuina de un profesional como usted genera confianza y atrae más clientes a la plataforma — lo que significa más reservas para todos:", googleCta: "Reséñenos en Google", trustpilotCta: "Reséñenos en Trustpilot", footer: "Lleva menos de un minuto. ¡Gracias por su apoyo!" },
-    fr: { subject: `Un petit service, ${photographerName} ?`, h2: "Aidez-nous à grandir !", greeting: `Bonjour ${photographerName},`, body1: "Merci de faire partie de Photo Portugal. Votre travail est ce qui fait la grandeur de cette plateforme.", body2: "Nous adorerions que vous partagiez votre expérience en tant que photographe sur Google ou Trustpilot. Un avis authentique d'un professionnel comme vous renforce la confiance et attire plus de clients — ce qui signifie plus de réservations pour tout le monde :", googleCta: "Évaluez-nous sur Google", trustpilotCta: "Évaluez-nous sur Trustpilot", footer: "Cela prend moins d'une minute. Merci de votre soutien !" },
+    en: { subject: `Quick favour, ${photographerName}?`, h2: "Help Us Grow!", greeting: `Hi ${photographerName},`, body1: "Thank you for being part of ${country.brand}. Your work is what makes this platform great.", body2: "We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:", googleCta: "Review Us on Google", trustpilotCta: "Review Us on Trustpilot", footer: "It takes less than a minute. Thank you for your support!" },
+    pt: { subject: `Pequeno favor, ${photographerName}?`, h2: "Ajude-nos a Crescer!", greeting: `Olá ${photographerName},`, body1: "Obrigado por fazer parte da ${country.brand}. O seu trabalho é o que torna esta plataforma especial.", body2: "Adorávamos que partilhasse a sua experiência como fotógrafo no Google ou Trustpilot. Uma avaliação genuína de um profissional como o(a) ajuda a construir confiança e atrai mais clientes — o que significa mais reservas para todos:", googleCta: "Avalie-nos no Google", trustpilotCta: "Avalie-nos no Trustpilot", footer: "Demora menos de um minuto. Obrigado pelo seu apoio!" },
+    de: { subject: `Kleiner Gefallen, ${photographerName}?`, h2: "Helfen Sie uns zu wachsen!", greeting: `Hallo ${photographerName},`, body1: "Vielen Dank, dass Sie Teil von ${country.brand} sind. Ihre Arbeit macht diese Plattform großartig.", body2: "Wir würden uns sehr freuen, wenn Sie Ihre Erfahrung als Fotograf auf Google oder Trustpilot teilen. Eine ehrliche Bewertung von einem Profi wie Ihnen schafft Vertrauen und bringt mehr Kunden auf die Plattform — was mehr Buchungen für alle bedeutet:", googleCta: "Bewerten Sie uns auf Google", trustpilotCta: "Bewerten Sie uns auf Trustpilot", footer: "Es dauert weniger als eine Minute. Danke für Ihre Unterstützung!" },
+    es: { subject: `Un pequeño favor, ${photographerName}`, h2: "¡Ayúdenos a crecer!", greeting: `Hola ${photographerName},`, body1: "Gracias por formar parte de ${country.brand}. Su trabajo es lo que hace que esta plataforma sea genial.", body2: "Nos encantaría que compartiera su experiencia como fotógrafo en Google o Trustpilot. Una reseña genuina de un profesional como usted genera confianza y atrae más clientes a la plataforma — lo que significa más reservas para todos:", googleCta: "Reséñenos en Google", trustpilotCta: "Reséñenos en Trustpilot", footer: "Lleva menos de un minuto. ¡Gracias por su apoyo!" },
+    fr: { subject: `Un petit service, ${photographerName} ?`, h2: "Aidez-nous à grandir !", greeting: `Bonjour ${photographerName},`, body1: "Merci de faire partie de ${country.brand}. Votre travail est ce qui fait la grandeur de cette plateforme.", body2: "Nous adorerions que vous partagiez votre expérience en tant que photographe sur Google ou Trustpilot. Un avis authentique d'un professionnel comme vous renforce la confiance et attire plus de clients — ce qui signifie plus de réservations pour tout le monde :", googleCta: "Évaluez-nous sur Google", trustpilotCta: "Évaluez-nous sur Trustpilot", footer: "Cela prend moins d'une minute. Merci de votre soutien !" },
   }, locale);
 
   await sendEmail(
@@ -1013,7 +1014,7 @@ export async function sendPasswordResetEmail(
   const resetUrl = `${localizedUrl("/auth/reset-password", locale, BASE_URL)}?token=${token}`;
   const T = pickT({
     en: {
-      subject: "Reset your Photo Portugal password",
+      subject: `Reset your ${country.brand} password`,
       h2: "Reset Your Password",
       greeting: `Hi ${firstName},`,
       body: "We received a request to reset your password. Click the button below to set a new one:",
@@ -1021,7 +1022,7 @@ export async function sendPasswordResetEmail(
       footer: "This link expires in 30 minutes. If you didn't request a password reset, you can safely ignore this email.",
     },
     pt: {
-      subject: "Redefinir a sua palavra-passe da Photo Portugal",
+      subject: `Redefinir a sua palavra-passe da ${country.brand}`,
       h2: "Redefinir a Sua Palavra-passe",
       greeting: `Olá ${firstName},`,
       body: "Recebemos um pedido para redefinir a sua palavra-passe. Clique no botão abaixo para definir uma nova:",
@@ -1029,7 +1030,7 @@ export async function sendPasswordResetEmail(
       footer: "Esta ligação expira em 30 minutos. Se não pediu a redefinição da palavra-passe, pode ignorar este email.",
     },
     de: {
-      subject: "Setzen Sie Ihr Photo Portugal Passwort zurück",
+      subject: `Setzen Sie Ihr ${country.brand} Passwort zurück`,
       h2: "Passwort zurücksetzen",
       greeting: `Hallo ${firstName},`,
       body: "Wir haben eine Anfrage zum Zurücksetzen Ihres Passworts erhalten. Klicken Sie auf die Schaltfläche unten, um ein neues festzulegen:",
@@ -1037,7 +1038,7 @@ export async function sendPasswordResetEmail(
       footer: "Dieser Link läuft in 30 Minuten ab. Wenn Sie kein Zurücksetzen des Passworts angefordert haben, können Sie diese E-Mail ignorieren.",
     },
     fr: {
-      subject: "Réinitialisez votre mot de passe Photo Portugal",
+      subject: `Réinitialisez votre mot de passe ${country.brand}`,
       h2: "Réinitialisez votre mot de passe",
       greeting: `Bonjour ${firstName},`,
       body: "Nous avons reçu une demande de réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en définir un nouveau :",
@@ -1045,7 +1046,7 @@ export async function sendPasswordResetEmail(
       footer: "Ce lien expire dans 30 minutes. Si vous n'avez pas demandé de réinitialisation, vous pouvez ignorer cet e-mail.",
     },
     es: {
-      subject: "Restablezca su contraseña de Photo Portugal",
+      subject: `Restablezca su contraseña de ${country.brand}`,
       h2: "Restablezca su contraseña",
       greeting: `Hola ${firstName},`,
       body: "Hemos recibido una solicitud para restablecer su contraseña. Haga clic en el botón de abajo para crear una nueva:",
@@ -1074,7 +1075,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
   const firstName = name.split(" ")[0];
   const T = pickT({
     en: {
-      subject: "Verify your email — Photo Portugal",
+      subject: `Verify your email — ${country.brand}`,
       h2: "Verify Your Email",
       greeting: `Hi ${firstName},`,
       body: "Thank you for signing up! Please verify your email address to activate your account:",
@@ -1082,7 +1083,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
       footer: "This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.",
     },
     pt: {
-      subject: "Verifique o seu email — Photo Portugal",
+      subject: `Verifique o seu email — ${country.brand}`,
       h2: "Verifique o Seu Email",
       greeting: `Olá ${firstName},`,
       body: "Obrigado por se registar! Por favor, verifique o seu endereço de email para activar a sua conta:",
@@ -1090,7 +1091,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
       footer: "Esta ligação expira em 24 horas. Se não criou uma conta, pode ignorar este email.",
     },
     de: {
-      subject: "Bestätigen Sie Ihre E-Mail — Photo Portugal",
+      subject: `Bestätigen Sie Ihre E-Mail — ${country.brand}`,
       h2: "Bestätigen Sie Ihre E-Mail",
       greeting: `Hallo ${firstName},`,
       body: "Vielen Dank für Ihre Anmeldung! Bitte bestätigen Sie Ihre E-Mail-Adresse, um Ihr Konto zu aktivieren:",
@@ -1098,7 +1099,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
       footer: "Dieser Link läuft in 24 Stunden ab. Wenn Sie kein Konto erstellt haben, können Sie diese E-Mail ignorieren.",
     },
     fr: {
-      subject: "Vérifiez votre e-mail — Photo Portugal",
+      subject: `Vérifiez votre e-mail — ${country.brand}`,
       h2: "Vérifiez votre e-mail",
       greeting: `Bonjour ${firstName},`,
       body: "Merci de votre inscription ! Veuillez vérifier votre adresse e-mail pour activer votre compte :",
@@ -1106,7 +1107,7 @@ export async function sendVerificationEmail(to: string, name: string, token: str
       footer: "Ce lien expire dans 24 heures. Si vous n'avez pas créé de compte, vous pouvez ignorer cet e-mail.",
     },
     es: {
-      subject: "Verifique su correo — Photo Portugal",
+      subject: `Verifique su correo — ${country.brand}`,
       h2: "Verifique su correo",
       greeting: `Hola ${firstName},`,
       body: "¡Gracias por registrarse! Verifique su dirección de correo para activar su cuenta:",
@@ -1138,7 +1139,7 @@ export async function sendWelcomeEmail(
   if (isPhotographer) {
     await sendEmail(
       to,
-      "Welcome to Photo Portugal — Let's get you started!",
+      `Welcome to ${country.brand} — Let's get you started!`,
       emailLayout(`
         <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Welcome to Photo Portugal!</h2>
         <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${name.split(" ")[0]},</p>
@@ -1183,8 +1184,8 @@ export async function sendWelcomeEmail(
     const firstName = name.split(" ")[0];
     const T = pickT({
       en: {
-        subject: "Welcome to Photo Portugal!",
-        h2: "Welcome to Photo Portugal!",
+        subject: `Welcome to ${country.brand}!`,
+        h2: `Welcome to ${country.brand}!`,
         greeting: `Hi ${firstName},`,
         intro: "You're all set! Here's how to book your perfect photoshoot in Portugal:",
         s1Title: "Browse photographers",
@@ -1197,8 +1198,8 @@ export async function sendWelcomeEmail(
         footerHtml: `Questions? <a href="${localizedUrl("/support", locale, BASE_URL)}" style="color:#C94536;">Visit our Help Center</a> or <a href="${localizedUrl("/contact", locale, BASE_URL)}" style="color:#C94536;">contact us</a>.`,
       },
       pt: {
-        subject: "Bem-vindo à Photo Portugal!",
-        h2: "Bem-vindo à Photo Portugal!",
+        subject: `Bem-vindo à ${country.brand}!`,
+        h2: `Bem-vindo à ${country.brand}!`,
         greeting: `Olá ${firstName},`,
         intro: "Está tudo pronto! Veja como reservar a sua sessão fotográfica perfeita em Portugal:",
         s1Title: "Explore os fotógrafos",
@@ -1211,8 +1212,8 @@ export async function sendWelcomeEmail(
         footerHtml: `Dúvidas? <a href="${localizedUrl("/support", locale, BASE_URL)}" style="color:#C94536;">Visite o nosso Centro de Ajuda</a> ou <a href="${localizedUrl("/contact", locale, BASE_URL)}" style="color:#C94536;">contacte-nos</a>.`,
       },
       de: {
-        subject: "Willkommen bei Photo Portugal!",
-        h2: "Willkommen bei Photo Portugal!",
+        subject: `Willkommen bei ${country.brand}!`,
+        h2: `Willkommen bei ${country.brand}!`,
         greeting: `Hallo ${firstName},`,
         intro: "Alles bereit! So buchen Sie Ihr perfektes Fotoshooting in Portugal:",
         s1Title: "Fotografen entdecken",
@@ -1225,8 +1226,8 @@ export async function sendWelcomeEmail(
         footerHtml: `Fragen? <a href="${localizedUrl("/support", locale, BASE_URL)}" style="color:#C94536;">Besuchen Sie unser Hilfecenter</a> oder <a href="${localizedUrl("/contact", locale, BASE_URL)}" style="color:#C94536;">kontaktieren Sie uns</a>.`,
       },
       fr: {
-        subject: "Bienvenue sur Photo Portugal !",
-        h2: "Bienvenue sur Photo Portugal !",
+        subject: `Bienvenue sur ${country.brand} !`,
+        h2: `Bienvenue sur ${country.brand} !`,
         greeting: `Bonjour ${firstName},`,
         intro: "Tout est prêt ! Voici comment réserver votre séance photo idéale au Portugal :",
         s1Title: "Parcourir les photographes",
@@ -1239,8 +1240,8 @@ export async function sendWelcomeEmail(
         footerHtml: `Des questions ? <a href="${localizedUrl("/support", locale, BASE_URL)}" style="color:#C94536;">Visitez notre Centre d'aide</a> ou <a href="${localizedUrl("/contact", locale, BASE_URL)}" style="color:#C94536;">contactez-nous</a>.`,
       },
       es: {
-        subject: "¡Bienvenido a Photo Portugal!",
-        h2: "¡Bienvenido a Photo Portugal!",
+        subject: `¡Bienvenido a ${country.brand}!`,
+        h2: `¡Bienvenido a ${country.brand}!`,
         greeting: `Hola ${firstName},`,
         intro: "¡Todo listo! Así puede reservar su sesión fotográfica ideal en Portugal:",
         s1Title: "Explorar fotógrafos",
@@ -1284,7 +1285,7 @@ export async function sendSubscriptionEmail(
   email: string, name: string, plan: string, action: "upgraded" | "downgraded" | "cancelled"
 ) {
   const subjects: Record<string, string> = {
-    upgraded: `Welcome to Photo Portugal ${plan}!`,
+    upgraded: `Welcome to ${country.brand} ${plan}!`,
     downgraded: `Your plan has been changed to ${plan}`,
     cancelled: "Your subscription has been cancelled",
   };
@@ -1793,7 +1794,7 @@ export function renderConciergeMatchesFollowUp(
       </table>`;
   }).join("");
   return {
-    subject: "Your Photo Portugal matches",
+    subject: `Your ${country.brand} matches`,
     html: emailLayout(`
       <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">Hey ${greet}</h2>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Yesterday our concierge put together a shortlist for you. Here it is again so you don't have to dig through the chat — tap any photographer to see their full profile and book directly.</p>
@@ -2088,7 +2089,7 @@ export async function sendCalendarSyncBrokenEmail(
   locale: "en" | "pt" | "de" | "es" | "fr" = "en",
 ) {
   const firstName = (photographerName || "").split(" ")[0] || photographerName;
-  const url = `https://photoportugal.com${locale === "en" ? "" : `/${locale}`}/dashboard/calendar-sync`;
+  const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/calendar-sync`;
 
   const C = {
     en: {

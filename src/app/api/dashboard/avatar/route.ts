@@ -6,8 +6,9 @@ import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { uploadToS3 } from "@/lib/s3";
 import crypto from "crypto";
 import sharp from "sharp";
+import { country } from "@/lib/country";
 
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://files.photoportugal.com";
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${country.filesHost}`;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB raw (will be compressed)
 
 export async function POST(req: NextRequest) {

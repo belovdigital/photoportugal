@@ -1,3 +1,4 @@
+import { country } from "./country";
 /**
  * Resolve a photo URL stored in the DB (or hardcoded) to a fetchable browser URL.
  *
@@ -10,7 +11,10 @@
  *
  * Anything else (Unsplash, blob:, data:, http(s) external) passes through as-is.
  */
-const R2_HOST = "files.photoportugal.com";
+// Per-market R2 host. Hardcoding Portugal meant Spanish uploads fell through
+// the pass-through branch, so deletion by prefix never matched and files were
+// orphaned in the bucket.
+const R2_HOST = country.filesHost;
 
 export function resolveImageUrl(src: string | null | undefined): string {
   if (!src) return "";
@@ -28,7 +32,7 @@ export function resolveImageUrl(src: string | null | undefined): string {
  * meta tags (og:image, schema.org), email content, sitemaps, and anything that
  * gets consumed off-site.
  */
-export function resolveAbsoluteImageUrl(src: string | null | undefined, baseUrl = "https://photoportugal.com"): string | undefined {
+export function resolveAbsoluteImageUrl(src: string | null | undefined, baseUrl = `${country.baseUrl}`): string | undefined {
   if (!src) return undefined;
   if (src.startsWith("https://") || src.startsWith("http://")) return src;
   const resolved = resolveImageUrl(src);

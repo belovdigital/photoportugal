@@ -6,6 +6,7 @@ import { localeAlternates } from "@/lib/seo";
 import { getShootTypeBySlug, shootTypeLocalized } from "@/lib/shoot-types-data";
 import { queryOne } from "@/lib/db";
 import { BusinessInquiryForm } from "./BusinessInquiryForm";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,7 @@ export default async function ForBusinessPage({ params }: { params: Promise<{ lo
       <section className="bg-[#1F1B17]">
         <div className="mx-auto w-full max-w-7xl px-5 pb-16 pt-24 sm:px-8 sm:pb-24 sm:pt-32">
           <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-white/70">
-            Photo Portugal · {t("kicker")}
+            {country.brand} · {t("kicker")}
           </p>
           <h1 className={`${serif.className} mt-6 max-w-4xl text-5xl font-medium leading-[1.05] text-white sm:text-6xl lg:text-7xl`}>
             {t.rich("heroTitleRich", {
@@ -97,7 +98,7 @@ export default async function ForBusinessPage({ params }: { params: Promise<{ lo
       <section className="border-b border-[#1F1B17]/10">
         <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#1F1B17]/55">
-            Photo Portugal · {t("kicker")}
+            {country.brand} · {t("kicker")}
           </p>
           <h2 className={`${serif.className} mt-4 text-4xl font-medium sm:text-5xl`}>{t("casesTitle")}</h2>
           <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
@@ -154,7 +155,7 @@ export default async function ForBusinessPage({ params }: { params: Promise<{ lo
       <section id="inquiry" className="scroll-mt-20 border-t border-[#1F1B17]/10 bg-white">
         <div className="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
           <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#1F1B17]/55">
-            Photo Portugal · {t("kicker")}
+            {country.brand} · {t("kicker")}
           </p>
           <h2 className={`${serif.className} mt-4 text-4xl font-medium sm:text-5xl`}>{t("formTitle")}</h2>
           <p className="mt-4 max-w-xl text-[#1F1B17]/65">{t("formSubtitle")}</p>
@@ -186,8 +187,8 @@ export default async function ForBusinessPage({ params }: { params: Promise<{ lo
             </div>
             <p className="mt-10 text-sm text-[#1F1B17]/50">
               {t("faqFootnote")}{" "}
-              <a href="mailto:info@photoportugal.com" className="underline underline-offset-2 hover:text-[#1F1B17]">
-                info@photoportugal.com
+              <a href={`mailto:${country.supportEmail}`} className="underline underline-offset-2 hover:text-[#1F1B17]">
+                {country.supportEmail}
               </a>
             </p>
           </div>

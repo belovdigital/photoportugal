@@ -4259,5 +4259,26 @@
     "benchReply": "Tiempo de primera respuesta",
     "benchMedian": "mediana: {value}",
     "ownVisitsNote": "Tus propias visitas no cuentan: cualquier dispositivo donde hayas iniciado sesión queda excluido, incluso sin sesión. Las ventanas privadas/incógnito no se reconocen — para cifras limpias, mira tu perfil con la sesión iniciada."
+  },
+  "gettingStarted": {
+    "eyebrow": "Primeros pasos",
+    "welcome": "Te damos la bienvenida a {brand}, {name} 👋",
+    "intro": "Ocho cosas que hacen distinto los fotógrafos con más reservas. Baja leyendo — son unos 4 minutos. Cada consejo enlaza al sitio donde se hace el trabajo.",
+    "s1title": "Responde rápido y rompe el hielo",
+    "s1body": "Los que más reservan responden en menos de 60 minutos. Medimos tu tiempo medio de respuesta y colocamos más arriba en las búsquedas a quien contesta antes. Instala la app y activa las notificaciones (paso 8): es la palanca que más pesa.",
+    "s2title": "Conecta tu calendario",
+    "s2body": "Sincroniza tu Google Calendar para que los clientes solo puedan pedir huecos en los que estás realmente libre. Tus eventos personales siguen siendo privados: solo vemos ocupado/libre, nunca los títulos. Se actualiza cada 15 minutos e incluye un margen automático alrededor de las sesiones para desplazamiento y preparación (se ajusta en los ajustes del calendario). También puedes bloquear fechas concretas a mano para vacaciones o asuntos personales. Resultado: cero dobles reservas, menos correos de \"lo siento, ya estoy ocupado\" y clientes más contentos.",
+    "s3title": "Diseña los paquetes por la ocasión",
+    "s3body": "Nombra los paquetes por el momento, no por la duración. \"Pedida de mano · 1 hora\" convierte mucho mejor que \"sesión de 1 hora\": el cliente entiende al instante que es para él. Los paquetes más reservados en {brand} se apoyan en ocasiones concretas: Esencial, Sesión a la Hora Dorada, Gran Sesión Familiar, Atardecer en Pareja. El precio sigue el valor del momento, no el reloj. Cuando un cliente pregunte por precios, pulsa el + en el cuadro de mensaje y elige un paquete: le llega una tarjeta con el botón de reservar incorporado. ¿Precio a medida? Envía una propuesta puntual por el importe que quieras.",
+    "s4title": "Usa las sugerencias de respuesta con IA",
+    "s4body": "En cada mensaje de cliente verás tres borradores breves generados a partir del contexto de la conversación y de tu biografía. Toca uno para rellenar el cuadro de respuesta: edítalo antes de enviar, nunca se envía solo.",
+    "s5title": "Mantén el chat previo al pago en la plataforma",
+    "s5body": "Compartir tu WhatsApp, Instagram o correo ANTES del pago se marca automáticamente a los administradores y pone en riesgo tu cuenta, además de que pierdes la protección de Stripe si algo sale mal en la sesión. DESPUÉS del pago, intercambiar WhatsApp para coordinar el día (punto de encuentro, parte meteorológico, cambios de última hora) es perfectamente normal: la protección de Stripe ya está activa.",
+    "s6title": "Las reseñas mueven tu posición",
+    "s6body": "Enviamos a cada cliente una petición de reseña 3 horas después de que acepte la entrega (con un 10% de descuento en su próxima reserva como agradecimiento). No hace falta que la pidas tú, pero un recordatorio amable en tu último mensaje sube mucho la tasa de respuesta. Plantilla que puedes copiar y personalizar (cambia el nombre, ajusta el tono):",
+    "s7title": "Mejoras Verificado y Destacado",
+    "s7body": "El distintivo Verificado (19 €/año) añade una marca azul junto a tu nombre: los clientes confían entre 2 y 3 veces más en los fotógrafos verificados. Destacado (19 €/mes) te fija arriba en las búsquedas de tus localizaciones. Ambos se amortizan rápido si ya tienes reservas entrando.",
+    "s8title": "Instala la aplicación móvil",
+    "s8body": "Las notificaciones push llegan en segundos, mucho antes que un correo. Puedes responder desde la playa, el gimnasio o donde estés. Busca \"{brand}\" en la App Store o Play Store, o toca los botones de abajo."
   }
 }

@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { HowItWorksSection } from "@/components/ui/HowItWorksSection";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("metaTitle"),
     description: t("metaDescription"),
     alternates: localeAlternates("/how-it-works", locale),
-    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/how-it-works` },
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/how-it-works` },
   };
 }
 
@@ -63,14 +64,14 @@ export default async function HowItWorksPage({
         position: 1,
         name: t("travelerSteps.browseCompare.title"),
         text: t("travelerSteps.browseCompare.text"),
-        url: "https://photoportugal.com/concierge",
+        url: `${country.baseUrl}/concierge`,
       },
       {
         "@type": "HowToStep",
         position: 2,
         name: t("travelerSteps.bookInstantly.title"),
         text: t("travelerSteps.bookInstantly.text"),
-        url: "https://photoportugal.com/concierge",
+        url: `${country.baseUrl}/concierge`,
       },
       {
         "@type": "HowToStep",

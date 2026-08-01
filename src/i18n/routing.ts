@@ -1,7 +1,11 @@
 import { defineRouting } from "next-intl/routing";
+import { locales } from "./config";
 
 export const routing = defineRouting({
-  locales: ["en", "pt", "de", "es", "fr"],
+  // Active locales come from the country pack. The `pathnames` table below
+  // still carries entries for every known locale — extra keys are harmless,
+  // and keeping them means adding a market never means re-translating slugs.
+  locales: [...locales],
   defaultLocale: "en",
   localePrefix: "as-needed",
   localeDetection: false, // no cookie/header detection — only URL determines locale

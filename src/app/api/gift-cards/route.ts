@@ -4,6 +4,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { requireStripe } from "@/lib/stripe";
 import { GIFT_CARD_TIERS, isGiftCardTier, generateGiftCardCode, defaultGiftCardExpiry } from "@/lib/gift-card";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
     // metadata.gift_card_id is the webhook hook that triggers the
     // recipient email/SMS once payment_intent.succeeded fires.
     const localeNorm = ["pt","de","es","fr"].includes(locale) ? locale : "auto";
-    const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+    const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
     const stripe = requireStripe();
     const checkoutSession = await stripe.checkout.sessions.create({

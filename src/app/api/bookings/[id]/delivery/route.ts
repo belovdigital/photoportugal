@@ -9,13 +9,14 @@ import sharp from "sharp";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { uploadToS3, deleteFromS3, getPresignedUrl, isS3Path, s3KeyFromPath } from "@/lib/s3";
+import { country } from "@/lib/country";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB per delivery photo (high-res RAW exports)
 const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB per delivery video (h264 at ~5-10MB/s)
 const MAX_DELIVERY_PHOTOS = 500; // max items per delivery (photos + videos combined) — raised from 200 after Isa hit it generously delivering 222 photos for an Essential package
 const MAX_DELIVERY_VIDEOS = 10; // hard cap on videos to keep total ZIP / storage in check
-const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
 
 // GET: List delivery photos for a booking
@@ -380,7 +381,7 @@ export async function POST(
 
               <p style="margin-top: 16px; font-size: 13px; color: #666;">Not happy with the results? You can report an issue directly from the gallery and our team will help resolve it within 48 hours.</p>
               <p style="font-size: 12px; color: #999;">This gallery is available until ${expiresAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.</p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>`
           );
         }
@@ -737,7 +738,7 @@ export async function POST(
             <p><strong>Booking:</strong> <code>${id}</code></p>
             <p><strong>Outcome:</strong> ${uploaded.length} uploaded, ${processingErrors.length} failed</p>
             <ul>${lines}</ul>
-            <p><a href="https://photoportugal.com/admin">Open admin →</a></p>
+            <p><a href="${country.baseUrl}/admin">Open admin →</a></p>
           </div>`
         ).catch((e) => console.error("[delivery] admin email error:", e));
       }).catch((e) => console.error("[delivery] admin email import error:", e));
@@ -774,7 +775,7 @@ export async function POST(
           <p><strong>Booking:</strong> <code>${id}</code></p>
           <p><strong>Error:</strong> ${msg.replace(/[<>]/g, "")}</p>
           <p>Photographer's whole upload batch was rejected. Check the photoportugal-blue logs for context.</p>
-          <p><a href="https://photoportugal.com/admin">Open admin →</a></p>
+          <p><a href="${country.baseUrl}/admin">Open admin →</a></p>
         </div>`
       ).catch(() => {});
     } catch {}
@@ -840,7 +841,7 @@ export async function DELETE(
   return NextResponse.json({ success: true });
 }
 
-const R2_PUBLIC_PREFIX = "https://files.photoportugal.com/";
+const R2_PUBLIC_PREFIX = `https://${country.filesHost}/`;
 
 /**
  * Delete a delivery photo from whichever backend it lives on. Three forms

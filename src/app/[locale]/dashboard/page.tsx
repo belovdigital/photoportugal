@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
+import { isPayoutReady } from "@/lib/payout";
+import { country } from "@/lib/country";
 import { RevisionChecklist } from "@/components/dashboard/RevisionChecklist";
 import { ActionNeededWidget } from "@/components/dashboard/ActionNeededWidget";
 import { PhotographerCalendarWidget } from "@/components/dashboard/PhotographerCalendarWidget";
@@ -11,6 +13,28 @@ import { AddOnsSection } from "@/app/[locale]/dashboard/subscriptions/AddOnsSect
 import { getPhotographerTasks } from "@/lib/photographer-tasks";
 import { syncStripeOnboardingIfStale } from "@/lib/stripe-sync";
 import { getLocale } from "next-intl/server";
+
+
+// Popular-destination chips, per market. These are links to /locations/<slug>,
+// so a Portuguese list on the Spanish dashboard sent photographers to 404s.
+const POPULAR_CITIES =
+  country.code === "es"
+    ? [
+        { slug: "barcelona", name: "Barcelona" },
+        { slug: "madrid", name: "Madrid" },
+        { slug: "seville", name: "Seville" },
+        { slug: "granada", name: "Granada" },
+        { slug: "mallorca", name: "Mallorca" },
+        { slug: "tenerife", name: "Tenerife" },
+      ]
+    : [
+        { slug: "lisbon", name: "Lisbon" },
+        { slug: "porto", name: "Porto" },
+        { slug: "algarve", name: "Algarve" },
+        { slug: "sintra", name: "Sintra" },
+        { slug: "madeira", name: "Madeira" },
+        { slug: "azores", name: "Azores" },
+      ];
 
 export const dynamic = "force-dynamic";
 
@@ -95,13 +119,13 @@ async function ClientOverview({ userId, name }: { userId: string; name: string }
       <div className="mt-8">
         <h2 className="text-lg font-bold text-gray-900">{t("popularDestinations")}</h2>
         <div className="mt-4 flex flex-wrap gap-2">
-          {["Lisbon", "Porto", "Algarve", "Sintra", "Madeira", "Azores"].map((city) => (
+          {POPULAR_CITIES.map((city) => (
             <Link
-              key={city}
-              href={`/locations/${city.toLowerCase()}`}
+              key={city.slug}
+              href={`/locations/${city.slug}`}
               className="rounded-full border border-warm-200 px-4 py-2 text-sm text-gray-600 transition hover:border-primary-300 hover:text-primary-600"
             >
-              {city}
+              {city.name}
             </Link>
           ))}
         </div>
@@ -122,12 +146,14 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     id: string; rating: number; review_count: number; session_count: number; plan: string; slug: string; is_approved: boolean;
     avatar_url: string | null; cover_url: string | null; bio: string | null;
     stripe_account_id: string | null; stripe_onboarding_complete: boolean;
+    payout_iban: string | null;
     phone: string | null; created_at: string; revision_status: string | null;
     is_verified: boolean; is_featured: boolean; phone_verified: boolean; phone_number: string | null;
     getting_started_seen_at: string | null;
   }>(
     `SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved,
             u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete,
+            pp.payout_iban,
             u.phone, pp.created_at, pp.revision_status,
             pp.is_verified, pp.is_featured, pp.phone_verified, pp.phone_number,
             pp.getting_started_seen_at
@@ -206,7 +232,11 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     portfolio: parseInt(portfolioCount?.count || "0", 10),
     packages: parseInt(packageCount?.count || "0", 10),
     locations: parseInt(locationCount?.count || "0", 10),
-    stripeConnected: !!profile.stripe_account_id && !!profile.stripe_onboarding_complete,
+    // Same checklist slot, different meaning per market: a completed Stripe
+    // Connect account in Portugal, bank details on file in Spain. Keeping one
+    // key means the "all steps complete" logic below and the admin approval
+    // gate stay in agreement about what "ready to be paid" means.
+    stripeConnected: isPayoutReady(profile),
     phone: !!profile.phone,
   };
 

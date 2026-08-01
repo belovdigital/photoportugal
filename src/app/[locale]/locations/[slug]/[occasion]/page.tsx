@@ -30,6 +30,7 @@ import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/u
 import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 import { locationImage } from "@/lib/unsplash-images";
 import { getComboIntro } from "@/lib/location-occasion-intros";
+import { country } from "@/lib/country";
 
 // Combo /locations/[slug]/[occasion] is the SEO + paid-ad sitelink target
 // for queries like "Couples photographer Algarve" or "Family photoshoot
@@ -422,8 +423,8 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: `https://photoportugal.com/locations/${slug}/${occasion}`,
-      images: [{ url: location.cover_image || "/og-image.png", width: 1200, height: 630, alt: `${occT} in ${locName}, Portugal` }],
+      url: `${country.baseUrl}/locations/${slug}/${occasion}`,
+      images: [{ url: location.cover_image || country.ogImage, width: 1200, height: 630, alt: `${occT} in ${locName}, Portugal` }],
     },
   };
 }
@@ -865,12 +866,12 @@ export default async function OccasionPage({
     "@type": "Service",
     name: `${occT} in ${location.name}, Portugal`,
     description: occD,
-    url: `https://photoportugal.com/locations/${slug}/${occasion}`,
+    url: `${country.baseUrl}/locations/${slug}/${occasion}`,
     serviceType: occ.title,
     provider: {
       "@type": "Organization",
-      name: "Photo Portugal",
-      url: "https://photoportugal.com",
+      name: country.brand,
+      url: country.baseUrl,
     },
     areaServed: {
       "@type": "City",
@@ -883,7 +884,7 @@ export default async function OccasionPage({
         priceCurrency: "EUR",
         price: String(minPrice),
         availability: "https://schema.org/InStock",
-        url: `https://photoportugal.com/photographers?location=${slug}&shoot=${occasion}`,
+        url: `${country.baseUrl}/photographers?location=${slug}&shoot=${occasion}`,
       },
     } : {}),
     // aggregateRating omitted — Service is not in Google's review-snippet
@@ -895,10 +896,10 @@ export default async function OccasionPage({
   const jsonLdBusiness = totalReviews > 0 && avgRating > 0 ? {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
-    "@id": `https://photoportugal.com/locations/${slug}/${occasion}#business`,
-    name: `Photo Portugal — ${occT} in ${localizedName}`,
-    url: `https://photoportugal.com/locations/${slug}/${occasion}`,
-    image: "https://photoportugal.com/og-image.png",
+    "@id": `${country.baseUrl}/locations/${slug}/${occasion}#business`,
+    name: `${country.brand} — ${occT} in ${localizedName}`,
+    url: `${country.baseUrl}/locations/${slug}/${occasion}`,
+    image: `${country.baseUrl}${country.ogImage}`,
     priceRange: "€€",
     address: { "@type": "PostalAddress", addressLocality: localizedName, addressCountry: "PT" },
     areaServed: { "@type": "City", name: localizedName },

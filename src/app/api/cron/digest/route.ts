@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { sendEmail, getAdminEmail } from "@/lib/email";
+import { country } from "@/lib/country";
 
-const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
 export async function GET(req: NextRequest) {
   if (req.nextUrl.searchParams.get("secret") !== process.env.CRON_SECRET) {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
       // Use the SAME GSC property as the analytics dashboard so cron-written
       // and dashboard-written snapshots are comparable (was sc-domain:, which
       // returns a different query set than the url-prefix property).
-      siteUrl: process.env.GSC_SITE_URL || "https://photoportugal.com",
+      siteUrl: process.env.GSC_SITE_URL || country.baseUrl,
       requestBody: { startDate, endDate, dimensions: ["query"], rowLimit: 500 },
     });
     const rows = gscRes.data.rows || [];
@@ -234,7 +235,7 @@ export async function GET(req: NextRequest) {
 
     // Daily Intercom sync
     try {
-      const base = process.env.AUTH_URL || "https://photoportugal.com";
+      const base = process.env.AUTH_URL || country.baseUrl;
       await fetch(`${base}/api/admin/intercom-sync?secret=${process.env.CRON_SECRET}`, { method: "POST" });
     } catch {}
 

@@ -1,4 +1,5 @@
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 export type Locale = "en" | "pt" | "de" | "es" | "fr";
 export const SUPPORTED_LOCALES: readonly Locale[] = ["en", "pt", "de", "es", "fr"] as const;
@@ -54,7 +55,7 @@ export function formatPrice(amount: number, locale: Locale): string {
 /**
  * Build a locale-prefixed URL: /pt/foo, /de/bar, /baz (en is bare).
  */
-export function localizedUrl(path: string, locale: Locale, base = "https://photoportugal.com"): string {
+export function localizedUrl(path: string, locale: Locale, base = `${country.baseUrl}`): string {
   const clean = path.startsWith("/") ? path : `/${path}`;
   if (locale === "en") return `${base}${clean}`;
   return `${base}/${locale}${clean}`;

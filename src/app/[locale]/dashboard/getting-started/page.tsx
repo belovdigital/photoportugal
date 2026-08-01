@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne, query } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
+import { country } from "@/lib/country";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -28,20 +30,20 @@ export default async function GettingStartedPage() {
   ).catch(() => {});
 
   const firstName = (user.name || "").split(" ")[0] || "there";
+  const t = await getTranslations("gettingStarted");
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
       {/* Hero */}
       <header className="mb-12 text-center">
         <p className="text-xs font-bold uppercase tracking-widest text-primary-600">
-          Getting started
+          {t("eyebrow")}
         </p>
         <h1 className="mt-3 font-display text-3xl font-bold text-gray-900 sm:text-4xl">
-          Welcome to Photo Portugal, {firstName} 👋
+          {t("welcome", { brand: country.brand, name: firstName })}
         </h1>
         <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-gray-600">
-          Eight things the photographers who book the most do differently. Scroll through —
-          should take 4 minutes. Each tip links to where the work happens.
+          {t("intro")}
         </p>
       </header>
 
@@ -49,8 +51,8 @@ export default async function GettingStartedPage() {
         <Section
           n={1}
           icon="⚡"
-          title="Reply fast, warm up the room"
-          body="Top performers reply in under 60 minutes. We track your average response time and surface faster repliers higher in search. Install the mobile app and turn on push (Step 8) — that's the single biggest lever."
+          title={t("s1title")}
+          body={t("s1body")}
           cta={{ href: "/dashboard/messages", label: "Open messages →" }}
           mockup={<FastReplyMockup />}
           extra={<ToneTipBlock />}
@@ -59,8 +61,8 @@ export default async function GettingStartedPage() {
         <Section
           n={2}
           icon="📅"
-          title="Connect your calendar"
-          body="Sync your Google Calendar so clients can only request slots you're actually free. Personal events stay private — we only see busy/free, not event titles. Pulls in every 15 min, plus an auto-buffer around shoots for travel/prep (set in calendar settings). You can also block specific dates manually for vacation or personal stuff. Net result: zero double-bookings, fewer &quot;sorry I'm booked&quot; emails, happier clients."
+          title={t("s2title")}
+          body={t("s2body")}
           cta={{ href: "/dashboard/calendar-sync", label: "Connect calendar →" }}
           mockup={<CalendarSyncMockup />}
         />
@@ -68,32 +70,32 @@ export default async function GettingStartedPage() {
         <Section
           n={3}
           icon="📦"
-          title="Design packages around the occasion"
-          body="Name packages by the moment, not by duration. &quot;Proposal · 1 hour&quot; converts much better than &quot;1-hour session&quot; — the client instantly knows it's for them. The top-booked packages on Photo Portugal anchor to specific occasions: Essential, Golden Hour Session, Big Family Photoshoot, Couples Sunset. Pricing follows the value of the moment, not the clock. When a client asks about pricing, hit the + in the message box and pick a package — they get a card with Book Now baked in. Custom price? Send a one-off proposal at any number."
+          title={t("s3title")}
+          body={t("s3body", { brand: country.brand })}
           mockup={<SendPackageMockup />}
         />
 
         <Section
           n={4}
           icon="✨"
-          title="Use AI reply suggestions"
-          body="On every client message you'll see three short draft replies generated from the conversation context and your bio. Tap one to prefill the reply box — edit before sending, never auto-sent."
+          title={t("s4title")}
+          body={t("s4body")}
           mockup={<AiChipsMockup />}
         />
 
         <Section
           n={5}
           icon="🚫"
-          title="Keep pre-payment chat on-platform"
-          body="Sharing your WhatsApp/Instagram/email BEFORE payment is auto-flagged to admins and risks your account — and you lose Stripe protection if anything goes wrong with the shoot. Use the mobile app for chat (Step 8) — push lands in seconds. AFTER payment, exchanging WhatsApp for day-of coordination (meet-up point, weather updates, last-minute timing) is totally fine — Stripe protection has already kicked in."
+          title={t("s5title")}
+          body={t("s5body")}
           mockup={<OffPlatformMockup />}
         />
 
         <Section
           n={6}
           icon="⭐"
-          title="Reviews drive ranking"
-          body="Kate sends every client a review request 3 hours after they accept their delivery (10% off their next booking as a thank-you). You don't have to ask — but a friendly nudge from you in your last chat message lifts response rate a lot. Template you can copy and personalize (swap the name, tweak the wording):"
+          title={t("s6title")}
+          body={t("s6body")}
           mockup={<ReviewMockup />}
           extra={<ReviewTemplateBlock />}
         />
@@ -101,19 +103,24 @@ export default async function GettingStartedPage() {
         <Section
           n={7}
           icon="✓"
-          title="Verified & Featured upgrades"
-          body="Verified badge (€19/year) adds a blue checkmark next to your name — clients trust verified photographers 2-3× more. Featured (€19/month) pins you to the top of search for your locations. Both pay for themselves quickly if you've got bookings flowing."
+          title={t("s7title")}
+          body={t("s7body")}
           cta={{ href: "/dashboard/subscriptions", label: "See add-ons →" }}
           mockup={<BadgesMockup />}
         />
 
+        {/* Only where the apps are actually published. Spain has no listing, so
+            this step told photographers to install something that doesn't exist
+            and showed a mockup branded Photo Portugal. */}
+        {country.hasMobileApp && (
         <Section
           n={8}
           icon="📱"
-          title="Install the mobile app"
-          body="Push notifications hit you within seconds — way faster than email. You can reply from a beach, the gym, anywhere. Search &quot;Photo Portugal&quot; on App Store or Play Store, or tap the badges below."
+          title={t("s8title")}
+          body={t("s8body", { brand: country.brand })}
           mockup={<MobileAppMockup />}
         />
+        )}
       </div>
 
       <div className="mt-16 rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-warm-50 p-8 text-center">
@@ -121,13 +128,13 @@ export default async function GettingStartedPage() {
           We're really glad you're here 🤍
         </p>
         <p className="mx-auto mt-3 max-w-lg text-[15px] leading-relaxed text-gray-700">
-          Photo Portugal is a small team that cares about the photographers on it —
+          {country.brand} is a small team that cares about the photographers on it —
           you're not a row in a spreadsheet. We hope you have a great experience, and
           we're always open to your questions, ideas, and the things you wish worked
           differently. Tell us anything.
         </p>
         <p className="mt-4 text-sm text-gray-500">
-          — Kate &amp; the Photo Portugal team
+          — Kate &amp; the {country.brand} team
         </p>
       </div>
 
@@ -216,7 +223,7 @@ function FastReplyMockup() {
         </div>
       </div>
       <div className="pt-2 text-center text-[11px] text-gray-500">
-        Median first-reply on Photo Portugal: <span className="font-bold text-emerald-600">42 minutes</span>
+        Median first-reply on {country.brand}: <span className="font-bold text-emerald-600">42 minutes</span>
       </div>
     </div>
   );
@@ -374,7 +381,7 @@ function ReviewMockup() {
         </div>
         <div className="flex-1">
           <p className="text-sm font-bold text-gray-900">Kate Belova</p>
-          <p className="text-[11px] text-gray-500">Founder of Photo Portugal</p>
+          <p className="text-[11px] text-gray-500">Founder of {country.brand}</p>
           <p className="mt-2 text-[13px] text-gray-700 leading-relaxed">
             Hope you loved your shoot! A quick review means the world to us — and as a
             thank-you, here's <span className="font-semibold text-yellow-700">10% off</span> your next session.
@@ -421,7 +428,7 @@ function MobileAppMockup() {
           <span>•••</span>
         </div>
         <div className="rounded-xl bg-gray-100 p-2 text-[10px] space-y-1">
-          <p className="font-bold text-gray-900">PHOTO PORTUGAL</p>
+          <p className="font-bold text-gray-900">{country.brand.toUpperCase()}</p>
           <p className="font-bold text-gray-900">💬 Maria</p>
           <p className="text-gray-600">Hi! Are you free Aug 15?</p>
         </div>

@@ -4,10 +4,16 @@ import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { locations } from "@/lib/locations-data";
+import { country } from "@/lib/country";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 
-const TOP_LOCATIONS = ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"];
+// Footer shortcut list, per market. These are slugs, so a Portuguese list on
+// the Spanish site matches nothing and the column renders empty.
+const TOP_LOCATIONS =
+  country.code === "es"
+    ? ["barcelona", "madrid", "seville", "granada", "malaga", "mallorca", "ibiza", "valencia"]
+    : ["lisbon", "porto", "algarve", "sintra", "madeira", "azores", "cascais", "lagos"];
 
 // Shoot types that have polished /photoshoots/[type] pages AND combo
 // /locations/[slug]/[occasion] sub-pages. Used in the footer column +
@@ -48,7 +54,11 @@ export function Footer() {
 
   return (
     <>
-    {/* Pre-footer: Mobile App CTA */}
+    {/* Pre-footer: Mobile App CTA.
+        Only where the apps actually exist in the stores. Spain has no listing
+        yet, and the badges linked to the Portuguese app — tapping one took a
+        Spanish visitor to a different product entirely. */}
+    {country.hasMobileApp && (
     <section className="app-cta-banner border-t border-warm-200 bg-warm-50">
       <div className="mx-auto max-w-7xl px-4 py-14 text-center sm:px-6 sm:py-16 lg:px-8">
         <h2 className="font-display text-2xl font-bold text-gray-900 sm:text-3xl">
@@ -89,6 +99,7 @@ export function Footer() {
         </div>
       </div>
     </section>
+    )}
 
     <footer className="border-t border-warm-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -97,8 +108,8 @@ export function Footer() {
           <div>
             <Link href="/" className="flex items-center">
               <Image
-                src="/logo.svg"
-                alt="Photo Portugal"
+                src={country.logoPath}
+                alt={country.brand}
                 width={180}
                 height={32}
                 className="h-8 w-auto"
@@ -280,6 +291,11 @@ export function Footer() {
             because these are actual recommendations our clients ask
             about (multi-day bike/walking trips around a photo session).
             Keep this list short and curated — not a sponsor wall. */}
+        {/* Portugal only. These are real Portuguese tour operators we recommend;
+            showing them on another market's site would advertise companies that
+            do not work there. A new country therefore starts with no partner
+            block rather than inheriting this one. */}
+        {country.code === "pt" && (
         <div className="mt-8 border-t border-warm-200 pt-6">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-center">
             {t("partners")}
@@ -323,8 +339,14 @@ export function Footer() {
             </a>
           </div>
         </div>
+        )}
 
         <div className="mt-8 border-t border-warm-200 pt-6">
+          {/* Icons point at Portugal's accounts. Spain has none yet, and a
+              Portuguese profile linked from the Spanish footer sends visitors
+              to a different brand than the one they are on. Only the icon row
+              is gated — email, phone and copyright below must always render. */}
+          {country.socialLinks.length > 0 && (
           <div className="flex items-center justify-center gap-4">
             <a href="https://www.instagram.com/photoportugal_com" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-warm-100 text-gray-500 transition hover:bg-primary-100 hover:text-primary-600" aria-label="Instagram">
               <svg className="h-4.5 w-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
@@ -339,10 +361,15 @@ export function Footer() {
               <svg className="h-4.5 w-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1z"/></svg>
             </a>
           </div>
+          )}
           <div className="mt-3 flex items-center justify-center gap-4 text-sm text-gray-400">
-            <a href="mailto:info@photoportugal.com" className="hover:text-primary-600 transition">info@photoportugal.com</a>
-            <span className="text-gray-300">&middot;</span>
-            <a href="tel:+351308800496" className="hover:text-primary-600 transition">+351 308 800 496</a>
+            <a href={`mailto:${country.supportEmail}`} className="hover:text-primary-600 transition">{country.supportEmail}</a>
+            {country.phone && (
+              <>
+                <span className="text-gray-300">&middot;</span>
+                <a href={`tel:${country.phone.replace(/\s/g, "")}`} className="hover:text-primary-600 transition">{country.phone}</a>
+              </>
+            )}
           </div>
           <div className="mt-4 flex justify-center">
             <GoogleReviewsBadge variant="compact" />

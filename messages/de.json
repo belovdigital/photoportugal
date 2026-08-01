@@ -4259,5 +4259,26 @@
     "benchReply": "Zeit bis zur ersten Antwort",
     "benchMedian": "Median: {value}",
     "ownVisitsNote": "Ihre eigenen Besuche zählen nicht: Jedes Gerät, auf dem Sie sich je angemeldet haben, wird ausgeschlossen — auch ausgeloggt. Privat-/Inkognito-Fenster sind nicht erkennbar; für saubere Zahlen besuchen Sie Ihr Profil eingeloggt."
+  },
+  "gettingStarted": {
+    "eyebrow": "Erste Schritte",
+    "welcome": "Willkommen bei {brand}, {name} 👋",
+    "intro": "Acht Dinge, die die Fotografen mit den meisten Buchungen anders machen. Einmal durchscrollen — dauert etwa 4 Minuten. Jeder Tipp verlinkt dorthin, wo die Arbeit passiert.",
+    "s1title": "Schnell antworten, Stimmung aufbauen",
+    "s1body": "Die Erfolgreichsten antworten in unter 60 Minuten. Wir messen Ihre durchschnittliche Antwortzeit und platzieren schnellere Antworter weiter oben in der Suche. Installieren Sie die App und aktivieren Sie Push (Schritt 8) — das ist der größte Hebel.",
+    "s2title": "Kalender verbinden",
+    "s2body": "Synchronisieren Sie Ihren Google Kalender, damit Kunden nur Zeiten anfragen können, an denen Sie wirklich frei sind. Private Termine bleiben privat: Wir sehen nur belegt/frei, keine Titel. Aktualisiert alle 15 Minuten, mit automatischem Puffer um Shootings für Anfahrt und Vorbereitung (in den Kalendereinstellungen). Einzelne Tage können Sie auch manuell für Urlaub oder Privates blocken. Ergebnis: keine Doppelbuchungen, weniger \"sorry, schon ausgebucht\"-Mails, zufriedenere Kunden.",
+    "s3title": "Pakete um den Anlass herum bauen",
+    "s3body": "Benennen Sie Pakete nach dem Moment, nicht nach der Dauer. \"Heiratsantrag · 1 Stunde\" konvertiert deutlich besser als \"1-Stunden-Session\" — der Kunde erkennt sofort, dass es für ihn ist. Die meistgebuchten Pakete auf {brand} hängen an konkreten Anlässen: Essential, Golden-Hour-Session, große Familiensession, Sonnenuntergang zu zweit. Der Preis folgt dem Wert des Moments, nicht der Uhr. Fragt ein Kunde nach Preisen, tippen Sie auf das + im Nachrichtenfeld und wählen ein Paket — er bekommt eine Karte mit eingebautem Buchen-Button. Individueller Preis? Schicken Sie ein einmaliges Angebot in beliebiger Höhe.",
+    "s4title": "KI-Antwortvorschläge nutzen",
+    "s4body": "Zu jeder Kundennachricht sehen Sie drei kurze Antwortentwürfe, erzeugt aus dem Gesprächsverlauf und Ihrer Bio. Tippen Sie einen an, um das Antwortfeld zu füllen — vor dem Senden bearbeitbar, nie automatisch verschickt.",
+    "s5title": "Chat vor der Zahlung auf der Plattform lassen",
+    "s5body": "WhatsApp, Instagram oder E-Mail VOR der Zahlung zu teilen wird automatisch an die Admins gemeldet und gefährdet Ihr Konto — außerdem verlieren Sie den Stripe-Schutz, falls beim Shooting etwas schiefgeht. NACH der Zahlung ist ein WhatsApp-Austausch zur Abstimmung am Tag selbst (Treffpunkt, Wetter, kurzfristige Zeiten) völlig in Ordnung — der Stripe-Schutz greift dann bereits.",
+    "s6title": "Bewertungen bestimmen das Ranking",
+    "s6body": "Wir schicken jedem Kunden 3 Stunden nach Abnahme der Lieferung eine Bewertungsanfrage (mit 10% Rabatt auf die nächste Buchung als Dankeschön). Sie müssen nicht selbst fragen — ein freundlicher Hinweis in Ihrer letzten Nachricht hebt die Rücklaufquote aber deutlich. Vorlage zum Kopieren und Anpassen (Namen tauschen, Ton anpassen):",
+    "s7title": "Upgrades Verifiziert und Featured",
+    "s7body": "Das Verifiziert-Abzeichen (19 €/Jahr) setzt ein blaues Häkchen neben Ihren Namen — verifizierten Fotografen vertrauen Kunden 2- bis 3-mal mehr. Featured (19 €/Monat) setzt Sie in der Suche Ihrer Orte nach ganz oben. Beides rechnet sich schnell, wenn Buchungen laufen.",
+    "s8title": "Mobile App installieren",
+    "s8body": "Push-Nachrichten erreichen Sie in Sekunden, viel schneller als E-Mail. Antworten Sie vom Strand, aus dem Gym, von überall. Suchen Sie \"{brand}\" im App Store oder Play Store, oder tippen Sie unten auf die Badges."
   }
 }

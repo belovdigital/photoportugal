@@ -38,6 +38,7 @@ import { spotSlug, spotLocalized } from "@/lib/photo-spots-data";
 import { formatDuration } from "@/lib/package-pricing";
 import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
+import { country } from "@/lib/country";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 
@@ -71,8 +72,8 @@ export async function generateMetadata({
       title: seoTitle,
       description: seoDescription,
       type: "website",
-      url: `https://photoportugal.com/locations/${slug}`,
-      images: [{ url: location.cover_image || "/og-image.png", width: 1200, height: 630, alt: `${location.name}, Portugal` }],
+      url: `${country.baseUrl}/locations/${slug}`,
+      images: [{ url: location.cover_image || country.ogImage, width: 1200, height: 630, alt: `${location.name}, Portugal` }],
     },
   };
 }
@@ -531,8 +532,8 @@ export default async function LocationPage({
     serviceType: "Vacation Photography",
     provider: {
       "@type": "Organization",
-      name: "Photo Portugal",
-      url: "https://photoportugal.com",
+      name: country.brand,
+      url: country.baseUrl,
     },
     areaServed: {
       "@type": "City",
@@ -546,16 +547,16 @@ export default async function LocationPage({
       "@type": "Offer",
       priceCurrency: "EUR",
       price: String(minPrice ?? 150),
-      url: `https://photoportugal.com/photographers?location=${slug}`,
+      url: `${country.baseUrl}/photographers?location=${slug}`,
     },
   };
 
   const jsonLdLocalBusiness: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": ["LocalBusiness", "ProfessionalService"],
-    name: `Photo Portugal — ${location.name}`,
+    name: `${country.brand} — ${location.name}`,
     description: description,
-    url: `https://photoportugal.com/locations/${slug}`,
+    url: `${country.baseUrl}/locations/${slug}`,
     address: {
       "@type": "PostalAddress",
       addressLocality: location.name,
@@ -567,7 +568,7 @@ export default async function LocationPage({
       longitude: location.lng,
     },
     priceRange: "$$",
-    image: location.cover_image?.startsWith("http") ? location.cover_image : `https://photoportugal.com${location.cover_image}`,
+    image: location.cover_image?.startsWith("http") ? location.cover_image : `${country.baseUrl}${location.cover_image}`,
     hasOfferCatalog: {
       "@type": "OfferCatalog",
       name: `Photography Services in ${location.name}`,

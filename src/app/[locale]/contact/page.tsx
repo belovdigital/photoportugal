@@ -5,6 +5,7 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
 import { ContactForm } from "@/components/ui/ContactForm";
 import { Suspense } from "react";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("metaTitle"),
     description: t("metaDescription"),
     alternates: localeAlternates("/contact", locale),
-    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/contact` },
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/contact` },
   };
 }
 
@@ -34,17 +35,17 @@ export default async function ContactPage({
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Photo Portugal",
-    url: "https://photoportugal.com",
-    logo: "https://photoportugal.com/logo.svg",
-    email: "info@photoportugal.com",
+    name: country.brand,
+    url: country.baseUrl,
+    logo: `${country.baseUrl}${country.logoPath}`,
+    email: country.supportEmail,
     contactPoint: [
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: "info@photoportugal.com",
-        availableLanguage: ["English", "Portuguese", "Spanish", "French", "German"],
-        areaServed: "PT",
+        email: country.supportEmail,
+        availableLanguage: country.contactLanguages,
+        areaServed: country.code.toUpperCase(),
       },
     ],
     sameAs: [

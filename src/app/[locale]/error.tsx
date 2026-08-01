@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { country } from "@/lib/country";
 
 export default function Error({ reset }: { reset: () => void }) {
   const [countdown, setCountdown] = useState(30);
@@ -24,7 +25,7 @@ export default function Error({ reset }: { reset: () => void }) {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <div className="max-w-md text-center">
-        <img src="/logo.svg" alt="Photo Portugal" className="mx-auto h-8" />
+        <img src={country.logoPath} alt={country.brand} className="mx-auto h-8" />
         <h1 className="mt-8 font-display text-4xl font-bold text-gray-900">
           {t("title")}
         </h1>
@@ -48,7 +49,7 @@ export default function Error({ reset }: { reset: () => void }) {
         </div>
         <p className="mt-6 text-xs text-gray-400">
           {t("contactSupport")}
-          <a href="mailto:info@photoportugal.com" className="text-primary-600 hover:underline">info@photoportugal.com</a>
+          <a href={`mailto:${country.supportEmail}`} className="text-primary-600 hover:underline">{country.supportEmail}</a>
         </p>
       </div>
     </div>

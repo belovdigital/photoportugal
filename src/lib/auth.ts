@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { queryOne, query } from "./db";
 import { sendWelcomeEmail } from "./email";
+import { country } from "@/lib/country";
 
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -67,7 +68,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async redirect({ url }) {
-      const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+      const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || country.baseUrl;
       if (url.startsWith("/")) return `${base}${url}`;
       try {
         if (new URL(url).origin === new URL(base).origin) return url;

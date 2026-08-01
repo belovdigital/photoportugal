@@ -3,6 +3,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { sendCancellationMessage } from "@/lib/booking-messages";
 import { maskSurname } from "@/lib/photographer-name";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -164,7 +165,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           const html = emailLayout(`
             <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">${T.h2}</h2>
             <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body}</p>
-            ${emailButton("https://photoportugal.com/photographers", T.cta)}
+            ${emailButton(`${country.baseUrl}/photographers`, T.cta)}
           `, loc);
           await sendEmail(booking.client_email, T.subject, html);
         }
@@ -212,7 +213,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         ${dateLine}
         ${priceLine}
         <p style="margin:0 0 16px;font-size:14px;line-height:1.5;color:#4A4A4A;">If you'd like to reach out — the chat between you stays open.</p>
-        ${emailButton(`https://photoportugal.com/dashboard/messages`, "Open conversation")}
+        ${emailButton(`${country.baseUrl}/dashboard/messages`, "Open conversation")}
       `)
     ).catch((e) => console.error("[bookings/cancel] email error:", e));
   }).catch(() => {});

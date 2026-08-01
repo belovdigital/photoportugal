@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
 import { sendSaveForLaterEmail } from "@/lib/email";
 import { sendTelegram } from "@/lib/telegram";
+import { country } from "@/lib/country";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     }
 
     sendTelegram(
-      `💌 <b>Saved for later</b>\n\nEmail: ${email.trim().toLowerCase()}\nPhotographer: <b>${photographer.name}</b>\nhttps://photoportugal.com/photographers/${photographer.slug}`,
+      `💌 <b>Saved for later</b>\n\nEmail: ${email.trim().toLowerCase()}\nPhotographer: <b>${photographer.name}</b>\n${country.baseUrl}/photographers/${photographer.slug}`,
       "clients"
     ).catch(() => {});
 

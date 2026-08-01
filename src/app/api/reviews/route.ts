@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { country } from "@/lib/country";
 
 // Written reviews must have real content (mirrors the ReviewForm min-word
 // check — keep the two in sync).
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
                 <p><strong>${rating}★</strong> from <strong>${client!.name}</strong> for <strong>${info!.name}</strong></p>
                 ${title ? `<p><strong>${title}</strong></p>` : ""}
                 ${text ? `<p>${text.slice(0, 300)}</p>` : ""}
-                <p><a href="https://photoportugal.com/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
+                <p><a href="${country.baseUrl}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
               </div>`
             );
           });
@@ -131,8 +132,8 @@ export async function POST(req: NextRequest) {
     if (slugRow) {
       import("@/lib/indexnow").then(({ pingIndexNow }) =>
         pingIndexNow([
-          `https://photoportugal.com/photographers/${slugRow.slug}`,
-          `https://photoportugal.com/`,
+          `${country.baseUrl}/photographers/${slugRow.slug}`,
+          `${country.baseUrl}/`,
         ])
       ).catch(() => {});
     }

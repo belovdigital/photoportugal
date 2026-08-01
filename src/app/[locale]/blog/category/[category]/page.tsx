@@ -7,6 +7,7 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { maskSurname } from "@/lib/photographer-name";
 import { localeAlternates } from "@/lib/seo";
 import { attachBlogHeroPhotos } from "@/lib/blog-hero-photo";
+import { country } from "@/lib/country";
 
 export const revalidate = 300;
 
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description,
-      url: `https://photoportugal.com/blog/category/${category}`,
+      url: `${country.baseUrl}/blog/category/${category}`,
       type: "website",
     },
   };
@@ -90,11 +91,11 @@ export default async function BlogCategoryPage({ params }: PageProps) {
     "@type": "CollectionPage",
     name: catLabel,
     description: catDescription,
-    url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog/category/${category}`,
+    url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/blog/category/${category}`,
     isPartOf: {
       "@type": "Blog",
-      name: "Photo Portugal Blog",
-      url: "https://photoportugal.com/blog",
+      name: `${country.brand} Blog`,
+      url: `${country.baseUrl}/blog`,
     },
     ...(posts.length > 0 && {
       mainEntity: {
@@ -103,7 +104,7 @@ export default async function BlogCategoryPage({ params }: PageProps) {
         itemListElement: posts.map((post, i) => ({
           "@type": "ListItem",
           position: i + 1,
-          url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/blog/${post.slug}`,
+          url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/blog/${post.slug}`,
           name: post.title,
         })),
       },

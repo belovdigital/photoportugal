@@ -4,6 +4,7 @@ import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
 import { checkAndNotifyChecklistComplete } from "@/lib/checklist-notify";
 import { DURATION_OPTIONS, getPricingForDuration } from "@/lib/package-pricing";
+import { country } from "@/lib/country";
 
 async function getProfile(userId: string) {
   return queryOne<{ id: string; plan: string; is_approved: boolean }>(
@@ -124,8 +125,8 @@ export async function POST(req: NextRequest) {
       if (pphSlug) {
         import("@/lib/indexnow").then(({ pingIndexNow }) =>
           pingIndexNow([
-            `https://photoportugal.com/photographers/${pphSlug.slug}/${pkg.slug}`,
-            `https://photoportugal.com/photographers/${pphSlug.slug}`,
+            `${country.baseUrl}/photographers/${pphSlug.slug}/${pkg.slug}`,
+            `${country.baseUrl}/photographers/${pphSlug.slug}`,
           ])
         ).catch(() => {});
       }
@@ -243,8 +244,8 @@ export async function PUT(req: NextRequest) {
     if (pphSlugUpd && pkgSlug?.slug) {
       import("@/lib/indexnow").then(({ pingIndexNow }) =>
         pingIndexNow([
-          `https://photoportugal.com/photographers/${pphSlugUpd.slug}/${pkgSlug.slug}`,
-          `https://photoportugal.com/photographers/${pphSlugUpd.slug}`,
+          `${country.baseUrl}/photographers/${pphSlugUpd.slug}/${pkgSlug.slug}`,
+          `${country.baseUrl}/photographers/${pphSlugUpd.slug}`,
         ])
       ).catch(() => {});
     }

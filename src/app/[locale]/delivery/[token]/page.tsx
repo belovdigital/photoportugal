@@ -3,6 +3,7 @@ import { queryOne } from "@/lib/db";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { DeliveryPageClient } from "./DeliveryPageClient";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   );
 
   return {
-    title: booking ? `Photos by ${booking.photographer_name} — Photo Portugal` : "Photo Delivery — Photo Portugal",
+    title: booking ? `Photos by ${booking.photographer_name} — ${country.brand}` : `Photo Delivery — ${country.brand}`,
     robots: "noindex, nofollow",
   };
 }

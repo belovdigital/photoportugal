@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import { emailLayout, emailButton, sendEmail } from "@/lib/email";
 import { maskSurname } from "@/lib/photographer-name";
+import { country } from "@/lib/country";
 
 export const runtime = "nodejs";
 
@@ -131,7 +132,7 @@ export async function POST(req: NextRequest) {
 
     const cardsHtml = cards.map((c) => {
       const imgUrl = c.sample_url || c.cover_url;
-      const fullImg = imgUrl?.startsWith("http") ? imgUrl : `https://photoportugal.com${imgUrl}`;
+      const fullImg = imgUrl?.startsWith("http") ? imgUrl : `${country.baseUrl}${imgUrl}`;
       const locs = c.locations.slice(0, 3).map((l) => l.charAt(0).toUpperCase() + l.slice(1).replace(/-/g, " ")).join(" · ");
       return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;border:1px solid #F3EDE6;border-radius:12px;overflow:hidden;">
         ${imgUrl ? `<tr><td><img src="${fullImg}" alt="${c.name}" width="520" style="display:block;width:100%;max-height:200px;object-fit:cover;"></td></tr>` : ""}
@@ -167,7 +168,7 @@ export async function POST(req: NextRequest) {
       <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.intro}</p>
       ${cardsHtml}
       <p style="margin:20px 0 4px;font-size:14px;line-height:1.55;color:#4A4A4A;">${T.refine}</p>
-      ${emailButton(`https://photoportugal.com/${lang === "en" ? "" : lang + "/"}concierge`, T.continueBtn, "#C94536")}
+      ${emailButton(`${country.baseUrl}/${lang === "en" ? "" : lang + "/"}concierge`, T.continueBtn, "#C94536")}
       <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#9B8E82;">${T.footer}</p>
     `);
 
@@ -184,7 +185,7 @@ export async function POST(req: NextRequest) {
     ).catch(() => null);
     const firstUserMsg = ctx?.messages?.find((m) => m.role === "user")?.content || "";
     const userMsgPreview = firstUserMsg.length > 200 ? firstUserMsg.slice(0, 200) + "…" : firstUserMsg;
-    const cardsList = cards.map((c) => `  • <a href="https://photoportugal.com/photographers/${c.slug}">${c.name}</a>`).join("\n");
+    const cardsList = cards.map((c) => `  • <a href="${country.baseUrl}/photographers/${c.slug}">${c.name}</a>`).join("\n");
     const sourceParts = [
       ctx?.utm_source ? `utm_source: ${ctx.utm_source}` : null,
       ctx?.utm_medium ? `utm_medium: ${ctx.utm_medium}` : null,
@@ -200,7 +201,7 @@ export async function POST(req: NextRequest) {
       (userMsgPreview ? `\n<b>What they asked:</b>\n<i>"${userMsgPreview}"</i>\n` : "") +
       (cards.length > 0 ? `\n<b>Matches sent (${cards.length}):</b>\n${cardsList}\n` : "") +
       (sourceParts ? `\n<b>Source:</b> ${sourceParts}\n` : "") +
-      `\n<a href="https://photoportugal.com/admin?tab=concierge#concierge-${chat_id}">Open chat in admin</a>`,
+      `\n<a href="${country.baseUrl}/admin?tab=concierge#concierge-${chat_id}">Open chat in admin</a>`,
       "clients"
     ).catch(() => {});
   } catch (err) {

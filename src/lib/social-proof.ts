@@ -1,5 +1,6 @@
 import { query } from "@/lib/db";
 import { locations } from "@/lib/locations-data";
+import { country } from "@/lib/country";
 
 // ---------------------------------------------------------------------------
 // Social-proof activity feed (TrustPulse-style, but tasteful).
@@ -98,7 +99,7 @@ interface Strings {
 
 const STRINGS: Record<SocialProofLocale, Strings> = {
   en: {
-    stats: "Live on Photo Portugal",
+    stats: `Live on ${country.brand}`,
     today: "Today",
     yesterday: "Yesterday",
     daysAgo: (n) => `${n} days ago`,
@@ -108,7 +109,7 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     aggregate: (n) => `${n} shoots booked across Portugal in the last 30 days`,
   },
   pt: {
-    stats: "Em direto na Photo Portugal",
+    stats: `Em direto na ${country.brand}`,
     today: "Hoje",
     yesterday: "Ontem",
     daysAgo: (n) => `há ${n} dias`,
@@ -118,7 +119,7 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     aggregate: (n) => `${n} sessões reservadas por todo Portugal nos últimos 30 dias`,
   },
   de: {
-    stats: "Live auf Photo Portugal",
+    stats: `Live auf ${country.brand}`,
     today: "Heute",
     yesterday: "Gestern",
     daysAgo: (n) => `vor ${n} Tagen`,
@@ -128,7 +129,7 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     aggregate: (n) => `${n} Shootings in den letzten 30 Tagen in ganz Portugal gebucht`,
   },
   es: {
-    stats: "En directo en Photo Portugal",
+    stats: `En directo en ${country.brand}`,
     today: "Hoy",
     yesterday: "Ayer",
     daysAgo: (n) => `hace ${n} días`,
@@ -138,7 +139,7 @@ const STRINGS: Record<SocialProofLocale, Strings> = {
     aggregate: (n) => `${n} sesiones reservadas en todo Portugal en los últimos 30 días`,
   },
   fr: {
-    stats: "En direct sur Photo Portugal",
+    stats: `En direct sur ${country.brand}`,
     today: "Aujourd’hui",
     yesterday: "Hier",
     daysAgo: (n) => `il y a ${n} jours`,

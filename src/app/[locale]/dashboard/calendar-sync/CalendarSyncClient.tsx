@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { country } from "@/lib/country";
 
 type Connection = {
   id: string;
@@ -417,7 +418,7 @@ export function CalendarSyncClient() {
           <div className="bg-white rounded-xl max-w-md w-full p-5 max-h-[80vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-900">Pick calendars</h3>
             <p className="mt-1 text-xs text-gray-500">
-              Tick the calendars whose busy times should block bookings on Photo Portugal.
+              Tick the calendars whose busy times should block bookings on {country.brand}.
               Untick any you want to ignore (e.g. holidays, kids&apos; school).
             </p>
             {calendarsLoading ? (

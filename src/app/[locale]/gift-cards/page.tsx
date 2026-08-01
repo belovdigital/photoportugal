@@ -4,14 +4,15 @@ import { GiftCardCheckoutForm } from "./GiftCardCheckoutForm";
 import { GIFT_CARD_TIERS } from "@/lib/gift-card";
 import { localeAlternates } from "@/lib/seo";
 import { getSiteReviewStats } from "@/lib/reviews-data";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const title = locale === "pt" ? "Ofereça uma sessão Photo Portugal — Cartões-presente"
-    : locale === "de" ? "Verschenken Sie eine Photo Portugal Session — Geschenkkarten"
-    : locale === "es" ? "Regale una sesión Photo Portugal — Tarjetas regalo"
-    : locale === "fr" ? "Offrez une séance Photo Portugal — Cartes cadeaux"
-    : "Gift a Photo Portugal session — Gift cards";
+  const title = locale === "pt" ? `Ofereça uma sessão ${country.brand} — Cartões-presente`
+    : locale === "de" ? `Verschenken Sie eine ${country.brand} Session — Geschenkkarten`
+    : locale === "es" ? `Regale una sesión ${country.brand} — Tarjetas regalo`
+    : locale === "fr" ? `Offrez une séance ${country.brand} — Cartes cadeaux`
+    : `Gift a ${country.brand} session — Gift cards`;
   const description = locale === "pt" ? "Ofereça uma sessão fotográfica de 1 ou 2 horas em Portugal. O destinatário escolhe o fotógrafo; você prepara a surpresa."
     : locale === "de" ? "Verschenken Sie eine 1- oder 2-stündige Fotoshooting-Session in Portugal. Die Empfänger:in wählt den Fotografen; Sie sorgen für die Überraschung."
     : locale === "es" ? "Regale una sesión fotográfica de 1 o 2 horas en Portugal. La persona elige al fotógrafo; usted prepara la sorpresa."
@@ -24,8 +25,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title,
       description,
-      url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/gift-cards`,
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Photo Portugal" }],
+      url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/gift-cards`,
+      images: [{ url: country.ogImage, width: 1200, height: 630, alt: `${country.brand}` }],
     },
   };
 }
@@ -37,7 +38,7 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
 
   const tiers = [GIFT_CARD_TIERS.express, GIFT_CARD_TIERS.full];
   const reviewStats = await getSiteReviewStats().catch(() => ({ avgRating: 5.0, count: 0 }));
-  const base = "https://photoportugal.com";
+  const base = country.baseUrl;
   const pageUrl = `${base}${locale === "en" ? "" : "/" + locale}/gift-cards`;
 
   // JSON-LD: Product with two Offers (one per tier) + AggregateRating
@@ -46,10 +47,10 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
   const productSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: "Photo Portugal Gift Card",
-    description: "Photoshoot gift card valid for any participating Photo Portugal photographer in Portugal. Valid 12 months from purchase.",
-    image: `${base}/og-image.png`,
-    brand: { "@type": "Brand", name: "Photo Portugal" },
+    name: `${country.brand} Gift Card`,
+    description: `Photoshoot gift card valid for any participating ${country.brand} photographer in Portugal. Valid 12 months from purchase.`,
+    image: `${base}${country.ogImage}`,
+    brand: { "@type": "Brand", name: `${country.brand}` },
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "EUR",
@@ -147,13 +148,13 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
     mainEntity: [
       {
         "@type": "Question",
-        name: "How long is a Photo Portugal gift card valid?",
+        name: `How long is a ${country.brand} gift card valid?`,
         acceptedAnswer: { "@type": "Answer", text: "12 months from the date of purchase. After that the gift expires and cannot be redeemed." },
       },
       {
         "@type": "Question",
         name: "Can the recipient pick any photographer?",
-        acceptedAnswer: { "@type": "Answer", text: "Yes — the gift card works with any participating Photo Portugal photographer across Portugal. The recipient browses the catalog and picks the one whose style they love." },
+        acceptedAnswer: { "@type": "Answer", text: `Yes — the gift card works with any participating ${country.brand} photographer across Portugal. The recipient browses the catalog and picks the one whose style they love.` },
       },
       {
         "@type": "Question",

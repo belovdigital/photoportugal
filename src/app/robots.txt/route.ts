@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { country } from "@/lib/country";
 
 // Route handler instead of the metadata robots.ts convention because
 // MetadataRoute.Robots can't emit Content-Signal directives
@@ -20,8 +21,8 @@ const disallow = [
 export const dynamic = "force-static";
 
 export function GET() {
-  const text = `# Photo Portugal — https://photoportugal.com
-# AI agents: site overview at https://photoportugal.com/llms.txt
+  const text = `# ${country.brand} — ${country.baseUrl}
+# AI agents: site overview at ${country.baseUrl}/llms.txt
 # Key public pages also serve markdown via content negotiation (Accept: text/markdown)
 
 # Content Signals (https://contentsignals.org/):
@@ -35,8 +36,8 @@ Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 ${disallow.map((p) => `Disallow: ${p}`).join("\n")}
 
-Sitemap: https://photoportugal.com/sitemap.xml
-Sitemap: https://photoportugal.com/sitemap-images.xml
+Sitemap: ${country.baseUrl}/sitemap.xml
+Sitemap: ${country.baseUrl}/sitemap-images.xml
 `;
 
   return new NextResponse(text, {

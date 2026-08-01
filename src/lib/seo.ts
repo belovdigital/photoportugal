@@ -1,8 +1,13 @@
 import { routing } from "@/i18n/routing";
+import { country } from "@/lib/country";
 
-const BASE = "https://photoportugal.com";
-const LOCALES = ["en", "pt", "de", "es", "fr"] as const;
-type Locale = (typeof LOCALES)[number];
+const BASE = country.baseUrl;
+// The type stays the full set so HREFLANGS and the pathname tables keep their
+// shape; only the ITERATED list narrows per market. Emitting an hreflang for a
+// locale this market does not serve points Google at a 404.
+const ALL_LOCALES = ["en", "pt", "de", "es", "fr"] as const;
+type Locale = (typeof ALL_LOCALES)[number];
+const LOCALES = country.locales as readonly Locale[];
 const HREFLANGS: Record<Locale, string[]> = {
   en: ["en-GB", "en-US"],
   pt: ["pt-PT"],

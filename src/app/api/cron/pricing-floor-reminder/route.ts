@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
+import { country } from "@/lib/country";
 
 // One-shot cron: fires the day BEFORE the new pricing floor + 15/30-min
 // removal takes effect (announced for Friday 2026-06-19). Goal: a
@@ -166,7 +167,7 @@ function renderEmail(
       change the duration to 45 min / 1 hour / longer — and save. The package stays exactly where it was, just at the new
       price/duration.
     </p>
-    ${emailButton("https://photoportugal.com/dashboard/photographer", "Open my dashboard")}
+    ${emailButton(`${country.baseUrl}/dashboard/photographer`, "Open my dashboard")}
     <p style="font-size:14px;line-height:1.7;color:#5c5247;margin:22px 0 0 0;">
       If anything's unclear — just reply to this email or ping us on WhatsApp. We're here.
     </p>

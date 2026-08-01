@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
-const REDIRECT_URI = "https://photoportugal.com/api/calendar/google/callback";
+const REDIRECT_URI = `${country.baseUrl}/api/calendar/google/callback`;
 
 function redirectBack(_req: NextRequest, params: Record<string, string>): NextResponse {
   // `req.url` resolves to the proxy upstream (http://localhost:3000) behind
   // nginx, so we'd send the user there if we used it as the base. Pin to
   // the canonical public host instead — set in env, falls back to the
   // hard-coded production URL.
-  const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+  const base = process.env.AUTH_URL || process.env.NEXTAUTH_URL || country.baseUrl;
   const url = new URL("/dashboard/availability", base);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   return NextResponse.redirect(url);

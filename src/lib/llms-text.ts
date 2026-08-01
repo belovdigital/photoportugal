@@ -2,6 +2,7 @@ import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
+import { country } from "@/lib/country";
 
 // Site overview in agent-friendly plain text / markdown. Served both as
 // /llms.txt and as the markdown representation of the homepage when a
@@ -99,9 +100,9 @@ export async function buildLlmsText(): Promise<string> {
         const name = loc?.name || c.location_slug;
         const count = parseInt(c.count);
         const price = c.min_price ? `EUR${Math.round(parseFloat(c.min_price))}` : "";
-        return `- ${name}: ${count} photographer${count === 1 ? "" : "s"}${price ? `, from ${price}` : ""} — https://photoportugal.com/locations/${c.location_slug}`;
+        return `- ${name}: ${count} photographer${count === 1 ? "" : "s"}${price ? `, from ${price}` : ""} — ${country.baseUrl}/locations/${c.location_slug}`;
       }).join("\n")
-    : locations.map((l) => `- ${l.name} — https://photoportugal.com/locations/${l.slug}`).join("\n");
+    : locations.map((l) => `- ${l.name} — ${country.baseUrl}/locations/${l.slug}`).join("\n");
 
   const photographerList = topPhotographers.length > 0
     ? topPhotographers.map((p) => {
@@ -109,12 +110,12 @@ export async function buildLlmsText(): Promise<string> {
         const rating = p.review_count > 0 ? `★${Number(p.rating).toFixed(1)} (${p.review_count} reviews)` : "new";
         const shootTypes = (p.shoot_types || []).slice(0, 3).join(", ");
         const locs = (p.locations || []).map((slug) => locations.find((l) => l.slug === slug)?.name || slug).join(", ");
-        return `- ${p.name} — ${rating}, ${price}${shootTypes ? `, specializes in ${shootTypes}` : ""}${locs ? `, works in ${locs}` : ""} — https://photoportugal.com/photographers/${p.slug}`;
+        return `- ${p.name} — ${rating}, ${price}${shootTypes ? `, specializes in ${shootTypes}` : ""}${locs ? `, works in ${locs}` : ""} — ${country.baseUrl}/photographers/${p.slug}`;
       }).join("\n")
     : "";
 
   const shootTypeDetail = shootTypes.map((st) => {
-    const url = `https://photoportugal.com/photoshoots/${st.slug}`;
+    const url = `${country.baseUrl}/photoshoots/${st.slug}`;
     return `- ${st.name}: ${url}`;
   }).join("\n");
 
@@ -123,7 +124,7 @@ export async function buildLlmsText(): Promise<string> {
         const name = r.client_name || "A client";
         const origin = r.country ? ` (${r.country})` : "";
         const text = r.text.length > 400 ? r.text.slice(0, 400).replace(/\s\S*$/, "") + "..." : r.text;
-        return `"${text}" — ${name}${origin} about ${r.photographer_name} (https://photoportugal.com/photographers/${r.photographer_slug})`;
+        return `"${text}" — ${name}${origin} about ${r.photographer_name} (${country.baseUrl}/photographers/${r.photographer_slug})`;
       }).join("\n\n")
     : "";
 

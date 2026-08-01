@@ -4,6 +4,7 @@ import { shootTypes } from "@/lib/shoot-types-data";
 import { queryOne } from "@/lib/db";
 import { PLAN_PRICES } from "@/lib/stripe";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
@@ -42,7 +43,7 @@ export async function GET() {
 
   const data = {
     name: "Photo Portugal",
-    url: "https://photoportugal.com",
+    url: country.baseUrl,
     description:
       "Photo Portugal is a marketplace connecting travelers with professional vacation photographers across Portugal. Travelers can browse verified photographer portfolios, read real reviews, compare prices, and book photoshoots online with instant confirmation. Photographers are vetted for quality and professionalism.",
     photographer_count: photographerCount,
@@ -56,12 +57,12 @@ export async function GET() {
       name: loc.name,
       slug: loc.slug,
       region: loc.region,
-      url: `https://photoportugal.com/locations/${loc.slug}`,
+      url: `${country.baseUrl}/locations/${loc.slug}`,
     })),
     shoot_types: shootTypes.map((st) => ({
       name: st.name,
       slug: st.slug,
-      url: `https://photoportugal.com/photoshoots/${st.slug}`,
+      url: `${country.baseUrl}/photoshoots/${st.slug}`,
     })),
     pricing: {
       photographer_plans: [
@@ -76,17 +77,17 @@ export async function GET() {
       },
     },
     key_pages: {
-      photographers: "https://photoportugal.com/photographers",
-      locations: "https://photoportugal.com/locations",
-      photoshoots: "https://photoportugal.com/photoshoots",
-      pricing: "https://photoportugal.com/for-photographers/pricing",
-      how_it_works: "https://photoportugal.com/how-it-works",
-      blog: "https://photoportugal.com/blog",
-      faq: "https://photoportugal.com/faq",
+      photographers: `${country.baseUrl}/photographers`,
+      locations: `${country.baseUrl}/locations`,
+      photoshoots: `${country.baseUrl}/photoshoots`,
+      pricing: `${country.baseUrl}/for-photographers/pricing`,
+      how_it_works: `${country.baseUrl}/how-it-works`,
+      blog: `${country.baseUrl}/blog`,
+      faq: `${country.baseUrl}/faq`,
     },
     languages: ["en", "pt", "de", "es", "fr"],
     country: "Portugal",
-    contact_email: "info@photoportugal.com",
+    contact_email: country.supportEmail,
   };
 
   return NextResponse.json(data, {

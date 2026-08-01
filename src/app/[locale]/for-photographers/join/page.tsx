@@ -8,6 +8,7 @@ import { localeAlternates } from "@/lib/seo";
 import { COMMISSION_RATES, PLAN_PRICES } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
 import { ConvertAccountCTA } from "./ConvertAccountCTA";
+import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
 
@@ -15,14 +16,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "join" });
   return {
-    title: t("heroTitle") + " — Photo Portugal",
+    title: t("heroTitle") + ` — ${country.brand}`,
     description: t("heroSubtitle"),
     alternates: localeAlternates("/for-photographers/join", locale),
     openGraph: {
-      title: t("heroTitle") + " — Photo Portugal",
+      title: t("heroTitle") + ` — ${country.brand}`,
       description: t("heroSubtitle"),
-      url: "https://photoportugal.com/for-photographers/join",
-      images: ["/og-image.png"],
+      url: `${country.baseUrl}/for-photographers/join`,
+      images: [country.ogImage],
     },
   };
 }
@@ -82,9 +83,9 @@ export default async function JoinPage({ params }: { params: Promise<{ locale: s
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    name: "Join Photo Portugal — Early Bird Program",
+    name: `Join ${country.brand} — Early Bird Program`,
     description: "Be among the first photographers on Portugal's newest photography marketplace.",
-    url: "https://photoportugal.com/for-photographers/join",
+    url: `${country.baseUrl}/for-photographers/join`,
   };
 
   const whatYouGetItems = [

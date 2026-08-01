@@ -44,17 +44,25 @@ export async function sendSMS(to: string, message: string): Promise<boolean> {
     return false;
   }
 
-  const sender = getSender(to);
+  // Normalize HERE rather than at the call sites. `normalizePhone` was written
+  // for exactly this problem but was never actually wired up anywhere, so all
+  // 15 callers passed raw user input straight to Twilio. A French client stored
+  // as "0033676041493" was rejected with error 21211 five times running and
+  // silently received none of their reminders. Doing it inside the single
+  // funnel every caller goes through means no future caller can forget.
+  // The function is idempotent, so numbers already in E.164 are untouched.
+  const toE164 = normalizePhone(to);
+  const sender = getSender(toE164);
 
   try {
     const client = twilio(accountSid, authToken);
     await client.messages.create({
       body: message,
       from: sender,
-      to,
+      to: toE164,
     });
-    console.log(`[sms] Sent SMS to ${to}`);
-    import("@/lib/notification-log").then(m => m.logNotification("sms", to, message.slice(0, 100), "sent")).catch(() => {});
+    console.log(`[sms] Sent SMS to ${toE164}`);
+    import("@/lib/notification-log").then(m => m.logNotification("sms", toE164, message.slice(0, 100), "sent")).catch(() => {});
     return true;
   } catch (error: unknown) {
     const twilioError = error as { code?: number; status?: number; message?: string };

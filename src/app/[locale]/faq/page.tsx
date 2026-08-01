@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { localeAlternates } from "@/lib/seo";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
+import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("metaTitle"),
     description: t("metaDescription"),
     alternates: localeAlternates("/faq", locale),
-    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: `https://photoportugal.com${locale === "en" ? "" : "/" + locale}/faq` },
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), url: `${country.baseUrl}${locale === "en" ? "" : "/" + locale}/faq` },
   };
 }
 

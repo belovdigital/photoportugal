@@ -10,8 +10,9 @@ import {
   hasAvailableBookingStart,
   lisbonLocalMinutesToUtc,
 } from "@/lib/booking-availability";
+import { country } from "@/lib/country";
 
-const BASE_URL = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "https://photoportugal.com";
+const BASE_URL = process.env.AUTH_URL || process.env.NEXTAUTH_URL || country.baseUrl;
 
 function toDateString(value: unknown) {
   if (value instanceof Date) return value.toISOString().split("T")[0];
@@ -168,7 +169,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         </div>
         <p>You can accept this date or propose a different one.</p>
         <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+        <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
       </div>`
     ).catch(console.error);
 
@@ -299,7 +300,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           <p style="font-size: 18px; font-weight: bold; margin: 0; color: #166534;">${formattedDate}${acceptedTimeDisplay}</p>
         </div>
         <p><a href="${BASE_URL}/dashboard/bookings" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">View Booking</a></p>
-        <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+        <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
       </div>`
     ).catch(console.error);
 
