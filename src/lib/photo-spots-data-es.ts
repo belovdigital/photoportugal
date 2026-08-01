@@ -518,4 +518,131 @@ export const photoSpotsES: Record<string, PhotoSpot[]> = {
       address: "Cala Comte, Sant Josep de sa Talaia, Ibiza",
     },
   ],
+
+  toledo: [
+    {
+      name: "Mirador del Valle",
+      description:
+        "The whole walled city seen from across the river — cathedral, alcázar and the Tagus wrapped round all of it.",
+      nameEs: "Mirador del Valle",
+      descriptionEs:
+        "La ciudad amurallada entera desde el otro lado del río: catedral, alcázar y el Tajo rodeándolo todo.",
+      long_description:
+        "Toledo sits on a granite hill inside a loop of the Tagus, and this viewpoint on the far bank is where you see that fact. The whole city stacks up in one frame — the cathedral spire, the square bulk of the Alcázar, the medieval walls and the river below.\n\nThe city faces roughly north from here, so it takes light across its face for most of the day rather than being backlit. Late afternoon warms the stone; after sunset the whole thing is floodlit and the twenty minutes of blue hour give you a completely different photograph.\n\nIt is a viewpoint on a road rather than a place you stumble into — four kilometres from the centre, and worth the taxi.",
+      long_description_es:
+        "Toledo se asienta sobre un cerro de granito dentro de un meandro del Tajo, y este mirador de la otra orilla es donde se ve esa realidad. La ciudad entera se apila en un solo encuadre: la aguja de la catedral, el bloque del Alcázar, las murallas medievales y el río abajo.\n\nDesde aquí la ciudad mira más o menos al norte, así que recibe luz de frente casi todo el día en vez de quedar a contraluz. A última hora de la tarde la piedra se calienta; después del atardecer todo queda iluminado y los veinte minutos de hora azul dan una fotografía completamente distinta.\n\nEs un mirador en carretera, no un sitio con el que uno se tropieza: a cuatro kilómetros del centro, y el taxi merece la pena.",
+      best_time: "The last hour of light, or twenty minutes after sunset when the city lights up",
+      best_timeEs: "La última hora de luz, o veinte minutos después del atardecer cuando la ciudad se ilumina",
+      tips: "Four kilometres from the old town along the Carretera de Circunvalación — taxi or car, not a walk. There is a lay-by to park in and it fills at sunset.",
+      tipsEs:
+        "A cuatro kilómetros del casco por la Carretera de Circunvalación: taxi o coche, no se va andando. Hay un apartadero para aparcar y se llena al atardecer.",
+      tags: ["couples", "engagement", "solo", "family"],
+      coordinates: { lat: 39.8506, lng: -4.0197 },
+      address: "Mirador del Valle, Carretera de Circunvalación, Toledo",
+    },
+    {
+      name: "The old town and Puente de San Martín",
+      description:
+        "Steep stone lanes between the cathedral and the river, ending at a fourteenth-century bridge with towers at both ends.",
+      nameEs: "El casco antiguo y el Puente de San Martín",
+      descriptionEs:
+        "Callejuelas de piedra empinadas entre la catedral y el río, que terminan en un puente del siglo XIV con torres en ambos extremos.",
+      long_description:
+        "Toledo's old town is dense, steep and almost entirely stone — narrow lanes where three cultures built on top of each other for a thousand years. The walls are high enough that direct sun rarely reaches the ground, so it holds workable light through the middle of the day when open squares do not.\n\nThe Puente de San Martín at the western edge is the reward for walking down: a fourteenth-century bridge across the Tagus with a fortified tower at each end and the gorge below.\n\nEverything here is uphill on the way back. Plan the route downhill and take the taxi up.",
+      long_description_es:
+        "El casco de Toledo es denso, empinado y casi todo de piedra: callejuelas donde tres culturas construyeron unas sobre otras durante mil años. Los muros son lo bastante altos para que el sol directo casi nunca llegue al suelo, así que conserva luz aprovechable a mediodía cuando las plazas abiertas no.\n\nEl Puente de San Martín, en el extremo oeste, es la recompensa de bajar: un puente del siglo XIV sobre el Tajo con una torre fortificada en cada punta y el tajo debajo.\n\nAquí todo es cuesta arriba a la vuelta. Plantee el recorrido cuesta abajo y suba en taxi.",
+      best_time: "Midday in the lanes; the bridge in the last two hours of light",
+      best_timeEs: "Mediodía en las callejuelas; el puente en las dos últimas horas de luz",
+      tips: "Cobblestone and steep throughout, and Toledo is a day-trip town — coaches arrive late morning and leave mid-afternoon. Before ten and after five it is a different, much emptier place.",
+      tipsEs:
+        "Adoquín y cuesta por todas partes, y Toledo es pueblo de excursión: los autocares llegan a media mañana y se van a media tarde. Antes de las diez y después de las cinco es otro sitio, mucho más vacío.",
+      tags: ["couples", "solo", "engagement", "family"],
+      coordinates: { lat: 39.8571, lng: -4.0361 },
+      address: "Puente de San Martín, Toledo",
+    },
+  ],
+  cordoba: [
+    {
+      name: "The Mezquita",
+      description:
+        "Eight hundred columns of red-and-white striped arches receding in every direction — an interior unlike anywhere in Europe.",
+      nameEs: "La Mezquita",
+      descriptionEs:
+        "Ochocientas columnas de arcos a franjas rojas y blancas que se pierden en todas direcciones: un interior que no tiene igual en Europa.",
+      long_description:
+        "A mosque begun in 785, extended for two centuries, and with a cathedral built into the middle of it in the sixteenth century. What that produced is a forest of columns carrying double horseshoe arches banded in brick and stone, repeating in every direction until they disappear into the dark.\n\nIt is one of very few interiors worth building an entire session around. The repetition does the composition for you — stand anyone between the columns and the arches lead the eye to them.\n\nThe light is low and warm and comes from lamps rather than windows, so this is a place for wide apertures and steady hands rather than bright frames. Check the current rules on photography and tripods before you plan around it; they change, and a tripod is normally not permitted.",
+      long_description_es:
+        "Una mezquita comenzada en 785, ampliada durante dos siglos, y con una catedral construida en el centro en el siglo XVI. El resultado es un bosque de columnas con dobles arcos de herradura a franjas de ladrillo y piedra, repitiéndose en todas direcciones hasta perderse en la penumbra.\n\nEs uno de los poquísimos interiores por los que merece la pena montar una sesión entera. La repetición hace la composición sola: coloque a alguien entre las columnas y los arcos llevan la mirada hasta él.\n\nLa luz es baja, cálida y viene de lámparas, no de ventanas, así que es sitio de diafragmas abiertos y pulso firme, no de encuadres luminosos. Consulte las normas vigentes sobre fotografía y trípodes antes de planificar: cambian, y el trípode normalmente no se permite.",
+      best_time: "The first entry slot of the day, before the interior fills",
+      best_timeEs: "El primer turno de entrada del día, antes de que se llene el interior",
+      tips: "Ticketed with timed entry; the photographer needs their own. There is a free early-morning visiting hour on most days, but conditions on it change — verify before relying on it.",
+      tipsEs:
+        "Entrada con hora; el fotógrafo necesita la suya. Casi todos los días hay una franja matinal de acceso gratuito, pero sus condiciones cambian: compruébelo antes de contar con ella.",
+      tags: ["couples", "solo", "engagement"],
+      coordinates: { lat: 37.8790, lng: -4.7794 },
+      address: "Mezquita-Catedral, Calle Cardenal Herrero, Córdoba",
+    },
+    {
+      name: "The Jewish Quarter and the patios",
+      description:
+        "Whitewashed lanes hung with flowerpots, and courtyards that open to the public for two weeks every May.",
+      nameEs: "La Judería y los patios",
+      descriptionEs:
+        "Callejuelas encaladas cubiertas de macetas, y patios que abren al público dos semanas cada mayo.",
+      long_description:
+        "The lanes around the Mezquita are the whitest in Andalusia and the most heavily planted — geraniums and jasmine in blue pots covering entire walls. The Calleja de las Flores narrows to barely a metre and frames the cathedral tower at the end of it, which is the photograph Córdoba is known for.\n\nThe patios themselves are the real thing. Private courtyards behind ordinary front doors, planted floor to roofline, and for two weeks in early May a large number of them open to visitors for the Fiesta de los Patios. It is, without much competition, the best fortnight of the year for photographs in this city.\n\nOutside those two weeks a handful stay open year-round and the lanes are still worth the trip.",
+      long_description_es:
+        "Las callejuelas alrededor de la Mezquita son las más blancas de Andalucía y las más plantadas: geranios y jazmines en macetas azules cubriendo paredes enteras. La Calleja de las Flores se estrecha hasta apenas un metro y enmarca la torre de la catedral al fondo, que es la foto por la que se conoce Córdoba.\n\nLos patios son lo verdaderamente singular. Patios privados tras puertas corrientes, plantados del suelo al tejado, y durante dos semanas de principios de mayo muchos abren al público por la Fiesta de los Patios. Es, sin mucha competencia, la mejor quincena del año para fotografiar en esta ciudad.\n\nFuera de esas dos semanas unos cuantos siguen abiertos todo el año y las calles merecen igualmente el viaje.",
+      best_time: "Early morning for empty lanes; the first half of May for the patios",
+      best_timeEs: "Primera hora para las calles vacías; la primera quincena de mayo para los patios",
+      tips: "The Calleja de las Flores is very narrow and very popular — first thing or not at all. During the patio festival the courtyards are free but queue, and several ask that you do not photograph the residents.",
+      tipsEs:
+        "La Calleja de las Flores es muy estrecha y muy concurrida: a primera hora o nada. Durante el festival los patios son gratuitos pero con cola, y en varios piden que no se fotografíe a los vecinos.",
+      tags: ["couples", "family", "solo", "engagement"],
+      coordinates: { lat: 37.8794, lng: -4.7830 },
+      address: "Judería, Córdoba",
+    },
+  ],
+  "costa-brava": [
+    {
+      name: "Cadaqués",
+      description:
+        "A white village round a rocky bay at the end of a mountain road — the whitest place on the Catalan coast.",
+      nameEs: "Cadaqués",
+      descriptionEs:
+        "Un pueblo blanco en torno a una bahía rocosa al final de una carretera de montaña: el sitio más blanco de la costa catalana.",
+      long_description:
+        "Reached over a mountain pass and cut off from the rest of the coast, which is why it still looks like itself. White houses stacked round a bay of dark rock and clear water, black-and-white pebble streets, and boats pulled up on the shingle.\n\nThe whiteness is the point for a photographer: it bounces light back up into faces, so this is one of the few coastal locations that works in the middle of the day rather than only at its ends. Dalí lived in the next cove along at Portlligat, and the landscape he kept painting is the one you will be standing in.\n\nThe road in is slow and the village is small. It rewards half a day rather than a stop.",
+      long_description_es:
+        "Se llega por un puerto de montaña y está aislado del resto de la costa, que es la razón de que siga pareciéndose a sí mismo. Casas blancas apiladas en torno a una bahía de roca oscura y agua clara, calles de canto rodado en blanco y negro, y barcas varadas en la grava.\n\nEl blanco es lo que importa para un fotógrafo: rebota la luz hacia las caras, así que este es uno de los pocos sitios de costa que funciona a mediodía y no solo en los extremos del día. Dalí vivía en la cala siguiente, en Portlligat, y el paisaje que pintaba una y otra vez es en el que va a estar.\n\nLa carretera de acceso es lenta y el pueblo es pequeño. Compensa medio día, no una parada.",
+      best_time: "Works at most hours thanks to the whitewash; best in the last two hours",
+      best_timeEs: "Funciona a casi cualquier hora gracias a la cal; mejor en las dos últimas horas",
+      tips: "The road in from Roses is winding and slow — allow well over what the distance suggests. Parking is outside the centre and the streets are pebble, which is hard on thin heels.",
+      tipsEs:
+        "La carretera desde Roses es revirada y lenta: calcule bastante más de lo que sugiere la distancia. El aparcamiento está fuera del centro y las calles son de canto rodado, incómodas con tacón fino.",
+      tags: ["couples", "honeymoon", "solo", "engagement"],
+      coordinates: { lat: 42.2887, lng: 3.2775 },
+      address: "Cadaqués, Alt Empordà, Girona",
+    },
+    {
+      name: "Tossa de Mar and the Camí de Ronda",
+      description:
+        "A walled medieval town on a headland, with a coastal footpath running out to pine-backed coves either side.",
+      nameEs: "Tossa de Mar y el Camí de Ronda",
+      descriptionEs:
+        "Un pueblo medieval amurallado sobre un promontorio, con un sendero de costa que sale hacia calas rodeadas de pinos a ambos lados.",
+      long_description:
+        "The Vila Vella is the only fortified medieval town still standing on the Catalan coast: stone walls and round towers on a headland dropping straight into the sea, with the beach curving away below it.\n\nWhat makes Tossa worth a session rather than a photograph is the Camí de Ronda, the coastal path that runs along the cliffs in both directions. Within twenty minutes on foot you are at small coves with pines coming down to the water and no one else in them — the enclosed, intimate frames that the main beach cannot give you.\n\nThe walls take warm light late in the day and the path faces east and west depending which way you walk, so you can choose your light by choosing your direction.",
+      long_description_es:
+        "La Vila Vella es el único pueblo medieval fortificado que sigue en pie en la costa catalana: murallas de piedra y torres redondas sobre un promontorio que cae al mar, con la playa curvándose debajo.\n\nLo que convierte Tossa en una sesión y no en una foto es el Camí de Ronda, el sendero que recorre los acantilados en ambas direcciones. A veinte minutos a pie hay calas pequeñas con pinos hasta el agua y nadie más en ellas: los encuadres recogidos e íntimos que la playa principal no da.\n\nLas murallas cogen luz cálida al final del día, y el sendero mira al este o al oeste según hacia dónde se camine, así que se elige la luz eligiendo la dirección.",
+      best_time: "Late afternoon on the walls; the coves whenever the light suits the direction you walk",
+      best_timeEs: "Última hora de la tarde en las murallas; las calas según la dirección que se tome",
+      tips: "The Camí de Ronda is a proper footpath — uneven, with steps and no railings in places. Trainers, and not the section to attempt in a long dress without changing at the far end.",
+      tipsEs:
+        "El Camí de Ronda es un sendero de verdad: irregular, con escalones y sin barandilla en algunos tramos. Zapatilla, y no es el tramo para un vestido largo sin cambiarse al llegar.",
+      tags: ["couples", "family", "honeymoon", "elopement"],
+      coordinates: { lat: 41.7203, lng: 2.9317 },
+      address: "Vila Vella, Tossa de Mar, Girona",
+    },
+  ],
 };
