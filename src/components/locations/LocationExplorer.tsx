@@ -91,7 +91,7 @@ const COPY = {
     swipe: "Destinations",
   },
   pt: {
-    eyebrow: `Mapa fotográfico de ${ES_COUNTRY}`,
+    eyebrow: `Mapa fotográfico de ${PT_COUNTRY}`,
     title: "Escolha o lugar pela sensação",
     subtitle: "Explore as regiões, toque no mapa e veja fotógrafos onde a viagem acontece.",
     search: country.code === "es" ? "Pesquisar Barcelona, Madrid, Maiorca..." : "Pesquisar Lisboa, Açores, Algarve...",
@@ -266,6 +266,31 @@ function availableNowLabel(count: number, copy: Copy): string {
 // broken <img> showing its alt text. Points at the market's flagship city.
 const FALLBACK_IMAGE_SLUG = country.code === "es" ? "barcelona" : "lisbon";
 
+/**
+ * Resolve per-locale display names once, at the point the data enters the
+ * component, so that cards, map markers, breadcrumbs AND the search index all
+ * agree without each call site having to know about `names`. Resolving at each
+ * render site instead would mean a visitor could see "Cataluña" on the card but
+ * fail to find it by typing "Cataluña" in the search box.
+ *
+ * Entries without a translation for this locale keep `name` untouched, so
+ * Portugal — where no entry defines `names` — gets exactly the old objects.
+ */
+function localizeRegions(regions: LocationExplorerRegion[], locale: string): LocationExplorerRegion[] {
+  const translated = <T extends { name: string; names?: Record<string, string> }>(node: T): T => {
+    const localized = node.names?.[locale];
+    return localized ? { ...node, name: localized } : node;
+  };
+  const localizeChild = (child: LocationExplorerChild): LocationExplorerChild => {
+    const next = translated(child);
+    return child.children ? { ...next, children: child.children.map(localizeChild) } : next;
+  };
+  return regions.map((region) => ({
+    ...translated(region),
+    children: region.children.map(localizeChild),
+  }));
+}
+
 function regionImage(region: LocationExplorerRegion): string {
   return (
     locationImage(REGION_IMAGE_SLUGS[region.slug] || region.slug, "cardLarge") ||
@@ -289,6 +314,7 @@ function localizedPath(locale: string, href: string): string {
 
 export function LocationExplorer({ locale, mapboxToken, totalPhotographers, coverageCounts, regionPhotographers }: Props) {
   const copy = COPY[(locale as keyof typeof COPY)] ?? COPY.en;
+  const regions = useMemo(() => localizeRegions(LOCATION_EXPLORER_REGIONS, locale), [locale]);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapboxRef = useRef<MapboxGL | null>(null);
   const mapRef = useRef<MapboxMap | null>(null);
@@ -398,13 +424,13 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
   };
 
   const allPlaces = useMemo(
-    () => LOCATION_EXPLORER_REGIONS.flatMap((region) => flattenRegionPlaces(region)),
-    []
+    () => regions.flatMap((region) => flattenRegionPlaces(region)),
+    [regions]
   );
 
   const filteredRegions = useMemo(() => {
     const q = normalize(query.trim());
-    return LOCATION_EXPLORER_REGIONS.filter((region) => {
+    return regions.filter((region) => {
       if (scope !== "all" && region.scope !== scope) return false;
       if (shootFilter && !region.bestFor.includes(shootFilter)) return false;
       if (vibeFilter && !region.vibes.includes(vibeFilter)) return false;
@@ -415,7 +441,7 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
         || region.children.some((child) => childMatches(child, q))
       );
     });
-  }, [query, scope, shootFilter, vibeFilter]);
+  }, [regions, query, scope, shootFilter, vibeFilter]);
 
   const matchingPlaces = useMemo(() => {
     const q = normalize(query.trim());
@@ -433,8 +459,8 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
   }, [allPlaces, query, scope, shootFilter, vibeFilter]);
 
   const selectedRegion = useMemo(
-    () => LOCATION_EXPLORER_REGIONS.find((region) => region.slug === selectedSlug) || LOCATION_EXPLORER_REGIONS[0],
-    [selectedSlug]
+    () => regions.find((region) => region.slug === selectedSlug) || regions[0],
+    [regions, selectedSlug]
   );
   const selectedPlace = useMemo(
     () => allPlaces.find((place) => place.slug === selectedPlaceSlug && place.parentSlug === selectedSlug) || null,

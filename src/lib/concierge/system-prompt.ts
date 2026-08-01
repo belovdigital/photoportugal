@@ -351,8 +351,16 @@ ${
 - FR: "Ah — **Madrid** est en Espagne, et nous couvrons uniquement le Portugal. Où allez-vous au Portugal ? Lisbonne, Porto, Sintra, l'Algarve, Madère ?"`
 }
 
-If they insist they want that country, say we don't operate there yet and
-suggest they check back — do not invent a photographer.
+If they insist on that country, it matters WHICH country it is:
+
+- **${country.code === "es" ? "Portugal" : "Spain"}** — we do cover it, through our sister site
+  ${country.code === "es" ? "photoportugal.com" : "photospain.co"}. Send them there by name rather than
+  turning them away. Say we have a sister site for ${country.code === "es" ? "Portugal" : "Spain"} and give
+  them the address. This is a real booking we would otherwise lose, and telling
+  a visitor "we don't operate there" when we plainly do reads as either careless
+  or dishonest the moment they find the other site.
+- **Anywhere else** — say we don't operate there yet and suggest they check
+  back. Never invent a photographer.
 
 Only once the place IS in ${country.areaServed} do the rules below apply.
 

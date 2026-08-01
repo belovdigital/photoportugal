@@ -2,6 +2,14 @@ import { LOCATION_EXPLORER_REGIONS_ES } from "./location-explorer-data-es";
 export type LocationExplorerChild = {
   slug: string;
   name: string;
+  /**
+   * Display name per locale, where it genuinely differs. Portuguese place names
+   * are near-identical across our locales, so a single `name` was always
+   * enough — Spain is the first market where it is not ("Catalonia" vs
+   * "Cataluña", "Basque Country" vs "País Vasco"). Omit for names that do not
+   * change; `name` stays the fallback.
+   */
+  names?: Record<string, string>;
   type: "Region" | "Group" | "Island" | "City" | "Spot";
   children?: LocationExplorerChild[];
 };
@@ -9,6 +17,8 @@ export type LocationExplorerChild = {
 export type LocationExplorerRegion = {
   slug: string;
   name: string;
+  /** See LocationExplorerChild.names. */
+  names?: Record<string, string>;
   shortName: string;
   scope: "mainland" | "islands";
   center: [number, number];
