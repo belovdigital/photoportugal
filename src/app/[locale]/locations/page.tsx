@@ -154,9 +154,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const title = t("mapMetaTitle");
   const description = t("mapMetaDescription");
   const alternates = localeAlternates("/locations", locale);
-  // Was locationImage("lisbon") — the share card for "Spain Photo Map" was a
-  // photo of tram 28 in Alfama, with an "Alfama" street sign legible in frame.
-  const image = `${country.baseUrl}${country.ogImage}`;
+  // Portugal keeps its Lisbon photo — it is a Portuguese site and the picture
+  // is on-topic. Spain cannot: the same call returned tram 28 in Alfama, with
+  // an "Alfama" street sign and Portuguese billboards legible in frame, as the
+  // share card for "Spain Photo Map". Until Spanish photography exists, the
+  // generated OG card is the honest option.
+  const image =
+    country.code === "es" ? `${country.baseUrl}${country.ogImage}` : locationImage("lisbon", "hero");
 
   return {
     title,

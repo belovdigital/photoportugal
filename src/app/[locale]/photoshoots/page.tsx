@@ -3,7 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { shootTypes, shootTypeLocalized } from "@/lib/shoot-types-data";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { localeAlternates } from "@/lib/seo";
+import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { query, queryOne } from "@/lib/db";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { TrackedConciergeTrigger } from "@/components/ui/TrackedConciergeTrigger";
@@ -42,6 +42,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t("title"),
     description: t("subtitle"),
     alternates: localeAlternates("/photoshoots", locale),
+    // Without its own block this page inherited the root layout's OpenGraph,
+    // which used to claim it was the homepage and that it was English.
+    openGraph: {
+      ...openGraphIdentity("/photoshoots", locale),
+      title: t("title"),
+      description: t("subtitle"),
+      images: [{ url: `${country.baseUrl}${country.ogImage}`, width: 1200, height: 630, alt: country.brand }],
+    },
   };
 }
 
