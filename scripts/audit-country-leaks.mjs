@@ -280,6 +280,25 @@ for (const file of fs.readdirSync("src/lib").filter((f) => f.endsWith("-es.ts"))
   }
 }
 
+// 7b. Broken article/preposition agreement in the DATASETS, not just the
+//     messages layer. "Portugal" is masculine and "Espagne"/"España" feminine,
+//     so bulk substitution leaves "le Espagne" and "todo España" behind. Ten of
+//     these survived in shoot-types-data-es.ts after the messages layer was
+//     repaired, and shipped into FAQPage structured data.
+const DATASET_GRAMMAR = [
+  [/\b(au|le|la|du) Espagne\b/gi, "французский артикль/предлог + Espagne"],
+  [/\btodo España\b/gi, "todo España → toda España"],
+  [/\b(el|del) España\b/g, "испанский артикль + España"],
+  [/\bder Spanien\b/g, "der Spanien"],
+];
+for (const file of fs.readdirSync("src/lib").filter((f) => f.endsWith("-es.ts"))) {
+  const code = fs.readFileSync(path.join("src/lib", file), "utf8");
+  for (const [re, label] of DATASET_GRAMMAR) {
+    const hits = code.match(re);
+    if (hits) report("сломанное согласование в датасете", "—", file, `${hits.length}× ${label}`);
+  }
+}
+
 // 7. The brand translated, ANYWHERE in src — not just the messages layer.
 //    The first repair pass only walked messages/country/es/*.json, so 122
 //    occurrences survived in shoot-types-data-es.ts and shipped "Photo
