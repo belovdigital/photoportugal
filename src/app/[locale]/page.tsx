@@ -399,7 +399,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         rating: Number(r.rating),
         review_count: r.review_count,
         session_count: r.session_count,
-        location_name: locData?.name || "Portugal",
+        location_name: locData?.name || country.areaServed,
         location_slug: r.location_slug || "",
         portfolio_urls: (r.portfolio_urls || []).filter(Boolean),
       };

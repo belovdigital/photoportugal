@@ -1018,7 +1018,11 @@ export default async function WeddingsPage({
       {/* ═══ 5. WHY — three editorial columns ═══ */}
       <section className="bg-[#F2EAE0]">
         <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
-          <h2 className={`${serif.className} max-w-2xl text-4xl font-medium sm:text-5xl`}>{ll.whyTitle}</h2>
+          {/* max-w-2xl broke this heading across two lines with only the brand
+              name on the second — the widest locale here is ~50 characters, so
+              the box has to fit that. text-balance keeps the split even on the
+              narrow screens where it still has to wrap. */}
+          <h2 className={`${serif.className} max-w-5xl text-balance text-4xl font-medium sm:text-5xl`}>{ll.whyTitle}</h2>
           <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-8">
             {ll.why.map((w, i) => (
               <div key={i} className="border-t border-[#1F1B17]/20 pt-6">

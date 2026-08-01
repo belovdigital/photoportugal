@@ -157,7 +157,7 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
       url: type.slug === "wedding"
         ? `${country.baseUrl}/weddings`
         : `${country.baseUrl}/photoshoots/${type.slug}`,
-      name: `${type.name} Photoshoot in Portugal`,
+      name: `${type.name} Photoshoot in ${country.areaServed}`,
     })),
   };
 
@@ -299,7 +299,7 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
                     {photo ? (
                       <OptimizedImage
                         src={photo}
-                        alt={`${stl.name} photoshoot in Portugal`}
+                        alt={`${stl.name} photoshoot in ${country.areaServed}`}
                         className="h-full w-full transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (

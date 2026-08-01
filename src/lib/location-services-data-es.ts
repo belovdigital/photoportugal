@@ -33,11 +33,11 @@ export const locationServicesES: Record<string, LocationService[]> = {
       shootTypeSlug: "couples",
       label: "Couples",
       description:
-        "Madrid's colorful streets, romantic viewpoints, and golden light make it Spain's most popular destination for couples photography. From La Latina's intimate alleyways to sweeping Tagus views, every corner tells a love story.",
+        "Madrid's colorful streets, romantic viewpoints, and golden light make it Espagne's most popular destination for couples photography. From La Latina's intimate alleyways to sweeping Tagus views, every corner tells a love story.",
       description_pt: "As ruas coloridas de Madrid, miradors românticos e a luz dourada fazem dela o destino mais popular de Espanha para fotografia de casais. Das ruelas íntimas de La Latina às vistas amplas sobre o Tejo, cada esquina conta uma história de amor.",
       description_de: "Madrids bunte Straßen, romantische Aussichtspunkte und goldenes Licht machen es zu Spaniens beliebtestem Ziel für Paar-Fotografie. Von La Latinas intimen Gassen bis zu weiten Tejo-Ausblicken erzählt jede Ecke eine Liebesgeschichte.",
       description_es: "Las calles coloridas de Madrid, los miradores románticos y la luz dorada la convierten en el destino más popular de España para fotografía de parejas. Desde los callejones íntimos de La Latina hasta las amplias vistas del Tajo, cada rincón cuenta una historia de amor.",
-      description_fr: "Les rues colorées de Madrid, ses miradors romantiques et sa lumière dorée en font la destination la plus prisée du Spain pour la photographie de couple. Des ruelles intimes d'La Latina aux vues panoramiques sur le Tage, chaque coin raconte une histoire d'amour.",
+      description_fr: "Les rues colorées de Madrid, ses miradors romantiques et sa lumière dorée en font la destination la plus prisée d’Espagne pour la photographie de couple. Des ruelles intimes d'La Latina aux vues panoramiques sur le Tage, chaque coin raconte une histoire d'amour.",
     },
     {
       shootTypeSlug: "family",

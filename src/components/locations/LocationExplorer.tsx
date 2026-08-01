@@ -41,15 +41,32 @@ export type LocationExplorerPhotographer = {
   rating: number;
 };
 
-const REGION_IMAGE_SLUGS: Record<string, string> = {
-  "lisbon-region": "lisbon",
-  "porto-north": "porto",
-  "central-portugal": "nazare",
-  alentejo: "evora",
-  algarve: "algarve",
-  madeira: "madeira",
-  azores: "azores",
-};
+// A region card borrows the photo of its most representative place, because
+// there is no photo filed under the region slug itself. Only the Portuguese
+// regions were listed, so every Spanish region card asked for an image that
+// does not exist — `locationImage` returns "" for an unknown slug, and the
+// cards rendered as broken images with the alt text showing through.
+const REGION_IMAGE_SLUGS: Record<string, string> =
+  country.code === "es"
+    ? {
+        catalonia: "barcelona",
+        "madrid-region": "madrid",
+        andalusia: "seville",
+        "balearic-islands": "mallorca",
+        "canary-islands": "tenerife",
+        "valencia-region": "valencia",
+        "basque-country": "san-sebastian",
+        galicia: "santiago-de-compostela",
+      }
+    : {
+        "lisbon-region": "lisbon",
+        "porto-north": "porto",
+        "central-portugal": "nazare",
+        alentejo: "evora",
+        algarve: "algarve",
+        madeira: "madeira",
+        azores: "azores",
+      };
 
 const COPY = {
   en: {
@@ -245,12 +262,23 @@ function availableNowLabel(count: number, copy: Copy): string {
   return `${count} ${count === 1 ? copy.photographer : copy.photographers} ${copy.availableNow}`;
 }
 
+// Last-resort photo so an unmapped slug degrades to a real picture instead of a
+// broken <img> showing its alt text. Points at the market's flagship city.
+const FALLBACK_IMAGE_SLUG = country.code === "es" ? "barcelona" : "lisbon";
+
 function regionImage(region: LocationExplorerRegion): string {
-  return locationImage(REGION_IMAGE_SLUGS[region.slug] || region.slug, "cardLarge");
+  return (
+    locationImage(REGION_IMAGE_SLUGS[region.slug] || region.slug, "cardLarge") ||
+    locationImage(FALLBACK_IMAGE_SLUG, "cardLarge")
+  );
 }
 
 function placeImage(place: ExplorerPlace): string {
-  return locationImage(place.slug, "cardLarge") || regionImage(place.region);
+  return (
+    locationImage(place.slug, "cardLarge") ||
+    regionImage(place.region) ||
+    locationImage(FALLBACK_IMAGE_SLUG, "cardLarge")
+  );
 }
 
 function localizedPath(locale: string, href: string): string {

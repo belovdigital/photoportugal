@@ -125,7 +125,7 @@ export default async function LocationPhotographersPage({
   const itemListJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `Professional Photographers in ${locationName}, Portugal`,
+    name: `Professional Photographers in ${locationName}, ${country.areaServed}`,
     numberOfItems: dbPhotographers.filter(p =>
       p.locations.some(l => l.slug === slug) || (p.coverage_nodes || []).includes(slug)
     ).length,

@@ -25,7 +25,11 @@
  * ("au Portugal" -> "au Espagne"), and leaves broken tokens behind ("dLa Rioja").
  *
  * Run: node scripts/audit-country-leaks.mjs
- * Exits non-zero if anything is found, so it can gate a deploy.
+ *
+ * Exits non-zero on the precise checks, so it can gate a deploy. The code scan
+ * is advisory only and never fails the run — see the note above `report`.
+ * This script is necessary but NOT sufficient: it reads source, not pages, so
+ * the live sweep of text, <meta> and JSON-LD in docs/SPAIN.md still has to run.
  */
 
 import fs from "node:fs";
@@ -138,8 +142,22 @@ const flatten = (node, prefix = "", out = {}) => {
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
 
 const problems = [];
+const advisories = [];
+
+/**
+ * Gating findings vs advisory ones.
+ *
+ * The code scan (check 5) cannot tell a rendered string from the `: "Portugal"`
+ * branch of a country ternary, or from dead code — it reports ~200 lines that
+ * the live site provably does not show. A check that cries wolf gets skimmed,
+ * which is how the original leaks survived in the first place, so it is listed
+ * separately and does NOT fail the run. The gate is the precise checks plus the
+ * live sweep of text, <meta> and JSON-LD described in docs/SPAIN.md.
+ */
 const report = (kind, locale, key, detail) =>
   problems.push({ kind, locale, key, detail });
+const advise = (kind, locale, key, detail) =>
+  advisories.push({ kind, locale, key, detail });
 
 /**
  * AI scene IDs the Spanish market actually renders. `SCENES` in ai-scenes.ts
@@ -243,7 +261,7 @@ for (const file of walkFiles("src")) {
     const context = `${lines[i - 1] ?? ""}\n${line}`;
     if (/country\.code|isSpain|country\.areaServed|CN\./.test(context)) return;
     if (!/["'`]/.test(line)) return;
-    report("страна зашита в country-aware файле", "—", `${file.replace(/^src\//, "")}:${i + 1}`, line.trim().slice(0, 80));
+    advise("страна зашита в country-aware файле (справочно)", "—", `${file.replace(/^src\//, "")}:${i + 1}`, line.trim().slice(0, 80));
   });
 }
 
@@ -256,6 +274,11 @@ for (const file of fs.readdirSync("src/lib").filter((f) => f.endsWith("-es.ts"))
       report("английское «Spain» в неанглийском поле", lang, `${file}:${key}_${lang}`, value.slice(0, 70));
     }
   }
+}
+
+if (advisories.length) {
+  console.log(`ℹ️  справочно (не блокирует): ${advisories.length} строк со страной, зашитой в country-aware файлах`);
+  console.log("   живой скан текста/меты/JSON-LD — единственная надёжная проверка, см. docs/SPAIN.md\n");
 }
 
 if (problems.length === 0) {

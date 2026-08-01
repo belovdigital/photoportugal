@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const tCat = await getTranslations({ locale, namespace: "blogCategories" });
   const label = tCat(category as typeof CATEGORY_SLUGS[number]);
   const description = tCat(`${category}Desc` as any);
-  const title = `${label} — Portugal Photography Blog`;
+  const title = `${label} — ${country.areaServed} Photography Blog`;
 
   return {
     title,

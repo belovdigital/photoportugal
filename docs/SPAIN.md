@@ -534,3 +534,30 @@ TELEGRAM_TOPIC_IDS={"bookings":2,"daily_digest":3,"photographers":4,"match_reque
 **Живой скан обязателен отдельно** и должен смотреть `<meta>` и JSON-LD: скан по
 видимому тексту их не видит, а именно там жило `"Barcelona, Portugal"` в
 `TouristDestination` — то, что индексирует Google.
+
+---
+
+## 14. Stripe — живой режим
+
+Аккаунт **отдельный** от португальского: `acct_1TzfRtGelEPoV4hO` (PHOTO SPAIN)
+против `acct_1QmGoQGU0seq3XOV` (PHOTO PORTUGAL). Балансы, выплаты и вебхуки
+независимы — это проверено через `/v1/account` обоими ключами до включения
+живых ключей. Если бы аккаунт оказался общим, платежи двух стран легли бы в
+один баланс, и разделить их постфактум было бы нечем.
+
+Активирован 2026-08-01: `charges_enabled: true`, `payouts_enabled: true`,
+`currently_due` пусто.
+
+Вебхук `we_1Tzgb0GelEPoV4hOXNhCZJcF` → `https://photospain.co/api/stripe/webhook`,
+21 событие (весь набор, который разбирает роут). Подпись проверяется — POST с
+поддельным `stripe-signature` отдаёт `400 Invalid signature`.
+
+Оплата идёт через **серверные Checkout Sessions** с редиректом на страницу
+Stripe. `loadStripe` и `@stripe/stripe-js` в коде не используются, поэтому
+`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` в клиентский бандл не попадает — это
+нормально, а не признак незавершённой сборки. Живой режим подтверждён созданием
+сессии: `cs_live_…`, `livemode: true`.
+
+⚠️ Connect для Испании по-прежнему НЕ используется: юрлицо португальское,
+испанским фотографам платим переводом по IBAN вручную. Stripe здесь только
+приём денег от клиента.

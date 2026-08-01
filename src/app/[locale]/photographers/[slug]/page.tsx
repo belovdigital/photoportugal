@@ -119,7 +119,7 @@ function compactRegionName(name: string): string {
 
 function formatMobileCoverageLabel(groups: CoverageGroup[]): string | null {
   if (groups.length === 0) return null;
-  if (groups.length >= 3) return "Portugal-wide";
+  if (groups.length >= 3) return `${country.areaServed}-wide`;
   return groups.map((group) => compactRegionName(group.regionName)).join(" · ");
 }
 
@@ -257,7 +257,7 @@ export async function generateMetadata({
   const p = result.data;
   const allLocationNames = (p.locations || []).map((l: { name: string }) => l.name);
   const locationNames = allLocationNames.length <= 2
-    ? allLocationNames.join(", ") || "Portugal"
+    ? allLocationNames.join(", ") || country.areaServed
     : `${allLocationNames.slice(0, 2).join(", ")} & ${allLocationNames.length - 2} more`;
   const title = t("metaTitle", { name: normalizeName(p.name), locations: locationNames });
   const topShootTypes = (p.shoot_types || []).slice(0, 2);
