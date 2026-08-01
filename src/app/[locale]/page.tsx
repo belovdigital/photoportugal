@@ -65,13 +65,22 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     price: minPrice,
   };
 
+  // A brand-new market has no roster yet, and the counted description rendered
+  // "0+ hand-picked photographers" as the meta description of the single most
+  // important page on the site. Swap the phrasing rather than hide the number:
+  // a description that simply does not mention a count reads as normal, while
+  // "0+" reads as a dead site.
+  const description =
+    photographerCount > 0 ? t("description", params2) : t("descriptionNoRoster", params2);
+
   return {
     title: t("title"),
-    description: t("description", params2),
+    description,
     alternates: localeAlternates("/", locale),
     openGraph: {
       title: t("ogTitle"),
-      description: t("ogDescription", params2),
+      description:
+        photographerCount > 0 ? t("ogDescription", params2) : t("ogDescriptionNoRoster", params2),
       url,
       images: [{ url: `${base}${country.ogImage}`, width: 1200, height: 630 }],
     },

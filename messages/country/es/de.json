@@ -267,8 +267,8 @@
   "locations": {
     "title": "Die besten Orte zum Fotografieren in Spanien",
     "subtitle": "Von Madrids Kopfsteinpflasterstraßen bis zu den goldenen Klippen der Costa del Sol — {count}+ der besten Orte zum Fotografieren in Spanien, handverlesen für Urlaubs-Fotoshootings, Paare, Familien und Solo-Reisende.",
-    "mapMetaTitle": "Spanien-Fotokarte — Fotoshooting-Orte entdecken",
-    "mapMetaDescription": "Entdecken Sie Spaniens Fotoshooting-Regionen, Städte und Inseln auf einer interaktiven Karte. Finden Sie verfügbare Fotografen in Madrid, Barcelona, Costa del Sol, Teneriffa, den Kanarische Inseln und mehr.",
+    "mapMetaTitle": "Spanien-Fotokarte — Shooting-Orte",
+    "mapMetaDescription": "Entdecken Sie Spaniens Regionen, Städte und Inseln auf einer interaktiven Karte — Barcelona, Madrid, Andalusien, Balearen und Kanaren.",
     "mapOgAlt": "Interaktive Spanien-Fotokarte mit Fotoshooting-Orten",
     "detail": {
       "realPhotos": {
@@ -341,8 +341,8 @@
     "photographerConciergePlaceholder": "z. B. Passt {name} für ein Familien-Shooting in Madrid?"
   },
   "photographersMeta": {
-    "title": "Fotograf in Spanien buchen – Madrid, Barcelona, Costa del Sol",
-    "description": "Finden und buchen Sie einen professionellen Fotografen in Madrid, Barcelona, Toledo, Costa del Sol und über 40 weiteren Orten in Spanien. Stöbern Sie in Portfolios, vergleichen Sie Preise und lesen Sie verifizierte Bewertungen. Buchen Sie Ihr Urlaubs-Fotoshooting online – Paare, Familie, Hochzeit, Elopement. Ab 299 €.",
+    "title": "Fotograf in Spanien — Barcelona, Madrid",
+    "description": "Finden und buchen Sie einen professionellen Fotografen in Barcelona, Madrid, Sevilla, Granada und ganz Spanien. Portfolios vergleichen, online buchen.",
     "locationDescription": "Finden und buchen Sie verifizierte Fotografen in {location}, Spanien. Portfolios ansehen, Bewertungen lesen, Pakete vergleichen. Ab 299 €. Sofortbuchung.",
     "ogAlt": "Fotografen in {location}, Spanien",
     "browseByCitySub": "Entdecken Sie verifizierte Fotografen in den schönsten Städten Spaniens."
@@ -501,7 +501,7 @@
     "allInclusive": "Ein All-in-Preis — wir wählen Ihren Fotografen aus unseren geprüften Top 1% der Profis in Spanien. Keine Extra-Gebühren."
   },
   "concierge": {
-    "metaTitle": "Finden Sie Ihren Fotografen in Spanien in 30 Sekunden | Photo Spain",
+    "metaTitle": "Finden Sie Ihren Fotografen in Spanien in 30 Sekunden",
     "title1": "Finden Sie Ihren Fotografen in Spanien",
     "openingMessage": "Hallo! Ich bin Ihr Smart Concierge von Photo Spain. Sagen Sie mir, wo Sie sein werden und den Anlass — ich finde Ihnen sofort die richtigen Fotografen. ✨",
     "nudge": {
@@ -539,8 +539,8 @@
     "suggestion4": "Hochzeit in La Rioja"
   },
   "lp": {
-    "metaTitleTyped": "{shootType}-Fotografen in {city} — Sofort buchen | Photo Spain",
-    "metaTitleGeneric": "Fotografen in {city} — Sofort buchen | Photo Spain",
+    "metaTitleTyped": "{shootType}-Fotografen in {city} — Sofort buchen",
+    "metaTitleGeneric": "Fotografen in {city} — Sofort buchen",
     "metaDescriptionPortugalTyped": "Professionelle {shootTypeLower}-Fotografen in ganz Spanien — Madrid, Barcelona, Costa del Sol, Toledo und mehr. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
     "metaDescriptionPortugalGeneric": "Professionelle Fotografen für Fotoshootings in ganz Spanien — Madrid, Barcelona, Costa del Sol, Toledo und mehr. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
     "heroSubtitlePortugalWithPrice": "Handverlesene, verifizierte Fotografen in ganz Spanien — ab {price}. Sofort buchen, sicher bezahlen.",
@@ -554,12 +554,14 @@
     }
   },
   "homepageMeta": {
-    "title": "Reise- & Urlaubsfotograf in Spanien — Online buchen",
-    "description": "Buchen Sie einen professionellen Reise- oder Urlaubsfotografen in Spanien. {photographers}+ handverlesene Fotografen in Madrid, Barcelona, Costa del Sol, Toledo und {locations}+ weiteren Orten. {reviews}Paare, Familien und Solo-Reisende. Ab {price} €.",
+    "title": "Urlaubsfotograf in Spanien — online buchen",
+    "description": "Buchen Sie einen handverlesenen Urlaubsfotografen in Spanien — Barcelona, Madrid, Sevilla, Granada, Mallorca. Geprüfte Profis. Ab {price} €.",
     "ogTitle": "Reise- & Urlaubsfotograf in Spanien — Online buchen",
     "ogDescription": "{photographers}+ professionelle Reise- & Urlaubsfotografen in Spanien. {reviews}Ab {price} €.",
     "schemaWebsite": "Finden und buchen Sie professionelle Fotografen in ganz Spanien für Urlaubs-Fotoshootings.",
-    "schemaService": "Marktplatz für Urlaubsfotografie in Spanien. Buchen Sie professionelle Fotografen in Madrid, Barcelona, Costa del Sol und über {locations} weiteren Orten."
+    "schemaService": "Marktplatz für Urlaubsfotografie in Spanien. Buchen Sie professionelle Fotografen in Madrid, Barcelona, Costa del Sol und über {locations} weiteren Orten.",
+    "descriptionNoRoster": "Buchen Sie einen handverlesenen Urlaubsfotografen in Spanien — Barcelona, Madrid, Sevilla, Granada, Mallorca. Geprüfte Profis. Ab {price} €.",
+    "ogDescriptionNoRoster": "Professionelle Reise- und Urlaubsfotografen in ganz Spanien. Ab {price} €."
   },
   "peek": {
     "bookYourOwn": "Buchen Sie Ihr eigenes Fotoshooting in Spanien →",

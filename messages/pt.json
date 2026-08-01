@@ -3569,7 +3569,7 @@
     "respondsSameDay": "Responde no mesmo dia"
   },
   "concierge": {
-    "metaTitle": "Encontre o seu fotógrafo em Portugal em 30 segundos | Photo Portugal",
+    "metaTitle": "Encontre o seu fotógrafo em Portugal em 30 segundos",
     "metaDescription": "Diga-nos onde vai estar e a ocasião — o nosso concierge IA recomenda os 2–3 melhores fotógrafos do nosso marketplace, ao instante.",
     "title1": "Encontre o seu fotógrafo em Portugal",
     "title2": "em 30 segundos",
@@ -3750,8 +3750,8 @@
     "blindBookingAllIn": "Tudo incluído — escolhemos o seu fotógrafo entre o top 1% verificado dos profissionais de Portugal."
   },
   "lp": {
-    "metaTitleTyped": "Fotógrafos de {shootType} em {city} — Reserve já | Photo Portugal",
-    "metaTitleGeneric": "Fotógrafos em {city} — Reserve já | Photo Portugal",
+    "metaTitleTyped": "Fotógrafos de {shootType} em {city} — Reserve já",
+    "metaTitleGeneric": "Fotógrafos em {city} — Reserve já",
     "metaDescriptionCityTyped": "Fotógrafos profissionais de {shootTypeLower} em {city}. Selecionados a dedo, verificados, reserva imediata. Pagamento seguro, garantia de devolução.",
     "metaDescriptionCityGeneric": "Fotógrafos profissionais de sessões fotográficas em {city}. Selecionados a dedo, verificados, reserva imediata. Pagamento seguro, garantia de devolução.",
     "metaDescriptionPortugalTyped": "Fotógrafos profissionais de {shootTypeLower} em todo o Portugal — Lisboa, Porto, Algarve, Sintra e mais. Selecionados a dedo, verificados, reserva imediata. Pagamento seguro, garantia de devolução.",
@@ -3813,7 +3813,9 @@
     "schemaWebsite": "Encontre e reserve fotógrafos profissionais em Portugal para sessões fotográficas de férias.",
     "schemaService": "Marketplace de fotografia de férias em Portugal. Reserve fotógrafos profissionais em Lisboa, Porto, Algarve e mais de {locations} localizações.",
     "reviewsCount": "{count}+ avaliações verificadas. ",
-    "inLanguage": "pt-PT"
+    "inLanguage": "pt-PT",
+    "descriptionNoRoster": "Reserve um fotógrafo de férias selecionado a dedo em Portugal — Lisboa, Porto, Sintra, Algarve, Madeira. Profissionais verificados. Desde €{price}.",
+    "ogDescriptionNoRoster": "Fotógrafos profissionais de viagem e férias em todo Portugal. Desde €{price}."
   },
   "scarcity": {
     "shootTypeFew": "Apenas {count, plural, =1 {1 fotógrafo especializado} other {# fotógrafos especializados}} em {location} disponíveis agora",

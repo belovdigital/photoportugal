@@ -646,7 +646,7 @@
     "step3Desc": "Revise sus matches, consulte sus portafolios y reserve directamente."
   },
   "concierge": {
-    "metaTitle": "Encuentre su fotógrafo en Portugal en 30 segundos | Photo Portugal",
+    "metaTitle": "Encuentre su fotógrafo en Portugal en 30 segundos",
     "metaDescription": "Díganos dónde estará y la ocasión — nuestro concierge IA le pone al instante en contacto con los 2–3 mejores fotógrafos de nuestro marketplace.",
     "title1": "Encuentre su fotógrafo en Portugal",
     "title2": "en 30 segundos",
@@ -827,8 +827,8 @@
     "blindBookingAllIn": "Todo incluido — elegimos a tu fotógrafo entre el top 1% verificado de los profesionales de Portugal."
   },
   "lp": {
-    "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Portugal",
-    "metaTitleGeneric": "Fotógrafos en {city} — Reserva instantánea | Photo Portugal",
+    "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea",
+    "metaTitleGeneric": "Fotógrafos en {city} — Reserva instantánea",
     "metaDescriptionCityTyped": "Fotógrafos profesionales {shootTypeLower} en {city}. Seleccionados a mano, verificados, reserva instantánea. Pago seguro, garantía de devolución.",
     "metaDescriptionCityGeneric": "Fotógrafos profesionales para sesiones en {city}. Seleccionados a mano, verificados, reserva instantánea. Pago seguro, garantía de devolución.",
     "metaDescriptionPortugalTyped": "Fotógrafos profesionales {shootTypeLower} en todo Portugal — Lisboa, Oporto, Algarve, Sintra y más. Seleccionados a mano, verificados, reserva instantánea. Pago seguro, garantía de devolución.",
@@ -3813,7 +3813,9 @@
     "schemaWebsite": "Encuentre y reserve fotógrafos profesionales en todo Portugal para sesiones de vacaciones.",
     "schemaService": "Marketplace de fotografía de vacaciones en Portugal. Reserve fotógrafos profesionales en Lisboa, Oporto, Algarve y más de {locations} lugares.",
     "reviewsCount": "{count}+ reseñas verificadas. ",
-    "inLanguage": "es-ES"
+    "inLanguage": "es-ES",
+    "descriptionNoRoster": "Reserve un fotógrafo de vacaciones seleccionado a mano en Portugal — Lisboa, Oporto, Sintra, Algarve, Madeira. Profesionales verificados. Desde {price} €.",
+    "ogDescriptionNoRoster": "Fotógrafos profesionales de viajes y vacaciones en todo Portugal. Desde {price} €."
   },
   "scarcity": {
     "shootTypeFew": "Solo {count, plural, =1 {1 fotógrafo especializado} other {# fotógrafos especializados}} en {location} disponibles ahora",

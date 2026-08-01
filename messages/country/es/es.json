@@ -106,7 +106,7 @@
     "locationLabel": "¿Dónde en España?"
   },
   "concierge": {
-    "metaTitle": "Encuentre su fotógrafo en España en 30 segundos | Photo Spain",
+    "metaTitle": "Encuentre su fotógrafo en España en 30 segundos",
     "title1": "Encuentre su fotógrafo en España",
     "openingMessage": "¡Hola! Soy su Smart Concierge para Photo Spain. Dígame dónde estará y la ocasión — le encontraré los fotógrafos adecuados al instante. ✨",
     "conciergeBadge": "Lens · Photo Spain",
@@ -144,8 +144,8 @@
     "blindBookingAllIn": "Todo incluido — elegimos a tu fotógrafo entre el top 1% verificado de los profesionales de España."
   },
   "lp": {
-    "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea | Photo Spain",
-    "metaTitleGeneric": "Fotógrafos en {city} — Reserva instantánea | Photo Spain",
+    "metaTitleTyped": "Fotógrafos {shootType} en {city} — Reserva instantánea",
+    "metaTitleGeneric": "Fotógrafos en {city} — Reserva instantánea",
     "metaDescriptionPortugalTyped": "Fotógrafos profesionales {shootTypeLower} en toda España — Madrid, Barcelona, Costa del Sol, Toledo y más. Seleccionados a mano, verificados, reserva instantánea. Pago seguro, garantía de devolución.",
     "metaDescriptionPortugalGeneric": "Fotógrafos profesionales para sesiones en toda España — Madrid, Barcelona, Costa del Sol, Toledo y más. Seleccionados a mano, verificados, reserva instantánea. Pago seguro, garantía de devolución.",
     "heroSubtitlePortugalWithPrice": "Fotógrafos seleccionados a mano y verificados en toda España — desde {price}. Reserve al instante, pague de forma segura.",
@@ -226,8 +226,8 @@
   "locations": {
     "title": "Mejores lugares para fotografiar en España",
     "subtitle": "Desde las calles empedradas de Madrid hasta los acantilados dorados de la Costa del Sol — {count}+ de los mejores lugares para fotografiar en España, seleccionados a mano para sesiones de vacaciones, parejas, familias y viajeros en solitario.",
-    "mapMetaTitle": "Mapa fotográfico de España — Explore lugares para sesiones",
-    "mapMetaDescription": "Explore regiones, ciudades e islas de España en un mapa interactivo. Encuentre fotógrafos disponibles en Madrid, Barcelona, Costa del Sol, Tenerife, Islas Canarias y más.",
+    "mapMetaTitle": "Mapa fotográfico de España — Lugares",
+    "mapMetaDescription": "Explore las regiones, ciudades e islas de España en un mapa interactivo — Barcelona, Madrid, Andalucía, Baleares y Canarias.",
     "mapOgAlt": "Mapa fotográfico interactivo de España con lugares para sesiones",
     "detail": {
       "realPhotos": {
@@ -291,8 +291,8 @@
     "photographerConciergePlaceholder": "ej. ¿{name} encaja para una sesión familiar en Madrid?"
   },
   "photographersMeta": {
-    "title": "Contrate un fotógrafo en España — Madrid, Barcelona, Costa del Sol",
-    "description": "Encuentre y contrate un fotógrafo profesional en Madrid, Barcelona, Toledo, Costa del Sol y más de 40 lugares de España. Explore portafolios, compare precios, lea reseñas verificadas. Reserve su sesión de vacaciones online — pareja, familia, boda, boda íntima. Desde 299 €.",
+    "title": "Fotógrafo en España — Barcelona, Madrid",
+    "description": "Encuentre y contrate un fotógrafo profesional en Barcelona, Madrid, Sevilla, Granada y toda España. Vea portafolios, compare precios y reserve online.",
     "locationDescription": "Encuentre y reserve fotógrafos verificados en {location}, España. Vea portafolios, lea reseñas, compare paquetes. Desde 299 €. Reserva al instante.",
     "ogAlt": "Fotógrafos en {location}, España",
     "browseByCitySub": "Explore fotógrafos verificados en las principales ciudades de España."
@@ -567,12 +567,14 @@
     "allInclusive": "Un precio único todo incluido — elegimos a tu fotógrafo entre el top 1% verificado de los profesionales de España. Sin tarifas extra."
   },
   "homepageMeta": {
-    "title": "Fotógrafo de viajes y vacaciones en España — Reserva online",
-    "description": "Contrate un fotógrafo profesional de viajes o vacaciones en España. {photographers}+ fotógrafos seleccionados a mano en Madrid, Barcelona, Costa del Sol, Toledo y {locations}+ lugares. {reviews}Parejas, familias y viajeros solos. Desde {price} €.",
+    "title": "Fotógrafo de vacaciones en España",
+    "description": "Reserve un fotógrafo de vacaciones seleccionado a mano en España — Barcelona, Madrid, Sevilla, Granada, Mallorca. Pago seguro. Desde {price} €.",
     "ogTitle": "Fotógrafo de viajes y vacaciones en España — Reserva online",
     "ogDescription": "{photographers}+ fotógrafos profesionales de viajes y vacaciones en España. {reviews}Desde {price} €.",
     "schemaWebsite": "Encuentre y reserve fotógrafos profesionales en toda España para sesiones de vacaciones.",
-    "schemaService": "Marketplace de fotografía de vacaciones en España. Reserve fotógrafos profesionales en Madrid, Barcelona, Costa del Sol y más de {locations} lugares."
+    "schemaService": "Marketplace de fotografía de vacaciones en España. Reserve fotógrafos profesionales en Madrid, Barcelona, Costa del Sol y más de {locations} lugares.",
+    "descriptionNoRoster": "Reserve un fotógrafo de vacaciones seleccionado a mano en España — Barcelona, Madrid, Sevilla, Granada, Mallorca. Pago seguro. Desde {price} €.",
+    "ogDescriptionNoRoster": "Fotógrafos profesionales de viajes y vacaciones en toda España. Desde {price} €."
   },
   "peek": {
     "bookYourOwn": "Reserva tu propia sesión de fotos en España →",

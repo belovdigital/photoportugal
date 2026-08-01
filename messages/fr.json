@@ -646,7 +646,7 @@
     "step3Desc": "Examinez vos matchs, consultez leurs portfolios et réservez directement."
   },
   "concierge": {
-    "metaTitle": "Trouvez votre photographe au Portugal en 30 secondes | Photo Portugal",
+    "metaTitle": "Trouvez votre photographe au Portugal en 30 secondes",
     "metaDescription": "Dites-nous où vous serez et l'occasion — notre concierge IA vous met instantanément en relation avec les 2–3 meilleurs photographes de notre marketplace.",
     "title1": "Trouvez votre photographe au Portugal",
     "title2": "en 30 secondes",
@@ -827,8 +827,8 @@
     "blindBookingAllIn": "Tout compris — nous choisissons votre photographe parmi le top 1% vérifié des pros du Portugal."
   },
   "lp": {
-    "metaTitleTyped": "Photographes {shootType} à {city} — Réservation instantanée | Photo Portugal",
-    "metaTitleGeneric": "Photographes à {city} — Réservation instantanée | Photo Portugal",
+    "metaTitleTyped": "Photographes {shootType} à {city} — Réservation instantanée",
+    "metaTitleGeneric": "Photographes à {city} — Réservation instantanée",
     "metaDescriptionCityTyped": "Photographes professionnels {shootTypeLower} à {city}. Triés sur le volet, vérifiés, réservation instantanée. Paiement sécurisé, garantie de remboursement.",
     "metaDescriptionCityGeneric": "Photographes professionnels de séances photo à {city}. Triés sur le volet, vérifiés, réservation instantanée. Paiement sécurisé, garantie de remboursement.",
     "metaDescriptionPortugalTyped": "Photographes professionnels {shootTypeLower} à travers le Portugal — Lisbonne, Porto, Algarve, Sintra et plus. Triés sur le volet, vérifiés, réservation instantanée. Paiement sécurisé, garantie de remboursement.",
@@ -3813,7 +3813,9 @@
     "schemaWebsite": "Trouvez et réservez des photographes professionnels partout au Portugal pour vos séances de vacances.",
     "schemaService": "Marketplace de photographie de vacances au Portugal. Réservez des photographes professionnels à Lisbonne, Porto, Algarve et plus de {locations} lieux.",
     "reviewsCount": "{count}+ avis vérifiés. ",
-    "inLanguage": "fr-FR"
+    "inLanguage": "fr-FR",
+    "descriptionNoRoster": "Réservez un photographe de vacances trié sur le volet au Portugal — Lisbonne, Porto, Sintra, l'Algarve, Madère. Pros vérifiés. Dès {price} €.",
+    "ogDescriptionNoRoster": "Photographes de voyage et de vacances partout au Portugal. Dès {price} €."
   },
   "scarcity": {
     "shootTypeFew": "Plus que {count, plural, =1 {1 photographe spécialisé} other {# photographes spécialisés}} en {location} disponibles",

@@ -3569,7 +3569,7 @@
     "respondsSameDay": "Antwortet am selben Tag"
   },
   "concierge": {
-    "metaTitle": "Finden Sie Ihren Fotografen in Portugal in 30 Sekunden | Photo Portugal",
+    "metaTitle": "Finden Sie Ihren Fotografen in Portugal in 30 Sekunden",
     "metaDescription": "Sagen Sie uns, wo Sie sein werden und den Anlass — unser KI-Concierge findet sofort die 2–3 besten Fotografen aus unserem Marketplace.",
     "title1": "Finden Sie Ihren Fotografen in Portugal",
     "title2": "in 30 Sekunden",
@@ -3750,8 +3750,8 @@
     "blindBookingAllIn": "Alles inklusive — wir wählen Ihren Fotografen aus unseren geprüften Top 1% der Profis in Portugal."
   },
   "lp": {
-    "metaTitleTyped": "{shootType}-Fotografen in {city} — Sofort buchen | Photo Portugal",
-    "metaTitleGeneric": "Fotografen in {city} — Sofort buchen | Photo Portugal",
+    "metaTitleTyped": "{shootType}-Fotografen in {city} — Sofort buchen",
+    "metaTitleGeneric": "Fotografen in {city} — Sofort buchen",
     "metaDescriptionCityTyped": "Professionelle {shootTypeLower}-Fotografen in {city}. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
     "metaDescriptionCityGeneric": "Professionelle Fotografen für Fotoshootings in {city}. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
     "metaDescriptionPortugalTyped": "Professionelle {shootTypeLower}-Fotografen in ganz Portugal — Lissabon, Porto, Algarve, Sintra und mehr. Handverlesen, verifiziert, Sofortbuchung. Sichere Zahlung, Geld-zurück-Garantie.",
@@ -3813,7 +3813,9 @@
     "schemaWebsite": "Finden und buchen Sie professionelle Fotografen in ganz Portugal für Urlaubs-Fotoshootings.",
     "schemaService": "Marktplatz für Urlaubsfotografie in Portugal. Buchen Sie professionelle Fotografen in Lissabon, Porto, Algarve und über {locations} weiteren Orten.",
     "reviewsCount": "{count}+ verifizierte Bewertungen. ",
-    "inLanguage": "de-DE"
+    "inLanguage": "de-DE",
+    "descriptionNoRoster": "Buchen Sie einen handverlesenen Urlaubsfotografen in Portugal — Lissabon, Porto, Sintra, Algarve, Madeira. Geprüfte Profis. Ab {price} €.",
+    "ogDescriptionNoRoster": "Professionelle Reise- und Urlaubsfotografen in ganz Portugal. Ab {price} €."
   },
   "scarcity": {
     "shootTypeFew": "Nur {count, plural, =1 {1 Fotograf} other {# Fotografen}} mit Spezialisierung auf {location} sind gerade verfügbar",

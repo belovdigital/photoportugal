@@ -1887,7 +1887,7 @@
   },
   "photographersMeta": {
     "title": "Hire a Photographer in Portugal — Lisbon, Porto, Algarve",
-    "description": "Find and hire a professional photographer in Lisbon, Porto, Sintra, Algarve and 40+ places across Portugal. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €299.",
+    "description": "Hire a professional photographer in Lisbon, Porto, Sintra, the Algarve and across Portugal. Browse portfolios, compare prices, book online.",
     "locationTitle": "Find Photographers in {location} — Portfolios & Prices",
     "locationDescription": "Find and book verified photographers in {location}, Portugal. Browse portfolios, read reviews, compare packages. From €299. Instant booking.",
     "ogAlt": "Photographers in {location}, Portugal",
@@ -3563,7 +3563,7 @@
     "respondsSameDay": "Responds same day"
   },
   "concierge": {
-    "metaTitle": "Find your Portugal photographer in 30 seconds | Photo Portugal",
+    "metaTitle": "Find your Portugal photographer in 30 seconds",
     "metaDescription": "Tell us where you'll be and the occasion — our AI concierge instantly matches you with the 2–3 best photographers from our marketplace.",
     "title1": "Find your Portugal photographer",
     "title2": "in 30 seconds",
@@ -3744,8 +3744,8 @@
     "blindBookingAllIn": "All-inclusive — we hand-pick your photographer from our vetted top 1% of Portugal pros."
   },
   "lp": {
-    "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Portugal",
-    "metaTitleGeneric": "Photographers in {city} — Book Instantly | Photo Portugal",
+    "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly",
+    "metaTitleGeneric": "Photographers in {city} — Book Instantly",
     "metaDescriptionCityTyped": "Professional {shootTypeLower} photographers in {city}. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
     "metaDescriptionCityGeneric": "Professional photoshoot photographers in {city}. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
     "metaDescriptionPortugalTyped": "Professional {shootTypeLower} photographers across Portugal — Lisbon, Porto, Algarve, Sintra & more. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
@@ -3800,14 +3800,16 @@
     }
   },
   "homepageMeta": {
-    "title": "Travel & Vacation Photographer in Portugal — Book Online",
+    "title": "Vacation Photographer in Portugal — Book Online",
     "description": "Hire a professional travel or vacation photographer in Portugal. {photographers}+ hand-picked photographers in Lisbon, Porto, Algarve, Sintra & {locations}+ locations. {reviews}Couples, families & solo travelers. From €{price}.",
     "ogTitle": "Travel & Vacation Photographer in Portugal — Book Online",
     "ogDescription": "{photographers}+ professional travel & vacation photographers in Portugal. {reviews}From €{price}.",
     "schemaWebsite": "Find and book professional photographers across Portugal for vacation photoshoots.",
     "schemaService": "Vacation photography marketplace in Portugal. Book professional photographers in Lisbon, Porto, Algarve and {locations}+ places.",
     "reviewsCount": "{count}+ verified reviews. ",
-    "inLanguage": "en"
+    "inLanguage": "en",
+    "descriptionNoRoster": "Book a hand-picked vacation photographer in Portugal — Lisbon, Porto, Sintra, the Algarve, Madeira. Verified pros, secure payment. From €{price}.",
+    "ogDescriptionNoRoster": "Professional travel & vacation photographers across Portugal. From €{price}."
   },
   "scarcity": {
     "shootTypeFew": "Only {count, plural, =1 {1 photographer} other {# photographers}} specializing in {location} available right now",

@@ -286,8 +286,8 @@
   "locations": {
     "title": "Best Places to Photograph in Spain",
     "subtitle": "From Madrid's cobblestone streets to the Costa del Sol's golden cliffs — {count}+ of the best places to photograph in Spain, hand-picked for vacation photoshoots, couples, families and solo travelers.",
-    "mapMetaTitle": "Spain Photo Map — Explore Photoshoot Locations",
-    "mapMetaDescription": "Explore Spain's photoshoot regions, cities and islands on an interactive map. Find available photographers in Madrid, Barcelona, Costa del Sol, Tenerife, the Canary Islands and more.",
+    "mapMetaTitle": "Spain Photo Map — Photoshoot Locations",
+    "mapMetaDescription": "Explore Spain's photoshoot regions, cities and islands on an interactive map — Barcelona, Madrid, Andalusia, the Balearics and the Canaries.",
     "mapOgAlt": "Interactive Spain photo map with photoshoot locations",
     "detail": {
       "realPhotos": {
@@ -360,8 +360,8 @@
     "photographerConciergePlaceholder": "e.g. Is {name} good for a family shoot in Madrid?"
   },
   "photographersMeta": {
-    "title": "Hire a Photographer in Spain — Madrid, Barcelona, Costa del Sol",
-    "description": "Find and hire a professional photographer in Madrid, Barcelona, Toledo, Costa del Sol and 40+ places across Spain. Browse portfolios, compare prices, read verified reviews. Book your vacation photoshoot online — couples, family, wedding, elopement. From €299.",
+    "title": "Photographer in Spain — Barcelona, Madrid",
+    "description": "Find and hire a professional photographer in Barcelona, Madrid, Seville, Granada and across Spain. Browse portfolios, compare prices, book online.",
     "locationDescription": "Find and book verified photographers in {location}, Spain. Browse portfolios, read reviews, compare packages. From €299. Instant booking.",
     "ogAlt": "Photographers in {location}, Spain",
     "browseByCitySub": "Explore verified photographers in Spain's top destinations."
@@ -520,7 +520,7 @@
     "allInclusive": "One all-in price — we hand-pick your photographer from our vetted top 1% of Spain pros. No extra fees."
   },
   "concierge": {
-    "metaTitle": "Find your Spain photographer in 30 seconds | Photo Spain",
+    "metaTitle": "Find your Spain photographer in 30 seconds",
     "title1": "Find your Spain photographer",
     "openingMessage": "Hi! I'm your Smart Concierge for Photo Spain. Tell me where you'll be and the occasion — I'll match you with the right photographers instantly. ✨",
     "conciergeBadge": "Lens · Photo Spain",
@@ -558,8 +558,8 @@
     "blindBookingAllIn": "All-inclusive — we hand-pick your photographer from our vetted top 1% of Spain pros."
   },
   "lp": {
-    "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly | Photo Spain",
-    "metaTitleGeneric": "Photographers in {city} — Book Instantly | Photo Spain",
+    "metaTitleTyped": "{shootType} Photographers in {city} — Book Instantly",
+    "metaTitleGeneric": "Photographers in {city} — Book Instantly",
     "metaDescriptionPortugalTyped": "Professional {shootTypeLower} photographers across Spain — Madrid, Barcelona, Costa del Sol, Toledo & more. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
     "metaDescriptionPortugalGeneric": "Professional photoshoot photographers across Spain — Madrid, Barcelona, Costa del Sol, Toledo & more. Hand-picked, verified, instant booking. Secure payment, money-back guarantee.",
     "heroSubtitlePortugalWithPrice": "Hand-picked, verified photographers across Spain — from {price}. Book instantly, pay securely.",
@@ -573,12 +573,14 @@
     }
   },
   "homepageMeta": {
-    "title": "Travel & Vacation Photographer in Spain — Book Online",
-    "description": "Hire a professional travel or vacation photographer in Spain. {photographers}+ hand-picked photographers in Madrid, Barcelona, Costa del Sol, Toledo & {locations}+ locations. {reviews}Couples, families & solo travelers. From €{price}.",
+    "title": "Vacation Photographer in Spain — Book Online",
+    "description": "Book a hand-picked vacation photographer in Spain — Barcelona, Madrid, Seville, Granada, Mallorca. Verified pros, secure payment. From €{price}.",
     "ogTitle": "Travel & Vacation Photographer in Spain — Book Online",
     "ogDescription": "{photographers}+ professional travel & vacation photographers in Spain. {reviews}From €{price}.",
     "schemaWebsite": "Find and book professional photographers across Spain for vacation photoshoots.",
-    "schemaService": "Vacation photography marketplace in Spain. Book professional photographers in Madrid, Barcelona, Costa del Sol and {locations}+ places."
+    "schemaService": "Vacation photography marketplace in Spain. Book professional photographers in Madrid, Barcelona, Costa del Sol and {locations}+ places.",
+    "descriptionNoRoster": "Book a hand-picked vacation photographer in Spain — Barcelona, Madrid, Seville, Granada, Mallorca. Verified pros, secure payment. From €{price}.",
+    "ogDescriptionNoRoster": "Professional travel & vacation photographers across Spain. From €{price}."
   },
   "peek": {
     "bookYourOwn": "Book your own photoshoot in Spain →",

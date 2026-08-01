@@ -106,7 +106,7 @@
     "locationLabel": "Où en Espagne ?"
   },
   "concierge": {
-    "metaTitle": "Trouvez votre photographe en Espagne en 30 secondes | Photo Spain",
+    "metaTitle": "Trouvez votre photographe en Espagne en 30 secondes",
     "title1": "Trouvez votre photographe en Espagne",
     "openingMessage": "Salut ! Je suis votre Smart Concierge pour Photo Spain. Dites-moi où vous serez et l'occasion — je vous trouve les bons photographes instantanément. ✨",
     "nudge": {
@@ -144,8 +144,8 @@
     "suggestion3": "Séance famille à Sitges"
   },
   "lp": {
-    "metaTitleTyped": "Photographes {shootType} à {city} — Réservation instantanée | Photo Spain",
-    "metaTitleGeneric": "Photographes à {city} — Réservation instantanée | Photo Spain",
+    "metaTitleTyped": "Photographes {shootType} à {city} — Réservation instantanée",
+    "metaTitleGeneric": "Photographes à {city} — Réservation instantanée",
     "metaDescriptionPortugalTyped": "Photographes professionnels {shootTypeLower} à travers l'Espagne — Madrid, Barcelone, Costa del Sol, Tolède et plus. Triés sur le volet, vérifiés, réservation instantanée. Paiement sécurisé, garantie de remboursement.",
     "metaDescriptionPortugalGeneric": "Photographes professionnels de séances photo à travers l'Espagne — Madrid, Barcelone, Costa del Sol, Tolède et plus. Triés sur le volet, vérifiés, réservation instantanée. Paiement sécurisé, garantie de remboursement.",
     "heroSubtitlePortugalWithPrice": "Photographes triés sur le volet et vérifiés à travers l'Espagne — à partir de {price}. Réservez instantanément, payez en toute sécurité.",
@@ -329,8 +329,8 @@
   "locations": {
     "title": "Meilleurs endroits où photographier en Espagne",
     "subtitle": "Des rues pavées de Madrid aux falaises dorées de l'Costa del Sol — {count}+ des meilleurs endroits où photographier en Espagne, sélectionnés pour les séances de vacances, couples, familles et voyageurs solos.",
-    "mapMetaTitle": "Carte photo d'Espagne — Explorer les lieux de séance",
-    "mapMetaDescription": "Explorez les régions, villes et îles d'Espagne sur une carte interactive. Trouvez des photographes disponibles à Madrid, Barcelone, Costa del Sol, Tenerife, aux îles Canaries et plus encore.",
+    "mapMetaTitle": "Carte photo d'Espagne — Lieux de séance",
+    "mapMetaDescription": "Explorez les régions, villes et îles d'Espagne sur une carte interactive — Barcelone, Madrid, l'Andalousie, les Baléares et les Canaries.",
     "mapOgAlt": "Carte photo interactive d'Espagne avec lieux de séance",
     "detail": {
       "realPhotos": {
@@ -394,8 +394,8 @@
     "photographerConciergePlaceholder": "ex. {name} convient-elle pour une séance famille à Madrid ?"
   },
   "photographersMeta": {
-    "title": "Engagez un photographe en Espagne — Madrid, Barcelone, Costa del Sol",
-    "description": "Trouvez et engagez un photographe professionnel à Madrid, Barcelone, Tolède, Costa del Sol et plus de 40 lieux en Espagne. Parcourez les portfolios, comparez les prix, lisez les avis vérifiés. Réservez votre séance de vacances en ligne — couples, famille, mariage, mariage intime. À partir de 299 €.",
+    "title": "Photographe en Espagne — Barcelone, Madrid",
+    "description": "Trouvez et réservez un photographe professionnel à Barcelone, Madrid, Séville, Grenade et partout en Espagne. Portfolios, tarifs, réservation en ligne.",
     "locationDescription": "Trouvez et réservez des photographes vérifiés à {location}, Espagne. Parcourez les portfolios, lisez les avis, comparez les forfaits. À partir de 299 €. Réservation immédiate.",
     "ogAlt": "Photographes à {location}, Espagne",
     "browseByCitySub": "Explorez les photographes vérifiés dans les plus belles villes d'Espagne."
@@ -553,12 +553,14 @@
     "allInclusive": "Un prix unique tout compris — nous choisissons votre photographe parmi le top 1% vérifié des pros d'Espagne. Aucun frais en plus."
   },
   "homepageMeta": {
-    "title": "Photographe de voyage et de vacances en Espagne — Réservez en ligne",
-    "description": "Réservez un photographe de voyage ou de vacances professionnel en Espagne. {photographers}+ photographes triés sur le volet à Madrid, Barcelone, Costa del Sol, Tolède et {locations}+ lieux. {reviews}Couples, familles et voyageurs solos. À partir de {price} €.",
+    "title": "Photographe de vacances en Espagne",
+    "description": "Réservez un photographe de vacances trié sur le volet en Espagne — Barcelone, Madrid, Séville, Grenade, Majorque. Paiement sécurisé. Dès {price} €.",
     "ogTitle": "Photographe de voyage et de vacances en Espagne — Réservez en ligne",
     "ogDescription": "{photographers}+ photographes professionnels de voyage et de vacances en Espagne. {reviews}À partir de {price} €.",
     "schemaWebsite": "Trouvez et réservez des photographes professionnels partout en Espagne pour vos séances de vacances.",
-    "schemaService": "Marketplace de photographie de vacances en Espagne. Réservez des photographes professionnels à Madrid, Barcelone, Costa del Sol et plus de {locations} lieux."
+    "schemaService": "Marketplace de photographie de vacances en Espagne. Réservez des photographes professionnels à Madrid, Barcelone, Costa del Sol et plus de {locations} lieux.",
+    "descriptionNoRoster": "Réservez un photographe de vacances trié sur le volet en Espagne — Barcelone, Madrid, Séville, Grenade, Majorque. Paiement sécurisé. Dès {price} €.",
+    "ogDescriptionNoRoster": "Photographes de voyage et de vacances partout en Espagne. Dès {price} €."
   },
   "peek": {
     "bookYourOwn": "Réservez votre propre séance photo en Espagne →",
