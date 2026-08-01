@@ -391,4 +391,131 @@ export const photoSpotsES: Record<string, PhotoSpot[]> = {
       address: "Ciudad Vieja, Ronda, Málaga",
     },
   ],
+
+  valencia: [
+    {
+      name: "City of Arts and Sciences",
+      description:
+        "White curved shells and shallow reflecting pools — the most futuristic backdrop in Spain, and it doubles everything.",
+      nameEs: "Ciudad de las Artes y las Ciencias",
+      descriptionEs:
+        "Conchas blancas curvas y láminas de agua poco profundas: el fondo más futurista de España, y duplica todo lo que hay.",
+      long_description:
+        "Santiago Calatrava's complex on the old riverbed: white concrete and broken-tile shells set in shallow blue pools, on a scale that makes people very small. There is nothing else like it in the country and it photographs unlike anywhere else in this catalogue.\n\nThe pools are the reason to come. Everything reflects, so a low camera position gives you the structure twice, and on a still morning the water is a mirror. The Hemisfèric — the eye-shaped building — and the covered walkways of the Umbracle give you shade and repeating arches when the open plaza is too bright.\n\nWhite concrete in full Valencian sun is genuinely hard: it blows out and it throws light back up into faces. Early morning and the last hour are not a preference here, they are the working hours.",
+      long_description_es:
+        "El complejo de Santiago Calatrava sobre el antiguo cauce del río: hormigón blanco y trencadís sobre láminas de agua azules, a una escala que empequeñece a las personas. No hay nada igual en el país y se fotografía distinto a todo lo demás de este catálogo.\n\nLas láminas de agua son la razón para venir. Todo se refleja, así que una cámara baja da la estructura dos veces, y en una mañana en calma el agua es un espejo. El Hemisfèric —el edificio con forma de ojo— y las galerías del Umbracle dan sombra y arcos repetidos cuando la explanada está demasiado dura.\n\nEl hormigón blanco a pleno sol valenciano es difícil de verdad: se quema y devuelve luz a las caras. Aquí la primera hora y la última no son una preferencia, son el horario de trabajo.",
+      best_time: "Just after sunrise for still water, or the hour before sunset",
+      best_timeEs: "Justo después del amanecer para el agua en calma, o la hora antes del atardecer",
+      tips: "The outdoor areas and pools are free to walk; only the museums and aquarium are ticketed. Wind ripples the reflections from mid-morning, which is a second reason to be early.",
+      tipsEs:
+        "Las zonas exteriores y las láminas de agua son de acceso libre; solo se paga por los museos y el oceanográfico. Desde media mañana el viento riza los reflejos, que es otra razón para madrugar.",
+      tags: ["couples", "content-creator", "solo", "family"],
+      coordinates: { lat: 39.4545, lng: -0.3512 },
+      address: "Ciudad de las Artes y las Ciencias, Valencia",
+    },
+    {
+      name: "The Turia gardens",
+      description:
+        "A nine-kilometre park laid out in a drained riverbed, running under the old bridges through the middle of the city.",
+      nameEs: "Los Jardines del Turia",
+      descriptionEs:
+        "Un parque de nueve kilómetros trazado en el cauce seco del río, que pasa bajo los puentes antiguos por el centro de la ciudad.",
+      long_description:
+        "After the 1957 flood Valencia moved its river and turned the empty bed into a park that curves right through the city. The result is nine kilometres of gardens, orange trees, palms and lawns, sunk below street level and crossed by the old stone bridges.\n\nBeing sunk is what makes it useful. The banks and the bridges cut the low sun, so there is usable shade through the middle of the day, and the bridge arches give you a built frame at regular intervals.\n\nIt is also flat, wide and traffic-free for its whole length, which makes it the easiest location in this catalogue for families with small children or anyone who does not want to climb anything.",
+      long_description_es:
+        "Tras la riada de 1957 Valencia desvió su río y convirtió el cauce vacío en un parque que atraviesa la ciudad. El resultado son nueve kilómetros de jardines, naranjos, palmeras y césped, hundidos por debajo del nivel de la calle y cruzados por los puentes de piedra antiguos.\n\nEstar hundido es lo que lo hace útil. Los taludes y los puentes cortan el sol bajo, así que hay sombra aprovechable a mediodía, y los arcos de los puentes dan un marco construido cada pocos cientos de metros.\n\nAdemás es llano, ancho y sin tráfico en todo su recorrido, lo que lo convierte en el sitio más fácil de este catálogo para familias con niños pequeños o para quien no quiera subir nada.",
+      best_time: "Any hour — the banks and bridges give shade when the streets do not",
+      best_timeEs: "A cualquier hora: los taludes y los puentes dan sombra cuando las calles no",
+      tips: "Nine kilometres is too much to walk in a session — pick one stretch. The section between the Palau de la Música and the City of Arts links the two most useful locations in Valencia on foot.",
+      tipsEs:
+        "Nueve kilómetros son demasiados para una sesión: elija un tramo. El trecho entre el Palau de la Música y la Ciudad de las Artes une a pie los dos mejores escenarios de Valencia.",
+      tags: ["family", "couples", "solo", "kids-birthday"],
+      coordinates: { lat: 39.4653, lng: -0.3628 },
+      address: "Jardí del Túria, Valencia",
+    },
+  ],
+  "san-sebastian": [
+    {
+      name: "La Concha",
+      description:
+        "A shell-shaped bay closed by two headlands, edged with the white Belle Époque railing the city is known for.",
+      nameEs: "La Concha",
+      descriptionEs:
+        "Una bahía en forma de concha cerrada por dos montes, bordeada por la barandilla blanca de la Belle Époque.",
+      long_description:
+        "One of the most complete city beaches in Europe: a near-perfect arc of sand closed at both ends by hills, with Santa Clara island sitting in the middle of the mouth. The promenade above it carries the white balustrade that appears in every photograph of the city, and its repeating curve is a gift to a photographer — a strong line that leads wherever you point it.\n\nThe bay faces north, which is unusual in Spain and changes everything. The light is soft and cool rather than hard and golden, and it stays workable much longer into the middle of the day than an Andalusian location would.\n\nAt low tide the sand runs out a long way and you can shoot on the flat wet beach with the whole bay reflected. At high tide there is almost none, so check the tide table before choosing a time.",
+      long_description_es:
+        "Una de las playas urbanas más completas de Europa: un arco de arena casi perfecto cerrado por dos montes, con la isla de Santa Clara en mitad de la bocana. El paseo que la bordea lleva la balaustrada blanca que sale en todas las fotos de la ciudad, y su curva repetida es un regalo para un fotógrafo: una línea fuerte que conduce hacia donde se quiera.\n\nLa bahía mira al norte, cosa rara en España, y eso lo cambia todo. La luz es suave y fría en vez de dura y dorada, y aguanta mucho más entrada la mañana que en un sitio andaluz.\n\nCon marea baja la arena se extiende mucho y se puede fotografiar sobre la playa mojada con toda la bahía reflejada. Con marea alta casi no queda arena, así que conviene mirar la tabla de mareas antes de elegir la hora.",
+      best_time: "Low tide, at almost any hour — the north-facing light is forgiving",
+      best_timeEs: "Con marea baja, a casi cualquier hora: la luz de orientación norte perdona mucho",
+      tips: "Check the tide table first; it matters more here than the time of day. The Basque coast is genuinely unpredictable — agree a rain plan when you book rather than on the morning.",
+      tipsEs:
+        "Mire primero la tabla de mareas: aquí importa más que la hora. La costa vasca es de verdad impredecible; acuerde el plan de lluvia al reservar, no la misma mañana.",
+      tags: ["couples", "family", "engagement", "solo"],
+      coordinates: { lat: 43.3183, lng: -1.9856 },
+      address: "Playa de la Concha, Donostia-San Sebastián",
+    },
+    {
+      name: "Monte Igueldo",
+      description:
+        "The hill closing the west end of the bay, with the whole shell of La Concha laid out below and a funicular from 1912.",
+      nameEs: "Monte Igueldo",
+      descriptionEs:
+        "El monte que cierra la bahía por el oeste, con toda la concha extendida abajo y un funicular de 1912.",
+      long_description:
+        "The view every postcard of San Sebastián uses, taken from the top of the western headland: the full arc of the bay, the island in the mouth, and Monte Urgull closing the far side. A wooden funicular has been climbing to it since 1912 and is worth doing for its own sake.\n\nThe viewpoint faces roughly east across the bay, so the best light on the city is early — the sun comes up behind you and lights the whole waterfront. In the evening you are shooting into it, which gives silhouettes rather than the postcard.\n\nThere is an old amusement park at the top, faded in a way that is either charming or the reason to shoot in the other direction.",
+      long_description_es:
+        "La vista que usa todas las postales de San Sebastián, tomada desde lo alto del monte del oeste: el arco completo de la bahía, la isla en la bocana y el Urgull cerrando el otro lado. Un funicular de madera sube desde 1912 y merece la pena por sí mismo.\n\nEl mirador mira más o menos al este, cruzando la bahía, así que la mejor luz sobre la ciudad es temprana: el sol sale a su espalda e ilumina todo el frente marítimo. Por la tarde se dispara a contraluz, lo que da siluetas en vez de la postal.\n\nArriba hay un parque de atracciones antiguo, desgastado de una forma que resulta encantadora o que es la razón para apuntar en la otra dirección.",
+      best_time: "Morning, with the sun behind you lighting the bay",
+      best_timeEs: "Por la mañana, con el sol a la espalda iluminando la bahía",
+      tips: "The funicular runs to a timetable and closes in bad weather; there is also a road up. The viewpoint terrace charges a small entry fee separate from the funicular ticket.",
+      tipsEs:
+        "El funicular tiene horario y cierra con mal tiempo; también se sube por carretera. La terraza del mirador cobra una entrada pequeña aparte del billete del funicular.",
+      tags: ["couples", "engagement", "solo", "family"],
+      coordinates: { lat: 43.3157, lng: -2.0107 },
+      address: "Monte Igueldo, Donostia-San Sebastián",
+    },
+  ],
+  ibiza: [
+    {
+      name: "Dalt Vila",
+      description:
+        "A walled old town climbing to a cathedral above the port, inside Renaissance ramparts that have never been breached.",
+      nameEs: "Dalt Vila",
+      descriptionEs:
+        "Un casco antiguo amurallado que sube hasta la catedral sobre el puerto, dentro de murallas renacentistas nunca tomadas.",
+      long_description:
+        "The part of Ibiza that has nothing to do with the island's reputation. A UNESCO-listed walled town of white lanes climbing from the harbour to a cathedral at the top, inside sixteenth-century bastions built to keep out Ottoman raiders.\n\nThe lanes are narrow, steep and white, which means bounced light for most of the day — the same geometry that makes the Albaicín work. The bastions at the top open out to wide views over the port and the sea, so you get the enclosed and the panoramic within a few minutes of each other.\n\nIt is quiet in the morning even in August, because the island's visitors are mostly elsewhere and mostly asleep.",
+      long_description_es:
+        "La parte de Ibiza que no tiene nada que ver con la fama de la isla. Un casco amurallado declarado Patrimonio de la Humanidad, de calles blancas que suben del puerto a la catedral, dentro de baluartes del siglo XVI levantados contra las incursiones otomanas.\n\nLas calles son estrechas, empinadas y blancas, lo que da luz rebotada casi todo el día: la misma geometría que hace funcionar el Albaicín. Los baluartes de arriba se abren a vistas amplias del puerto y del mar, así que se tiene lo cerrado y lo panorámico a pocos minutos.\n\nPor la mañana está tranquilo incluso en agosto, porque los visitantes de la isla están en otra parte y, en general, durmiendo.",
+      best_time: "Morning — quiet even in season, and the lanes hold soft light",
+      best_timeEs: "Por la mañana: tranquilo incluso en temporada, y las calles conservan luz suave",
+      tips: "Steep cobblestone from the port to the cathedral, about twenty minutes up. Flat shoes for the climb. Vehicle access inside the walls is restricted.",
+      tipsEs:
+        "Adoquín empinado desde el puerto hasta la catedral, unos veinte minutos de subida. Calzado plano. El acceso de vehículos dentro de las murallas está restringido.",
+      tags: ["couples", "engagement", "solo", "content-creator"],
+      coordinates: { lat: 38.9067, lng: 1.4361 },
+      address: "Dalt Vila, Eivissa, Ibiza",
+    },
+    {
+      name: "Cala Comte at sunset",
+      description:
+        "A west-coast cove looking out at the islets of Es Vedrà — the most reliable dramatic sunset in Spain.",
+      nameEs: "Cala Comte al atardecer",
+      descriptionEs:
+        "Una cala de la costa oeste frente a los islotes y Es Vedrà: el atardecer más fiable de España.",
+      long_description:
+        "Low rust-coloured rock terraces stepping down into very clear water, with small islands offshore and the silhouette of Es Vedrà further south. The whole cove faces west, which is the entire point: the sun goes down into the sea directly in front of you, behind the islets.\n\nUnlike most sunset locations this one works from the rock as well as from the sand, so a session is not fighting for space on a beach. The terraces give you levels to place people on and foreground texture that a flat beach cannot.\n\nIt is the best-known sunset on the island, so in July and August it is busy and the parking fills early. May and October give you the identical light with a fraction of the people.",
+      long_description_es:
+        "Terrazas bajas de roca color óxido que bajan hasta un agua muy clara, con islotes enfrente y la silueta de Es Vedrà más al sur. Toda la cala mira al oeste, y ese es el motivo: el sol se mete en el mar justo delante, por detrás de los islotes.\n\nA diferencia de la mayoría de los sitios de atardecer, este funciona igual desde la roca que desde la arena, así que la sesión no compite por sitio en la playa. Las terrazas dan niveles donde colocar a la gente y una textura de primer plano que una playa llana no tiene.\n\nEs el atardecer más conocido de la isla, así que en julio y agosto hay mucha gente y el aparcamiento se llena pronto. Mayo y octubre dan la misma luz con una fracción del público.",
+      best_time: "The hour before sunset, arriving well ahead of it",
+      best_timeEs: "La hora antes del atardecer, llegando con bastante antelación",
+      tips: "Parking fills long before sunset in season — arrive early or expect a walk. The rock terraces are uneven and slippery when wet; not the place for thin heels.",
+      tipsEs:
+        "En temporada el aparcamiento se llena mucho antes del atardecer: llegue pronto o cuente con caminar. Las terrazas de roca son irregulares y resbalan mojadas; no es sitio para tacón fino.",
+      tags: ["couples", "honeymoon", "engagement", "elopement"],
+      coordinates: { lat: 38.9614, lng: 1.2233 },
+      address: "Cala Comte, Sant Josep de sa Talaia, Ibiza",
+    },
+  ],
 };
