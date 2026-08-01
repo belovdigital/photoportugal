@@ -772,4 +772,203 @@ export const photoSpotsES: Record<string, PhotoSpot[]> = {
       address: "La Geria, Lanzarote",
     },
   ],
+
+  malaga: [
+    {
+      name: "Alcazaba and the Gibralfaro road",
+      description:
+        "A Moorish fortress climbing the hill above the port, with the Mediterranean and the bullring laid out below it.",
+      nameEs: "La Alcazaba y la subida al Gibralfaro",
+      descriptionEs:
+        "Una fortaleza árabe que sube la colina sobre el puerto, con el Mediterráneo y la plaza de toros extendidos abajo.",
+      long_description:
+        "Málaga's Alcazaba is the best-preserved Moorish fortress in Spain, and it climbs — walled terraces, horseshoe arches, courtyards with water channels, each level giving a wider view of the city and the sea. Above it the Gibralfaro castle sits at the top of the hill with the whole bay in front.\n\nWhat makes it work for a session is that the levels give you variety without walking anywhere else. Enclosed arched courtyards at the bottom, open terraces halfway up, and a panorama at the top — three registers in one ticket.\n\nMálaga is the easiest Andalusian city to reach and the most forgiving in summer, because the sea moderates the heat that makes Seville and Córdoba impossible in August.",
+      long_description_es:
+        "La Alcazaba de Málaga es la fortaleza árabe mejor conservada de España, y sube: terrazas amuralladas, arcos de herradura, patios con acequias, y cada nivel da una vista más amplia de la ciudad y del mar. Por encima, el castillo de Gibralfaro corona la colina con toda la bahía delante.\n\nLo que la hace útil para una sesión es que los niveles dan variedad sin moverse a otro sitio. Patios cerrados con arcos abajo, terrazas abiertas a media altura y panorámica arriba: tres registros con una sola entrada.\n\nMálaga es la ciudad andaluza más fácil de alcanzar y la más llevadera en verano, porque el mar modera el calor que hace imposibles Sevilla y Córdoba en agosto.",
+      best_time: "Early morning in the courtyards; the last hour from the upper terraces",
+      best_timeEs: "Primera hora en los patios; la última hora desde las terrazas altas",
+      tips: "Ticketed, and there is a combined ticket with Gibralfaro. It is a real climb — a lift from Calle Guillén Sotelo saves the first section.",
+      tipsEs:
+        "De pago, y existe entrada combinada con el Gibralfaro. Es una subida de verdad; el ascensor de la calle Guillén Sotelo ahorra el primer tramo.",
+      tags: ["couples", "family", "solo", "engagement"],
+      coordinates: { lat: 36.7215, lng: -4.4155 },
+      address: "Alcazaba de Málaga, Málaga",
+    },
+  ],
+  marbella: [
+    {
+      name: "Casco Antiguo and Plaza de los Naranjos",
+      description:
+        "A whitewashed old town of geranium-covered walls around a small orange-tree square, minutes from the marina.",
+      nameEs: "El Casco Antiguo y la Plaza de los Naranjos",
+      descriptionEs:
+        "Un casco antiguo encalado, con muros cubiertos de geranios, alrededor de una plaza pequeña de naranjos, a minutos del puerto.",
+      long_description:
+        "Behind the Costa del Sol's beachfront is a genuine Andalusian old town: narrow whitewashed lanes, wrought-iron balconies loaded with geraniums, and at the centre a small square planted with orange trees and lined with cafés.\n\nThe lanes are the useful part. High white walls mean bounced light rather than direct sun, so this works through the middle of the day when the beach does not — which matters on a coast where most visitors are here in July and August.\n\nTwenty minutes away Puerto Banús gives you the opposite register entirely: yachts, glass and hard modern lines. A session that uses both has range that neither has alone.",
+      long_description_es:
+        "Detrás del frente marítimo de la Costa del Sol hay un casco antiguo andaluz de verdad: callejuelas encaladas, balcones de forja cargados de geranios y, en el centro, una plaza pequeña plantada de naranjos y rodeada de terrazas.\n\nLas callejuelas son lo aprovechable. Los muros altos y blancos dan luz rebotada en vez de sol directo, así que funcionan a mediodía cuando la playa no, algo que importa en una costa donde la mayoría viene en julio y agosto.\n\nA veinte minutos, Puerto Banús da el registro contrario: yates, cristal y líneas modernas duras. Una sesión que use ambos tiene un rango que ninguno alcanza por separado.",
+      best_time: "Midday in the lanes, late afternoon in the square",
+      best_timeEs: "Mediodía en las callejuelas, última hora en la plaza",
+      tips: "The square fills with restaurant tables from lunchtime — early morning is the only time it is clear. Parking is outside the old town.",
+      tipsEs:
+        "La plaza se llena de mesas desde la hora de comer: solo a primera hora está despejada. El aparcamiento está fuera del casco.",
+      tags: ["couples", "family", "engagement", "anniversary"],
+      coordinates: { lat: 36.5108, lng: -4.8850 },
+      address: "Plaza de los Naranjos, Marbella",
+    },
+  ],
+  cadiz: [
+    {
+      name: "La Caleta and the old town",
+      description:
+        "A small beach between two castles at the tip of a peninsula, with the Atlantic on three sides of the city.",
+      nameEs: "La Caleta y el casco antiguo",
+      descriptionEs:
+        "Una playa pequeña entre dos castillos en la punta de una península, con el Atlántico rodeando la ciudad por tres lados.",
+      long_description:
+        "Cádiz claims to be the oldest continuously inhabited city in Western Europe, and it sits on a spit of land almost surrounded by ocean. La Caleta is the small beach at the tip, framed by a castle at each end and backed by a white bathhouse pavilion on stilts.\n\nBecause the city is nearly an island, it takes light from every direction as the day moves — a rare thing on the Spanish coast, and it means there is almost always somewhere working. The Atlantic here is a colder, greyer blue than the Mediterranean, which changes the whole palette.\n\nBehind the beach the old town is narrow, salt-worn and far less polished than Seville. Its shabbiness is the appeal; nothing here looks restored for visitors.",
+      long_description_es:
+        "Cádiz se reclama la ciudad habitada más antigua de Europa occidental, y se asienta en una lengua de tierra casi rodeada de océano. La Caleta es la playa pequeña de la punta, enmarcada por un castillo en cada extremo y con el balneario blanco sobre pilotes al fondo.\n\nComo la ciudad es casi una isla, recibe luz de todas las direcciones según avanza el día —cosa rara en la costa española—, así que casi siempre hay algo que funciona. El Atlántico aquí es de un azul más frío y gris que el Mediterráneo, y eso cambia toda la paleta.\n\nDetrás de la playa, el casco antiguo es estrecho, curtido por el salitre y mucho menos pulido que Sevilla. Ese desgaste es su atractivo: aquí nada parece restaurado para el visitante.",
+      best_time: "Sunset at La Caleta — it faces west, which is unusual on this coast",
+      best_timeEs: "Atardecer en La Caleta: mira al oeste, cosa poco común en esta costa",
+      tips: "La Caleta is a working city beach and busy in summer. The Atlantic wind is stronger and cooler than on the Mediterranean side — a layer is worth carrying even in June.",
+      tipsEs:
+        "La Caleta es playa urbana en uso y se llena en verano. El viento atlántico es más fuerte y fresco que en el lado mediterráneo: conviene llevar una capa incluso en junio.",
+      tags: ["couples", "family", "solo", "engagement"],
+      coordinates: { lat: 36.5312, lng: -6.3095 },
+      address: "Playa de La Caleta, Cádiz",
+    },
+  ],
+  segovia: [
+    {
+      name: "The Roman aqueduct",
+      description:
+        "A two-thousand-year-old aqueduct running through the middle of the city, 28 metres high and built without mortar.",
+      nameEs: "El acueducto romano",
+      descriptionEs:
+        "Un acueducto de dos mil años que atraviesa el centro de la ciudad, de 28 metros de alto y levantado sin argamasa.",
+      long_description:
+        "One of the best-preserved Roman structures anywhere, and it is not in a museum or on an archaeological site — it runs straight through the middle of a working city, over a square, with cafés underneath it. A hundred and sixty-seven arches of granite, stacked dry without mortar, standing since the first century.\n\nThe scale is what photographs. Stand people at the base of the tallest section in the Plaza del Azoguejo and the arches disappear upward out of frame; step back to the stairs beside it and you get the whole run receding into the town.\n\nGranite is grey and takes warm light beautifully at the ends of the day, and does very little at noon.",
+      long_description_es:
+        "Una de las estructuras romanas mejor conservadas del mundo, y no está en un museo ni en un yacimiento: atraviesa el centro de una ciudad viva, sobre una plaza, con terrazas debajo. Ciento sesenta y siete arcos de granito, apilados en seco sin argamasa, en pie desde el siglo I.\n\nLo que se fotografía es la escala. Coloque a alguien al pie del tramo más alto, en la Plaza del Azoguejo, y los arcos se salen del encuadre hacia arriba; retroceda hasta las escaleras contiguas y se obtiene todo el recorrido perdiéndose en el pueblo.\n\nEl granito es gris y coge muy bien la luz cálida de los extremos del día; a mediodía no hace casi nada.",
+      best_time: "The first or last hour — grey granite needs warm, low light",
+      best_timeEs: "La primera o la última hora: el granito gris necesita luz cálida y baja",
+      tips: "Free and open at all hours. Segovia is an hour from Madrid by train and a day-trip town, so it is busiest between eleven and four. Winters here are genuinely cold.",
+      tipsEs:
+        "Gratis y accesible a cualquier hora. Segovia está a una hora de Madrid en tren y es pueblo de excursión: lo más lleno, entre las once y las cuatro. Los inviernos aquí son fríos de verdad.",
+      tags: ["couples", "family", "proposal", "solo"],
+      coordinates: { lat: 40.9481, lng: -4.1184 },
+      address: "Acueducto de Segovia, Plaza del Azoguejo, Segovia",
+    },
+  ],
+  sitges: [
+    {
+      name: "Sant Bartomeu church and the seafront",
+      description:
+        "A church on a rock above the sea, with a whitewashed old town behind it and a promenade running the length of the beaches.",
+      nameEs: "La iglesia de Sant Bartomeu y el paseo marítimo",
+      descriptionEs:
+        "Una iglesia sobre una roca junto al mar, con el casco antiguo encalado detrás y un paseo que recorre todas las playas.",
+      long_description:
+        "Sitges is forty minutes from Barcelona and looks nothing like it. The parish church sits on a low rock directly above the water, and it is the town's whole identity — visible from every beach, lit at night, and photographable from three completely different angles within a few minutes' walk.\n\nBehind it the old town is narrow and white, with a Modernista streak left over from the artists who summered here in the 1890s. In front, a promenade of palms runs the length of the seafront.\n\nThe church faces roughly south-east over the water, so it takes early light on its face. At sunset you shoot it against the sky from the western beaches instead — two different photographs depending which end of the day you pick.",
+      long_description_es:
+        "Sitges está a cuarenta minutos de Barcelona y no se parece en nada. La iglesia parroquial se levanta sobre una roca baja justo encima del agua, y es toda la identidad del pueblo: se ve desde cualquier playa, se ilumina de noche y se fotografía desde tres ángulos distintos con pocos minutos de caminata.\n\nDetrás, el casco antiguo es estrecho y blanco, con una vena modernista heredada de los artistas que veraneaban aquí en la década de 1890. Delante, un paseo de palmeras recorre todo el frente marítimo.\n\nLa iglesia mira más o menos al sureste sobre el agua, así que recibe la luz temprana de frente. Al atardecer se fotografía a contraluz desde las playas del oeste: dos fotos distintas según el extremo del día que se elija.",
+      best_time: "Early morning for light on the church; sunset for it against the sky",
+      best_timeEs: "Primera hora para la luz sobre la iglesia; atardecer para verla a contraluz",
+      tips: "Forty minutes by train from Barcelona Sants, which makes it an easy second location on a Barcelona trip. Busy on summer weekends with day-trippers from the city.",
+      tipsEs:
+        "A cuarenta minutos en tren desde Barcelona Sants, lo que la convierte en un segundo escenario fácil en un viaje a Barcelona. Los fines de semana de verano se llena de gente de la ciudad.",
+      tags: ["couples", "engagement", "family", "anniversary"],
+      coordinates: { lat: 41.2350, lng: 1.8118 },
+      address: "Església de Sant Bartomeu i Santa Tecla, Sitges",
+    },
+  ],
+  girona: [
+    {
+      name: "The cathedral steps and the Onyar houses",
+      description:
+        "Ninety steps rising to a baroque facade, and a river lined with houses painted ochre, red and yellow.",
+      nameEs: "Las escaleras de la catedral y las casas del Oñar",
+      descriptionEs:
+        "Noventa escalones que suben a una fachada barroca, y un río flanqueado por casas pintadas de ocre, rojo y amarillo.",
+      long_description:
+        "Girona has two images and they are a few minutes apart. The first is the cathedral: ninety broad steps climbing to a baroque facade, a staircase built to be walked up slowly and one of the most cinematic pieces of architecture in Catalonia — which is why film crews keep using it.\n\nThe second is the Onyar, the narrow river running through the middle of town with houses built right down to the water and painted in ochre, red and yellow. The footbridges across it give you the frame everyone photographs, with the cathedral tower rising behind the roofline.\n\nBetween the two is the Call, one of the best-preserved Jewish quarters in Europe: narrow, stepped, stone-walled and shaded through the middle of the day.",
+      long_description_es:
+        "Girona tiene dos imágenes y están a pocos minutos una de otra. La primera es la catedral: noventa escalones anchos que suben a una fachada barroca, una escalinata hecha para subirla despacio y una de las piezas de arquitectura más cinematográficas de Cataluña, motivo por el que los rodajes vuelven a ella.\n\nLa segunda es el Oñar, el río estrecho que cruza el centro con casas construidas hasta el agua y pintadas de ocre, rojo y amarillo. Las pasarelas dan el encuadre que fotografía todo el mundo, con la torre de la catedral asomando sobre los tejados.\n\nEntre ambas está el Call, uno de los barrios judíos mejor conservados de Europa: estrecho, escalonado, de muro de piedra y en sombra a mediodía.",
+      best_time: "Morning on the steps; the river houses in the last hour of light",
+      best_timeEs: "Por la mañana en las escaleras; las casas del río en la última hora de luz",
+      tips: "Thirty-eight minutes from Barcelona by high-speed train. The cathedral steps are public and free; entry to the cathedral itself is ticketed.",
+      tipsEs:
+        "A treinta y ocho minutos de Barcelona en alta velocidad. Las escaleras de la catedral son públicas y gratuitas; entrar en la catedral se paga.",
+      tags: ["couples", "engagement", "solo", "family"],
+      coordinates: { lat: 41.9873, lng: 2.8262 },
+      address: "Catedral de Girona, Plaça de la Catedral, Girona",
+    },
+  ],
+  menorca: [
+    {
+      name: "Ciutadella harbour and the Camí de Cavalls",
+      description:
+        "A sandstone port town at the quiet end of the Balearics, with a coastal path circling the whole island.",
+      nameEs: "El puerto de Ciutadella y el Camí de Cavalls",
+      descriptionEs:
+        "Un puerto de arenisca en el extremo tranquilo de Baleares, con un sendero de costa que rodea toda la isla.",
+      long_description:
+        "Menorca is the Balearic island that stayed quiet, and Ciutadella is its old capital: a narrow sandstone harbour cut into the rock, with a town of arcaded streets and honey-coloured stone above it.\n\nThe stone is the thing. Menorcan sandstone is warmer and softer than Mallorca's limestone, and at the end of the day the whole harbour glows in a way that photographs almost orange.\n\nBeyond the town the Camí de Cavalls, a bridle path built to patrol the coast, now runs 185 kilometres around the entire island. It reaches coves that no road does, which is why couples who want photographs with nobody else in them come here rather than to Mallorca.",
+      long_description_es:
+        "Menorca es la isla balear que se quedó tranquila, y Ciutadella es su antigua capital: un puerto estrecho de arenisca excavado en la roca, con una ciudad de calles porticadas y piedra color miel por encima.\n\nLa piedra es lo que importa. La arenisca menorquina es más cálida y blanda que la caliza mallorquina, y al final del día todo el puerto brilla de una forma que se fotografía casi anaranjada.\n\nMás allá del pueblo, el Camí de Cavalls, un camino de herradura construido para vigilar la costa, recorre hoy 185 kilómetros alrededor de toda la isla. Llega a calas a las que no llega ninguna carretera, y por eso las parejas que quieren fotos sin nadie más vienen aquí y no a Mallorca.",
+      best_time: "The last hour, when the sandstone turns",
+      best_timeEs: "La última hora, cuando la arenisca cambia de color",
+      tips: "Much of the Camí de Cavalls is a real footpath — check which section you are using and wear proper shoes. Many island restaurants and hotels close from November to April.",
+      tipsEs:
+        "Buena parte del Camí de Cavalls es un sendero de verdad: mire qué tramo va a usar y lleve calzado adecuado. Muchos restaurantes y hoteles de la isla cierran de noviembre a abril.",
+      tags: ["couples", "honeymoon", "elopement", "family"],
+      coordinates: { lat: 40.0014, lng: 3.8386 },
+      address: "Port de Ciutadella, Menorca",
+    },
+  ],
+  bilbao: [
+    {
+      name: "The Guggenheim and the riverside",
+      description:
+        "A titanium building that changed a city, with walkways along the Nervión on both sides of it.",
+      nameEs: "El Guggenheim y la ría",
+      descriptionEs:
+        "Un edificio de titanio que cambió una ciudad, con paseos a lo largo del Nervión en ambas orillas.",
+      long_description:
+        "Frank Gehry's museum opened in 1997 on a derelict industrial riverbank and turned Bilbao from a post-industrial city into a destination. The titanium panels curve in every direction and change colour with the weather — silver in cloud, gold at sunset, and almost white at midday.\n\nFor a photographer the building is a machine for making backgrounds. Every angle gives a different set of curves, and the riverside walkways on both banks mean you can circle it and never repeat a frame. Puppy, the giant flower-covered sculpture at the entrance, gives colour that the metal does not.\n\nBilbao's weather is Atlantic and often overcast, which suits this location better than sun does: flat light makes the titanium subtle rather than blinding, and softens faces at the same time.",
+      long_description_es:
+        "El museo de Frank Gehry abrió en 1997 sobre una ribera industrial abandonada y convirtió Bilbao de ciudad postindustrial en destino. Las placas de titanio se curvan en todas direcciones y cambian de color con el tiempo: plata con nubes, dorado al atardecer y casi blanco a mediodía.\n\nPara un fotógrafo el edificio es una máquina de fabricar fondos. Cada ángulo da un juego de curvas distinto, y los paseos de ambas orillas permiten rodearlo sin repetir encuadre. Puppy, la escultura gigante cubierta de flores de la entrada, aporta el color que el metal no tiene.\n\nEl tiempo en Bilbao es atlántico y a menudo cubierto, lo que le sienta mejor a este sitio que el sol: la luz plana hace el titanio sutil en vez de cegador y suaviza las caras a la vez.",
+      best_time: "Overcast suits it; otherwise the last hour, when the titanium goes gold",
+      best_timeEs: "El cielo cubierto le sienta bien; si no, la última hora, cuando el titanio se vuelve dorado",
+      tips: "The exterior and the riverside are free and open at all hours. Rain is common — this is one of the few locations in the catalogue that is arguably better in it.",
+      tipsEs:
+        "El exterior y la ría son libres y accesibles a cualquier hora. La lluvia es habitual, y este es de los pocos sitios del catálogo que puede quedar incluso mejor con ella.",
+      tags: ["couples", "solo", "content-creator", "engagement"],
+      coordinates: { lat: 43.2687, lng: -2.9340 },
+      address: "Museo Guggenheim, Abandoibarra Etorbidea, Bilbao",
+    },
+  ],
+  "santiago-de-compostela": [
+    {
+      name: "Praza do Obradoiro",
+      description:
+        "The granite square at the end of the Camino, with the cathedral facade filling one whole side of it.",
+      nameEs: "La Praza do Obradoiro",
+      descriptionEs:
+        "La plaza de granito al final del Camino, con la fachada de la catedral ocupando todo un lado.",
+      long_description:
+        "The square where the Camino de Santiago ends, and one of the great architectural spaces in Europe: granite underfoot, the baroque cathedral facade filling the eastern side, and pilgrims arriving all day with the look of people who have walked eight hundred kilometres.\n\nThat last part is why this location is unlike any other in the catalogue. It is not a backdrop, it is a place where something happens — and a session here that includes the arrivals has a subject rather than just a view.\n\nGalicia is wet and often overcast, and the granite reads best in exactly that: soft grey light makes the stone silver, while strong sun makes it harsh and contrasty. This is a location that rewards the weather everyone else is complaining about.",
+      long_description_es:
+        "La plaza donde termina el Camino de Santiago, y uno de los grandes espacios arquitectónicos de Europa: granito bajo los pies, la fachada barroca de la catedral ocupando el lado este y peregrinos llegando todo el día con la cara de quien ha caminado ochocientos kilómetros.\n\nEso último es lo que hace este sitio distinto de todos los demás del catálogo. No es un fondo, es un lugar donde ocurre algo, y una sesión que incluya esas llegadas tiene un tema y no solo una vista.\n\nGalicia es húmeda y a menudo está cubierta, y el granito se lee mejor justo así: la luz gris suave vuelve la piedra plateada, mientras que el sol fuerte la deja dura y contrastada. Es un sitio que premia el tiempo del que todos se quejan.",
+      best_time: "Overcast or early morning; the square fills with arrivals through the day",
+      best_timeEs: "Con cielo cubierto o a primera hora; la plaza se llena de llegadas a lo largo del día",
+      tips: "Free and open. Rain is frequent year-round — bring a plan for it rather than hoping. Be considerate with pilgrims arriving; for many it is an emotional moment, not a photo opportunity.",
+      tipsEs:
+        "Libre y abierta. La lluvia es frecuente todo el año: lleve un plan en vez de confiar en la suerte. Tenga tacto con los peregrinos que llegan; para muchos es un momento emotivo, no una oportunidad fotográfica.",
+      tags: ["couples", "solo", "family", "content-creator"],
+      coordinates: { lat: 42.8805, lng: -8.5456 },
+      address: "Praza do Obradoiro, Santiago de Compostela",
+    },
+  ],
 };
