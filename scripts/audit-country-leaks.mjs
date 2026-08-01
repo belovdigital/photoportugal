@@ -270,9 +270,26 @@ for (const file of walkFiles("src")) {
 for (const file of fs.readdirSync("src/lib").filter((f) => f.endsWith("-es.ts"))) {
   const code = fs.readFileSync(path.join("src/lib", file), "utf8");
   for (const [, key, lang, value] of code.matchAll(/(\w+)_(es|pt|de|fr):\s*"((?:[^"\\]|\\.)*)"/g)) {
-    if (/\bSpain\b|Riojatal/.test(value)) {
+    // The BRAND is legitimately English in every locale — "Photo Spain" is a
+    // proper noun, the same way base de/fr keep "Photo Portugal". Strip it
+    // before testing, or fixing the translated-brand bug re-triggers this check.
+    const withoutBrand = value.replace(/Photo Spain/g, "");
+    if (/\bSpain\b|Riojatal/.test(withoutBrand)) {
       report("английское «Spain» в неанглийском поле", lang, `${file}:${key}_${lang}`, value.slice(0, 70));
     }
+  }
+}
+
+// 7. The brand translated, ANYWHERE in src — not just the messages layer.
+//    The first repair pass only walked messages/country/es/*.json, so 122
+//    occurrences survived in shoot-types-data-es.ts and shipped "Photo
+//    Spanien" and "Photo Espagne" into German and French body copy and into
+//    FAQPage structured data. The brand is a proper noun in every locale.
+for (const file of walkFiles("src")) {
+  const code = fs.readFileSync(file, "utf8");
+  const hits = code.match(TRANSLATED_BRAND);
+  if (hits) {
+    report("бренд переведён", "—", file.replace(/^src\//, ""), `${hits.length}× ${hits[0]}`);
   }
 }
 
