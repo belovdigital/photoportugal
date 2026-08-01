@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail, getAdminEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { country } from "@/lib/country";
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -30,6 +31,8 @@ export async function POST(req: NextRequest) {
     const topicLabel = TOPIC_LABELS[topic] || topic;
 
     // Always send to CTO + CEO, plus any admin emails from DB
+    // Internal team mailboxes, deliberately the same for both markets — one team
+    // reads them. Only the subject prefix tells the markets apart.
     const CONTACT_RECIPIENTS = ["cto@photoportugal.com", "ceo@photoportugal.com"];
     const adminEmailStr = await getAdminEmail();
     const adminEmails = adminEmailStr.split(",").map((e: string) => e.trim()).filter(Boolean);
@@ -55,7 +58,7 @@ export async function POST(req: NextRequest) {
       recipients.map((recipient: string) =>
         sendEmail(
           recipient,
-          `[Photo Portugal] ${topicLabel}: ${name}`,
+          `[${country.brand}] ${topicLabel}: ${name}`,
           emailBody
         )
       )
