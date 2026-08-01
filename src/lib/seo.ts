@@ -144,6 +144,12 @@ const OG_LOCALES: Record<string, string> = {
 export function openGraphIdentity(path: string, locale: string) {
   const safeLocale = LOCALES.includes(locale as Locale) ? (locale as Locale) : "en";
   return {
+    // Next.js replaces the whole `openGraph` object when a page declares one,
+    // rather than merging field by field. That is why og:site_name was missing
+    // on 24 of 31 pages: every page with its own OpenGraph block silently
+    // dropped the layout's. Carrying it in the helper puts it back everywhere
+    // the helper is used.
+    siteName: country.brand,
     url: localizedUrl(path, safeLocale),
     locale: OG_LOCALES[safeLocale] ?? OG_LOCALES.en,
     alternateLocale: LOCALES.filter((l) => l !== safeLocale).map((l) => OG_LOCALES[l]),
