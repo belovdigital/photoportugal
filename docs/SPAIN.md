@@ -604,3 +604,36 @@ Connect для Испании включён (проверено: `/v1/accounts`
 налоговая может иметь мнение. Решение за Алексом и бухгалтером, не за кодом.
 
 Решение принято 01.08.2026: Испания переведена на Connect, ручной режим удалён (§6.2).
+
+---
+
+## 16. ⚠️ Публичный профиль Stripe-аккаунта Испании — правится ТОЛЬКО руками
+
+На 01.08.2026 в профиле `acct_1TzfRtGelEPoV4hO` (PHOTO SPAIN) стояло:
+
+```
+business_profile.url           = https://photoportugal.com
+business_profile.support_email = info@photoportugal.com
+```
+
+Это **не внутреннее поле**. Stripe показывает его клиенту на странице оплаты,
+в письме с чеком и фотографу во время Connect-онбординга. То есть испанский
+клиент, платящий на photospain.co, видел бы в чеке португальский домен — утечка
+на самой чувствительной поверхности, какая есть.
+
+Через API не исправить: `POST /v1/accounts/{id}` отвечает
+`You cannot use this method on your own account` — платформа не может править
+сама себя, только свои connected-аккаунты.
+
+**Делается руками:** Stripe Dashboard → Settings → Business → Public details →
+website `https://photospain.co`, support email `info@photospain.co`,
+support URL `https://photospain.co/help`.
+
+Проверить после правки:
+
+```bash
+curl -s https://api.stripe.com/v1/account -u "$STRIPE_SECRET_KEY:" \
+  | python3 -c "import sys,json;b=json.load(sys.stdin)['business_profile'];print(b['url'],b['support_email'])"
+```
+
+Заодно стоит загрузить логотип: `settings.branding.logo` пуст, иконка есть.
