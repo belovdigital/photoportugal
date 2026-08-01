@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { country } from "@/lib/country";
 
 interface BlogPost {
   id: string;
@@ -49,7 +50,7 @@ export function BlogManager() {
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [targetKeywords, setTargetKeywords] = useState("");
-  const [author, setAuthor] = useState("Photo Portugal");
+  const [author, setAuthor] = useState(country.brand);
   const [isPublished, setIsPublished] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
   const [previewMode, setPreviewMode] = useState(false);
@@ -83,7 +84,7 @@ export function BlogManager() {
     setMetaTitle("");
     setMetaDescription("");
     setTargetKeywords("");
-    setAuthor("Photo Portugal");
+    setAuthor(country.brand);
     setIsPublished(false);
     setScheduledAt("");
     setPreviewMode(false);
@@ -113,7 +114,7 @@ export function BlogManager() {
         setMetaTitle(fullPost.meta_title || "");
         setMetaDescription(fullPost.meta_description || "");
         setTargetKeywords(fullPost.target_keywords || "");
-        setAuthor(fullPost.author || "Photo Portugal");
+        setAuthor(fullPost.author || country.brand);
         setIsPublished(fullPost.is_published);
         setScheduledAt(fullPost.scheduled_at ? new Date(fullPost.scheduled_at).toISOString().slice(0, 16) : "");
         setPreviewMode(false);
@@ -352,7 +353,7 @@ export function BlogManager() {
                 type="text"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
-                placeholder="Photo Portugal"
+                placeholder={country.brand}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               />
             </div>

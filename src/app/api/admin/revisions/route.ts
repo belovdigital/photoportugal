@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail, emailLayout, emailButton } from "@/lib/email";
+import { country } from "@/lib/country";
 
 async function verifyAdmin(): Promise<{ email: string } | null> {
   const cookieStore = await cookies();
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
           ${admin_note ? `<p style="color:#6B7280;margin:0 0 12px;font-style:italic;">"${admin_note}"</p>` : ""}
           <ul style="padding-left:20px;margin:0 0 20px;">${itemsList}</ul>
           <p style="color:#6B7280;margin:0 0 8px;">Please log in and resolve each item. Once done, submit for re-review.</p>
-          ${emailButton("https://photoportugal.com/dashboard", "View Revisions")}
+          ${emailButton(`${country.baseUrl}/dashboard`, "View Revisions")}
         `)
       ).catch(e => console.error("[admin/revisions] email error:", e));
 
@@ -162,8 +163,8 @@ export async function PATCH(req: NextRequest) {
         "Your profile is now live! 🎉",
         emailLayout(`
           <h2 style="margin:0 0 16px;font-size:20px;color:#1F1F1F;">Congratulations, ${profile.name}!</h2>
-          <p style="color:#6B7280;margin:0 0 16px;">Your profile has been approved and is now live on Photo Portugal. Clients can find and book you!</p>
-          ${emailButton(`https://photoportugal.com/photographers/${profile.slug}`, "View Your Profile")}
+          <p style="color:#6B7280;margin:0 0 16px;">Your profile has been approved and is now live on ${country.brand}. Clients can find and book you!</p>
+          ${emailButton(`${country.baseUrl}/photographers/${profile.slug}`, "View Your Profile")}
         `)
       ).catch(e => console.error("[admin/revisions] approval email error:", e));
 

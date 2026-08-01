@@ -12,6 +12,7 @@
 import { query, queryOne } from "@/lib/db";
 import { parsePhone } from "@/lib/phone-codes";
 import { sendSMS } from "@/lib/sms";
+import { country } from "@/lib/country";
 
 // ── Timezone mapping ───────────────────────────────────────────────
 
@@ -58,7 +59,7 @@ const SEND_HOUR_END = 21;   // 21:00 local
 
 export function getTimezoneForPhone(phone: string): string {
   const { code } = parsePhone(phone);
-  return COUNTRY_CODE_TO_TIMEZONE[code] || "Europe/Lisbon";
+  return COUNTRY_CODE_TO_TIMEZONE[code] || country.timezone;
 }
 
 /** Get current hour (0-23) in a given IANA timezone */
@@ -151,7 +152,7 @@ interface QueueResult {
  */
 export async function queueNotification(opts: QueueOptions): Promise<QueueResult> {
   const phone = opts.channel === "sms" ? opts.recipient : opts.recipientPhone;
-  const timezone = phone ? getTimezoneForPhone(phone) : "Europe/Lisbon";
+  const timezone = phone ? getTimezoneForPhone(phone) : country.timezone;
 
   if (isWithinSendingHours(timezone)) {
     // Send immediately — insert temporarily for dedup, delete after success.
@@ -270,7 +271,7 @@ export async function enqueueNewMessageNotif(opts: EnqueueNewMessageOpts): Promi
   const delay = opts.delaySec ?? NEW_MESSAGE_DELAY_SEC;
   const sendAfter = new Date(Date.now() + delay * 1000).toISOString();
   const dedupKey = `nm:${opts.messageId}:${opts.channel}`;
-  const tz = opts.channel === "sms" ? getTimezoneForPhone(opts.recipient) : "Europe/Lisbon";
+  const tz = opts.channel === "sms" ? getTimezoneForPhone(opts.recipient) : country.timezone;
 
   await queryOne(
     `INSERT INTO notification_queue
@@ -285,7 +286,7 @@ export async function enqueueNewMessageNotif(opts: EnqueueNewMessageOpts): Promi
       opts.messageId,
       opts.bookingId,
       opts.channel,
-      opts.subject || "New message — Photo Portugal",
+      opts.subject || `New message — ${country.brand}`,
       opts.body,
       sendAfter,
       tz,
@@ -426,7 +427,7 @@ export async function processNotificationQueue(): Promise<number> {
       } else {
         // For queued emails, body contains the pre-rendered HTML
         const { sendEmail } = await import("@/lib/email");
-        await sendEmail(item.recipient, item.subject || "Photo Portugal", item.body);
+        await sendEmail(item.recipient, item.subject || country.brand, item.body);
       }
 
       // Success — remove from queue (logs are in notification_logs via sendSMS/sendEmail)
@@ -471,5 +472,5 @@ export async function processNotificationQueue(): Promise<number> {
 
 async function sendQueuedEmail(opts: QueueOptions): Promise<void> {
   const { sendEmail } = await import("@/lib/email");
-  await sendEmail(opts.recipient, opts.subject || "Photo Portugal", opts.body);
+  await sendEmail(opts.recipient, opts.subject || country.brand, opts.body);
 }

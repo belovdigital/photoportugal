@@ -98,10 +98,10 @@ export async function POST(req: NextRequest) {
         <table cellpadding="0" cellspacing="0">
           <tr>
             <td style="background:#C94536;border-radius:8px;">
-              <a href="https://photoportugal.com/book/${c.slug}?from=concierge_email" style="display:inline-block;padding:10px 18px;color:#fff;text-decoration:none;font-weight:600;font-size:14px;">Talk to ${c.name.split(" ")[0]}</a>
+              <a href="${country.baseUrl}/book/${c.slug}?from=concierge_email" style="display:inline-block;padding:10px 18px;color:#fff;text-decoration:none;font-weight:600;font-size:14px;">Talk to ${c.name.split(" ")[0]}</a>
             </td>
             <td style="padding-left:8px;">
-              <a href="https://photoportugal.com/photographers/${c.slug}?from=concierge_email" style="display:inline-block;padding:10px 16px;color:#4A4A4A;text-decoration:none;font-weight:500;font-size:14px;border:1px solid #E8DFD3;border-radius:8px;">View profile</a>
+              <a href="${country.baseUrl}/photographers/${c.slug}?from=concierge_email" style="display:inline-block;padding:10px 16px;color:#4A4A4A;text-decoration:none;font-weight:500;font-size:14px;border:1px solid #E8DFD3;border-radius:8px;">View profile</a>
             </td>
           </tr>
         </table>

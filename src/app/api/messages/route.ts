@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
         // Allow photoportugal.com links
         const isInternalLink = /photoportugal\.com/i.test(text);
         if (!isInternalLink) {
-          contactWarning = `For your safety, we recommend keeping all communication on Photo Portugal. Sharing ${contactType}s may put your booking protection at risk.`;
+          contactWarning = `For your safety, we recommend keeping all communication on ${country.brand}. Sharing ${contactType}s may put your booking protection at risk.`;
         }
       }
     }
@@ -223,14 +223,14 @@ export async function POST(req: NextRequest) {
         // BLOCK the message for clients
         return NextResponse.json({
           error: "social_platform_blocked",
-          warning: `Photo Portugal is a curated platform where every photographer is personally vetted for quality, reliability, and professionalism. Our photographers' profiles include portfolios, verified reviews, pricing, and all the information you need to make the right choice.\n\nTo protect both you and the photographer, all communication and bookings must stay on the platform. Contacting or booking photographers outside Photo Portugal may result in a permanent ban for the photographer.\n\nIf you have any questions, our support team is happy to help!`,
+          warning: `${country.brand} is a curated platform where every photographer is personally vetted for quality, reliability, and professionalism. Our photographers' profiles include portfolios, verified reviews, pricing, and all the information you need to make the right choice.\n\nTo protect both you and the photographer, all communication and bookings must stay on the platform. Contacting or booking photographers outside ${country.brand} may result in a permanent ban for the photographer.\n\nIf you have any questions, our support team is happy to help!`,
         }, { status: 400 });
       }
 
       if (socialPlatform && senderRole === "photographer") {
         // Let the message through but add a system warning after it
         // (handled below after message insert)
-        contactWarning = `⚠️ Reminder: sharing social media handles or directing clients off-platform is against Photo Portugal's terms. Repeated violations may result in account suspension.`;
+        contactWarning = `⚠️ Reminder: sharing social media handles or directing clients off-platform is against ${country.brand}'s terms. Repeated violations may result in account suspension.`;
       }
 
       // Off-platform PAYMENT attempts. detectSocialPlatform/detectContactInfo
@@ -331,7 +331,7 @@ export async function POST(req: NextRequest) {
         await queryOne(
           `INSERT INTO messages (booking_id, sender_id, text, is_system)
            VALUES ($1, $2, $3, TRUE)`,
-          [booking_id, userId, "⚠️ Reminder: Please keep all communication on Photo Portugal. Sharing social media handles or directing clients off-platform is against our terms and may result in account suspension."]
+          [booking_id, userId, `⚠️ Reminder: Please keep all communication on ${country.brand}. Sharing social media handles or directing clients off-platform is against our terms and may result in account suspension.`]
         );
       }
     }
@@ -473,8 +473,8 @@ export async function POST(req: NextRequest) {
               messageId: message!.id,
               bookingId: booking_id,
               channel: "email",
-              subject: `New message from ${senderDisplay} — Photo Portugal`,
-              body: `You've got a new message from ${senderDisplay} about your Photo Portugal booking.`,
+              subject: `New message from ${senderDisplay} — ${country.brand}`,
+              body: `You've got a new message from ${senderDisplay} about your ${country.brand} booking.`,
             });
           }
         }
@@ -557,10 +557,10 @@ export async function POST(req: NextRequest) {
           const senderName = (await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]))?.name?.split(" ")[0] || "Someone";
           const rLocale = await getUserLocaleById(recipientId);
           const smsBody = pickT({
-            en: `Photo Portugal: New message from ${senderName}. Reply: ${country.baseUrl}/dashboard/messages`,
-            pt: `Photo Portugal: Nova mensagem de ${senderName}. Responda: ${country.baseUrl}/dashboard/messages`,
-            de: `Photo Portugal: Neue Nachricht von ${senderName}. Antworten: ${country.baseUrl}/dashboard/messages`,
-            fr: `Photo Portugal : Nouveau message de ${senderName}. Répondre : ${country.baseUrl}/dashboard/messages`,
+            en: `${country.brand}: New message from ${senderName}. Reply: ${country.baseUrl}/dashboard/messages`,
+            pt: `${country.brand}: Nova mensagem de ${senderName}. Responda: ${country.baseUrl}/dashboard/messages`,
+            de: `${country.brand}: Neue Nachricht von ${senderName}. Antworten: ${country.baseUrl}/dashboard/messages`,
+            fr: `${country.brand} : Nouveau message de ${senderName}. Répondre : ${country.baseUrl}/dashboard/messages`,
           }, rLocale);
           await enqueueNewMessageNotif({
             recipientId,

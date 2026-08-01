@@ -1387,7 +1387,7 @@ async function runReminders(): Promise<NextResponse> {
             </p>
             ${b.password ? `<p style="margin:0 0 16px;font-size:13px;color:#6B6B6B;">Gallery password: <strong>${b.password}</strong></p>` : ""}
             ${p(`You can download everything in original quality any time before <strong>${b.expires}</strong>. If anything's not right with the photos, just reply to this email — we're here to help.`)}
-            <p style="margin:0;font-size:13px;color:#9B8E82;">Photo Portugal Team — photoportugal.com</p>
+            <p style="margin:0;font-size:13px;color:#9B8E82;">${country.brand} Team — ${country.host}</p>
           </div>`;
 
         await queueNotification({
@@ -1854,7 +1854,7 @@ async function runReminders(): Promise<NextResponse> {
           `<div style="font-family: sans-serif; max-width: 520px; margin: 0 auto;">
             <h2 style="color: #C94536;">Don't lose your photos!</h2>
             <p>Hi ${firstName},</p>
-            <p>Your gallery from <strong>${booking.photographer_name}</strong> will be removed from Photo Portugal on <strong>${expiresOn}</strong> (7 days from now).</p>
+            <p>Your gallery from <strong>${booking.photographer_name}</strong> will be removed from ${country.brand} on <strong>${expiresOn}</strong> (7 days from now).</p>
             <p>Make sure to download the full ZIP to keep them forever:</p>
             ${ctaBlock}
             <p style="font-size: 13px; color: #666;">After ${expiresOn}, the public link stops working. We keep a hidden backup for another 3 months in case anything goes wrong, but the cleanest path is to download now.</p>
@@ -1987,7 +1987,7 @@ async function runReminders(): Promise<NextResponse> {
           p.email,
           `Complete your ${country.brand} profile today`,
           `<p>Hi ${p.name},</p>
-<p>Your photographer profile on Photo Portugal is almost ready, but some steps are still incomplete.</p>
+<p>Your photographer profile on ${country.brand} is almost ready, but some steps are still incomplete.</p>
 <p><strong>Please complete your profile today</strong> to avoid account deactivation. Once your checklist is done, our team will review and approve your profile so you can start receiving bookings.</p>
 <p><a href="${country.baseUrl}/dashboard" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Complete My Profile</a></p>
 <p>If you need help, reply to this email or visit our <a href="${country.baseUrl}/support">Help Center</a>.</p>
@@ -2090,7 +2090,7 @@ async function runReminders(): Promise<NextResponse> {
           p.email,
           `Your ${country.brand} account has been deactivated`,
           `<p>Hi ${p.name},</p>
-<p>Your photographer profile on Photo Portugal has been deactivated because the onboarding checklist was not completed within 7 days of registration.</p>
+<p>Your photographer profile on ${country.brand} has been deactivated because the onboarding checklist was not completed within 7 days of registration.</p>
 <p>If you'd like to reactivate your account, please contact us at <a href="mailto:info@photoportugal.com">info@photoportugal.com</a> and we'll help you get started again.</p>
 <p>Best,<br>${country.brand} Team</p>`
         );

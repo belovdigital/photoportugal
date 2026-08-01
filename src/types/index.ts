@@ -1,3 +1,4 @@
+import { country } from "@/lib/country";
 export interface User {
   id: string;
   email: string;
@@ -29,10 +30,16 @@ export const SHOOT_TYPES = [
 
 export type ShootType = (typeof SHOOT_TYPES)[number];
 
+// The market's own language comes first after English: a Spanish photographer
+// filling this in should not have to hunt past Portuguese to find Spanish.
+// Order is presentation only — the stored values are unchanged, so a profile
+// created on either market reads the same.
+const MARKET_LANGUAGES =
+  country.code === "es" ? ["Spanish", "Portuguese"] : ["Portuguese", "Spanish"];
+
 export const LANGUAGES = [
   "English",
-  "Portuguese",
-  "Spanish",
+  ...MARKET_LANGUAGES,
   "French",
   "German",
   "Italian",

@@ -5,6 +5,7 @@ import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
 import { resolveAbsoluteImageUrl } from "@/lib/image-url";
 import { getLocationDisplayName } from "@/lib/location-hierarchy";
+import { country } from "@/lib/country";
 
 async function isAdmin() {
   const cookieStore = await cookies();
@@ -12,7 +13,7 @@ async function isAdmin() {
   return token ? verifyToken(token) : false;
 }
 
-const BASE_URL = process.env.AUTH_URL || "https://photoportugal.com";
+const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       <!-- Header -->
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="padding:32px 0 24px;text-align:center;">
-          <img src="${BASE_URL}/logo.svg" alt="Photo Portugal" width="160" style="width:160px;" />
+          <img src="${BASE_URL}/logo.svg" alt="${country.brand}" width="160" style="width:160px;" />
         </td></tr>
       </table>
 
@@ -185,7 +186,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
       <!-- Intro -->
       <p style="font-size:15px;line-height:1.7;color:#4A4A4A;">Hi ${escapeHtml(firstName)},</p>
-      <p style="font-size:15px;line-height:1.7;color:#4A4A4A;">Thank you for trusting Photo Portugal with your photoshoot! Our concierge team has reviewed your request, personally reached out to ${photographerDetails.length} photographer${photographerDetails.length > 1 ? "s" : ""}, and confirmed ${photographerDetails.length > 1 ? "they are all" : "they are"} available for your date and a great fit for your ${escapeHtml(shootTypeLabel.toLowerCase())} session.</p>
+      <p style="font-size:15px;line-height:1.7;color:#4A4A4A;">Thank you for trusting ${country.brand} with your photoshoot! Our concierge team has reviewed your request, personally reached out to ${photographerDetails.length} photographer${photographerDetails.length > 1 ? "s" : ""}, and confirmed ${photographerDetails.length > 1 ? "they are all" : "they are"} available for your date and a great fit for your ${escapeHtml(shootTypeLabel.toLowerCase())} session.</p>
 
       <!-- Request summary -->
       <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border-radius:10px;overflow:hidden;border:1px solid #F3EDE6;">
@@ -226,8 +227,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       <!-- Footer -->
       <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 0;border-top:1px solid #F3EDE6;">
         <tr><td style="padding:24px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#999;">Photo Portugal — Connecting travelers with talented photographers across Portugal</p>
-          <p style="margin:4px 0 0;font-size:12px;color:#999;"><a href="${BASE_URL}" style="color:#C94536;text-decoration:none;">photoportugal.com</a></p>
+          <p style="margin:0;font-size:12px;color:#999;">${country.brand} — Connecting travelers with talented photographers across Portugal</p>
+          <p style="margin:4px 0 0;font-size:12px;color:#999;"><a href="${BASE_URL}" style="color:#C94536;text-decoration:none;">${country.host}</a></p>
         </td></tr>
       </table>
     </div>`;
@@ -325,7 +326,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
               <p>${T.greeting}</p>
               <p>${T.body}</p>
               <p>${T.footer}</p>
-              <p style="color: #999; font-size: 12px;">Photo Portugal — photoportugal.com</p>
+              <p style="color: #999; font-size: 12px;">${country.brand} — ${country.host}</p>
             </div>`
           ).catch(() => {});
         }
@@ -492,7 +493,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;color:#333;">
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr><td style="padding:32px 0 24px;text-align:center;">
-            <img src="${BASE_URL}/logo.svg" alt="Photo Portugal" width="160" style="width:160px;" />
+            <img src="${BASE_URL}/logo.svg" alt="${country.brand}" width="160" style="width:160px;" />
           </td></tr>
         </table>
         <h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#1F1F1F;text-align:center;">Updated Photographer Matches</h1>
@@ -520,8 +521,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         <p style="font-size:14px;color:#666;line-height:1.6;">Can't decide? Simply reply to this email — our team is happy to help you choose the best fit for your session.</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 0;border-top:1px solid #F3EDE6;">
           <tr><td style="padding:24px 0;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#999;">Photo Portugal — Connecting travelers with talented photographers across Portugal</p>
-            <p style="margin:4px 0 0;font-size:12px;color:#999;"><a href="${BASE_URL}" style="color:#C94536;text-decoration:none;">photoportugal.com</a></p>
+            <p style="margin:0;font-size:12px;color:#999;">${country.brand} — Connecting travelers with talented photographers across Portugal</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#999;"><a href="${BASE_URL}" style="color:#C94536;text-decoration:none;">${country.host}</a></p>
           </td></tr>
         </table>
       </div>`;

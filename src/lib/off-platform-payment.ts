@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { country } from "@/lib/country";
 
 // ---------------------------------------------------------------------------
 // Off-platform payment detection for chat.
@@ -71,7 +72,7 @@ export interface OffPlatformVerdict {
   reason: string;
 }
 
-const SYSTEM_PROMPT = `You moderate chat on Photo Portugal, a marketplace where clients book photographers. The platform takes a 15% service fee and ALL payment must go through the site.
+const SYSTEM_PROMPT = `You moderate chat on ${country.brand}, a marketplace where clients book photographers. The platform takes a 15% service fee and ALL payment must go through the site.
 
 Decide whether the message is an attempt to move payment OFF the platform.
 
@@ -139,19 +140,19 @@ type Locale = "en" | "pt" | "de" | "es" | "fr";
 // The post-delivery scan can't un-send, so its notice must not claim it did.
 // Same body, different opening line.
 const LEAD_BLOCKED: Record<Locale, string> = {
-  en: `Payments can only be made through Photo Portugal, so this message wasn't sent.`,
-  pt: `Os pagamentos só podem ser feitos através da Photo Portugal, por isso esta mensagem não foi enviada.`,
-  de: `Zahlungen sind ausschließlich über Photo Portugal möglich, deshalb wurde diese Nachricht nicht gesendet.`,
-  es: `Los pagos solo pueden realizarse a través de Photo Portugal, por eso este mensaje no se ha enviado.`,
-  fr: `Les paiements ne peuvent se faire que via Photo Portugal, ce message n'a donc pas été envoyé.`,
+  en: `Payments can only be made through ${country.brand}, so this message wasn't sent.`,
+  pt: `Os pagamentos só podem ser feitos através da ${country.brand}, por isso esta mensagem não foi enviada.`,
+  de: `Zahlungen sind ausschließlich über ${country.brand} möglich, deshalb wurde diese Nachricht nicht gesendet.`,
+  es: `Los pagos solo pueden realizarse a través de ${country.brand}, por eso este mensaje no se ha enviado.`,
+  fr: `Les paiements ne peuvent se faire que via ${country.brand}, ce message n'a donc pas été envoyé.`,
 };
 
 const LEAD_DELIVERED: Record<Locale, string> = {
-  en: `A note from Photo Portugal: payments can only be made through the platform.`,
-  pt: `Uma nota da Photo Portugal: os pagamentos só podem ser feitos através da plataforma.`,
-  de: `Ein Hinweis von Photo Portugal: Zahlungen sind ausschließlich über die Plattform möglich.`,
-  es: `Un aviso de Photo Portugal: los pagos solo pueden realizarse a través de la plataforma.`,
-  fr: `Un mot de Photo Portugal : les paiements ne peuvent se faire que via la plateforme.`,
+  en: `A note from ${country.brand}: payments can only be made through the platform.`,
+  pt: `Uma nota da ${country.brand}: os pagamentos só podem ser feitos através da plataforma.`,
+  de: `Ein Hinweis von ${country.brand}: Zahlungen sind ausschließlich über die Plattform möglich.`,
+  es: `Un aviso de ${country.brand}: los pagos solo pueden realizarse a través de la plataforma.`,
+  fr: `Un mot de ${country.brand} : les paiements ne peuvent se faire que via la plateforme.`,
 };
 
 const CLIENT_COPY: Record<Locale, string> = {
@@ -163,11 +164,11 @@ const CLIENT_COPY: Record<Locale, string> = {
 };
 
 const PHOTOGRAPHER_COPY: Record<Locale, string> = {
-  en: `This message wasn't sent: it points the client at a payment method outside Photo Portugal.\n\nTaking a booking off-platform removes the client's refund and cover, and it breaches your agreement with us — repeat cases end in removal from the platform. If the client is pushing for it, say no and tell us; you won't be penalised for their ask.\n\nIf the issue is the price, you can send the client a custom offer at any amount from your dashboard.`,
-  pt: `Esta mensagem não foi enviada: encaminha o cliente para um método de pagamento fora da Photo Portugal.\n\nTirar uma reserva da plataforma elimina o reembolso e a cobertura do cliente e viola o seu acordo connosco — casos repetidos terminam com a remoção da plataforma. Se for o cliente a insistir, recuse e avise-nos; não será penalizado pelo pedido dele.\n\nSe a questão for o preço, pode enviar ao cliente uma proposta personalizada com o valor que quiser, a partir do seu painel.`,
-  de: `Diese Nachricht wurde nicht gesendet: Sie verweist die Kundschaft auf eine Zahlungsmethode außerhalb von Photo Portugal.\n\nEine Buchung von der Plattform zu nehmen, streicht Erstattung und Absicherung der Kundschaft und verstößt gegen Ihre Vereinbarung mit uns — Wiederholungsfälle enden mit dem Ausschluss. Wenn die Kundschaft darauf drängt, lehnen Sie ab und sagen Sie uns Bescheid; für deren Anfrage werden Sie nicht belangt.\n\nGeht es um den Preis, können Sie jederzeit ein individuelles Angebot in beliebiger Höhe aus Ihrem Dashboard senden.`,
-  es: `Este mensaje no se ha enviado: dirige al cliente a un método de pago fuera de Photo Portugal.\n\nSacar una reserva de la plataforma elimina el reembolso y la cobertura del cliente, e incumple su acuerdo con nosotros; los casos repetidos acaban en expulsión. Si es el cliente quien insiste, niéguese y avísenos; no será penalizado por lo que él pida.\n\nSi el problema es el precio, puede enviar al cliente una oferta personalizada por el importe que quiera desde su panel.`,
-  fr: `Ce message n'a pas été envoyé : il oriente le client vers un moyen de paiement hors Photo Portugal.\n\nSortir une réservation de la plateforme supprime le remboursement et la couverture du client, et enfreint votre accord avec nous — les cas répétés se terminent par une exclusion. Si c'est le client qui insiste, refusez et prévenez-nous ; sa demande ne vous sera pas reprochée.\n\nSi le sujet est le prix, vous pouvez envoyer au client une offre personnalisée du montant de votre choix depuis votre tableau de bord.`,
+  en: `This message wasn't sent: it points the client at a payment method outside ${country.brand}.\n\nTaking a booking off-platform removes the client's refund and cover, and it breaches your agreement with us — repeat cases end in removal from the platform. If the client is pushing for it, say no and tell us; you won't be penalised for their ask.\n\nIf the issue is the price, you can send the client a custom offer at any amount from your dashboard.`,
+  pt: `Esta mensagem não foi enviada: encaminha o cliente para um método de pagamento fora da ${country.brand}.\n\nTirar uma reserva da plataforma elimina o reembolso e a cobertura do cliente e viola o seu acordo connosco — casos repetidos terminam com a remoção da plataforma. Se for o cliente a insistir, recuse e avise-nos; não será penalizado pelo pedido dele.\n\nSe a questão for o preço, pode enviar ao cliente uma proposta personalizada com o valor que quiser, a partir do seu painel.`,
+  de: `Diese Nachricht wurde nicht gesendet: Sie verweist die Kundschaft auf eine Zahlungsmethode außerhalb von ${country.brand}.\n\nEine Buchung von der Plattform zu nehmen, streicht Erstattung und Absicherung der Kundschaft und verstößt gegen Ihre Vereinbarung mit uns — Wiederholungsfälle enden mit dem Ausschluss. Wenn die Kundschaft darauf drängt, lehnen Sie ab und sagen Sie uns Bescheid; für deren Anfrage werden Sie nicht belangt.\n\nGeht es um den Preis, können Sie jederzeit ein individuelles Angebot in beliebiger Höhe aus Ihrem Dashboard senden.`,
+  es: `Este mensaje no se ha enviado: dirige al cliente a un método de pago fuera de ${country.brand}.\n\nSacar una reserva de la plataforma elimina el reembolso y la cobertura del cliente, e incumple su acuerdo con nosotros; los casos repetidos acaban en expulsión. Si es el cliente quien insiste, niéguese y avísenos; no será penalizado por lo que él pida.\n\nSi el problema es el precio, puede enviar al cliente una oferta personalizada por el importe que quiera desde su panel.`,
+  fr: `Ce message n'a pas été envoyé : il oriente le client vers un moyen de paiement hors ${country.brand}.\n\nSortir une réservation de la plateforme supprime le remboursement et la couverture du client, et enfreint votre accord avec nous — les cas répétés se terminent par une exclusion. Si c'est le client qui insiste, refusez et prévenez-nous ; sa demande ne vous sera pas reprochée.\n\nSi le sujet est le prix, vous pouvez envoyer au client une offre personnalisée du montant de votre choix depuis votre tableau de bord.`,
 };
 
 /**

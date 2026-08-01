@@ -151,10 +151,10 @@ export async function POST(req: NextRequest) {
           <table cellpadding="0" cellspacing="0">
             <tr>
               <td style="background:#C94536;border-radius:8px;">
-                <a href="https://photoportugal.com/${lang === "en" ? "" : lang + "/"}book/${c.slug}?from=concierge_email" style="display:inline-block;padding:10px 18px;color:#fff;text-decoration:none;font-weight:600;font-size:14px;">${T.talk(c.name.split(" ")[0])}</a>
+                <a href="${country.baseUrl}/${lang === "en" ? "" : lang + "/"}book/${c.slug}?from=concierge_email" style="display:inline-block;padding:10px 18px;color:#fff;text-decoration:none;font-weight:600;font-size:14px;">${T.talk(c.name.split(" ")[0])}</a>
               </td>
               <td style="padding-left:8px;">
-                <a href="https://photoportugal.com/${lang === "en" ? "" : lang + "/"}photographers/${c.slug}?from=concierge_email" style="display:inline-block;padding:10px 16px;color:#4A4A4A;text-decoration:none;font-weight:500;font-size:14px;border:1px solid #E8DFD3;border-radius:8px;">${T.view}</a>
+                <a href="${country.baseUrl}/${lang === "en" ? "" : lang + "/"}photographers/${c.slug}?from=concierge_email" style="display:inline-block;padding:10px 16px;color:#4A4A4A;text-decoration:none;font-weight:500;font-size:14px;border:1px solid #E8DFD3;border-radius:8px;">${T.view}</a>
               </td>
             </tr>
           </table>

@@ -446,7 +446,7 @@ export async function PATCH(
             if (photographerPhone?.phone && smsPrefs?.sms_bookings !== false) {
               sendSMS(
                 photographerPhone.phone,
-                `Photo Portugal: Booking with ${cancelInfo.client_name} has been cancelled by the ${cancelledBy}. Log in to view: ${country.baseUrl}/dashboard/bookings`
+                `${country.brand}: Booking with ${cancelInfo.client_name} has been cancelled by the ${cancelledBy}. Log in to view: ${country.baseUrl}/dashboard/bookings`
               ).catch(err => console.error("[sms] cancellation error:", err));
             }
           } catch (smsErr) {
@@ -605,7 +605,7 @@ export async function PATCH(
             if (photographerPhone?.phone && smsPrefs?.sms_bookings !== false) {
               sendSMS(
                 photographerPhone.phone,
-                `Photo Portugal: Booking with ${cancellerName} has been cancelled by the ${cancelledBy}. Log in to view: ${country.baseUrl}/dashboard/bookings`
+                `${country.brand}: Booking with ${cancellerName} has been cancelled by the ${cancelledBy}. Log in to view: ${country.baseUrl}/dashboard/bookings`
               ).catch(err => console.error("[sms] cancellation error:", err));
             }
           } catch (smsErr) {
@@ -779,7 +779,7 @@ export async function PATCH(
                     currency: "eur",
                     product_data: {
                       name: `${bookingDetails.package_name || "Photoshoot"} with ${bookingDetails.photographer_name}`,
-                      description: "Photo Portugal photoshoot session",
+                      description: `${country.brand} photoshoot session`,
                     },
                     unit_amount: Math.round(clientTotal! * 100),
                   },
@@ -829,15 +829,15 @@ export async function PATCH(
                 // Gift-card bookings: no "check dashboard for payment" copy
                 // — recipient already paid via the gift card.
                 const smsBody = bookingDetails.gift_card_id ? pickT({
-                  en: `Photo Portugal: ${bookingDetails.photographer_name} confirmed your gift session! See your dashboard.`,
-                  pt: `Photo Portugal: ${bookingDetails.photographer_name} confirmou a sua sessão de presente! Veja o seu painel.`,
-                  de: `Photo Portugal: ${bookingDetails.photographer_name} hat Ihre Geschenk-Session bestätigt! Im Dashboard sehen.`,
-                  fr: `Photo Portugal : ${bookingDetails.photographer_name} a confirmé votre séance cadeau ! Voir votre tableau de bord.`,
+                  en: `${country.brand}: ${bookingDetails.photographer_name} confirmed your gift session! See your dashboard.`,
+                  pt: `${country.brand}: ${bookingDetails.photographer_name} confirmou a sua sessão de presente! Veja o seu painel.`,
+                  de: `${country.brand}: ${bookingDetails.photographer_name} hat Ihre Geschenk-Session bestätigt! Im Dashboard sehen.`,
+                  fr: `${country.brand} : ${bookingDetails.photographer_name} a confirmé votre séance cadeau ! Voir votre tableau de bord.`,
                 }, cLocale) : pickT({
-                  en: `Photo Portugal: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`,
-                  pt: `Photo Portugal: ${bookingDetails.photographer_name} confirmou a sua reserva! Veja o seu painel para os detalhes de pagamento.`,
-                  de: `Photo Portugal: ${bookingDetails.photographer_name} hat Ihre Buchung bestätigt! Zahlungsdetails finden Sie in Ihrem Dashboard.`,
-                  fr: `Photo Portugal : ${bookingDetails.photographer_name} a confirmé votre réservation ! Détails de paiement sur votre tableau de bord.`,
+                  en: `${country.brand}: ${bookingDetails.photographer_name} confirmed your booking! Check your dashboard for payment details.`,
+                  pt: `${country.brand}: ${bookingDetails.photographer_name} confirmou a sua reserva! Veja o seu painel para os detalhes de pagamento.`,
+                  de: `${country.brand}: ${bookingDetails.photographer_name} hat Ihre Buchung bestätigt! Zahlungsdetails finden Sie in Ihrem Dashboard.`,
+                  fr: `${country.brand} : ${bookingDetails.photographer_name} a confirmé votre réservation ! Détails de paiement sur votre tableau de bord.`,
                 }, cLocale);
                 sendSMS(
                   clientPhone.phone,

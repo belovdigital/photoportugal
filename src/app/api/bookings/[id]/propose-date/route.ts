@@ -209,10 +209,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           const { enqueueNewMessageNotif } = await import("@/lib/notification-queue");
           const rLocale = await getUserLocaleById(recipientUserId);
           const smsBody = pickT({
-            en: `Photo Portugal: ${senderDisplay} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`,
-            pt: `Photo Portugal: ${senderDisplay} propôs uma nova data (${formattedDate}${timeDisplay}) para a sua sessão fotográfica. Inicie sessão para responder.`,
-            de: `Photo Portugal: ${senderDisplay} hat ein neues Datum (${formattedDate}${timeDisplay}) für Ihr Fotoshooting vorgeschlagen. Melden Sie sich an, um zu antworten.`,
-            fr: `Photo Portugal : ${senderDisplay} a proposé une nouvelle date (${formattedDate}${timeDisplay}) pour votre séance photo. Connectez-vous pour répondre.`,
+            en: `${country.brand}: ${senderDisplay} proposed a new date (${formattedDate}${timeDisplay}) for your photoshoot. Log in to respond.`,
+            pt: `${country.brand}: ${senderDisplay} propôs uma nova data (${formattedDate}${timeDisplay}) para a sua sessão fotográfica. Inicie sessão para responder.`,
+            de: `${country.brand}: ${senderDisplay} hat ein neues Datum (${formattedDate}${timeDisplay}) für Ihr Fotoshooting vorgeschlagen. Melden Sie sich an, um zu antworten.`,
+            fr: `${country.brand} : ${senderDisplay} a proposé une nouvelle date (${formattedDate}${timeDisplay}) pour votre séance photo. Connectez-vous pour répondre.`,
           }, rLocale);
           await enqueueNewMessageNotif({
             recipientId: recipientUserId,
@@ -314,10 +314,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
         const rLocale = await getUserLocaleById(recipientUserId);
         const smsBody = pickT({
-          en: `Photo Portugal: Date confirmed! ${accepterDisplay} accepted ${formattedDate}${acceptedTimeDisplay} for your photoshoot.`,
-          pt: `Photo Portugal: Data confirmada! ${accepterDisplay} aceitou ${formattedDate}${acceptedTimeDisplay} para a sua sessão fotográfica.`,
-          de: `Photo Portugal: Termin bestätigt! ${accepterDisplay} hat ${formattedDate}${acceptedTimeDisplay} für Ihr Fotoshooting akzeptiert.`,
-          fr: `Photo Portugal : Date confirmée ! ${accepterDisplay} a accepté ${formattedDate}${acceptedTimeDisplay} pour votre séance photo.`,
+          en: `${country.brand}: Date confirmed! ${accepterDisplay} accepted ${formattedDate}${acceptedTimeDisplay} for your photoshoot.`,
+          pt: `${country.brand}: Data confirmada! ${accepterDisplay} aceitou ${formattedDate}${acceptedTimeDisplay} para a sua sessão fotográfica.`,
+          de: `${country.brand}: Termin bestätigt! ${accepterDisplay} hat ${formattedDate}${acceptedTimeDisplay} für Ihr Fotoshooting akzeptiert.`,
+          fr: `${country.brand} : Date confirmée ! ${accepterDisplay} a accepté ${formattedDate}${acceptedTimeDisplay} pour votre séance photo.`,
         }, rLocale);
         sendSMS(
           recipientPhone.phone,

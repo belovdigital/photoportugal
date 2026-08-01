@@ -3,6 +3,7 @@ import { queryOne } from "@/lib/db";
 import { formatShootDate } from "@/lib/format-shoot-date";
 import { maskSurname } from "@/lib/photographer-name";
 import { country } from "@/lib/country";
+import { locations } from "@/lib/locations-data";
 
 // Default to 587 + STARTTLS — Hetzner blocks the implicit-TLS port 465
 // outbound by default (their anti-abuse policy), so we use the submission
@@ -37,6 +38,12 @@ const ceoTransporter = process.env.SMTP_CEO_PASS
       },
     })
   : null;
+
+// Named from this market's own catalogue rather than a literal list: the
+// welcome email told Spanish clients to "find your style in Lisbon, Porto,
+// Algarve". The per-language location counts also disagreed with each other
+// (20 in English, 40 in German), so they are gone rather than reconciled.
+const TOP_CITIES = locations.slice(0, 3).map((l) => l.name).join(", ");
 
 export async function getAdminEmail(): Promise<string> {
   try {
@@ -86,7 +93,7 @@ export function emailLayout(body: string, locale: "en" | "pt" | "de" | "es" | "f
         <tr><td style="padding:28px 32px 20px;border-bottom:1px solid #F3EDE6;">
           <a href="${country.baseUrl}" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
             <img src="${country.baseUrl}/logo-icon.png" width="28" height="28" alt="" style="border-radius:6px;">
-            <span style="font-size:17px;font-weight:700;color:#1F1F1F;letter-spacing:-0.3px;">Photo Portugal</span>
+            <span style="font-size:17px;font-weight:700;color:#1F1F1F;letter-spacing:-0.3px;">${country.brand}</span>
           </a>
         </td></tr>
         <!-- Body -->
@@ -98,12 +105,12 @@ export function emailLayout(body: string, locale: "en" | "pt" | "de" | "es" | "f
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td style="font-size:13px;color:#9B8E82;">
-                <a href="${country.baseUrl}" style="color:#9B8E82;text-decoration:none;font-weight:500;">photoportugal.com</a>
+                <a href="${country.baseUrl}" style="color:#9B8E82;text-decoration:none;font-weight:500;">${country.host}</a>
               </td>
               <td align="right" style="font-size:13px;color:#C4B8AD;">
-                <a href="https://photoportugal.com${L.helpUrl}" style="color:#C4B8AD;text-decoration:none;">${L.help}</a>
+                <a href="${country.baseUrl}${L.helpUrl}" style="color:#C4B8AD;text-decoration:none;">${L.help}</a>
                 <span style="margin:0 6px;">·</span>
-                <a href="https://photoportugal.com${L.privacyUrl}" style="color:#C4B8AD;text-decoration:none;">${L.privacy}</a>
+                <a href="${country.baseUrl}${L.privacyUrl}" style="color:#C4B8AD;text-decoration:none;">${L.privacy}</a>
               </td>
             </tr>
           </table>
@@ -192,7 +199,7 @@ export async function emailSocialProof(): Promise<string> {
     return `<div style="margin:24px 0 0;padding:16px;background:#FAFAF8;border-radius:10px;border:1px solid #F3EDE6;">
   <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.5px;color:#9B8E82;text-transform:uppercase;">Join ${row.review_count}+ travelers who loved their photoshoot</p>
   <p style="margin:0 0 8px;font-size:14px;font-style:italic;line-height:1.5;color:#4A4A4A;">&ldquo;${quote}&rdquo;</p>
-  <p style="margin:0;font-size:12px;color:#9B8E82;">— ${name} · <a href="https://photoportugal.com/photographers/${row.photographer_slug}" style="color:#C94536;text-decoration:none;">${row.photographer_name}</a></p>
+  <p style="margin:0;font-size:12px;color:#9B8E82;">— ${name} · <a href="${country.baseUrl}/photographers/${row.photographer_slug}" style="color:#C94536;text-decoration:none;">${row.photographer_name}</a></p>
 </div>`;
   } catch {
     return "";
@@ -887,7 +894,7 @@ export async function sendTrustpilotFollowUpToClient(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", T.googleCta, "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", T.trustpilotCta, "#16A34A")}
+      ${emailButton("https://www.trustpilot.com/evaluate/${country.host}", T.trustpilotCta, "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">${T.footer}</p>
     `, locale)
   );
@@ -918,7 +925,7 @@ export async function sendTrustpilotFollowUpToPhotographer(
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">${T.body2}</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", T.googleCta, "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", T.trustpilotCta, "#16A34A")}
+      ${emailButton("https://www.trustpilot.com/evaluate/${country.host}", T.trustpilotCta, "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">${T.footer}</p>
     `, locale)
   );
@@ -1141,9 +1148,9 @@ export async function sendWelcomeEmail(
       to,
       `Welcome to ${country.brand} — Let's get you started!`,
       emailLayout(`
-        <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Welcome to Photo Portugal!</h2>
+        <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Welcome to ${country.brand}!</h2>
         <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${name.split(" ")[0]},</p>
-        <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Thank you for joining Photo Portugal! We're excited to have you on the platform. Here's how to get your profile live and start receiving bookings:</p>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Thank you for joining ${country.brand}! We're excited to have you on the platform. Here's how to get your profile live and start receiving bookings:</p>
 
         <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
           <p style="margin:0 0 12px;font-weight:bold;color:#1F1F1F;">Your setup checklist:</p>
@@ -1163,7 +1170,7 @@ export async function sendWelcomeEmail(
           <p style="margin:0 0 10px;font-weight:bold;color:#991B1B;">Important rules:</p>
           <table style="width:100%;border-collapse:collapse;font-size:14px;color:#7F1D1D;">
             <tr><td style="padding:4px 0;vertical-align:top;">1.</td><td style="padding:4px 8px;"><strong>Complete your profile within 7 days</strong> — accounts that remain incomplete will be automatically deactivated</td></tr>
-            <tr><td style="padding:4px 0;vertical-align:top;">2.</td><td style="padding:4px 8px;"><strong>Never work with clients off-platform</strong> — soliciting clients outside Photo Portugal or accepting direct payments results in a permanent ban</td></tr>
+            <tr><td style="padding:4px 0;vertical-align:top;">2.</td><td style="padding:4px 8px;"><strong>Never work with clients off-platform</strong> — soliciting clients outside ${country.brand} or accepting direct payments results in a permanent ban</td></tr>
             <tr><td style="padding:4px 0;vertical-align:top;">3.</td><td style="padding:4px 8px;"><strong>Respond to booking requests within 24 hours</strong> — clients expect fast communication</td></tr>
           </table>
         </div>
@@ -1187,9 +1194,9 @@ export async function sendWelcomeEmail(
         subject: `Welcome to ${country.brand}!`,
         h2: `Welcome to ${country.brand}!`,
         greeting: `Hi ${firstName},`,
-        intro: "You're all set! Here's how to book your perfect photoshoot in Portugal:",
+        intro: `You're all set! Here's how to book your perfect photoshoot in ${country.areaServed}:`,
         s1Title: "Browse photographers",
-        s1Body: "Find your style in Lisbon, Porto, Algarve, and 20 more locations",
+        s1Body: `Find your style in ${TOP_CITIES}, and more`,
         s2Title: "Pick a package",
         s2Body: "Choose the session length and number of photos",
         s3Title: "Book &amp; pay securely",
@@ -1203,7 +1210,7 @@ export async function sendWelcomeEmail(
         greeting: `Olá ${firstName},`,
         intro: "Está tudo pronto! Veja como reservar a sua sessão fotográfica perfeita em Portugal:",
         s1Title: "Explore os fotógrafos",
-        s1Body: "Encontre o seu estilo em Lisboa, Porto, Algarve e mais 20 localizações",
+        s1Body: `Encontre o seu estilo em ${TOP_CITIES} e mais`,
         s2Title: "Escolha um pacote",
         s2Body: "Escolha a duração da sessão e o número de fotos",
         s3Title: "Reserve e pague em segurança",
@@ -1217,7 +1224,7 @@ export async function sendWelcomeEmail(
         greeting: `Hallo ${firstName},`,
         intro: "Alles bereit! So buchen Sie Ihr perfektes Fotoshooting in Portugal:",
         s1Title: "Fotografen entdecken",
-        s1Body: "Finden Sie Ihren Stil in Lissabon, Porto, Algarve und über 40 weiteren Orten",
+        s1Body: `Finden Sie Ihren Stil in ${TOP_CITIES} und mehr`,
         s2Title: "Paket auswählen",
         s2Body: "Wählen Sie Dauer und Anzahl der Fotos",
         s3Title: "Sicher buchen und bezahlen",
@@ -1231,7 +1238,7 @@ export async function sendWelcomeEmail(
         greeting: `Bonjour ${firstName},`,
         intro: "Tout est prêt ! Voici comment réserver votre séance photo idéale au Portugal :",
         s1Title: "Parcourir les photographes",
-        s1Body: "Trouvez votre style à Lisbonne, Porto, Algarve et 20+ autres lieux",
+        s1Body: `Trouvez votre style à ${TOP_CITIES} et plus`,
         s2Title: "Choisir un forfait",
         s2Body: "Sélectionnez la durée de la séance et le nombre de photos",
         s3Title: "Réserver et payer en sécurité",
@@ -1245,7 +1252,7 @@ export async function sendWelcomeEmail(
         greeting: `Hola ${firstName},`,
         intro: "¡Todo listo! Así puede reservar su sesión fotográfica ideal en Portugal:",
         s1Title: "Explorar fotógrafos",
-        s1Body: "Encuentre su estilo en Lisboa, Oporto, Algarve y 20+ ubicaciones más",
+        s1Body: `Encuentre su estilo en ${TOP_CITIES} y más`,
         s2Title: "Elegir un paquete",
         s2Body: "Seleccione la duración de la sesión y el número de fotos",
         s3Title: "Reservar y pagar de forma segura",
@@ -1730,10 +1737,10 @@ export function renderTrustpilotFollowUpToClient(
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Thank You for Your Review!</h2>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${clientName.split(" ")[0]},</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We really appreciate you sharing your experience with <strong>${photographerName}</strong> on our platform.</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover Photo Portugal:</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We have one small favour to ask — it would mean the world to our small business if you could leave a quick review on Google or Trustpilot. It takes less than a minute and helps other travelers discover ${country.brand}:</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", "Review Us on Google", "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", "Review Us on Trustpilot", "#16A34A")}
+      ${emailButton("https://www.trustpilot.com/evaluate/${country.host}", "Review Us on Trustpilot", "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">Even a few words make a huge difference. Thank you for supporting independent photography in Portugal!</p>
     `),
   };
@@ -1747,11 +1754,11 @@ export function renderTrustpilotFollowUpToPhotographer(
     html: emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Help Us Grow!</h2>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Hi ${photographerName},</p>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Thank you for being part of Photo Portugal. Your work is what makes this platform great.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Thank you for being part of ${country.brand}. Your work is what makes this platform great.</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">We'd love it if you could share your experience as a photographer on Google or Trustpilot. A genuine review from a professional like you helps build trust and brings more clients to the platform — which means more bookings for everyone:</p>
       ${emailButton("https://g.page/r/CbWG7PogT_K2EBM/review", "Review Us on Google", "#4285F4")}
       <div style="height:8px"></div>
-      ${emailButton("https://www.trustpilot.com/evaluate/photoportugal.com", "Review Us on Trustpilot", "#16A34A")}
+      ${emailButton("https://www.trustpilot.com/evaluate/${country.host}", "Review Us on Trustpilot", "#16A34A")}
       <p style="margin:0;font-size:13px;line-height:1.5;color:#9B8E82;">It takes less than a minute. Thank you for your support!</p>
     `),
   };
@@ -1820,7 +1827,7 @@ export function renderReadyToBookNudge(
     subject: `Still thinking about your shoot with ${photographerDisplay}?`,
     html: emailLayout(`
       <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#1F1F1F;">Hey ${greet}</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">You started a chat with <strong>${photographerDisplay}</strong> yesterday on Photo Portugal — looks like you didn't finish picking a date.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">You started a chat with <strong>${photographerDisplay}</strong> yesterday on ${country.brand} — looks like you didn't finish picking a date.</p>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4A4A4A;">No rush, but if you're still up for it, jump back into the conversation and they can confirm availability + send you a quick booking link.</p>
       ${emailButton(threadUrl, "Open the chat")}
       <p style="margin:16px 0 0;font-size:13px;color:#9B8E82;line-height:1.5;">Questions? Just reply to this email.</p>
@@ -1975,7 +1982,7 @@ export async function sendNoBookingNudge(
     `Need help finding a photographer in Portugal?`,
     emailLayout(`
       <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Hi ${firstName}!</h2>
-      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Welcome to Photo Portugal! We noticed you signed up but haven't booked a session yet.</p>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Welcome to ${country.brand}! We noticed you signed up but haven't booked a session yet.</p>
       <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">Not sure where to start? Tell us your dates, group size, and preferred location, and we'll recommend the perfect photographer for your trip.</p>
       ${emailButton(`${BASE_URL}/photographers`, "Browse Photographers")}
       <p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:#9A9A9A;">Just reply to this email with your plans and we'll take care of the rest!</p>
@@ -2044,14 +2051,14 @@ export async function sendSocialPermissionEmail(
 
   const body = `
     <p style="margin:0 0 18px;font-size:16px;line-height:1.55;color:#1F1F1F;">Hi ${safeFirst},</p>
-    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">It's Kate, founder of Photo Portugal. I've just been through the photos <strong>${safePhotog}</strong> made with you${locationPhrase} — genuinely lovely work ✨</p>
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">It's Kate, founder of ${country.brand}. I've just been through the photos <strong>${safePhotog}</strong> made with you${locationPhrase} — genuinely lovely work ✨</p>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">We're still a young platform, and the honest truth is that good photos are what bring new clients to our photographers. So: would you let us feature a few of yours on our Instagram and website?</p>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;"><strong>${safePhotog}</strong> would pick the frames they're proudest of — the most natural and flattering ones, never anything personal or revealing. Nothing for you to approve; just reply <strong>"yes"</strong> and we'll handle it from there. And if there's a particular shot you'd rather keep to yourself, just tell me which and we'll leave it out.</p>
     <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:#2A2A2A;">Prefer not to? Reply <strong>"no thanks"</strong> and that's the end of it — no hard feelings, and I won't ask twice.</p>
     <p style="margin:0 0 28px;font-size:15px;line-height:1.65;color:#2A2A2A;">Either way, thank you for choosing us. Every booking through our platform goes to an independent photographer here in Portugal, and that's the whole point of what we're building 🌸</p>
     <p style="margin:0;font-size:15px;line-height:1.55;color:#2A2A2A;">Warmly,</p>
     <p style="margin:4px 0 2px;font-size:15px;line-height:1.4;color:#1F1F1F;font-weight:600;">Kate</p>
-    <p style="margin:0;font-size:13px;line-height:1.4;color:#9B8E82;">Founder · Photo Portugal</p>
+    <p style="margin:0;font-size:13px;line-height:1.4;color:#9B8E82;">Founder · ${country.brand}</p>
   `;
 
   const subject = `May we show off ${safePhotog}'s work? 🌸`;

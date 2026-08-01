@@ -411,10 +411,10 @@ export async function POST(
             const { getUserLocaleById, pickT } = await import("@/lib/email-locale");
             const cLocale = await getUserLocaleById(deliveryDetails.client_id);
             const smsBody = pickT({
-              en: `Photo Portugal: Your photos from ${deliveryDetails.photographer_name} are ready! Check your email for the gallery link.`,
-              pt: `Photo Portugal: As suas fotos de ${deliveryDetails.photographer_name} estão prontas! Veja o link da galeria no seu email.`,
-              de: `Photo Portugal: Ihre Fotos von ${deliveryDetails.photographer_name} sind bereit! Galerie-Link finden Sie in Ihrer E-Mail.`,
-              fr: `Photo Portugal : Vos photos de ${deliveryDetails.photographer_name} sont prêtes ! Le lien de la galerie est dans votre e-mail.`,
+              en: `${country.brand}: Your photos from ${deliveryDetails.photographer_name} are ready! Check your email for the gallery link.`,
+              pt: `${country.brand}: As suas fotos de ${deliveryDetails.photographer_name} estão prontas! Veja o link da galeria no seu email.`,
+              de: `${country.brand}: Ihre Fotos von ${deliveryDetails.photographer_name} sind bereit! Galerie-Link finden Sie in Ihrer E-Mail.`,
+              fr: `${country.brand} : Vos photos de ${deliveryDetails.photographer_name} sont prêtes ! Le lien de la galerie est dans votre e-mail.`,
             }, cLocale);
             sendSMS(
               deliveryDetails.client_phone,

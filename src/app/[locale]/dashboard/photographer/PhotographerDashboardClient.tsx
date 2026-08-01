@@ -921,7 +921,7 @@ export function PhotographerDashboardClient({
                   <span className="ml-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-0.5 text-[10px] font-bold text-white">{t("premiumBadge")}</span>
                 </label>
                 <div className="mt-1 flex items-center rounded-xl border border-gray-300 overflow-hidden focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-200">
-                  <span className="shrink-0 bg-warm-50 px-3 py-3 text-sm text-gray-400 border-r border-gray-300">photoportugal.com/photographers/</span>
+                  <span className="shrink-0 bg-warm-50 px-3 py-3 text-sm text-gray-400 border-r border-gray-300">{country.host}/photographers/</span>
                   <input
                     type="text"
                     value={customSlug}
@@ -937,7 +937,7 @@ export function PhotographerDashboardClient({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-gray-500">
-                      {t("yourProfileUrl")} <span className="font-mono text-gray-700">photoportugal.com/photographers/{profile.slug}</span>
+                      {t("yourProfileUrl")} <span className="font-mono text-gray-700">{country.host}/photographers/{profile.slug}</span>
                     </p>
                     <p className="mt-1 text-xs text-gray-400">
                       {t("customUrlUpgrade", { plan: "Premium" })}
