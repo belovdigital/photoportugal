@@ -33,7 +33,7 @@ const ceoTransporter = process.env.SMTP_CEO_PASS
       port: SMTP_PORT,
       secure: SMTP_PORT === 465,
       auth: {
-        user: process.env.SMTP_CEO_USER || "ceo@photoportugal.com",
+        user: process.env.SMTP_CEO_USER || `ceo@${country.host}`,
         pass: process.env.SMTP_CEO_PASS,
       },
     })
@@ -2064,11 +2064,11 @@ export async function sendSocialPermissionEmail(
   const subject = `May we show off ${safePhotog}'s work? 🌸`;
   try {
     await ceoTransporter.sendMail({
-      from: "Kate Belova <ceo@photoportugal.com>",
+      from: `Kate Belova <${process.env.SMTP_CEO_USER || `ceo@${country.host}`}>`,
       to,
       subject,
       html: emailLayout(body, "en"),
-      replyTo: "ceo@photoportugal.com",
+      replyTo: process.env.SMTP_CEO_USER || `ceo@${country.host}`,
     });
     console.log(`[email] Sent social-permission → ${to}`);
     import("@/lib/notification-log").then(m => m.logNotification("email", to, subject, "sent")).catch(() => {});
