@@ -83,7 +83,11 @@ export const DESTINATIONS: Destination[] = [
   { slug: "coimbra", name: "Coimbra", market: "portugal", area: "Central Portugal" },
   { slug: "obidos", name: "Óbidos", market: "portugal", area: "Central Portugal" },
   { slug: "nazare", name: "Nazaré", market: "portugal", area: "Central Portugal" },
+  { slug: "alentejo", name: "Alentejo", market: "portugal", area: "Alentejo" },
   { slug: "evora", name: "Évora", market: "portugal", area: "Alentejo" },
+  // Travellers name the Algarve far more often than any town in it, so the
+  // region has to be bookable in its own right and not only via Lagos or Faro.
+  { slug: "algarve", name: "Algarve", market: "portugal", area: "Algarve" },
   { slug: "lagos", name: "Lagos", market: "portugal", area: "Algarve" },
   { slug: "albufeira", name: "Albufeira", market: "portugal", area: "Algarve" },
   { slug: "faro", name: "Faro", market: "portugal", area: "Algarve" },
