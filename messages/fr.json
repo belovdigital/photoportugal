@@ -3235,7 +3235,10 @@
     "resending": "Envoi…",
     "resent": "Envoyé ✓",
     "resentToast": "Un nouveau lien de livraison a été envoyé au client par e-mail.",
-    "confirmResend": "Renvoyer la galerie complète ({count} photos) au client ? Il recevra un nouvel e-mail avec un lien à jour."
+    "confirmResend": "Renvoyer la galerie complète ({count} photos) au client ? Il recevra un nouvel e-mail avec un lien à jour.",
+    "deleteAllCount": "Tout supprimer ({count})",
+    "deleteFailed": "Impossible de supprimer ces photos. Rien n'a été retiré.",
+    "deletePartial": "{removed} supprimées, mais {failed} n'ont pas pu l'être. Réessayez pour le reste."
   },
   "availability": {
     "pageTitle": "Disponibilités",

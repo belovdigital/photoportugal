@@ -783,7 +783,13 @@ export async function POST(
   }
 }
 
-// DELETE: Remove a delivery photo
+// DELETE: Remove one delivery photo (`?photoId=`) or a batch (`?photoIds=a,b,c`).
+//
+// The batch form exists because deleting a mistaken upload of 100 frames used
+// to be 100 sequential round trips from the browser — tens of seconds, and a
+// half-finished job if the tab was closed. Both forms share this handler on
+// purpose: the three guards below (ownership, accepted delivery, open dispute)
+// must never drift apart, and a separate route is exactly how that happens.
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -795,8 +801,25 @@ export async function DELETE(
   const userId = authUser.id;
   const { searchParams } = new URL(req.url);
   const photoId = searchParams.get("photoId");
+  const photoIdsParam = searchParams.get("photoIds");
 
-  if (!photoId) return NextResponse.json({ error: "photoId required" }, { status: 400 });
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const requestedIds = (photoIdsParam ? photoIdsParam.split(",") : photoId ? [photoId] : [])
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  if (requestedIds.length === 0) {
+    return NextResponse.json({ error: "photoId or photoIds required" }, { status: 400 });
+  }
+  // Shape-checked before they reach ANY($1::uuid[]): a malformed id would
+  // abort the whole statement, so one bad entry must not lose the batch.
+  if (requestedIds.some((v) => !UUID_RE.test(v))) {
+    return NextResponse.json({ error: "photoIds must be UUIDs" }, { status: 400 });
+  }
+  // The client chunks at 50; this is the backstop, not the expected limit.
+  if (requestedIds.length > 200) {
+    return NextResponse.json({ error: "Too many photos in one request (max 200)" }, { status: 400 });
+  }
 
   const booking = await queryOne<{ photographer_user_id: string; delivery_accepted: boolean }>(
     `SELECT u.id as photographer_user_id, COALESCE(b.delivery_accepted, FALSE) as delivery_accepted
@@ -828,17 +851,23 @@ export async function DELETE(
     );
   }
 
-  const photo = await queryOne<{ url: string; preview_url: string | null }>(
-    "DELETE FROM delivery_photos WHERE id = $1 AND booking_id = $2 RETURNING url, preview_url",
-    [photoId, id]
+  // One statement for the whole batch, scoped to this booking so an id from
+  // someone else's delivery simply does not match.
+  const rows = await query<{ id: string; url: string; preview_url: string | null }>(
+    "DELETE FROM delivery_photos WHERE id = ANY($1::uuid[]) AND booking_id = $2 RETURNING id, url, preview_url",
+    [requestedIds, id]
   );
 
-  if (photo) {
-    await deleteDeliveryFile(photo.url);
-    if (photo.preview_url) await deleteDeliveryFile(photo.preview_url);
+  // Blobs go in bounded parallel: serial was the slow part, and unbounded
+  // would open 200 sockets to R2 at once. Failures are swallowed inside
+  // deleteDeliveryFile — an orphan blob costs disk, not correctness.
+  const files = rows.flatMap((r) => (r.preview_url ? [r.url, r.preview_url] : [r.url]));
+  const CONCURRENCY = 10;
+  for (let i = 0; i < files.length; i += CONCURRENCY) {
+    await Promise.all(files.slice(i, i + CONCURRENCY).map((u) => deleteDeliveryFile(u)));
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, deleted: rows.map((r) => r.id) });
 }
 
 const R2_PUBLIC_PREFIX = `https://${country.filesHost}/`;

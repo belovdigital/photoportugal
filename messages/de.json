@@ -2987,7 +2987,10 @@
     "resending": "Wird gesendet…",
     "resent": "Gesendet ✓",
     "resentToast": "Ein neuer Liefer-Link wurde per E-Mail an den Kunden gesendet.",
-    "confirmResend": "Die komplette Galerie ({count} Fotos) erneut an den Kunden senden? Er erhält eine neue E-Mail mit einem frischen Link."
+    "confirmResend": "Die komplette Galerie ({count} Fotos) erneut an den Kunden senden? Er erhält eine neue E-Mail mit einem frischen Link.",
+    "deleteAllCount": "Alle {count} löschen",
+    "deleteFailed": "Diese Fotos konnten nicht gelöscht werden. Es wurde nichts entfernt.",
+    "deletePartial": "{removed} entfernt, aber {failed} konnten nicht gelöscht werden. Versuchen Sie es für den Rest erneut."
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

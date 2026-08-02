@@ -193,12 +193,30 @@ export function DeliveryUploadClient({
     }, 800);
   }
 
-  function toggleSelect(id: string) {
+  // Anchor for shift-click. The mistaken upload is almost always a
+  // contiguous run in upload order, so selecting 40 of 100 was 40 clicks
+  // before this — the actual complaint, more than "select all" was.
+  const lastClickedRef = useRef<string | null>(null);
+
+  function toggleSelect(id: string, extend = false) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
+      const anchor = lastClickedRef.current;
+      if (extend && anchor && anchor !== id) {
+        const from = photos.findIndex((p) => p.id === anchor);
+        const to = photos.findIndex((p) => p.id === id);
+        if (from !== -1 && to !== -1) {
+          const [lo, hi] = from < to ? [from, to] : [to, from];
+          // A range always selects. Making it toggle means dragging back
+          // over your own selection silently unpicks it.
+          for (let i = lo; i <= hi; i++) next.add(photos[i].id);
+          return next;
+        }
+      }
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+    lastClickedRef.current = id;
   }
 
   async function deleteSelected() {
@@ -208,14 +226,46 @@ export function DeliveryUploadClient({
     setDeleting(true);
     const ids = Array.from(selectedIds);
     setDeleteProgress({ current: 0, total: ids.length });
-    for (let i = 0; i < ids.length; i++) {
-      await fetch(`/api/bookings/${bookingId}/delivery?photoId=${ids[i]}`, { method: "DELETE" });
-      setPhotos((prev) => prev.filter((p) => p.id !== ids[i]));
-      setDeleteProgress({ current: i + 1, total: ids.length });
+    // Chunks, not one request per photo: 100 frames used to be 100 sequential
+    // round trips. The server takes up to 200 per call; 50 keeps the URL short
+    // and the progress bar honest.
+    const CHUNK = 50;
+    let removed = 0;
+    let failed = 0;
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const chunk = ids.slice(i, i + CHUNK);
+      try {
+        const res = await fetch(
+          `/api/bookings/${bookingId}/delivery?photoIds=${chunk.join(",")}`,
+          { method: "DELETE" }
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          failed += chunk.length;
+          // Surface the reason — an accepted delivery or an open dispute is
+          // refused server-side, and silently doing nothing looks like a bug.
+          alert(typeof data?.error === "string" ? data.error : t("deleteFailed"));
+          break;
+        }
+        // Trust the server's list rather than the request: anything it did
+        // not delete stays on screen instead of vanishing from the grid.
+        const deleted: string[] = Array.isArray(data?.deleted) ? data.deleted : chunk;
+        const gone = new Set(deleted);
+        setPhotos((prev) => prev.filter((p) => !gone.has(p.id)));
+        removed += deleted.length;
+      } catch {
+        failed += chunk.length;
+        alert(t("deleteFailed"));
+        break;
+      }
+      setDeleteProgress({ current: Math.min(i + CHUNK, ids.length), total: ids.length });
     }
     setSelectedIds(new Set());
     setSelectMode(false);
     setDeleting(false);
+    if (failed > 0 && removed > 0) {
+      alert(t("deletePartial", { removed, failed }));
+    }
   }
 
   // Byte-level progress: keep an uploaded-bytes-per-file map and sum it
@@ -806,7 +856,7 @@ export function DeliveryUploadClient({
               {selectMode ? (
                 <>
                   <button onClick={() => setSelectedIds(new Set(photos.map((p) => p.id)))} className="text-xs font-medium text-gray-600 hover:text-gray-800">{t("selectAll")}</button>
-                  <button onClick={deleteSelected} disabled={selectedIds.size === 0} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-40">{t("deleteCount", { count: selectedIds.size })}</button>
+                  <button onClick={deleteSelected} disabled={selectedIds.size === 0} className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-40">{selectedIds.size > 0 && selectedIds.size === photos.length ? t("deleteAllCount", { count: photos.length }) : t("deleteCount", { count: selectedIds.size })}</button>
                   <button onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }} className="text-xs font-medium text-gray-500 hover:text-gray-700">{t("cancel")}</button>
                 </>
               ) : (
@@ -970,7 +1020,7 @@ export function DeliveryUploadClient({
             <div
               key={photo.id}
               className={`group relative aspect-square overflow-hidden rounded-lg bg-warm-100 ${selectMode ? "cursor-pointer" : ""} ${selectedIds.has(photo.id) ? "ring-2 ring-primary-500" : ""}`}
-              onClick={selectMode ? () => toggleSelect(photo.id) : undefined}
+              onClick={selectMode ? (e) => toggleSelect(photo.id, e.shiftKey) : undefined}
             >
               <img
                 src={previewSrc}
