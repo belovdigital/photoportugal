@@ -2582,7 +2582,11 @@
     "stripeOverdueBody": "Les réservations que vous acceptez sont en sécurité : nous conservons l'argent et le versons dès que vous êtes connecté. Faites-le maintenant, ou écrivez-nous si le formulaire vous bloque.",
     "profileHiddenTitle": "VOTRE PROFIL N'EST PAS VISIBLE PAR LES CLIENTS",
     "profileHiddenBody": "Nous l'avons retiré du site car votre compte de paiement n'a jamais été connecté. Rien n'est perdu : photos, forfaits et lieux sont toujours là. Connectez le compte et votre profil est republié automatiquement en une quinzaine de minutes.",
-    "profileHiddenCta": "Terminer l'inscription Stripe"
+    "profileHiddenCta": "Terminer l'inscription Stripe",
+    "bankConfirmTitle": "Avant de postuler",
+    "bankConfirmBody": "En continuant, vous confirmez posséder un compte bancaire en {country}, à votre nom, et pouvoir le vérifier. Les versements sont automatiques et passent par Stripe : sans un tel compte, nous ne pouvons pas vous payer et ne pourrons donc pas valider votre profil. Si vous n'en avez pas encore, merci de ne pas postuler avant de l'avoir.",
+    "bankConfirmCheckbox": "J'ai un compte bancaire en {country} à mon nom et je peux le vérifier",
+    "bankConfirmRequired": "Merci de confirmer avant d'envoyer."
   },
   "matchRequests": {
     "title": "Mes matchs",

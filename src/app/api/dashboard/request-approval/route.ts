@@ -16,7 +16,14 @@ export const dynamic = "force-dynamic";
  * Idempotent — pressing twice does not re-notify the admins, because the
  * UPDATE only matches rows where the stamp is still null.
  */
-export async function POST() {
+export async function POST(req: Request) {
+  let body: Record<string, unknown> = {};
+  try {
+    body = await req.json();
+  } catch {
+    // Body is optional in shape but the attestation below is not.
+  }
+
   const session = await auth();
   const user = session?.user as { id?: string; role?: string } | undefined;
   if (!user?.id || user.role !== "photographer") {
@@ -58,13 +65,24 @@ export async function POST() {
       { status: 400 }
     );
   }
+  // The attestation is required, and re-checked here rather than trusted
+  // from the UI: it is the record of what the photographer told us about
+  // being payable at all.
+  if (body.bank_country_confirmed !== true) {
+    return NextResponse.json(
+      { error: "Please confirm you hold a local bank account in your own name" },
+      { status: 400 }
+    );
+  }
+
   if (profile.already_requested) {
     return NextResponse.json({ ok: true, already: true });
   }
 
   const claimed = await queryOne<{ id: string }>(
     `UPDATE photographer_profiles
-        SET approval_requested_at = NOW()
+        SET approval_requested_at = NOW(),
+            bank_country_confirmed_at = NOW()
       WHERE id = $1 AND approval_requested_at IS NULL
       RETURNING id`,
     [profile.id]

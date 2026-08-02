@@ -2334,7 +2334,11 @@
     "stripeOverdueBody": "Angenommene Buchungen sind sicher — wir halten das Geld und überweisen es, sobald Sie verbunden sind. Bitte erledigen Sie es jetzt, oder schreiben Sie uns, wenn Sie im Formular hängen.",
     "profileHiddenTitle": "IHR PROFIL IST FÜR KUNDEN NICHT SICHTBAR",
     "profileHiddenBody": "Wir haben es von der Seite genommen, weil Ihr Auszahlungskonto nie verbunden wurde. Es ist nichts verloren — Fotos, Pakete und Orte sind alle noch da. Verbinden Sie das Konto, und Ihr Profil geht innerhalb von etwa fünfzehn Minuten automatisch wieder online.",
-    "profileHiddenCta": "Stripe-Registrierung abschließen"
+    "profileHiddenCta": "Stripe-Registrierung abschließen",
+    "bankConfirmTitle": "Bevor Sie sich bewerben",
+    "bankConfirmBody": "Mit dem Fortfahren bestätigen Sie, dass Sie ein Bankkonto in {country} auf Ihren eigenen Namen besitzen und es verifizieren können. Auszahlungen laufen automatisch über Stripe — ohne ein solches Konto können wir Sie nicht bezahlen und Ihr Profil daher nicht freigeben. Wenn Sie noch keines haben, bewerben Sie sich bitte erst später.",
+    "bankConfirmCheckbox": "Ich habe ein Bankkonto in {country} auf meinen Namen und kann es verifizieren",
+    "bankConfirmRequired": "Bitte bestätigen Sie dies vor dem Absenden."
   },
   "matchRequests": {
     "title": "Meine Vermittlungen",

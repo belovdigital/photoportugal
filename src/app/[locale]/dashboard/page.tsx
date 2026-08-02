@@ -321,7 +321,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
                 <p className="mt-1 text-sm text-green-700">{t("readyToSubmitBody")}</p>
               </div>
             </div>
-            <div className="shrink-0"><RequestApprovalButton /></div>
+            <div className="shrink-0"><RequestApprovalButton countryName={country.areaServed} /></div>
           </div>
         </div>
       )}

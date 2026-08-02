@@ -2582,7 +2582,11 @@
     "stripeOverdueBody": "Las reservas que aceptes están a salvo: guardamos el dinero y te lo enviamos en cuanto conectes. Pero hazlo ya, o escríbenos si algo del formulario te está bloqueando.",
     "profileHiddenTitle": "TU PERFIL NO ES VISIBLE PARA LOS CLIENTES",
     "profileHiddenBody": "Lo retiramos del sitio porque nunca conectaste la cuenta de cobros. No has perdido nada: fotos, paquetes y ubicaciones siguen aquí. Conecta la cuenta y tu perfil vuelve a publicarse automáticamente en unos quince minutos.",
-    "profileHiddenCta": "Completar el registro en Stripe"
+    "profileHiddenCta": "Completar el registro en Stripe",
+    "bankConfirmTitle": "Antes de enviar tu solicitud",
+    "bankConfirmBody": "Al continuar confirmas que tienes una cuenta bancaria en {country}, a tu nombre, y que puedes verificarla. Los pagos son automáticos y pasan por Stripe: sin esa cuenta no podemos pagarte, así que no podremos aprobar tu perfil. Si todavía no la tienes, por favor no envíes la solicitud hasta tenerla.",
+    "bankConfirmCheckbox": "Tengo una cuenta bancaria en {country} a mi nombre y puedo verificarla",
+    "bankConfirmRequired": "Confirma esto antes de enviar."
   },
   "matchRequests": {
     "title": "Mis matches",

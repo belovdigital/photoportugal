@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { query, queryOne, withAdvisoryLock } from "@/lib/db";
 import {
   sendEmail,
@@ -2029,6 +2030,10 @@ async function runReminders(): Promise<NextResponse> {
          FROM users u
         WHERE u.id = pp.user_id
           AND (pp.stripe_deadline_at IS NOT NULL OR pp.stripe_hidden_at IS NOT NULL)
+          -- A banned photographer must never be brought back by a stale
+          -- deadline: admin deactivation is is_approved=FALSE + is_banned,
+          -- and this UPDATE would otherwise undo half of it.
+          AND COALESCE(u.is_banned, FALSE) = FALSE
           AND pp.stripe_account_id IS NOT NULL
           AND COALESCE(pp.stripe_onboarding_complete, FALSE) = TRUE
         RETURNING pp.id, u.email, u.name, u.locale AS locale,
@@ -2045,7 +2050,11 @@ async function runReminders(): Promise<NextResponse> {
     }
 
     // (b) Still outstanding — nudge on day 1, 4 and 7 of the week.
-    for (const day of [1, 4, 7] as const) {
+    // Days 1, 4 and 6 — not 7. The deadline itself is when the profile is
+    // hidden, so a day-7 nudge would land in the same cron tick as the
+    // "your profile is hidden" email and read as a contradiction. The last
+    // warning goes out with a day still left to act on it.
+    for (const day of [1, 4, 6] as const) {
       const col = `stripe_nudge_d${day}_sent`;
       const due = await query<{ id: string; email: string; name: string; locale: string | null; days_left: number }>(
         `UPDATE photographer_profiles pp
@@ -2111,6 +2120,14 @@ async function runReminders(): Promise<NextResponse> {
           "photographers"
         )
       ).catch(() => {});
+    }
+    // Both the catalogue and the profile pages are ISR-cached, so a
+    // photographer who was just hidden (or restored) would otherwise keep
+    // showing their old state until the cache happened to expire.
+    if (stripeFinalised || stripeHidden) {
+      revalidatePath("/");
+      revalidatePath("/photographers");
+      revalidatePath("/locations");
     }
     if (stripeFinalised || stripeNudged || stripeHidden) {
       console.log(`[cron] stripe grace week: ${stripeFinalised} finalised, ${stripeNudged} nudged, ${stripeHidden} hidden`);

@@ -2329,7 +2329,11 @@
     "stripeOverdueBody": "Bookings you take are safe — we hold the money and send it on as soon as you connect. But please do it now, or write to us if something in the form is blocking you.",
     "profileHiddenTitle": "YOUR PROFILE IS NOT VISIBLE TO CLIENTS",
     "profileHiddenBody": "We took it off the site because your payout account was never connected. Nothing is lost — your photos, packages and locations are all still here. Connect your payout account and your profile goes back up automatically within about fifteen minutes.",
-    "profileHiddenCta": "Finish Stripe onboarding"
+    "profileHiddenCta": "Finish Stripe onboarding",
+    "bankConfirmTitle": "Before you apply",
+    "bankConfirmBody": "By continuing you confirm that you hold a bank account in {country}, registered in your own name, and that you can verify it. Payouts are automatic and go through Stripe — without such an account we cannot pay you, so we will not be able to approve your profile. If you don't have one yet, please don't apply until you do.",
+    "bankConfirmCheckbox": "I have a bank account in {country} in my own name and I can verify it",
+    "bankConfirmRequired": "Please confirm this before submitting."
   },
   "matchRequests": {
     "title": "My Matches",
