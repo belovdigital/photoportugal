@@ -52,7 +52,7 @@ function getPhotographerSteps(
       label: t("photographer.uploadPortfolioPhotos"),
       href: "/dashboard/portfolio",
       complete: checks.portfolio >= MIN_PORTFOLIO_PHOTOS,
-      detail: `${Math.min(checks.portfolio, 15)}/15`,
+      detail: `${Math.min(checks.portfolio, MIN_PORTFOLIO_PHOTOS)}/${MIN_PORTFOLIO_PHOTOS}`,
       tip: t("photographer.uploadPortfolioPhotosTip"),
     },
     {
@@ -66,12 +66,6 @@ function getPhotographerSteps(
       href: "/dashboard/profile",
       complete: checks.locations >= 1,
       tip: t("photographer.selectLocationsTip"),
-    },
-    {
-      label: t("photographer.connectStripe"),
-      href: "/dashboard/payouts",
-      complete: checks.stripeConnected,
-      tip: t("photographer.connectStripeTip"),
     },
     {
       label: t("photographer.addPhoneNumber"),

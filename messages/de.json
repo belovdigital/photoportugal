@@ -2319,7 +2319,22 @@
     "sidebarStats": "Statistiken",
     "calendarBrokenTitle": "{name} synchronisiert nicht mehr",
     "calendarBrokenBody": "Seit {days} Tagen können wir ihn nicht mehr auslesen. Bis Sie neu verbinden, arbeiten wir mit einem alten Stand — ein Kunde könnte einen Termin buchen, den Sie nicht wahrnehmen können.",
-    "calendarBrokenCta": "Neu verbinden"
+    "calendarBrokenCta": "Neu verbinden",
+    "requestApprovalCta": "Zur Prüfung einreichen",
+    "requestApprovalSubmitting": "Wird gesendet…",
+    "requestApprovalError": "Ihr Profil konnte nicht eingereicht werden. Bitte versuchen Sie es erneut.",
+    "readyToSubmitTitle": "Ihr Profil ist fertig",
+    "readyToSubmitBody": "Alle Punkte der Checkliste sind erledigt. Reichen Sie es ein — ein Mensch aus unserem Team sieht es sich an, in der Regel innerhalb von zwei Tagen.",
+    "inReviewTitle": "Ihr Profil wird geprüft",
+    "inReviewBody": "Jemand aus unserem Team schaut es sich an. Wir schreiben Ihnen, sobald es freigegeben ist — oder wenn wir vorher eine Kleinigkeit geändert haben möchten. Bis dahin ist nichts zu tun.",
+    "stripePendingTitle": "Auszahlungskonto verbinden — noch {days} Tage",
+    "stripePendingBody": "Sie sind online und buchbar, aber wir haben noch keinen Weg, Ihnen Geld zu schicken. Es dauert wenige Minuten: Ausweis, Adresse und Bankverbindung.",
+    "stripePendingCta": "Auszahlungen verbinden",
+    "stripeOverdueTitle": "Ihr Auszahlungskonto ist weiterhin nicht verbunden",
+    "stripeOverdueBody": "Angenommene Buchungen sind sicher — wir halten das Geld und überweisen es, sobald Sie verbunden sind. Bitte erledigen Sie es jetzt, oder schreiben Sie uns, wenn Sie im Formular hängen.",
+    "profileHiddenTitle": "IHR PROFIL IST FÜR KUNDEN NICHT SICHTBAR",
+    "profileHiddenBody": "Wir haben es von der Seite genommen, weil Ihr Auszahlungskonto nie verbunden wurde. Es ist nichts verloren — Fotos, Pakete und Orte sind alle noch da. Verbinden Sie das Konto, und Ihr Profil geht innerhalb von etwa fünfzehn Minuten automatisch wieder online.",
+    "profileHiddenCta": "Stripe-Registrierung abschließen"
   },
   "matchRequests": {
     "title": "Meine Vermittlungen",

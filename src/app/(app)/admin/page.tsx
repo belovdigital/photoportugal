@@ -71,7 +71,7 @@ export default async function AdminPage() {
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM users WHERE role = 'client' AND COALESCE(email_verified, FALSE) = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = TRUE AND COALESCE(u.email_verified, FALSE) = TRUE"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.email_verified, FALSE) = TRUE AND NOT EXISTS (SELECT 1 FROM users uu WHERE uu.id = pp.user_id AND uu.is_banned = TRUE)"),
-    queryOne<{ count: string }>(`SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.email_verified, FALSE) = TRUE AND COALESCE(u.is_banned, FALSE) = FALSE AND (pp.revision_status IS NULL OR pp.revision_status = 'submitted') AND u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10 AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS} AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1 AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1 AND ${payoutReadySql("pp")} AND u.phone IS NOT NULL`),
+    queryOne<{ count: string }>(`SELECT COUNT(*) as count FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.is_approved = FALSE AND COALESCE(pp.is_test, FALSE) = FALSE AND COALESCE(u.email_verified, FALSE) = TRUE AND COALESCE(u.is_banned, FALSE) = FALSE AND pp.approval_requested_at IS NOT NULL AND pp.stripe_hidden_at IS NULL AND (pp.revision_status IS NULL OR pp.revision_status = 'submitted') AND u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10 AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS} AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1 AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1 AND u.phone IS NOT NULL`),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status != 'inquiry'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'pending'"),
     queryOne<{ count: string }>("SELECT COUNT(*) as count FROM bookings WHERE status = 'confirmed'"),
@@ -160,6 +160,9 @@ export default async function AdminPage() {
     has_avatar: boolean; has_cover: boolean; has_bio: boolean; portfolio_count: number;
     package_count: number; location_count: number; locations: string | null; stripe_ready: boolean; has_phone: boolean; phone: string | null;
     revision_status: string | null;
+    approval_requested_at: string | null;
+    stripe_deadline_at: string | null;
+    stripe_hidden_at: string | null;
     warning_open_count: number | null;
     warning_critical_open_count: number | null;
   }>(
@@ -180,9 +183,8 @@ export default async function AdminPage() {
              AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS}
              AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1
              AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
-             AND ${payoutReadySql("pp")}
              AND u.phone IS NOT NULL) as checklist_complete,
-            pp.revision_status,
+            pp.revision_status, pp.approval_requested_at, pp.stripe_deadline_at, pp.stripe_hidden_at,
             CASE WHEN pp.is_approved = FALSE AND COALESCE(u.is_banned, FALSE) = FALSE
               THEN GREATEST(0, 7 - EXTRACT(DAY FROM NOW() - pp.created_at)::int)
               ELSE NULL END as days_until_deactivation,

@@ -2567,7 +2567,22 @@
     "sidebarStats": "Estadísticas",
     "calendarBrokenTitle": "{name} dejó de sincronizarse",
     "calendarBrokenBody": "Llevamos {days} días sin poder leerlo. Hasta que lo reconectes usamos una copia antigua: un cliente podría reservar un hueco que no tienes libre.",
-    "calendarBrokenCta": "Reconectar"
+    "calendarBrokenCta": "Reconectar",
+    "requestApprovalCta": "Enviar a revisión",
+    "requestApprovalSubmitting": "Enviando…",
+    "requestApprovalError": "No se pudo enviar tu perfil. Inténtalo de nuevo.",
+    "readyToSubmitTitle": "Tu perfil está listo",
+    "readyToSubmitBody": "Ya has completado toda la lista. Envíalo a nuestro equipo y lo revisará una persona, normalmente en un par de días.",
+    "inReviewTitle": "Tu perfil está en revisión",
+    "inReviewBody": "Alguien de nuestro equipo lo está mirando. Te escribiremos cuando esté aprobado, o si antes necesitamos algún cambio pequeño. Hasta entonces no tienes que hacer nada.",
+    "stripePendingTitle": "Conecta tu cuenta de cobros — quedan {days} días",
+    "stripePendingBody": "Ya estás publicado y pueden reservarte, pero todavía no tenemos dónde enviarte el dinero. Son unos minutos: identificación, dirección y datos bancarios.",
+    "stripePendingCta": "Conectar cobros",
+    "stripeOverdueTitle": "Tu cuenta de cobros sigue sin conectar",
+    "stripeOverdueBody": "Las reservas que aceptes están a salvo: guardamos el dinero y te lo enviamos en cuanto conectes. Pero hazlo ya, o escríbenos si algo del formulario te está bloqueando.",
+    "profileHiddenTitle": "TU PERFIL NO ES VISIBLE PARA LOS CLIENTES",
+    "profileHiddenBody": "Lo retiramos del sitio porque nunca conectaste la cuenta de cobros. No has perdido nada: fotos, paquetes y ubicaciones siguen aquí. Conecta la cuenta y tu perfil vuelve a publicarse automáticamente en unos quince minutos.",
+    "profileHiddenCta": "Completar el registro en Stripe"
   },
   "matchRequests": {
     "title": "Mis matches",

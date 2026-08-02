@@ -22,6 +22,7 @@ import { rm } from "fs/promises";
 import path from "path";
 import { country } from "@/lib/country";
 import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
+import { stageOneCompleteSql } from "@/lib/onboarding-stage";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 
@@ -2004,6 +2005,120 @@ async function runReminders(): Promise<NextResponse> {
     results.errors.push(`Checklist deadline query: ${err}`);
   }
 
+  // === Two-stage onboarding: the Stripe grace week ===
+  //
+  // Approval makes a photographer live; connecting a payout account is the
+  // week that follows. Every transition lives here rather than in the seven
+  // places that can set stripe_onboarding_complete — one sweep on a 15-minute
+  // tick is worth far less risk than seven edited Stripe code paths.
+  let stripeFinalised = 0, stripeNudged = 0, stripeHidden = 0;
+  try {
+    const { normalizeLocale } = await import("@/lib/email-locale");
+    // (a) Connected — finish the job. Also un-hides anyone who was hidden
+    //     for missing payouts: fixing the one thing wrong must restore them
+    //     without an admin having to notice.
+    const finalised = await query<{ id: string; email: string; name: string; locale: string | null; was_hidden: boolean }>(
+      `UPDATE photographer_profiles pp
+          SET is_approved = TRUE,
+              stripe_deadline_at = NULL,
+              stripe_hidden_at = NULL,
+              stripe_nudge_d1_sent = FALSE,
+              stripe_nudge_d4_sent = FALSE,
+              stripe_nudge_d7_sent = FALSE,
+              stripe_overdue_admin_notified = FALSE
+         FROM users u
+        WHERE u.id = pp.user_id
+          AND (pp.stripe_deadline_at IS NOT NULL OR pp.stripe_hidden_at IS NOT NULL)
+          AND pp.stripe_account_id IS NOT NULL
+          AND COALESCE(pp.stripe_onboarding_complete, FALSE) = TRUE
+        RETURNING pp.id, u.email, u.name, u.locale AS locale,
+                  (pp.stripe_hidden_at IS NOT NULL) AS was_hidden`
+    );
+    for (const p of finalised) {
+      stripeFinalised++;
+      try {
+        const { sendPhotographerFullyLiveEmail } = await import("@/lib/email");
+        await sendPhotographerFullyLiveEmail(p.email, p.name, normalizeLocale(p.locale));
+      } catch (e) {
+        console.error("[cron] fully-live email failed:", p.email, e);
+      }
+    }
+
+    // (b) Still outstanding — nudge on day 1, 4 and 7 of the week.
+    for (const day of [1, 4, 7] as const) {
+      const col = `stripe_nudge_d${day}_sent`;
+      const due = await query<{ id: string; email: string; name: string; locale: string | null; days_left: number }>(
+        `UPDATE photographer_profiles pp
+            SET ${col} = TRUE
+           FROM users u
+          WHERE u.id = pp.user_id
+            AND pp.is_approved = TRUE
+            AND pp.stripe_deadline_at IS NOT NULL
+            AND pp.stripe_hidden_at IS NULL
+            AND COALESCE(pp.${col}, FALSE) = FALSE
+            AND COALESCE(u.is_banned, FALSE) = FALSE
+            AND NOT (pp.stripe_account_id IS NOT NULL AND COALESCE(pp.stripe_onboarding_complete, FALSE) = TRUE)
+            AND NOW() >= pp.stripe_deadline_at - INTERVAL '${7 - day} days'
+          RETURNING pp.id, u.email, u.name, u.locale AS locale,
+                    GREATEST(0, EXTRACT(DAY FROM pp.stripe_deadline_at - NOW())::int) AS days_left`
+      );
+      for (const p of due) {
+        stripeNudged++;
+        try {
+          const { sendStripeDeadlineNudge } = await import("@/lib/email");
+          await sendStripeDeadlineNudge(p.email, p.name, p.days_left, normalizeLocale(p.locale));
+        } catch (e) {
+          console.error("[cron] stripe nudge failed:", p.email, e);
+        }
+      }
+    }
+
+    // (c) Week is up — the profile stops being public. Hiding reuses
+    //     is_approved = FALSE so all 128 public queries drop them for free;
+    //     stripe_hidden_at is what tells this apart from "never reviewed",
+    //     and is_banned is deliberately untouched so they can still log in
+    //     and fix it.
+    const expired = await query<{ id: string; email: string; name: string; slug: string; locale: string | null; days_over: number }>(
+      `UPDATE photographer_profiles pp
+          SET is_approved = FALSE,
+              stripe_hidden_at = NOW(),
+              stripe_overdue_admin_notified = TRUE
+         FROM users u
+        WHERE u.id = pp.user_id
+          AND pp.is_approved = TRUE
+          AND pp.stripe_deadline_at IS NOT NULL
+          AND pp.stripe_hidden_at IS NULL
+          AND pp.stripe_deadline_at < NOW()
+          AND COALESCE(u.is_banned, FALSE) = FALSE
+          AND NOT (pp.stripe_account_id IS NOT NULL AND COALESCE(pp.stripe_onboarding_complete, FALSE) = TRUE)
+        RETURNING pp.id, u.email, u.name, pp.slug, u.locale AS locale,
+                  GREATEST(0, EXTRACT(DAY FROM NOW() - pp.stripe_deadline_at)::int) AS days_over`
+    );
+    for (const p of expired) {
+      stripeHidden++;
+      try {
+        const { sendProfileHiddenNoStripeEmail, sendAdminStripeOverdueNotification } = await import("@/lib/email");
+        await sendProfileHiddenNoStripeEmail(p.email, p.name, normalizeLocale(p.locale));
+        await sendAdminStripeOverdueNotification(p.name, p.email, p.slug, p.days_over);
+      } catch (e) {
+        console.error("[cron] stripe-overdue emails failed:", p.email, e);
+      }
+      import("@/lib/telegram").then(({ sendTelegram }) =>
+        sendTelegram(
+          `🚫 <b>Профиль скрыт — нет Stripe</b>\n\n${p.name} (${p.email})\n` +
+          `Одобрен, неделя на подключение выплат вышла. Профиль убран из каталога, аккаунт не заблокирован.\n` +
+          `Подключит Stripe — вернётся сам.`,
+          "photographers"
+        )
+      ).catch(() => {});
+    }
+    if (stripeFinalised || stripeNudged || stripeHidden) {
+      console.log(`[cron] stripe grace week: ${stripeFinalised} finalised, ${stripeNudged} nudged, ${stripeHidden} hidden`);
+    }
+  } catch (err) {
+    console.error("[cron] stripe grace week failed:", err);
+  }
+
   // === Auto-deactivate photographers who didn't complete checklist in 7 days ===
   // Two-tier Stripe check:
   //   1. SQL pre-filter — checklist treats `stripe_onboarding_complete=TRUE`
@@ -2034,12 +2149,18 @@ async function runReminders(): Promise<NextResponse> {
        WHERE pp.is_approved = FALSE
          AND pp.created_at < NOW() - INTERVAL '7 days'
          AND COALESCE(u.is_banned, FALSE) = FALSE
-         AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS}
-           AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1
-           AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
-           AND COALESCE(pp.stripe_onboarding_complete, FALSE) = TRUE
-           AND u.phone IS NOT NULL)`
+         -- Already asked to be reviewed: they are waiting on us, not the
+         -- other way round. Deactivating them would ban an applicant for
+         -- our own queue time.
+         AND pp.approval_requested_at IS NULL
+         -- Hidden for missing payouts. They were approved once and can
+         -- restore themselves by connecting Stripe; banning them would
+         -- take away the login they need to do it.
+         AND pp.stripe_hidden_at IS NULL
+         -- Stripe is deliberately absent from this predicate: it is no
+         -- longer part of stage one, so its absence is not evidence that
+         -- someone abandoned their profile.
+         AND NOT (${stageOneCompleteSql("pp", "u", MIN_PORTFOLIO_PHOTOS)})`
     );
 
     const stripeClient = (() => {

@@ -2314,7 +2314,22 @@
     "sidebarStats": "Statistics",
     "calendarBrokenTitle": "{name} stopped syncing",
     "calendarBrokenBody": "We haven't been able to read it for {days} days. Until you reconnect, we're using an old copy — a client could book a time you're not actually free for.",
-    "calendarBrokenCta": "Reconnect"
+    "calendarBrokenCta": "Reconnect",
+    "requestApprovalCta": "Submit for approval",
+    "requestApprovalSubmitting": "Submitting…",
+    "requestApprovalError": "Could not submit your profile. Please try again.",
+    "readyToSubmitTitle": "Your profile is ready",
+    "readyToSubmitBody": "Everything on the checklist is done. Send it to our team and a real person will review it — usually within a couple of days.",
+    "inReviewTitle": "Your profile is being reviewed",
+    "inReviewBody": "A member of our team is looking at it. We'll email you when it's approved, or if we need a small change first. Nothing to do until then.",
+    "stripePendingTitle": "Connect your payout account — {days} days left",
+    "stripePendingBody": "You're live and can be booked, but we have nowhere to send your money yet. It takes a few minutes: ID, address and bank details.",
+    "stripePendingCta": "Connect payouts",
+    "stripeOverdueTitle": "Your payout account is still not connected",
+    "stripeOverdueBody": "Bookings you take are safe — we hold the money and send it on as soon as you connect. But please do it now, or write to us if something in the form is blocking you.",
+    "profileHiddenTitle": "YOUR PROFILE IS NOT VISIBLE TO CLIENTS",
+    "profileHiddenBody": "We took it off the site because your payout account was never connected. Nothing is lost — your photos, packages and locations are all still here. Connect your payout account and your profile goes back up automatically within about fifteen minutes.",
+    "profileHiddenCta": "Finish Stripe onboarding"
   },
   "matchRequests": {
     "title": "My Matches",

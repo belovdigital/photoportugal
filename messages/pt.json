@@ -2319,7 +2319,22 @@
     "sidebarStats": "Estatísticas",
     "calendarBrokenTitle": "{name} deixou de sincronizar",
     "calendarBrokenBody": "Há {days} dias que não a conseguimos ler. Até voltar a ligar, estamos a usar uma cópia antiga — um cliente pode reservar um horário que não tem livre.",
-    "calendarBrokenCta": "Voltar a ligar"
+    "calendarBrokenCta": "Voltar a ligar",
+    "requestApprovalCta": "Enviar para aprovação",
+    "requestApprovalSubmitting": "A enviar…",
+    "requestApprovalError": "Não foi possível enviar o seu perfil. Tente novamente.",
+    "readyToSubmitTitle": "O seu perfil está pronto",
+    "readyToSubmitBody": "Está tudo feito na lista. Envie para a nossa equipa e uma pessoa vai analisá-lo — normalmente dentro de dois dias.",
+    "inReviewTitle": "O seu perfil está em análise",
+    "inReviewBody": "Alguém da nossa equipa está a vê-lo. Enviamos um email quando estiver aprovado, ou se precisarmos de uma pequena alteração. Até lá não precisa de fazer nada.",
+    "stripePendingTitle": "Ligue a sua conta de pagamentos — faltam {days} dias",
+    "stripePendingBody": "Já está publicado e pode receber reservas, mas ainda não temos para onde enviar o seu dinheiro. São poucos minutos: identificação, morada e dados bancários.",
+    "stripePendingCta": "Ligar pagamentos",
+    "stripeOverdueTitle": "A sua conta de pagamentos continua por ligar",
+    "stripeOverdueBody": "As reservas que aceitar estão seguras — guardamos o dinheiro e enviamos assim que ligar a conta. Mas trate disto agora, ou escreva-nos se algo no formulário o estiver a bloquear.",
+    "profileHiddenTitle": "O SEU PERFIL NÃO ESTÁ VISÍVEL PARA OS CLIENTES",
+    "profileHiddenBody": "Retirámo-lo do site porque a conta de pagamentos nunca foi ligada. Não perdeu nada — fotos, pacotes e localizações continuam cá. Ligue a conta e o perfil volta a ficar online automaticamente em cerca de quinze minutos.",
+    "profileHiddenCta": "Concluir o registo no Stripe"
   },
   "matchRequests": {
     "title": "As Minhas Sugestões",

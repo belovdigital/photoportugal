@@ -6,6 +6,7 @@ import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { country } from "@/lib/country";
+import { STRIPE_GRACE_DAYS } from "@/lib/onboarding-stage";
 
 async function verifyAdmin(): Promise<{ email: string } | null> {
   const cookieStore = await cookies();
@@ -108,8 +109,51 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // Send approval email only when photographer is newly approved (was not approved before)
+    // Approval opens stage two: the profile is live, and the photographer now
+    // has a week to connect a payout account. The deadline is stamped here
+    // and nowhere else — the cron sweep keys off it, so a KYC lapse years
+    // later cannot drag someone back into the new-joiner nudge sequence.
+    let approvalPayoutConnected = true;
     if (updates.is_approved === true && !wasAlreadyApproved) {
+      const row = await queryOne<{
+        email: string; name: string; locale: string | null;
+        stripe_account_id: string | null; stripe_onboarding_complete: boolean;
+      }>(
+        `SELECT u.email, u.name, u.locale, pp.stripe_account_id,
+                COALESCE(pp.stripe_onboarding_complete, FALSE) AS stripe_onboarding_complete
+           FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
+          WHERE pp.id = $1`,
+        [id]
+      );
+      approvalPayoutConnected = Boolean(row?.stripe_account_id && row?.stripe_onboarding_complete);
+      if (row && !approvalPayoutConnected) {
+        await query(
+          `UPDATE photographer_profiles
+              SET stripe_deadline_at = NOW() + INTERVAL '${STRIPE_GRACE_DAYS} days',
+                  stripe_hidden_at = NULL,
+                  stripe_nudge_d1_sent = FALSE,
+                  stripe_nudge_d4_sent = FALSE,
+                  stripe_nudge_d7_sent = FALSE,
+                  stripe_overdue_admin_notified = FALSE
+            WHERE id = $1`,
+          [id]
+        );
+        try {
+          const { normalizeLocale } = await import("@/lib/email-locale");
+          const { sendApprovedConnectStripeEmail } = await import("@/lib/email");
+          await sendApprovedConnectStripeEmail(
+            row.email, row.name, STRIPE_GRACE_DAYS, normalizeLocale(row.locale)
+          );
+        } catch (e) {
+          console.error("[admin] approved/connect-stripe email failed:", e);
+        }
+      }
+    }
+
+    // The legacy "you're live" email only fits someone who is already
+    // payable; anyone else gets the stage-two email above instead of two
+    // messages that contradict each other about what is left to do.
+    if (updates.is_approved === true && !wasAlreadyApproved && approvalPayoutConnected) {
       try {
         const photographer = await queryOne<{ email: string; name: string; slug: string }>(
           `SELECT u.email, u.name, pp.slug

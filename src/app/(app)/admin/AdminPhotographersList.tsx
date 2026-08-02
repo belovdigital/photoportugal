@@ -40,6 +40,9 @@ export interface AdminPhotographer {
   has_phone: boolean;
   phone: string | null;
   revision_status: string | null;
+  approval_requested_at: string | null;
+  stripe_deadline_at: string | null;
+  stripe_hidden_at: string | null;
   // Photographer-warnings surface — counts from the
   // v_photographer_warning_counts view. Null when no warnings exist.
   warning_open_count?: number | null;
@@ -48,7 +51,7 @@ export interface AdminPhotographer {
 
 const PAGE_SIZE = 50;
 
-type StatusKey = "all" | "active" | "ready_review" | "needs_revision" | "not_ready" | "deactivated";
+type StatusKey = "all" | "active" | "ready_review" | "awaiting_stripe" | "hidden_no_stripe" | "needs_revision" | "not_ready" | "deactivated";
 type PlanKey = "all" | "free" | "pro" | "premium";
 type BadgeKey = "all" | "founding" | "early50";
 type AddonKey = "all" | "featured" | "verified" | "any" | "none";
@@ -57,6 +60,8 @@ const STATUS_OPTIONS: { key: StatusKey; label: string; dot: string }[] = [
   { key: "all", label: "All statuses", dot: "bg-gray-300" },
   { key: "active", label: "Active", dot: "bg-green-500" },
   { key: "ready_review", label: "Ready for Review", dot: "bg-emerald-500" },
+  { key: "awaiting_stripe", label: "Awaiting Stripe", dot: "bg-yellow-500" },
+  { key: "hidden_no_stripe", label: "Hidden — no payouts", dot: "bg-red-600" },
   { key: "needs_revision", label: "Needs Revision", dot: "bg-amber-500" },
   { key: "not_ready", label: "Not Ready", dot: "bg-orange-500" },
   { key: "deactivated", label: "Deactivated", dot: "bg-red-500" },
@@ -88,9 +93,15 @@ function matchesStatus(p: AdminPhotographer, s: StatusKey): boolean {
     case "all": return true;
     case "active": return p.is_approved && !p.is_banned;
     case "deactivated": return p.is_banned;
-    case "ready_review": return !p.is_approved && p.checklist_complete && !p.is_banned && (!p.revision_status || p.revision_status === "submitted");
+    // Asked for approval and is waiting on us. checklist_complete is stage
+    // one only — Stripe is not part of it any more.
+    case "ready_review": return !p.is_approved && !p.stripe_hidden_at && !!p.approval_requested_at && p.checklist_complete && !p.is_banned && (!p.revision_status || p.revision_status === "submitted");
+    // Live, inside the grace week, still not payable.
+    case "awaiting_stripe": return p.is_approved && !p.is_banned && !!p.stripe_deadline_at && !p.stripe_ready;
+    // Grace week ran out — pulled from the public site, account intact.
+    case "hidden_no_stripe": return !p.is_approved && !p.is_banned && !!p.stripe_hidden_at;
     case "needs_revision": return !p.is_approved && !p.is_banned && p.revision_status === "pending";
-    case "not_ready": return !p.is_approved && !p.checklist_complete && !p.is_banned && !p.revision_status;
+    case "not_ready": return !p.is_approved && !p.stripe_hidden_at && !p.approval_requested_at && !p.checklist_complete && !p.is_banned && !p.revision_status;
   }
 }
 

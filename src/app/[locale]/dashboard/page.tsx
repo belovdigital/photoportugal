@@ -3,8 +3,10 @@ import { queryOne } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
+import { RequestApprovalButton } from "@/components/dashboard/RequestApprovalButton";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { isPayoutReady } from "@/lib/payout";
+import { onboardingStage, daysUntilStripeDeadline } from "@/lib/onboarding-stage";
 import { country } from "@/lib/country";
 import { RevisionChecklist } from "@/components/dashboard/RevisionChecklist";
 import { ActionNeededWidget } from "@/components/dashboard/ActionNeededWidget";
@@ -148,12 +150,14 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     avatar_url: string | null; cover_url: string | null; bio: string | null;
     stripe_account_id: string | null; stripe_onboarding_complete: boolean;
     phone: string | null; created_at: string; revision_status: string | null;
+    approval_requested_at: string | null; stripe_deadline_at: string | null; stripe_hidden_at: string | null;
     is_verified: boolean; is_featured: boolean; phone_verified: boolean; phone_number: string | null;
     getting_started_seen_at: string | null;
   }>(
     `SELECT pp.id, pp.rating, pp.review_count, pp.session_count, pp.plan, pp.slug, pp.is_approved,
             u.avatar_url, pp.cover_url, pp.bio, pp.stripe_account_id, pp.stripe_onboarding_complete,
             u.phone, pp.created_at, pp.revision_status,
+            pp.approval_requested_at, pp.stripe_deadline_at, pp.stripe_hidden_at,
             pp.is_verified, pp.is_featured, pp.phone_verified, pp.phone_number,
             pp.getting_started_seen_at
      FROM photographer_profiles pp
@@ -239,9 +243,15 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
     phone: !!profile.phone,
   };
 
+  // Stage one deliberately excludes Stripe — see lib/onboarding-stage.ts.
+  // Connecting a bank account is what stalled applications, so it moved
+  // behind approval and is no longer a condition for asking to be reviewed.
   const allStepsComplete = onboardingChecks.avatar && onboardingChecks.cover && onboardingChecks.bio
     && onboardingChecks.portfolio >= MIN_PORTFOLIO_PHOTOS && onboardingChecks.packages >= 1
-    && onboardingChecks.locations >= 1 && onboardingChecks.stripeConnected && onboardingChecks.phone;
+    && onboardingChecks.locations >= 1 && onboardingChecks.phone;
+
+  const stage = onboardingStage(profile);
+  const stripeDaysLeft = daysUntilStripeDeadline(profile.stripe_deadline_at);
 
   return (
     <div className="p-6 sm:p-8">
@@ -297,19 +307,92 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
         </div>
       )}
 
-      {/* Approval notice — only show when all checklist steps are complete and no revisions */}
-      {!profile.is_approved && allStepsComplete && !profile.revision_status && (
+      {/* Stage one is finished but nobody has been told yet — the ask is an
+          explicit button so the photographer sees where their work went. */}
+      {stage === "building" && allStepsComplete && (
         <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-green-800">{t("readyToSubmitTitle")}</p>
+                <p className="mt-1 text-sm text-green-700">{t("readyToSubmitBody")}</p>
+              </div>
+            </div>
+            <div className="shrink-0"><RequestApprovalButton /></div>
+          </div>
+        </div>
+      )}
+
+      {/* Approved once, hidden now: the loudest thing on the page, because
+          the photographer's profile has silently vanished from the site and
+          exactly one action brings it back. */}
+      {stage === "hidden_no_stripe" && (
+        <div className="mt-4 rounded-xl border-2 border-red-500 bg-red-50 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <svg className="mt-0.5 h-6 w-6 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+              <div>
+                <p className="text-base font-extrabold uppercase tracking-wide text-red-700">{t("profileHiddenTitle")}</p>
+                <p className="mt-2 text-sm text-red-800">{t("profileHiddenBody")}</p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/payouts"
+              className="shrink-0 rounded-lg bg-red-600 px-5 py-2.5 text-center text-sm font-bold text-white transition hover:bg-red-700"
+            >
+              {t("profileHiddenCta")}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {stage === "in_review" && (
+        <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
           <div className="flex items-start gap-3">
-            <svg className="mt-0.5 h-5 w-5 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <p className="text-sm font-semibold text-green-800">{t("profilePendingApproval")}</p>
-              <p className="mt-1 text-sm text-green-700">
-                {t("profilePendingDescriptionComplete")}
-              </p>
+              <p className="text-sm font-semibold text-blue-800">{t("inReviewTitle")}</p>
+              <p className="mt-1 text-sm text-blue-700">{t("inReviewBody")}</p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Approved and live, but unpayable. Deliberately loud: bookings can
+          arrive before this is done, and the money then waits. */}
+      {stage === "awaiting_stripe" && profile.stripe_deadline_at && (
+        <div className={`mt-4 rounded-xl border p-4 ${
+          (stripeDaysLeft ?? 0) <= 0 ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"
+        }`}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <svg className={`mt-0.5 h-5 w-5 shrink-0 ${(stripeDaysLeft ?? 0) <= 0 ? "text-red-600" : "text-amber-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0L3.16 16.25A2 2 0 005 19z" />
+              </svg>
+              <div>
+                <p className={`text-sm font-semibold ${(stripeDaysLeft ?? 0) <= 0 ? "text-red-800" : "text-amber-900"}`}>
+                  {(stripeDaysLeft ?? 0) <= 0 ? t("stripeOverdueTitle") : t("stripePendingTitle", { days: stripeDaysLeft ?? 0 })}
+                </p>
+                <p className={`mt-1 text-sm ${(stripeDaysLeft ?? 0) <= 0 ? "text-red-700" : "text-amber-800"}`}>
+                  {(stripeDaysLeft ?? 0) <= 0 ? t("stripeOverdueBody") : t("stripePendingBody")}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/payouts"
+              className={`shrink-0 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white transition ${
+                (stripeDaysLeft ?? 0) <= 0 ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700"
+              }`}
+            >
+              {t("stripePendingCta")}
+            </Link>
           </div>
         </div>
       )}

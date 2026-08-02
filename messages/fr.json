@@ -2567,7 +2567,22 @@
     "sidebarStats": "Statistiques",
     "calendarBrokenTitle": "{name} ne se synchronise plus",
     "calendarBrokenBody": "Depuis {days} jours, nous n'arrivons plus à le lire. Tant que vous ne l'avez pas reconnecté, nous utilisons une copie ancienne : un client pourrait réserver un créneau que vous ne pouvez pas assurer.",
-    "calendarBrokenCta": "Reconnecter"
+    "calendarBrokenCta": "Reconnecter",
+    "requestApprovalCta": "Soumettre pour validation",
+    "requestApprovalSubmitting": "Envoi…",
+    "requestApprovalError": "Impossible d'envoyer votre profil. Merci de réessayer.",
+    "readyToSubmitTitle": "Votre profil est prêt",
+    "readyToSubmitBody": "Tous les points de la liste sont faits. Envoyez-le à notre équipe : une personne l'examinera, généralement sous deux jours.",
+    "inReviewTitle": "Votre profil est en cours d'examen",
+    "inReviewBody": "Quelqu'un de notre équipe le regarde. Nous vous écrirons dès qu'il sera validé, ou si nous avons besoin d'une petite modification avant. Rien à faire d'ici là.",
+    "stripePendingTitle": "Connectez votre compte de paiement — {days} jours restants",
+    "stripePendingBody": "Vous êtes en ligne et réservable, mais nous n'avons pas encore où vous envoyer votre argent. Cela prend quelques minutes : pièce d'identité, adresse et coordonnées bancaires.",
+    "stripePendingCta": "Connecter les paiements",
+    "stripeOverdueTitle": "Votre compte de paiement n'est toujours pas connecté",
+    "stripeOverdueBody": "Les réservations que vous acceptez sont en sécurité : nous conservons l'argent et le versons dès que vous êtes connecté. Faites-le maintenant, ou écrivez-nous si le formulaire vous bloque.",
+    "profileHiddenTitle": "VOTRE PROFIL N'EST PAS VISIBLE PAR LES CLIENTS",
+    "profileHiddenBody": "Nous l'avons retiré du site car votre compte de paiement n'a jamais été connecté. Rien n'est perdu : photos, forfaits et lieux sont toujours là. Connectez le compte et votre profil est republié automatiquement en une quinzaine de minutes.",
+    "profileHiddenCta": "Terminer l'inscription Stripe"
   },
   "matchRequests": {
     "title": "Mes matchs",

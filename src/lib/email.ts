@@ -2165,3 +2165,400 @@ export async function sendCalendarSyncBrokenEmail(
     `, locale),
   );
 }
+
+// ─── Two-stage onboarding (2026-08-02) ────────────────────────────────────
+// Stage one ends with an approval request; stage two is the week the
+// photographer has to connect Stripe once they are already live. See
+// lib/onboarding-stage.ts for why the two are separate.
+
+export async function sendApprovalRequestedToPhotographer(
+  to: string,
+  photographerName: string,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const C = {
+    en: {
+      subject: `We've got your application — ${country.brand}`,
+      h2: "Your profile is with our team",
+      greet: `Hi ${firstName},`,
+      p1: "Thanks for finishing your profile — it's now in the review queue.",
+      p2: "A real person looks at every application. We usually come back within a couple of days, either to welcome you in or to ask for a small change first.",
+      p3: "There's nothing to do until you hear from us.",
+    },
+    pt: {
+      subject: `Recebemos a sua candidatura — ${country.brand}`,
+      h2: "O seu perfil está com a nossa equipa",
+      greet: `Olá ${firstName},`,
+      p1: "Obrigado por concluir o seu perfil — está agora na fila de análise.",
+      p2: "Cada candidatura é vista por uma pessoa. Normalmente respondemos dentro de dois dias, seja para lhe dar as boas-vindas, seja para pedir uma pequena alteração primeiro.",
+      p3: "Não precisa de fazer mais nada até termos novidades.",
+    },
+    de: {
+      subject: `Ihre Bewerbung ist bei uns — ${country.brand}`,
+      h2: "Ihr Profil liegt bei unserem Team",
+      greet: `Hallo ${firstName},`,
+      p1: "Danke, dass Sie Ihr Profil fertiggestellt haben — es ist jetzt in der Prüfung.",
+      p2: "Jede Bewerbung sieht sich ein Mensch an. Normalerweise melden wir uns innerhalb von zwei Tagen: entweder mit einer Zusage oder mit der Bitte um eine kleine Änderung.",
+      p3: "Bis dahin müssen Sie nichts weiter tun.",
+    },
+    es: {
+      subject: `Hemos recibido tu solicitud — ${country.brand}`,
+      h2: "Tu perfil está con nuestro equipo",
+      greet: `Hola ${firstName},`,
+      p1: "Gracias por completar tu perfil: ya está en la cola de revisión.",
+      p2: "Cada solicitud la mira una persona. Solemos responder en un par de días, ya sea para darte la bienvenida o para pedirte antes algún cambio pequeño.",
+      p3: "No tienes que hacer nada más hasta que te escribamos.",
+    },
+    fr: {
+      subject: `Nous avons bien reçu votre candidature — ${country.brand}`,
+      h2: "Votre profil est entre les mains de notre équipe",
+      greet: `Bonjour ${firstName},`,
+      p1: "Merci d'avoir complété votre profil : il est désormais dans la file d'attente.",
+      p2: "Chaque candidature est examinée par une personne. Nous revenons vers vous sous deux jours en général, soit pour vous accueillir, soit pour vous demander d'abord une petite modification.",
+      p3: "Vous n'avez rien à faire d'ici là.",
+    },
+  }[locale];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${C.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p1}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p2}</p>
+      <p style="margin:0;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p3}</p>
+    `, locale),
+  );
+}
+
+export async function sendAdminApprovalRequestNotification(
+  photographerName: string,
+  photographerEmail: string,
+  slug: string,
+) {
+  await sendToAllAdmins(
+    `[Review] ${photographerName} asked for approval`,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Ready for review</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">A photographer finished the profile checklist and asked to be approved. Stripe is not connected yet — that step only unlocks once you approve.</p>
+      <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Name:</strong> ${photographerName}</p>
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Email:</strong> ${photographerEmail}</p>
+        <p style="margin:0;font-size:15px;color:#4A4A4A;"><strong>Profile:</strong> ${country.baseUrl}/photographers/${slug}</p>
+      </div>
+      ${emailButton(`${BASE_URL}/admin`, "Review this photographer")}
+    `)
+  );
+}
+
+export async function sendApprovedConnectStripeEmail(
+  to: string,
+  photographerName: string,
+  graceDays: number,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
+  const C = {
+    en: {
+      subject: `You're in — welcome to ${country.brand}`,
+      h2: `You're in`,
+      greet: `Hi ${firstName},`,
+      p1: "We've reviewed your profile and accepted it. It's live on the site now, and clients can find and book you.",
+      p2: `One thing left: connect your payout account so we can pay you. It takes a few minutes, and you have ${graceDays} days.`,
+      p3: "You can receive bookings before it's done — we'll hold the money and send it on as soon as your account is connected. But it's much easier to do it now than on the day of your first shoot.",
+      cta: "Connect my payout account",
+    },
+    pt: {
+      subject: `Está dentro — bem-vindo à ${country.brand}`,
+      h2: "Está dentro",
+      greet: `Olá ${firstName},`,
+      p1: "Analisámos o seu perfil e aceitámos a candidatura. Já está publicado no site e os clientes podem encontrá-lo e reservar.",
+      p2: `Falta uma coisa: ligar a conta de pagamentos para lhe podermos pagar. São poucos minutos e tem ${graceDays} dias.`,
+      p3: "Pode receber reservas antes disso — guardamos o dinheiro e enviamos assim que a conta estiver ligada. Mas é bem mais simples tratar disto agora do que no dia da primeira sessão.",
+      cta: "Ligar a minha conta de pagamentos",
+    },
+    de: {
+      subject: `Sie sind dabei — willkommen bei ${country.brand}`,
+      h2: "Sie sind dabei",
+      greet: `Hallo ${firstName},`,
+      p1: "Wir haben Ihr Profil geprüft und angenommen. Es ist jetzt online, und Kundinnen und Kunden können Sie finden und buchen.",
+      p2: `Eines fehlt noch: Verbinden Sie Ihr Auszahlungskonto, damit wir Sie bezahlen können. Das dauert wenige Minuten, und Sie haben ${graceDays} Tage Zeit.`,
+      p3: "Sie können auch vorher schon Buchungen erhalten — wir halten das Geld und überweisen es, sobald das Konto verbunden ist. Es ist aber deutlich entspannter, das jetzt zu erledigen als am Tag des ersten Shootings.",
+      cta: "Auszahlungskonto verbinden",
+    },
+    es: {
+      subject: `Estás dentro — bienvenido a ${country.brand}`,
+      h2: "Estás dentro",
+      greet: `Hola ${firstName},`,
+      p1: "Hemos revisado tu perfil y lo hemos aceptado. Ya está publicado y los clientes pueden encontrarte y reservar contigo.",
+      p2: `Queda una cosa: conectar tu cuenta de cobros para que podamos pagarte. Son unos minutos y tienes ${graceDays} días.`,
+      p3: "Puedes recibir reservas antes de hacerlo: guardamos el dinero y te lo enviamos en cuanto la cuenta esté conectada. Pero es mucho más cómodo resolverlo ahora que el día de tu primera sesión.",
+      cta: "Conectar mi cuenta de cobros",
+    },
+    fr: {
+      subject: `C'est bon — bienvenue chez ${country.brand}`,
+      h2: "C'est bon",
+      greet: `Bonjour ${firstName},`,
+      p1: "Nous avons examiné votre profil et l'avons accepté. Il est en ligne, et les clients peuvent vous trouver et vous réserver.",
+      p2: `Il reste une chose : connecter votre compte de paiement pour que nous puissions vous régler. Cela prend quelques minutes, et vous avez ${graceDays} jours.`,
+      p3: "Vous pouvez recevoir des réservations avant : nous conservons l'argent et le versons dès que le compte est connecté. Mais c'est bien plus simple de le faire maintenant que le jour de votre première séance.",
+      cta: "Connecter mon compte de paiement",
+    },
+  }[locale];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${C.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p1}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p2}</p>
+      <p style="margin:0 0 4px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p3}</p>
+      ${emailButton(url, C.cta)}
+    `, locale),
+  );
+}
+
+export async function sendStripeDeadlineNudge(
+  to: string,
+  photographerName: string,
+  daysLeft: number,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
+  const last = daysLeft <= 0;
+  const C = {
+    en: {
+      subject: last
+        ? "Last reminder: connect your payout account"
+        : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left to connect your payout account`,
+      h2: "You can't be paid yet",
+      greet: `Hi ${firstName},`,
+      p1: "Your profile is live and taking bookings, but your payout account still isn't connected — so there's nowhere for us to send your money.",
+      p2: last
+        ? "This is the last automatic reminder. If you've hit a problem with the form, reply to this email and a person will help — we'd rather sort it out than lose you."
+        : `You have ${daysLeft} day${daysLeft === 1 ? "" : "s"} left. It takes a few minutes: ID, address and bank details.`,
+      cta: "Connect my payout account",
+    },
+    pt: {
+      subject: last
+        ? "Último lembrete: ligue a sua conta de pagamentos"
+        : `Faltam ${daysLeft} dia${daysLeft === 1 ? "" : "s"} para ligar a conta de pagamentos`,
+      h2: "Ainda não lhe podemos pagar",
+      greet: `Olá ${firstName},`,
+      p1: "O seu perfil está publicado e a receber reservas, mas a conta de pagamentos continua por ligar — não temos para onde enviar o seu dinheiro.",
+      p2: last
+        ? "Este é o último lembrete automático. Se ficou preso nalgum passo do formulário, responda a este email e uma pessoa ajuda-o — preferimos resolver a perdê-lo."
+        : `Faltam ${daysLeft} dia${daysLeft === 1 ? "" : "s"}. São poucos minutos: identificação, morada e dados bancários.`,
+      cta: "Ligar a minha conta de pagamentos",
+    },
+    de: {
+      subject: last
+        ? "Letzte Erinnerung: Auszahlungskonto verbinden"
+        : `Noch ${daysLeft} Tag${daysLeft === 1 ? "" : "e"}, um Ihr Auszahlungskonto zu verbinden`,
+      h2: "Wir können Sie noch nicht bezahlen",
+      greet: `Hallo ${firstName},`,
+      p1: "Ihr Profil ist online und nimmt Buchungen an, aber Ihr Auszahlungskonto ist noch nicht verbunden — wir haben also keinen Weg, Ihnen Geld zu schicken.",
+      p2: last
+        ? "Das ist die letzte automatische Erinnerung. Wenn Sie im Formular hängen, antworten Sie einfach auf diese E-Mail — ein Mensch hilft Ihnen. Uns ist eine Lösung lieber als ein Abschied."
+        : `Sie haben noch ${daysLeft} Tag${daysLeft === 1 ? "" : "e"}. Es dauert wenige Minuten: Ausweis, Adresse und Bankverbindung.`,
+      cta: "Auszahlungskonto verbinden",
+    },
+    es: {
+      subject: last
+        ? "Último recordatorio: conecta tu cuenta de cobros"
+        : `Te quedan ${daysLeft} día${daysLeft === 1 ? "" : "s"} para conectar tu cuenta de cobros`,
+      h2: "Todavía no podemos pagarte",
+      greet: `Hola ${firstName},`,
+      p1: "Tu perfil está publicado y recibiendo reservas, pero la cuenta de cobros sigue sin conectar, así que no tenemos dónde enviarte el dinero.",
+      p2: last
+        ? "Este es el último recordatorio automático. Si te has atascado en el formulario, responde a este correo y te ayuda una persona: preferimos resolverlo a perderte."
+        : `Te quedan ${daysLeft} día${daysLeft === 1 ? "" : "s"}. Son unos minutos: identificación, dirección y datos bancarios.`,
+      cta: "Conectar mi cuenta de cobros",
+    },
+    fr: {
+      subject: last
+        ? "Dernier rappel : connectez votre compte de paiement"
+        : `Il vous reste ${daysLeft} jour${daysLeft === 1 ? "" : "s"} pour connecter votre compte de paiement`,
+      h2: "Nous ne pouvons pas encore vous payer",
+      greet: `Bonjour ${firstName},`,
+      p1: "Votre profil est en ligne et reçoit des réservations, mais votre compte de paiement n'est toujours pas connecté : nous n'avons nulle part où vous envoyer votre argent.",
+      p2: last
+        ? "C'est le dernier rappel automatique. Si vous bloquez sur le formulaire, répondez à cet e-mail et une personne vous aidera — nous préférons régler le problème que vous perdre."
+        : `Il vous reste ${daysLeft} jour${daysLeft === 1 ? "" : "s"}. Cela prend quelques minutes : pièce d'identité, adresse et coordonnées bancaires.`,
+      cta: "Connecter mon compte de paiement",
+    },
+  }[locale];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${C.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p1}</p>
+      <p style="margin:0 0 4px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p2}</p>
+      ${emailButton(url, C.cta)}
+    `, locale),
+  );
+}
+
+export async function sendPhotographerFullyLiveEmail(
+  to: string,
+  photographerName: string,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard`;
+  const C = {
+    en: {
+      subject: "Your payout account is connected — you're all set",
+      h2: "You're all set",
+      greet: `Hi ${firstName},`,
+      p1: "Your payout account is connected and verified. Nothing else is outstanding.",
+      p2: "From here on, when a client accepts your gallery the money goes out to you automatically — you don't have to invoice anyone or ask us for it.",
+      cta: "Go to my dashboard",
+    },
+    pt: {
+      subject: "A sua conta de pagamentos está ligada — está tudo pronto",
+      h2: "Está tudo pronto",
+      greet: `Olá ${firstName},`,
+      p1: "A sua conta de pagamentos está ligada e verificada. Não falta mais nada.",
+      p2: "A partir de agora, quando um cliente aceitar a sua galeria, o dinheiro segue automaticamente para si — não precisa de emitir nada nem de nos pedir.",
+      cta: "Ir para o meu painel",
+    },
+    de: {
+      subject: "Ihr Auszahlungskonto ist verbunden — alles erledigt",
+      h2: "Alles erledigt",
+      greet: `Hallo ${firstName},`,
+      p1: "Ihr Auszahlungskonto ist verbunden und verifiziert. Es steht nichts mehr offen.",
+      p2: "Ab jetzt geht das Geld automatisch an Sie, sobald ein Kunde Ihre Galerie annimmt — Sie müssen nichts in Rechnung stellen und uns um nichts bitten.",
+      cta: "Zum Dashboard",
+    },
+    es: {
+      subject: "Tu cuenta de cobros está conectada — ya está todo listo",
+      h2: "Ya está todo listo",
+      greet: `Hola ${firstName},`,
+      p1: "Tu cuenta de cobros está conectada y verificada. No queda nada pendiente.",
+      p2: "A partir de ahora, cuando un cliente acepte tu galería el dinero sale hacia ti automáticamente: no tienes que facturar nada ni pedírnoslo.",
+      cta: "Ir a mi panel",
+    },
+    fr: {
+      subject: "Votre compte de paiement est connecté — tout est prêt",
+      h2: "Tout est prêt",
+      greet: `Bonjour ${firstName},`,
+      p1: "Votre compte de paiement est connecté et vérifié. Il ne reste rien en suspens.",
+      p2: "Désormais, dès qu'un client accepte votre galerie, l'argent part automatiquement vers vous : pas de facture à émettre, rien à nous demander.",
+      cta: "Aller à mon tableau de bord",
+    },
+  }[locale];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">${C.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p1}</p>
+      <p style="margin:0 0 4px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p2}</p>
+      ${emailButton(url, C.cta)}
+    `, locale),
+  );
+}
+
+export async function sendAdminStripeOverdueNotification(
+  photographerName: string,
+  photographerEmail: string,
+  slug: string,
+  daysOverdue: number,
+) {
+  await sendToAllAdmins(
+    `[Action needed] ${photographerName} is live but still can't be paid`,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1F1F1F;">Stripe deadline passed</h2>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#4A4A4A;">This photographer was approved and is live on the site, but the week they had to connect a payout account has run out. They have had three reminders. Nothing has been done automatically — decide what should happen.</p>
+      <div style="margin:16px 0;padding:16px;background:#FAF8F5;border-radius:10px;border:1px solid #F3EDE6;">
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Name:</strong> ${photographerName}</p>
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Email:</strong> ${photographerEmail}</p>
+        <p style="margin:0 0 8px;font-size:15px;color:#4A4A4A;"><strong>Overdue by:</strong> ${daysOverdue} day${daysOverdue === 1 ? "" : "s"}</p>
+        <p style="margin:0;font-size:15px;color:#4A4A4A;"><strong>Profile:</strong> ${country.baseUrl}/photographers/${slug}</p>
+      </div>
+      <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#9B8E82;">If they take a booking meanwhile, the money is held safely and pays out by itself once they connect.</p>
+      ${emailButton(`${BASE_URL}/admin`, "Open the admin panel")}
+    `)
+  );
+}
+
+export async function sendProfileHiddenNoStripeEmail(
+  to: string,
+  photographerName: string,
+  locale: "en" | "pt" | "de" | "es" | "fr" = "en",
+) {
+  const firstName = (photographerName || "").split(" ")[0] || photographerName;
+  const url = `${country.baseUrl}${locale === "en" ? "" : `/${locale}`}/dashboard/payouts`;
+  const C = {
+    en: {
+      subject: "Your profile is no longer visible to clients",
+      h2: "Your profile has been hidden",
+      greet: `Hi ${firstName},`,
+      p1: "We've taken your profile off the site. It isn't a decision about your work — the week you had to connect a payout account has passed, and we can't list a photographer we have no way to pay.",
+      p2: "Your account is untouched. Log in, connect your payout account, and your profile goes back up automatically within about fifteen minutes. Nothing else is lost: your photos, packages and locations are all still there.",
+      p3: "If something in the form is blocking you, reply to this email and a person will help. We'd much rather sort it out.",
+      cta: "Connect my payout account",
+    },
+    pt: {
+      subject: "O seu perfil deixou de estar visível para os clientes",
+      h2: "O seu perfil foi ocultado",
+      greet: `Olá ${firstName},`,
+      p1: "Retirámos o seu perfil do site. Não é uma decisão sobre o seu trabalho — passou a semana que tinha para ligar a conta de pagamentos, e não podemos mostrar um fotógrafo a quem não temos forma de pagar.",
+      p2: "A sua conta está intacta. Entre, ligue a conta de pagamentos e o perfil volta a ficar online automaticamente em cerca de quinze minutos. Não perdeu nada: fotos, pacotes e localizações continuam lá.",
+      p3: "Se algo no formulário o estiver a bloquear, responda a este email e uma pessoa ajuda-o. Preferimos muito mais resolver.",
+      cta: "Ligar a minha conta de pagamentos",
+    },
+    de: {
+      subject: "Ihr Profil ist für Kunden nicht mehr sichtbar",
+      h2: "Ihr Profil wurde ausgeblendet",
+      greet: `Hallo ${firstName},`,
+      p1: "Wir haben Ihr Profil von der Seite genommen. Das ist keine Bewertung Ihrer Arbeit — die Woche für das Verbinden eines Auszahlungskontos ist verstrichen, und wir können niemanden listen, den wir nicht bezahlen können.",
+      p2: "Ihr Konto bleibt unangetastet. Melden Sie sich an, verbinden Sie Ihr Auszahlungskonto, und das Profil geht innerhalb von etwa fünfzehn Minuten automatisch wieder online. Es geht nichts verloren: Fotos, Pakete und Orte sind alle noch da.",
+      p3: "Wenn Sie im Formular hängen, antworten Sie einfach auf diese E-Mail — ein Mensch hilft Ihnen. Uns ist eine Lösung deutlich lieber.",
+      cta: "Auszahlungskonto verbinden",
+    },
+    es: {
+      subject: "Tu perfil ya no es visible para los clientes",
+      h2: "Hemos ocultado tu perfil",
+      greet: `Hola ${firstName},`,
+      p1: "Hemos retirado tu perfil del sitio. No es una valoración de tu trabajo: ha pasado la semana que tenías para conectar una cuenta de cobros, y no podemos mostrar a un fotógrafo al que no tenemos forma de pagar.",
+      p2: "Tu cuenta sigue intacta. Entra, conecta la cuenta de cobros y el perfil vuelve a publicarse automáticamente en unos quince minutos. No has perdido nada: fotos, paquetes y ubicaciones siguen ahí.",
+      p3: "Si algo del formulario te está bloqueando, responde a este correo y te ayuda una persona. Preferimos resolverlo con diferencia.",
+      cta: "Conectar mi cuenta de cobros",
+    },
+    fr: {
+      subject: "Votre profil n'est plus visible par les clients",
+      h2: "Votre profil a été masqué",
+      greet: `Bonjour ${firstName},`,
+      p1: "Nous avons retiré votre profil du site. Ce n'est pas un jugement sur votre travail : la semaine dont vous disposiez pour connecter un compte de paiement est écoulée, et nous ne pouvons pas référencer un photographe que nous n'avons aucun moyen de payer.",
+      p2: "Votre compte est intact. Connectez-vous, reliez votre compte de paiement, et le profil est republié automatiquement en une quinzaine de minutes. Rien n'est perdu : photos, forfaits et lieux sont toujours là.",
+      p3: "Si le formulaire vous bloque, répondez à cet e-mail et une personne vous aidera. Nous préférons de loin régler le problème.",
+      cta: "Connecter mon compte de paiement",
+    },
+  }[locale];
+
+  await sendEmail(
+    to,
+    C.subject,
+    emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#B91C1C;">${C.h2}</h2>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;">${C.greet}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p1}</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p2}</p>
+      <p style="margin:0 0 4px;font-size:15px;color:#4A4A4A;line-height:1.6;">${C.p3}</p>
+      ${emailButton(url, C.cta)}
+    `, locale),
+  );
+}
