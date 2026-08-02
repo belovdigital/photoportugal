@@ -133,7 +133,7 @@ export async function PATCH(req: NextRequest) {
                   stripe_hidden_at = NULL,
                   stripe_nudge_d1_sent = FALSE,
                   stripe_nudge_d4_sent = FALSE,
-                  stripe_nudge_d7_sent = FALSE,
+                  stripe_nudge_d6_sent = FALSE,
                   stripe_overdue_admin_notified = FALSE
             WHERE id = $1`,
           [id]
