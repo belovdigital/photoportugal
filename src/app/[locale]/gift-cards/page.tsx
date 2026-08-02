@@ -8,12 +8,15 @@ import { country } from "@/lib/country";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const title = locale === "pt" ? `Ofereça uma sessão ${country.brand} — Cartões-presente`
-    : locale === "de" ? `Verschenken Sie eine ${country.brand} Session — Geschenkkarten`
-    : locale === "es" ? `Regale una sesión ${country.brand} — Tarjetas regalo`
-    : locale === "fr" ? `Offrez une séance ${country.brand} — Cartes cadeaux`
-    : `Gift a ${country.brand} session — Gift cards`;
-  const cn = { en: country.areaServed, pt: country.code === "es" ? "Espanha" : "Portugal", de: country.code === "es" ? "Spanien" : "Portugal", es: country.code === "es" ? "España" : "Portugal", fr: country.code === "es" ? "Espagne" : "Portugal" }[locale] || country.areaServed;
+  // The brand is dropped from the title itself: the root template appends
+  // "| Photo Spain", so naming it here printed it twice and pushed the whole
+  // thing past what a result shows.
+  const title = locale === "pt" ? "Ofereça uma sessão fotográfica — cartões-presente"
+    : locale === "de" ? "Fotoshooting verschenken — Geschenkkarten"
+    : locale === "es" ? "Regale una sesión de fotos — tarjetas regalo"
+    : locale === "fr" ? "Offrez une séance photo — cartes cadeaux"
+    : "Gift a photoshoot — gift cards";
+  const cn = country.countryName[locale as keyof typeof country.countryName] ?? country.areaServed;
   const description = locale === "pt" ? `Ofereça uma sessão fotográfica de 1 ou 2 horas em ${cn}. O destinatário escolhe o fotógrafo; você prepara a surpresa.`
     : locale === "de" ? `Verschenken Sie eine 1- oder 2-stündige Fotoshooting-Session in ${cn}. Die Empfänger:in wählt den Fotografen; Sie sorgen für die Überraschung.`
     : locale === "es" ? `Regale una sesión fotográfica de 1 o 2 horas en ${cn}. La persona elige al fotógrafo; usted prepara la sorpresa.`
