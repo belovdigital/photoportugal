@@ -6,6 +6,7 @@ import { AdminToggleClient, AdminPlanSelectClient, AdminDeactivatePhotographer, 
 import { AdminRevisionForm } from "./AdminRevisionForm";
 import { normalizeName } from "@/lib/format-name";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
+import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
 
 export interface AdminPhotographer {
   id: string;
@@ -312,7 +313,7 @@ export function AdminPhotographersList({ photographers, previewSecret, belowMinP
 
         const checklistDone = [
           p.has_avatar, p.has_cover, p.has_bio,
-          p.portfolio_count >= 15, p.package_count >= 1,
+          p.portfolio_count >= MIN_PORTFOLIO_PHOTOS, p.package_count >= 1,
           p.location_count >= 1, p.stripe_ready, p.has_phone,
         ].filter(Boolean).length;
         const progressPct = Math.round((checklistDone / 8) * 100);
@@ -692,7 +693,7 @@ function getMissingSteps(p: AdminPhotographer): string[] {
   if (!p.has_avatar) steps.push("Profile photo");
   if (!p.has_cover) steps.push("Cover image");
   if (!p.has_bio) steps.push("Bio & tagline");
-  if (p.portfolio_count < 15) steps.push(`Portfolio (${p.portfolio_count}/15)`);
+  if (p.portfolio_count < MIN_PORTFOLIO_PHOTOS) steps.push(`Portfolio (${p.portfolio_count}/${MIN_PORTFOLIO_PHOTOS})`);
   if (p.package_count < 1) steps.push("Package");
   if (p.location_count < 1) steps.push("Locations");
   if (!p.stripe_ready) steps.push("Stripe");
@@ -701,7 +702,7 @@ function getMissingSteps(p: AdminPhotographer): string[] {
 }
 
 function getCompleteness(p: AdminPhotographer): number {
-  const checks = [p.has_avatar, p.has_cover, p.has_bio, p.portfolio_count >= 15, p.package_count >= 1, p.location_count >= 1, p.stripe_ready, p.has_phone];
+  const checks = [p.has_avatar, p.has_cover, p.has_bio, p.portfolio_count >= MIN_PORTFOLIO_PHOTOS, p.package_count >= 1, p.location_count >= 1, p.stripe_ready, p.has_phone];
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
 

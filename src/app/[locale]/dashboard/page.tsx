@@ -13,6 +13,7 @@ import { AddOnsSection } from "@/app/[locale]/dashboard/subscriptions/AddOnsSect
 import { getPhotographerTasks } from "@/lib/photographer-tasks";
 import { syncStripeOnboardingIfStale } from "@/lib/stripe-sync";
 import { getLocale } from "next-intl/server";
+import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
 
 
 // Popular-destination chips, per market. These are links to /locations/<slug>,
@@ -239,7 +240,7 @@ async function PhotographerOverview({ userId, name }: { userId: string; name: st
   };
 
   const allStepsComplete = onboardingChecks.avatar && onboardingChecks.cover && onboardingChecks.bio
-    && onboardingChecks.portfolio >= 15 && onboardingChecks.packages >= 1
+    && onboardingChecks.portfolio >= MIN_PORTFOLIO_PHOTOS && onboardingChecks.packages >= 1
     && onboardingChecks.locations >= 1 && onboardingChecks.stripeConnected && onboardingChecks.phone;
 
   return (

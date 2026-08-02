@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
 
 interface OnboardingChecks {
   avatar: boolean;
@@ -50,7 +51,7 @@ function getPhotographerSteps(
     {
       label: t("photographer.uploadPortfolioPhotos"),
       href: "/dashboard/portfolio",
-      complete: checks.portfolio >= 15,
+      complete: checks.portfolio >= MIN_PORTFOLIO_PHOTOS,
       detail: `${Math.min(checks.portfolio, 15)}/15`,
       tip: t("photographer.uploadPortfolioPhotosTip"),
     },

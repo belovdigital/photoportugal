@@ -21,6 +21,7 @@ import { requireStripe, calculatePayment, SERVICE_FEE_RATE, payoutBreakdownTeleg
 import { rm } from "fs/promises";
 import path from "path";
 import { country } from "@/lib/country";
+import { MIN_PORTFOLIO_PHOTOS } from "@/lib/portfolio-requirements";
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 
@@ -1945,7 +1946,7 @@ async function runReminders(): Promise<NextResponse> {
          AND u.avatar_url IS NOT NULL
          AND pp.cover_url IS NOT NULL
          AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-         AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15
+         AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS}
          AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1
          AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
          AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
@@ -1973,7 +1974,7 @@ async function runReminders(): Promise<NextResponse> {
          AND pp.created_at < NOW() - INTERVAL '6 days'
          AND COALESCE(pp.checklist_deadline_emailed, FALSE) = FALSE
          AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15
+           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS}
            AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1
            AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
            AND pp.stripe_account_id IS NOT NULL AND pp.stripe_onboarding_complete = TRUE
@@ -2034,7 +2035,7 @@ async function runReminders(): Promise<NextResponse> {
          AND pp.created_at < NOW() - INTERVAL '7 days'
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND NOT (u.avatar_url IS NOT NULL AND pp.cover_url IS NOT NULL AND pp.bio IS NOT NULL AND LENGTH(pp.bio) > 10
-           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= 15
+           AND (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id) >= ${MIN_PORTFOLIO_PHOTOS}
            AND (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL) >= 1
            AND (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id) >= 1
            AND COALESCE(pp.stripe_onboarding_complete, FALSE) = TRUE
