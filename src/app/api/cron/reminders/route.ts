@@ -2013,8 +2013,13 @@ async function runReminders(): Promise<NextResponse> {
   // places that can set stripe_onboarding_complete — one sweep on a 15-minute
   // tick is worth far less risk than seven edited Stripe code paths.
   let stripeFinalised = 0, stripeNudged = 0, stripeHidden = 0;
+  const { normalizeLocale } = await import("@/lib/email-locale");
+
+  // Three independent try blocks on purpose. They were one, and a bad column
+  // name in the nudge step silently disabled hiding for every run — the most
+  // consequential of the three, and the one whose absence nobody would notice
+  // until a photographer stayed listed for a month without a payout account.
   try {
-    const { normalizeLocale } = await import("@/lib/email-locale");
     // (a) Connected — finish the job. Also un-hides anyone who was hidden
     //     for missing payouts: fixing the one thing wrong must restore them
     //     without an admin having to notice.
@@ -2025,7 +2030,7 @@ async function runReminders(): Promise<NextResponse> {
               stripe_hidden_at = NULL,
               stripe_nudge_d1_sent = FALSE,
               stripe_nudge_d4_sent = FALSE,
-              stripe_nudge_d7_sent = FALSE,
+              stripe_nudge_d6_sent = FALSE,
               stripe_overdue_admin_notified = FALSE
          FROM users u
         WHERE u.id = pp.user_id
@@ -2049,7 +2054,12 @@ async function runReminders(): Promise<NextResponse> {
       }
     }
 
-    // (b) Still outstanding — nudge on day 1, 4 and 7 of the week.
+  } catch (err) {
+    console.error("[cron] stripe grace week — finalise step failed:", err);
+  }
+
+  try {
+    // (b) Still outstanding — nudge on day 1, 4 and 6 of the week.
     // Days 1, 4 and 6 — not 7. The deadline itself is when the profile is
     // hidden, so a day-7 nudge would land in the same cron tick as the
     // "your profile is hidden" email and read as a contradiction. The last
@@ -2082,6 +2092,11 @@ async function runReminders(): Promise<NextResponse> {
       }
     }
 
+  } catch (err) {
+    console.error("[cron] stripe grace week — nudge step failed:", err);
+  }
+
+  try {
     // (c) Week is up — the profile stops being public. Hiding reuses
     //     is_approved = FALSE so all 128 public queries drop them for free;
     //     stripe_hidden_at is what tells this apart from "never reviewed",
@@ -2121,19 +2136,20 @@ async function runReminders(): Promise<NextResponse> {
         )
       ).catch(() => {});
     }
-    // Both the catalogue and the profile pages are ISR-cached, so a
-    // photographer who was just hidden (or restored) would otherwise keep
-    // showing their old state until the cache happened to expire.
-    if (stripeFinalised || stripeHidden) {
-      revalidatePath("/");
-      revalidatePath("/photographers");
-      revalidatePath("/locations");
-    }
-    if (stripeFinalised || stripeNudged || stripeHidden) {
-      console.log(`[cron] stripe grace week: ${stripeFinalised} finalised, ${stripeNudged} nudged, ${stripeHidden} hidden`);
-    }
   } catch (err) {
-    console.error("[cron] stripe grace week failed:", err);
+    console.error("[cron] stripe grace week — hide step failed:", err);
+  }
+
+  // Both the catalogue and the profile pages are ISR-cached, so a photographer
+  // just hidden (or restored) would keep showing their old state until the
+  // cache happened to expire.
+  if (stripeFinalised || stripeHidden) {
+    revalidatePath("/");
+    revalidatePath("/photographers");
+    revalidatePath("/locations");
+  }
+  if (stripeFinalised || stripeNudged || stripeHidden) {
+    console.log(`[cron] stripe grace week: ${stripeFinalised} finalised, ${stripeNudged} nudged, ${stripeHidden} hidden`);
   }
 
   // === Auto-deactivate photographers who didn't complete checklist in 7 days ===
