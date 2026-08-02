@@ -1,8 +1,8 @@
 import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
-import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { country } from "@/lib/country";
+import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
 
 // Site overview in agent-friendly plain text / markdown. Served both as
 // /llms.txt and as the markdown representation of the homepage when a
@@ -142,16 +142,24 @@ export async function buildLlmsText(): Promise<string> {
 ${country.brand} is an online marketplace that connects travelers visiting ${country.areaServed} with vetted professional local photographers. Clients browse portfolios, compare real verified reviews, check availability, and book a photoshoot online with instant confirmation and secure Stripe payment. Every photographer is personally vetted and approved by the ${country.brand} team.
 
 ## Key Facts
-- ${photographerCount} approved photographers
-- ${portugalCoverageStats.displayPlacesLabel} places across ${portugalCoverageStats.regions} ${country.areaServed} regions
-- ${reviewCount} verified reviews from real bookings
-- Average rating: ${avgRating}/5
-- Sessions starting from EUR${minPrice ?? 150}
-- Booking languages: ${country.contactLanguages.join(", ")}
-- Payment: Stripe, escrow-protected (held until delivery)
-- Typical delivery: 1-3 weeks after the session
-- Founded: 2024
-- Owner/operator: ${country.brand}, ${country.supportEmail}
+${[
+  // Counts are omitted rather than printed as zero. This file is the one an
+  // assistant quotes as fact, and a freshly opened market was announcing
+  // "0 approved photographers, 0 verified reviews, average rating 0/5" —
+  // which is how a model ends up telling someone we are rated zero.
+  photographerCount > 0 ? `- ${photographerCount} approved photographers` : null,
+  // Coverage was reading Portugal's precomputed stats on both sites, so the
+  // Spanish file claimed Portuguese numbers "across 8 Spain regions".
+  `- ${locations.length} places across ${new Set(locations.map((l) => l.region).filter(Boolean)).size} ${country.areaServed} regions`,
+  reviewCount > 0 ? `- ${reviewCount} verified reviews from real bookings` : null,
+  reviewCount > 0 && Number(avgRating) > 0 ? `- Average rating: ${avgRating}/5` : null,
+  `- Sessions starting from EUR${minPrice ?? MIN_PACKAGE_PRICE}`,
+  `- Booking languages: ${country.contactLanguages.join(", ")}`,
+  `- Payment: Stripe, escrow-protected (held until delivery)`,
+  `- Typical delivery: 1-3 weeks after the session`,
+  `- Founded: ${country.foundedYear}`,
+  `- Owner/operator: ${country.brand}, ${country.supportEmail}`,
+].filter(Boolean).join("\n")}
 
 ## Who uses ${country.brand}?
 - Travelers visiting ${country.areaServed} who want professional vacation photos

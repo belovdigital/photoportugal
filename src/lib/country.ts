@@ -111,6 +111,8 @@ export interface CountryPack {
   locales: readonly string[];
   /** IANA timezone used for business-hours logic and date formatting. */
   timezone: string;
+  /** Year this market opened. Quoted as fact in llms.txt, so it must be its own. */
+  foundedYear: number;
 }
 
 const PACKS: Record<CountryCode, CountryPack> = {
@@ -162,6 +164,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     logoIconPath: "/favicon.svg",
     locales: ["en", "pt", "de", "es", "fr"],
     timezone: "Europe/Lisbon",
+    foundedYear: 2024,
   },
   es: {
     code: "es",
@@ -211,6 +214,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     // Portuguese is deliberately absent: it earns nothing in the Spanish market.
     locales: ["en", "es", "de", "fr"],
     timezone: "Europe/Madrid",
+    foundedYear: 2026,
     // The operating company is Portuguese and is not registered in Spain, so
     // Stripe Connect onboarding is not available to Spanish photographers.
     // They are paid by bank transfer after the money clears. See docs/SPAIN.md §6.2.
