@@ -18,6 +18,7 @@ import { GoogleAnalytics } from "@/components/ui/GoogleAnalytics";
 // in case we want to revive a different exit-intent experiment later.
 import { VisitorTracker } from "@/components/ui/VisitorTracker";
 import { LazyIntercom } from "@/components/ui/LazyIntercom";
+import { country } from "@/lib/country";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { SocialProofToaster } from "@/components/ui/SocialProofToaster";
 import { ConciergeDrawerProvider } from "@/components/concierge/ConciergeDrawer";
@@ -80,7 +81,9 @@ export default async function LocaleLayout({
         <GoogleAnalytics />
         {/* Clarity temporarily disabled 2026-06-18 — re-enable: uncomment import + this line */}
         {/* <ClarityWidget /> */}
-        <LazyIntercom />
+        {/* Live chat only in markets that have their own workspace — this
+            keeps the client component out of the tree entirely for the rest. */}
+        {country.intercomAppId && <LazyIntercom />}
       </SessionProvider>
     </NextIntlClientProvider>
   );
