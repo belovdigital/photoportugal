@@ -27,6 +27,7 @@ export function ConciergeInvitePlaque({
   chips,
   variant = "dark",
   ctaLabel,
+  framed = true,
 }: {
   placeholder: string;
   /** 0–4 short pre-prompt chips. Each renders as a button; click sends
@@ -34,6 +35,10 @@ export function ConciergeInvitePlaque({
   chips?: string[];
   variant?: "dark" | "light";
   ctaLabel?: string;
+  /** Drop the plaque's own glass container. Set this when the caller
+   *  already provides one — stacking two translucent panels reads as a
+   *  smudge rather than as depth (the homepage hero did exactly that). */
+  framed?: boolean;
 }) {
   const t = useTranslations("concierge.plaque");
   const drawer = useConciergeDrawer();
@@ -70,12 +75,14 @@ export function ConciergeInvitePlaque({
     ? "flex-1 min-w-0 rounded-xl border border-white/20 bg-white/15 px-4 py-3 text-base text-white placeholder-white/60 focus:border-white/40 focus:outline-none focus:ring-1 focus:ring-white/30"
     : "flex-1 min-w-0 rounded-xl border border-warm-200 bg-white px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400";
 
-  return (
-    <div className={containerCls}>
+  const hasChips = Boolean(chips && chips.length > 0);
+
+  const body = (
+    <>
       {/* Chip row — optional. Auto-sends on click. */}
-      {chips && chips.length > 0 && (
+      {hasChips && (
         <div className="flex flex-wrap gap-1.5">
-          {chips.slice(0, 4).map((chip, i) => (
+          {chips?.slice(0, 4).map((chip, i) => (
             <button
               key={i}
               type="button"
@@ -94,7 +101,7 @@ export function ConciergeInvitePlaque({
           e.preventDefault();
           handleSend(text);
         }}
-        className={`flex flex-col gap-2 sm:flex-row sm:items-stretch ${chips && chips.length > 0 ? "mt-2.5" : ""}`}
+        className={`flex flex-col gap-2 sm:flex-row sm:items-stretch ${hasChips ? "mt-2.5" : !framed ? "mt-3" : ""}`}
       >
         <input
           type="text"
@@ -117,6 +124,8 @@ export function ConciergeInvitePlaque({
           </svg>
         </button>
       </form>
-    </div>
+    </>
   );
+
+  return framed ? <div className={containerCls}>{body}</div> : body;
 }

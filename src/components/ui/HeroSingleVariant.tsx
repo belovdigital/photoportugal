@@ -636,10 +636,12 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
               </p>
             )}
             {/* On location pages we drop the visitor's question straight
-                into the on-page concierge drawer. The homepage variant
-                shows the same idea but with pre-prompt chips so first-
-                time visitors who don't know what to type get a one-tap
-                path. Both routes lead to the same chat. */}
+                into the on-page concierge drawer; the homepage sends it to
+                the same chat through the plaque. The homepage variant runs
+                bare and chipless: the pre-prompt chips plus the plaque's
+                own glass sat inside this panel's glass and made the hero
+                read as cluttered (Alex, 2026-08-02). The placeholder still
+                shows visitors what a good question looks like. */}
             {locationContext ? (
               <ConciergeQuickStart
                 placeholder={tLocQuickStart("placeholder", { location: locationContext.name })}
@@ -649,8 +651,8 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
             ) : (
               <ConciergeInvitePlaque
                 variant="dark"
+                framed={false}
                 placeholder={tPlaque("homepagePlaceholder")}
-                chips={tPlaque.raw("homepageChips") as string[]}
               />
             )}
           </div>
