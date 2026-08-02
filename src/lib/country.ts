@@ -34,6 +34,12 @@ export interface CountryPack {
   /** Country name for schema.org areaServed and geo-targeted copy. */
   areaServed: string;
   /**
+   * The same country name, declined per locale, for copy the visitor reads.
+   * `areaServed` is the schema.org value and is always English, which reads
+   * as a bug inside Spanish or French sentences ("cuenta bancaria en Spain").
+   */
+  countryName: Record<"en" | "pt" | "de" | "es" | "fr", string>;
+  /**
    * Root-level SEO copy. Full strings rather than a template, because the
    * Portuguese version interpolates a Portugal-only coverage statistic and
    * forcing both markets through one template would either leak that number
@@ -111,6 +117,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     emailFrom: "Photo Portugal <info@photoportugal.com>",
     supportEmail: "info@photoportugal.com",
     areaServed: "Portugal",
+    countryName: { en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal" },
     ogImage: "/og-image.png",
     defaultRegionSlug: "greater-lisbon",
     dpaName: "www.cnpd.pt",
@@ -158,6 +165,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     emailFrom: "Photo Spain <info@photospain.co>",
     supportEmail: "info@photospain.co",
     areaServed: "Spain",
+    countryName: { en: "Spain", pt: "Espanha", de: "Spanien", es: "España", fr: "Espagne" },
     // No Spanish phone line and no social profiles yet — emitting Portugal's
     // would be a false signal to both Google and visitors.
     ogImage: "/og",

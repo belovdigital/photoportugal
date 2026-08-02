@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { StripeConnectSection } from "../subscriptions/StripeConnectSection";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +13,7 @@ export default async function PayoutsPage() {
 
   const t = await getTranslations("payouts");
   const td = await getTranslations("dashboard");
+  const locale = await getLocale();
   const userId = (session.user as { id?: string }).id;
   const userRow = await queryOne<{ role: string }>("SELECT role FROM users WHERE id = $1", [userId]);
   if (!userRow || userRow.role !== "photographer") redirect("/dashboard");
@@ -27,7 +28,7 @@ export default async function PayoutsPage() {
           is still a cheap thing to discover. */}
       <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
         <p className="text-sm text-amber-900">
-          {td("bankConfirmBody", { country: country.areaServed })}
+          {td("bankConfirmBody", { country: country.countryName[locale as keyof typeof country.countryName] ?? country.areaServed })}
         </p>
       </div>
 
