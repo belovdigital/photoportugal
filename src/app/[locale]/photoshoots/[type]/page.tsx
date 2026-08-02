@@ -21,6 +21,7 @@ import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { formatDuration } from "@/lib/package-pricing";
 import { country } from "@/lib/country";
+import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
 
 // Force-dynamic so the hero photographer reshuffles on every request.
 // Same rationale as the location page: paid-ad / sitelink landing prefers
@@ -446,15 +447,16 @@ export default async function ShootTypePage({
       url: country.baseUrl,
     },
     areaServed: { "@type": "Country", name: country.areaServed },
-    ...(minPrice ? {
-      offers: {
-        "@type": "Offer",
-        priceCurrency: "EUR",
-        price: String(minPrice),
-        availability: "https://schema.org/InStock",
-        url: `${country.baseUrl}/photographers?shootType=${type}`,
-      },
-    } : {}),
+    // An offer is always emitted: before there is a roster the platform
+    // floor is still the real, honoured price, and a shoot-type page with no
+    // price at all loses the one rich result this page can earn.
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "EUR",
+      price: String(minPrice ?? MIN_PACKAGE_PRICE),
+      availability: "https://schema.org/InStock",
+      url: `${country.baseUrl}/photographers?shootType=${type}`,
+    },
     // aggregateRating intentionally omitted on Service nodes — Google's
     // review-snippet whitelist excludes Service. GSC flagged "Invalid
     // object type for field <parent_node>" 2026-04-30 → fixed 2026-05-09.

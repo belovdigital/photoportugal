@@ -39,6 +39,7 @@ import { formatDuration } from "@/lib/package-pricing";
 import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { country } from "@/lib/country";
+import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 import { regionLabel } from "@/lib/region-labels";
@@ -548,7 +549,12 @@ export default async function LocationPage({
     offers: {
       "@type": "Offer",
       priceCurrency: "EUR",
-      price: String(minPrice ?? 150),
+      // Was a hardcoded 150 — a price that exists nowhere in the product.
+      // It only showed when a location had no photographers yet, which is
+      // every location in a market that has just opened, and a wrong price
+      // in structured data is worse than none: the result promises 150 and
+      // the page says 299. Same floor the homepage falls back to.
+      price: String(minPrice ?? MIN_PACKAGE_PRICE),
       url: `${country.baseUrl}/photographers?location=${slug}`,
     },
   };
