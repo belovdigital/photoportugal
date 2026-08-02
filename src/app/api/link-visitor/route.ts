@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { query } from "@/lib/db";
+import { isInternalAccount } from "@/lib/internal-accounts";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,6 +10,14 @@ export async function POST(req: NextRequest) {
 
     const { visitor_id } = await req.json();
     if (!visitor_id) return NextResponse.json({ ok: true });
+
+    // Our own accounts never get attached to their browsing. Every admin
+    // visit was landing in Recent Visitors as a named photographer, which
+    // is both noise and a wrong number in every visitor count derived from
+    // it. Their sessions still exist, just anonymous like any other.
+    if (isInternalAccount(session.user.email)) {
+      return NextResponse.json({ ok: true, skipped: "internal" });
+    }
 
     // Link visitor_id to user (only if not already linked)
     await query("UPDATE users SET visitor_id = $1 WHERE id = $2 AND visitor_id IS NULL", [visitor_id, session.user.id]);

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { query, queryOne } from "@/lib/db";
+import { internalEmailsSqlList } from "@/lib/internal-accounts";
 import { verifyToken } from "@/app/api/admin/login/route";
 
 export const dynamic = "force-dynamic";
@@ -108,14 +109,16 @@ export async function GET(req: Request) {
   // Recent sessions
   // Filter out bots: Googlebot, headless crawlers, and high-frequency scrapers
   // Also hide test accounts (Kate Belova's user_id and any visitor that ever linked to her).
-  const HIDDEN_USER_IDS = ["1fe40315-bd00-4530-a6be-39fa970617bd"]; // Kate Belova — testing
-  const hiddenUserSql = HIDDEN_USER_IDS.length > 0
-    ? `AND (vs.user_id IS NULL OR vs.user_id NOT IN (${HIDDEN_USER_IDS.map(id => `'${id}'`).join(",")}))
-       AND vs.visitor_id NOT IN (
-         SELECT vs2.visitor_id FROM visitor_sessions vs2
-         WHERE vs2.user_id IN (${HIDDEN_USER_IDS.map(id => `'${id}'`).join(",")})
-       )`
-    : "";
+  // Hidden by email, not by user id: the same person has a different UUID in
+  // each market's database, so the id list that used to be here was only ever
+  // correct for Portugal. See lib/internal-accounts.ts.
+  const internalEmails = internalEmailsSqlList();
+  const hiddenUserSql = `
+    AND (vs.user_id IS NULL OR vs.user_id NOT IN (SELECT id FROM users WHERE email IN (${internalEmails})))
+    AND vs.visitor_id NOT IN (
+      SELECT vs2.visitor_id FROM visitor_sessions vs2
+       WHERE vs2.user_id IN (SELECT id FROM users WHERE email IN (${internalEmails}))
+    )`;
 
   // is_bot covers both self-identified crawlers (historical rows — new ones
   // are no longer inserted at all) and flagged stealth fleets. The velocity
