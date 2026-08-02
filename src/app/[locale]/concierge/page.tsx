@@ -49,7 +49,7 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
           global CSS scoped to `(max-width: 639px) body:has(.concierge-page)`.
           Desktop (sm+) keeps the regular site chrome plus the marketing
           sections below the chat. */}
-      <section className="relative h-[calc(100dvh-64px)] bg-gradient-to-br from-warm-50 via-white to-primary-50/40 lg:h-[calc(100vh-64px)]">
+      <section className="h-below-chrome-dvh relative bg-gradient-to-br from-warm-50 via-white to-primary-50/40">
         <div className="mx-auto h-full max-w-7xl px-0 sm:px-6 lg:px-8 lg:py-8">
           <div className="grid h-full grid-cols-1 gap-0 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10">
             {/* Info column — desktop only, vertically centered with proper hierarchy */}

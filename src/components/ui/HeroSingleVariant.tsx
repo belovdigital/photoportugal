@@ -340,15 +340,16 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
     <section
       ref={sectionRef}
       className="relative overflow-hidden bg-gray-900"
-      // Reserve space for fixed page chrome so the hero never overflows
-      // below the viewport fold. 64px = the global header. On location
-      // pages an extra ~44px breadcrumbs row sits above the hero, so we
-      // subtract more there. Using inline style instead of Tailwind
-      // because the calc operands need to be conditional.
+      // Reserve space for page chrome so the hero never overflows below the
+      // viewport fold. 64px = the global header; --promo-h = the summer
+      // offer topbar, which sits in flow above the header and is 0 when it
+      // is absent or dismissed. On location pages an extra ~44px breadcrumbs
+      // row sits above the hero, so we subtract more there. Using inline
+      // style instead of Tailwind because the operands are conditional.
       style={{
         minHeight: locationContext
-          ? "calc(100svh - 64px - 44px)"
-          : "calc(100svh - 64px)",
+          ? "calc(100svh - 64px - 44px - var(--promo-h))"
+          : "calc(100svh - 64px - var(--promo-h))",
       }}
     >
       {/* Mobile (< md): single static photo, no carousel, no arrows. */}

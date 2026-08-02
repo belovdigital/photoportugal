@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { QuickBookingTrigger } from "@/components/ui/QuickBookingModal";
@@ -33,11 +33,36 @@ export function PromoTopbar() {
   // Lazy initializer keeps SSR markup identical (false) while the client
   // first render already respects the cookie — no flash for dismissers.
   const [dismissed, setDismissed] = useState(readDismissed);
+  const barRef = useRef<HTMLDivElement>(null);
 
   const stripped = pathname.replace(/^\/(en|pt|de|es|fr)(?=\/|$)/, "") || "/";
-  if (dismissed) return null;
-  if (HIDDEN_PREFIXES.some((p) => stripped.startsWith(p))) return null;
-  if (PROFILE_RE.test(stripped)) return null;
+  const hidden = dismissed
+    || HIDDEN_PREFIXES.some((p) => stripped.startsWith(p))
+    || PROFILE_RE.test(stripped);
+
+  // Publish the bar's real height so the full-viewport sections below can
+  // subtract it — see `--promo-h` in globals.css. The `:has()` rule there
+  // already handles presence vs absence on its own; this only refines the
+  // value, which matters below ~640px where the offer copy wraps onto a
+  // second row and the bar is taller than the 36px it takes on desktop.
+  useEffect(() => {
+    const root = document.documentElement;
+    const el = barRef.current;
+    if (!el) {
+      root.style.removeProperty("--promo-h");
+      return;
+    }
+    const apply = () => root.style.setProperty("--promo-h", `${el.offsetHeight}px`);
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--promo-h");
+    };
+  }, [hidden]);
+
+  if (hidden) return null;
 
   function dismiss() {
     document.cookie = `${DISMISS_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
@@ -45,7 +70,11 @@ export function PromoTopbar() {
   }
 
   return (
-    <div className="relative z-40 bg-gradient-to-r from-amber-500 via-orange-500 to-primary-600 text-white">
+    <div
+      ref={barRef}
+      id="promo-topbar"
+      className="relative z-40 bg-gradient-to-r from-amber-500 via-orange-500 to-primary-600 text-white"
+    >
       <QuickBookingTrigger
         className="mx-auto flex w-full max-w-7xl items-center justify-center gap-x-2 gap-y-0.5 flex-wrap px-8 py-2 text-center text-[13px] sm:text-sm font-medium cursor-pointer"
         onClick={() => trackCTAClick("quick_booking", "promo_topbar")}

@@ -807,7 +807,7 @@ export default async function WeddingsPage({
       ` }} />
 
       {/* ═══ 1. HERO — cinematic, full viewport ═══ */}
-      <section className="relative flex min-h-[calc(100svh-4rem)] items-end overflow-hidden bg-[#1F1B17]">
+      <section className="min-h-below-chrome relative flex items-end overflow-hidden bg-[#1F1B17]">
         {/* Base frame always visible; frames 2-3 crossfade above it */}
         <div className="absolute inset-0">
           <OptimizedImage src={heroPhotos[0]} alt={stl.h1} className="h-full w-full object-cover" />

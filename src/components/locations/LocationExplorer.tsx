@@ -711,7 +711,7 @@ export function LocationExplorer({ locale, mapboxToken, totalPhotographers, cove
           display: none !important;
         }
       `}</style>
-      <div className="relative h-[calc(100svh-64px)] min-h-[620px] lg:h-[calc(100vh-64px)] lg:min-h-[700px]">
+      <div className="h-below-chrome relative min-h-[620px] lg:min-h-[700px]">
         {mapboxToken ? (
           <div className="absolute inset-0 h-full w-full">
             <div ref={mapContainerRef} className="photoportugal-location-map h-full w-full" />

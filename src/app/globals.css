@@ -113,6 +113,29 @@ html {
   body:has(.concierge-page) main { padding-bottom: 0 !important; }
 }
 
+/* Full-viewport sections (heroes, the locations map, the concierge chat)
+ * size themselves as `100svh - fixed chrome`. The chrome is the 64px
+ * header PLUS the promo topbar when it is on screen: the bar sits in
+ * normal flow above the header, so it pushes every one of those sections
+ * down by its own height and they overflow the fold by exactly that much
+ * — which is what cut off the hero carousel's arrows and counter.
+ *
+ * `:has()` keeps this correct with no JavaScript and no hydration jump:
+ * the bar is absent from the markup on hidden routes, and dismissing it
+ * unmounts the node, so the variable falls back to 0px on its own.
+ * PromoTopbar additionally writes the measured height onto <html>, which
+ * matters below ~640px where the offer copy wraps onto a second row and
+ * the bar is taller than the 36px it takes at desktop sizes. */
+:root { --promo-h: 0px; }
+html:has(#promo-topbar) { --promo-h: 36px; }
+
+.h-below-chrome { height: calc(100svh - 64px - var(--promo-h)); }
+.min-h-below-chrome { min-height: calc(100svh - 64px - var(--promo-h)); }
+/* The concierge chat measures in dvh rather than svh on purpose — the
+ * mobile rule above pins body to 100dvh, and a section sized in svh would
+ * come up short and open a strip beneath the chat once the URL bar hides. */
+.h-below-chrome-dvh { height: calc(100dvh - 64px - var(--promo-h)); }
+
 /* Blog HTML content styling — matches the markdown renderer output */
 .blog-html-content h2 {
   @apply mt-10 mb-4 font-display text-2xl font-bold text-gray-900 sm:text-3xl;
