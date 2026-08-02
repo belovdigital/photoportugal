@@ -24,10 +24,20 @@ export async function GET(req: NextRequest) {
   // grace like standard bookings) — the Stripe session already expires
   // after 1h (accept route), so a row still 'pending' at 2h is an
   // abandoned checkout. Cancel it so the admin queue never shows a stale
-  // "awaiting payment" card that looks assignable. No PI exists to void
-  // and no client email — they never paid.
+  // "awaiting payment" card that looks assignable. No PI exists to void.
+  //
+  // These people are NOT cold leads: they picked a region, a date and a
+  // party size, handed over their email, and got as far as Stripe. We paid
+  // for most of them — 3 of the 7 ad-driven bookings on 1-2 Aug died here.
+  // Nothing used to reach them: this sweep only pinged admin on Telegram,
+  // and the generic abandoned-booking cron in reminders/route.ts filters on
+  // `NOT EXISTS (SELECT 1 FROM bookings ...)`, which excludes anyone who
+  // has a cancelled row — i.e. exactly these. They fell between both nets.
   try {
-    const unpaid = await query<{ id: string }>(
+    const unpaid = await query<{
+      id: string; client_id: string; location_slug: string | null;
+      shoot_date: string | null; group_size: number | null; occasion: string | null;
+    }>(
       `UPDATE bookings
           SET status = 'cancelled',
               cancelled_by = 'system',
@@ -37,9 +47,58 @@ export async function GET(req: NextRequest) {
           AND photographer_id IS NULL
           AND payment_status = 'pending'
           AND created_at <= NOW() - INTERVAL '2 hours'
-        RETURNING id`
+        RETURNING id, client_id, location_slug, shoot_date, group_size, occasion`
     );
     results.cancelled_unpaid = unpaid.length;
+
+    // One nudge per person, not per abandoned row — the same visitor often
+    // retries with another date and abandons again (two did on 1-2 Aug), and
+    // three emails about three dead rows reads like a malfunction.
+    const seen = new Set<string>();
+    for (const b of unpaid) {
+      if (seen.has(b.client_id)) continue;
+      seen.add(b.client_id);
+      try {
+        const client = await queryOne<{ email: string; name: string | null }>(
+          "SELECT email, name FROM users WHERE id = $1", [b.client_id]
+        );
+        if (!client?.email) continue;
+
+        // At most one recovery nudge a week per person, so a repeatedly
+        // stalling checkout can't turn into a drip campaign.
+        const recent = await queryOne<{ id: string }>(
+          `SELECT id FROM notification_logs
+            WHERE recipient = $1 AND event LIKE '%finish your booking%'
+              AND created_at > NOW() - INTERVAL '7 days' LIMIT 1`,
+          [client.email]
+        );
+        if (recent) continue;
+
+        const when = b.shoot_date ? new Date(String(b.shoot_date) + "T12:00:00").toLocaleDateString("en-US",
+          { weekday: "long", month: "long", day: "numeric" }) : null;
+        const where = b.location_slug ? b.location_slug.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : null;
+        const detail = [where, when, b.group_size ? `${b.group_size} ${b.group_size === 1 ? "person" : "people"}` : null]
+          .filter(Boolean).join(" · ");
+
+        const { sendEmail } = await import("@/lib/email");
+        await sendEmail(
+          client.email,
+          "Want to finish your booking?",
+          `<div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color:#2A2A2A;">
+            <h2 style="color:#C94536;margin:0 0 16px;">Your session is still available</h2>
+            <p>Hi ${(client.name || "").split(" ")[0] || "there"},</p>
+            <p>You started booking a photoshoot with us but didn't get through checkout${detail ? ` — <strong>${detail}</strong>` : ""}. Nothing was charged.</p>
+            <p>If it was just bad timing, the same session is still there:</p>
+            <p><a href="${country.baseUrl}/quickbook?utm_source=recovery&utm_medium=email" style="display:inline-block;background:#C94536;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Finish booking</a></p>
+            <p style="font-size:14px;color:#666;">And if something went wrong at the payment step, just reply to this email — we read every one and we'd rather fix it than lose you.</p>
+            <p style="color:#999;font-size:12px;">${country.brand} — ${country.baseUrl.replace(/^https?:\/\//, "")}</p>
+          </div>`
+        );
+      } catch (mailErr) {
+        results.errors.push(`recovery email for ${b.id}: ${mailErr instanceof Error ? mailErr.message : String(mailErr)}`);
+      }
+    }
+
     if (unpaid.length > 0) {
       import("@/lib/telegram").then(({ sendTelegram }) =>
         sendTelegram(
