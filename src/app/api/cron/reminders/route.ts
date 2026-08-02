@@ -2079,7 +2079,9 @@ async function runReminders(): Promise<NextResponse> {
             AND NOT (pp.stripe_account_id IS NOT NULL AND COALESCE(pp.stripe_onboarding_complete, FALSE) = TRUE)
             AND NOW() >= pp.stripe_deadline_at - INTERVAL '${7 - day} days'
           RETURNING pp.id, u.email, u.name, u.locale AS locale,
-                    GREATEST(0, EXTRACT(DAY FROM pp.stripe_deadline_at - NOW())::int) AS days_left`
+                    -- Round up: EXTRACT(DAY) truncates, so a deadline six days and 23 hours
+                    -- away was announced as "5 days left" on the first day of the week.
+                    GREATEST(0, CEIL(EXTRACT(EPOCH FROM pp.stripe_deadline_at - NOW()) / 86400)::int) AS days_left`
       );
       for (const p of due) {
         stripeNudged++;

@@ -35,12 +35,13 @@ export async function POST(req: Request) {
     name: string;
     email: string;
     slug: string;
+    locale: string | null;
     is_approved: boolean;
     revision_status: string | null;
     already_requested: boolean;
     checklist_complete: boolean;
   }>(
-    `SELECT pp.id, u.name, u.email, pp.slug, pp.is_approved, pp.revision_status,
+    `SELECT pp.id, u.name, u.email, pp.slug, u.locale, pp.is_approved, pp.revision_status,
             (pp.approval_requested_at IS NOT NULL) AS already_requested,
             (${stageOneCompleteSql("pp", "u", MIN_PORTFOLIO_PHOTOS)}) AS checklist_complete
        FROM photographer_profiles pp
@@ -112,10 +113,13 @@ export async function POST(req: Request) {
     )
     .catch((e) => console.error("[request-approval] admin email failed:", e));
 
-  import("@/lib/email")
-    .then(({ sendApprovalRequestedToPhotographer }) =>
-      sendApprovalRequestedToPhotographer(profile.email, profile.name)
-    )
+  import("@/lib/email-locale")
+    .then(async ({ normalizeLocale }) => {
+      const { sendApprovalRequestedToPhotographer } = await import("@/lib/email");
+      return sendApprovalRequestedToPhotographer(
+        profile.email, profile.name, normalizeLocale(profile.locale)
+      );
+    })
     .catch((e) => console.error("[request-approval] photographer email failed:", e));
 
   return NextResponse.json({ ok: true });
