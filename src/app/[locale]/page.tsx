@@ -24,6 +24,7 @@ import { BrandHero } from "@/components/ui/BrandHero";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
+import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
 
 // Force-dynamic so the random Hero photographer reshuffles on every request
 // rather than getting stuck on whichever person was picked when ISR last ran.
@@ -40,14 +41,27 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   // Pull real numbers for meta descriptions
   let photographerCount = 20;
   let reviewCount = 0;
-  let minPrice = 150;
+  let minPrice = MIN_PACKAGE_PRICE;
   try {
     const { queryOne } = await import("@/lib/db");
     const stats = await queryOne<{ photographers: number; reviews: number; min_price: number; avg_rating: number }>(`
       SELECT
         (SELECT COUNT(*) FROM photographer_profiles WHERE is_approved = TRUE)::int as photographers,
         (SELECT COUNT(*) FROM reviews WHERE is_approved = TRUE)::int as reviews,
-        COALESCE((SELECT MIN(price) FROM packages WHERE custom_for_user_id IS NULL), 150)::int as min_price,
+        -- Only packages a visitor can actually book: from an APPROVED,
+        -- non-test photographer, and public. Without those filters an
+        -- unapproved applicant's package set the site's advertised "from"
+        -- price — a test account created during an end-to-end run put
+        -- "From €320" on the live homepage. The concierge query next door
+        -- already filtered correctly; this one was the outlier.
+        --
+        -- The fallback is the real catalogue floor rather than 150, because
+        -- with no packages the old value advertised a price no photographer
+        -- is allowed to offer.
+        COALESCE((SELECT MIN(pk.price) FROM packages pk
+                  JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
+                  WHERE pp2.is_approved = TRUE AND COALESCE(pp2.is_test, FALSE) = FALSE
+                    AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL), ${MIN_PACKAGE_PRICE})::int as min_price,
         COALESCE((SELECT ROUND(AVG(rating)::numeric, 1) FROM reviews WHERE is_approved = TRUE), 5.0)::float as avg_rating
     `);
     if (stats) {

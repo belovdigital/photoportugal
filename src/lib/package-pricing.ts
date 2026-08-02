@@ -69,3 +69,13 @@ export function isBelowMinimum(durationMinutes: number, price: number): boolean 
   if (!pricing) return false;
   return price < pricing.minPrice;
 }
+
+/**
+ * The lowest price any catalogue package may be set to — the floor for the
+ * shortest duration.
+ *
+ * Used as the "from" price when a market has no packages yet. The homepage
+ * previously fell back to a hardcoded 150, which advertised a price below the
+ * floor the same codebase enforces, so nobody could have offered it.
+ */
+export const MIN_PACKAGE_PRICE = Math.min(...DURATION_OPTIONS.map((o) => o.minPrice));
