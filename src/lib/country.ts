@@ -40,6 +40,12 @@ export interface CountryPack {
    */
   countryName: Record<"en" | "pt" | "de" | "es" | "fr", string>;
   /**
+   * "in <country>", with the preposition already correct for each language.
+   * A template cannot do this: French takes "au Portugal" but "en Espagne",
+   * and naive substitution is exactly how "au Espagne" shipped once already.
+   */
+  countryIn: Record<"en" | "pt" | "de" | "es" | "fr", string>;
+  /**
    * Root-level SEO copy. Full strings rather than a template, because the
    * Portuguese version interpolates a Portugal-only coverage statistic and
    * forcing both markets through one template would either leak that number
@@ -118,6 +124,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     supportEmail: "info@photoportugal.com",
     areaServed: "Portugal",
     countryName: { en: "Portugal", pt: "Portugal", de: "Portugal", es: "Portugal", fr: "Portugal" },
+    countryIn: { en: "in Portugal", pt: "em Portugal", de: "in Portugal", es: "en Portugal", fr: "au Portugal" },
     ogImage: "/og-image.png",
     defaultRegionSlug: "greater-lisbon",
     dpaName: "www.cnpd.pt",
@@ -166,6 +173,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     supportEmail: "info@photospain.co",
     areaServed: "Spain",
     countryName: { en: "Spain", pt: "Espanha", de: "Spanien", es: "España", fr: "Espagne" },
+    countryIn: { en: "in Spain", pt: "em Espanha", de: "in Spanien", es: "en España", fr: "en Espagne" },
     // No Spanish phone line and no social profiles yet — emitting Portugal's
     // would be a false signal to both Google and visitors.
     ogImage: "/og",

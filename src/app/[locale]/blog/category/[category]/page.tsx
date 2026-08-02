@@ -33,7 +33,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const tCat = await getTranslations({ locale, namespace: "blogCategories" });
   const label = tCat(category as typeof CATEGORY_SLUGS[number]);
   const description = tCat(`${category}Desc` as any);
-  const title = `${label} — ${country.areaServed} Photography Blog`;
+  // Was `${label} — ${areaServed} Photography Blog` in every language, so the
+  // Spanish pages read "Parejas — Spain Photography Blog".
+  const BLOG_SUFFIX = {
+    en: `${country.countryName.en} Photography Blog`,
+    pt: `Blog de fotografia ${country.countryIn.pt}`,
+    de: `Fotografie-Blog ${country.countryName.de}`,
+    es: `Blog de fotografía ${country.countryIn.es}`,
+    fr: `Blog photo ${country.countryName.fr}`,
+  } as const;
+  const suffix = BLOG_SUFFIX[locale as keyof typeof BLOG_SUFFIX] ?? BLOG_SUFFIX.en;
+  const title = `${label} — ${suffix}`;
 
   return {
     title,
