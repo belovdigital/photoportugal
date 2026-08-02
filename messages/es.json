@@ -646,7 +646,7 @@
     "step3Desc": "Revise sus matches, consulte sus portafolios y reserve directamente."
   },
   "concierge": {
-    "metaTitle": "Encuentre su fotógrafo en Portugal en 30 segundos",
+    "metaTitle": "Encuentre su fotógrafo en 30 segundos",
     "metaDescription": "Díganos dónde estará y la ocasión — nuestro concierge IA le pone al instante en contacto con los 2–3 mejores fotógrafos de nuestro marketplace.",
     "title1": "Encuentre su fotógrafo en Portugal",
     "title2": "en 30 segundos",
@@ -993,8 +993,8 @@
       "poweredBy": "Con tecnología de"
     },
     "page": {
-      "metaTitle": "Cómo reservar un fotógrafo en Portugal — 4 pasos simples",
-      "metaDescription": "Reserve un fotógrafo profesional en Portugal en 4 pasos simples. Explore portafolios, reserve al instante con pagos seguros Stripe, disfrute de su sesión y reciba las fotos editadas en una galería privada.",
+      "metaTitle": "Cómo reservar un fotógrafo — 4 pasos",
+      "metaDescription": "Reserve un fotógrafo profesional en Portugal en 4 pasos simples. Explore portafolios, reserve al instante con pagos seguros Stripe, disfrute de su sesión.",
       "title": "Cómo reservar un fotógrafo en Portugal",
       "subtitle": "Reservar un fotógrafo profesional en Portugal es simple, seguro y divertido. Aquí todo lo que necesita saber.",
       "forTravelers": "Para viajeros",
@@ -1065,7 +1065,7 @@
     }
   },
   "about": {
-    "metaTitle": "Sobre Photo Portugal — Nuestra historia y misión",
+    "metaTitle": "Sobre nosotros — historia y misión",
     "metaDescription": "Photo Portugal conecta a turistas con fotógrafos locales talentosos en todo Portugal. Conozca nuestra misión y por qué los viajeros confían en nosotros.",
     "heroTitle": "Por qué creamos",
     "heroTitleHighlight": "Photo Portugal",
@@ -1668,8 +1668,8 @@
     "browseByCitySub": "Explore fotógrafos verificados en las principales ciudades de Portugal."
   },
   "faq": {
-    "metaTitle": "FAQ Sesión de fotos de vacaciones en Portugal — Precios, reservas y más",
-    "metaDescription": "Encuentre respuestas a preguntas frecuentes sobre reservar un fotógrafo de vacaciones en Portugal. Precios, política de cancelación, plazos de entrega, lugares y más.",
+    "metaTitle": "Preguntas frecuentes — precios y reservas",
+    "metaDescription": "Encuentre respuestas a preguntas frecuentes sobre reservar un fotógrafo de vacaciones en Portugal.",
     "title": "Preguntas frecuentes",
     "subtitle": "Sesión de fotos de vacaciones en Portugal — Precios, reservas, entrega y más",
     "questions": {
@@ -1770,8 +1770,8 @@
     "helpCenterCtaLink": "Visite nuestro Centro de ayuda"
   },
   "pricing": {
-    "metaTitle": "Paquetes y precios de fotografía — Sesiones de vacaciones en Portugal",
-    "metaDescription": "Paquetes de sesiones de fotos en Portugal desde 299 €. Pareja, familia, solo y pedida de mano. Compare fotógrafos, lea reseñas verificadas. Cancelación gratuita disponible.",
+    "metaTitle": "Paquetes y precios de fotografía",
+    "metaDescription": "Paquetes de sesiones de fotos en Portugal desde 299 €. Pareja, familia, solo y pedida de mano. Compare fotógrafos, lea reseñas verificadas.",
     "title": "Precios simples y transparentes",
     "subtitle": "Empiece gratis, suba de nivel cuando esté listo para crecer",
     "plans": {
@@ -2015,8 +2015,8 @@
     "alreadyPhotographerCta": "Ya eres fotógrafo — abre tu panel"
   },
   "forPhotographers": {
-    "metaTitle": "Únase a Photo Portugal — Gane dinero como fotógrafo de vacaciones en Portugal",
-    "metaDescription": "Únase al marketplace creciente de fotógrafos en Portugal. Conéctese con viajeros internacionales, gestione reservas y haga crecer su negocio fotográfico. Registro gratuito.",
+    "metaTitle": "Gane dinero como fotógrafo en Portugal",
+    "metaDescription": "Únase al marketplace creciente de fotógrafos en Portugal. Conéctese con viajeros internacionales, gestione reservas y haga crecer su negocio fotográfico.",
     "heroTitle": "Concéntrese en fotografiar. Nosotros gestionamos el resto.",
     "heroSubtitle": "Miles de turistas sueñan con fotos hermosas en los lugares más espectaculares de Portugal — y le están buscando. Traemos los clientes, gestionamos las reservas, gestionamos los pagos y le dejamos hacer lo que ama.",
     "joinEarlyBird": "Unirse al programa Early Bird",
@@ -3847,7 +3847,7 @@
     "body": "Estos fotógrafos suelen estar totalmente reservados — sobre todo los fines de semana y en temporada alta. Reserve ahora para asegurar su fecha."
   },
   "tryYourself": {
-    "metaTitle": "Mírese en Portugal — Selfie de Viaje con IA",
+    "metaTitle": "Verse en Portugal — selfie de viaje con IA",
     "metaDescription": "Suba un selfie y mírese en Sintra, Algarve, Oporto y Lisboa. Después reserve un fotógrafo real para la experiencia auténtica.",
     "badge": "Vista previa IA · Gratis",
     "title1": "Mírese a sí mismo",
@@ -4050,8 +4050,8 @@
     "joinFailed": "No se pudo entrar en la llamada. Inténtalo de nuevo."
   },
   "business": {
-    "metaTitle": "Photo Portugal para Empresas — Fotografía Corporativa y de Eventos",
-    "metaDescription": "Fotografía corporativa en todo Portugal: eventos, conferencias, retratos de equipo, contenido de marca. Un contrato, una factura, un gestor de cuenta personal. Presupuesto en un día laborable.",
+    "metaTitle": "Fotografía corporativa y de eventos",
+    "metaDescription": "Fotografía corporativa en todo Portugal: eventos, conferencias, retratos de equipo, contenido de marca.",
     "kicker": "para Empresas",
     "heroTitle": "Fotografía profesional para tu empresa, en cualquier punto de Portugal",
     "heroText": "Eventos, conferencias, retratos de equipo, contenido de marca. Seleccionamos a mano fotógrafos verificados para tu proyecto y lo gestionamos todo — recibes un contrato, una factura y un gestor de cuenta personal, no una carpeta de freelancers.",

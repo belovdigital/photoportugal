@@ -553,8 +553,8 @@
       "poweredBy": "Processado por"
     },
     "page": {
-      "metaTitle": "Como Reservar um Fotógrafo em Portugal — 4 Passos Simples",
-      "metaDescription": "Reserve um fotógrafo profissional em Portugal em 4 passos simples. Explore portfólios, reserve instantaneamente com pagamentos seguros via Stripe, desfrute da sua sessão e receba fotos editadas numa galeria privada.",
+      "metaTitle": "Como reservar um fotógrafo — 4 passos",
+      "metaDescription": "Reserve um fotógrafo profissional em Portugal em 4 passos simples. Explore portfólios, reserve instantaneamente com pagamentos seguros via Stripe.",
       "title": "Como Reservar um Fotógrafo em Portugal",
       "subtitle": "Reservar um fotógrafo profissional em Portugal é simples, seguro e divertido. Aqui está tudo o que precisa de saber.",
       "forTravelers": "Para Viajantes",
@@ -625,8 +625,8 @@
     }
   },
   "faq": {
-    "metaTitle": "FAQ Sessão Fotográfica de Férias em Portugal — Preços, Reservas e Mais",
-    "metaDescription": "Encontre respostas às perguntas mais frequentes sobre reservar um fotógrafo de férias em Portugal. Preços, política de cancelamento, prazos de entrega, localizações e muito mais.",
+    "metaTitle": "FAQ — preços, reservas e entrega",
+    "metaDescription": "Encontre respostas às perguntas mais frequentes sobre reservar um fotógrafo de férias em Portugal.",
     "title": "Perguntas Frequentes",
     "subtitle": "Sessão Fotográfica de Férias em Portugal — Preços, Reservas, Entrega e Mais",
     "questions": {
@@ -727,7 +727,7 @@
     "helpCenterCtaLink": "Visite o nosso Centro de Ajuda"
   },
   "about": {
-    "metaTitle": "Sobre a Photo Portugal — A Nossa História e Missão",
+    "metaTitle": "Sobre nós — história e missão",
     "metaDescription": "A Photo Portugal liga turistas a fotógrafos locais talentosos em todo o Portugal. Conheça a nossa missão e saiba porque os viajantes confiam em nós.",
     "heroTitle": "Porque criámos a",
     "heroTitleHighlight": "Photo Portugal",
@@ -815,8 +815,8 @@
     "helpCenterLink": "Ir para o Centro de Ajuda"
   },
   "pricing": {
-    "metaTitle": "Pacotes e Preços de Fotografia — Sessões Fotográficas de Férias em Portugal",
-    "metaDescription": "Pacotes de sessões fotográficas de férias em Portugal a partir de 299 EUR. Fotografia de casais, família, individual e pedidos de casamento. Compare fotógrafos, leia avaliações verificadas. Cancelamento gratuito disponível.",
+    "metaTitle": "Pacotes e preços de fotografia",
+    "metaDescription": "Pacotes de sessões fotográficas de férias em Portugal a partir de 299 EUR. Fotografia de casais, família, individual e pedidos de casamento.",
     "title": "Preços simples e transparentes",
     "subtitle": "Comece gratuitamente, faça upgrade quando estiver pronto para crescer",
     "plans": {
@@ -1060,8 +1060,8 @@
     "alreadyPhotographerCta": "Já é fotógrafo — abrir o seu painel"
   },
   "forPhotographers": {
-    "metaTitle": "Junte-se à Photo Portugal — Ganhe Dinheiro como Fotógrafo de Férias em Portugal",
-    "metaDescription": "Junte-se ao marketplace de fotógrafos em crescimento em Portugal. Conecte-se com viajantes internacionais, gira reservas e faça crescer o seu negócio de fotografia. Gratuito para começar.",
+    "metaTitle": "Ganhe dinheiro como fotógrafo",
+    "metaDescription": "Junte-se ao marketplace de fotógrafos em crescimento em Portugal. Conecte-se com viajantes internacionais, gira reservas e faça crescer o seu negócio de.",
     "heroTitle": "Concentre-se em fotografar. Nós tratamos do resto.",
     "heroSubtitle": "Milhares de turistas sonham com fotos bonitas das localizações mais deslumbrantes de Portugal — e estão à sua procura. Trazemos os clientes, gerimos as reservas, tratamos dos pagamentos e deixamos que faça o que ama.",
     "joinEarlyBird": "Aderir ao Programa Early Bird",
@@ -3591,7 +3591,7 @@
     "respondsSameDay": "Responde no mesmo dia"
   },
   "concierge": {
-    "metaTitle": "Encontre o seu fotógrafo em Portugal em 30 segundos",
+    "metaTitle": "Encontre o seu fotógrafo em 30 segundos",
     "metaDescription": "Diga-nos onde vai estar e a ocasião — o nosso concierge IA recomenda os 2–3 melhores fotógrafos do nosso marketplace, ao instante.",
     "title1": "Encontre o seu fotógrafo em Portugal",
     "title2": "em 30 segundos",
@@ -3847,7 +3847,7 @@
     "body": "Estes fotógrafos costumam estar totalmente reservados — sobretudo aos fins-de-semana e em época alta. Reserve agora para garantir a sua data."
   },
   "tryYourself": {
-    "metaTitle": "Veja-se em Portugal — Selfie de Viagem com IA",
+    "metaTitle": "Veja-se em Portugal — selfie de viagem IA",
     "metaDescription": "Carregue uma selfie e veja-se em Sintra, Algarve, Porto e Lisboa. Depois reserve um fotógrafo real para a experiência verdadeira.",
     "badge": "Pré-visualização IA · Grátis",
     "title1": "Veja-se a si mesmo",
@@ -4050,8 +4050,8 @@
     "joinFailed": "Não foi possível entrar na chamada. Tente novamente."
   },
   "business": {
-    "metaTitle": "Photo Portugal para Empresas — Fotografia Corporativa e de Eventos",
-    "metaDescription": "Fotografia corporativa em todo o Portugal: eventos, conferências, retratos de equipa, conteúdo de marca. Um contrato, uma fatura, um gestor de conta pessoal. Orçamento num dia útil.",
+    "metaTitle": "Fotografia corporativa e de eventos",
+    "metaDescription": "Fotografia corporativa em todo o Portugal: eventos, conferências, retratos de equipa, conteúdo de marca.",
     "kicker": "para Empresas",
     "heroTitle": "Fotografia profissional para a sua empresa, em qualquer ponto de Portugal",
     "heroText": "Eventos, conferências, retratos de equipa, conteúdo de marca. Escolhemos a dedo fotógrafos verificados para o seu projeto e gerimos tudo — recebe um contrato, uma fatura e um gestor de conta pessoal, não uma pasta de freelancers.",

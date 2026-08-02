@@ -106,7 +106,7 @@
     "locationLabel": "¿Dónde en España?"
   },
   "concierge": {
-    "metaTitle": "Encuentre su fotógrafo en España en 30 segundos",
+    "metaTitle": "Encuentre su fotógrafo en 30 segundos",
     "title1": "Encuentre su fotógrafo en España",
     "openingMessage": "¡Hola! Soy su Smart Concierge para Photo Spain. Dígame dónde estará y la ocasión — le encontraré los fotógrafos adecuados al instante. ✨",
     "conciergeBadge": "Lens · Photo Spain",
@@ -182,15 +182,15 @@
   "howItWorks": {
     "whyUsTitle": "¿Por qué Photo Spain?",
     "page": {
-      "metaTitle": "Cómo reservar un fotógrafo en España — 4 pasos simples",
-      "metaDescription": "Reserve un fotógrafo profesional en España en 4 pasos simples. Explore portafolios, reserve al instante con pagos seguros Stripe, disfrute de su sesión y reciba las fotos editadas en una galería privada.",
+      "metaTitle": "Cómo reservar un fotógrafo — 4 pasos",
+      "metaDescription": "Reserve un fotógrafo profesional en España en 4 pasos simples. Explore portafolios, reserve al instante con pagos seguros Stripe, disfrute de su sesión y.",
       "title": "Cómo reservar un fotógrafo en España",
       "subtitle": "Reservar un fotógrafo profesional en España es simple, seguro y divertido. Aquí todo lo que necesita saber.",
       "forPhotographersSubtitle": "Únase a la comunidad creciente de fotógrafos de vacaciones en España y llegue a clientes internacionales."
     }
   },
   "about": {
-    "metaTitle": "Sobre Photo Spain — Nuestra historia y misión",
+    "metaTitle": "Sobre nosotros — historia y misión",
     "metaDescription": "Photo Spain conecta a turistas con fotógrafos locales talentosos en toda España. Conozca nuestra misión y por qué los viajeros confían en nosotros.",
     "heroTitleHighlight": "Photo Spain",
     "theProblem": {
@@ -298,8 +298,8 @@
     "browseByCitySub": "Explore fotógrafos verificados en las principales ciudades de España."
   },
   "faq": {
-    "metaTitle": "FAQ Sesión de fotos de vacaciones en España — Precios, reservas y más",
-    "metaDescription": "Encuentre respuestas a preguntas frecuentes sobre reservar un fotógrafo de vacaciones en España. Precios, política de cancelación, plazos de entrega, lugares y más.",
+    "metaTitle": "Preguntas frecuentes — precios y reservas",
+    "metaDescription": "Encuentre respuestas a preguntas frecuentes sobre reservar un fotógrafo de vacaciones en España.",
     "subtitle": "Sesión de fotos de vacaciones en España — Precios, reservas, entrega y más",
     "questions": {
       "howDoesItWork": {
@@ -320,8 +320,8 @@
     }
   },
   "pricing": {
-    "metaTitle": "Paquetes y precios de fotografía — Sesiones de vacaciones en España",
-    "metaDescription": "Paquetes de sesiones de fotos en España desde 299 €. Pareja, familia, solo y pedida de mano. Compare fotógrafos, lea reseñas verificadas. Cancelación gratuita disponible."
+    "metaTitle": "Paquetes y precios de fotografía",
+    "metaDescription": "Paquetes de sesiones de fotos en España desde 299 €. Pareja, familia, solo y pedida de mano. Compare fotógrafos, lea reseñas verificadas."
   },
   "join": {
     "heroSubtitle": "Estamos construyendo el marketplace fotográfico número uno en España para turistas. Únase ahora y asegure beneficios exclusivos antes del lanzamiento público.",
@@ -358,8 +358,8 @@
     }
   },
   "forPhotographers": {
-    "metaTitle": "Únase a Photo Spain — Gane dinero como fotógrafo de vacaciones en España",
-    "metaDescription": "Únase al marketplace creciente de fotógrafos en España. Conéctese con viajeros internacionales, gestione reservas y haga crecer su negocio fotográfico. Registro gratuito.",
+    "metaTitle": "Gane dinero como fotógrafo en España",
+    "metaDescription": "Únase al marketplace creciente de fotógrafos en España. Conéctese con viajeros internacionales, gestione reservas y haga crecer su negocio fotográfico.",
     "heroSubtitle": "Miles de turistas sueñan con fotos hermosas en los lugares más espectaculares de España — y le están buscando. Traemos los clientes, gestionamos las reservas, gestionamos los pagos y le dejamos hacer lo que ama.",
     "whyJoin": {
       "title": "¿Por qué unirse a Photo Spain?",
@@ -584,8 +584,8 @@
     "consentText": "Por la seguridad de todos, las llamadas en Photo Spain pueden grabarse y transcribirse. La transcripción se adjunta a este chat y la grabación se elimina justo después. Al unirte, aceptas esto."
   },
   "business": {
-    "metaTitle": "Photo Spain para Empresas — Fotografía Corporativa y de Eventos",
-    "metaDescription": "Fotografía corporativa en toda España: eventos, conferencias, retratos de equipo, contenido de marca. Un contrato, una factura, un gestor de cuenta personal. Presupuesto en un día laborable.",
+    "metaTitle": "Fotografía corporativa y de eventos",
+    "metaDescription": "Fotografía corporativa en toda España: eventos, conferencias, retratos de equipo, contenido de marca.",
     "heroTitle": "Fotografía profesional para tu empresa, en cualquier punto de España",
     "how3Text": "Photo Spain es tu contraparte única: contrato, factura con IVA, plazos de entrega y calidad corren de nuestra cuenta.",
     "cases": {
@@ -604,7 +604,7 @@
     "trustPhotographers": "{count} fotógrafos verificados en toda España"
   },
   "tryYourself": {
-    "metaTitle": "Pruébate en España — Selfie de viaje con IA",
+    "metaTitle": "Verse en España — selfie de viaje con IA",
     "metaDescription": "Sube un selfie y verte en la Alhambra, el Park Güell, Ronda y Mallorca. Después reserva un fotógrafo real para hacerlo de verdad.",
     "stat_locations": "📍 Barcelona · Madrid · Sevilla · Granada · Mallorca · Tenerife",
     "title2": "en España",

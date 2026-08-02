@@ -35,7 +35,7 @@ export const locationsES: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in Barcelona — Book a Professional Photoshoot",
     seo_description:
-      "Book a professional photographer in Barcelona. Couples, family, proposal and solo photoshoots at Park Güell, the Gothic Quarter, Bunkers del Carmel and the beach. Verified reviews.",
+      "Book a professional photographer in Barcelona. Couples, family, proposal and solo photoshoots at Park Güell, the Gothic Quarter, Bunkers del Carmel and.",
     seo_title_de: "Fotograf in Barcelona — Shooting buchen",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Barcelona. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
     seo_title_fr: "Photographe à Barcelone — séance photo",
@@ -47,7 +47,7 @@ export const locationsES: Location[] = [
       "Barcelona ofrece más escenarios por kilómetro cuadrado que cualquier otra ciudad española. Las mañanas son del Barrio Gótico, donde la luz entra en diagonal entre callejones de piedra que aún están tranquilos antes de las diez. El Park Güell y la Casa Batlló aportan el color y las curvas de Gaudí, los Búnkers del Carmel regalan la mejor panorámica al atardecer, y la Barceloneta cierra el día con mar, arena y sombras de palmeras. Las parejas eligen el casco antiguo, las familias el paseo marítimo, y las pedidas de mano casi siempre ocurren en una azotea con la Sagrada Família recortada en el horizonte.",
     seo_title_es: "Fotógrafo en Barcelona — sesión de fotos",
     seo_description_es:
-      "Reserva un fotógrafo profesional en Barcelona. Sesiones de pareja, familia, pedida de mano y solo en el Park Güell, el Barrio Gótico, los Búnkers del Carmel y la playa.",
+      "Reserva un fotógrafo profesional en Barcelona. Sesiones de pareja, familia, pedida de mano y solo en el Park Güell, el Barrio Gótico, los Búnkers del.",
     name_de: "Barcelona",
     description_de:
       "Gaudís Mosaike, gotische Gassen und Mittelmeerstrand am selben Nachmittag — Spaniens fotogenste Stadt.",
@@ -71,7 +71,7 @@ export const locationsES: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in Sitges — Beach & Couple Photoshoots",
     seo_description:
-      "Book a professional photographer in Sitges. Couple, engagement and family photoshoots on the promenade, the old town and the beaches, 40 minutes from Barcelona.",
+      "Book a professional photographer in Sitges. Couple, engagement and family photoshoots on the promenade, the old town and the beaches, 40 minutes from.",
     seo_title_de: "Fotograf in Sitges — Paare und Strand",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Sitges. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
     seo_title_fr: "Photographe à Sitges — couple et plage",
@@ -181,7 +181,7 @@ export const locationsES: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in Madrid — Book a Professional Photoshoot",
     seo_description:
-      "Book a professional photographer in Madrid. Couple, family, proposal and solo photoshoots at Templo de Debod, Retiro Park, Plaza Mayor and the Royal Palace.",
+      "Book a professional photographer in Madrid. Couple, family, proposal and solo photoshoots at Templo de Debod, Retiro Park, Plaza Mayor and the Royal.",
     seo_title_de: "Fotograf in Madrid — Shooting buchen",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Madrid. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
     seo_title_fr: "Photographe à Madrid — séance photo",
@@ -193,7 +193,7 @@ export const locationsES: Location[] = [
       "Madrid premia a quien fotografía tarde. La imagen insignia de la ciudad es el Templo de Debod al atardecer, reflejado en el agua quieta con todo el cielo de poniente detrás; por eso aquí las pedidas de mano se cronometran al minuto. Antes, el Retiro aporta verde, el Palacio de Cristal y el estanque; la Plaza Mayor y las calles de La Latina, piedra cálida y balcones; la Gran Vía, la ciudad más cinematográfica. Las familias eligen el Retiro, las parejas el casco antiguo, y el Palacio Real funciona como un fondo de pura escala.",
     seo_title_es: "Fotógrafo en Madrid — sesión de fotos",
     seo_description_es:
-      "Reserva un fotógrafo profesional en Madrid. Sesiones de pareja, familia, pedida de mano y solo en el Templo de Debod, el Retiro, la Plaza Mayor y el Palacio Real.",
+      "Reserva un fotógrafo profesional en Madrid. Sesiones de pareja, familia, pedida de mano y solo en el Templo de Debod, el Retiro, la Plaza Mayor y el.",
     name_de: "Madrid",
     description_de:
       "Prachtboulevards, ein Königspalast und der Sonnenuntergang am Templo de Debod — die Hauptstadt fotografiert man am besten abends.",
@@ -765,7 +765,7 @@ export const locationsES: Location[] = [
     photographer_count: 0,
     seo_title: "Photographer in Valencia — City & Beach Photoshoots",
     seo_description:
-      "Book a professional photographer in Valencia. Couple, family and solo photoshoots at the City of Arts and Sciences, the old town, Turia gardens and Malvarrosa beach.",
+      "Book a professional photographer in Valencia. Couple, family and solo photoshoots at the City of Arts and Sciences, the old town, Turia gardens and.",
     seo_title_de: "Fotograf in Valencia — Stadt und Strand",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Valencia. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
     seo_title_fr: "Photographe à Valence — ville et plage",
@@ -777,7 +777,7 @@ export const locationsES: Location[] = [
       "La ventaja de Valencia es el contraste a distancia de paseo. La Ciudad de las Artes y las Ciencias es un conjunto de edificios blancos escultóricos rodeados de láminas de agua: limpio, moderno y sin equivalente en España. El casco antiguo es lo contrario: la Lonja de la Seda, la catedral, las calles estrechas y los muros pintados del Barrio del Carmen. Entre ambos, los jardines del Turia recorren nueve kilómetros por el cauce desviado del río, llenos de naranjos y palmeras. La Malvarrosa cierra el día. Cálida de abril a octubre y bastante menos saturada que Barcelona.",
     seo_title_es: "Fotógrafo en Valencia — ciudad y playa",
     seo_description_es:
-      "Reserva un fotógrafo profesional en Valencia. Sesiones de pareja, familia y solo en la Ciudad de las Artes y las Ciencias, el casco antiguo, el Turia y la Malvarrosa.",
+      "Reserva un fotógrafo profesional en Valencia. Sesiones de pareja, familia y solo en la Ciudad de las Artes y las Ciencias, el casco antiguo, el Turia y la.",
     name_de: "Valencia",
     description_de:
       "Futuristische weiße Architektur, ein zum Park umgebautes Flussbett und ein breiter Stadtstrand.",
@@ -879,9 +879,9 @@ export const locationsES: Location[] = [
     seo_description:
       "Book a professional photographer in Santiago de Compostela. Couple, family, solo and Camino arrival photoshoots at the cathedral and the old town.",
     seo_title_de: "Fotograf in Santiago de Compostela",
-    seo_description_de: "Buchen Sie einen professionellen Fotografen in Santiago de Compostela. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
+    seo_description_de: "Buchen Sie einen professionellen Fotografen in Santiago de Compostela. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten.",
     seo_title_fr: "Photographe à Saint-Jacques-de-Compostelle",
-    seo_description_fr: "Réservez un photographe professionnel à Saint-Jacques-de-Compostelle. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
+    seo_description_fr: "Réservez un photographe professionnel à Saint-Jacques-de-Compostelle. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux.",
     name_es: "Santiago de Compostela",
     description_es:
       "El final del Camino: una catedral de granito sobre una plaza inmensa, calles con soportales y niebla atlántica.",

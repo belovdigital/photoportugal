@@ -122,15 +122,15 @@
   "howItWorks": {
     "whyUsTitle": "Why Photo Spain?",
     "page": {
-      "metaTitle": "How to Book a Photographer in Spain — 4 Simple Steps",
-      "metaDescription": "Book a professional photographer in Spain in 4 simple steps. Browse portfolios, book instantly with secure Stripe payments, enjoy your photoshoot, and receive edited photos in a private gallery.",
+      "metaTitle": "How to Book a Photographer — 4 Steps",
+      "metaDescription": "Book a professional photographer in Spain in 4 simple steps. Browse portfolios, book instantly with secure Stripe payments, enjoy your photoshoot, and.",
       "title": "How to Book a Photographer in Spain",
       "subtitle": "Booking a professional photographer in Spain is simple, safe, and fun. Here's everything you need to know.",
       "forPhotographersSubtitle": "Join Spain's growing community of vacation photographers and reach international clients."
     }
   },
   "faq": {
-    "metaTitle": "Vacation Photoshoot Spain FAQ — Pricing, Booking & More",
+    "metaTitle": "FAQ — pricing, booking and delivery",
     "metaDescription": "Find answers to common questions about booking a vacation photographer in Spain. Pricing, cancellation policy, delivery times, locations, and more.",
     "subtitle": "Vacation Photoshoot in Spain — Pricing, Booking, Delivery & More",
     "questions": {
@@ -152,7 +152,7 @@
     }
   },
   "about": {
-    "metaTitle": "About Photo Spain — Our Story & Mission",
+    "metaTitle": "About us — our story and mission",
     "metaDescription": "Photo Spain connects tourists with talented local photographers across Spain. Learn about our mission and why travelers trust us.",
     "heroTitleHighlight": "Photo Spain",
     "theProblem": {
@@ -178,8 +178,8 @@
     "metaDescription": "Get in touch with Photo Spain. Questions about bookings, photographer accounts, or partnerships? We're here to help."
   },
   "pricing": {
-    "metaTitle": "Photography Packages & Pricing — Vacation Photoshoots in Spain",
-    "metaDescription": "Vacation photoshoot packages in Spain from EUR299. Couples, family, solo & proposal photography. Compare photographers, read verified reviews. Free cancellation available."
+    "metaTitle": "Photography Packages & Pricing",
+    "metaDescription": "Vacation photoshoot packages in Spain from EUR299. Couples, family, solo & proposal photography. Compare photographers, read verified reviews."
   },
   "join": {
     "heroSubtitle": "We're building Spain's premier photography marketplace for tourists. Join now and lock in exclusive benefits before we launch publicly.",
@@ -216,7 +216,7 @@
     }
   },
   "forPhotographers": {
-    "metaTitle": "Join Photo Spain — Earn Money as a Vacation Photographer in Spain",
+    "metaTitle": "Earn as a Vacation Photographer in Spain",
     "metaDescription": "Join Spain's growing photographer marketplace. Connect with international travelers, manage bookings, and grow your photography business. Free to get started.",
     "heroSubtitle": "Thousands of tourists dream of beautiful photos from Spain's most stunning locations — and they're looking for you. We bring the clients, manage bookings, handle payments, and let you do what you love.",
     "whyJoin": {
@@ -520,7 +520,7 @@
     "allInclusive": "One all-in price — we hand-pick your photographer from our vetted top 1% of Spain pros. No extra fees."
   },
   "concierge": {
-    "metaTitle": "Find your Spain photographer in 30 seconds",
+    "metaTitle": "Find your photographer in 30 seconds",
     "title1": "Find your Spain photographer",
     "openingMessage": "Hi! I'm your Smart Concierge for Photo Spain. Tell me where you'll be and the occasion — I'll match you with the right photographers instantly. ✨",
     "conciergeBadge": "Lens · Photo Spain",
@@ -590,8 +590,8 @@
     "consentText": "To keep everyone safe, calls on Photo Spain may be recorded and transcribed. The transcript is attached to this chat and the recording is deleted right after. By joining you agree to this."
   },
   "business": {
-    "metaTitle": "Photo Spain for Business — Corporate & Event Photography",
-    "metaDescription": "Corporate photography across Spain: events, conferences, team headshots, brand content. One contract, one invoice, a personal account manager. Get a quote within one business day.",
+    "metaTitle": "Corporate & Event Photography",
+    "metaDescription": "Corporate photography across Spain: events, conferences, team headshots, brand content. One contract, one invoice, a personal account manager.",
     "heroTitle": "Professional photography for your company, anywhere in Spain",
     "how3Text": "Photo Spain is your single counterparty: contract, VAT invoice, delivery deadlines and quality are on us.",
     "cases": {
@@ -610,7 +610,7 @@
     "trustPhotographers": "{count} vetted photographers across Spain"
   },
   "tryYourself": {
-    "metaTitle": "Try Yourself in Spain — AI Travel Selfie",
+    "metaTitle": "See Yourself in Spain — AI Travel Selfie",
     "metaDescription": "Upload a selfie and see yourself at the Alhambra, Park Güell, Ronda and Mallorca. Then book a real photographer for the real thing.",
     "stat_locations": "📍 Barcelona · Madrid · Seville · Granada · Mallorca · Tenerife",
     "title2": "in Spain",

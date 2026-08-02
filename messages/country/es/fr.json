@@ -107,7 +107,7 @@
     "locationLabel": "Où en Espagne ?"
   },
   "concierge": {
-    "metaTitle": "Trouvez votre photographe en Espagne en 30 secondes",
+    "metaTitle": "Trouvez votre photographe en 30 s",
     "title1": "Trouvez votre photographe en Espagne",
     "openingMessage": "Salut ! Je suis votre Smart Concierge pour Photo Spain. Dites-moi où vous serez et l'occasion — je vous trouve les bons photographes instantanément. ✨",
     "nudge": {
@@ -183,16 +183,16 @@
   "howItWorks": {
     "whyUsTitle": "Pourquoi Photo Spain ?",
     "page": {
-      "metaTitle": "Comment réserver un photographe en Espagne — 4 étapes simples",
-      "metaDescription": "Réservez un photographe professionnel en Espagne en 4 étapes simples. Parcourez les portfolios, réservez instantanément avec des paiements sécurisés Stripe, profitez de votre séance et recevez les photos éditées dans une galerie privée.",
+      "metaTitle": "Réserver un photographe — 4 étapes",
+      "metaDescription": "Réservez un photographe professionnel en Espagne en 4 étapes simples. Parcourez les portfolios, réservez instantanément avec des paiements sécurisés.",
       "title": "Comment réserver un photographe en Espagne",
       "subtitle": "Réserver un photographe professionnel en Espagne est simple, sûr et amusant. Voici tout ce que vous devez savoir.",
       "forPhotographersSubtitle": "Rejoignez la communauté grandissante des photographes de vacances en Espagne et atteignez une clientèle internationale."
     }
   },
   "faq": {
-    "metaTitle": "FAQ Séance photo de vacances en Espagne — Tarifs, réservation et plus",
-    "metaDescription": "Trouvez des réponses aux questions fréquentes sur la réservation d'un photographe de vacances en Espagne. Tarifs, politique d'annulation, délais de livraison, lieux et plus.",
+    "metaTitle": "FAQ — tarifs, réservation et livraison",
+    "metaDescription": "Trouvez des réponses aux questions fréquentes sur la réservation d'un photographe de vacances en Espagne.",
     "subtitle": "Séance photo de vacances en Espagne — Tarifs, réservation, livraison et plus",
     "questions": {
       "howDoesItWork": {
@@ -213,8 +213,8 @@
     }
   },
   "about": {
-    "metaTitle": "À propos de Photo Spain — Notre histoire et mission",
-    "metaDescription": "Photo Spain connecte les touristes avec des photographes locaux talentueux à travers l'Espagne. Découvrez notre mission et pourquoi les voyageurs nous font confiance.",
+    "metaTitle": "À propos — notre histoire et mission",
+    "metaDescription": "Photo Spain connecte les touristes avec des photographes locaux talentueux à travers l'Espagne.",
     "heroTitleHighlight": "Photo Spain",
     "theProblem": {
       "text": "L’Espagne est l'un des pays les plus photogéniques d'Europe. La lumière dorée de Madrid, le bord de fleuve dramatique de Barcelone, les palais de conte de fées de Tolède, la beauté côtière brute de l'Costa del Sol — c'est un rêve de photographe. Pourtant, chaque année, des millions de touristes rentrent chez eux avec rien d'autre que des selfies flous et des photos maladroites prises par des inconnus."
@@ -239,8 +239,8 @@
     "metaDescription": "Contactez Photo Spain. Questions sur les réservations, comptes photographes ou partenariats ? Nous sommes là pour aider."
   },
   "pricing": {
-    "metaTitle": "Forfaits et tarifs photographie — Séances de vacances en Espagne",
-    "metaDescription": "Forfaits de séances photo en Espagne à partir de 299 €. Couples, famille, solo et demande en mariage. Comparez les photographes, lisez les avis vérifiés. Annulation gratuite disponible."
+    "metaTitle": "Forfaits et tarifs photographie",
+    "metaDescription": "Forfaits de séances photo en Espagne à partir de 299 €. Couples, famille, solo et demande en mariage. Comparez les photographes, lisez les avis vérifiés."
   },
   "join": {
     "heroSubtitle": "Nous construisons le marketplace photographique numéro un en Espagne pour les touristes. Rejoignez maintenant et verrouillez des avantages exclusifs avant le lancement public.",
@@ -263,8 +263,8 @@
     "founderQuote": "J'ai créé Photo Spain parce que je sais à quel point il est difficile pour des photographes talentueux de trouver des clients réguliers. Cette plateforme amène les touristes directement à vous — pas de prospection, pas de négociation de prix. Vous vous concentrez sur ce que vous aimez : créer de belles photos."
   },
   "forPhotographers": {
-    "metaTitle": "Rejoindre Photo Spain — Gagnez de l'argent en tant que photographe de vacances en Espagne",
-    "metaDescription": "Rejoignez le marketplace grandissant des photographes en Espagne. Connectez-vous avec des voyageurs internationaux, gérez les réservations et développez votre activité photo. Inscription gratuite.",
+    "metaTitle": "Gagnez votre vie comme photographe",
+    "metaDescription": "Rejoignez le marketplace grandissant des photographes en Espagne. Connectez-vous avec des voyageurs internationaux, gérez les réservations et développez.",
     "heroSubtitle": "Des milliers de touristes rêvent de belles photos dans les plus beaux lieux d'Espagne — et ils vous cherchent. Nous amenons les clients, gérons les réservations, gérons les paiements et vous laissons faire ce que vous aimez.",
     "whyJoin": {
       "title": "Pourquoi rejoindre Photo Spain ?",
@@ -571,8 +571,8 @@
     "consentText": "Pour la sécurité de tous, les appels sur Photo Spain peuvent être enregistrés et transcrits. La transcription est jointe à cette conversation et l’enregistrement est supprimé juste après. En rejoignant, vous acceptez ces conditions."
   },
   "business": {
-    "metaTitle": "Photo Spain pour les Entreprises — Photographie Corporate & Événementielle",
-    "metaDescription": "Photographie corporate dans tout l'Espagne : événements, conférences, portraits d'équipe, contenu de marque. Un contrat, une facture, un account manager dédié. Devis sous un jour ouvré.",
+    "metaTitle": "Photographie corporate et événements",
+    "metaDescription": "Photographie corporate dans tout l'Espagne : événements, conférences, portraits d'équipe, contenu de marque.",
     "heroTitle": "Une photographie professionnelle pour votre entreprise, partout en Espagne",
     "how3Text": "Photo Spain est votre contrepartie unique : contrat, facture avec TVA, délais de livraison et qualité sont notre affaire.",
     "cases": {
@@ -596,7 +596,7 @@
     "whileYouWait": "En attendant, découvrez quelques photographes d'Espagne",
     "stat_photographers": "✨ Des photographes triés sur le volet partout en Espagne",
     "stat_locations": "📍 Barcelone · Madrid · Séville · Grenade · Majorque · Tenerife",
-    "metaTitle": "Voyez-vous en Espagne — Selfie de Voyage par IA",
+    "metaTitle": "Selfie de voyage par IA",
     "metaDescription": "Téléchargez un selfie et voyez-vous à Grenade, Barcelone, Séville et Madrid. Puis réservez un vrai photographe pour la vraie expérience.",
     "scenes": {
       "alhambra-granada": {

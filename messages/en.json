@@ -553,8 +553,8 @@
       "poweredBy": "Powered by"
     },
     "page": {
-      "metaTitle": "How to Book a Photographer in Portugal — 4 Simple Steps",
-      "metaDescription": "Book a professional photographer in Portugal in 4 simple steps. Browse portfolios, book instantly with secure Stripe payments, enjoy your photoshoot, and receive edited photos in a private gallery.",
+      "metaTitle": "How to Book a Photographer — 4 Steps",
+      "metaDescription": "Book a professional photographer in Portugal in 4 simple steps. Browse portfolios, book instantly with secure Stripe payments, enjoy your photoshoot, and.",
       "title": "How to Book a Photographer in Portugal",
       "subtitle": "Booking a professional photographer in Portugal is simple, safe, and fun. Here's everything you need to know.",
       "forTravelers": "For Travelers",
@@ -625,7 +625,7 @@
     }
   },
   "faq": {
-    "metaTitle": "Vacation Photoshoot Portugal FAQ — Pricing, Booking & More",
+    "metaTitle": "FAQ — pricing, booking and delivery",
     "metaDescription": "Find answers to common questions about booking a vacation photographer in Portugal. Pricing, cancellation policy, delivery times, locations, and more.",
     "title": "Frequently Asked Questions",
     "subtitle": "Vacation Photoshoot in Portugal — Pricing, Booking, Delivery & More",
@@ -727,7 +727,7 @@
     "helpCenterCtaLink": "Visit our Help Center"
   },
   "about": {
-    "metaTitle": "About Photo Portugal — Our Story & Mission",
+    "metaTitle": "About us — our story and mission",
     "metaDescription": "Photo Portugal connects tourists with talented local photographers across Portugal. Learn about our mission and why travelers trust us.",
     "heroTitle": "Why we built",
     "heroTitleHighlight": "Photo Portugal",
@@ -815,8 +815,8 @@
     "helpCenterLink": "Go to Help Center"
   },
   "pricing": {
-    "metaTitle": "Photography Packages & Pricing — Vacation Photoshoots in Portugal",
-    "metaDescription": "Vacation photoshoot packages in Portugal from EUR299. Couples, family, solo & proposal photography. Compare photographers, read verified reviews. Free cancellation available.",
+    "metaTitle": "Photography Packages & Pricing",
+    "metaDescription": "Vacation photoshoot packages in Portugal from EUR299. Couples, family, solo & proposal photography. Compare photographers, read verified reviews.",
     "title": "Simple, transparent pricing",
     "subtitle": "Start for free, upgrade when you're ready to grow",
     "plans": {
@@ -1055,8 +1055,8 @@
     "alreadyPhotographerCta": "You're already a photographer — open your dashboard"
   },
   "forPhotographers": {
-    "metaTitle": "Join Photo Portugal — Earn Money as a Vacation Photographer in Portugal",
-    "metaDescription": "Join Portugal's growing photographer marketplace. Connect with international travelers, manage bookings, and grow your photography business. Free to get started.",
+    "metaTitle": "Earn as a Vacation Photographer in Portugal",
+    "metaDescription": "Join Portugal's growing photographer marketplace. Connect with international travelers, manage bookings, and grow your photography business.",
     "heroTitle": "Focus on shooting. We handle the rest.",
     "heroSubtitle": "Thousands of tourists dream of beautiful photos from Portugal's most stunning locations — and they're looking for you. We bring the clients, manage bookings, handle payments, and let you do what you love.",
     "joinEarlyBird": "Join Early Bird Program",
@@ -3585,7 +3585,7 @@
     "respondsSameDay": "Responds same day"
   },
   "concierge": {
-    "metaTitle": "Find your Portugal photographer in 30 seconds",
+    "metaTitle": "Find your photographer in 30 seconds",
     "metaDescription": "Tell us where you'll be and the occasion — our AI concierge instantly matches you with the 2–3 best photographers from our marketplace.",
     "title1": "Find your Portugal photographer",
     "title2": "in 30 seconds",
@@ -3841,7 +3841,7 @@
     "body": "These photographers are usually fully booked — especially on weekends and during peak season. Book now to secure your preferred date."
   },
   "tryYourself": {
-    "metaTitle": "Try Yourself in Portugal — AI Travel Selfie",
+    "metaTitle": "See Yourself in Portugal — AI Travel Selfie",
     "metaDescription": "Upload a selfie and see yourself at Sintra, Algarve, Porto and Lisbon. Then book a real photographer for the real thing.",
     "badge": "AI Preview · Free",
     "title1": "See yourself",
@@ -4044,8 +4044,8 @@
     "joinFailed": "Could not join the call. Please try again."
   },
   "business": {
-    "metaTitle": "Photo Portugal for Business — Corporate & Event Photography",
-    "metaDescription": "Corporate photography across Portugal: events, conferences, team headshots, brand content. One contract, one invoice, a personal account manager. Get a quote within one business day.",
+    "metaTitle": "Corporate & Event Photography",
+    "metaDescription": "Corporate photography across Portugal: events, conferences, team headshots, brand content. One contract, one invoice, a personal account manager.",
     "kicker": "for Business",
     "heroTitle": "Professional photography for your company, anywhere in Portugal",
     "heroText": "Events, conferences, team headshots, brand content. We hand-pick vetted photographers for your project and manage everything — you get one contract, one invoice and a personal account manager, not a folder of freelancers.",

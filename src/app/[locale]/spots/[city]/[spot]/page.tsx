@@ -214,7 +214,13 @@ export async function generateMetadata({
   // on boilerplate and cut the place off. `absolute` drops the "| Photo Spain"
   // the root template appends, buying back another fourteen characters that
   // said nothing a searcher was looking for.
-  const title = `${s.name}, ${location.name} — ${t.titleSuffix}`;
+  // The suffix only earns its place if the whole thing still fits a result.
+  // Some spot names are 40+ characters on their own, and "— Sesión de fotos"
+  // repeated after a truncated place name helps nobody.
+  const titleCore = `${s.name}, ${location.name}`;
+  const title = titleCore.length + t.titleSuffix.length + 3 <= 60
+    ? `${titleCore} — ${t.titleSuffix}`
+    : titleCore;
   // t.countryName, not country.areaServed: areaServed is the schema.org value
   // and is always English, which produced "…, Barcelona, Spain" inside 45
   // Spanish meta descriptions.

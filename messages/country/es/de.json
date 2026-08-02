@@ -120,15 +120,15 @@
   "howItWorks": {
     "whyUsTitle": "Warum Photo Spain?",
     "page": {
-      "metaTitle": "So buchen Sie einen Fotografen in Spanien — 4 einfache Schritte",
-      "metaDescription": "Buchen Sie einen professionellen Fotografen in Spanien in 4 einfachen Schritten. Portfolios durchsuchen, sofort mit sicheren Stripe-Zahlungen buchen, Ihr Fotoshooting genießen und bearbeitete Fotos in einer privaten Galerie erhalten.",
+      "metaTitle": "Fotograf buchen — in 4 Schritten",
+      "metaDescription": "Buchen Sie einen professionellen Fotografen in Spanien in 4 einfachen Schritten. Portfolios durchsuchen, sofort mit sicheren Stripe-Zahlungen buchen, Ihr.",
       "title": "So buchen Sie einen Fotografen in Spanien",
       "subtitle": "Einen professionellen Fotografen in Spanien zu buchen ist einfach, sicher und macht Spaß. Hier ist alles, was Sie wissen müssen.",
       "forPhotographersSubtitle": "Werden Sie Teil von Spaniens wachsender Community von Urlaubsfotografen und erreichen Sie internationale Kunden."
     }
   },
   "faq": {
-    "metaTitle": "FAQ Urlaubs-Fotoshooting Spanien — Preise, Buchung & mehr",
+    "metaTitle": "FAQ — Preise, Buchung und Lieferung",
     "metaDescription": "Antworten auf häufige Fragen zur Buchung eines Urlaubsfotografen in Spanien. Preise, Stornierungsbedingungen, Lieferzeiten, Orte und mehr.",
     "subtitle": "Urlaubs-Fotoshooting in Spanien — Preise, Buchung, Lieferung & mehr",
     "questions": {
@@ -150,7 +150,7 @@
     }
   },
   "about": {
-    "metaTitle": "Über Photo Spain — Unsere Geschichte & Mission",
+    "metaTitle": "Über uns — Geschichte und Mission",
     "metaDescription": "Photo Spain verbindet Touristen mit talentierten lokalen Fotografen in ganz Spanien. Erfahren Sie mehr über unsere Mission und warum Reisende uns vertrauen.",
     "heroTitleHighlight": "Photo Spain",
     "theProblem": {
@@ -176,8 +176,8 @@
     "metaDescription": "Nehmen Sie Kontakt mit Photo Spain auf. Fragen zu Buchungen, Fotografen-Konten oder Partnerschaften? Wir sind für Sie da."
   },
   "pricing": {
-    "metaTitle": "Foto-Pakete & Preise — Urlaubs-Fotoshootings in Spanien",
-    "metaDescription": "Urlaubs-Fotoshooting-Pakete in Spanien ab 299 EUR. Paar-, Familien-, Solo- und Heiratsantrag-Fotografie. Fotografen vergleichen, verifizierte Bewertungen lesen. Kostenlose Stornierung verfügbar."
+    "metaTitle": "Foto-Pakete und Preise",
+    "metaDescription": "Urlaubs-Fotoshooting-Pakete in Spanien ab 299 EUR. Paar-, Familien-, Solo- und Heiratsantrag-Fotografie."
   },
   "join": {
     "heroSubtitle": "Wir bauen Spaniens führenden Fotografie-Marktplatz für Touristen auf. Treten Sie jetzt bei und sichern Sie sich exklusive Vorteile, bevor wir öffentlich starten.",
@@ -200,8 +200,8 @@
     "founderQuote": "Ich habe Photo Spain gegründet, weil ich weiß, wie schwer es für talentierte Fotografen ist, beständig Kunden zu finden. Diese Plattform bringt Touristen direkt zu Ihnen — kein Hinterherlaufen, kein Feilschen über Preise. Sie konzentrieren sich auf das, was Sie lieben: schöne Fotos zu machen."
   },
   "forPhotographers": {
-    "metaTitle": "Bei Photo Spain mitmachen — Als Urlaubsfotograf in Spanien Geld verdienen",
-    "metaDescription": "Treten Sie Spaniens wachsendem Fotografen-Marktplatz bei. Verbinden Sie sich mit internationalen Reisenden, verwalten Sie Buchungen und bauen Sie Ihr Fotografie-Geschäft auf. Kostenloser Einstieg.",
+    "metaTitle": "Als Urlaubsfotograf in Spanien verdienen",
+    "metaDescription": "Treten Sie Spaniens wachsendem Fotografen-Marktplatz bei. Verbinden Sie sich mit internationalen Reisenden, verwalten Sie Buchungen und bauen Sie Ihr.",
     "heroSubtitle": "Tausende Touristen träumen von schönen Fotos an Spaniens atemberaubendsten Orten — und sie suchen nach Ihnen. Wir bringen die Kunden, verwalten Buchungen, kümmern uns um Zahlungen und lassen Sie tun, was Sie lieben.",
     "whyJoin": {
       "title": "Warum Photo Spain beitreten?",
@@ -501,7 +501,7 @@
     "allInclusive": "Ein All-in-Preis — wir wählen Ihren Fotografen aus unseren geprüften Top 1% der Profis in Spanien. Keine Extra-Gebühren."
   },
   "concierge": {
-    "metaTitle": "Finden Sie Ihren Fotografen in Spanien in 30 Sekunden",
+    "metaTitle": "Finden Sie Ihren Fotografen in 30 Sek.",
     "title1": "Finden Sie Ihren Fotografen in Spanien",
     "openingMessage": "Hallo! Ich bin Ihr Smart Concierge von Photo Spain. Sagen Sie mir, wo Sie sein werden und den Anlass — ich finde Ihnen sofort die richtigen Fotografen. ✨",
     "nudge": {
@@ -571,8 +571,8 @@
     "consentText": "Zur Sicherheit aller können Anrufe auf Photo Spain aufgezeichnet und transkribiert werden. Das Transkript wird diesem Chat angehängt, die Aufnahme direkt danach gelöscht. Mit dem Beitritt stimmen Sie dem zu."
   },
   "business": {
-    "metaTitle": "Photo Spain für Unternehmen — Firmen- & Event-Fotografie",
-    "metaDescription": "Firmenfotografie in ganz Spanien: Events, Konferenzen, Team-Headshots, Brand-Content. Ein Vertrag, eine Rechnung, ein persönlicher Account-Manager. Angebot innerhalb eines Werktags.",
+    "metaTitle": "Firmen- und Event-Fotografie",
+    "metaDescription": "Firmenfotografie in ganz Spanien: Events, Konferenzen, Team-Headshots, Brand-Content. Ein Vertrag, eine Rechnung, ein persönlicher Account-Manager.",
     "heroTitle": "Professionelle Fotografie für Ihr Unternehmen, überall in Spanien",
     "how3Text": "Photo Spain ist Ihr einziger Vertragspartner: Vertrag, Rechnung mit MwSt., Liefertermine und Qualität liegen bei uns.",
     "cases": {
@@ -596,7 +596,7 @@
     "whileYouWait": "Bis dahin — lernen Sie ein paar Spanien-Fotografen kennen",
     "stat_photographers": "✨ Handverlesene Fotografen in ganz Spanien",
     "stat_locations": "📍 Barcelona · Madrid · Sevilla · Granada · Mallorca · Teneriffa",
-    "metaTitle": "Sehen Sie sich in Spanien — KI-Reise-Selfie",
+    "metaTitle": "Sehen Sie sich in Spanien — KI-Reiseselfie",
     "metaDescription": "Laden Sie ein Selfie hoch und sehen Sie sich in Granada, Barcelona, Sevilla und Madrid. Buchen Sie dann einen echten Fotografen für das echte Erlebnis.",
     "scenes": {
       "alhambra-granada": {
