@@ -18,6 +18,7 @@ import { SpotHeroCarousel } from "@/components/ui/SpotHeroCarousel";
 import { SpotMap } from "@/components/ui/SpotMap";
 import { country } from "@/lib/country";
 import { locationCoverUrl } from "@/lib/location-cover";
+import { clampMeta } from "@/lib/seo";
 
 const L = {
   en: {
@@ -47,7 +48,7 @@ const L = {
     otherSpotsTitle: "Other spots in",
     moreFrom: "More from",
     travelGuide: "travel guide",
-    titleSuffix: "Book a Photoshoot",
+    titleSuffix: "Photoshoot spot",
     hireDesc: "Hire a professional photographer at",
     placeholder: "What kind of photoshoot at",
     photographersChips: ["Couples photoshoot", "Family", "Solo portrait", "Engagement", "Honeymoon"],
@@ -79,7 +80,7 @@ const L = {
     otherSpotsTitle: "Outros locais em",
     moreFrom: "Mais de",
     travelGuide: "guia de viagem",
-    titleSuffix: "Reserve uma Sessão",
+    titleSuffix: "Sessão fotográfica",
     hireDesc: "Contrate um fotógrafo profissional em",
     placeholder: "Que tipo de sessão em",
     photographersChips: ["Sessão de casal", "Família", "Retrato solo", "Noivado", "Lua de mel"],
@@ -111,7 +112,7 @@ const L = {
     otherSpotsTitle: "Weitere Orte in",
     moreFrom: "Mehr aus",
     travelGuide: "Reiseführer",
-    titleSuffix: "Fotoshooting buchen",
+    titleSuffix: "Foto-Spot",
     hireDesc: "Buchen Sie einen professionellen Fotografen bei",
     placeholder: "Welches Shooting bei",
     photographersChips: ["Paar-Shooting", "Familie", "Solo-Porträt", "Verlobung", "Flitterwochen"],
@@ -143,7 +144,7 @@ const L = {
     otherSpotsTitle: "Otros lugares en",
     moreFrom: "Más de",
     travelGuide: "guía de viaje",
-    titleSuffix: "Reservar una sesión",
+    titleSuffix: "Sesión de fotos",
     hireDesc: "Contrate un fotógrafo profesional en",
     placeholder: "Qué tipo de sesión en",
     photographersChips: ["Sesión de pareja", "Familia", "Retrato solo", "Compromiso", "Luna de miel"],
@@ -175,7 +176,7 @@ const L = {
     otherSpotsTitle: "Autres lieux à",
     moreFrom: "Plus de",
     travelGuide: "guide de voyage",
-    titleSuffix: "Réserver une séance",
+    titleSuffix: "Séance photo",
     hireDesc: "Réservez un photographe professionnel à",
     placeholder: "Quel type de séance à",
     photographersChips: ["Séance couple", "Famille", "Portrait solo", "Fiançailles", "Lune de miel"],
@@ -206,16 +207,25 @@ export async function generateMetadata({
 
   const s = spotLocalized(spotData, locale);
   const t = pickL(locale);
-  const title = `${t.photoshootAt} ${s.name}, ${location.name} — ${t.titleSuffix}`;
+  // Spot name first. These titles run past what a result shows however they
+  // are worded — the names themselves are long ("El casco antiguo y el Puente
+  // de San Martín") — so the question is not length but which end survives the
+  // truncation. Leading with "Sesión fotográfica en …" spent the visible half
+  // on boilerplate and cut the place off. `absolute` drops the "| Photo Spain"
+  // the root template appends, buying back another fourteen characters that
+  // said nothing a searcher was looking for.
+  const title = `${s.name}, ${location.name} — ${t.titleSuffix}`;
   // t.countryName, not country.areaServed: areaServed is the schema.org value
   // and is always English, which produced "…, Barcelona, Spain" inside 45
   // Spanish meta descriptions.
-  const description = `${t.hireDesc} ${s.name}, ${location.name}, ${t.countryName}. ${s.description.slice(0, 140)}`;
+  const description = clampMeta(
+    `${t.hireDesc} ${s.name}, ${location.name}, ${t.countryName}. ${s.description}`
+  );
   const alt = localeAlternates(`/spots/${city}/${spot}`, locale);
   const ogImage = spotData.images?.[0]?.url || locationCoverUrl(location);
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: alt,
     openGraph: {

@@ -155,3 +155,18 @@ export function openGraphIdentity(path: string, locale: string) {
     alternateLocale: LOCALES.filter((l) => l !== safeLocale).map((l) => OG_LOCALES[l]),
   };
 }
+
+/**
+ * Trim a meta description to what a result actually shows.
+ *
+ * Google renders roughly 155–160 characters and cuts mid-word if you let it,
+ * so the last thing a searcher reads becomes half a word. This cuts at a
+ * word boundary instead, and only when there is something to cut.
+ */
+export function clampMeta(text: string, max = 155): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.—-]+$/, "") + "…";
+}

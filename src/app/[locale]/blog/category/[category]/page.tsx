@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${label} — ${suffix}`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: localeAlternates(`/blog/category/${category}`, locale),
     openGraph: {

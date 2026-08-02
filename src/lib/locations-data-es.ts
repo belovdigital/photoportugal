@@ -45,7 +45,7 @@ export const locationsES: Location[] = [
       "Mosaicos de Gaudí, callejuelas góticas y playa mediterránea en una misma tarde: la ciudad más fotogénica de España.",
     long_description_es:
       "Barcelona ofrece más escenarios por kilómetro cuadrado que cualquier otra ciudad española. Las mañanas son del Barrio Gótico, donde la luz entra en diagonal entre callejones de piedra que aún están tranquilos antes de las diez. El Park Güell y la Casa Batlló aportan el color y las curvas de Gaudí, los Búnkers del Carmel regalan la mejor panorámica al atardecer, y la Barceloneta cierra el día con mar, arena y sombras de palmeras. Las parejas eligen el casco antiguo, las familias el paseo marítimo, y las pedidas de mano casi siempre ocurren en una azotea con la Sagrada Família recortada en el horizonte.",
-    seo_title_es: "Fotógrafo en Barcelona — Reserva tu sesión de fotos profesional",
+    seo_title_es: "Fotógrafo en Barcelona — sesión de fotos",
     seo_description_es:
       "Reserva un fotógrafo profesional en Barcelona. Sesiones de pareja, familia, pedida de mano y solo en el Park Güell, el Barrio Gótico, los Búnkers del Carmel y la playa.",
     name_de: "Barcelona",
@@ -72,16 +72,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Sitges — Beach & Couple Photoshoots",
     seo_description:
       "Book a professional photographer in Sitges. Couple, engagement and family photoshoots on the promenade, the old town and the beaches, 40 minutes from Barcelona.",
-    seo_title_de: "Fotograf in Sitges — Shooting buchen",
+    seo_title_de: "Fotograf in Sitges — Paare und Strand",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Sitges. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Sitges — séance photo",
+    seo_title_fr: "Photographe à Sitges — couple et plage",
     seo_description_fr: "Réservez un photographe professionnel à Sitges. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Sitges",
     description_es:
       "Pueblo marinero de casas blancas a cuarenta minutos de Barcelona, con su iglesia sobre la roca y diecisiete playas.",
     long_description_es:
       "Sitges es la imagen que todo el mundo tiene de la costa catalana: casas blancas, buganvillas, un paseo de palmeras y la iglesia de Sant Bartomeu sobre la roca, asomada al agua. Fotografía especialmente bien a última hora de la tarde, cuando el mar se vuelve metálico y el casco antiguo se vacía. Es desde hace décadas uno de los destinos más acogedores de España para parejas del mismo sexo, y buena parte de las bodas y pedidas que se fotografían aquí lo reflejan. A cuarenta minutos en tren de Barcelona, funciona muy bien como segunda localización.",
-    seo_title_es: "Fotógrafo en Sitges — Sesiones de pareja y playa",
+    seo_title_es: "Fotógrafo en Sitges — pareja y playa",
     seo_description_es:
       "Reserva un fotógrafo profesional en Sitges. Sesiones de pareja, pedida de mano y familia en el paseo marítimo, el casco antiguo y las playas.",
     name_de: "Sitges",
@@ -108,16 +108,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Girona — Old Town & Cathedral Photoshoots",
     seo_description:
       "Book a professional photographer in Girona. Couple, family and solo photoshoots at the cathedral stairway, the Jewish Quarter and the Onyar houses.",
-    seo_title_de: "Fotograf in Girona — Shooting buchen",
+    seo_title_de: "Fotograf in Girona — Altstadt",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Girona. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Gérone — séance photo",
+    seo_title_fr: "Photographe à Gérone — vieille ville",
     seo_description_fr: "Réservez un photographe professionnel à Gérone. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Girona",
     description_es:
       "Murallas medievales, casas de colores sobre el río y la escalinata de la catedral que hizo famosa a la ciudad.",
     long_description_es:
       "Girona es compacta, muy caminable y casi teatralmente fotogénica. Las casas del Onyar cuelgan sobre el agua en tonos ocre y óxido, el Call judío es un laberinto de arcos de piedra que se mantiene fresco y en sombra al mediodía, y la escalinata de la catedral, con sus ochenta y seis peldaños, aporta una escala real a la imagen. Recorrer la muralla al final del día deja todo el casco antiguo y las estribaciones del Pirineo detrás de los protagonistas. Está a menos de cuarenta minutos en AVE desde Barcelona y es la base natural para la Costa Brava.",
-    seo_title_es: "Fotógrafo en Girona — Sesiones en el casco antiguo",
+    seo_title_es: "Fotógrafo en Girona — casco antiguo",
     seo_description_es:
       "Reserva un fotógrafo profesional en Girona. Sesiones de pareja, familia y solo en la escalinata de la catedral, el Call judío y las casas del Onyar.",
     name_de: "Girona",
@@ -144,16 +144,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer on the Costa Brava — Coastal Photoshoots",
     seo_description:
       "Book a professional photographer on the Costa Brava. Couple, honeymoon and family photoshoots in Tossa de Mar, Cadaqués and the hidden coves.",
-    seo_title_de: "Fotograf in Costa Brava — Shooting buchen",
+    seo_title_de: "Fotograf in Costa Brava — Buchten und Küste",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Costa Brava. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Costa Brava — séance photo",
+    seo_title_fr: "Photographe à Costa Brava — criques et côte",
     seo_description_fr: "Réservez un photographe professionnel à Costa Brava. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Costa Brava",
     description_es:
       "Acantilados de pinos que caen sobre calas turquesa, con Cadaqués y Tossa de Mar como las dos postales de referencia.",
     long_description_es:
       "La Costa Brava es la mitad agreste del litoral catalán: pinos que crecen hasta el borde del acantilado, calas a las que solo se llega a pie y un agua que sale turquesa incluso fotografiada desde la orilla. Tossa de Mar tiene el recinto medieval amurallado sobre la playa; Cadaqués, más al norte, es el pueblo pesquero blanco donde vivió Dalí, con su bahía y su campanario. Las sesiones aquí se organizan alrededor de un camino de ronda y de las dos últimas horas de luz, y funcionan muy bien para parejas, lunas de miel y quien quiera mar en lugar de ciudad.",
-    seo_title_es: "Fotógrafo en la Costa Brava — Sesiones junto al mar",
+    seo_title_es: "Fotógrafo en la Costa Brava — calas y costa",
     seo_description_es:
       "Reserva un fotógrafo profesional en la Costa Brava. Sesiones de pareja, luna de miel y familia en Tossa de Mar, Cadaqués y las calas.",
     name_de: "Costa Brava",
@@ -191,7 +191,7 @@ export const locationsES: Location[] = [
       "Grandes avenidas, palacio real y el atardecer del Templo de Debod: la capital se fotografía mejor al caer la tarde.",
     long_description_es:
       "Madrid premia a quien fotografía tarde. La imagen insignia de la ciudad es el Templo de Debod al atardecer, reflejado en el agua quieta con todo el cielo de poniente detrás; por eso aquí las pedidas de mano se cronometran al minuto. Antes, el Retiro aporta verde, el Palacio de Cristal y el estanque; la Plaza Mayor y las calles de La Latina, piedra cálida y balcones; la Gran Vía, la ciudad más cinematográfica. Las familias eligen el Retiro, las parejas el casco antiguo, y el Palacio Real funciona como un fondo de pura escala.",
-    seo_title_es: "Fotógrafo en Madrid — Reserva tu sesión de fotos profesional",
+    seo_title_es: "Fotógrafo en Madrid — sesión de fotos",
     seo_description_es:
       "Reserva un fotógrafo profesional en Madrid. Sesiones de pareja, familia, pedida de mano y solo en el Templo de Debod, el Retiro, la Plaza Mayor y el Palacio Real.",
     name_de: "Madrid",
@@ -218,16 +218,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Toledo — Medieval City Photoshoots",
     seo_description:
       "Book a professional photographer in Toledo. Couple, family and solo photoshoots in the walled old town, 30 minutes from Madrid by train.",
-    seo_title_de: "Fotograf in Toledo — Shooting buchen",
+    seo_title_de: "Fotograf in Toledo — Altstadt",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Toledo. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Tolède — séance photo",
+    seo_title_fr: "Photographe à Tolède — cité médiévale",
     seo_description_fr: "Réservez un photographe professionnel à Tolède. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Toledo",
     description_es:
       "Ciudad amurallada sobre un cerro de granito en un meandro del Tajo, a media hora en tren de Madrid.",
     long_description_es:
       "Toledo se asienta sobre una roca dentro de un meandro del Tajo, y la imagen clásica se toma desde la otra orilla: la ciudad medieval entera escalonada en la ladera, con la catedral y el alcázar coronándola. Dentro de las murallas todo son callejones estrechos, arcos y patios, con arquitectura árabe, judía y cristiana superpuesta calle a calle. La piedra conserva un color cálido hasta bien entrada la tarde. A treinta minutos de Madrid en AVE, es la segunda localización habitual para quien busca algo más antiguo y tranquilo que la capital.",
-    seo_title_es: "Fotógrafo en Toledo — Sesiones en la ciudad medieval",
+    seo_title_es: "Fotógrafo en Toledo — ciudad medieval",
     seo_description_es:
       "Reserva un fotógrafo profesional en Toledo. Sesiones de pareja, familia y solo en el casco amurallado, a 30 minutos de Madrid.",
     name_de: "Toledo",
@@ -254,16 +254,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Segovia — Aqueduct & Alcázar Photoshoots",
     seo_description:
       "Book a professional photographer in Segovia. Couple, family and proposal photoshoots at the Roman aqueduct and the Alcázar, 30 minutes from Madrid.",
-    seo_title_de: "Fotograf in Segovia — Shooting buchen",
+    seo_title_de: "Fotograf in Segovia — Aquädukt und Alcázar",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Segovia. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Ségovie — séance photo",
+    seo_title_fr: "Photographe à Ségovie — aqueduc et Alcázar",
     seo_description_fr: "Réservez un photographe professionnel à Ségovie. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Segovia",
     description_es:
       "Un acueducto romano que atraviesa la ciudad y un alcázar que parece sacado de un cuento.",
     long_description_es:
       "Segovia ofrece dos fondos que no necesitan explicación. El acueducto romano sigue cruzando el centro sobre 167 arcos sin una gota de argamasa, y el Alcázar se alza en un espolón sobre la confluencia de dos ríos, todo torres y chapiteles de pizarra. Entre ambos, el casco antiguo es piedra color miel y plazas tranquilas. Está a menos de media hora de Madrid en tren rápido, más alto y más fresco que la capital, y la luz de la última hora vuelve la piedra del acueducto literalmente dorada.",
-    seo_title_es: "Fotógrafo en Segovia — Sesiones en el acueducto y el Alcázar",
+    seo_title_es: "Fotógrafo en Segovia — acueducto y Alcázar",
     seo_description_es:
       "Reserva un fotógrafo profesional en Segovia. Sesiones de pareja, familia y pedida de mano en el acueducto romano y el Alcázar.",
     name_de: "Segovia",
@@ -292,16 +292,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Seville — Book a Professional Photoshoot",
     seo_description:
       "Book a professional photographer in Seville. Couple, proposal, family and solo photoshoots at Plaza de España, the Real Alcázar and Santa Cruz.",
-    seo_title_de: "Fotograf in Sevilla — Shooting buchen",
+    seo_title_de: "Fotograf in Sevilla — Plaza de España",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Sevilla. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Séville — séance photo",
+    seo_title_fr: "Photographe à Séville — Plaza de España",
     seo_description_fr: "Réservez un photographe professionnel à Séville. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Sevilla",
     description_es:
       "Plaza de España, naranjos y patios de azulejos: la ciudad más fotografiada del sur de España.",
     long_description_es:
       "Sevilla es la ciudad que la mayoría de las parejas ya ha visto antes de llegar. La Plaza de España es un semicírculo de ladrillo, azulejo y puentes sobre un canal, y sostiene una sesión entera por sí sola. El Real Alcázar aporta arcos, jardines de agua y yeserías; el barrio de Santa Cruz, callejones encalados por los que apenas pasan dos personas; las Setas, un perfil moderno de madera. Los naranjos jalonan las calles y la luz es cálida de marzo a noviembre. Es el mercado más fuerte de Andalucía para pedidas de mano y lunas de miel.",
-    seo_title_es: "Fotógrafo en Sevilla — Reserva tu sesión de fotos profesional",
+    seo_title_es: "Fotógrafo en Sevilla — Plaza de España",
     seo_description_es:
       "Reserva un fotógrafo profesional en Sevilla. Sesiones de pareja, pedida de mano, familia y solo en la Plaza de España, el Real Alcázar y Santa Cruz.",
     name_de: "Sevilla",
@@ -328,16 +328,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Granada — Alhambra & Albaicín Photoshoots",
     seo_description:
       "Book a professional photographer in Granada. Couple, proposal and family photoshoots at Mirador de San Nicolás, the Albaicín and the Alhambra.",
-    seo_title_de: "Fotograf in Granada — Shooting buchen",
+    seo_title_de: "Fotograf in Granada — Alhambra und Albaicín",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Granada. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Grenade — séance photo",
+    seo_title_fr: "Photographe à Grenade — Alhambra et Albaicín",
     seo_description_fr: "Réservez un photographe professionnel à Grenade. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Granada",
     description_es:
       "La Alhambra en su cerro con la nieve de Sierra Nevada al fondo, vista desde el Albaicín encalado.",
     long_description_es:
       "El encuadre que define Granada se toma desde el Mirador de San Nicolás: la Alhambra en la loma de enfrente, Sierra Nevada todavía nevada hasta mayo detrás, y el sol cayendo por encima del hombro de los protagonistas. Por eso aquí se fotografía al anochecer. El Albaicín, más abajo, es una ladera de casas blancas, cipreses y cuestas empedradas; el Sacromonte añade cuevas y una vista más agreste. Los patios de la Alhambra exigen entrada con hora, y cualquier fotógrafo local recomendará reservarla con semanas de antelación.",
-    seo_title_es: "Fotógrafo en Granada — Sesiones en la Alhambra y el Albaicín",
+    seo_title_es: "Fotógrafo en Granada — Alhambra y Albaicín",
     seo_description_es:
       "Reserva un fotógrafo profesional en Granada. Sesiones de pareja, pedida de mano y familia en el Mirador de San Nicolás, el Albaicín y la Alhambra.",
     name_de: "Granada",
@@ -364,16 +364,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Málaga — Costa del Sol Photoshoots",
     seo_description:
       "Book a professional photographer in Málaga. Couple, family and solo photoshoots at the Alcazaba, Gibralfaro, the old town and La Malagueta beach.",
-    seo_title_de: "Fotograf in Málaga — Shooting buchen",
+    seo_title_de: "Fotograf in Málaga — Costa del Sol",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Málaga. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Málaga — séance photo",
+    seo_title_fr: "Photographe à Málaga — Costa del Sol",
     seo_description_fr: "Réservez un photographe professionnel à Málaga. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Málaga",
     description_es:
       "La puerta de la Costa del Sol: fortaleza árabe sobre el puerto, calles de palmeras y trescientos días de sol.",
     long_description_es:
       "Málaga es donde aterriza la mayoría de quienes visitan el sur de España, y con los años se ha convertido en destino por derecho propio. La Alcazaba y el castillo de Gibralfaro escalonan la colina detrás del centro y regalan una vista del puerto y la bahía. El casco antiguo, de mármol y plazas pequeñas, se combina con el Muelle Uno y la playa de La Malagueta para la parte marítima de la sesión. Como el aeropuerto está aquí y el clima aguanta en invierno, suele ser el punto de Andalucía más fácil para agendar con poca antelación.",
-    seo_title_es: "Fotógrafo en Málaga — Sesiones en la Costa del Sol",
+    seo_title_es: "Fotógrafo en Málaga — Costa del Sol",
     seo_description_es:
       "Reserva un fotógrafo profesional en Málaga. Sesiones de pareja, familia y solo en la Alcazaba, Gibralfaro, el casco antiguo y La Malagueta.",
     name_de: "Málaga",
@@ -400,7 +400,7 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Marbella — Beach & Old Town Photoshoots",
     seo_description:
       "Book a professional photographer in Marbella. Couple, family and honeymoon photoshoots at Puerto Banús, the old town and the beaches.",
-    seo_title_de: "Fotograf in Marbella — Shooting buchen",
+    seo_title_de: "Fotograf in Marbella — Strand und Altstadt",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Marbella. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
     seo_title_fr: "Photographe à Marbella — séance photo",
     seo_description_fr: "Réservez un photographe professionnel à Marbella. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
@@ -409,7 +409,7 @@ export const locationsES: Location[] = [
       "Yates en Puerto Banús, un casco antiguo enterrado en flores y la Sierra Blanca sobre ambos.",
     long_description_es:
       "Marbella funciona en dos registros y fotografía bien en los dos. Puerto Banús es el pulido: yates, palmeras, cristal y luz de tarde sobre los cascos blancos, ideal para quien busca la versión glamurosa de la costa. Cinco minutos hacia el interior, el Casco Antiguo es lo contrario: la plaza de los Naranjos, callejones estrechos y cal bajo cascadas de geranios. Detrás de todo, la Sierra Blanca da a las playas un fondo de montaña que falta en casi toda la Costa del Sol. Las familias suelen fotografiarse en la arena a la hora dorada; los aniversarios y lunas de miel, en el puerto.",
-    seo_title_es: "Fotógrafo en Marbella — Sesiones en la playa y el casco antiguo",
+    seo_title_es: "Fotógrafo en Marbella — playa y casco antiguo",
     seo_description_es:
       "Reserva un fotógrafo profesional en Marbella. Sesiones de pareja, familia y luna de miel en Puerto Banús, el casco antiguo y las playas.",
     name_de: "Marbella",
@@ -436,16 +436,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Ronda — Puente Nuevo & Gorge Photoshoots",
     seo_description:
       "Book a professional photographer in Ronda. Couple, proposal and honeymoon photoshoots at the Puente Nuevo, the gorge viewpoints and the old town.",
-    seo_title_de: "Fotograf in Ronda — Shooting buchen",
+    seo_title_de: "Fotograf in Ronda — Puente Nuevo",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Ronda. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Ronda — séance photo",
+    seo_title_fr: "Photographe à Ronda — Puente Nuevo",
     seo_description_fr: "Réservez un photographe professionnel à Ronda. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Ronda",
     description_es:
       "Un pueblo partido por un tajo de 120 metros y unido por un puente de piedra: el fondo más espectacular de España.",
     long_description_es:
       "Ronda ofrece una imagen que ningún otro pueblo español iguala: el Puente Nuevo salvando un tajo de 120 metros, con las casas asomadas al borde del precipicio. Fotografiado desde los miradores de abajo o desde los Jardines de Cuenca, enfrente, da a las parejas un encuadre con verdadera fuerza y sin problemas de gentío. El barrio árabe, detrás del puente, es tranquilo y muy caminable, y alrededor se abre un paisaje de viñedos y pueblos blancos. Está a hora y media en coche de Málaga y es parada habitual en las lunas de miel.",
-    seo_title_es: "Fotógrafo en Ronda — Sesiones en el Puente Nuevo y el Tajo",
+    seo_title_es: "Fotógrafo en Ronda — Puente Nuevo y el Tajo",
     seo_description_es:
       "Reserva un fotógrafo profesional en Ronda. Sesiones de pareja, pedida de mano y luna de miel en el Puente Nuevo, los miradores del Tajo y el casco antiguo.",
     name_de: "Ronda",
@@ -472,16 +472,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Córdoba — Mezquita & Patios Photoshoots",
     seo_description:
       "Book a professional photographer in Córdoba. Couple, family and solo photoshoots at the Mezquita, the Jewish Quarter, the patios and the Roman bridge.",
-    seo_title_de: "Fotograf in Córdoba — Shooting buchen",
+    seo_title_de: "Fotograf in Córdoba — Mezquita und Patios",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Córdoba. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Cordoue — séance photo",
+    seo_title_fr: "Photographe à Cordoue — Mosquée et patios",
     seo_description_fr: "Réservez un photographe professionnel à Cordoue. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Córdoba",
     description_es:
       "Un bosque de arcos rojos y blancos dentro de la Mezquita, y patios enterrados bajo macetas.",
     long_description_es:
       "La Mezquita de Córdoba es uno de los pocos interiores de España que sostienen una sesión entera: cientos de arcos dobles de ladrillo rojo y piedra clara repitiéndose en todas direcciones. Fuera, la Judería es una retícula de callejones encalados, y los famosos patios cordobeses —cubiertos de geranios de pared a pared— abren al público en mayo. El puente romano sobre el Guadalquivir aporta el plano general, sobre todo al anochecer con la Mezquita iluminada al fondo. Los veranos aprietan de verdad, así que se fotografía temprano o tarde.",
-    seo_title_es: "Fotógrafo en Córdoba — Sesiones en la Mezquita y los patios",
+    seo_title_es: "Fotógrafo en Córdoba — Mezquita y patios",
     seo_description_es:
       "Reserva un fotógrafo profesional en Córdoba. Sesiones de pareja, familia y solo en la Mezquita, la Judería, los patios y el puente romano.",
     name_de: "Córdoba",
@@ -508,16 +508,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Cádiz — Atlantic Coast Photoshoots",
     seo_description:
       "Book a professional photographer in Cádiz. Couple, family and solo photoshoots at La Caleta, the old town and the Atlantic beaches.",
-    seo_title_de: "Fotograf in Cádiz — Shooting buchen",
+    seo_title_de: "Fotograf in Cádiz — Atlantikküste",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Cádiz. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Cadix — séance photo",
+    seo_title_fr: "Photographe à Cadix — côte atlantique",
     seo_description_fr: "Réservez un photographe professionnel à Cadix. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Cádiz",
     description_es:
       "La ciudad más antigua de Europa occidental, casi rodeada por el Atlántico, con puestas de sol al final de cada playa.",
     long_description_es:
       "Cádiz se asienta en una lengua de tierra con el Atlántico por tres lados, lo que significa luz desde cualquier dirección y horizonte al final de casi todas las calles. La playa de La Caleta, enmarcada por dos castillos, es donde la ciudad mira caer el sol. El casco antiguo es una trama densa de casas altas y claras con torres miradores y plazas pequeñas llenas de laureles. Recibe menos visitantes internacionales que Sevilla o Granada, y eso se nota en las fotos: menos gente en el encuadre y una ciudad marinera viva, no un monumento.",
-    seo_title_es: "Fotógrafo en Cádiz — Sesiones en la costa atlántica",
+    seo_title_es: "Fotógrafo en Cádiz — costa atlántica",
     seo_description_es:
       "Reserva un fotógrafo profesional en Cádiz. Sesiones de pareja, familia y solo en La Caleta, el casco antiguo y las playas atlánticas.",
     name_de: "Cádiz",
@@ -546,16 +546,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Mallorca — Island & Coastal Photoshoots",
     seo_description:
       "Book a professional photographer in Mallorca. Couple, honeymoon and family photoshoots in Palma, the Serra de Tramuntana, Deià and the coves.",
-    seo_title_de: "Fotograf in Mallorca — Shooting buchen",
+    seo_title_de: "Fotograf in Mallorca — Insel und Küste",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Mallorca. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Majorque — séance photo",
+    seo_title_fr: "Photographe à Majorque — île et côte",
     seo_description_fr: "Réservez un photographe professionnel à Majorque. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Mallorca",
     description_es:
       "Una catedral sobre el agua en Palma, una sierra a lo largo de la costa norte y calas entre medias.",
     long_description_es:
       "Mallorca da mucho más de sí de lo que la gente espera. Palma aporta una catedral de arenisca alzada justo sobre un estanque frente al mar, y un casco antiguo de patios y fachadas con persianas. Al norte y al oeste, la Serra de Tramuntana recorre toda la costa entre olivares aterrazados y pueblos de piedra —Deià, Valldemossa, Sóller— con miradores sobre acantilados que caen a plomo. Entre unos y otros están las calas: pequeñas ensenadas turquesa a las que se baja por senderos de pinos. Es la isla más fuerte de España en bodas y lunas de miel, con clientela sobre todo alemana y británica.",
-    seo_title_es: "Fotógrafo en Mallorca — Sesiones en la isla y la costa",
+    seo_title_es: "Fotógrafo en Mallorca — isla y costa",
     seo_description_es:
       "Reserva un fotógrafo profesional en Mallorca. Sesiones de pareja, luna de miel y familia en Palma, la Serra de Tramuntana, Deià y las calas.",
     name_de: "Mallorca",
@@ -582,16 +582,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Ibiza — Sunset & Old Town Photoshoots",
     seo_description:
       "Book a professional photographer in Ibiza. Couple, honeymoon and family photoshoots at Dalt Vila, Cala Comte and the west-coast sunsets.",
-    seo_title_de: "Fotograf in Ibiza — Shooting buchen",
+    seo_title_de: "Fotograf in Ibiza — Sonnenuntergang",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Ibiza. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Ibiza — séance photo",
+    seo_title_fr: "Photographe à Ibiza — coucher de soleil",
     seo_description_fr: "Réservez un photographe professionnel à Ibiza. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Ibiza",
     description_es:
       "El casco antiguo amurallado sobre el puerto, pueblos blancos en el interior y el atardecer que dio fama a la isla.",
     long_description_es:
       "Ibiza tiene una identidad fotográfica más serena de lo que sugiere su fama. Dalt Vila, el recinto amurallado, trepa sobre el puerto entre murallas de arenisca y callejones escalonados, y desde arriba se domina toda la bahía. El interior es de ermitas blancas, muros de piedra seca y almendros. La costa oeste —Cala Comte, Cala Bassa, Es Vedrà en el horizonte— produce los atardeceres por los que se viaja, y allí se programan casi todas las sesiones de pareja, en la última hora de luz. En temporada alta hay mucha gente; mayo, junio y septiembre fotografían mejor.",
-    seo_title_es: "Fotógrafo en Ibiza — Sesiones al atardecer y en Dalt Vila",
+    seo_title_es: "Fotógrafo en Ibiza — atardecer y Dalt Vila",
     seo_description_es:
       "Reserva un fotógrafo profesional en Ibiza. Sesiones de pareja, luna de miel y familia en Dalt Vila, Cala Comte y los atardeceres de la costa oeste.",
     name_de: "Ibiza",
@@ -618,16 +618,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Menorca — Coves & Coastal Photoshoots",
     seo_description:
       "Book a professional photographer in Menorca. Couple, honeymoon and family photoshoots at Cala Macarella, Ciutadella and the Camí de Cavalls.",
-    seo_title_de: "Fotograf in Menorca — Shooting buchen",
+    seo_title_de: "Fotograf in Menorca — Buchten und Küste",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Menorca. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Minorque — séance photo",
+    seo_title_fr: "Photographe à Minorque — criques et côte",
     seo_description_fr: "Réservez un photographe professionnel à Minorque. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Menorca",
     description_es:
       "La balear tranquila: un camino de costa que rodea la isla entera, calas vacías y un puerto de fachadas georgianas.",
     long_description_es:
       "Menorca es la isla que se elige cuando se quieren las Baleares sin la multitud. El Camí de Cavalls, la senda que rodea todo el litoral, da acceso a calas que siguen vacías incluso en agosto, como Cala Macarella o Cala Pregonda. Ciutadella tiene un pequeño casco antiguo de arenisca alrededor de un puerto estrecho; Mahón se asienta sobre uno de los puertos naturales más grandes del Mediterráneo, entre fachadas claras de influencia georgiana que dejaron los británicos. Toda la isla es reserva de la biosfera, y por eso sigue teniendo este aspecto.",
-    seo_title_es: "Fotógrafo en Menorca — Sesiones en calas y costa",
+    seo_title_es: "Fotógrafo en Menorca — calas y costa",
     seo_description_es:
       "Reserva un fotógrafo profesional en Menorca. Sesiones de pareja, luna de miel y familia en Cala Macarella, Ciutadella y el Camí de Cavalls.",
     name_de: "Menorca",
@@ -656,16 +656,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Tenerife — Teide & Coastal Photoshoots",
     seo_description:
       "Book a professional photographer in Tenerife. Couple, honeymoon and family photoshoots at Teide National Park, Anaga and the volcanic beaches.",
-    seo_title_de: "Fotograf in Teneriffa — Shooting buchen",
+    seo_title_de: "Fotograf in Teneriffa — Teide und Küste",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Teneriffa. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Tenerife — séance photo",
+    seo_title_fr: "Photographe à Tenerife — Teide et côte",
     seo_description_fr: "Réservez un photographe professionnel à Tenerife. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Tenerife",
     description_es:
       "El pico más alto de España sobre un mar de nubes, laurisilva en el norte y playas de arena negra.",
     long_description_es:
       "Tenerife ofrece paisajes que no existen en ningún otro punto de España. El Parque Nacional del Teide se extiende por encima de los 2.000 metros en un desierto volcánico rojo y ocre, a menudo sobre una capa compacta de nubes: un fondo sin equivalente en la península y el motivo por el que muchas parejas vienen expresamente. El macizo de Anaga, al norte, es laurisilva antigua, húmeda y verde. Las costas van de la arena negra de Playa Jardín a los acantilados de Los Gigantes. El clima suave todo el año la convierte en el destino invernal más fiable del país para sesiones al aire libre.",
-    seo_title_es: "Fotógrafo en Tenerife — Sesiones en el Teide y la costa",
+    seo_title_es: "Fotógrafo en Tenerife — Teide y costa",
     seo_description_es:
       "Reserva un fotógrafo profesional en Tenerife. Sesiones de pareja, luna de miel y familia en el Parque Nacional del Teide, Anaga y las playas volcánicas.",
     name_de: "Teneriffa",
@@ -692,16 +692,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Gran Canaria — Dunes & Island Photoshoots",
     seo_description:
       "Book a professional photographer in Gran Canaria. Couple, honeymoon and family photoshoots at the Maspalomas dunes, Roque Nublo and Las Palmas.",
-    seo_title_de: "Fotograf in Gran Canaria — Shooting buchen",
+    seo_title_de: "Fotograf in Gran Canaria — Dünen und Küste",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Gran Canaria. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Grande Canarie — séance photo",
+    seo_title_fr: "Photographe à Grande Canarie — dunes et côte",
     seo_description_fr: "Réservez un photographe professionnel à Grande Canarie. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Gran Canaria",
     description_es:
       "Un desierto de dunas que muere en el Atlántico al sur, y un interior verde de montaña a una hora de allí.",
     long_description_es:
       "A Gran Canaria se la llama continente en miniatura, y para un fotógrafo eso es casi literal. Las dunas de Maspalomas, al sur, son un desierto de verdad: crestas de arena clara que llegan hasta el océano, mejores en la primera y la última hora de luz, y uno de los fondos más impactantes del país. Tirando hacia el interior, en una hora se está entre pinares, barrancos y el monolito del Roque Nublo. Las Palmas, en la costa norte, suma un casco colonial y una playa urbana larguísima. Cálida todo el año.",
-    seo_title_es: "Fotógrafo en Gran Canaria — Sesiones en las dunas y la isla",
+    seo_title_es: "Fotógrafo en Gran Canaria — dunas y costa",
     seo_description_es:
       "Reserva un fotógrafo profesional en Gran Canaria. Sesiones de pareja, luna de miel y familia en las dunas de Maspalomas, el Roque Nublo y Las Palmas.",
     name_de: "Gran Canaria",
@@ -728,16 +728,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Lanzarote — Volcanic Landscape Photoshoots",
     seo_description:
       "Book a professional photographer in Lanzarote. Couple, honeymoon and family photoshoots at Timanfaya, La Geria and the northern cliffs.",
-    seo_title_de: "Fotograf in Lanzarote — Shooting buchen",
+    seo_title_de: "Fotograf in Lanzarote — Vulkanlandschaft",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Lanzarote. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Lanzarote — séance photo",
+    seo_title_fr: "Photographe à Lanzarote — paysage volcanique",
     seo_description_fr: "Réservez un photographe professionnel à Lanzarote. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Lanzarote",
     description_es:
       "Coladas negras, casas blancas cúbicas y viñedos verdes en hoyos volcánicos: la isla más gráfica de España.",
     long_description_es:
       "Lanzarote parece diseñada, y en parte lo está: el artista César Manrique fijó las reglas constructivas de la isla, y por eso cada casa es blanca con carpintería verde o azul sobre un suelo volcánico negro. El contraste es extremo y se fotografía casi sin procesado. Las coladas de Timanfaya dan un paisaje vacío, casi extraterrestre; los viñedos de La Geria se asientan en miles de hoyos de piedra negra; el norte aporta acantilados y el Mirador del Río. Menos árboles y menos gentío que en las islas grandes, y luz constante buena parte del año.",
-    seo_title_es: "Fotógrafo en Lanzarote — Sesiones en paisaje volcánico",
+    seo_title_es: "Fotógrafo en Lanzarote — paisaje volcánico",
     seo_description_es:
       "Reserva un fotógrafo profesional en Lanzarote. Sesiones de pareja, luna de miel y familia en Timanfaya, La Geria y los acantilados del norte.",
     name_de: "Lanzarote",
@@ -766,16 +766,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Valencia — City & Beach Photoshoots",
     seo_description:
       "Book a professional photographer in Valencia. Couple, family and solo photoshoots at the City of Arts and Sciences, the old town, Turia gardens and Malvarrosa beach.",
-    seo_title_de: "Fotograf in Valencia — Shooting buchen",
+    seo_title_de: "Fotograf in Valencia — Stadt und Strand",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Valencia. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Valence — séance photo",
+    seo_title_fr: "Photographe à Valence — ville et plage",
     seo_description_fr: "Réservez un photographe professionnel à Valence. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Valencia",
     description_es:
       "Arquitectura blanca futurista, un cauce convertido en nueve kilómetros de parque y una playa urbana enorme.",
     long_description_es:
       "La ventaja de Valencia es el contraste a distancia de paseo. La Ciudad de las Artes y las Ciencias es un conjunto de edificios blancos escultóricos rodeados de láminas de agua: limpio, moderno y sin equivalente en España. El casco antiguo es lo contrario: la Lonja de la Seda, la catedral, las calles estrechas y los muros pintados del Barrio del Carmen. Entre ambos, los jardines del Turia recorren nueve kilómetros por el cauce desviado del río, llenos de naranjos y palmeras. La Malvarrosa cierra el día. Cálida de abril a octubre y bastante menos saturada que Barcelona.",
-    seo_title_es: "Fotógrafo en Valencia — Sesiones en la ciudad y la playa",
+    seo_title_es: "Fotógrafo en Valencia — ciudad y playa",
     seo_description_es:
       "Reserva un fotógrafo profesional en Valencia. Sesiones de pareja, familia y solo en la Ciudad de las Artes y las Ciencias, el casco antiguo, el Turia y la Malvarrosa.",
     name_de: "Valencia",
@@ -804,16 +804,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in San Sebastián — La Concha & Old Town Photoshoots",
     seo_description:
       "Book a professional photographer in San Sebastián. Couple, family and solo photoshoots at La Concha beach, Monte Igueldo and the old town.",
-    seo_title_de: "Fotograf in San Sebastián — Shooting buchen",
+    seo_title_de: "Fotograf in San Sebastián — La Concha",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in San Sebastián. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Saint-Sébastien — séance photo",
+    seo_title_fr: "Photographe à Saint-Sébastien — La Concha",
     seo_description_fr: "Réservez un photographe professionnel à Saint-Sébastien. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "San Sebastián",
     description_es:
       "Una bahía en forma de concha entre dos montes verdes, con barandillas de la Belle Époque y la mejor mesa de España.",
     long_description_es:
       "La Concha es una de las playas urbanas más reconocibles de Europa: una media luna casi perfecta cerrada por una isla, enmarcada por la barandilla blanca y las farolas que tan bien fotografían a la hora azul. El Monte Igueldo, en el extremo oeste, da la vista de postal sobre toda la bahía; el Urgull cierra el otro lado. La Parte Vieja, detrás de la playa, es densa, de piedra y llena de barras de pintxos. La costa vasca es más verde y fresca que el sur, con un tiempo atlántico cambiante que a menudo juega a favor de la foto.",
-    seo_title_es: "Fotógrafo en San Sebastián — Sesiones en La Concha y la Parte Vieja",
+    seo_title_es: "Fotógrafo en San Sebastián — La Concha",
     seo_description_es:
       "Reserva un fotógrafo profesional en San Sebastián. Sesiones de pareja, familia y solo en la playa de La Concha, el Monte Igueldo y la Parte Vieja.",
     name_de: "San Sebastián",
@@ -840,16 +840,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Bilbao — Guggenheim & Old Town Photoshoots",
     seo_description:
       "Book a professional photographer in Bilbao. Couple, family and solo photoshoots at the Guggenheim, the riverside and the Casco Viejo.",
-    seo_title_de: "Fotograf in Bilbao — Shooting buchen",
+    seo_title_de: "Fotograf in Bilbao — Guggenheim",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Bilbao. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Bilbao — séance photo",
+    seo_title_fr: "Photographe à Bilbao — Guggenheim",
     seo_description_fr: "Réservez un photographe professionnel à Bilbao. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Bilbao",
     description_es:
       "Curvas de titanio a la orilla de la ría, un casco medieval restaurado y montes verdes cerrando cada vista.",
     long_description_es:
       "Bilbao es una ciudad que se reconstruyó alrededor de un museo. La piel de titanio del Guggenheim cambia de color con el tiempo y ofrece un fondo reconocible al instante, con Puppy, la araña Maman y los paseos de la ría alrededor. Río arriba, el Casco Viejo son siete calles medievales de fachadas altas y mercados cubiertos. Los montes bajan hasta el borde de la ciudad, así que casi todo plano general lleva verde detrás. Llueve a menudo y, sobre las superficies reflectantes de la ría, eso suele ser una ventaja más que un problema.",
-    seo_title_es: "Fotógrafo en Bilbao — Sesiones en el Guggenheim y el Casco Viejo",
+    seo_title_es: "Fotógrafo en Bilbao — Guggenheim y Casco Viejo",
     seo_description_es:
       "Reserva un fotógrafo profesional en Bilbao. Sesiones de pareja, familia y solo en el Guggenheim, la ría y el Casco Viejo.",
     name_de: "Bilbao",
@@ -878,16 +878,16 @@ export const locationsES: Location[] = [
     seo_title: "Photographer in Santiago de Compostela — Cathedral & Camino Photoshoots",
     seo_description:
       "Book a professional photographer in Santiago de Compostela. Couple, family, solo and Camino arrival photoshoots at the cathedral and the old town.",
-    seo_title_de: "Fotograf in Santiago de Compostela — Shooting buchen",
+    seo_title_de: "Fotograf in Santiago de Compostela",
     seo_description_de: "Buchen Sie einen professionellen Fotografen in Santiago de Compostela. Paare, Familien, Heiratsanträge und Solo-Shootings an den schönsten Orten. Sichere Zahlung.",
-    seo_title_fr: "Photographe à Saint-Jacques-de-Compostelle — séance photo",
+    seo_title_fr: "Photographe à Saint-Jacques-de-Compostelle",
     seo_description_fr: "Réservez un photographe professionnel à Saint-Jacques-de-Compostelle. Séances couple, famille, demande en mariage et solo dans les plus beaux lieux. Paiement sécurisé.",
     name_es: "Santiago de Compostela",
     description_es:
       "El final del Camino: una catedral de granito sobre una plaza inmensa, calles con soportales y niebla atlántica.",
     long_description_es:
       "Santiago es donde termina el Camino, y esa carga emocional se nota en las fotos que se hacen aquí. La fachada barroca de la catedral se alza sobre la Praza do Obradoiro, una explanada enorme que da una sensación de escala difícil de encontrar. El casco antiguo es de granito, con soportales y a menudo mojado, lo que hace brillar la piedra. Los peregrinos que llegan a todas horas ofrecen un material espontáneo que ninguna otra ciudad española tiene. Galicia es verde, fresca y lluviosa: una paleta completamente distinta a la del Mediterráneo, y por eso merece estar en el catálogo.",
-    seo_title_es: "Fotógrafo en Santiago de Compostela — Sesiones en la catedral y el Camino",
+    seo_title_es: "Fotógrafo en Santiago de Compostela",
     seo_description_es:
       "Reserva un fotógrafo profesional en Santiago de Compostela. Sesiones de pareja, familia, solo y de llegada del Camino en la catedral y el casco antiguo.",
     name_de: "Santiago de Compostela",

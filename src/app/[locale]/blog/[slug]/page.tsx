@@ -124,7 +124,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ).then((rows) => rows.map((r) => r.locale)).catch(() => [locale]);
 
   return {
-    title: pageTitle,
+    // absolute: the root template appends "| Photo Spain", which pushed
+    // every post past what a result shows. A blog headline is already the
+    // thing someone searched for; the brand was costing fourteen visible
+    // characters to say something the URL says anyway.
+    title: { absolute: pageTitle },
     description: pageDescription,
     alternates: localeAlternatesFiltered(`/blog/${post.slug}`, locale, availableLocales),
     openGraph: {
