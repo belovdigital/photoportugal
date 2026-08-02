@@ -25,7 +25,14 @@ export async function buildLlmsText(): Promise<string> {
         COUNT(*) as photographer_count,
         COALESCE(SUM(review_count), 0) as review_count,
         AVG(rating) FILTER (WHERE rating IS NOT NULL AND review_count > 0) as avg_rating,
-        (SELECT MIN(price) FROM packages pk JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id WHERE pp2.is_approved = TRUE AND pk.custom_for_user_id IS NULL) as min_price
+        -- is_public and is_test matter here for the same reason they matter
+        -- on the homepage: without them this quoted the cheapest package in
+        -- the database, including ones hidden from their own profile, so the
+        -- file advertised a price nobody could actually book.
+        (SELECT MIN(pk.price) FROM packages pk
+           JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
+          WHERE pp2.is_approved = TRUE AND COALESCE(pp2.is_test, FALSE) = FALSE
+            AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL) as min_price
       FROM photographer_profiles
       WHERE is_approved = TRUE`
     );
