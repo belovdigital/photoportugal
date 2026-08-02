@@ -21,7 +21,7 @@ import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { formatDuration } from "@/lib/package-pricing";
 import { country } from "@/lib/country";
-import { lowestBookablePrice } from "@/lib/package-pricing";
+import { lowestBookablePrice } from "@/lib/entry-price";
 
 // Force-dynamic so the hero photographer reshuffles on every request.
 // Same rationale as the location page: paid-ad / sitelink landing prefers

@@ -39,7 +39,7 @@ import { formatDuration } from "@/lib/package-pricing";
 import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { country } from "@/lib/country";
-import { lowestBookablePrice } from "@/lib/package-pricing";
+import { lowestBookablePrice } from "@/lib/entry-price";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 import { regionLabel } from "@/lib/region-labels";

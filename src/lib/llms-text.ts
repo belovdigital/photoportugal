@@ -2,7 +2,7 @@ import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
 import { country } from "@/lib/country";
-import { lowestBookablePrice } from "@/lib/package-pricing";
+import { lowestBookablePrice } from "@/lib/entry-price";
 
 // Site overview in agent-friendly plain text / markdown. Served both as
 // /llms.txt and as the markdown representation of the homepage when a
