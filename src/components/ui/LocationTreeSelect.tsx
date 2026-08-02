@@ -15,6 +15,14 @@ interface LocationTreeSelectProps {
    *  legacy location slugs — hides locations with no relevant photographers.
    *  Omit to show the full tree (existing behaviour). */
   availableSlugs?: string[];
+  /**
+   * Which edge of the trigger the panel hangs from. Left by default, which is
+   * right for a full-width field. Inside a sentence — Quick Booking's "in
+   * <region> on <date>" — the trigger is a short word sitting well to the
+   * right, so a 280px panel anchored left runs past the modal and gives the
+   * whole page a horizontal scrollbar.
+   */
+  align?: "left" | "right";
 }
 
 export function LocationTreeSelect({
@@ -26,6 +34,7 @@ export function LocationTreeSelect({
   className = "",
   buttonClassName = "",
   availableSlugs,
+  align = "left",
 }: LocationTreeSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -58,7 +67,11 @@ export function LocationTreeSelect({
         </svg>
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-[100] mt-1 w-full min-w-[280px] rounded-xl border border-warm-200 bg-white shadow-xl">
+        <div
+          className={`absolute top-full z-[100] mt-1 w-full min-w-[280px] max-w-[calc(100vw-2rem)] rounded-xl border border-warm-200 bg-white shadow-xl ${
+            align === "right" ? "right-0" : "left-0"
+          }`}
+        >
           <div className="p-2">
             <input
               type="text"

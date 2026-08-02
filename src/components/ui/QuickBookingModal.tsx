@@ -541,6 +541,7 @@ function QuickBookingModalImpl({ onClose }: { onClose: () => void }) {
                       placeholder={t("region")}
                       searchPlaceholder={t("regionSearch")}
                       noMatchLabel={t("regionNoMatch")}
+                      align="right"
                       buttonClassName={`${TOKEN} [&>span]:!text-primary-700 [&>svg]:!hidden`}
                     />
                   </span>
