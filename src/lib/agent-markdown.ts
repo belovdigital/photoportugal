@@ -206,3 +206,68 @@ ${rows.slice(0, 15).map(photographerLine).join("\n\n") || `See the live catalog 
 
 ${st.faqs.length > 0 ? `## FAQ\n${st.faqs.map((f) => `### ${f.question}\n${f.answer}`).join("\n\n")}\n` : ""}`;
 }
+
+/**
+ * Blog posts and photo spots as markdown.
+ *
+ * These were left out of the original agent surface, which covered the
+ * catalogue pages. That is backwards for answer engines: a model citing us
+ * is far more likely to be answering "when is the best light in Seville"
+ * than listing photographers, and the long-form pages are where that answer
+ * lives. Between them they are the largest body of original text on the site.
+ */
+export async function blogIndexMarkdown(locale = "en"): Promise<string> {
+  const rows = await query<{ slug: string; title: string; excerpt: string | null; category: string | null }>(
+    `SELECT slug, title, excerpt, category FROM blog_posts
+      WHERE is_published = TRUE AND locale = $1
+      ORDER BY published_at DESC`,
+    [locale]
+  );
+  if (rows.length === 0) return `# ${country.brand} — Blog\n\nNo posts in this language yet.`;
+  const byCategory = new Map<string, typeof rows>();
+  for (const r of rows) {
+    const k = r.category || "other";
+    if (!byCategory.has(k)) byCategory.set(k, []);
+    byCategory.get(k)!.push(r);
+  }
+  const prefix = locale === "en" ? "" : `/${locale}`;
+  const sections = [...byCategory.entries()].map(([cat, posts]) =>
+    `## ${cat}\n\n` +
+    posts.map((p) => `- [${p.title}](${SITE}${prefix}/blog/${p.slug})${p.excerpt ? ` — ${p.excerpt}` : ""}`).join("\n")
+  );
+  return [
+    `# ${country.brand} — Blog`,
+    ``,
+    `> ${rows.length} guides on planning and photographing a trip. Written by the team, not generated.`,
+    ``,
+    ...sections,
+    ``,
+    `Site overview: ${SITE}/llms.txt`,
+  ].join("\n");
+}
+
+export async function blogPostMarkdown(slug: string): Promise<string | null> {
+  const post = await queryOne<{
+    title: string; excerpt: string | null; content: string;
+    published_at: string | null; category: string | null; locale: string;
+  }>(
+    `SELECT title, excerpt, content, published_at::text, category, locale
+       FROM blog_posts WHERE slug = $1 AND is_published = TRUE`,
+    [slug]
+  );
+  if (!post) return null;
+  const prefix = post.locale === "en" ? "" : `/${post.locale}`;
+  return [
+    `# ${post.title}`,
+    ``,
+    post.excerpt ? `> ${post.excerpt}\n` : "",
+    // The body is already markdown in the database — this is the one place
+    // on the site where no conversion is needed at all.
+    post.content,
+    ``,
+    `---`,
+    ``,
+    `Source: ${SITE}${prefix}/blog/${slug} · ${country.brand}`,
+    `Book a photographer: ${SITE}/photographers`,
+  ].filter(Boolean).join("\n");
+}

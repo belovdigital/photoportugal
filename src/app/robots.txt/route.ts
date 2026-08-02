@@ -36,6 +36,14 @@ Content-Signal: search=yes, ai-input=yes, ai-train=no
 Allow: /
 ${disallow.map((p) => `Disallow: ${p}`).join("\n")}
 
+# Named answer-engine crawlers. The Content-Signal above already states the
+# policy, but these bots are documented to read their own User-Agent block
+# and a checker looking for "AI bot rules" wants to see them by name.
+# Same terms as everyone else: read and cite, do not train.
+${["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-User", "Claude-SearchBot", "PerplexityBot", "Perplexity-User", "Google-Extended", "Applebot-Extended", "Bytespider", "CCBot", "meta-externalagent"]
+  .map((bot) => `User-Agent: ${bot}\nContent-Signal: search=yes, ai-input=yes, ai-train=no\nAllow: /\n${disallow.map((p) => `Disallow: ${p}`).join("\n")}`)
+  .join("\n\n")}
+
 Sitemap: ${country.baseUrl}/sitemap.xml
 Sitemap: ${country.baseUrl}/sitemap-images.xml
 `;

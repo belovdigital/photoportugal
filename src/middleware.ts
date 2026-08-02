@@ -127,6 +127,10 @@ function agentMarkdownPath(pathname: string): string | null {
   }
   if (rest === "/") return "/";
   if (/^\/(photographers|locations|photoshoots)(\/[a-z0-9-]+)?$/.test(rest)) return rest;
+  // Blog: the largest body of original writing on the site, and the part an
+  // answer engine is most likely to be citing. Slugs are unique per post
+  // across languages, so the localized prefix has already done its job above.
+  if (/^\/blog(\/[a-z0-9-]+)?$/.test(rest)) return rest;
   return null;
 }
 

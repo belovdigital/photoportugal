@@ -7,6 +7,8 @@ import {
   locationMarkdown,
   photoshootsMarkdown,
   photoshootMarkdown,
+  blogIndexMarkdown,
+  blogPostMarkdown,
 } from "@/lib/agent-markdown";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +36,12 @@ export async function GET(
     markdown = await locationsMarkdown();
   } else if (path === "/photoshoots") {
     markdown = await photoshootsMarkdown();
+  } else if (path === "/blog") {
+    markdown = await blogIndexMarkdown();
+  } else if (path.startsWith("/blog/")) {
+    // Blog slugs are unique across locales, so the post carries its own
+    // language — no need to thread the requested locale through the rewrite.
+    markdown = await blogPostMarkdown(path.slice("/blog/".length));
   } else {
     const m = path.match(/^\/(photographers|locations|photoshoots)\/([a-z0-9-]+)$/);
     if (m) {
