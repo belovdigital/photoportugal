@@ -59,6 +59,12 @@ export interface CountryPack {
   googleProfileUrl: string | null;
   /** Are the iOS/Android apps published for this market? */
   hasMobileApp: boolean;
+  /**
+   * Intercom workspace, or null for a market that runs without live chat.
+   * Gates both the widget and the server-side contact sync — a null here
+   * must never let a market's users leak into another market's inbox.
+   */
+  intercomAppId: string | null;
   /** Head-office city for schema.org PostalAddress. */
   city: string;
   /** Coordinates of that city, for schema.org geo. */
@@ -111,6 +117,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     dpaUrl: "https://www.cnpd.pt",
     googleProfileUrl: "https://g.page/r/CbWG7PogT_K2EBM",
     hasMobileApp: true,
+    intercomAppId: "d02q0i7w",
     city: "Lisbon",
     geo: { lat: 38.7223, lng: -9.1393 },
     phone: "+351 308 800 496",
@@ -159,6 +166,7 @@ const PACKS: Record<CountryCode, CountryPack> = {
     dpaUrl: "https://www.aepd.es",
     googleProfileUrl: null,
     hasMobileApp: false,
+    intercomAppId: null,
     city: "Madrid",
     geo: { lat: 40.4168, lng: -3.7038 },
     phone: null,

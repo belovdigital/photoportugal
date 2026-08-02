@@ -5,6 +5,7 @@ import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
+import { country } from "@/lib/country";
 
 async function verifyAdmin(): Promise<{ email: string } | null> {
   const cookieStore = await cookies();
@@ -239,7 +240,7 @@ export async function PATCH(req: NextRequest) {
         );
         if (userInfo) {
           const token = process.env.INTERCOM_ACCESS_TOKEN;
-          if (token) {
+          if (country.intercomAppId && token) {
             fetch("https://api.intercom.io/contacts/search", {
               method: "POST",
               headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },

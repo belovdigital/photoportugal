@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { queryOne, query } from "@/lib/db";
 import { verifyToken } from "@/app/api/admin/login/route";
+import { country } from "@/lib/country";
 
 const INTERCOM_TOKEN = process.env.INTERCOM_ACCESS_TOKEN || "";
 
@@ -99,6 +100,11 @@ export async function POST(req: NextRequest) {
   const isAuthed = secret === process.env.CRON_SECRET || (await verifyAdmin());
   if (!isAuthed) {
     return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+  }
+
+  // Markets without their own workspace never sync — see country.intercomAppId.
+  if (!country.intercomAppId) {
+    return NextResponse.json({ ok: true, skipped: "no-intercom" });
   }
 
   if (!INTERCOM_TOKEN) {

@@ -233,11 +233,13 @@ export async function GET(req: NextRequest) {
       await sendTelegram(lines.join("\n"), "daily_digest");
     } catch {}
 
-    // Daily Intercom sync
-    try {
-      const base = process.env.AUTH_URL || country.baseUrl;
-      await fetch(`${base}/api/admin/intercom-sync?secret=${process.env.CRON_SECRET}`, { method: "POST" });
-    } catch {}
+    // Daily Intercom sync — skipped in markets that run without live chat.
+    if (country.intercomAppId) {
+      try {
+        const base = process.env.AUTH_URL || country.baseUrl;
+        await fetch(`${base}/api/admin/intercom-sync?secret=${process.env.CRON_SECRET}`, { method: "POST" });
+      } catch {}
+    }
 
     return NextResponse.json({
       success: true,

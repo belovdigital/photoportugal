@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
+import { country } from "@/lib/country";
 
 const INTERCOM_TOKEN = process.env.INTERCOM_ACCESS_TOKEN || "";
 
 export async function POST() {
+  // A market with no workspace of its own must not push its users into
+  // another market's inbox, even if the access token is present in .env.
+  if (!country.intercomAppId) return NextResponse.json({ ok: true, skipped: "no-intercom" });
+
   const session = await auth();
   if (!session?.user) return NextResponse.json({ ok: false });
 

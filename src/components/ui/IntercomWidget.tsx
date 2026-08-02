@@ -2,11 +2,17 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { country } from "@/lib/country";
 
 // Routes where Intercom should never load. /concierge competes with
 // the AI chat panel; /blog visitors are reading long-form, the
 // launcher is just noise + competes with the sticky conversion bar.
 const SUPPRESS_INTERCOM_ROUTES = ["/concierge", "/blog"];
+
+// Single source of truth for the workspace. Null in markets that run
+// without live chat — LazyIntercom already refuses to mount there, and the
+// guard below keeps a direct import from booting a foreign workspace.
+const APP_ID = country.intercomAppId;
 
 export function IntercomWidget() {
   const pathname = usePathname();
@@ -32,6 +38,7 @@ export function IntercomWidget() {
   }, [pathname]);
 
   useEffect(() => {
+    if (!APP_ID) return;
     if (SUPPRESS_INTERCOM_ROUTES.some(r => pathname.includes(r))) return;
     if ((window as any).__intercomLoaded) return;
 
@@ -61,7 +68,7 @@ export function IntercomWidget() {
             path.includes("/dashboard")
           );
           const settings: Record<string, unknown> = {
-            app_id: "d02q0i7w",
+            app_id: APP_ID,
             is_mobile: isMobile,
             device_type: isMobile ? "mobile" : "desktop",
             vertical_padding: hasBottomBar ? 100 : 20,
@@ -76,7 +83,7 @@ export function IntercomWidget() {
           }
 
           const script = document.createElement("script");
-          script.src = "https://widget.intercom.io/widget/d02q0i7w";
+          script.src = `https://widget.intercom.io/widget/${APP_ID}`;
           script.async = true;
           script.setAttribute("data-cfasync", "false");
           document.head.appendChild(script);
