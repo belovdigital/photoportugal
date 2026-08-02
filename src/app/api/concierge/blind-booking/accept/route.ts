@@ -34,9 +34,24 @@ export async function POST(req: NextRequest) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || req.headers.get("x-real-ip")
       || "anonymous";
-    if (!checkRateLimit(`blind-accept:ip:${ip}`, 5, 60_000)) {
+    // PhotoTravel (the MCP/agent channel) proxies every booking through one
+    // server, so all of its traffic shares a single IP and would trip a
+    // per-IP limit designed for browsers. It authenticates with a shared
+    // key instead and stays subject to the per-email limit below, which is
+    // the one that actually catches abuse here.
+    const agentKey = process.env.AGENT_CHANNEL_KEY;
+    const isAgentChannel = Boolean(
+      agentKey && req.headers.get("x-agent-channel-key") === agentKey
+    );
+    if (!isAgentChannel && !checkRateLimit(`blind-accept:ip:${ip}`, 5, 60_000)) {
       return NextResponse.json(
         { error: "Too many booking attempts from this network. Try again in a minute." },
+        { status: 429 }
+      );
+    }
+    if (isAgentChannel && !checkRateLimit("blind-accept:agent", 60, 60_000)) {
+      return NextResponse.json(
+        { error: "Too many booking attempts just now. Try again in a minute." },
         { status: 429 }
       );
     }
@@ -317,9 +332,9 @@ export async function POST(req: NextRequest) {
         blindBaseFromTotal(hold.price_eur),
         Math.round((hold.price_eur - blindBaseFromTotal(hold.price_eur)) * 100) / 100,
         chatUuid,
-        // utm_source distinguishes the two funnels honestly; utm_medium
-        // stays 'blind_booking' for both so blind-funnel filters keep working.
-        holdId ? "concierge" : "quick_booking",
+        // utm_source distinguishes the funnels honestly; utm_medium stays
+        // 'blind_booking' for all of them so blind-funnel filters keep working.
+        isAgentChannel ? "phototravel" : holdId ? "concierge" : "quick_booking",
         visitorId,
         gclid,
       ]
