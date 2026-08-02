@@ -176,12 +176,15 @@ function normalizeOccasion(raw: string | undefined): string {
 const TOKEN =
   "relative inline-block cursor-pointer rounded-sm px-1 py-0 font-semibold text-primary-700 underline decoration-dotted decoration-primary-300 decoration-2 underline-offset-[5px] transition hover:bg-primary-50 hover:decoration-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-1";
 
-// Inline-token select. A visible <span> renders the selected label so
-// the element sizes exactly to the value (no implicit min-width from
-// the longest option), with a transparent native <select> overlaid on
-// top to handle the click + open the platform picker. This pattern
-// sidesteps the cross-browser fight with `appearance-none` and the
-// vendor-specific dropdown arrow.
+// Inline-token select. A button renders the selected label so the element
+// sizes exactly to the value (no implicit min-width from the longest
+// option), and the list is drawn by us rather than by the platform.
+//
+// It used to be a transparent native <select> overlaid on the label, which
+// sidestepped the cross-browser fight with `appearance-none` — but it also
+// meant this one control opened the grey OS picker while the region and
+// date tokens beside it opened styled panels. Consistency inside one
+// sentence is worth owning the list.
 function InlineSelect({
   value,
   onChange,
@@ -193,23 +196,76 @@ function InlineSelect({
   options: { value: string | number; label: string }[];
   ariaLabel: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLSpanElement>(null);
   const current = options.find((o) => String(o.value) === String(value));
   const label = current?.label ?? String(value);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function pick(v: string | number) {
+    onChange(String(v));
+    setOpen(false);
+  }
+
   return (
-    <span className={`${TOKEN} relative`}>
-      <span aria-hidden>{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+    <span ref={wrapRef} className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
         aria-label={ariaLabel}
-        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={TOKEN}
       >
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+        {label}
+      </button>
+      {open && (
+        <span
+          role="listbox"
+          aria-label={ariaLabel}
+          // Same panel treatment as the region and date tokens. Clamped so a
+          // long option list can never widen the dialog on a narrow phone.
+          className="absolute left-0 top-full z-[100] mt-1 block max-h-[280px] min-w-[11rem] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-warm-200 bg-white py-1 text-left shadow-xl"
+        >
+          {options.map((o) => {
+            const selected = String(o.value) === String(value);
+            return (
+              <button
+                key={o.value}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={() => pick(o.value)}
+                className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[15px] font-normal leading-snug no-underline transition hover:bg-warm-50 ${
+                  selected ? "font-semibold text-primary-700" : "text-gray-700"
+                }`}
+              >
+                <span>{o.label}</span>
+                {selected && (
+                  <svg className="h-4 w-4 shrink-0 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </span>
+      )}
     </span>
   );
 }
