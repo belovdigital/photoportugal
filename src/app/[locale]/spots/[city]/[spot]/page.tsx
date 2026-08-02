@@ -21,7 +21,7 @@ import { locationCoverUrl } from "@/lib/location-cover";
 
 const L = {
   en: {
-    portugal: country.areaServed,
+    countryName: country.countryName.en,
     photographerAt: "Photographer at",
     photoshootAt: "Photoshoot at",
     spotInCity: "Photo spot in",
@@ -53,7 +53,7 @@ const L = {
     photographersChips: ["Couples photoshoot", "Family", "Solo portrait", "Engagement", "Honeymoon"],
   },
   pt: {
-    portugal: country.areaServed,
+    countryName: country.countryName.pt,
     photographerAt: "Fotógrafo em",
     photoshootAt: "Sessão fotográfica em",
     spotInCity: "Local de fotografia em",
@@ -85,7 +85,7 @@ const L = {
     photographersChips: ["Sessão de casal", "Família", "Retrato solo", "Noivado", "Lua de mel"],
   },
   de: {
-    portugal: country.areaServed,
+    countryName: country.countryName.de,
     photographerAt: "Fotograf bei",
     photoshootAt: "Fotoshooting bei",
     spotInCity: "Foto-Spot in",
@@ -117,7 +117,7 @@ const L = {
     photographersChips: ["Paar-Shooting", "Familie", "Solo-Porträt", "Verlobung", "Flitterwochen"],
   },
   es: {
-    portugal: country.areaServed,
+    countryName: country.countryName.es,
     photographerAt: "Fotógrafo en",
     photoshootAt: "Sesión fotográfica en",
     spotInCity: "Lugar fotográfico en",
@@ -149,7 +149,7 @@ const L = {
     photographersChips: ["Sesión de pareja", "Familia", "Retrato solo", "Compromiso", "Luna de miel"],
   },
   fr: {
-    portugal: country.areaServed,
+    countryName: country.countryName.fr,
     photographerAt: "Photographe à",
     photoshootAt: "Séance photo à",
     spotInCity: "Lieu photo à",
@@ -207,7 +207,10 @@ export async function generateMetadata({
   const s = spotLocalized(spotData, locale);
   const t = pickL(locale);
   const title = `${t.photoshootAt} ${s.name}, ${location.name} — ${t.titleSuffix}`;
-  const description = `${t.hireDesc} ${s.name}, ${location.name}, ${country.areaServed}. ${s.description.slice(0, 140)}`;
+  // t.countryName, not country.areaServed: areaServed is the schema.org value
+  // and is always English, which produced "…, Barcelona, Spain" inside 45
+  // Spanish meta descriptions.
+  const description = `${t.hireDesc} ${s.name}, ${location.name}, ${t.countryName}. ${s.description.slice(0, 140)}`;
   const alt = localeAlternates(`/spots/${city}/${spot}`, locale);
   const ogImage = spotData.images?.[0]?.url || locationCoverUrl(location);
 
@@ -247,7 +250,7 @@ export default async function SpotPage({
   // single slide and no pagination controls show up.
   const carouselImages = (spotData.images || []).map((img) => ({
     url: img.url,
-    alt: img.alt || `${s.name}, ${location.name}, ${country.areaServed}`,
+    alt: img.alt || `${s.name}, ${location.name}, ${t.countryName}`,
     attribution: img.attribution,
     source: img.source,
     source_url: img.source_url,
@@ -257,7 +260,7 @@ export default async function SpotPage({
   if (carouselImages.length === 0) {
     carouselImages.push({
       url: locationCoverUrl(location),
-      alt: `${location.name}, ${country.areaServed}`,
+      alt: `${location.name}, ${t.countryName}`,
       attribution: "",
       source: "photographer" as const,
       source_url: undefined,
@@ -416,7 +419,7 @@ export default async function SpotPage({
             <div className="mb-4 [&_*]:!text-primary-200">
               <Breadcrumbs
                 items={[
-                  { name: t.portugal, href: "/" },
+                  { name: t.countryName, href: "/" },
                   { name: localizedCity, href: `/locations/${city}` },
                   { name: s.name, href: `/spots/${city}/${spot}` },
                 ]}
