@@ -2,7 +2,7 @@ import { locations } from "@/lib/locations-data";
 import { shootTypes } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
 import { country } from "@/lib/country";
-import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
+import { lowestBookablePrice } from "@/lib/package-pricing";
 
 // Site overview in agent-friendly plain text / markdown. Served both as
 // /llms.txt and as the markdown representation of the homepage when a
@@ -13,6 +13,7 @@ export async function buildLlmsText(): Promise<string> {
   let reviewCount = 0;
   let avgRating = 0;
   let minPrice: number | null = null;
+  const entryPrice = await lowestBookablePrice();
 
   try {
     const stats = await queryOne<{
@@ -160,7 +161,7 @@ ${[
   `- ${locations.length} places across ${new Set(locations.map((l) => l.region).filter(Boolean)).size} ${country.areaServed} regions`,
   reviewCount > 0 ? `- ${reviewCount} verified reviews from real bookings` : null,
   reviewCount > 0 && Number(avgRating) > 0 ? `- Average rating: ${avgRating}/5` : null,
-  `- Sessions starting from EUR${minPrice ?? MIN_PACKAGE_PRICE}`,
+  `- Sessions starting from EUR${entryPrice}`,
   `- Booking languages: ${country.contactLanguages.join(", ")}`,
   `- Payment: Stripe, escrow-protected (held until delivery)`,
   `- Typical delivery: 1-3 weeks after the session`,

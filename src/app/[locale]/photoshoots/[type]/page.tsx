@@ -21,7 +21,7 @@ import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { formatDuration } from "@/lib/package-pricing";
 import { country } from "@/lib/country";
-import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
+import { lowestBookablePrice } from "@/lib/package-pricing";
 
 // Force-dynamic so the hero photographer reshuffles on every request.
 // Same rationale as the location page: paid-ad / sitelink landing prefers
@@ -88,6 +88,7 @@ export default async function ShootTypePage({
 }: {
   params: Promise<{ locale: string; type: string }>;
 }) {
+  const entryPrice = await lowestBookablePrice();
   const { locale, type } = await params;
   setRequestLocale(locale);
 
@@ -453,7 +454,7 @@ export default async function ShootTypePage({
     offers: {
       "@type": "Offer",
       priceCurrency: "EUR",
-      price: String(minPrice ?? MIN_PACKAGE_PRICE),
+      price: String(Math.min(minPrice ?? Number.POSITIVE_INFINITY, entryPrice)),
       availability: "https://schema.org/InStock",
       url: `${country.baseUrl}/photographers?shootType=${type}`,
     },

@@ -39,7 +39,7 @@ import { formatDuration } from "@/lib/package-pricing";
 import { HeroSingleVariant, type HeroFeaturedPhotographer, type HeroLocationContext } from "@/components/ui/HeroSingleVariant";
 import { PortfolioMosaic } from "@/components/ui/PortfolioMosaic";
 import { country } from "@/lib/country";
-import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
+import { lowestBookablePrice } from "@/lib/package-pricing";
 import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/ui/LocationPhotosMasonry";
 import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 import { regionLabel } from "@/lib/region-labels";
@@ -86,6 +86,7 @@ export default async function LocationPage({
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }) {
+  const entryPrice = await lowestBookablePrice();
   const { locale, slug } = await params;
   setRequestLocale(locale);
 
@@ -554,7 +555,7 @@ export default async function LocationPage({
       // every location in a market that has just opened, and a wrong price
       // in structured data is worse than none: the result promises 150 and
       // the page says 299. Same floor the homepage falls back to.
-      price: String(minPrice ?? MIN_PACKAGE_PRICE),
+      price: String(Math.min(minPrice ?? Number.POSITIVE_INFINITY, entryPrice)),
       url: `${country.baseUrl}/photographers?location=${slug}`,
     },
   };
