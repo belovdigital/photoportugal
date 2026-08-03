@@ -211,7 +211,9 @@ export function ReviewsPaginated({
             </div>
 
             {review.title && <h4 className="mt-2 font-semibold text-gray-900">{review.title}</h4>}
-            {review.text && <p className="mt-2 text-sm text-gray-600 leading-relaxed">{review.text}</p>}
+            {/* whitespace-pre-line: 156 of the 688 approved reviews are written
+                in paragraphs, and without this they collapse into one block. */}
+            {review.text && <p className="mt-2 whitespace-pre-line text-sm text-gray-600 leading-relaxed">{review.text}</p>}
             {review.video_url && (
               <div className="mt-3">
                 <video
