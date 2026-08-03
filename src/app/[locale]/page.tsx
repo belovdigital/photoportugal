@@ -55,13 +55,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
         -- "From €320" on the live homepage. The concierge query next door
         -- already filtered correctly; this one was the outlier.
         --
-        -- The fallback is the real catalogue floor rather than 150, because
-        -- with no packages the old value advertised a price no photographer
-        -- is allowed to offer.
-        COALESCE((SELECT MIN(pk.price) FROM packages pk
-                  JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
-                  WHERE pp2.is_approved = TRUE AND COALESCE(pp2.is_test, FALSE) = FALSE
-                    AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL), ${MIN_PACKAGE_PRICE})::int as min_price,
+        -- Not MIN(packages) any more. Filtering out test and unapproved
+        -- accounts fixed the symptom but not the design: the advertised
+        -- price was still whatever the single cheapest package happened to
+        -- be, so one €90 portrait (1 of 253) was headlining the site — and
+        -- Google lifted it into the SERP hint and into auto-generated ad
+        -- sitelinks. region_pricing is the blind-booking price we can
+        -- honour in any region on any date, i.e. the real entry point.
+        COALESCE((SELECT MIN(price_eur) FROM region_pricing), ${MIN_PACKAGE_PRICE})::int as min_price,
         COALESCE((SELECT ROUND(AVG(rating)::numeric, 1) FROM reviews WHERE is_approved = TRUE), 5.0)::float as avg_rating
     `);
     if (stats) {

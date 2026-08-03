@@ -162,10 +162,10 @@ export default async function LocationPage({
       `SELECT COUNT(DISTINCT pp.id) as count,
               AVG(pp.rating) FILTER (WHERE pp.rating IS NOT NULL AND pp.review_count > 0) as avg_rating,
               COALESCE(SUM(pp.review_count), 0) as total_reviews,
-              (SELECT MIN(pk.price) FROM packages pk
+              GREATEST((SELECT MIN(pk.price) FROM packages pk
                JOIN photographer_locations pl2 ON pl2.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
-               WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE AND pk.is_public = TRUE) as min_price,
+               WHERE pl2.location_slug = $1 AND pp2.is_approved = TRUE AND pk.is_public = TRUE), (SELECT MIN(price_eur) FROM region_pricing)) as min_price,
               (SELECT MIN(pk.duration_minutes) FROM packages pk
                JOIN photographer_locations pl3 ON pl3.photographer_id = pk.photographer_id
                JOIN photographer_profiles pp3 ON pp3.id = pk.photographer_id

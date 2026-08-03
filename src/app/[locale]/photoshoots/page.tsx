@@ -79,10 +79,10 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
       try {
         const row = await queryOne<{ count: string; min_price: string | null }>(
           `SELECT COUNT(DISTINCT pp.id)::text as count,
-                  (SELECT MIN(pk.price) FROM packages pk
+                  GREATEST((SELECT MIN(pk.price) FROM packages pk
                    JOIN photographer_profiles pp2 ON pp2.id = pk.photographer_id
                    WHERE pp2.is_approved = TRUE AND pk.is_public = TRUE
-                     AND pp2.shoot_types && $1::text[]) as min_price
+                     AND pp2.shoot_types && $1::text[]), (SELECT MIN(price_eur) FROM region_pricing)) as min_price
            FROM photographer_profiles pp
            WHERE pp.is_approved = TRUE AND pp.shoot_types && $1::text[]`,
           [aliases]

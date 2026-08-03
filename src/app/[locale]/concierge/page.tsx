@@ -33,7 +33,7 @@ export default async function ConciergePage({ params }: { params: Promise<{ loca
          (SELECT COUNT(*)::text FROM photographer_profiles WHERE is_approved = TRUE AND COALESCE(is_test, FALSE) = FALSE) AS photographer_count,
          (SELECT COUNT(*)::text FROM reviews WHERE is_approved = TRUE) AS total_reviews,
          (SELECT COALESCE(ROUND(AVG(rating)::numeric, 1)::text, '5.0') FROM reviews WHERE is_approved = TRUE) AS avg_rating,
-         (SELECT MIN(price)::text FROM packages pk JOIN photographer_profiles pp ON pp.id = pk.photographer_id WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL) AS min_price`
+         GREATEST((SELECT MIN(price) FROM packages pk JOIN photographer_profiles pp ON pp.id = pk.photographer_id WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL), (SELECT MIN(price_eur) FROM region_pricing))::text AS min_price`
     ).catch(() => null),
   ]);
 

@@ -212,9 +212,9 @@ export default async function LocationsPage({ params }: { params: Promise<{ loca
     const rows = await query<{ location_slug: string; count: string; min_price: string | null }>(
       `SELECT pl.location_slug,
               COUNT(DISTINCT pp.id)::text as count,
-              (SELECT MIN(pk.price)::text FROM packages pk
+              GREATEST((SELECT MIN(pk.price) FROM packages pk
                  JOIN photographer_locations pl2 ON pl2.photographer_id = pk.photographer_id
-                 WHERE pl2.location_slug = pl.location_slug AND pk.is_public = TRUE) as min_price
+                 WHERE pl2.location_slug = pl.location_slug AND pk.is_public = TRUE), (SELECT MIN(price_eur) FROM region_pricing))::text as min_price
        FROM photographer_locations pl
        JOIN photographer_profiles pp ON pp.id = pl.photographer_id
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE

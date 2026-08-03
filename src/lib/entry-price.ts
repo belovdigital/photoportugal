@@ -21,14 +21,19 @@ import { MIN_PACKAGE_PRICE } from "@/lib/package-pricing";
 export async function lowestBookablePrice(): Promise<number> {
   try {
     const row = await queryOne<{ p: string | null }>(
-      `SELECT LEAST(
-                (SELECT MIN(price_eur) FROM region_pricing),
-                COALESCE((SELECT MIN(pk.price) FROM packages pk
-                            JOIN photographer_profiles pp ON pp.id = pk.photographer_id
-                           WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
-                             AND pk.is_public = TRUE AND pk.custom_for_user_id IS NULL),
-                         (SELECT MIN(price_eur) FROM region_pricing))
-              )::text AS p`
+      // region_pricing ONLY — deliberately not LEAST() against the package
+      // floor any more. That let a single outlier package define the whole
+      // platform's advertised price: one photographer's €90 portrait, 1 of
+      // 253 public packages, was putting "From €90" on the homepage, into
+      // the SERP price hint we feed Google, and from there into Google's
+      // auto-generated ad sitelinks ("From €90 · 32+ Cities") — while the
+      // real entry point is the €279 all-in blind booking. A price that
+      // exists for one photographer in one city is not the price of the
+      // marketplace, and quoting it buys clicks from people who leave the
+      // moment they see the actual catalogue.
+      //
+      // region_pricing is the number we can honour anywhere, any date.
+      `SELECT (SELECT MIN(price_eur) FROM region_pricing)::text AS p`
     );
     const value = row?.p ? Math.round(parseFloat(row.p)) : null;
     return value && value > 0 ? value : MIN_PACKAGE_PRICE;

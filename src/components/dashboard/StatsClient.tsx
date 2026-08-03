@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { localizeShootType } from "@/lib/shoot-type-labels";
+import { CardImpressionMockup, InfoHint } from "./InfoHint";
 
 /**
  * Photographer analytics dashboard (/dashboard/stats).
@@ -406,6 +407,14 @@ export function StatsClient() {
     );
   }
 
+  /** "What does 'shown' mean?" — the single most-asked support question. */
+  const shownHint = (align: "left" | "right" = "left") => (
+    <InfoHint label={t("hintShownLabel")} title={t("hintShownTitle")} align={align}>
+      {t("hintShownBody")}
+      <CardImpressionMockup youLabel={t("hintShownYou")} caption={t("hintShownCaption")} />
+    </InfoHint>
+  );
+
   const sourceLabel = (key: string): string => {
     const known: Record<string, string> = {
       google_ads: t("sourceGoogleAds"),
@@ -594,7 +603,10 @@ export function StatsClient() {
 
           {/* Timeline */}
           <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900">{t("timelineTitle")}</h2>
+            <h2 className="flex items-center gap-1.5 font-semibold text-gray-900">
+              {t("timelineTitle")}
+              {cur.cardImpressions > 0 && shownHint()}
+            </h2>
             {data.meta.cardDataSince === null && (
               <p className="mt-1 text-xs text-gray-400">{t("impressionsCollecting")}</p>
             )}
@@ -636,7 +648,10 @@ export function StatsClient() {
                 ] as const
               ).map((step, i) => (
                 <div key={step.label} className="relative rounded-xl bg-warm-50 p-4">
-                  <p className="text-xs font-medium text-gray-500">{step.label}</p>
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                    {step.label}
+                    {i === 0 && shownHint()}
+                  </p>
                   <p className="mt-1 text-xl font-bold tabular-nums text-gray-900">{numFmt.format(step.value)}</p>
                   {i > 0 && (
                     <p className="mt-0.5 text-[11px] text-gray-400">
@@ -709,7 +724,10 @@ export function StatsClient() {
 
           {/* Channels: where you were shown */}
           <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
-            <h2 className="font-semibold text-gray-900">{t("channelsTitle")}</h2>
+            <h2 className="flex items-center gap-1.5 font-semibold text-gray-900">
+              {t("channelsTitle")}
+              {shownHint()}
+            </h2>
             <p className="mt-1 text-xs text-gray-400">{t("channelsHint")}</p>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[420px] text-sm">
