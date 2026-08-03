@@ -39,6 +39,7 @@ export function PhotographerCardCover({
   height = "h-44",
   altPrefix,
   impressionSurface,
+  scope,
 }: {
   slug: string;
   name: string;
@@ -49,6 +50,10 @@ export function PhotographerCardCover({
   /** Override the pathname-derived surface for photographer-stats
    *  impressions (e.g. "concierge" for cards inside the chat overlay). */
   impressionSurface?: string;
+  /** Which body of work these thumbnails come from. Passed to the lightbox
+   *  so full-screen opens the same set the card was showing — a card under
+   *  the Business filter must not expand into the leisure portfolio. */
+  scope?: "leisure" | "business";
 }) {
   const t = useTranslations("photographers.card");
   const [idx, setIdx] = useState(0);
@@ -214,6 +219,7 @@ export function PhotographerCardCover({
             slug={slug}
             name={name}
             initialUrl={thumbnails[idx]}
+            scope={scope}
             onClose={() => setLightboxOpen(false)}
           />
         </Suspense>

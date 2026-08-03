@@ -76,6 +76,7 @@ export function PhotographerCard({
           name={displayName}
           thumbnails={thumbs}
           coverPositionY={photographer.cover_position_y}
+          scope={showBusinessOnly ? "business" : "leisure"}
           height="h-56"
           altPrefix={t("coverAlt", { name: "" }).replace(/\s*$/, "")}
         />

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * payload small enough to load on-click without noticeable delay.
  */
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
@@ -17,11 +17,20 @@ export async function GET(
     return NextResponse.json({ error: "Bad slug" }, { status: 400 });
   }
 
+  // The lightbox must show the same body of work the card was showing. A card
+  // under the catalog's Business filter carries corporate photos, so opening
+  // it full-screen has to stay in that set — the default (leisure) would swap
+  // the gallery out from under the visitor.
+  const scope = req.nextUrl.searchParams.get("scope") === "business" ? "business" : "leisure";
+  const scopeSql = scope === "business"
+    ? "lower(pi.shoot_type) = 'business'"
+    : "COALESCE(lower(pi.shoot_type), '') <> 'business'";
+
   const rows = await query<{ url: string; caption: string | null }>(
     `SELECT pi.url, pi.caption
      FROM portfolio_items pi
      JOIN photographer_profiles pp ON pp.id = pi.photographer_id
-     WHERE pp.slug = $1 AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
+     WHERE pp.slug = $1 AND pi.type = 'photo' AND ${scopeSql}
      ORDER BY pi.sort_order NULLS LAST, pi.created_at
      LIMIT 40`,
     [slug],

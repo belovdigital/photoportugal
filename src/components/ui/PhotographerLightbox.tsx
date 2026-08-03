@@ -21,11 +21,14 @@ export function PhotographerLightbox({
   slug,
   name,
   initialUrl,
+  scope,
   onClose,
 }: {
   slug: string;
   name: string;
   initialUrl?: string;
+  /** Which body of work to load — matches what the card was showing. */
+  scope?: "leisure" | "business";
   onClose: () => void;
 }) {
   const [items, setItems] = useState<{ url: string; caption: string | null }[] | null>(null);
@@ -57,7 +60,7 @@ export function PhotographerLightbox({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/photographers/${slug}/portfolio`)
+    fetch(`/api/photographers/${slug}/portfolio${scope === "business" ? "?scope=business" : ""}`)
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
       .then((d: { items: { url: string; caption: string | null }[] }) => {
         if (cancelled) return;
@@ -90,7 +93,7 @@ export function PhotographerLightbox({
         setItems(initialUrl ? [{ url: initialUrl, caption: null }] : []);
       });
     return () => { cancelled = true; };
-  }, [slug, initialUrl]);
+  }, [slug, initialUrl, scope]);
 
   // Lock body scroll while modal is open.
   useEffect(() => {
