@@ -56,8 +56,6 @@ export interface BusinessPhotographer {
   rating: number;
   review_count: number;
   locations: string[];
-  /** Corporate photos only — the card carousel shows nothing else. */
-  photos: string[];
 }
 
 /**
@@ -74,16 +72,7 @@ export async function getBusinessPhotographers(limit = 8): Promise<BusinessPhoto
                 SELECT ARRAY_AGG(INITCAP(REPLACE(pl.location_slug, '-', ' ')) ORDER BY pl.location_slug)
                   FROM photographer_locations pl
                  WHERE pl.photographer_id = pp.id
-              ), ARRAY[]::text[]) as locations,
-              ARRAY(
-                SELECT pi.url
-                  FROM portfolio_items pi
-                 WHERE pi.photographer_id = pp.id
-                   AND pi.type = 'photo'
-                   AND lower(pi.shoot_type) = 'business'
-                 ORDER BY pi.sort_order NULLS LAST, pi.created_at
-                 LIMIT 8
-              ) as photos
+              ), ARRAY[]::text[]) as locations
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
         WHERE pp.is_approved = TRUE
