@@ -412,6 +412,15 @@ export function Footer() {
               className="hover:text-gray-500 transition"
             >
               BLV Group
+            </a>{" "}
+            and hosted on{" "}
+            <a
+              href="https://belov.cloud"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-500 transition"
+            >
+              Belov.Cloud
             </a>
           </p>
         </div>
