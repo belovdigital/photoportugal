@@ -240,9 +240,32 @@ export async function POST(
         console.error("[delivery/share_peek] email error:", e);
       }
 
-      import("@/lib/telegram").then(({ sendTelegram }) =>
-        sendTelegram(`✨ <b>Sneak peek shared</b>\nBooking: <code>${id.slice(0, 8)}</code>\nPhotos: ${imgCount}\n${peekUrl}`, "bookings")
-      ).catch(() => {});
+      // Names, like every other ping in this topic. A truncated booking id
+      // identifies nobody in a group chat: telling whose shoot this was meant
+      // opening the link or going to the admin panel.
+      try {
+        const tgNames = await queryOne<{ client_name: string }>(
+          `SELECT cu.name as client_name
+             FROM bookings b JOIN users cu ON cu.id = b.client_id
+            WHERE b.id = $1`, [id]
+        );
+        const shootDate = booking.shoot_date
+          ? new Date(booking.shoot_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+          : null;
+        import("@/lib/telegram").then(({ sendTelegram }) =>
+          sendTelegram(
+            `✨ <b>Sneak peek shared</b>\n\n` +
+            `<b>Photographer:</b> ${booking.photographer_name}\n` +
+            `<b>Client:</b> ${tgNames?.client_name || "—"}\n` +
+            (shootDate ? `<b>Shoot:</b> ${shootDate}\n` : "") +
+            `<b>Photos:</b> ${imgCount}\n` +
+            `<code>${id.slice(0, 8)}</code>\n\n${peekUrl}`,
+            "bookings"
+          )
+        ).catch(() => {});
+      } catch (e) {
+        console.error("[delivery/share_peek] telegram error:", e);
+      }
 
       return NextResponse.json({ success: true, peek_token: peekToken, peek_url: peekUrl, count: imgCount });
     }
