@@ -17,6 +17,7 @@ import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
 import { country } from "@/lib/country";
 import { BUSINESS_SHOOT_TYPE } from "@/lib/shoot-type-labels";
+import { getBusinessPhotos } from "@/lib/business-showcase";
 
 /** Market name in Spanish, for the hardcoded copy dictionary below. */
 // Country name declined per locale lives in the pack — areaServed is the
@@ -117,34 +118,10 @@ export default async function PhotoshootsHubPage({ params }: { params: Promise<{
   } catch {}
 
   // The Business tile is the one place a corporate photo belongs on this page
-  // — a tile only ever shows its own shoot type, so nothing gets mixed. No
-  // RANDOM() here: with a handful of corporate photos on the platform we want
-  // the strongest one, so pick from the best-ranked profile and take the shot
-  // that photographer put first themselves.
-  try {
-    const row = await queryOne<{ url: string }>(
-      `SELECT pi.url
-       FROM portfolio_items pi
-       JOIN photographer_profiles pp ON pp.id = pi.photographer_id
-       JOIN users u ON u.id = pp.user_id
-       WHERE pi.type = 'photo'
-         AND lower(pi.shoot_type) = 'business'
-         AND pp.is_approved = TRUE
-         AND COALESCE(pp.is_test, FALSE) = FALSE
-         AND COALESCE(u.is_banned, FALSE) = FALSE
-       ORDER BY
-         CASE
-           WHEN pp.is_featured THEN 0
-           WHEN pp.is_verified THEN 1
-           WHEN COALESCE(pp.is_founding, FALSE) THEN 2
-           ELSE 3
-         END,
-         pp.rating DESC NULLS LAST,
-         pi.sort_order NULLS LAST, pi.created_at
-       LIMIT 1`
-    );
-    if (row?.url) representative[BUSINESS_SHOOT_TYPE] = row.url;
-  } catch {}
+  // — a tile only ever shows its own shoot type, so nothing gets mixed. Shares
+  // the ranking with the other B2B surfaces instead of picking at random.
+  const [bestBusinessPhoto] = await getBusinessPhotos(1);
+  if (bestBusinessPhoto) representative[BUSINESS_SHOOT_TYPE] = bestBusinessPhoto;
 
   // ─── Top 24 photos for the hero mosaic (mixed shoot types) ──────────
   let heroMosaic: { url: string; slug: string; name: string; location: string | null }[] = [];

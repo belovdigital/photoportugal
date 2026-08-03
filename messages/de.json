@@ -4143,7 +4143,12 @@
     "heroTitleRich": "Professionelle Fotografie für Ihr Unternehmen, <accent>überall in Portugal</accent>",
     "faqTitle": "Häufige Fragen",
     "trustPhotographers": "{count} geprüfte Fotografen in ganz Portugal",
-    "faqFootnote": "Noch Fragen? Schreiben Sie uns an"
+    "faqFootnote": "Noch Fragen? Schreiben Sie uns an",
+    "photographersKicker": "Die Fotografen",
+    "photographersTitle": "Wer tatsächlich fotografiert",
+    "photographersText": "Unternehmensarbeiten von Fotografen aus unserem Netzwerk — Events, Teams und Markeninhalte, die sie für Firmen fotografiert haben. Wischen Sie über eine Karte für mehr.",
+    "photographersCta": "Vollständiges Profil ansehen",
+    "photographersAll": "Alle Business-Fotografen ansehen"
   },
   "photographerStats": {
     "title": "Statistiken",

@@ -4143,7 +4143,12 @@
     "heroTitleRich": "Fotografia profissional para a sua empresa, <accent>em qualquer ponto de Portugal</accent>",
     "faqTitle": "Perguntas frequentes",
     "trustPhotographers": "{count} fotógrafos verificados em todo o Portugal",
-    "faqFootnote": "Ainda tem dúvidas? Escreva-nos para"
+    "faqFootnote": "Ainda tem dúvidas? Escreva-nos para",
+    "photographersKicker": "Os fotógrafos",
+    "photographersTitle": "Quem vai fotografar de facto",
+    "photographersText": "Trabalho corporativo de fotógrafos da nossa rede — eventos, equipas e conteúdo de marca que fotografaram para empresas. Deslize em qualquer cartão para ver mais.",
+    "photographersCta": "Ver perfil completo",
+    "photographersAll": "Ver todos os fotógrafos para empresas"
   },
   "photographerStats": {
     "title": "Estatísticas",

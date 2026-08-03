@@ -6,6 +6,8 @@ import { localeAlternates } from "@/lib/seo";
 import { getShootTypeBySlug, shootTypeLocalized } from "@/lib/shoot-types-data";
 import { queryOne } from "@/lib/db";
 import { BusinessInquiryForm } from "./BusinessInquiryForm";
+import { BusinessPhotographers } from "./BusinessPhotographers";
+import { getBusinessPhotos } from "@/lib/business-showcase";
 import { country } from "@/lib/country";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +46,7 @@ export default async function ForBusinessPage({ params }: { params: Promise<{ lo
     "SELECT COUNT(*)::text as count FROM photographer_profiles WHERE is_approved = TRUE AND 'Business' = ANY(shoot_types)"
   );
   const photographerCount = parseInt(stats?.count || "0", 10);
+  const [heroPhoto] = await getBusinessPhotos(1);
 
   const jsonLdFaq = faqs.length > 0
     ? {
@@ -63,8 +66,25 @@ export default async function ForBusinessPage({ params }: { params: Promise<{ lo
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
       )}
 
-      {/* ═══ 1. HERO — typographic, charcoal ═══ */}
-      <section className="bg-[#1F1B17]">
+      {/* ═══ 1. HERO — typographic, charcoal, real corporate work behind ═══ */}
+      <section className="relative isolate overflow-hidden bg-[#1F1B17]">
+        {heroPhoto && (
+          <>
+            {/* Decorative: the headline carries the message. The scrim is
+                heavy on purpose — this hero is typographic first, and the
+                photo must never fight the serif. */}
+            <img
+              src={heroPhoto}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-45"
+            />
+            <div
+              className="absolute inset-0 -z-10 bg-gradient-to-br from-[#1F1B17] via-[#1F1B17]/92 to-[#1F1B17]/55"
+              aria-hidden
+            />
+          </>
+        )}
         <div className="mx-auto w-full max-w-7xl px-5 pb-16 pt-24 sm:px-8 sm:pb-24 sm:pt-32">
           <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-white/70">
             {country.brand} · {t("kicker")}
@@ -114,6 +134,9 @@ export default async function ForBusinessPage({ params }: { params: Promise<{ lo
           </div>
         </div>
       </section>
+
+      {/* ═══ 2b. THE PHOTOGRAPHERS — corporate work, nothing else ═══ */}
+      <BusinessPhotographers serifClass={serif.className} />
 
       {/* ═══ 3. HOW IT WORKS — big serif numerals ═══ */}
       <section className="bg-white">
