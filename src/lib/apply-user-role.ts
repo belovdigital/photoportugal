@@ -1,4 +1,5 @@
 import { query, queryOne, withTransaction } from "@/lib/db";
+import { defaultPhotographerSlug } from "@/lib/photographer-slug";
 import { sendWelcomeEmail, sendAdminNewPhotographerNotification, sendAdminNewClientNotification } from "@/lib/email";
 import { country } from "@/lib/country";
 
@@ -25,8 +26,8 @@ export async function applyUserRole(
   role: "photographer" | "client",
   displayName?: string | null
 ): Promise<{ ok: boolean; reason?: string }> {
-  const user = await queryOne<{ id: string; role: string | null; admin_notified: boolean; created_at: string }>(
-    "SELECT id, role, COALESCE(admin_notified, FALSE) as admin_notified, created_at FROM users WHERE email = $1",
+  const user = await queryOne<{ id: string; name: string | null; role: string | null; admin_notified: boolean; created_at: string }>(
+    "SELECT id, name, role, COALESCE(admin_notified, FALSE) as admin_notified, created_at FROM users WHERE email = $1",
     [email]
   );
   if (!user) return { ok: false, reason: "user_not_found" };
@@ -53,13 +54,8 @@ export async function applyUserRole(
   const name = displayName || "there";
 
   if (role === "photographer") {
-    const shortId = user.id.replace(/-/g, "").slice(0, 10);
-    let slug = `p-${shortId}`;
-    const existingSlug = await queryOne("SELECT id FROM photographer_profiles WHERE slug = $1", [slug]);
-    if (existingSlug) {
-      const crypto = await import("crypto");
-      slug = `${slug}${crypto.randomBytes(2).toString("hex").slice(0, 3)}`;
-    }
+    // Readable from day one — see src/lib/photographer-slug.ts.
+    const slug = await defaultPhotographerSlug(displayName || user.name, user.id);
 
     // Early-bird tier under an exclusive lock (concurrent signups race).
     await withTransaction(async (client) => {

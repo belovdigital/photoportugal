@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sendVerificationEmail } from "@/lib/email";
+import { defaultPhotographerSlug } from "@/lib/photographer-slug";
 
 function getJwtSecret(): string {
   const s = process.env.NEXTAUTH_SECRET;
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     // Create photographer profile with early bird tier (same logic as web set-role)
     if (validRole === "photographer") {
-      const slug = `p-${user.id.replace(/-/g, "").slice(0, 10)}`;
+      const slug = await defaultPhotographerSlug(name, user.id);
       await withTransaction(async (client) => {
         await client.query("LOCK TABLE photographer_profiles IN EXCLUSIVE MODE");
         const countResult = await client.query(

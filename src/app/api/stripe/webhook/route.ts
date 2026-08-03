@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { requireStripe, SERVICE_FEE_RATE } from "@/lib/stripe";
 import { queryOne, query } from "@/lib/db";
+import { defaultPhotographerSlug } from "@/lib/photographer-slug";
 import { revalidatePath } from "next/cache";
 import { sendEmail, getAdminEmail, sendSubscriptionEmail, sendPaymentReceivedToPhotographer, sendPaymentConfirmedToClient, sendPaymentFailedToClient, emailLayout } from "@/lib/email";
 import { queueNotification } from "@/lib/notification-queue";
@@ -1185,11 +1186,18 @@ export async function POST(req: NextRequest) {
           const newPlan = subActive ? plan : "free";
           // On downgrade from premium: revert custom slug to default
           if (newPlan === "free") {
-            const currentProfile = await queryOne<{ slug: string; user_id: string }>(
-              "SELECT slug, user_id FROM photographer_profiles WHERE id = $1", [photographerId]
+            const currentProfile = await queryOne<{ slug: string; user_id: string; name: string | null }>(
+              `SELECT pp.slug, pp.user_id, u.name FROM photographer_profiles pp
+               JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`, [photographerId]
             );
-            if (currentProfile && !currentProfile.slug.startsWith("p-")) {
-              const defaultSlug = `p-${currentProfile.user_id.replace(/-/g, "").slice(0, 10)}`;
+            // Reverting a CUSTOM slug drops back to the name-based
+            // default, not to `p-<id>`: a readable URL is everyone's
+            // baseline, only choosing your own is the paid perk.
+            const revertTo = currentProfile
+              ? await defaultPhotographerSlug(currentProfile.name, currentProfile.user_id, photographerId)
+              : null;
+            if (currentProfile && revertTo && currentProfile.slug !== revertTo) {
+              const defaultSlug = revertTo;
               await queryOne(
                 "INSERT INTO slug_redirects (old_slug, photographer_id) VALUES ($1, $2) ON CONFLICT (old_slug) DO NOTHING",
                 [currentProfile.slug, photographerId]
@@ -1250,11 +1258,15 @@ export async function POST(req: NextRequest) {
           );
         } else if (photographerId) {
           // Plan subscription cancelled — revert custom slug
-          const cancelledProfile = await queryOne<{ slug: string; user_id: string }>(
-            "SELECT slug, user_id FROM photographer_profiles WHERE id = $1", [photographerId]
+          const cancelledProfile = await queryOne<{ slug: string; user_id: string; name: string | null }>(
+            `SELECT pp.slug, pp.user_id, u.name FROM photographer_profiles pp
+             JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`, [photographerId]
           );
-          if (cancelledProfile && !cancelledProfile.slug.startsWith("p-")) {
-            const defaultSlug = `p-${cancelledProfile.user_id.replace(/-/g, "").slice(0, 10)}`;
+          const revertSlug = cancelledProfile
+            ? await defaultPhotographerSlug(cancelledProfile.name, cancelledProfile.user_id, photographerId)
+            : null;
+          if (cancelledProfile && revertSlug && cancelledProfile.slug !== revertSlug) {
+            const defaultSlug = revertSlug;
             await queryOne(
               "INSERT INTO slug_redirects (old_slug, photographer_id) VALUES ($1, $2) ON CONFLICT (old_slug) DO NOTHING",
               [cancelledProfile.slug, photographerId]

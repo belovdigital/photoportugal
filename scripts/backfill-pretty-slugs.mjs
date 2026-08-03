@@ -36,11 +36,21 @@ const pool = new Pool(
       }
 );
 
+// Kept in sync with src/lib/photographer-slug.ts (this script is plain
+// .mjs and can't import the TS helper).
+const CYRILLIC = {
+  а: "a", б: "b", в: "v", г: "h", ґ: "g", д: "d", е: "e", ё: "e", є: "ie",
+  ж: "zh", з: "z", и: "y", і: "i", ї: "i", й: "i", к: "k", л: "l", м: "m",
+  н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "kh",
+  ц: "ts", ч: "ch", ш: "sh", щ: "shch", ъ: "", ы: "y", ь: "", э: "e",
+  ю: "yu", я: "ya",
+};
+
 function slugify(name) {
-  return name
+  const latin = [...name.toLowerCase()].map((ch) => CYRILLIC[ch] ?? ch).join("");
+  return latin
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
@@ -54,14 +64,18 @@ const RESERVED = new Set([
 ]);
 
 const DRY_RUN = process.argv.includes("--dry-run");
+// Default: only auto-generated `p-<10 hex>` slugs. Hand-made ones like
+// `p-kayleevandam` are somebody's deliberate URL — --all opts them in.
+const INCLUDE_ALL = process.argv.includes("--all");
 
 async function main() {
   const { rows } = await pool.query(
     `SELECT pp.id, pp.slug, u.name
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
-      WHERE pp.slug ~ '^p-[a-z0-9]+$'
-      ORDER BY pp.created_at`
+      WHERE pp.slug ~ (CASE WHEN $1::bool THEN '^p-[a-z0-9]+$' ELSE '^p-[0-9a-f]{10}' END)
+      ORDER BY pp.created_at`,
+    [INCLUDE_ALL]
   );
 
   console.log(`Found ${rows.length} photographers with auto slugs${DRY_RUN ? " (DRY RUN)" : ""}`);
