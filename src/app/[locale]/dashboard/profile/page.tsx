@@ -4,10 +4,12 @@ import { queryOne, query } from "@/lib/db";
 import { locations } from "@/lib/locations-data";
 import { PhotographerDashboardClient } from "../photographer/PhotographerDashboardClient";
 import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
+import { getOneLinerQuotesForPhotographers } from "@/lib/reviews-data";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const session = await auth();
   if (!session?.user) redirect("/auth/signin");
 
@@ -48,15 +50,10 @@ export default async function ProfilePage() {
     id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number;
   }>("SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC", [profile.id]);
 
-  // The catalog prints a review snippet on the card — the preview needs
-  // the same one to be worth trusting.
-  const quoteRow = await queryOne<{ text: string; client_name: string | null }>(
-    `SELECT r.comment AS text, u.name AS client_name
-       FROM reviews r LEFT JOIN users u ON u.id = r.client_id
-      WHERE r.photographer_id = $1 AND COALESCE(r.comment, '') <> ''
-      ORDER BY r.rating DESC NULLS LAST, r.created_at DESC LIMIT 1`,
-    [profile.id]
-  );
+  // The catalog prints a review snippet on the card — reuse ITS helper so
+  // the preview shows the same quote, translated the same way.
+  const quotes = await getOneLinerQuotesForPhotographers([profile.id], locale);
+  const quoteRow = quotes[profile.id] || null;
 
   const packages = await query<{
     id: string; name: string; description: string | null; duration_minutes: number; num_photos: number; price: number; is_popular: boolean; is_public: boolean; delivery_days: number; features: string[];
