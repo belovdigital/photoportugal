@@ -46,9 +46,9 @@ export function PhotographerCard({
   // their first portfolio item.
   //
   // Under the Business filter the carousel becomes corporate-only: the cover
-  // is a leisure shot, so it's dropped too. A photographer who ticked Business
-  // but hasn't uploaded any corporate work yet keeps their cover — a blank
-  // card would read as "no longer available".
+  // is a leisure shot, so it's dropped too. The catalog already hides
+  // photographers with no corporate work, so the cover-only branch is just a
+  // guard — a blank card would read as "no longer available".
   const businessThumbs = (photographer.business_thumbs ?? []).filter(Boolean);
   const showBusinessOnly = businessMode && businessThumbs.length > 0;
   const thumbs: string[] = [];

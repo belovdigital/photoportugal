@@ -53,12 +53,17 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
       languages: string[]; shoot_types: string[]; experience_years: number;
       is_verified: boolean; is_featured: boolean; is_founding: boolean; plan: string;
       rating: number; review_count: number; session_count: number;
+      business_thumbs: string[] | null;
     }>(
       `SELECT p.id, p.slug, u.name, ${taglineSql} as tagline, ${bioSql} as bio,
               u.avatar_url, p.cover_url, p.cover_position_y, p.languages, p.shoot_types,
               COALESCE(CASE WHEN p.career_start_year IS NOT NULL THEN EXTRACT(YEAR FROM CURRENT_DATE)::INT - p.career_start_year + 1 END, p.experience_years) as experience_years,
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
-              p.plan, p.rating, p.review_count, p.session_count
+              p.plan, p.rating, p.review_count, p.session_count,
+              -- The catalog's Business filter both hides photographers without
+              -- corporate work and swaps the card carousel to it, so this page
+              -- needs the same array even though it shows covers otherwise.
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = p.id AND pi.type = 'photo' AND lower(pi.shoot_type) = 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as business_thumbs
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.is_approved = TRUE
@@ -100,6 +105,7 @@ async function getDbPhotographers(locale?: string): Promise<PhotographerProfile[
         is_featured: p.is_featured, is_founding: p.is_founding, plan: p.plan,
         rating: Number(p.rating), review_count: p.review_count,
         session_count: p.session_count, created_at: "",
+        business_thumbs: p.business_thumbs,
       } as PhotographerProfile;
     });
   } catch {

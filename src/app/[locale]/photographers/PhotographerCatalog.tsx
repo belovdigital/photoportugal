@@ -295,8 +295,15 @@ export function PhotographerCatalog({
     }
 
     if (shootTypeFilters.length > 0) {
+      // Business is the one shoot type where the toggle isn't enough: it's on
+      // by default for every photographer, so matching on it alone would list
+      // 47 profiles with no corporate work to show. Ticking it means "show me
+      // people who have actually shot this".
       result = result.filter((p) =>
-        shootTypeFilters.some((t) => p.shoot_types.includes(t))
+        shootTypeFilters.some((t) =>
+          p.shoot_types.includes(t) &&
+          (t !== BUSINESS_SHOOT_TYPE || (p.business_thumbs?.length ?? 0) > 0)
+        )
       );
     }
 
