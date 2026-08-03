@@ -584,6 +584,7 @@ export function StatsClient() {
     };
     return {
       headline,
+      weakKey: weakest && weakest.relative < 1 ? weakest.key : null,
       weak: weakest && weakest.relative < 1 ? weakCopy[weakest.key] || null : null,
       lowData: candidates.length === 0 ? t("summaryLowData") : null,
     };
@@ -653,6 +654,16 @@ export function StatsClient() {
               <p className="text-sm font-medium text-primary-900">{summary.headline}</p>
               {(summary.weak || summary.lowData) && (
                 <p className="mt-1 text-sm text-primary-800">{summary.weak || summary.lowData}</p>
+              )}
+              {/* The card is edited on the profile tab — send them there
+                  rather than leaving "fix your cover" as advice. */}
+              {summary.weakKey === "clicks" && (
+                <a
+                  href="/dashboard/profile"
+                  className="mt-2 inline-block text-sm font-semibold text-primary-700 underline hover:text-primary-900"
+                >
+                  {t("summaryWeakCta")} →
+                </a>
               )}
             </div>
           )}

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 import Cropper from "react-easy-crop";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
+import { CardPreviewGuide } from "@/components/dashboard/CardPreviewGuide";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
 import { BUSINESS_SHOOT_TYPE, isBusinessPhoto } from "@/lib/shoot-type-labels";
 import { resolveImageUrl } from "@/lib/image-url";
@@ -187,6 +188,12 @@ export function PhotographerDashboardClient({
     }).catch(() => {});
   }, []);
   const [tagline, setTagline] = useState(profile.tagline ?? "");
+  // Mirrors what CoverUpload is showing, so the card preview below it
+  // updates on upload and on every drag of the crop.
+  const [cardCover, setCardCover] = useState<{ url: string | null; y: number }>({
+    url: profile.cover_url,
+    y: profile.cover_position_y ?? 50,
+  });
   const [bio, setBio] = useState(profile.bio ?? "");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(profile.languages);
   const [selectedShootTypes, setSelectedShootTypes] = useState<string[]>(profile.shoot_types);
@@ -879,7 +886,23 @@ export function PhotographerDashboardClient({
               <AvatarUpload initialUrl={profile.avatar_url} fallbackChar={profile.name.charAt(0)} onMessage={showMessage} />
 
             {/* Cover Image */}
-            <CoverUpload initialUrl={profile.cover_url} initialPositionY={profile.cover_position_y ?? 50} onMessage={showMessage} />
+            <CoverUpload
+              initialUrl={profile.cover_url}
+              initialPositionY={profile.cover_position_y ?? 50}
+              onMessage={showMessage}
+              onChange={(url, y) => setCardCover({ url, y })}
+            />
+
+            {/* What the visitor actually decides on */}
+            <CardPreviewGuide
+              name={profile.name}
+              tagline={tagline}
+              coverUrl={cardCover.url}
+              positionY={cardCover.y}
+              minPrice={packages.length > 0 ? Math.min(...packages.map((p) => p.price)) : null}
+              reviewCount={profile.review_count}
+              rating={profile.rating}
+            />
 
             {/* Real Name */}
             <div className="grid grid-cols-2 gap-4">
@@ -2174,7 +2197,7 @@ function AvatarUpload({ initialUrl, fallbackChar, onMessage }: { initialUrl: str
   );
 }
 
-function CoverUpload({ initialUrl, initialPositionY, onMessage }: { initialUrl: string | null; initialPositionY: number; onMessage: (msg: string) => void }) {
+function CoverUpload({ initialUrl, initialPositionY, onMessage, onChange }: { initialUrl: string | null; initialPositionY: number; onMessage: (msg: string) => void; onChange?: (url: string | null, positionY: number) => void }) {
   const t = useTranslations("photographerDashboard");
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const [uploading, setUploading] = useState(false);
@@ -2189,6 +2212,7 @@ function CoverUpload({ initialUrl, initialPositionY, onMessage }: { initialUrl: 
   useEffect(() => { setPositionY(initialPositionY); }, [initialPositionY]);
 
   function savePosition(y: number) {
+    onChange?.(previewUrl, y);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       try {
@@ -2266,6 +2290,7 @@ function CoverUpload({ initialUrl, initialPositionY, onMessage }: { initialUrl: 
       if (res.ok) {
         const data = await res.json();
         setPreviewUrl(data.url);
+        onChange?.(data.url, positionY);
         onMessage(t("coverUploaded"));
       } else {
         const err = await res.json().catch(() => null);
