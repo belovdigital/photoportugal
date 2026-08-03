@@ -35,9 +35,11 @@ export function CardPreviewGuide({
   positionY: number;
   minPrice: number | null;
   reviewCount: number;
-  rating: number;
+  /** Postgres NUMERIC arrives as a string — coerce before formatting. */
+  rating: number | string;
 }) {
   const t = useTranslations("cardPreview");
+  const ratingNum = Number(rating) || 0;
   // Landscape vs portrait is only knowable once the browser has the file.
   const [ratio, setRatio] = useState<number | null>(null);
 
@@ -84,7 +86,7 @@ export function CardPreviewGuide({
             </p>
             <div className="mt-2 flex items-center justify-between text-xs">
               <span className="text-gray-500">
-                {reviewCount > 0 ? `★ ${rating.toFixed(1)} · ${reviewCount}` : t("noReviewsYet")}
+                {reviewCount > 0 ? `★ ${ratingNum.toFixed(1)} · ${reviewCount}` : t("noReviewsYet")}
               </span>
               <span className="font-semibold text-gray-900">
                 {minPrice !== null ? t("fromPrice", { price: minPrice }) : "—"}
