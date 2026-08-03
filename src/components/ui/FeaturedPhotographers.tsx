@@ -47,7 +47,7 @@ export async function FeaturedPhotographers({ locale }: { locale?: string } = {}
               COALESCE(pp.languages, '{}') as languages,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
-              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = TRUE

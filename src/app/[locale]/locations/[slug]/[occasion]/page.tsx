@@ -562,7 +562,7 @@ export default async function OccasionPage({
               -- always has real frames to rotate through.
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
-                WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                   AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
                   CASE WHEN pi.shoot_type = ANY($2::text[]) THEN 0 ELSE 1 END,
@@ -578,7 +578,7 @@ export default async function OccasionPage({
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND ($2::text[] IS NULL OR pp.shoot_types && $2::text[])
          AND EXISTS (
-           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
          )
        -- Two-tier ORDER BY: photographers with ≥4 matching-tagged photos
        -- rank above those with fewer, so hero defaults to someone with a
@@ -589,7 +589,7 @@ export default async function OccasionPage({
          CASE WHEN (
            SELECT COUNT(*) FROM portfolio_items pi
            WHERE pi.photographer_id = pp.id
-             AND pi.type = 'photo'
+             AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
              AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]))
          ) >= 4 THEN 0 ELSE 1 END,
          -LN(RANDOM()) / (CASE
@@ -639,7 +639,7 @@ export default async function OccasionPage({
        JOIN users u ON u.id = pp.user_id
        JOIN photographer_locations pl ON pl.photographer_id = pp.id
        WHERE pl.location_slug = $1
-         AND pi.type = 'photo'
+         AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
          AND pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
@@ -730,7 +730,7 @@ export default async function OccasionPage({
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
-                WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                   AND ($2::text[] IS NULL OR pi.shoot_type = ANY($2::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
                   CASE WHEN pi.shoot_type = ANY($2::text[]) THEN 0 ELSE 1 END,
@@ -847,7 +847,7 @@ export default async function OccasionPage({
                          pi.sort_order, pi.created_at
                     FROM portfolio_items pi
                    WHERE pi.photographer_id = pp.profile_id
-                     AND pi.type = 'photo'
+                     AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                    ORDER BY rank, shuffle, pi.sort_order NULLS LAST, pi.created_at
                    LIMIT 5
                 ) ranked

@@ -9,7 +9,7 @@ import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
-import { localizeShootType } from "@/lib/shoot-type-labels";
+import { localizeShootType, isBusinessPhoto } from "@/lib/shoot-type-labels";
 import { shootTypes as allShootTypes } from "@/lib/shoot-types-data";
 import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
@@ -302,7 +302,8 @@ export async function generateMetadata({
 
   // Portfolio photos to vary the image carousel (real shoots beat
   // a single cover for both social previews and image-pack ranking).
-  const portfolioImageUrls = ((p.portfolioItems || []) as { url: string }[])
+  const portfolioImageUrls = ((p.portfolioItems || []) as { url: string; shoot_type?: string | null }[])
+    .filter((x) => !isBusinessPhoto(x.shoot_type))
     .slice(0, 6)
     .map((x) => resolveAbsoluteImageUrl(x.url))
     .filter((u): u is string => Boolean(u));
@@ -478,7 +479,13 @@ export default async function PhotographerProfilePage({
   const hiddenShootTypeChipCount = Math.max(0, shootTypeChipItems.length - 5);
   const hasExperience = photographer.experience_years > 0;
   let reviews: { id: string; rating: number; title: string | null; text: string | null; is_verified: boolean; created_at: string; client_name: string | null; client_avatar: string | null; photos?: { id: string; url: string }[]; package_name?: string | null; package_id?: string | null; client_country?: string | null }[] = [];
-  const portfolioItems = (photographer as { portfolioItems?: { id?: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
+  const allPortfolioItems = (photographer as { portfolioItems?: { id?: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null }[] }).portfolioItems || [];
+  // Corporate work is kept in its own gallery tab and never mixed into the
+  // leisure portfolio — which is also what feeds the hero carousel, the LCP
+  // image, the OG images and the ImageGallery JSON-LD below. `portfolioItems`
+  // therefore means "leisure only" from here down.
+  const portfolioItems = allPortfolioItems.filter((it) => !isBusinessPhoto(it.shoot_type));
+  const businessPortfolioItems = allPortfolioItems.filter((it) => isBusinessPhoto(it.shoot_type));
 
   // Fetch real reviews from DB for DB photographers
   if (result.type === "db") {
@@ -584,7 +591,7 @@ export default async function PhotographerProfilePage({
                 (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
                 (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                  FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
-                ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
+                ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
          WHERE pp.is_approved = TRUE
@@ -1079,9 +1086,10 @@ export default async function PhotographerProfilePage({
             />
 
             {/* Portfolio — always visible below tabs */}
-            {portfolioItems.length > 0 && (
+            {(portfolioItems.length > 0 || businessPortfolioItems.length > 0) && (
               <PortfolioGallery
                 items={portfolioItems}
+                businessItems={businessPortfolioItems}
                 locations={allLocations.map((l) => ({ slug: l.slug, name: l.name }))}
                 photographerName={normalizeName(visibleName)}
                 photographerSlug={photographer.slug}

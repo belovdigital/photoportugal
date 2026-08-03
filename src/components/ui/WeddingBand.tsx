@@ -112,7 +112,7 @@ export async function WeddingBand({ locale }: { locale: string }) {
        FROM portfolio_items pi
        JOIN photographer_profiles pp ON pp.id = pi.photographer_id
        JOIN users u ON u.id = pp.user_id
-       WHERE pi.type = 'photo'
+       WHERE pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
          AND pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE

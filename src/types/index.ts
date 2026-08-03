@@ -103,6 +103,9 @@ export interface PhotographerProfile {
   avg_response_minutes?: number | null;
   /** Up to 4 extra portfolio thumbnails for the on-card carousel + lightbox launcher. Cover is shown first. */
   portfolio_thumbs?: string[] | null;
+  /** Corporate photos, never mixed into `portfolio_thumbs`. Only the catalog's
+   *  Business filter renders them — see PhotographerCard `businessMode`. */
+  business_thumbs?: string[] | null;
 }
 
 export interface Package {

@@ -70,8 +70,8 @@ export async function loadPhotographersForConcierge(): Promise<ConciergePhotogra
        u.avatar_url,
        pp.cover_url,
        pp.cover_position_y,
-       (SELECT url FROM portfolio_items WHERE photographer_id = pp.id AND type = 'photo' ORDER BY sort_order, created_at LIMIT 1) AS sample_portfolio_url,
-       ARRAY(SELECT url FROM portfolio_items WHERE photographer_id = pp.id AND type = 'photo' ORDER BY sort_order NULLS LAST, created_at LIMIT 7) AS portfolio_thumbs,
+       (SELECT url FROM portfolio_items WHERE photographer_id = pp.id AND type = 'photo' AND COALESCE(lower(shoot_type), '') <> 'business' ORDER BY sort_order, created_at LIMIT 1) AS sample_portfolio_url,
+       ARRAY(SELECT url FROM portfolio_items WHERE photographer_id = pp.id AND type = 'photo' AND COALESCE(lower(shoot_type), '') <> 'business' ORDER BY sort_order NULLS LAST, created_at LIMIT 7) AS portfolio_thumbs,
        u.last_seen_at::text,
        (SELECT r.text FROM reviews r WHERE r.photographer_id = pp.id AND r.is_approved = TRUE AND r.text IS NOT NULL AND length(r.text) > 30 ORDER BY r.rating DESC, r.created_at DESC LIMIT 1) AS review_text,
        (SELECT COALESCE(r.client_name_override, cu.name) FROM reviews r LEFT JOIN users cu ON cu.id = r.client_id WHERE r.photographer_id = pp.id AND r.is_approved = TRUE AND r.text IS NOT NULL AND length(r.text) > 30 ORDER BY r.rating DESC, r.created_at DESC LIMIT 1) AS review_client_name

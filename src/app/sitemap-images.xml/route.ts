@@ -48,7 +48,7 @@ export async function GET() {
       `SELECT pp.slug as photographer_slug, pi.url, pi.caption
        FROM portfolio_items pi
        JOIN photographer_profiles pp ON pp.id = pi.photographer_id
-       WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND pi.type = 'photo'
+       WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
        ORDER BY pi.sort_order NULLS LAST, pi.created_at ASC`
     );
 

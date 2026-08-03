@@ -141,7 +141,7 @@ export async function GET(
               -- the same first picture but order is stable per package).
               (SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = packages.photographer_id
-                  AND pi.type = 'photo'
+                  AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                 ORDER BY hashtext(packages.id::text || pi.url),
                          pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 1) as preview_url

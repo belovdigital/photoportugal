@@ -55,6 +55,7 @@ async function getDbPhotographers(locale?: string, giftMode = false): Promise<Ph
       avg_response_minutes: number | null;
       created_at: string;
       portfolio_thumbs: string[] | null;
+      business_thumbs: string[] | null;
     }>(
       `SELECT p.id, p.slug, u.name,
               ${taglineSql} as tagline,
@@ -64,7 +65,11 @@ async function getDbPhotographers(locale?: string, giftMode = false): Promise<Ph
               p.is_verified, p.is_featured, COALESCE(p.is_founding, FALSE) as is_founding,
               p.plan, p.rating, p.review_count, p.session_count, u.last_seen_at::text, p.avg_response_minutes,
               COALESCE(p.created_at, u.created_at)::text as created_at,
-              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = p.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = p.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
+              -- Corporate work, fetched separately: the card carousel swaps to
+              -- these when the visitor filters the catalog by Business, and
+              -- shows none of them otherwise.
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = p.id AND pi.type = 'photo' AND lower(pi.shoot_type) = 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as business_thumbs
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
        WHERE p.is_approved = TRUE
@@ -146,6 +151,7 @@ async function getDbPhotographers(locale?: string, giftMode = false): Promise<Ph
         last_seen_at: p.last_seen_at,
         avg_response_minutes: p.avg_response_minutes,
         portfolio_thumbs: p.portfolio_thumbs,
+        business_thumbs: p.business_thumbs,
       } as PhotographerProfile;
     });
   } catch (error) {

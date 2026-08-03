@@ -3,7 +3,7 @@
 import { Fragment, useState, useMemo, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { localizeShootType } from "@/lib/shoot-type-labels";
+import { localizeShootType, BUSINESS_SHOOT_TYPE } from "@/lib/shoot-type-labels";
 import { PhotographerProfile, Location } from "@/types";
 import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { ConciergeTrigger } from "@/components/concierge/ConciergeDrawer";
@@ -356,6 +356,11 @@ export function PhotographerCatalog({
 
     return result;
   }, [photographers, locationFilters, shootTypeFilters, languageFilter, bucketFlags, sortBy, searchQuery]);
+
+  // Filtering by Business turns the catalog into a B2B view: cards swap their
+  // carousel to corporate work only, since a client shopping for an office
+  // shoot shouldn't be judging photographers by their beach engagements.
+  const businessMode = shootTypeFilters.includes(BUSINESS_SHOOT_TYPE);
 
   const secondaryCount = shootTypeFilters.length + (languageFilter ? 1 : 0);
   const activeFilterCount = locationFilters.length + secondaryCount;
@@ -783,7 +788,7 @@ export function PhotographerCatalog({
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((photographer, idx) => (
           <Fragment key={photographer.id}>
-            <PhotographerCard photographer={photographer} quote={quotes[photographer.id]} giftMode={giftMode} />
+            <PhotographerCard photographer={photographer} quote={quotes[photographer.id]} giftMode={giftMode} businessMode={businessMode} />
             {idx === 2 && filtered.length > 3 && (
               <ConciergeTrigger
                 onClick={() => trackCTAClick("get_matched", "catalog_inline_card")}

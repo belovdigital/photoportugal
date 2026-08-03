@@ -21,7 +21,7 @@ export async function GET(
     `SELECT pi.url, pi.caption
      FROM portfolio_items pi
      JOIN photographer_profiles pp ON pp.id = pi.photographer_id
-     WHERE pp.slug = $1 AND pi.type = 'photo'
+     WHERE pp.slug = $1 AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
      ORDER BY pi.sort_order NULLS LAST, pi.created_at
      LIMIT 40`,
     [slug],

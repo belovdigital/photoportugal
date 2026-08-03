@@ -18,10 +18,14 @@ export function PhotographerCard({
   photographer,
   quote,
   giftMode = null,
+  businessMode = false,
 }: {
   photographer: PhotographerProfile;
   quote?: { text: string; client_name: string | null };
   giftMode?: { tier: "express" | "full"; tierLabel: string } | null;
+  /** Visitor is filtering the catalog by the Business shoot type — the card
+   *  then shows corporate work only, instead of the leisure portfolio. */
+  businessMode?: boolean;
 }) {
   const { data: session } = useSession();
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
@@ -40,11 +44,24 @@ export function PhotographerCard({
   // Build the carousel: cover first, then up to 4 portfolio photos. Dedupe so
   // the same image isn't shown twice when the photographer's cover is already
   // their first portfolio item.
+  //
+  // Under the Business filter the carousel becomes corporate-only: the cover
+  // is a leisure shot, so it's dropped too. A photographer who ticked Business
+  // but hasn't uploaded any corporate work yet keeps their cover — a blank
+  // card would read as "no longer available".
+  const businessThumbs = (photographer.business_thumbs ?? []).filter(Boolean);
+  const showBusinessOnly = businessMode && businessThumbs.length > 0;
   const thumbs: string[] = [];
-  if (photographer.cover_url) thumbs.push(photographer.cover_url);
-  for (const u of photographer.portfolio_thumbs ?? []) {
-    if (u && !thumbs.includes(u)) thumbs.push(u);
-    if (thumbs.length >= 8) break;
+  if (showBusinessOnly) {
+    thumbs.push(...businessThumbs.slice(0, 8));
+  } else {
+    if (photographer.cover_url) thumbs.push(photographer.cover_url);
+    if (!businessMode) {
+      for (const u of photographer.portfolio_thumbs ?? []) {
+        if (u && !thumbs.includes(u)) thumbs.push(u);
+        if (thumbs.length >= 8) break;
+      }
+    }
   }
 
   return (

@@ -10,6 +10,7 @@ import { localeAlternates, localeAlternatesFiltered, openGraphIdentity } from "@
 import { PackageCardWithCarousel } from "@/components/ui/PackageCardWithCarousel";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { deriveBlogTopic } from "@/lib/blog-topic";
+import { BUSINESS_SHOOT_TYPE } from "@/lib/shoot-type-labels";
 import { fetchBlogConversionAssets } from "@/lib/blog-conversion-assets";
 import { CityMap, type CityMapPin } from "@/components/ui/CityMap";
 import { getSpotsWithMediaForCity } from "@/lib/photo-spots-data";
@@ -83,8 +84,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       : `${country.baseUrl}${post.cover_image_url}`;
   } else {
     const topic = deriveBlogTopic(post);
-    const locSlugs = topic.primaryLocation ? [topic.primaryLocation.slug] : [];
-    const stNames = topic.primaryShootType ? [topic.primaryShootType.name] : [];
+    // Same split as the in-page hero: a B2B post gets a corporate photo or
+    // nothing, a consumer post never gets a corporate one.
+    const isBusiness = post.category === "business";
+    const locSlugs = !isBusiness && topic.primaryLocation ? [topic.primaryLocation.slug] : [];
+    const stNames = isBusiness
+      ? [BUSINESS_SHOOT_TYPE]
+      : (topic.primaryShootType ? [topic.primaryShootType.name] : []);
+    const ogPhotoScope = isBusiness
+      ? "AND lower(pi.shoot_type) = 'business'"
+      : "AND COALESCE(lower(pi.shoot_type), '') <> 'business'";
     if (locSlugs.length > 0 || stNames.length > 0) {
       const heroPhoto = await queryOne<{ url: string }>(
         `SELECT pi.url
@@ -92,7 +101,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
            JOIN photographer_profiles pp ON pp.id = pi.photographer_id
           WHERE pp.is_approved = TRUE
             AND COALESCE(pp.is_test, FALSE) = FALSE
-            AND pi.type = 'photo'
+            AND pi.type = 'photo' ${ogPhotoScope}
             -- Skip HEIC for og:image — Facebook/Twitter/WhatsApp don't
             -- render it, so the social preview would be blank.
             AND lower(pi.url) NOT LIKE '%.heic'
@@ -630,7 +639,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                              pi.sort_order, pi.created_at
                         FROM portfolio_items pi
                        WHERE pi.photographer_id = pp.profile_id
-                         AND pi.type = 'photo'
+                         AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                          AND ($1::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($1::text[]))
                          AND (
                            $2::text[] = ARRAY[]::text[]
@@ -666,7 +675,16 @@ export default async function BlogPostPage({ params }: PageProps) {
   // session" mid-article is worse than nothing. They get a dedicated
   // /for-business CTA band instead (Alex, 2026-07-12).
   const isBusinessPost = post.category === "business";
-  const heroPhoto = !isBusinessPost && (conversionLocationSlugs.length > 0 || conversionShootTypeNames.length > 0)
+  // B2B posts do get a real hero now that photographers upload corporate
+  // work — but only from business-tagged photos, and matched on shoot type
+  // alone (locations are too sparse in a 17-photo corporate pool to filter
+  // on). No business photo on file yet → the stock cover stays.
+  const heroPhotoScope = isBusinessPost
+    ? "AND lower(pi.shoot_type) = 'business'"
+    : "AND COALESCE(lower(pi.shoot_type), '') <> 'business'";
+  const heroLocationSlugs = isBusinessPost ? [] : conversionLocationSlugs;
+  const heroShootTypeNames = isBusinessPost ? [BUSINESS_SHOOT_TYPE] : conversionShootTypeNames;
+  const heroPhoto = (isBusinessPost || conversionLocationSlugs.length > 0 || conversionShootTypeNames.length > 0)
     ? await queryOne<{ url: string; photographer_name: string; photographer_slug: string }>(
         `SELECT pi.url, u.name as photographer_name, pp.slug as photographer_slug,
                 -- Lower rank = better match. 0 = both location+type tagged,
@@ -689,7 +707,7 @@ export default async function BlogPostPage({ params }: PageProps) {
            JOIN users u ON u.id = pp.user_id
           WHERE pp.is_approved = TRUE
             AND COALESCE(pp.is_test, FALSE) = FALSE
-            AND pi.type = 'photo'
+            AND pi.type = 'photo' ${heroPhotoScope}
             -- When the post mentions a specific shoot type, accept a
             -- photo only if EITHER:
             --   a) the photo itself is tagged with a matching type, OR
@@ -710,7 +728,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             )
           ORDER BY match_rank, hashtext($3::text || pi.url)
           LIMIT 1`,
-        [conversionLocationSlugs, conversionShootTypeNames, post.id]
+        [heroLocationSlugs, heroShootTypeNames, post.id]
       ).catch(() => null)
     : null;
 

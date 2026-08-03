@@ -126,6 +126,19 @@ export function canonicalizeShootType(raw: string | null | undefined): string | 
   return CANONICAL_BY_NORM[norm(trimmed)] || trimmed;
 }
 
+/** Corporate/B2B work is kept apart from leisure shoots everywhere on the
+ *  public site: hero mosaics, catalog cards, location and shoot-type pages,
+ *  blog heroes, OG images and JSON-LD all show leisure photos only. The one
+ *  place a business photo renders is its own tab on the photographer's
+ *  profile. In SQL the invariant is spelled
+ *  `COALESCE(lower(pi.shoot_type), '') <> 'business'` and sits next to every
+ *  `pi.type = 'photo'` — keep the two together when adding a photo query. */
+export const BUSINESS_SHOOT_TYPE = "Business";
+
+export function isBusinessPhoto(shootType: string | null | undefined): boolean {
+  return canonicalizeShootType(shootType) === BUSINESS_SHOOT_TYPE;
+}
+
 export function localizeShootType(canonical: string, locale: string): string {
   const dict = LABELS[locale] || LABELS.en;
   return dict[canonical] || dict[canonicalizeShootType(canonical) || canonical] || canonical;

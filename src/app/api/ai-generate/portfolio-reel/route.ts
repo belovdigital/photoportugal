@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
        JOIN photographer_profiles pp ON pp.id = pi.photographer_id
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(lower(pi.shoot_type), '') <> 'business'
          AND (pi.location_slug = $1 OR pp.id IN (
            SELECT pl.photographer_id FROM photographer_locations pl WHERE pl.location_slug = $1
          ))
@@ -74,6 +75,7 @@ export async function GET(req: NextRequest) {
        JOIN photographer_profiles pp ON pp.id = pi.photographer_id
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
+         AND COALESCE(lower(pi.shoot_type), '') <> 'business'
        ORDER BY pp.id, RANDOM()
        LIMIT $1`,
       [(12 - rows.length) * 3]

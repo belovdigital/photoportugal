@@ -173,14 +173,18 @@ export function Header() {
             )}
 
             {/* For Business — B2B inquiries (events, corporate, brand content).
-                Gift Cards moved into the Explore dropdown to make room. */}
-            <Link
-              href={"/for-business" as never}
-              onClick={() => trackCTAClick("for_business", "header_desktop")}
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition ${isActive("/for-business") ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50 hover:text-primary-600"}`}
-            >
-              {t("forBusiness")}
-            </Link>
+                Gift Cards moved into the Explore dropdown to make room.
+                Hidden from photographers like every other buy-side link: it's
+                a client inquiry form, not a photographer surface. */}
+            {!isPhotographer && (
+              <Link
+                href={"/for-business" as never}
+                onClick={() => trackCTAClick("for_business", "header_desktop")}
+                className={`rounded-lg px-3 py-2 text-sm font-medium transition ${isActive("/for-business") ? "bg-warm-50 text-primary-600" : "text-gray-700 hover:bg-warm-50 hover:text-primary-600"}`}
+              >
+                {t("forBusiness")}
+              </Link>
+            )}
 
             {/* Destinations dropdown */}
             <div className="relative">
@@ -738,7 +742,9 @@ export function Header() {
               {!isPhotographer && (
                 <MobileNavLink href="/weddings" label={`💍 ${t("weddings")}`} onClick={() => { trackCTAClick("weddings", "header_mobile"); setMobileOpen(false); }} />
               )}
-              <MobileNavLink href="/for-business" label={`${t("forBusiness")}`} onClick={() => { trackCTAClick("for_business", "header_mobile"); setMobileOpen(false); }} />
+              {!isPhotographer && (
+                <MobileNavLink href="/for-business" label={`${t("forBusiness")}`} onClick={() => { trackCTAClick("for_business", "header_mobile"); setMobileOpen(false); }} />
+              )}
               {!isPhotographer && (
                 <MobileNavLink href="/gift-cards" label={`🎁 ${t("giftCards")}`} onClick={() => { trackCTAClick("gift_cards", "header_mobile"); setMobileOpen(false); }} />
               )}

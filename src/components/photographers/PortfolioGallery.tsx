@@ -129,13 +129,21 @@ function LightboxImage({ item, alt }: { item: PortfolioItem; alt: string }) {
   );
 }
 
+/** Stable empty default — a fresh `[]` per render defeats memoization. */
+const NO_ITEMS: PortfolioItem[] = [];
+
 export function PortfolioGallery({
   items,
+  businessItems = NO_ITEMS,
   locations,
   photographerName,
   photographerSlug,
 }: {
   items: PortfolioItem[];
+  /** Corporate/B2B photos. Rendered in their own root-level tab so client
+   *  work never mixes with leisure shoots; the tab is omitted entirely when
+   *  the photographer has no business photos. */
+  businessItems?: PortfolioItem[];
   locations: LocationOption[];
   photographerName?: string;
   /** Enables photo_open events for /dashboard/stats. */
@@ -143,6 +151,13 @@ export function PortfolioGallery({
 }) {
   const t = useTranslations("photographers.portfolioGallery");
   const locale = useLocale();
+  const hasBusinessTab = businessItems.length > 0;
+  // A photographer who uploaded corporate work only still gets a usable
+  // gallery — open on whichever tab actually has photos.
+  const [tab, setTab] = useState<"leisure" | "business">(
+    items.length === 0 && hasBusinessTab ? "business" : "leisure"
+  );
+  const activeItems = tab === "business" ? businessItems : items;
   const [filter, setFilter] = useState({ location: "", shootType: "" });
   const [lightbox, setLightbox] = useState<number | null>(null);
   const lightboxScrollerRef = useRef<HTMLDivElement>(null);
@@ -151,10 +166,10 @@ export function PortfolioGallery({
   // user has already started swiping.
   const lightboxInitialJumpRef = useRef<number | null>(null);
 
-  const usedLocations = [...new Set(items.map((p) => p.location_slug).filter(Boolean))] as string[];
+  const usedLocations = [...new Set(activeItems.map((p) => p.location_slug).filter(Boolean))] as string[];
   // Canonicalize before de-duping so legacy slug/case variants ("wedding"
   // vs "Wedding", "solo" vs "Solo Portrait") collapse to a single pill.
-  const usedShootTypes = [...new Set(items.map((p) => canonicalizeShootType(p.shoot_type)).filter(Boolean))] as string[];
+  const usedShootTypes = [...new Set(activeItems.map((p) => canonicalizeShootType(p.shoot_type)).filter(Boolean))] as string[];
 
   function describePhoto(item: PortfolioItem): string {
     if (item.caption) return item.caption;
@@ -168,9 +183,12 @@ export function PortfolioGallery({
     if (photographerName) parts.push(`by ${photographerName}`);
     return parts.join(" ");
   }
-  const hasFilters = usedLocations.length > 0 || usedShootTypes.length > 0;
+  // Every photo in the business tab carries the same shoot type, so a
+  // "Business" pill there would filter nothing — locations still do.
+  const shootTypePills = tab === "business" ? [] : usedShootTypes;
+  const hasFilters = usedLocations.length > 0 || shootTypePills.length > 0;
 
-  const filtered = items.filter((item) => {
+  const filtered = activeItems.filter((item) => {
     if (filter.location && item.location_slug !== filter.location) return false;
     // Compare on the canonical form so a "Wedding" pill also matches photos
     // still tagged "wedding" (and vice-versa) until the data migration lands.
@@ -244,6 +262,31 @@ export function PortfolioGallery({
     <section>
       <h2 className="text-xl font-bold text-gray-900">{t("title")}</h2>
 
+      {/* Root-level tabs — leisure work and corporate work are separate
+          bodies of work and must not share a grid. Only rendered when the
+          photographer actually has business photos. */}
+      {hasBusinessTab && (
+        <div className="mt-3 flex gap-6 border-b border-warm-200">
+          {([
+            ["leisure", t("tabPersonal"), items.length],
+            ["business", t("tabBusiness"), businessItems.length],
+          ] as const).map(([key, label, count]) => (
+            <button
+              key={key}
+              onClick={() => { setTab(key); setFilter({ location: "", shootType: "" }); setLightbox(null); }}
+              aria-current={tab === key}
+              className={`-mb-px border-b-2 pb-2 text-sm font-semibold transition ${
+                tab === key
+                  ? "border-primary-600 text-primary-700"
+                  : "border-transparent text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              {label} <span className="font-normal text-gray-400">({count})</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Filter pills */}
       {hasFilters && (
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -254,7 +297,7 @@ export function PortfolioGallery({
                 ? "bg-gray-900 text-white" : "bg-warm-100 text-gray-500 hover:bg-warm-200"
             }`}
           >
-            {t("all", { count: items.length })}
+            {t("all", { count: activeItems.length })}
           </button>
           {usedLocations.map((slug) => (
             <button
@@ -268,7 +311,7 @@ export function PortfolioGallery({
               {locations.find((l) => l.slug === slug)?.name || slug}
             </button>
           ))}
-          {usedShootTypes.map((type) => (
+          {shootTypePills.map((type) => (
             <button
               key={type}
               onClick={() => setFilter((f) => ({ ...f, shootType: f.shootType === type ? "" : type }))}
@@ -301,13 +344,13 @@ export function PortfolioGallery({
               // Position = the photo's index in the photographer's own
               // sort order (not the filtered view) so the stats page can
               // relate clicks to grid placement.
-              if (photographerSlug) trackPhotoOpen(photographerSlug, item.id, items.indexOf(item));
+              if (photographerSlug) trackPhotoOpen(photographerSlug, item.id, activeItems.indexOf(item));
               setLightbox(i);
             }}
           />
         )}
       />
-      {filtered.length === 0 && items.length > 0 && (
+      {filtered.length === 0 && activeItems.length > 0 && (
         <p className="mt-4 text-sm text-gray-400">{t("noPhotosMatch")}</p>
       )}
 

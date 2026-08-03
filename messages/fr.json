@@ -1741,7 +1741,9 @@
       "photoViewer": "Visionneuse photo",
       "closeLightbox": "Fermer la lightbox",
       "previousPhoto": "Photo précédente",
-      "nextPhoto": "Photo suivante"
+      "nextPhoto": "Photo suivante",
+      "tabPersonal": "Portfolio",
+      "tabBusiness": "Entreprises"
     }
   },
   "locations": {

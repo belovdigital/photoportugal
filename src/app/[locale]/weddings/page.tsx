@@ -628,7 +628,7 @@ export default async function WeddingsPage({
        FROM portfolio_items pi
        JOIN photographer_profiles pp ON pp.id = pi.photographer_id
        JOIN users u ON u.id = pp.user_id
-       WHERE pi.type = 'photo'
+       WHERE pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
          AND pi.shoot_type = ANY($1::text[])
          AND pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
@@ -664,7 +664,7 @@ export default async function WeddingsPage({
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
          JOIN portfolio_items pi ON pi.photographer_id = pp.id
-           AND pi.type = 'photo' AND pi.shoot_type = ANY($1::text[])
+           AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' AND pi.shoot_type = ANY($1::text[])
          WHERE pp.is_approved = TRUE
            AND COALESCE(pp.is_test, FALSE) = FALSE
            AND COALESCE(u.is_banned, FALSE) = FALSE
@@ -674,7 +674,7 @@ export default async function WeddingsPage({
        SELECT wp.*,
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
-                WHERE pi.photographer_id = wp.id AND pi.type = 'photo'
+                WHERE pi.photographer_id = wp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                   AND pi.shoot_type = ANY($1::text[])
                 ORDER BY pi.sort_order NULLS LAST, pi.created_at
                 LIMIT 4

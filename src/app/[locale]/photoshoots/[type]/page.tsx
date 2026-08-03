@@ -108,6 +108,16 @@ export default async function ShootTypePage({
   // array everywhere so all rows surface, not just first-alias matches.
   const dbShootTypeNames = shootType.photographerShootTypeNames || [shootType.name];
 
+  // Corporate and leisure work never share a page. On every other shoot-type
+  // landing business photos are filtered out; on the Business landing they are
+  // the only thing shown — including through the "or untagged" fallbacks the
+  // queries below use to pad thin galleries, which this AND cancels out. Both
+  // directions matter: a corporate page padded with beach engagements is the
+  // same bug as a couples page showing a boardroom.
+  const PHOTO_SCOPE = shootType.slug === "business"
+    ? "AND lower(pi.shoot_type) = 'business'"
+    : "AND COALESCE(lower(pi.shoot_type), '') <> 'business'";
+
   const portugalLabel = PORTUGAL_LABEL[locale] || "Portugal";
   const inPrep = IN_PREP[locale] || "in";
 
@@ -185,7 +195,7 @@ export default async function ShootTypePage({
               -- available rather than crashing the hero.
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
-                WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ${PHOTO_SCOPE}
                   AND (pi.shoot_type = ANY($1::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
                   CASE WHEN pi.shoot_type = ANY($1::text[]) THEN 0 ELSE 1 END,
@@ -199,7 +209,7 @@ export default async function ShootTypePage({
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND pp.shoot_types && $1::text[]
          AND EXISTS (
-           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ${PHOTO_SCOPE}
          )
        -- Two-tier ORDER BY — see combo page for rationale. Same idea
        -- here: prefer photographers with ≥4 matching-tagged photos so
@@ -209,7 +219,7 @@ export default async function ShootTypePage({
          CASE WHEN (
            SELECT COUNT(*) FROM portfolio_items pi
            WHERE pi.photographer_id = pp.id
-             AND pi.type = 'photo'
+             AND pi.type = 'photo' ${PHOTO_SCOPE}
              AND pi.shoot_type = ANY($1::text[])
          ) >= 4 THEN 0 ELSE 1 END,
          -LN(RANDOM()) / (CASE
@@ -254,7 +264,7 @@ export default async function ShootTypePage({
        FROM portfolio_items pi
        JOIN photographer_profiles pp ON pp.id = pi.photographer_id
        JOIN users u ON u.id = pp.user_id
-       WHERE pi.type = 'photo'
+       WHERE pi.type = 'photo' ${PHOTO_SCOPE}
          AND pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
@@ -336,7 +346,7 @@ export default async function ShootTypePage({
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
-                WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ${PHOTO_SCOPE}
                   AND (pi.shoot_type = ANY($1::text[]) OR pi.shoot_type IS NULL)
                 ORDER BY
                   CASE WHEN pi.shoot_type = ANY($1::text[]) THEN 0 ELSE 1 END,
@@ -411,7 +421,7 @@ export default async function ShootTypePage({
                          pi.sort_order, pi.created_at
                     FROM portfolio_items pi
                    WHERE pi.photographer_id = pp.profile_id
-                     AND pi.type = 'photo'
+                     AND pi.type = 'photo' ${PHOTO_SCOPE}
                    ORDER BY rank, shuffle, pi.sort_order NULLS LAST, pi.created_at
                    LIMIT 5
                 ) ranked

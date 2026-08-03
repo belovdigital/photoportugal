@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
                           hashtext(p.id::text || pi.url) as shuffle,
                           pi.sort_order, pi.created_at
                      FROM portfolio_items pi
-                    WHERE pi.photographer_id = p.id AND pi.type = 'photo'
+                    WHERE pi.photographer_id = p.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                     ORDER BY shuffle, pi.sort_order NULLS LAST, pi.created_at
                     LIMIT 6
                  ) t

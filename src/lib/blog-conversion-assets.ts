@@ -172,7 +172,7 @@ async function fetchHeroCarousel(
        JOIN users u ON u.id = pp.user_id
       WHERE pp.is_approved = TRUE
         AND COALESCE(pp.is_test, FALSE) = FALSE
-        AND pi.type = 'photo'
+        AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
         AND ($1::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($1::text[]))
         -- Photographer must cover the location AND match the shoot type
         -- when both are present in the post. The photo itself must also
@@ -204,7 +204,7 @@ async function fetchHeroCarousel(
     `SELECT pi.url
      FROM portfolio_items pi
       WHERE pi.photographer_id = $1
-        AND pi.type = 'photo'
+        AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
         AND ($2::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($2::text[]))
         AND ($3::text[] = ARRAY[]::text[] OR pi.shoot_type = ANY($3::text[]) OR pi.shoot_type IS NULL)
       ORDER BY
@@ -265,7 +265,7 @@ async function fetchPhotoStrip(
          JOIN users u ON u.id = pp.user_id
         WHERE pp.is_approved = TRUE
           AND COALESCE(pp.is_test, FALSE) = FALSE
-          AND pi.type = 'photo'
+          AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
           -- If the post has a primary location, the strip photo itself must
           -- be tagged there; otherwise the "Real shots from X" label lies.
           AND (
@@ -353,7 +353,7 @@ async function fetchPhotographerBreakouts(
         AND EXISTS (
           SELECT 1 FROM portfolio_items pix
            WHERE pix.photographer_id = pp.id
-             AND pix.type = 'photo'
+             AND pix.type = 'photo' AND COALESCE(lower(pix.shoot_type), '') <> 'business'
              AND ($1::text[] = ARRAY[]::text[] OR pix.location_slug = ANY($1::text[]))
              AND (
                $2::text[] = ARRAY[]::text[]
@@ -375,7 +375,7 @@ async function fetchPhotographerBreakouts(
       const [thumbs, packages] = await Promise.all([
         query<{ url: string }>(
           `SELECT pi.url FROM portfolio_items pi
-            WHERE pi.photographer_id = $1 AND pi.type = 'photo'
+            WHERE pi.photographer_id = $1 AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
               AND ($3::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($3::text[]))
               AND (
                 $4::text[] = ARRAY[]::text[]
@@ -484,7 +484,7 @@ async function fetchEndCapPhotographers(
                          pi.sort_order, pi.created_at
                     FROM portfolio_items pi
                    WHERE pi.photographer_id = pp.id
-                     AND pi.type = 'photo'
+                     AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                      AND ($1::text[] = ARRAY[]::text[] OR pi.location_slug = ANY($1::text[]))
                      AND (
                        $2::text[] = ARRAY[]::text[]

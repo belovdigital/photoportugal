@@ -58,7 +58,7 @@ export async function attachBlogHeroPhotos<T extends BlogHeroAttachable>(posts: 
          JOIN users u ON u.id = pp.user_id
         WHERE pp.is_approved = TRUE
           AND COALESCE(pp.is_test, FALSE) = FALSE
-          AND pi.type = 'photo'
+          AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
           AND (
             $2::text[] = ARRAY[]::text[]
             OR pi.shoot_type = ANY($2::text[])

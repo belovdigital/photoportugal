@@ -311,7 +311,7 @@ export default async function SpotPage({
             COALESCE(pp.languages, '{}') as languages,
             (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
              FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
-            ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
+            ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
      JOIN photographer_locations pl ON pl.photographer_id = pp.id
@@ -337,7 +337,7 @@ export default async function SpotPage({
        JOIN users u ON u.id = pp.user_id
        JOIN photographer_locations pl ON pl.photographer_id = pp.id
        WHERE pl.location_slug = $1
-         AND pi.type = 'photo'
+         AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
          AND pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE

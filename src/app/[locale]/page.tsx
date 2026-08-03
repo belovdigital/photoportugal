@@ -391,12 +391,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                   ELSE 100
                 END), loc_row.location_slug
                 LIMIT 1) as location_slug,
-              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 12) as portfolio_urls
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 12) as portfolio_urls
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
        WHERE pp.is_approved = TRUE AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
-         AND EXISTS (SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo')
+         AND EXISTS (SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business')
        -- Weighted random pick (Efraimidis-Spirakis sampling): higher tier =
        -- higher probability of being chosen, but not a hard priority. Alexandru
        -- (sole Featured) gets ~50% of impressions, Verified ~30%, Founding ~15%,
@@ -445,7 +445,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               (SELECT pl.location_slug FROM photographer_locations pl WHERE pl.photographer_id = pp.id LIMIT 1) AS location_slug
        FROM photographer_profiles pp
        JOIN users u ON u.id = pp.user_id
-       JOIN portfolio_items pi ON pi.photographer_id = pp.id AND pi.type = 'photo'
+       JOIN portfolio_items pi ON pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
        WHERE pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE

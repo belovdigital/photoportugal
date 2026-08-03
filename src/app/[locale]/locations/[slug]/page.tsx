@@ -225,7 +225,7 @@ export default async function LocationPage({
               COALESCE(pp.session_count, 0) as session_count,
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
-                WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+                WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                 ORDER BY
                   CASE WHEN pi.location_slug = $1 THEN 0 ELSE 1 END,
                   pi.sort_order NULLS LAST, pi.created_at
@@ -239,7 +239,7 @@ export default async function LocationPage({
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
          AND EXISTS (
-           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo'
+           SELECT 1 FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
          )
        ORDER BY -LN(RANDOM()) / (CASE
          WHEN pp.is_featured THEN 50
@@ -250,7 +250,7 @@ export default async function LocationPage({
        END * (CASE WHEN EXISTS (
          SELECT 1 FROM portfolio_items pi3
           WHERE pi3.photographer_id = pp.id
-            AND pi3.type = 'photo'
+            AND pi3.type = 'photo' AND COALESCE(lower(pi3.shoot_type), '') <> 'business'
             AND pi3.location_slug = $1
        ) THEN 5 ELSE 1 END)) ASC
        LIMIT 1`;
@@ -295,7 +295,7 @@ export default async function LocationPage({
        JOIN users u ON u.id = pp.user_id
        JOIN photographer_locations pl ON pl.photographer_id = pp.id
        WHERE pl.location_slug = $1
-         AND pi.type = 'photo'
+         AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
          AND pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
@@ -378,7 +378,7 @@ export default async function LocationPage({
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
               (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
-              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
+              ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
               -- ALL public packages (no LIMIT) so the card can render the
               -- full stack inline — most photographers have 3–4 and a
               -- "view all" link would just add a click without saving
@@ -409,7 +409,7 @@ export default async function LocationPage({
        ORDER BY (CASE WHEN EXISTS (
          SELECT 1 FROM portfolio_items pi
           WHERE pi.photographer_id = pp.id
-            AND pi.type = 'photo'
+            AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
             AND pi.location_slug = $1
        ) THEN 0 ELSE 1 END),
                 pp.is_featured DESC, pp.is_verified DESC, RANDOM()
@@ -470,7 +470,7 @@ export default async function LocationPage({
                          pi.sort_order, pi.created_at
                     FROM portfolio_items pi
                    WHERE pi.photographer_id = pp.profile_id
-                     AND pi.type = 'photo'
+                     AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                    ORDER BY rank, shuffle, pi.sort_order NULLS LAST, pi.created_at
                    LIMIT 5
                 ) ranked
@@ -480,7 +480,7 @@ export default async function LocationPage({
       ORDER BY (CASE WHEN EXISTS (
                  SELECT 1 FROM portfolio_items pi
                   WHERE pi.photographer_id = pp.profile_id
-                    AND pi.type = 'photo'
+                    AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
                     AND pi.location_slug = $1
                ) THEN 0 ELSE 1 END),
                pp.is_featured DESC, pp.is_verified DESC,

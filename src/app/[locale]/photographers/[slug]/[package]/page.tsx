@@ -105,7 +105,7 @@ async function loadPackage(slug: string, packageSlug: string, locale: Loc) {
             (CASE WHEN shoot_type IS NOT NULL AND LOWER(shoot_type) = ANY($3::text[]) THEN 100 ELSE 0 END) +
             (CASE WHEN location_slug IS NOT NULL AND location_slug = ANY($4::text[]) THEN 50 ELSE 0 END) as score
      FROM portfolio_items
-     WHERE photographer_id = $1 AND type = 'photo'
+     WHERE photographer_id = $1 AND type = 'photo' AND COALESCE(lower(shoot_type), '') <> 'business'
      ORDER BY score DESC, hashtext($2 || url), sort_order NULLS LAST, created_at
      LIMIT 24`,
     [photographer.id, pkg.id, shootKeywords, locSlugs]
@@ -153,7 +153,7 @@ async function loadPackage(slug: string, packageSlug: string, locale: Loc) {
   const otherPackages = await query<{ slug: string | null; name: string; price: number; duration_minutes: number; num_photos: number; preview_url: string | null }>(
     `SELECT slug, ${locField(locale, "name")} as name, price, duration_minutes, num_photos,
             (SELECT pi.url FROM portfolio_items pi
-              WHERE pi.photographer_id = packages.photographer_id AND pi.type = 'photo'
+              WHERE pi.photographer_id = packages.photographer_id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
               ORDER BY hashtext(packages.id::text || pi.url), pi.sort_order NULLS LAST, pi.created_at
               LIMIT 1) as preview_url
      FROM packages

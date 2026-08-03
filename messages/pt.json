@@ -1314,7 +1314,9 @@
       "photoViewer": "Visualizador de fotos",
       "closeLightbox": "Fechar visualizador",
       "previousPhoto": "Foto anterior",
-      "nextPhoto": "Próxima foto"
+      "nextPhoto": "Próxima foto",
+      "tabPersonal": "Portfólio",
+      "tabBusiness": "Empresas"
     }
   },
   "locations": {
