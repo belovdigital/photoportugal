@@ -2052,6 +2052,17 @@ async function runReminders(): Promise<NextResponse> {
       } catch (e) {
         console.error("[cron] fully-live email failed:", p.email, e);
       }
+      // Closes the loop the approval ping opened: an admin who saw "Stripe нет,
+      // срок такой-то" now hears how it ended, without checking the roster.
+      import("@/lib/telegram").then(({ sendTelegram }) =>
+        sendTelegram(
+          `💳 <b>Stripe подключён</b>\n\n${p.name} (${p.email})\n` +
+          (p.was_hidden
+            ? "Был скрыт за отсутствие выплат — профиль вернулся в каталог."
+            : "Успел в срок. Выплаты идут ему напрямую, отсчёт снят."),
+          "photographers"
+        )
+      ).catch(() => {});
     }
 
   } catch (err) {

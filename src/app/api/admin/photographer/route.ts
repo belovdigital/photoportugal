@@ -116,18 +116,19 @@ export async function PATCH(req: NextRequest) {
     let approvalPayoutConnected = true;
     if (updates.is_approved === true && !wasAlreadyApproved) {
       const row = await queryOne<{
-        email: string; name: string; locale: string | null;
+        email: string; name: string; phone: string | null; locale: string | null;
         stripe_account_id: string | null; stripe_onboarding_complete: boolean;
       }>(
-        `SELECT u.email, u.name, u.locale, pp.stripe_account_id,
+        `SELECT u.email, u.name, u.phone, u.locale, pp.stripe_account_id,
                 COALESCE(pp.stripe_onboarding_complete, FALSE) AS stripe_onboarding_complete
            FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id
           WHERE pp.id = $1`,
         [id]
       );
       approvalPayoutConnected = Boolean(row?.stripe_account_id && row?.stripe_onboarding_complete);
+      let approvalDeadline: string | null = null;
       if (row && !approvalPayoutConnected) {
-        await query(
+        const stamped = await query<{ stripe_deadline_at: Date }>(
           `UPDATE photographer_profiles
               SET stripe_deadline_at = NOW() + INTERVAL '${STRIPE_GRACE_DAYS} days',
                   stripe_hidden_at = NULL,
@@ -135,9 +136,12 @@ export async function PATCH(req: NextRequest) {
                   stripe_nudge_d4_sent = FALSE,
                   stripe_nudge_d6_sent = FALSE,
                   stripe_overdue_admin_notified = FALSE
-            WHERE id = $1`,
+            WHERE id = $1
+            RETURNING stripe_deadline_at`,
           [id]
         );
+        const deadlineAt = stamped[0]?.stripe_deadline_at;
+        approvalDeadline = deadlineAt ? new Date(deadlineAt).toISOString().slice(0, 10) : null;
         try {
           const { normalizeLocale } = await import("@/lib/email-locale");
           const { sendApprovedConnectStripeEmail } = await import("@/lib/email");
@@ -147,6 +151,23 @@ export async function PATCH(req: NextRequest) {
         } catch (e) {
           console.error("[admin] approved/connect-stripe email failed:", e);
         }
+      }
+
+      // Admins hear about every approval, not only the ones already payable.
+      // This ping carries the phone number the WhatsApp group is built from,
+      // and it used to live inside the "already connected" branch below —
+      // which the two-stage split turned into the rare case, so a week of
+      // approvals went unannounced.
+      if (row) {
+        const stripeLine = approvalPayoutConnected
+          ? "💳 Stripe подключён — платить можем."
+          : `⏳ Stripe нет. Срок: ${approvalDeadline || `${STRIPE_GRACE_DAYS} дней`} — дальше профиль скроется сам.`;
+        import("@/lib/telegram").then(({ sendTelegram }) =>
+          sendTelegram(
+            `✅ <b>Photographer Approved!</b>\n\n<b>Name:</b> ${row.name}\n<b>Phone:</b> ${row.phone || "not set"}\n${stripeLine}\n\n👉 Add to WhatsApp group`,
+            "photographers"
+          )
+        ).catch((err) => console.error("[admin] telegram approval error:", err));
       }
     }
 
@@ -228,10 +249,9 @@ export async function PATCH(req: NextRequest) {
                 m.notifyUser(photographerPhone.user_id, "profile_approved")
               );
             }
-            // Telegram notification to admins with phone for WhatsApp group addition
-            import("@/lib/telegram").then(({ sendTelegram }) => {
-              sendTelegram(`✅ <b>Photographer Approved!</b>\n\n<b>Name:</b> ${photographer.name}\n<b>Phone:</b> ${photographerPhone?.phone || "not set"}\n\n👉 Add to WhatsApp group`, "photographers");
-            }).catch((err) => console.error("[admin] telegram approval error:", err));
+            // No Telegram here — the approval ping now fires for every
+            // first-time approval above, payable or not. Two sends would be
+            // two "add to WhatsApp group" reminders for the same person.
           } catch (smsErr) {
             console.error("[admin] approval whatsapp/sms error:", smsErr);
           }
