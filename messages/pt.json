@@ -4232,7 +4232,7 @@
     "intentYou": "Os seus visitantes",
     "intentPlatform": "Procura na plataforma",
     "intentUnknown": "Desconhecido",
-    "photosTitle": "Fotos mais abertas (30 dias)",
+    "photosTitle": "Fotos mais abertas",
     "photosHint": "Fotos do portfólio que os visitantes mais abrem. # = posição no portfólio — as primeiras posições recebem naturalmente mais aberturas.",
     "photosEmpty": "Ainda sem aberturas de fotos registadas — a recolha acabou de começar.",
     "dataSince": "Dados recolhidos desde {date}",

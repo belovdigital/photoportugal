@@ -18,7 +18,6 @@ export const dynamic = "force-dynamic";
 
 const DAY_MS = 86_400_000;
 const ALLOWED_WINDOWS = new Set([30, 90, 180]);
-const TOP_PHOTOS_WINDOW_DAYS = 30;
 const TOP_PHOTOS_LIMIT = 12;
 const PLATFORM_INTENT_WINDOW_DAYS = 90;
 
@@ -262,7 +261,9 @@ export async function GET(req: NextRequest) {
          GROUP BY pi.id, pi.url, pi.thumbnail_url, pi.caption, pi.sort_order
          ORDER BY opens DESC
          LIMIT ${TOP_PHOTOS_LIMIT}`,
-        [profile.id, shiftDays(today, -(TOP_PHOTOS_WINDOW_DAYS - 1))],
+        // Follows the page's period selector — a fixed 30-day list next
+        // to 90/180-day numbers just looked like a different profile.
+        [profile.id, from],
       ),
       query<{ occasion: string; count: number }>(
         `SELECT occasion, COUNT(*)::int AS count FROM bookings

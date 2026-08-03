@@ -312,14 +312,16 @@ function BarList({
     <div className="space-y-2">
       {entries.map(([key, value]) => (
         <div key={key} className="flex items-center gap-3 text-sm">
-          <div className="w-32 shrink-0 truncate text-gray-600 sm:w-40">{labelFor(key)}</div>
+          {/* Wraps instead of truncating: labels like "Outranked (didn't
+              fit the top)" were being cut mid-word. */}
+          <div className="w-32 shrink-0 leading-tight text-gray-600 sm:w-48">{labelFor(key)}</div>
           <div className="h-4 flex-1 overflow-hidden rounded-sm bg-warm-100">
             <div
               className="h-full rounded-r-[4px] bg-primary-500"
               style={{ width: `${Math.max(2, (value / max) * 100)}%` }}
             />
           </div>
-          <div className="w-10 shrink-0 text-right font-semibold tabular-nums text-gray-900">{value}</div>
+          <div className="w-12 shrink-0 text-right font-semibold tabular-nums text-gray-900">{value}</div>
         </div>
       ))}
     </div>

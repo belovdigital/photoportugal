@@ -4232,7 +4232,7 @@
     "intentYou": "Ihre Besucher",
     "intentPlatform": "Nachfrage auf der Plattform",
     "intentUnknown": "Unbekannt",
-    "photosTitle": "Meistgeöffnete Fotos (30 Tage)",
+    "photosTitle": "Meistgeöffnete Fotos",
     "photosHint": "Portfolio-Fotos, die Besucher am häufigsten öffnen. # = Position im Portfolio — frühe Positionen werden naturgemäß öfter geöffnet.",
     "photosEmpty": "Noch keine Foto-Öffnungen erfasst — die Erfassung hat gerade begonnen.",
     "dataSince": "Daten erfasst seit {date}",

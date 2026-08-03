@@ -4232,7 +4232,7 @@
     "intentYou": "Vos visiteurs",
     "intentPlatform": "Demande sur la plateforme",
     "intentUnknown": "Inconnu",
-    "photosTitle": "Photos les plus ouvertes (30 jours)",
+    "photosTitle": "Photos les plus ouvertes",
     "photosHint": "Photos du portfolio que les visiteurs ouvrent le plus. # = position dans votre portfolio — les premières positions reçoivent naturellement plus d'ouvertures.",
     "photosEmpty": "Aucune ouverture de photo enregistrée pour l'instant — la collecte vient de commencer.",
     "dataSince": "Données collectées depuis {date}",

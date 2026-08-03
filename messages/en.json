@@ -4226,7 +4226,7 @@
     "intentYou": "Your visitors",
     "intentPlatform": "Platform demand",
     "intentUnknown": "Unknown",
-    "photosTitle": "Most-opened photos (30 days)",
+    "photosTitle": "Most-opened photos",
     "photosHint": "Portfolio photos visitors open most. # = position in your portfolio — early positions naturally get more opens.",
     "photosEmpty": "No photo opens recorded yet — collection has just started.",
     "dataSince": "Data collected since {date}",
