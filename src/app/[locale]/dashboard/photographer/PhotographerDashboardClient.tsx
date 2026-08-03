@@ -5,6 +5,7 @@ import Cropper from "react-easy-crop";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { SHOOT_TYPES, LANGUAGES } from "@/types";
+import { BUSINESS_SHOOT_TYPE, isBusinessPhoto } from "@/lib/shoot-type-labels";
 import { resolveImageUrl } from "@/lib/image-url";
 import { useConfirmModal } from "@/components/ui/ConfirmModal";
 import {
@@ -398,6 +399,12 @@ export function PhotographerDashboardClient({
   const [uploadProgress, setUploadProgress] = useState<{ total: number; done: number; failed: number } | null>(null);
   const [draggingOver, setDraggingOver] = useState(false);
   const [portfolioFilter, setPortfolioFilter] = useState<{ location: string; shootType: string }>({ location: "", shootType: "" });
+  // Two portfolios, not one list with a filter: corporate work is shown to a
+  // different audience on a separate tab of the public profile, so it gets
+  // its own upload zone and its own drag order here. Uploads land tagged
+  // Business automatically while this section is open.
+  const [portfolioSection, setPortfolioSection] = useState<"leisure" | "business">("leisure");
+  const inBusinessSection = portfolioSection === "business";
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -416,6 +423,10 @@ export function PhotographerDashboardClient({
   async function processFiles(files: FileList | File[]) {
     const fileArr = Array.from(files).filter((f) => f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name));
     if (fileArr.length === 0) return;
+
+    // Captured once per batch: switching sections mid-upload must not retag
+    // files that are already in flight.
+    const uploadShootType = inBusinessSection ? BUSINESS_SHOOT_TYPE : null;
 
     setUploadingPortfolio(true);
     const total = fileArr.length;
@@ -437,7 +448,7 @@ export function PhotographerDashboardClient({
           // the optimistic preview would land at the bottom and then "jump"
           // to the top after the upload settles.
           setLocalItems((prev) => [
-            { id: tempId, type: "photo", url: previewUrl, thumbnail_url: null, caption: null, location_slug: null, shoot_type: null, sort_order: 0, _uploading: true },
+            { id: tempId, type: "photo", url: previewUrl, thumbnail_url: null, caption: null, location_slug: null, shoot_type: uploadShootType, sort_order: 0, _uploading: true },
             ...prev,
           ]);
 
@@ -460,6 +471,9 @@ export function PhotographerDashboardClient({
 
           const formData = new FormData();
           formData.append("file", compressed, file.name);
+          // Tag at upload time so the photo lands in the section the
+          // photographer is looking at — no second pass to re-tag 20 files.
+          if (uploadShootType) formData.append("shoot_type", uploadShootType);
 
           try {
             const res = await fetch("/api/dashboard/portfolio", {
@@ -598,11 +612,19 @@ export function PhotographerDashboardClient({
     setActiveDragId(null);
     if (!over || active.id === over.id) return;
 
-    const oldIndex = localItems.findIndex((p) => p.id === active.id);
-    const newIndex = localItems.findIndex((p) => p.id === over.id);
+    // Drag happens inside one section, so reorder that section and drop the
+    // new sequence back into the slots it already occupied globally. The
+    // other section keeps both its order and its position in the list.
+    const section = localItems.filter((p) => isBusinessPhoto(p.shoot_type) === inBusinessSection);
+    const oldIndex = section.findIndex((p) => p.id === active.id);
+    const newIndex = section.findIndex((p) => p.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(localItems, oldIndex, newIndex);
+    const movedSection = arrayMove(section, oldIndex, newIndex);
+    let cursor = 0;
+    const reordered = localItems.map((item) =>
+      isBusinessPhoto(item.shoot_type) === inBusinessSection ? movedSection[cursor++] : item
+    );
     setLocalItems(reordered);
 
     // Save in background
@@ -618,11 +640,20 @@ export function PhotographerDashboardClient({
 
   const activeDragItem = activeDragId ? localItems.find((p) => p.id === activeDragId) : null;
 
-  // Portfolio filters: only show tags that exist
-  const usedLocations = [...new Set(localItems.map((p) => p.location_slug).filter(Boolean))] as string[];
-  const usedShootTypes = [...new Set(localItems.map((p) => p.shoot_type).filter(Boolean))] as string[];
+  // Everything below the section tabs works on the active section only —
+  // counts, filter pills, select-all, the grid and the empty state.
+  const sectionItems = localItems.filter((p) => isBusinessPhoto(p.shoot_type) === inBusinessSection);
+  const businessCount = localItems.filter((p) => isBusinessPhoto(p.shoot_type)).length;
 
-  const filteredPortfolio = localItems.filter((item) => {
+  // Portfolio filters: only show tags that exist
+  const usedLocations = [...new Set(sectionItems.map((p) => p.location_slug).filter(Boolean))] as string[];
+  // Every photo in the business section carries the same tag, so a shoot-type
+  // row there would be one dead pill.
+  const usedShootTypes = inBusinessSection
+    ? []
+    : ([...new Set(sectionItems.map((p) => p.shoot_type).filter(Boolean))] as string[]);
+
+  const filteredPortfolio = sectionItems.filter((item) => {
     if (portfolioFilter.location && item.location_slug !== portfolioFilter.location) return false;
     if (portfolioFilter.shootType && item.shoot_type !== portfolioFilter.shootType) return false;
     return true;
@@ -1101,6 +1132,43 @@ export function PhotographerDashboardClient({
         {/* === PORTFOLIO TAB === */}
         {activeTab === "portfolio" && (
           <div>
+            {/* Two portfolios: leisure and corporate. They are shown to
+                different audiences on the public profile, so they get
+                separate upload zones and separate drag orders. Always both
+                visible — the Business tab is where a photographer goes to
+                start a corporate portfolio, so it can't be hidden until one
+                exists. */}
+            <div className="mb-5 flex gap-6 border-b border-warm-200">
+              {([
+                ["leisure", t("portfolioSectionPersonal"), localItems.length - businessCount],
+                ["business", t("portfolioSectionBusiness"), businessCount],
+              ] as const).map(([key, label, count]) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setPortfolioSection(key);
+                    setPortfolioFilter({ location: "", shootType: "" });
+                    setSelectMode(false);
+                    setSelectedIds(new Set());
+                  }}
+                  aria-current={portfolioSection === key}
+                  className={`-mb-px border-b-2 pb-2 text-sm font-semibold transition ${
+                    portfolioSection === key
+                      ? "border-primary-600 text-primary-700"
+                      : "border-transparent text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  {label} <span className="font-normal text-gray-400">({count})</span>
+                </button>
+              ))}
+            </div>
+
+            {inBusinessSection && (
+              <p className="mb-4 rounded-xl bg-warm-50 px-4 py-3 text-xs leading-relaxed text-gray-600">
+                {t("portfolioBusinessHint")}
+              </p>
+            )}
+
             {/* Drag & Drop Upload Zone */}
             <div
               ref={dropZoneRef}
@@ -1143,10 +1211,10 @@ export function PhotographerDashboardClient({
             </div>
 
             {/* Header bar */}
-            {localItems.length > 0 && (
+            {sectionItems.length > 0 && (
               <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-gray-500">
-                  {localItems.filter((p) => !p._uploading).length !== 1 ? t("photoCountPlural", { count: localItems.filter((p) => !p._uploading).length }) : t("photoCount", { count: localItems.filter((p) => !p._uploading).length })}{!selectMode && t("dragToReorder")}
+                  {sectionItems.filter((p) => !p._uploading).length !== 1 ? t("photoCountPlural", { count: sectionItems.filter((p) => !p._uploading).length }) : t("photoCount", { count: sectionItems.filter((p) => !p._uploading).length })}{!selectMode && t("dragToReorder")}
                   {selectMode && selectedIds.size > 0 && t("selectedCount", { count: selectedIds.size })}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
@@ -1177,23 +1245,36 @@ export function PhotographerDashboardClient({
                           <option key={loc.slug} value={loc.slug}>{loc.name}</option>
                         ))}
                       </select>
-                      <select
-                        value=""
-                        disabled={selectedIds.size === 0}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (v === "") return;
-                          bulkApplyTag("shoot_type", v === "__clear__" ? null : v);
-                          e.currentTarget.value = "";
-                        }}
-                        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
-                      >
-                        <option value="">{t("setShootType")}</option>
-                        <option value="__clear__">{t("clearShootType")}</option>
-                        {[...SHOOT_TYPES].sort((a, b) => a.localeCompare(b)).map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
+                      {/* Business photos are tagged on upload, so the only
+                          shoot-type action that makes sense here is moving
+                          them back out. */}
+                      {inBusinessSection ? (
+                        <button
+                          onClick={() => bulkApplyTag("shoot_type", null)}
+                          disabled={selectedIds.size === 0}
+                          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+                        >
+                          {t("moveToMainPortfolio")}
+                        </button>
+                      ) : (
+                        <select
+                          value=""
+                          disabled={selectedIds.size === 0}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === "") return;
+                            bulkApplyTag("shoot_type", v === "__clear__" ? null : v);
+                            e.currentTarget.value = "";
+                          }}
+                          className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                        >
+                          <option value="">{t("setShootType")}</option>
+                          <option value="__clear__">{t("clearShootType")}</option>
+                          {[...SHOOT_TYPES].sort((a, b) => a.localeCompare(b)).map((type) => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      )}
                       <button
                         onClick={deleteSelected}
                         disabled={selectedIds.size === 0}
@@ -1233,7 +1314,7 @@ export function PhotographerDashboardClient({
                         ? "bg-primary-600 text-white" : "bg-warm-100 text-gray-500 hover:bg-warm-200"
                     }`}
                   >
-                    {t("allPhotos", { count: localItems.length })}
+                    {t("allPhotos", { count: sectionItems.length })}
                   </button>
                   {[...usedLocations].sort((a, b) => {
                     const an = allLocations.find((l) => l.slug === a)?.name || a;
@@ -1290,15 +1371,20 @@ export function PhotographerDashboardClient({
                       selectMode={selectMode}
                       selected={selectedIds.has(item.id)}
                       onToggleSelect={toggleSelect}
+                      businessSection={inBusinessSection}
                     />
                   ))}
-                  {localItems.length === 0 && (
+                  {sectionItems.length === 0 && (
                     <div className="col-span-full flex flex-col items-center py-12 text-center">
                       <svg className="h-12 w-12 text-warm-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      <h3 className="mt-4 font-semibold text-gray-900">{t("noPortfolioPhotos")}</h3>
-                      <p className="mt-1 text-sm text-gray-500">{t("uploadBestWork")}</p>
+                      <h3 className="mt-4 font-semibold text-gray-900">
+                        {inBusinessSection ? t("noBusinessPhotos") : t("noPortfolioPhotos")}
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {inBusinessSection ? t("uploadBusinessWork") : t("uploadBestWork")}
+                      </p>
                     </div>
                   )}
                   {localItems.length > 0 && filteredPortfolio.length === 0 && (
@@ -1694,6 +1780,7 @@ function SortablePhotoCard({
   selectMode = false,
   selected = false,
   onToggleSelect,
+  businessSection = false,
 }: {
   item: PortfolioItem;
   allLocations: LocationOption[];
@@ -1702,6 +1789,8 @@ function SortablePhotoCard({
   selectMode?: boolean;
   selected?: boolean;
   onToggleSelect?: (id: string) => void;
+  /** Card lives in the Business portfolio — shoot type is fixed. */
+  businessSection?: boolean;
 }) {
   const t = useTranslations("photographerDashboard");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: selectMode });
@@ -1772,21 +1861,35 @@ function SortablePhotoCard({
             <option key={l.slug} value={l.slug}>{l.name}</option>
           ))}
         </select>
-        <select
-          value={item.shoot_type || ""}
-          onChange={(e) => onUpdateTag(item.id, "shoot_type", e.target.value)}
-          onPointerDown={(e) => e.stopPropagation()}
-          className={`w-full rounded border px-2 py-1.5 text-xs outline-none focus:border-primary-400 ${
-            item.shoot_type
-              ? "border-warm-200 text-gray-600"
-              : "border-red-300 bg-red-50 text-red-600"
-          }`}
-        >
-          <option value="">{t("shootTypeTag")}</option>
-          {[...SHOOT_TYPES].sort((a, b) => a.localeCompare(b)).map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
+        {/* In the Business section the shoot type is already decided — the
+            upload tagged it — so the only thing left to set is the location.
+            One escape hatch stays: send the photo back to the main portfolio
+            if it was filed here by mistake. */}
+        {businessSection ? (
+          <button
+            onClick={() => onUpdateTag(item.id, "shoot_type", "")}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="w-full rounded border border-warm-200 px-2 py-1.5 text-xs text-gray-500 transition hover:border-gray-400 hover:text-gray-700"
+          >
+            {t("moveToMainPortfolio")}
+          </button>
+        ) : (
+          <select
+            value={item.shoot_type || ""}
+            onChange={(e) => onUpdateTag(item.id, "shoot_type", e.target.value)}
+            onPointerDown={(e) => e.stopPropagation()}
+            className={`w-full rounded border px-2 py-1.5 text-xs outline-none focus:border-primary-400 ${
+              item.shoot_type
+                ? "border-warm-200 text-gray-600"
+                : "border-red-300 bg-red-50 text-red-600"
+            }`}
+          >
+            <option value="">{t("shootTypeTag")}</option>
+            {[...SHOOT_TYPES].sort((a, b) => a.localeCompare(b)).map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        )}
       </div>
     </div>
   );

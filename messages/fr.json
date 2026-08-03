@@ -2788,7 +2788,13 @@
     "coverAlt": "Couverture",
     "packageFeaturePlaceholder": "ex. 30 photos retouchées professionnellement",
     "minimumPriceFor": "Le prix minimum pour {duration} est {price} €",
-    "whatsIncluded": "Ce qui est inclus"
+    "whatsIncluded": "Ce qui est inclus",
+    "portfolioSectionPersonal": "Portfolio",
+    "portfolioSectionBusiness": "Entreprises",
+    "portfolioBusinessHint": "Travail corporate uniquement — séances réalisées pour une entreprise : événements, conférences, équipes et bureaux, contenu de marque. Tout ce que vous importez ici est étiqueté Business et apparaît dans un onglet distinct de votre profil public, jamais mélangé à vos autres photos. Un client en costume qui réserve sa propre séance relève du portrait studio ou solo, pas de Business.",
+    "noBusinessPhotos": "Pas encore de photos entreprises",
+    "uploadBusinessWork": "Importez du travail corporate pour apparaître dans l onglet Entreprises de votre profil et dans les recherches For Business.",
+    "moveToMainPortfolio": "Déplacer vers le portfolio principal"
   },
   "subscriptions": {
     "title": "Abonnements",

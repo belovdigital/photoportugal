@@ -28,7 +28,13 @@ export async function BusinessPhotographers({ serifClass }: { serifClass: string
         <h2 className={`${serifClass} mt-4 text-4xl font-medium sm:text-5xl`}>{t("photographersTitle")}</h2>
         <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-[#1F1B17]/65">{t("photographersText")}</p>
 
-        <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Three across only once there are three to show — two cards in a
+            three-column grid read as a broken row. */}
+        <div
+          className={`mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 ${
+            photographers.length >= 3 ? "lg:grid-cols-3" : "max-w-3xl"
+          }`}
+        >
           {photographers.map((p) => {
             const displayName = normalizeName(maskSurname(p.name));
             return (
@@ -37,7 +43,11 @@ export async function BusinessPhotographers({ serifClass }: { serifClass: string
                   slug={p.slug}
                   name={displayName}
                   thumbnails={p.photos}
-                  height="h-64"
+                  // Taller than a catalog card and biased upward: corporate
+                  // portraits are shot full-length, and a centred crop cuts
+                  // the head off.
+                  height="h-80"
+                  coverPositionY={25}
                   impressionSurface="for_business"
                 />
                 <div className="mt-4 flex items-baseline justify-between gap-3">

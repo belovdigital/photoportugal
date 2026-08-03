@@ -2540,7 +2540,13 @@
     "coverAlt": "Capa",
     "packageFeaturePlaceholder": "ex.: 30 fotos profissionalmente editadas",
     "minimumPriceFor": "O preço mínimo para {duration} é {price} €",
-    "whatsIncluded": "O que está incluído"
+    "whatsIncluded": "O que está incluído",
+    "portfolioSectionPersonal": "Portfólio",
+    "portfolioSectionBusiness": "Empresas",
+    "portfolioBusinessHint": "Apenas trabalho corporativo — sessões que fez para uma empresa: eventos, conferências, equipas e escritórios, conteúdo de marca. Tudo o que carregar aqui fica com a etiqueta Business e aparece num separador próprio do seu perfil público, nunca misturado com as outras fotos. Um cliente de fato que reserva a sua própria sessão é Retrato em Estúdio ou Individual, não Business.",
+    "noBusinessPhotos": "Ainda sem fotos para empresas",
+    "uploadBusinessWork": "Carregue trabalho corporativo para aparecer no separador Empresas do seu perfil e nas pesquisas For Business.",
+    "moveToMainPortfolio": "Mover para o portfólio principal"
   },
   "subscriptions": {
     "title": "Subscrições",

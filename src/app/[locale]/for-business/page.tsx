@@ -69,21 +69,15 @@ export default async function ForBusinessPage({ params }: { params: Promise<{ lo
       {/* ═══ 1. HERO — typographic, charcoal, real corporate work behind ═══ */}
       <section className="relative isolate overflow-hidden bg-[#1F1B17]">
         {heroPhoto && (
-          <>
-            {/* Decorative: the headline carries the message. The scrim is
-                heavy on purpose — this hero is typographic first, and the
-                photo must never fight the serif. */}
-            <img
-              src={heroPhoto}
-              alt=""
-              aria-hidden
-              className="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-45"
-            />
-            <div
-              className="absolute inset-0 -z-10 bg-gradient-to-br from-[#1F1B17] via-[#1F1B17]/92 to-[#1F1B17]/55"
-              aria-hidden
-            />
-          </>
+          // Right-hand panel rather than a full bleed: corporate photos are
+          // mostly portrait, and stretching one across a 1440px hero turns it
+          // into unreadable mush behind the type. Desktop only — on mobile the
+          // headline needs the full width and the hero stays purely
+          // typographic. Decorative, so it's alt-empty and inert.
+          <div className="pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-[46%] lg:block" aria-hidden>
+            <img src={heroPhoto} alt="" className="h-full w-full object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1F1B17] via-[#1F1B17]/70 to-[#1F1B17]/25" />
+          </div>
         )}
         <div className="mx-auto w-full max-w-7xl px-5 pb-16 pt-24 sm:px-8 sm:pb-24 sm:pt-32">
           <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-white/70">

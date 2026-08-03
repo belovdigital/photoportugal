@@ -2535,7 +2535,13 @@
     "coverAlt": "Cover",
     "packageFeaturePlaceholder": "e.g. 30 professionally edited photos",
     "minimumPriceFor": "Minimum price for {duration} is €{price}",
-    "whatsIncluded": "What's included"
+    "whatsIncluded": "What's included",
+    "portfolioSectionPersonal": "Portfolio",
+    "portfolioSectionBusiness": "Business",
+    "portfolioBusinessHint": "Corporate work only — shoots you did for a company: events, conferences, team and office sessions, brand content. Anything you upload here is tagged Business and appears on a separate tab of your public profile, never mixed with your other photos. A client in a suit booking their own session is a Studio or Solo Portrait, not Business.",
+    "noBusinessPhotos": "No business photos yet",
+    "uploadBusinessWork": "Upload corporate work to appear on the Business tab of your profile and in For Business searches.",
+    "moveToMainPortfolio": "Move to main portfolio"
   },
   "subscriptions": {
     "title": "Subscriptions",
