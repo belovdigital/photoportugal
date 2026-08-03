@@ -55,7 +55,9 @@ export interface BusinessPhotographer {
   is_verified: boolean;
   rating: number;
   review_count: number;
-  locations: string[];
+  /** Raw slugs. Ranked and turned into display names by the caller, which
+   *  knows the locale — INITCAP on a slug gives "Portimao", not "Portimão". */
+  location_slugs: string[];
 }
 
 /**
@@ -69,10 +71,10 @@ export async function getBusinessPhotographers(limit = 8): Promise<BusinessPhoto
       `SELECT pp.slug, u.name, pp.tagline, u.avatar_url, pp.is_verified,
               pp.rating::float as rating, pp.review_count,
               COALESCE((
-                SELECT ARRAY_AGG(INITCAP(REPLACE(pl.location_slug, '-', ' ')) ORDER BY pl.location_slug)
+                SELECT ARRAY_AGG(pl.location_slug ORDER BY pl.location_slug)
                   FROM photographer_locations pl
                  WHERE pl.photographer_id = pp.id
-              ), ARRAY[]::text[]) as locations
+              ), ARRAY[]::text[]) as location_slugs
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
         WHERE pp.is_approved = TRUE

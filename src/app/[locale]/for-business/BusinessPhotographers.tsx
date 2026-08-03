@@ -1,8 +1,10 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getBusinessPhotographers } from "@/lib/business-showcase";
 import { maskSurname } from "@/lib/photographer-name";
 import { normalizeName } from "@/lib/format-name";
+import { locations, locField } from "@/lib/locations-data";
+import { topLocationSlugs } from "@/lib/location-priority";
 
 /**
  * Proof section for the B2B landing: the photographers who have actually
@@ -19,8 +21,16 @@ import { normalizeName } from "@/lib/format-name";
  */
 export async function BusinessPhotographers({ serifClass }: { serifClass: string }) {
   const t = await getTranslations("business");
+  const locale = await getLocale();
   const photographers = await getBusinessPhotographers(8);
   if (photographers.length === 0) return null;
+
+  // Name the cities a company would recognise, in the visitor's language.
+  const cityNames = (slugs: string[]) =>
+    topLocationSlugs(slugs, 3).map((slug) => {
+      const loc = locations.find((l) => l.slug === slug);
+      return loc ? locField(loc, "name", locale) || loc.name : slug;
+    });
 
   return (
     <section className="border-t border-[#1F1B17]/10 bg-white">
@@ -34,6 +44,7 @@ export async function BusinessPhotographers({ serifClass }: { serifClass: string
         <ul className="mt-10 border-t border-[#1F1B17]/15">
           {photographers.map((p) => {
             const displayName = normalizeName(maskSurname(p.name));
+            const cities = cityNames(p.location_slugs);
             return (
               <li key={p.slug} className="border-b border-[#1F1B17]/15">
                 <Link
@@ -46,9 +57,9 @@ export async function BusinessPhotographers({ serifClass }: { serifClass: string
                       ★ {Number(p.rating).toFixed(1)} ({p.review_count})
                     </span>
                   )}
-                  {p.locations.length > 0 && (
-                    <span className="text-[13px] uppercase tracking-[0.18em] text-[#1F1B17]/45">
-                      {p.locations.slice(0, 3).join(" · ")}
+                  {cities.length > 0 && (
+                    <span className="text-[13px] tracking-[0.06em] text-[#1F1B17]/45">
+                      {cities.join(" · ")}
                     </span>
                   )}
                   <span className="ml-auto shrink-0 border-b border-[#1F1B17]/30 pb-0.5 text-sm font-semibold transition group-hover:border-[#1F1B17]">
