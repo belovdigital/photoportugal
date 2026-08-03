@@ -19,6 +19,7 @@ import { SpotMap } from "@/components/ui/SpotMap";
 import { country } from "@/lib/country";
 import { locationCoverUrl } from "@/lib/location-cover";
 import { clampMeta } from "@/lib/seo";
+import { formatLocationList } from "@/lib/location-priority";
 
 const L = {
   en: {
@@ -309,8 +310,8 @@ export default async function SpotPage({
             (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as min_price,
             u.last_seen_at as last_active_at, pp.avg_response_minutes,
             COALESCE(pp.languages, '{}') as languages,
-            (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
-             FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+            (SELECT string_agg(location_slug, ',')
+             FROM photographer_locations WHERE photographer_id = pp.id) as locations,
             ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
      FROM photographer_profiles pp
      JOIN users u ON u.id = pp.user_id
@@ -580,7 +581,7 @@ export default async function SpotPage({
                     rating: Number(p.rating || 0),
                     review_count: p.review_count,
                     min_price: p.min_price ? Number(p.min_price) : null,
-                    locations: p.locations,
+                    locations: formatLocationList(p.locations, locale),
                     last_active_at: p.last_active_at,
                     avg_response_minutes: p.avg_response_minutes,
                     languages: p.languages,

@@ -1,5 +1,6 @@
 import { query, queryOne } from "@/lib/db";
 import { maskSurname } from "@/lib/photographer-name";
+import { formatLocationList } from "@/lib/location-priority";
 
 /**
  * Fetches all the carousel data a single blog post page needs to do
@@ -462,7 +463,7 @@ async function fetchEndCapPhotographers(
   const useLoc = locale && TR_LOCALES.has(locale) ? locale : null;
   const taglineSql = useLoc ? `COALESCE(pp.tagline_${useLoc}, pp.tagline)` : "pp.tagline";
 
-  return query<EndCapPhotographer>(
+  const rows = await query<EndCapPhotographer>(
     `SELECT pp.id, pp.slug, u.name, u.avatar_url,
             pp.cover_url, pp.cover_position_y,
             pp.is_featured, pp.is_verified,
@@ -474,8 +475,8 @@ async function fetchEndCapPhotographers(
             COALESCE(pp.languages, '{}') as languages,
             (SELECT MIN(price)::text FROM packages
               WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL) as starting_price,
-            (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
-               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+            (SELECT string_agg(location_slug, ',')
+               FROM photographer_locations WHERE photographer_id = pp.id) as locations,
             COALESCE((
               SELECT array_agg(url ORDER BY shuffle, sort_order NULLS LAST, created_at)
                 FROM (
@@ -546,4 +547,9 @@ async function fetchEndCapPhotographers(
       LIMIT 6`,
     [locationSlugs, shootTypeNames, postId]
   ).catch(() => []);
+
+  // The query hands back raw slugs; ranking and localisation happen here so
+  // the card shows "Lisbon, Porto, Sintra" and not every satellite the
+  // photographer covers, alphabetically, in English.
+  return rows.map((r) => ({ ...r, locations: formatLocationList(r.locations, locale || "en") }));
 }

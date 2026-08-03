@@ -175,6 +175,9 @@ export default async function AdminPage() {
             (SELECT COUNT(*) FROM portfolio_items WHERE photographer_id = pp.id)::int as portfolio_count,
             (SELECT COUNT(*) FROM packages WHERE photographer_id = pp.id AND custom_for_user_id IS NULL)::int as package_count,
             (SELECT COUNT(*) FROM photographer_locations WHERE photographer_id = pp.id)::int as location_count,
+            -- Admin wants the whole coverage list, not the three headline
+            -- cities the public cards show, so this one keeps the full
+            -- alphabetical roll-up.
             (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
                FROM photographer_locations WHERE photographer_id = pp.id) as locations,
             (${payoutReadySql("pp")}) as stripe_ready,

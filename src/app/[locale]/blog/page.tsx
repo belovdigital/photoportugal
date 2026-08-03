@@ -8,6 +8,7 @@ import { maskSurname } from "@/lib/photographer-name";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { localeAlternates, openGraphIdentity } from "@/lib/seo";
 import { country } from "@/lib/country";
+import { formatLocationList } from "@/lib/location-priority";
 
 const POSTS_PER_PAGE = 48;
 
@@ -149,8 +150,8 @@ export default async function BlogPage({
               u.last_seen_at as last_active_at, p.avg_response_minutes,
               COALESCE(p.languages, '{}') as languages,
               (SELECT MIN(price) FROM packages WHERE photographer_id = p.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
-              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
-               FROM photographer_locations WHERE photographer_id = p.id LIMIT 3) as locations,
+              (SELECT string_agg(location_slug, ',')
+               FROM photographer_locations WHERE photographer_id = p.id) as locations,
               ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = p.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
        FROM photographer_profiles p
        JOIN users u ON u.id = p.user_id
@@ -402,7 +403,7 @@ export default async function BlogPage({
                     rating: Number(p.rating) || 0,
                     review_count: p.review_count,
                     min_price: p.starting_price ? Number(p.starting_price) : null,
-                    locations: p.locations,
+                    locations: formatLocationList(p.locations, locale),
                     last_active_at: p.last_active_at,
                     avg_response_minutes: p.avg_response_minutes,
                     languages: p.languages,

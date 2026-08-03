@@ -44,6 +44,7 @@ import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/u
 import { LocationStickyBookBar } from "@/components/ui/LocationStickyBookBar";
 import { regionLabel } from "@/lib/region-labels";
 import { locationCoverUrl } from "@/lib/location-cover";
+import { formatLocationList } from "@/lib/location-priority";
 
 export function generateStaticParams() {
   return locations.map((loc) => ({ slug: loc.slug }));
@@ -376,8 +377,8 @@ export default async function LocationPage({
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
               COALESCE(pp.languages, '{}') as languages,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
-              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
-               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+              (SELECT string_agg(location_slug, ',')
+               FROM photographer_locations WHERE photographer_id = pp.id) as locations,
               ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs,
               -- ALL public packages (no LIMIT) so the card can render the
               -- full stack inline — most photographers have 3–4 and a
@@ -889,7 +890,7 @@ export default async function LocationPage({
                     rating: Number(sp.rating),
                     review_count: sp.review_count,
                     min_price: sp.starting_price ? Number(sp.starting_price) : null,
-                    locations: sp.locations,
+                    locations: formatLocationList(sp.locations, locale),
                     last_active_at: sp.last_active_at,
                     avg_response_minutes: sp.avg_response_minutes,
                     languages: sp.languages,

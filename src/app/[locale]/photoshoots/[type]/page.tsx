@@ -22,6 +22,7 @@ import { LocationPhotosMasonry, type LocationMasonryPhoto } from "@/components/u
 import { formatDuration } from "@/lib/package-pricing";
 import { country } from "@/lib/country";
 import { lowestBookablePrice } from "@/lib/entry-price";
+import { formatLocationList } from "@/lib/location-priority";
 
 // Force-dynamic so the hero photographer reshuffles on every request.
 // Same rationale as the location page: paid-ad / sitelink landing prefers
@@ -342,8 +343,8 @@ export default async function ShootTypePage({
               COALESCE(pp.languages, '{}') as languages,
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
-              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
-               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+              (SELECT string_agg(location_slug, ',')
+               FROM photographer_locations WHERE photographer_id = pp.id) as locations,
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo' ${PHOTO_SCOPE}
@@ -669,7 +670,7 @@ export default async function ShootTypePage({
                     rating: Number(sp.rating),
                     review_count: sp.review_count,
                     min_price: sp.starting_price ? Number(sp.starting_price) : null,
-                    locations: sp.locations,
+                    locations: formatLocationList(sp.locations, locale),
                     languages: sp.languages,
                     last_active_at: sp.last_active_at,
                     avg_response_minutes: sp.avg_response_minutes,

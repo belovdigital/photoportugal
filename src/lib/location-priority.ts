@@ -13,6 +13,7 @@
 // list keeps its relative order after the anchors, alphabetically, so the
 // result stays deterministic.
 import { country } from "@/lib/country";
+import { locations, locField } from "@/lib/locations-data";
 
 const ANCHORS_PT = [
   "lisbon", "porto", "sintra", "cascais", "algarve", "madeira", "azores",
@@ -40,4 +41,32 @@ export function topLocationSlugs(slugs: string[], limit = 3): string[] {
   return [...slugs]
     .sort((a, b) => locationRank(a) - locationRank(b) || a.localeCompare(b))
     .slice(0, limit);
+}
+
+/**
+ * Card-ready city line: ranked, trimmed and in the visitor's language.
+ *
+ * Takes the comma-separated slugs the card queries select. Those queries used
+ * to build the string in SQL with
+ * `string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug) ... LIMIT 3`,
+ * which had three faults at once: the LIMIT applied to the outer single-row
+ * select and capped nothing (a photographer covering eleven places listed all
+ * eleven), the alphabetical order buried the anchor city under its satellites,
+ * and INITCAP on a slug spells Évora "Evora" in every language.
+ */
+export function formatLocationList(
+  value: string | string[] | null | undefined,
+  locale: string,
+  limit = 3,
+): string {
+  const slugs = (typeof value === "string" ? value.split(",") : value || [])
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (slugs.length === 0) return "";
+  return topLocationSlugs(slugs, limit)
+    .map((slug) => {
+      const loc = locations.find((l) => l.slug === slug);
+      return loc ? locField(loc, "name", locale) || loc.name : slug;
+    })
+    .join(", ");
 }

@@ -33,6 +33,7 @@ import { getComboIntro } from "@/lib/location-occasion-intros";
 import { country } from "@/lib/country";
 import { regionLabel } from "@/lib/region-labels";
 import { locationCoverUrl } from "@/lib/location-cover";
+import { formatLocationList } from "@/lib/location-priority";
 
 // Combo /locations/[slug]/[occasion] is the SEO + paid-ad sitelink target
 // for queries like "Couples photographer Algarve" or "Family photoshoot
@@ -726,8 +727,8 @@ export default async function OccasionPage({
               u.last_seen_at as last_active_at, pp.avg_response_minutes,
               COALESCE(pp.languages, '{}') as languages,
               (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
-              (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
-               FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+              (SELECT string_agg(location_slug, ',')
+               FROM photographer_locations WHERE photographer_id = pp.id) as locations,
               ARRAY(
                 SELECT pi.url FROM portfolio_items pi
                 WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business'
@@ -1134,7 +1135,7 @@ export default async function OccasionPage({
                     rating: Number(sp.rating),
                     review_count: sp.review_count,
                     min_price: isWedding ? null : (sp.starting_price ? Number(sp.starting_price) : null),
-                    locations: sp.locations,
+                    locations: formatLocationList(sp.locations, locale),
                     last_active_at: sp.last_active_at,
                     avg_response_minutes: sp.avg_response_minutes,
                     languages: sp.languages,

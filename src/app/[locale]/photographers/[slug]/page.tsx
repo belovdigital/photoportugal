@@ -29,6 +29,7 @@ import { flattenLocationNodes, getAncestorNodeSlugs, getLocationNode, type Locat
 import { getPhotographerCoverageNodeSlugs } from "@/lib/photographer-location-coverage";
 import { ExpandableChipList } from "@/components/ui/ExpandableChipList";
 import { country } from "@/lib/country";
+import { formatLocationList } from "@/lib/location-priority";
 
 export const dynamicParams = true;
 export const revalidate = 86400; // ISR: revalidate every 24 hours
@@ -589,8 +590,8 @@ export default async function PhotographerProfilePage({
                 COALESCE(pp.languages, '{}') as languages,
                 u.last_seen_at as last_active_at, pp.avg_response_minutes,
                 (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL)::text as starting_price,
-                (SELECT string_agg(INITCAP(REPLACE(location_slug, '-', ' ')), ', ' ORDER BY location_slug)
-                 FROM photographer_locations WHERE photographer_id = pp.id LIMIT 3) as locations,
+                (SELECT string_agg(location_slug, ',')
+                 FROM photographer_locations WHERE photographer_id = pp.id) as locations,
                 ARRAY(SELECT pi.url FROM portfolio_items pi WHERE pi.photographer_id = pp.id AND pi.type = 'photo' AND COALESCE(lower(pi.shoot_type), '') <> 'business' ORDER BY pi.sort_order NULLS LAST, pi.created_at LIMIT 7) as portfolio_thumbs
          FROM photographer_profiles pp
          JOIN users u ON u.id = pp.user_id
@@ -1203,7 +1204,7 @@ export default async function PhotographerProfilePage({
                     rating: sp.rating,
                     review_count: sp.review_count,
                     min_price: sp.starting_price,
-                    locations: sp.locations,
+                    locations: formatLocationList(sp.locations, locale),
                     languages: sp.languages,
                     last_active_at: sp.last_active_at,
                     avg_response_minutes: sp.avg_response_minutes,
