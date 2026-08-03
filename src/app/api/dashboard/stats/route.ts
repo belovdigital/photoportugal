@@ -163,6 +163,47 @@ export async function GET(req: NextRequest) {
     const current = rows.filter((r) => r.date >= from);
     const previous = rows.filter((r) => r.date < from);
 
+    // ── Unique visitors: distinct over the window, not a sum of days ──
+    // Summing daily uniques counted a visitor once per day they came
+    // back (~14% inflation platform-wide) and understated every rate
+    // built on top of it. photographer_visitor_days keeps the pairs;
+    // days older than that table's coverage keep the legacy sum, which
+    // is the best that can be reconstructed — raw sessions are pruned.
+    const prevTo = shiftDays(from, -1);
+    const uniq = await queryOne<{ cur: number; prev: number; returning: number; since: string | null }>(
+      `SELECT
+         (SELECT COUNT(DISTINCT visitor_id)::int FROM photographer_visitor_days
+           WHERE photographer_id = $1 AND date BETWEEN $2::date AND $3::date) AS cur,
+         (SELECT COUNT(DISTINCT visitor_id)::int FROM photographer_visitor_days
+           WHERE photographer_id = $1 AND date BETWEEN $4::date AND $5::date) AS prev,
+         (SELECT COUNT(*)::int FROM (
+            SELECT vd.visitor_id, MIN(vd.date) AS first_in_window, COUNT(DISTINCT vd.date) AS days
+            FROM photographer_visitor_days vd
+            WHERE vd.photographer_id = $1 AND vd.date BETWEEN $2::date AND $3::date
+            GROUP BY 1) w
+          LEFT JOIN photographer_visitor_first_seen fs
+            ON fs.photographer_id = $1 AND fs.visitor_id = w.visitor_id
+          WHERE w.days > 1 OR fs.first_date < w.first_in_window) AS returning,
+         (SELECT MIN(date)::text FROM photographer_visitor_days WHERE photographer_id = $1) AS since`,
+      [profile.id, from, today, prevFrom, prevTo],
+    );
+    const uniquesSince = uniq?.since || null;
+
+    /** Exact distinct count + legacy daily sum for days the table predates. */
+    function blendUniques(windowRows: DailyRow[], exact: number): number {
+      if (!uniquesSince) return windowRows.reduce((s, r) => s + r.unique_visitors, 0);
+      const uncovered = windowRows.filter((r) => r.date < uniquesSince);
+      return exact + uncovered.reduce((s, r) => s + r.unique_visitors, 0);
+    }
+
+    const currentTotals = sumTotals(current);
+    const previousTotals = sumTotals(previous);
+    currentTotals.uniqueVisitors = blendUniques(current, uniq?.cur || 0);
+    previousTotals.uniqueVisitors = blendUniques(previous, uniq?.prev || 0);
+    if (uniquesSince && !current.some((r) => r.date < uniquesSince)) {
+      currentTotals.returningVisitors = uniq?.returning || 0;
+    }
+
     // Sparse rows → dense timeline (missing days rendered as zeros)
     const byDate = new Map(current.map((r) => [r.date, r]));
     const timeline = Array.from({ length: days }, (_, i) => {
@@ -367,7 +408,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       range: { from, to: today, days },
-      totals: { current: sumTotals(current), previous: sumTotals(previous) },
+      totals: { current: currentTotals, previous: previousTotals },
       timeline,
       breakdowns: {
         countries: mergeBreakdowns(current, "countries"),
@@ -414,6 +455,8 @@ export async function GET(req: NextRequest) {
         dataSince: meta?.data_since || null,
         cardDataSince: meta?.card_since || null,
         gscDataSince: meta?.gsc_since || null,
+        // Before this date uniques fall back to the summed daily figure.
+        uniquesExactSince: uniquesSince,
         profileCreatedAt: profile.created_at,
       },
     });

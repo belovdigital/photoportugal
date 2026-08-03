@@ -96,7 +96,10 @@ function flagEmoji(code: string): string {
 
 function pct(numerator: number, denominator: number): string {
   if (denominator <= 0) return "—";
-  return `${((numerator / denominator) * 100).toFixed(1)}%`;
+  // Capped at 100%: a visitor can reach the booking form through a
+  // direct link without a profile view, and a click can be recorded
+  // when its impression wasn't — neither should print "140%".
+  return `${Math.min(100, (numerator / denominator) * 100).toFixed(1)}%`;
 }
 
 function shareMap(m: Record<string, number>): Record<string, number> {
@@ -123,23 +126,42 @@ function TimelineChart({
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
-  const W = 720;
-  const H = 220;
-  const PAD = { top: 12, right: 12, bottom: 24, left: 36 };
+  // The viewBox tracks the real pixel width: with a fixed 720-wide box
+  // every label shrank with the container, so on a phone the axis text
+  // rendered at ~4.5px. 1:1 keeps 10px meaning 10px everywhere.
+  const [boxW, setBoxW] = useState(720);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setBoxW(Math.max(280, Math.round(width)));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const narrow = boxW < 480;
+  const W = boxW;
+  const H = narrow ? 190 : 220;
+  const PAD = { top: 12, right: showImpressions ? 32 : 12, bottom: 24, left: 30 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
   const n = timeline.length;
-  const maxY = Math.max(
-    1,
-    ...timeline.map((d) => Math.max(d.views, showImpressions ? d.impressions : 0)),
-  );
-  // Round the axis top to a friendly number
-  const yTop = maxY <= 5 ? 5 : Math.ceil(maxY / 5) * 5;
+  // Separate scales: impressions run ~7× views on this platform, so a
+  // shared axis flattened the views line — the one people open this for.
+  const maxViews = Math.max(1, ...timeline.map((d) => d.views));
+  const maxImpressions = Math.max(1, ...timeline.map((d) => (showImpressions ? d.impressions : 0)));
+  const niceTop = (v: number) => (v <= 5 ? 5 : Math.ceil(v / 5) * 5);
+  const yTop = niceTop(maxViews);
+  const yTopImp = niceTop(maxImpressions);
 
   const x = (i: number) => PAD.left + (n <= 1 ? innerW / 2 : (i / (n - 1)) * innerW);
   const y = (v: number) => PAD.top + innerH - (v / yTop) * innerH;
+  const yImp = (v: number) => PAD.top + innerH - (v / yTopImp) * innerH;
 
   const linePath = (get: (d: StatsResponse["timeline"][number]) => number) =>
     timeline.map((d, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(get(d)).toFixed(1)}`).join("");
@@ -147,7 +169,7 @@ function TimelineChart({
   const areaPath = `${linePath((d) => d.views)}L${x(n - 1).toFixed(1)},${y(0)}L${x(0).toFixed(1)},${y(0)}Z`;
 
   const dateFmt = useMemo(() => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }), [locale]);
-  const tickEvery = Math.max(1, Math.ceil(n / 6));
+  const tickEvery = Math.max(1, Math.ceil(n / (narrow ? 3 : 6)));
 
   function onMove(e: React.MouseEvent | React.TouchEvent) {
     const svg = svgRef.current;
@@ -163,7 +185,7 @@ function TimelineChart({
   const h = hover !== null ? timeline[hover] : null;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={wrapRef}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
@@ -174,13 +196,18 @@ function TimelineChart({
         onMouseLeave={() => setHover(null)}
         role="img"
       >
-        {/* recessive grid */}
+        {/* recessive grid — left axis is views, right axis impressions */}
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <g key={f}>
             <line x1={PAD.left} x2={W - PAD.right} y1={y(yTop * f)} y2={y(yTop * f)} stroke="#e6ddd0" strokeWidth={1} />
-            <text x={PAD.left - 6} y={y(yTop * f) + 3} textAnchor="end" fontSize={10} fill="#9ca3af">
+            <text x={PAD.left - 5} y={y(yTop * f) + 3} textAnchor="end" fontSize={10} fill={SERIES.views}>
               {Math.round(yTop * f)}
             </text>
+            {showImpressions && (
+              <text x={W - PAD.right + 5} y={y(yTop * f) + 3} textAnchor="start" fontSize={10} fill={SERIES.impressions}>
+                {Math.round(yTopImp * f)}
+              </text>
+            )}
           </g>
         ))}
         <line x1={PAD.left} x2={W - PAD.right} y1={y(0)} y2={y(0)} stroke="#d5c5b0" strokeWidth={1} />
@@ -197,7 +224,10 @@ function TimelineChart({
         {/* series */}
         <path d={areaPath} fill={SERIES.views} opacity={0.08} />
         {showImpressions && (
-          <path d={linePath((d) => d.impressions)} fill="none" stroke={SERIES.impressions} strokeWidth={2} strokeLinejoin="round" />
+          <path
+            d={timeline.map((d, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${yImp(d.impressions).toFixed(1)}`).join("")}
+            fill="none" stroke={SERIES.impressions} strokeWidth={2} strokeLinejoin="round" strokeDasharray="4 3"
+          />
         )}
         <path d={linePath((d) => d.views)} fill="none" stroke={SERIES.views} strokeWidth={2} strokeLinejoin="round" />
 
@@ -219,7 +249,7 @@ function TimelineChart({
             <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={y(0)} stroke="#9ca3af" strokeWidth={1} strokeDasharray="3 3" />
             <circle cx={x(hover)} cy={y(h.views)} r={4} fill={SERIES.views} stroke="#fff" strokeWidth={2} />
             {showImpressions && (
-              <circle cx={x(hover)} cy={y(h.impressions)} r={4} fill={SERIES.impressions} stroke="#fff" strokeWidth={2} />
+              <circle cx={x(hover)} cy={yImp(h.impressions)} r={4} fill={SERIES.impressions} stroke="#fff" strokeWidth={2} />
             )}
           </g>
         )}
@@ -228,7 +258,8 @@ function TimelineChart({
       {h && hover !== null && (
         <div
           className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 rounded-lg border border-warm-200 bg-white px-3 py-2 text-xs shadow-lg"
-          style={{ left: `${(x(hover) / W) * 100}%` }}
+          // Clamped so the box never hangs off the card at the edges.
+          style={{ left: `${Math.min(82, Math.max(18, (x(hover) / W) * 100))}%` }}
         >
           <p className="font-semibold text-gray-900">{dateFmt.format(new Date(`${h.date}T12:00:00Z`))}</p>
           <p className="mt-1 flex items-center gap-1.5 text-gray-600">
@@ -474,6 +505,88 @@ export function StatsClient() {
     return known[reason] || reason;
   };
 
+  // ── Funnel: one honest chain ────────────────────────────────────────
+  // Site impressions → clicks on the card → profile views → booking form
+  // → inquiry → paid. Google Search sits OUTSIDE this chain (its
+  // impressions are search results, and its data lags 2-3 days); it has
+  // its own row in the channels table. Every percentage names the step
+  // it is measured against, because the old "from previous step" label
+  // was wrong for three of the four rates it printed.
+  const siteImpressions = cur ? cur.cardImpressions + cur.conciergeImpressions : 0;
+  const siteClicks = cur ? cur.cardClicks + cur.conciergeClicks : 0;
+  const totalShown = cur ? siteImpressions + cur.gscImpressions : 0;
+
+  interface FunnelStep {
+    key: string;
+    label: string;
+    value: number;
+    ofLabel: string;
+    rate: string | null;
+    needMore: number | null;
+    note?: string;
+  }
+  const chainStep = (
+    key: string, label: string, value: number, base: number, ofLabel: string, minBase: number,
+  ): FunnelStep => ({
+    key, label, value, ofLabel,
+    rate: base >= minBase ? pct(value, base) : null,
+    needMore: base >= minBase ? null : minBase - base,
+  });
+
+  const funnelSteps: FunnelStep[] = cur
+    ? [
+        { key: "impressions", label: t("funnelImpressions"), value: siteImpressions, ofLabel: "", rate: null, needMore: null, note: t("funnelImpressionsNote") },
+        chainStep("clicks", t("funnelClicks"), siteClicks, siteImpressions, t("funnelImpressions"), MIN_IMPRESSIONS_FOR_RATE),
+        { key: "views", label: t("funnelViews"), value: cur.profileViews, ofLabel: "", rate: null, needMore: null, note: t("funnelViewsNote") },
+        chainStep("bookOpens", t("funnelBookOpens"), cur.bookOpens, cur.profileViews, t("funnelViews"), MIN_VIEWS_FOR_RATE),
+        chainStep("inquiries", t("funnelInquiries"), cur.inquiries, cur.profileViews, t("funnelViews"), MIN_VIEWS_FOR_RATE),
+        {
+          key: "paid", label: t("funnelPaid"), value: cur.paidBookings, ofLabel: t("funnelInquiries"),
+          rate: cur.inquiries > 0 ? pct(cur.paidBookings, cur.inquiries) : null,
+          needMore: cur.inquiries > 0 ? null : 1,
+        },
+      ]
+    : [];
+
+  // ── Plain-language summary ──────────────────────────────────────────
+  // Photographers read two sentences, not twelve charts. The weak step
+  // is picked by comparing each stage against the platform's own
+  // averages (measured 2026-08-03: 3.5% card CTR, 7.3% of profile views
+  // become inquiries, 33% of inquiries get paid).
+  const PLATFORM = { ctr: 0.035, inquiry: 0.073, paid: 0.33 };
+  const summary = (() => {
+    if (!cur) return null;
+    const headline = t("summaryHeadline", {
+      days,
+      shown: numFmt.format(totalShown),
+      views: numFmt.format(cur.profileViews),
+      inquiries: numFmt.format(cur.inquiries),
+    });
+    const candidates: { key: string; relative: number }[] = [];
+    if (siteImpressions >= MIN_IMPRESSIONS_FOR_RATE) {
+      candidates.push({ key: "clicks", relative: siteClicks / siteImpressions / PLATFORM.ctr });
+    }
+    if (cur.profileViews >= MIN_VIEWS_FOR_RATE) {
+      candidates.push({ key: "inquiries", relative: cur.inquiries / cur.profileViews / PLATFORM.inquiry });
+    }
+    if (cur.inquiries >= 3) {
+      candidates.push({ key: "paid", relative: cur.paidBookings / cur.inquiries / PLATFORM.paid });
+    }
+    const weakest = candidates.sort((a, b) => a.relative - b.relative)[0];
+    // Spelled out rather than t(`summaryWeak_${key}`): a missing key
+    // would render the literal key path to the photographer.
+    const weakCopy: Record<string, string> = {
+      clicks: t("summaryWeak_clicks"),
+      inquiries: t("summaryWeak_inquiries"),
+      paid: t("summaryWeak_paid"),
+    };
+    return {
+      headline,
+      weak: weakest && weakest.relative < 1 ? weakCopy[weakest.key] || null : null,
+      lowData: candidates.length === 0 ? t("summaryLowData") : null,
+    };
+  })();
+
   const chartAnnotations = (data?.annotations || []).reduce<{ date: string; label: string }[]>((accum, a) => {
     const existing = accum.find((x) => x.date === a.date);
     const label = annotationLabel(a.field);
@@ -532,6 +645,16 @@ export function StatsClient() {
 
       {data && cur && prev && !loading && !error && (
         <>
+          {/* Two-sentence read of the period — the part photographers act on */}
+          {summary && (
+            <div className="mt-6 rounded-2xl border border-primary-200 bg-primary-50 p-4">
+              <p className="text-sm font-medium text-primary-900">{summary.headline}</p>
+              {(summary.weak || summary.lowData) && (
+                <p className="mt-1 text-sm text-primary-800">{summary.weak || summary.lowData}</p>
+              )}
+            </div>
+          )}
+
           {/* KPI tiles */}
           <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
             {(
@@ -630,37 +753,27 @@ export function StatsClient() {
           <div className="mt-6 rounded-2xl border border-warm-200 bg-white p-5">
             <h2 className="font-semibold text-gray-900">{t("funnelTitle")}</h2>
             <p className="mt-1 text-xs text-gray-400">{t("funnelHint")}</p>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-              {(
-                [
-                  { label: t("funnelImpressions"), value: cur.cardImpressions + cur.conciergeImpressions + cur.gscImpressions, rate: null as string | null },
-                  {
-                    label: t("funnelViews"),
-                    value: cur.profileViews,
-                    rate:
-                      cur.cardImpressions + cur.conciergeImpressions + cur.gscImpressions >= MIN_IMPRESSIONS_FOR_RATE
-                        ? pct(cur.cardClicks + cur.conciergeClicks + cur.gscClicks, cur.cardImpressions + cur.conciergeImpressions + cur.gscImpressions)
-                        : null,
-                  },
-                  { label: t("funnelBookOpens"), value: cur.bookOpens, rate: cur.uniqueVisitors >= MIN_VIEWS_FOR_RATE && cur.bookOpens > 0 ? pct(cur.bookOpens, cur.uniqueVisitors) : null },
-                  { label: t("funnelInquiries"), value: cur.inquiries, rate: cur.uniqueVisitors >= MIN_VIEWS_FOR_RATE ? pct(cur.inquiries, cur.uniqueVisitors) : null },
-                  { label: t("funnelPaid"), value: cur.paidBookings, rate: cur.inquiries > 0 ? pct(cur.paidBookings, cur.inquiries) : null },
-                ] as const
-              ).map((step, i) => (
-                <div key={step.label} className="relative rounded-xl bg-warm-50 p-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {funnelSteps.map((step, i) => (
+                <div key={step.key} className="relative rounded-xl bg-warm-50 p-4">
                   <p className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
                     {step.label}
                     {i === 0 && shownHint()}
                   </p>
                   <p className="mt-1 text-xl font-bold tabular-nums text-gray-900">{numFmt.format(step.value)}</p>
-                  {i > 0 && (
-                    <p className="mt-0.5 text-[11px] text-gray-400">
-                      {step.rate !== null ? t("funnelRate", { rate: step.rate }) : t("funnelLowData")}
-                    </p>
-                  )}
+                  <p className="mt-0.5 text-[11px] leading-tight text-gray-400">
+                    {step.note
+                      ? step.note
+                      : step.rate !== null
+                        ? t("funnelRateOf", { rate: step.rate, of: step.ofLabel })
+                        : step.needMore !== null
+                          ? t("funnelNeedMore", { n: numFmt.format(step.needMore) })
+                          : ""}
+                  </p>
                 </div>
               ))}
             </div>
+            <p className="mt-3 text-[11px] text-gray-400">{t("funnelGoogleNote")}</p>
           </div>
 
           {/* Response speed & offers */}
@@ -742,26 +855,43 @@ export function StatsClient() {
                 <tbody>
                   {(
                     [
-                      { name: t("channelCatalog"), shown: cur.cardImpressions, clicked: cur.cardClicks, since: data.meta.cardDataSince },
-                      { name: t("channelConcierge"), shown: cur.conciergeImpressions, clicked: cur.conciergeClicks, since: null },
-                      { name: t("channelGoogle"), shown: cur.gscImpressions, clicked: cur.gscClicks, since: data.meta.gscDataSince === null ? data.meta.today : null },
+                      // "collecting" means the channel has never produced a
+                      // single data point — a channel that simply had no
+                      // shows this period says so instead of pretending
+                      // collection is still starting up.
+                      { name: t("channelCatalog"), shown: cur.cardImpressions, clicked: cur.cardClicks, collecting: data.meta.cardDataSince === null },
+                      { name: t("channelConcierge"), shown: cur.conciergeImpressions, clicked: cur.conciergeClicks, collecting: false },
+                      { name: t("channelGoogle"), shown: cur.gscImpressions, clicked: cur.gscClicks, collecting: data.meta.gscDataSince === null },
                     ] as const
                   ).map((row) => (
                     <tr key={row.name} className="border-b border-warm-50">
                       <td className="py-2.5 pr-4 text-gray-700">
                         {row.name}
-                        {row.shown === 0 && <span className="ml-2 text-[11px] text-gray-400">{t("collectingBadge")}</span>}
+                        {row.collecting ? (
+                          <span className="ml-2 text-[11px] text-gray-400">{t("collectingBadge")}</span>
+                        ) : row.shown === 0 ? (
+                          <span className="ml-2 text-[11px] text-gray-400">{t("noneInPeriod")}</span>
+                        ) : null}
                       </td>
                       <td className="py-2.5 pr-4 text-right tabular-nums text-gray-900">{numFmt.format(row.shown)}</td>
                       <td className="py-2.5 pr-4 text-right tabular-nums text-gray-900">{numFmt.format(row.clicked)}</td>
                       <td className="py-2.5 text-right font-semibold tabular-nums text-gray-900">
-                        {row.shown >= MIN_IMPRESSIONS_FOR_RATE ? pct(row.clicked, row.shown) : "—"}
+                        {row.shown >= MIN_IMPRESSIONS_FOR_RATE ? (
+                          pct(row.clicked, row.shown)
+                        ) : row.shown > 0 ? (
+                          <span className="text-[11px] font-normal text-gray-400">
+                            {t("ctrNeedMore", { n: numFmt.format(MIN_IMPRESSIONS_FOR_RATE - row.shown) })}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            <p className="mt-3 text-[11px] text-gray-400">{t("channelGoogleLag")}</p>
             {cur.cardImpressions > 0 && Object.keys(data.breakdowns.surfaces).length > 1 && (
               <div className="mt-4">
                 <p className="mb-2 text-xs font-medium text-gray-500">{t("surfacesTitle")}</p>

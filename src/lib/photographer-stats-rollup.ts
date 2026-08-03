@@ -8,7 +8,9 @@ import { country } from "@/lib/country";
  *
  * Inputs already collected elsewhere:
  *   - visitor_sessions.pageviews  → profile views, uniques, countries,
- *     devices, sources, returning visitors, URL-derived intent
+ *     devices, sources, returning visitors, URL-derived intent; the
+ *     visitor↔day pairs are also persisted to photographer_visitor_days
+ *     so a window's uniques can be counted distinctly, not summed
  *   - photographer_events         → card impressions/clicks, photo opens
  *   - concierge_recommendation_events → concierge shows/clicks
  *   - bookings                    → inquiries, paid (cohort by created day)
@@ -35,6 +37,33 @@ const WEDDING_PATH_RE = `^${LOCALE_PREFIX}/${WEDDING_SEGMENTS}/?$`;
 
 const TZ = "Europe/Lisbon";
 const EVENTS_RETENTION_DAYS = 120;
+/**
+ * Bookings updated within this window are re-aggregated even when their
+ * creation day fell outside the recompute range — otherwise a booking
+ * paid later than the trailing window would stay a zero forever in the
+ * 90/180-day views (it is counted on its CREATION day).
+ */
+const BOOKING_BACKREF_DAYS = 400;
+
+/**
+ * Drop bot traffic and the photographer's own devices from raw events.
+ * Written once and reused by every photographer_events query — the
+ * per-photo table used to skip it, so a photographer's own portfolio
+ * browsing inflated their "most-opened photos".
+ * Expects the events table to be aliased `e`.
+ */
+const EVENT_NOISE_FILTER = `
+  AND NOT EXISTS (
+    SELECT 1 FROM visitor_sessions bvs
+     WHERE bvs.visitor_id = e.visitor_id AND bvs.is_bot = TRUE)
+  AND NOT EXISTS (
+    SELECT 1 FROM photographer_profiles pp
+    JOIN (
+      SELECT DISTINCT user_id, visitor_id FROM visitor_sessions WHERE user_id IS NOT NULL AND visitor_id IS NOT NULL
+      UNION
+      SELECT id AS user_id, visitor_id FROM users WHERE visitor_id IS NOT NULL
+    ) own ON own.user_id = pp.user_id
+     WHERE pp.id = e.photographer_id AND own.visitor_id = e.visitor_id)`;
 /** Cap breakdown JSONB keys so a bot burst can't bloat rows. */
 const MAX_BREAKDOWN_KEYS = 12;
 
@@ -221,6 +250,19 @@ export async function rollupPhotographerStats(opts: {
        ON CONFLICT (photographer_id, visitor_id)
        DO UPDATE SET first_date = LEAST(photographer_visitor_first_seen.first_date, EXCLUDED.first_date)`,
     );
+    // Visitor↔day pairs outlive both the 30-day session retention and
+    // the daily rows: they are what makes "unique visitors over 90 days"
+    // an actual distinct count instead of a sum of daily uniques.
+    await client.query(
+      `DELETE FROM photographer_visitor_days WHERE date BETWEEN $1::date AND $2::date`,
+      [from, to],
+    );
+    await client.query(
+      `INSERT INTO photographer_visitor_days (photographer_id, visitor_id, date)
+       SELECT DISTINCT photographer_id, visitor_id, day::date FROM tmp_pp_views
+       ON CONFLICT DO NOTHING`,
+    );
+
     const returning = (await client.query(
       `SELECT t.photographer_id, t.day, COUNT(DISTINCT t.visitor_id)::int AS count
        FROM (SELECT DISTINCT photographer_id, day, visitor_id FROM tmp_pp_views) t
@@ -290,17 +332,7 @@ export async function rollupPhotographerStats(opts: {
               COUNT(*) FILTER (WHERE e.event_type = 'book_open')::int AS book_opens
        FROM photographer_events e
        WHERE (e.occurred_at AT TIME ZONE '${TZ}')::date BETWEEN $1::date AND $2::date
-         AND NOT EXISTS (
-           SELECT 1 FROM visitor_sessions bvs
-            WHERE bvs.visitor_id = e.visitor_id AND bvs.is_bot = TRUE)
-         AND NOT EXISTS (
-           SELECT 1 FROM photographer_profiles pp
-           JOIN (
-             SELECT DISTINCT user_id, visitor_id FROM visitor_sessions WHERE user_id IS NOT NULL AND visitor_id IS NOT NULL
-             UNION
-             SELECT id AS user_id, visitor_id FROM users WHERE visitor_id IS NOT NULL
-           ) own ON own.user_id = pp.user_id
-            WHERE pp.id = e.photographer_id AND own.visitor_id = e.visitor_id)
+         ${EVENT_NOISE_FILTER}
        GROUP BY 1, 2`,
       [from, to],
     )).rows as { photographer_id: string; day: string; impressions: number; clicks: number; photo_opens: number; book_opens: number }[];
@@ -312,6 +344,8 @@ export async function rollupPhotographerStats(opts: {
       b.book_opens = r.book_opens;
     }
 
+    // Same population as card_impressions above (concierge excluded, own
+    // devices excluded) so the breakdown adds up to the headline number.
     const surfaceRows = (await client.query(
       `SELECT e.photographer_id,
               ((e.occurred_at AT TIME ZONE '${TZ}')::date)::text AS day,
@@ -319,10 +353,9 @@ export async function rollupPhotographerStats(opts: {
               COUNT(*)::int AS count
        FROM photographer_events e
        WHERE e.event_type = 'card_impression'
+         AND COALESCE(e.surface, '') <> 'concierge'
          AND (e.occurred_at AT TIME ZONE '${TZ}')::date BETWEEN $1::date AND $2::date
-         AND NOT EXISTS (
-           SELECT 1 FROM visitor_sessions bvs
-            WHERE bvs.visitor_id = e.visitor_id AND bvs.is_bot = TRUE)
+         ${EVENT_NOISE_FILTER}
        GROUP BY 1, 2, 3`,
       [from, to],
     )).rows as { photographer_id: string; day: string; name: string; count: number }[];
@@ -338,6 +371,12 @@ export async function rollupPhotographerStats(opts: {
     }
 
     // ── 7. Per-photo daily opens ──────────────────────────────────────
+    // Cleared first: an event that disappears (pruned, or its session
+    // re-flagged as a bot) must not leave a stale row behind.
+    await client.query(
+      `DELETE FROM portfolio_item_daily_stats WHERE date BETWEEN $1::date AND $2::date`,
+      [from, to],
+    );
     const photoUpsert = await client.query(
       `INSERT INTO portfolio_item_daily_stats (item_id, photographer_id, date, opens)
        SELECT e.item_id, e.photographer_id, (e.occurred_at AT TIME ZONE '${TZ}')::date, COUNT(*)::int
@@ -345,6 +384,7 @@ export async function rollupPhotographerStats(opts: {
        JOIN portfolio_items pi ON pi.id = e.item_id
        WHERE e.event_type = 'photo_open' AND e.item_id IS NOT NULL
          AND (e.occurred_at AT TIME ZONE '${TZ}')::date BETWEEN $1::date AND $2::date
+         ${EVENT_NOISE_FILTER}
        GROUP BY 1, 2, 3
        ON CONFLICT (item_id, date) DO UPDATE SET opens = EXCLUDED.opens`,
       [from, to],
@@ -493,6 +533,39 @@ export async function rollupPhotographerStats(opts: {
         ],
       );
     }
+
+    // ── 11. Bookings that changed outside the recompute range ─────────
+    // Inquiries/paid are counted on the booking's CREATION day. The cron
+    // only recomputes a trailing window, so a booking paid later than
+    // that — or a blind booking assigned to its photographer weeks in —
+    // would stay a zero forever in the 90/180-day views. Re-aggregate
+    // the creation day of anything touched recently.
+    await client.query(
+      `WITH touched AS (
+         SELECT DISTINCT b.photographer_id,
+                ((b.created_at AT TIME ZONE '${TZ}')::date) AS day
+         FROM bookings b
+         WHERE b.photographer_id IS NOT NULL
+           AND b.updated_at >= NOW() - INTERVAL '${BOOKING_BACKREF_DAYS} days'
+           AND ((b.created_at AT TIME ZONE '${TZ}')::date) NOT BETWEEN $1::date AND $2::date
+       ), agg AS (
+         SELECT t.photographer_id, t.day,
+                COUNT(b.id)::int AS inquiries,
+                COUNT(b.id) FILTER (WHERE b.payment_status = 'paid')::int AS paid
+         FROM touched t
+         JOIN bookings b
+           ON b.photographer_id = t.photographer_id
+          AND ((b.created_at AT TIME ZONE '${TZ}')::date) = t.day
+         GROUP BY 1, 2
+       )
+       INSERT INTO photographer_daily_stats (photographer_id, date, inquiries, paid_bookings, computed_at)
+       SELECT photographer_id, day, inquiries, paid, NOW() FROM agg
+       ON CONFLICT (photographer_id, date) DO UPDATE SET
+         inquiries = EXCLUDED.inquiries,
+         paid_bookings = EXCLUDED.paid_bookings,
+         computed_at = NOW()`,
+      [from, to],
+    );
   });
 
   let eventsPruned = 0;
