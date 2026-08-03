@@ -4173,6 +4173,8 @@
     "check_price_bad": "Sem pacote público — o seu cartão não mostra preço",
     "check_reviews": "Avaliações visíveis no cartão",
     "check_reviews_bad": "Ainda sem avaliações — peça aos últimos clientes; o cartão mostra o número",
+    "viewDesktop": "Computador",
+    "viewMobile": "Telemóvel",
     "judgementTitle": "Verifique você mesmo:",
     "remind_faces": "Vê-se um rosto — as capas sem pessoas são as menos abertas",
     "remind_place": "Portugal é reconhecível — um sítio que o cliente saiba nomear",

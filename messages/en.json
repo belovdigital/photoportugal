@@ -4167,6 +4167,8 @@
     "check_price_bad": "No public package — your card shows no price",
     "check_reviews": "Reviews shown on the card",
     "check_reviews_bad": "No reviews yet — ask your last clients, the card shows the count",
+    "viewDesktop": "Desktop",
+    "viewMobile": "Phone",
     "judgementTitle": "Check these yourself:",
     "remind_faces": "A face is visible — covers without people get opened least",
     "remind_place": "Portugal is recognisable — a place a client could name",

@@ -40,6 +40,7 @@ export function PhotographerCardCover({
   altPrefix,
   impressionSurface,
   scope,
+  disableTracking = false,
 }: {
   slug: string;
   name: string;
@@ -54,6 +55,8 @@ export function PhotographerCardCover({
    *  so full-screen opens the same set the card was showing — a card under
    *  the Business filter must not expand into the leisure portfolio. */
   scope?: "leisure" | "business";
+  /** Dashboard preview of one's own card — must not log an impression. */
+  disableTracking?: boolean;
 }) {
   const t = useTranslations("photographers.card");
   const [idx, setIdx] = useState(0);
@@ -66,7 +69,8 @@ export function PhotographerCardCover({
 
   // Every card on the site renders this cover, so this is the single
   // impression point for photographer stats (≥50% visible for 600ms).
-  useCardImpression(wrapRef, slug, impressionSurface);
+  // Empty slug makes the hook a no-op (see trackCardImpression).
+  useCardImpression(wrapRef, disableTracking ? "" : slug, impressionSurface);
 
   // Mount all slides as soon as the card scrolls anywhere near the viewport.
   // We could lazy-render only on swipe, but that creates a one-frame gap on

@@ -2,8 +2,22 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { maskSurname } from "@/lib/photographer-name";
-import { normalizeName } from "@/lib/format-name";
+import { PhotographerCard } from "@/components/photographers/PhotographerCard";
+import { locations as ALL_LOCATIONS } from "@/lib/locations-data";
+import type { PhotographerProfile, Package } from "@/types";
+
+/** The dashboard's own package row — description is nullable there. */
+interface DashboardPackage {
+  id: string;
+  name: string;
+  description: string | null;
+  duration_minutes: number;
+  num_photos: number;
+  price: number;
+  is_popular: boolean;
+  is_public: boolean;
+  features: string[];
+}
 
 /**
  * "This is your card, this is what a visitor decides on."
@@ -15,84 +29,153 @@ import { normalizeName } from "@/lib/format-name";
  * recognisable Portugal, or marketing text baked into the image, while
  * the clicked ones all showed faces in a place you can name.
  *
- * So: render the card the way the catalog renders it, and put the rules
- * next to it — auto-checking everything that can be checked (cover
- * exists, landscape crop, tagline, a package to price against, reviews)
- * and leaving the three judgement calls as reminders.
+ * It renders the REAL catalog card (a hand-built lookalike drifted from
+ * it immediately — missing the avatar, badges, chips and CTA), in
+ * `preview` mode so it neither navigates nor logs an impression against
+ * its own owner. The width switch matters because the cover height is
+ * fixed at h-56 while the card width comes from the grid: 1 column on a
+ * phone, 3 columns on a desktop, so the same photo is cropped
+ * differently in each.
  */
 export function CardPreviewGuide({
-  name,
-  tagline,
-  coverUrl,
-  positionY,
-  minPrice,
-  reviewCount,
-  rating,
+  profile,
+  packages,
+  portfolioThumbs,
+  quote,
 }: {
-  name: string;
-  tagline: string;
-  coverUrl: string | null;
-  positionY: number;
-  minPrice: number | null;
-  reviewCount: number;
-  /** Postgres NUMERIC arrives as a string — coerce before formatting. */
-  rating: number | string;
+  profile: {
+    id: string;
+    user_id?: string;
+    slug: string;
+    name: string;
+    tagline: string | null;
+    bio: string | null;
+    avatar_url: string | null;
+    cover_url: string | null;
+    cover_position_y: number;
+    languages: string[];
+    shoot_types: string[];
+    hourly_rate: number | null;
+    currency?: string | null;
+    experience_years: number;
+    plan: string;
+    rating: number | string;
+    review_count: number;
+    session_count: number;
+    is_verified?: boolean;
+    is_featured?: boolean;
+    is_founding?: boolean;
+    created_at?: string;
+    last_seen_at?: string | null;
+    avg_response_minutes?: number | null;
+    location_slugs: string[];
+  };
+  packages: DashboardPackage[];
+  portfolioThumbs: string[];
+  quote?: { text: string; client_name: string | null };
 }) {
   const t = useTranslations("cardPreview");
-  const ratingNum = Number(rating) || 0;
+  const [wide, setWide] = useState(true);
   // Landscape vs portrait is only knowable once the browser has the file.
   const [ratio, setRatio] = useState<number | null>(null);
 
+  const tagline = (profile.tagline || "").trim();
+  const publicPackages: Package[] = packages
+    .filter((p) => p.is_public)
+    .map((p) => ({ ...p, description: p.description || "" }));
+
+  const card: PhotographerProfile = {
+    id: profile.id,
+    user_id: profile.user_id || "",
+    slug: profile.slug,
+    name: profile.name,
+    tagline,
+    bio: profile.bio || "",
+    avatar_url: profile.avatar_url,
+    cover_url: profile.cover_url,
+    cover_position_y: profile.cover_position_y ?? 50,
+    languages: profile.languages || [],
+    hourly_rate: profile.hourly_rate ?? 0,
+    currency: profile.currency || "EUR",
+    locations: (profile.location_slugs || [])
+      .map((slug) => ALL_LOCATIONS.find((l) => l.slug === slug))
+      .filter((l): l is (typeof ALL_LOCATIONS)[number] => Boolean(l)),
+    packages: publicPackages,
+    shoot_types: profile.shoot_types || [],
+    experience_years: profile.experience_years,
+    is_verified: Boolean(profile.is_verified),
+    is_featured: Boolean(profile.is_featured),
+    is_founding: Boolean(profile.is_founding),
+    plan: (profile.plan as PhotographerProfile["plan"]) || "free",
+    rating: Number(profile.rating) || 0,
+    review_count: profile.review_count,
+    session_count: profile.session_count,
+    created_at: profile.created_at || "",
+    last_seen_at: profile.last_seen_at ?? null,
+    avg_response_minutes: profile.avg_response_minutes ?? null,
+    portfolio_thumbs: portfolioThumbs,
+  };
+
   const checks: { key: string; ok: boolean | null }[] = [
-    { key: "cover", ok: Boolean(coverUrl) },
+    { key: "cover", ok: Boolean(profile.cover_url) },
     { key: "landscape", ok: ratio === null ? null : ratio >= 1.2 },
-    { key: "tagline", ok: tagline.trim().length > 0 },
-    { key: "price", ok: minPrice !== null },
-    { key: "reviews", ok: reviewCount > 0 },
+    { key: "tagline", ok: tagline.length > 0 },
+    { key: "price", ok: publicPackages.length > 0 },
+    { key: "reviews", ok: profile.review_count > 0 },
   ];
   const reminders = ["faces", "place", "noText"];
 
   return (
     <div className="rounded-2xl border border-warm-200 bg-warm-50 p-4">
-      <h3 className="text-sm font-semibold text-gray-900">{t("title")}</h3>
-      <p className="mt-1 text-xs text-gray-500">{t("subtitle")}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">{t("title")}</h3>
+          <p className="mt-1 text-xs text-gray-500">{t("subtitle")}</p>
+        </div>
+        <div className="flex rounded-lg border border-warm-200 bg-white p-0.5 text-xs">
+          {([true, false] as const).map((w) => (
+            <button
+              key={String(w)}
+              type="button"
+              onClick={() => setWide(w)}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${
+                wide === w ? "bg-primary-600 text-white" : "text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              {w ? t("viewDesktop") : t("viewMobile")}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <div className="mt-4 grid gap-5 sm:grid-cols-[minmax(0,260px)_1fr]">
-        {/* The card itself, built like the catalog builds it */}
-        <div className="overflow-hidden rounded-2xl border border-warm-200 bg-white shadow-sm">
-          <div className="relative h-44 bg-warm-100">
-            {coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={coverUrl}
-                alt=""
-                className="h-full w-full object-cover"
-                style={{ objectPosition: `center ${positionY}%` }}
-                onLoad={(e) => {
-                  const img = e.currentTarget;
-                  if (img.naturalHeight > 0) setRatio(img.naturalWidth / img.naturalHeight);
-                }}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-xs text-gray-400">
-                {t("noCover")}
-              </div>
-            )}
-          </div>
-          <div className="p-3">
-            <p className="text-sm font-semibold text-gray-900">{maskSurname(normalizeName(name))}</p>
-            <p className="mt-0.5 line-clamp-2 min-h-8 text-xs text-gray-500">
-              {tagline.trim() || t("noTagline")}
-            </p>
-            <div className="mt-2 flex items-center justify-between text-xs">
-              <span className="text-gray-500">
-                {reviewCount > 0 ? `★ ${ratingNum.toFixed(1)} · ${reviewCount}` : t("noReviewsYet")}
-              </span>
-              <span className="font-semibold text-gray-900">
-                {minPrice !== null ? t("fromPrice", { price: minPrice }) : "—"}
-              </span>
-            </div>
-          </div>
+      <div className="mt-4 grid gap-5 lg:grid-cols-[auto_1fr]">
+        {/* The catalog's own card, at the width the catalog gives it */}
+        <div
+          className="mx-auto w-full"
+          style={{ maxWidth: wide ? 400 : 340 }}
+          // A preview must not act as a link — the photographer's own
+          // clicks are noise, and "View Profile" here is confusing.
+          onClickCapture={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          <PhotographerCard photographer={card} quote={quote} preview />
+          {profile.cover_url && (
+            // Off-screen probe: the card's own <img> is inside a scroller
+            // we don't control, so measure the file separately.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={profile.cover_url}
+              alt=""
+              aria-hidden
+              className="hidden"
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                if (img.naturalHeight > 0) setRatio(img.naturalWidth / img.naturalHeight);
+              }}
+            />
+          )}
         </div>
 
         {/* The rules, with everything checkable already checked */}

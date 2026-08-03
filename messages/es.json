@@ -4173,6 +4173,8 @@
     "check_price_bad": "Sin paquete público: tu tarjeta no muestra precio",
     "check_reviews": "Reseñas visibles en la tarjeta",
     "check_reviews_bad": "Aún sin reseñas: pídeselas a tus últimos clientes, la tarjeta muestra el número",
+    "viewDesktop": "Ordenador",
+    "viewMobile": "Móvil",
     "judgementTitle": "Compruébalo tú:",
     "remind_faces": "Se ve una cara: las portadas sin personas son las que menos se abren",
     "remind_place": "Portugal es reconocible: un lugar que el cliente pueda nombrar",

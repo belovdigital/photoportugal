@@ -66,6 +66,16 @@ interface Profile {
   is_approved: boolean;
   location_slugs: string[];
   coverage_node_slugs?: string[];
+  // Card-preview extras — only the profile page selects these, the
+  // portfolio/packages pages reuse this component without them.
+  user_id?: string;
+  is_verified?: boolean;
+  is_featured?: boolean;
+  is_founding?: boolean;
+  currency?: string | null;
+  created_at?: string;
+  last_seen_at?: string | null;
+  avg_response_minutes?: number | null;
 }
 
 interface PortfolioItem {
@@ -130,6 +140,7 @@ export function PhotographerDashboardClient({
   allLocations,
   initialTab,
   standalone,
+  previewQuote,
 }: {
   profile: Profile;
   portfolioItems: PortfolioItem[];
@@ -138,6 +149,8 @@ export function PhotographerDashboardClient({
   allLocations: LocationOption[];
   initialTab?: Tab;
   standalone?: boolean;
+  /** Review snippet the catalog prints on the card (profile tab preview). */
+  previewQuote?: { text: string; client_name: string | null };
 }) {
   const router = useRouter();
   const t = useTranslations("photographerDashboard");
@@ -894,15 +907,22 @@ export function PhotographerDashboardClient({
             />
 
             {/* What the visitor actually decides on */}
+            {profile.user_id && (
             <CardPreviewGuide
-              name={profile.name}
-              tagline={tagline}
-              coverUrl={cardCover.url}
-              positionY={cardCover.y}
-              minPrice={packages.length > 0 ? Math.min(...packages.map((p) => p.price)) : null}
-              reviewCount={profile.review_count}
-              rating={profile.rating}
+              profile={{
+                ...profile,
+                tagline,
+                cover_url: cardCover.url,
+                cover_position_y: cardCover.y,
+              }}
+              packages={packages}
+              portfolioThumbs={portfolioItems
+                .filter((i) => i.type === "photo")
+                .slice(0, 6)
+                .map((i) => i.thumbnail_url || i.url)}
+              quote={previewQuote}
             />
+            )}
 
             {/* Real Name */}
             <div className="grid grid-cols-2 gap-4">

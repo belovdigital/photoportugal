@@ -4173,6 +4173,8 @@
     "check_price_bad": "Kein öffentliches Paket — Ihre Karte zeigt keinen Preis",
     "check_reviews": "Bewertungen auf der Karte",
     "check_reviews_bad": "Noch keine Bewertungen — fragen Sie Ihre letzten Kunden; die Karte zeigt die Anzahl",
+    "viewDesktop": "Desktop",
+    "viewMobile": "Handy",
     "judgementTitle": "Selbst prüfen:",
     "remind_faces": "Ein Gesicht ist zu sehen — Titelbilder ohne Menschen werden am seltensten geöffnet",
     "remind_place": "Portugal ist erkennbar — ein Ort, den ein Kunde benennen kann",

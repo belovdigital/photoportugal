@@ -19,6 +19,7 @@ export function PhotographerCard({
   quote,
   giftMode = null,
   businessMode = false,
+  preview = false,
 }: {
   photographer: PhotographerProfile;
   quote?: { text: string; client_name: string | null };
@@ -26,6 +27,9 @@ export function PhotographerCard({
   /** Visitor is filtering the catalog by the Business shoot type — the card
    *  then shows corporate work only, instead of the leisure portfolio. */
   businessMode?: boolean;
+  /** Photographer looking at their own card in the dashboard: same pixels,
+   *  but no impression events and no click tracking for their own profile. */
+  preview?: boolean;
 }) {
   const { data: session } = useSession();
   const isPhotographer = (session?.user as { role?: string } | undefined)?.role === "photographer";
@@ -78,6 +82,7 @@ export function PhotographerCard({
           coverPositionY={photographer.cover_position_y}
           scope={showBusinessOnly ? "business" : "leisure"}
           height="h-56"
+          disableTracking={preview}
           altPrefix={t("coverAlt", { name: "" }).replace(/\s*$/, "")}
         />
         <div className="absolute left-3 top-3 z-10">
@@ -105,7 +110,7 @@ export function PhotographerCard({
 
       <Link
         href={`/photographers/${photographer.slug}`}
-        onClick={() => trackCardClick(photographer.slug)}
+        onClick={() => { if (!preview) trackCardClick(photographer.slug); }}
         className="flex flex-1 flex-col"
       >
       <div className="relative flex-1 p-6 pt-10 pb-3">
@@ -209,7 +214,7 @@ export function PhotographerCard({
           {!isPhotographer && (
             <Link
               href={`/photographers/${photographer.slug}#message`}
-              onClick={() => { trackCardClick(photographer.slug); trackCTAClick("message_photographer", "photographer_card"); }}
+              onClick={() => { if (preview) return; trackCardClick(photographer.slug); trackCTAClick("message_photographer", "photographer_card"); }}
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-warm-200 text-gray-400 transition hover:border-primary-400 hover:text-primary-600"
               title={t("messagePhotographer", { name: normalizeName(displayName) })}
             >
@@ -220,7 +225,7 @@ export function PhotographerCard({
           )}
           <Link
             href={`/photographers/${photographer.slug}`}
-            onClick={() => { trackCardClick(photographer.slug); trackCTAClick("view_profile", "photographer_card"); }}
+            onClick={() => { if (preview) return; trackCardClick(photographer.slug); trackCTAClick("view_profile", "photographer_card"); }}
             className="flex h-10 items-center rounded-lg bg-primary-50 px-3 text-sm font-semibold text-primary-600 transition group-hover:bg-primary-600 group-hover:text-white whitespace-nowrap"
           >
             {t("viewProfile")}

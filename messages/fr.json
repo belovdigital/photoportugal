@@ -4173,6 +4173,8 @@
     "check_price_bad": "Aucun forfait public — votre carte n'affiche pas de prix",
     "check_reviews": "Avis visibles sur la carte",
     "check_reviews_bad": "Pas encore d'avis — demandez à vos derniers clients, la carte affiche le nombre",
+    "viewDesktop": "Ordinateur",
+    "viewMobile": "Mobile",
     "judgementTitle": "À vérifier vous-même :",
     "remind_faces": "Un visage est visible — les couvertures sans personnes sont les moins ouvertes",
     "remind_place": "Le Portugal est reconnaissable — un lieu que le client peut nommer",

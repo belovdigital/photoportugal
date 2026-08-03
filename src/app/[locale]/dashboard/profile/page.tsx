@@ -21,11 +21,16 @@ export default async function ProfilePage() {
     languages: string[]; shoot_types: string[]; hourly_rate: number | null;
     experience_years: number; career_start_year: number | null;
     plan: string; rating: number; review_count: number; session_count: number; is_approved: boolean;
+    user_id: string; is_verified: boolean; is_featured: boolean; is_founding: boolean;
+    currency: string | null; created_at: string; last_seen_at: string | null; avg_response_minutes: number | null;
   }>(
     `SELECT pp.id, pp.slug, u.name, COALESCE(u.first_name, '') as first_name, COALESCE(u.last_name, '') as last_name,
             pp.tagline, pp.bio, u.avatar_url, pp.cover_url, pp.cover_position_y,
             pp.languages, pp.shoot_types, pp.hourly_rate, pp.experience_years, pp.career_start_year, pp.plan,
-            pp.rating, pp.review_count, pp.session_count, pp.is_approved
+            pp.rating, pp.review_count, pp.session_count, pp.is_approved,
+            pp.user_id, pp.is_verified, pp.is_featured, COALESCE(pp.is_founding, FALSE) AS is_founding,
+            pp.currency, COALESCE(pp.created_at, u.created_at)::text AS created_at,
+            u.last_seen_at::text AS last_seen_at, pp.avg_response_minutes
      FROM photographer_profiles pp JOIN users u ON u.id = pp.user_id WHERE pp.user_id = $1`,
     [userId]
   );
@@ -42,6 +47,16 @@ export default async function ProfilePage() {
   const portfolioItems = await query<{
     id: string; type: string; url: string; thumbnail_url: string | null; caption: string | null; location_slug: string | null; shoot_type: string | null; sort_order: number;
   }>("SELECT id, type, url, thumbnail_url, caption, location_slug, shoot_type, sort_order FROM portfolio_items WHERE photographer_id = $1 ORDER BY sort_order ASC NULLS LAST, created_at ASC", [profile.id]);
+
+  // The catalog prints a review snippet on the card — the preview needs
+  // the same one to be worth trusting.
+  const quoteRow = await queryOne<{ text: string; client_name: string | null }>(
+    `SELECT r.comment AS text, u.name AS client_name
+       FROM reviews r LEFT JOIN users u ON u.id = r.client_id
+      WHERE r.photographer_id = $1 AND COALESCE(r.comment, '') <> ''
+      ORDER BY r.rating DESC NULLS LAST, r.created_at DESC LIMIT 1`,
+    [profile.id]
+  );
 
   const packages = await query<{
     id: string; name: string; description: string | null; duration_minutes: number; num_photos: number; price: number; is_popular: boolean; is_public: boolean; delivery_days: number; features: string[];
@@ -69,6 +84,7 @@ export default async function ProfilePage() {
     <div className="p-6 sm:p-8">
       <PhotographerDashboardClient
         profile={{ ...profile, location_slugs: locationSlugs, coverage_node_slugs: coverageNodeSlugs }}
+        previewQuote={quoteRow ? { text: quoteRow.text, client_name: quoteRow.client_name } : undefined}
         portfolioItems={portfolioItems}
         packages={packages}
         bookings={bookings}
