@@ -131,9 +131,11 @@ export async function POST(req: NextRequest) {
         [user.id]
       );
 
-      import("@/lib/email").then(({ sendWelcomeEmail }) => {
-        sendWelcomeEmail(user.email, user.name, "client").catch(console.error);
-      });
+      // Queued, not sent: a photographer signup passes through here as a
+      // client first, and the role flips seconds later.
+      import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
+        enqueueClientWelcome(user.id, user.email, user.name)
+      ).catch(console.error);
 
       import("@/lib/telegram").then(({ sendTelegram }) => {
         sendTelegram(`👤 New client registered: ${user.name} (${user.email})`, "clients");

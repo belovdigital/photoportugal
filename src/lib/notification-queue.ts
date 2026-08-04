@@ -295,6 +295,40 @@ export async function enqueueNewMessageNotif(opts: EnqueueNewMessageOpts): Promi
   );
 }
 
+// ── Client welcome, held back until the role settles ───────────────
+//
+// Signing up as a photographer starts as a client: the account is created
+// first, and applyUserRole flips the role seconds later. Sending the client
+// welcome on the spot meant one person got two welcome emails seven seconds
+// apart (Nina bulusan, 2026-08-04 — "Welcome to Photo Spain!" at 11:34:10 and
+// "Let's get you started!" at 11:34:17).
+//
+// Ten minutes is well past the window that matters: applyUserRole only
+// converts an account created in the last five minutes, or an empty one.
+//
+// The row's `body` holds the recipient's NAME rather than HTML, because the
+// client welcome is localized and worth rendering at send time — if they pick
+// a language in those ten minutes, they get that one.
+const CLIENT_WELCOME_DELAY_MIN = 10;
+
+export async function enqueueClientWelcome(userId: string, email: string, name: string): Promise<void> {
+  if (!userId || !email) return;
+  try {
+    await queryOne(
+      `INSERT INTO notification_queue
+         (recipient_id, recipient, channel, event_kind, body, send_after, recipient_timezone, dedup_key, status)
+       VALUES ($1, $2, 'email', 'welcome_client', $3,
+               NOW() + INTERVAL '${CLIENT_WELCOME_DELAY_MIN} minutes', $4, $5, 'pending')
+       ON CONFLICT (dedup_key) DO NOTHING
+       RETURNING id`,
+      [userId, email, name || "there", country.timezone, `welcome:${userId}`]
+    );
+  } catch (err) {
+    // A welcome email is not worth failing a signup over.
+    console.error("[notification-queue] enqueueClientWelcome failed:", err);
+  }
+}
+
 /**
  * Cancel-conditions check for a queued new-message notification.
  * Returns a string reason to cancel, or null to proceed with delivery.
@@ -420,6 +454,30 @@ export async function processNotificationQueue(): Promise<number> {
           );
           continue;
         }
+      }
+
+      // The whole point of the delay: if they turned out to be a
+      // photographer, that welcome has already gone out and this one is the
+      // duplicate we were waiting to avoid.
+      if (item.event_kind === "welcome_client") {
+        const u = await queryOne<{ role: string | null }>(
+          "SELECT role FROM users WHERE id = $1",
+          [item.recipient_id]
+        );
+        if (!u || u.role === "photographer") {
+          await queryOne(
+            `UPDATE notification_queue
+                SET status = 'cancelled', cancel_reason = $2, sent_at = NOW()
+              WHERE id = $1 RETURNING id`,
+            [item.id, u ? "became_photographer" : "user_gone"]
+          );
+          continue;
+        }
+        const { sendWelcomeEmail } = await import("@/lib/email");
+        await sendWelcomeEmail(item.recipient, item.body, "client");
+        await queryOne("DELETE FROM notification_queue WHERE id = $1", [item.id]);
+        processed++;
+        continue;
       }
 
       if (item.channel === "sms") {

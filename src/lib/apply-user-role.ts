@@ -112,9 +112,9 @@ export async function applyUserRole(
     }
   } else {
     if (!user.admin_notified) {
-      sendWelcomeEmail(email, name, "client").catch((err) =>
-        console.error("[apply-role] client welcome email:", err)
-      );
+      import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
+        enqueueClientWelcome(user.id, email, name)
+      ).catch((err) => console.error("[apply-role] client welcome queue:", err));
       sendAdminNewClientNotification(name, email).catch((err) =>
         console.error("[apply-role] admin client notification:", err)
       );

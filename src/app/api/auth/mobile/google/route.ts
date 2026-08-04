@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { sendAdminNewClientNotification, sendWelcomeEmail } from "@/lib/email";
+import { sendAdminNewClientNotification } from "@/lib/email";
 
 function getJwtSecret(): string {
   const s = process.env.NEXTAUTH_SECRET;
@@ -87,8 +87,11 @@ export async function POST(req: NextRequest) {
         avatar_url: avatarUrl,
       };
 
-      // Send welcome email for new mobile users (always clients on mobile)
-      sendWelcomeEmail(googleUser.email, googleUser.name, "client").catch((err) => console.error("[auth/google] welcome email error:", err));
+      // Queued like every other client welcome — an app signup can still turn
+      // into a photographer account on the web ten minutes later.
+      import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
+        enqueueClientWelcome(newUser.id, googleUser.email, googleUser.name)
+      ).catch((err) => console.error("[auth/google] welcome queue error:", err));
       sendAdminNewClientNotification(googleUser.name, googleUser.email).catch((err) => console.error("[auth/google] admin notification error:", err));
       import("@/lib/telegram").then(({ sendTelegram }) => {
         sendTelegram(`👤 <b>New Client (Google, app)</b>\n\n<b>Name:</b> ${googleUser.name}\n<b>Email:</b> ${googleUser.email}`, "clients");

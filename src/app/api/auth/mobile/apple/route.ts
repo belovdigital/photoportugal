@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { sendAdminNewClientNotification, sendWelcomeEmail } from "@/lib/email";
+import { sendAdminNewClientNotification } from "@/lib/email";
 
 function getJwtSecret(): string {
   const s = process.env.NEXTAUTH_SECRET;
@@ -103,8 +103,10 @@ export async function POST(req: NextRequest) {
         [user.id]
       );
 
-      // Notify admin + send welcome email
-      sendWelcomeEmail(email.toLowerCase(), name, "client").catch((err) => console.error("[auth/apple] welcome email error:", err));
+      // Notify admin + queue the welcome (held in case the role changes)
+      import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
+        enqueueClientWelcome(user!.id, email.toLowerCase(), name)
+      ).catch((err) => console.error("[auth/apple] welcome queue error:", err));
       sendAdminNewClientNotification(name, email.toLowerCase()).catch((err) => console.error("[auth/apple] admin notification error:", err));
       import("@/lib/telegram").then(({ sendTelegram }) => {
         sendTelegram(`👤 <b>New Client (Apple, app)</b>\n\n<b>Name:</b> ${name}\n<b>Email:</b> ${email}`, "clients");

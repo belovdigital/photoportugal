@@ -3,7 +3,6 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { queryOne, query } from "./db";
-import { sendWelcomeEmail } from "./email";
 import { country } from "@/lib/country";
 
 
@@ -115,10 +114,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const newUser = await queryOne<{ id: string }>("SELECT id FROM users WHERE email = $1", [email]);
             if (newUser) {
               query("INSERT INTO notification_preferences (user_id) VALUES ($1) ON CONFLICT DO NOTHING", [newUser.id]).catch(() => {});
-              import("@/lib/email").then(({ sendWelcomeEmail, sendAdminNewClientNotification }) => {
-                sendWelcomeEmail(email, user.name || "there", "client").catch((err) =>
-                  console.error("[auth] Google welcome email error:", err)
-                );
+              // Google signups are exactly the case this delay exists for:
+              // photographers land here as clients, then pick their role on
+              // the next screen.
+              import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
+                enqueueClientWelcome(newUser.id, email, user.name || "there")
+              ).catch((err) => console.error("[auth] Google welcome queue error:", err));
+              import("@/lib/email").then(({ sendAdminNewClientNotification }) => {
                 sendAdminNewClientNotification(user.name || "Unknown", email).catch((err) =>
                   console.error("[auth] Google admin email error:", err)
                 );

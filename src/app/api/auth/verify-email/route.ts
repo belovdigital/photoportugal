@@ -40,9 +40,16 @@ export async function GET(req: NextRequest) {
     // Send welcome email + admin notification for email sign ups
     // (Google sign ups are handled in set-role endpoint)
     if (!user.email_verified) {
-      sendWelcomeEmail(user.email, user.name, user.role as "client" | "photographer").catch((err) =>
-        console.error("[verify-email] Failed to send welcome email:", err)
-      );
+      if (user.role === "photographer") {
+        sendWelcomeEmail(user.email, user.name, "photographer").catch((err) =>
+          console.error("[verify-email] Failed to send welcome email:", err)
+        );
+      } else {
+        // Held ten minutes in case this account becomes a photographer.
+        import("@/lib/notification-queue").then(({ enqueueClientWelcome }) =>
+          enqueueClientWelcome(user.id, user.email, user.name)
+        ).catch((err) => console.error("[verify-email] Failed to queue welcome email:", err));
+      }
       if (user.role === "photographer") {
         sendAdminNewPhotographerNotification(user.name, user.email).catch((err) =>
           console.error("[verify-email] Failed to send admin notification:", err)
