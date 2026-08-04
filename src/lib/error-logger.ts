@@ -157,11 +157,47 @@ export async function logServerError(err: unknown, ctx: ErrorContext = {}): Prom
       sendErrorEmail(logId, fingerprint, errorClass, message, stack, ctx, !existing).catch((emailErr) => {
         console.error("[error-logger] sendErrorEmail failed:", emailErr);
       });
+      // Telegram carries the same alert, because email is not a channel you
+      // can time. On 2026-08-03 one of these sat in Migadu's intradomain queue
+      // for thirteen hours and arrived the next morning, while its twin — sent
+      // one second earlier — was delivered instantly. A 5xx you hear about
+      // after breakfast is not an alert. Same throttle, so the two channels
+      // stay in step rather than one of them spamming.
+      sendErrorTelegram(errorClass, message, ctx, !existing).catch((tgErr) => {
+        console.error("[error-logger] sendErrorTelegram failed:", tgErr);
+      });
     }
   } catch (loggerErr) {
     // Logger MUST NOT throw — would mask the original error.
     console.error("[error-logger] failed to log:", loggerErr);
   }
+}
+
+async function sendErrorTelegram(
+  errorClass: string,
+  message: string,
+  ctx: ErrorContext,
+  isFirstOccurrence: boolean
+) {
+  const { sendTelegram } = await import("@/lib/telegram");
+  const baseUrl = process.env.AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || country.baseUrl;
+  const status = ctx.statusCode || 500;
+
+  // escapeHtml on every interpolated value, not for tidiness: Telegram parses
+  // this as HTML and rejects the whole message on a stray < or &, which is
+  // exactly what a SQL error ("... <> ''") or a TypeError tends to contain.
+  const lines = [
+    `🔴 <b>${isFirstOccurrence ? "NEW" : "RECURRING"} ${status}</b> — <code>${escapeHtml((ctx.path || "(unknown path)").slice(0, 150))}</code>`,
+    "",
+    `<b>${escapeHtml(errorClass)}</b>`,
+    `<code>${escapeHtml(message.slice(0, 400))}</code>`,
+    "",
+    `<b>User:</b> ${ctx.userEmail ? escapeHtml(ctx.userEmail) : "anonymous"}${ctx.userRole ? ` (${escapeHtml(ctx.userRole)})` : ""}`,
+  ];
+  if (ctx.referrer) lines.push(`<b>From:</b> ${escapeHtml(ctx.referrer.slice(0, 150))}`);
+  lines.push("", `<a href="${baseUrl}/admin#errors">Open admin →</a>`);
+
+  await sendTelegram(lines.join("\n"), "alerts");
 }
 
 async function sendErrorEmail(
