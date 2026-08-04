@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne, query } from "@/lib/db";
-import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification } from "@/lib/email";
+import { sendBookingNotification, sendBookingRequestToClient, sendAdminNewBookingNotification, replyToAddress } from "@/lib/email";
 import { sendSMS, sendAdminSMS } from "@/lib/sms";
 import { maskSurname } from "@/lib/photographer-name";
 import { bookingGroupSizeEstimateColumnExists } from "@/lib/booking-group-size-fields";
@@ -615,7 +615,8 @@ export async function POST(req: NextRequest) {
           clientInfo.name,
           photographerInfo.display_name,
           pkgInfo?.name || null,
-          dateDisplay
+          dateDisplay,
+          { replyTo: replyToAddress(clientInfo.email) }
         );
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`📅 <b>New Booking!</b>\n\n<b>Client:</b> ${clientInfo!.name}\n<b>Photographer:</b> ${photographerInfo!.display_name}\n<b>Package:</b> ${pkgInfo?.name || "Custom"}\n<b>Date:</b> ${dateDisplay || "Flexible"}\n\n<a href="${country.baseUrl}/admin">Open Admin →</a>`, "bookings");

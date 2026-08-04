@@ -2,8 +2,8 @@
 
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
-import { locations } from "@/lib/locations-data";
+import { useLocale, useTranslations } from "next-intl";
+import { locations, locField } from "@/lib/locations-data";
 import { country } from "@/lib/country";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { GoogleReviewsBadge } from "@/components/ui/GoogleReviewsBadge";
@@ -69,6 +69,11 @@ const FEATURED_COMBOS: { city: string; occ: string }[] =
 
 export function Footer() {
   const t = useTranslations("footer");
+  // Location names come from the data file in English and carry name_es /
+  // name_de / name_fr alongside. The city grid has always read the localised
+  // one; the footer read the raw field, which is why Spain's links said
+  // "Fotógrafos en Seville" next to a grid that said "Sevilla".
+  const locale = useLocale();
   const tShoot = useTranslations("nav.shootTypes");
   const topLocations = locations.filter((l) => TOP_LOCATIONS.includes(l.slug));
 
@@ -152,7 +157,7 @@ export function Footer() {
                     href={`/locations/${loc.slug}`}
                     className="text-sm text-gray-500 transition hover:text-primary-600 py-2 inline-block"
                   >
-                    {t("photographersIn", { location: loc.name })}
+                    {t("photographersIn", { location: locField(loc, "name", locale) || loc.name })}
                   </Link>
                 </li>
               ))}
@@ -299,7 +304,7 @@ export function Footer() {
                   href={`/locations/${city}/${occ}`}
                   className="inline-flex items-center rounded-full border border-warm-200 bg-warm-50 px-3 py-1 text-xs font-medium text-gray-600 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
                 >
-                  {tShoot(shootKey)} {t("inWord")} {loc.name}
+                  {tShoot(shootKey)} {t("inWord")} {locField(loc, "name", locale) || loc.name}
                 </Link>
               );
             })}

@@ -29,24 +29,33 @@
     "heroDescription": "The easiest way to book a travel photographer or vacation photoshoot in Spain — hand-picked local pros, verified reviews, instant booking. Every photographer is personally vetted for quality, reliability, and style.",
     "floatingReviews": [
       {
+        "text": "Ana captured our engagement in Madrid perfectly. The photos are pure magic!",
+        "author": "Sophie L.",
         "location": "Madrid"
       },
       {
+        "text": "Best decision of our trip. Our family shoot on the Costa del Sol is now framed at home.",
+        "author": "Michael R.",
         "location": "Costa del Sol"
       },
       {
-        "text": "Monica knew the most beautiful hidden spots in Toledo. Absolutely magical session!",
+        "text": "Monica knew the most beautiful hidden corners of Toledo. An absolutely magical session!",
+        "author": "Emma W.",
         "location": "Toledo"
       },
       {
+        "text": "Booked in the morning, shooting by the afternoon. Madrid has never looked better.",
+        "author": "Laura P.",
         "location": "Madrid"
       },
       {
-        "text": "Jonathan made our sunset shoot in Marbella an unforgettable experience. Truly talented!",
-        "location": "Marbella"
+        "text": "Jonathan made our sunset shoot in Sitges an unforgettable experience. Truly talented!",
+        "author": "David K.",
+        "location": "Sitges"
       },
       {
-        "text": "Elena took the most stunning solo portraits of me in Barcelona. Best souvenir ever!",
+        "text": "Elena took the most stunning solo portraits in Barcelona. The best souvenir possible!",
+        "author": "Nina S.",
         "location": "Barcelona"
       }
     ],
@@ -99,20 +108,22 @@
     "subtitle": "Real stories from real travelers who captured unforgettable memories in Spain",
     "items": {
       "sarah": {
-        "location": "Madrid"
+        "location": "Madrid",
+        "text": "Our photographer knew all the hidden gems in La Latina. The photos turned out absolutely stunning — our friends can't believe these are vacation photos!"
       },
       "martinez": {
         "location": "Costa del Sol"
       },
       "emily": {
-        "location": "Toledo"
+        "location": "Toledo",
+        "text": "I was traveling solo and wanted beautiful photos at the Alcázar. My photographer was like a friendly guide — she knew the best angles and times to avoid crowds."
       },
       "david": {
         "location": "Seville",
         "text": "We booked a sunrise session on the Guadalquivir riverfront. The golden light, the reflections — absolutely magical. Our photographer captured our engagement perfectly."
       },
       "anna": {
-        "location": "Marbella"
+        "location": "Costa Brava"
       },
       "tanaka": {
         "location": "Sitges"
@@ -654,5 +665,13 @@
   },
   "support": {
     "errorMessage": "Something went wrong. Please try again or email us at info@photospain.co."
+  },
+  "book": {
+    "form": {
+      "locationDetailPlaceholder": "e.g. Barceloneta beach, hotel lobby, Gothic Quarter..."
+    }
+  },
+  "cardPreview": {
+    "remind_place": "Somewhere recognisably Spanish — a place a client could name"
   }
 }

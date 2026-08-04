@@ -449,7 +449,7 @@ export async function POST(req: NextRequest) {
           "bookings"
         )
       ).catch((err) => console.error("[blind-booking/accept] admin telegram error:", err));
-      import("@/lib/email").then(async ({ sendEmail, getAdminEmail }) => {
+      import("@/lib/email").then(async ({ sendEmail, getAdminEmail, replyToAddress }) => {
         const adminEmail = await getAdminEmail();
         if (!adminEmail) return;
         await sendEmail(
@@ -461,7 +461,9 @@ export async function POST(req: NextRequest) {
             <p>Client: ${clientLabel}<br/>Booking ID: <code>${booking.id}</code></p>
             <p>No Stripe authorisation yet — the client is in checkout. A separate "authorised" notification follows if they complete payment.</p>
             <p><a href="${country.baseUrl}/admin" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open admin queue</a></p>
-          </div>`
+          </div>`,
+          // A lead an admin actually works — Reply must reach the visitor.
+          { replyTo: replyToAddress(email) }
         );
       }).catch((err) => console.error("[blind-booking/accept] admin email error:", err));
     }

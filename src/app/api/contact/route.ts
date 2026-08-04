@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail, getAdminEmail } from "@/lib/email";
+import { sendEmail, getAdminEmail, replyToAddress } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { country } from "@/lib/country";
 
@@ -59,7 +59,10 @@ export async function POST(req: NextRequest) {
         sendEmail(
           recipient,
           `[${country.brand}] ${topicLabel}: ${name}`,
-          emailBody
+          emailBody,
+          // The body already promises "reply directly to this email"; without
+          // this the reply went to our own From address instead of them.
+          { replyTo: replyToAddress(email) }
         )
       )
     ).catch((err) => console.error("[contact] email error:", err));

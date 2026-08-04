@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
          JOIN users u ON u.id = pp.user_id WHERE pp.id = $1`,
         [booking.photographer_id]
       );
-      const client = await queryOne<{ name: string }>("SELECT name FROM users WHERE id = $1", [userId]);
+      const client = await queryOne<{ name: string; email: string }>("SELECT name, email FROM users WHERE id = $1", [userId]);
       if (info && client) {
         // Telegram: notify admin of new review
         import("@/lib/telegram").then(({ sendTelegram }) => {
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         }).catch((err) => console.error("[reviews] telegram error:", err));
 
         // Email: notify admin of new review
-        import("@/lib/email").then(({ sendEmail, getAdminEmail }) => {
+        import("@/lib/email").then(({ sendEmail, getAdminEmail, replyToAddress }) => {
           getAdminEmail().then(adminEmail => {
             sendEmail(adminEmail, `New review: ${rating}★ from ${client!.name} for ${info!.name}`,
               `<div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
@@ -116,7 +116,8 @@ export async function POST(req: NextRequest) {
                 ${title ? `<p><strong>${title}</strong></p>` : ""}
                 ${text ? `<p>${text.slice(0, 300)}</p>` : ""}
                 <p><a href="${country.baseUrl}/admin" style="display: inline-block; background: #C94536; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
-              </div>`
+              </div>`,
+              { replyTo: replyToAddress(client!.email) }
             );
           });
         }).catch((err) => console.error("[reviews] admin email error:", err));

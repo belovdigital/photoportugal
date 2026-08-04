@@ -109,7 +109,7 @@ export async function POST(req: Request) {
 
   import("@/lib/email")
     .then(({ sendAdminApprovalRequestNotification }) =>
-      sendAdminApprovalRequestNotification(profile.name, profile.email, profile.slug)
+      sendAdminApprovalRequestNotification(profile.name, profile.email, profile.slug, { replyTo: profile.email?.trim() || undefined })
     )
     .catch((e) => console.error("[request-approval] admin email failed:", e));
 

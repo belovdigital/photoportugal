@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
          WHERE b.id = $1`, [booking_id]
       );
       if (info) {
-        const { sendEmail, getAdminEmail } = await import("@/lib/email");
+        const { sendEmail, getAdminEmail, replyToAddress } = await import("@/lib/email");
         const REASON_LABELS: Record<string, string> = { fewer_photos: "Fewer photos than promised", wrong_location: "Wrong location or subjects", technical_issues: "Technical issues", no_show: "Photographer no-show", other: "Other" };
         const reasonText = REASON_LABELS[reason] || reason;
 
@@ -151,7 +151,9 @@ export async function POST(req: NextRequest) {
               <p><strong>Reason:</strong> ${reasonText}</p>
               <p><strong>Details:</strong> ${escapeHtml(description)}</p>
               <p><a href="${country.baseUrl}/admin#disputes" style="display: inline-block; background: #C94536; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">Review in Admin</a></p>
-            </div>`
+            </div>`,
+            // The client filed this; Reply should reach them, not our own inbox.
+            { replyTo: replyToAddress(info.client_email) }
           ).catch(e => console.error("[dispute] admin email error:", e));
         }
         import("@/lib/telegram").then(({ sendTelegram }) => {

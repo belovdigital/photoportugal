@@ -29,26 +29,34 @@
     "heroDescription": "La façon la plus simple de réserver un photographe de voyage ou une séance photo de vacances en Espagne — des pros locaux soigneusement sélectionnés, des avis vérifiés, une réservation instantanée. Chaque photographe est personnellement vérifié pour la qualité, la fiabilité et le style.",
     "floatingReviews": [
       {
+        "text": "Ana a parfaitement capturé notre demande en mariage à Madrid. Les photos sont magiques !",
+        "author": "Sophie L.",
         "location": "Madrid"
       },
       {
+        "text": "La meilleure décision du voyage. Notre séance de famille sur la Costa del Sol est encadrée à la maison.",
+        "author": "Michael R.",
         "location": "Costa del Sol"
       },
       {
-        "text": "Monica connaissait les plus beaux endroits cachés de Tolède. Une séance absolument magique !",
-        "location": "Tolède"
+        "text": "Monica connaissait les plus beaux coins cachés de Tolède. Une séance absolument magique !",
+        "author": "Emma W.",
+        "location": "Toledo"
       },
       {
+        "text": "Réservé le matin, photographié l'après-midi. Madrid n'a jamais été aussi belle.",
+        "author": "Laura P.",
         "location": "Madrid"
       },
       {
-        "text": "Jonathan a fait de notre séance au coucher du soleil à Lagos une expérience inoubliable. Vraiment talentueux !",
+        "text": "Jonathan a fait de notre séance au coucher du soleil à Sitges une expérience inoubliable. Vraiment talentueux !",
         "author": "David K.",
-        "location": "Lagos"
+        "location": "Sitges"
       },
       {
-        "text": "Elena a pris les portraits solos les plus magnifiques à Barcelone. Le meilleur souvenir possible !",
-        "location": "Barcelone"
+        "text": "Elena a réalisé les plus beaux portraits solo à Barcelone. Le meilleur souvenir possible !",
+        "author": "Nina S.",
+        "location": "Barcelona"
       }
     ],
     "socialProofStrip": {
@@ -163,13 +171,15 @@
     "subtitle": "Histoires vraies de voyageurs qui ont immortalisé leurs souvenirs en Espagne",
     "items": {
       "sarah": {
-        "location": "Madrid"
+        "location": "Madrid",
+        "text": "Notre photographe connaissait tous les coins cachés de La Latina. Les photos sont absolument magnifiques — nos amis n'arrivent pas à croire que ce sont des photos de vacances !"
       },
       "martinez": {
         "location": "Costa del Sol"
       },
       "emily": {
-        "location": "Tolède"
+        "location": "Tolède",
+        "text": "Je voyageais en solo et voulais de belles photos à l'Alcazar. Ma photographe était comme une amie guide — elle connaissait les meilleurs angles et horaires pour éviter la foule."
       },
       "david": {
         "location": "Séville",
@@ -177,6 +187,9 @@
       },
       "tanaka": {
         "location": "Sitges"
+      },
+      "anna": {
+        "location": "Costa Brava"
       }
     }
   },
@@ -635,5 +648,13 @@
   },
   "support": {
     "errorMessage": "Une erreur s'est produite. Veuillez réessayer ou nous écrire à info@photospain.co."
+  },
+  "book": {
+    "form": {
+      "locationDetailPlaceholder": "Ex. Plage de la Barceloneta, hall de l'hôtel, Quartier Gothique..."
+    }
+  },
+  "cardPreview": {
+    "remind_place": "Un lieu reconnaissable d'Espagne — que le client peut nommer"
   }
 }

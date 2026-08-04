@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
-import { sendEmail, emailLayout, emailButton, getAdminEmail } from "@/lib/email";
+import { sendEmail, emailLayout, emailButton, getAdminEmail, replyToAddress } from "@/lib/email";
 import { country } from "@/lib/country";
 
 // GET — fetch current revision for authenticated photographer
@@ -96,7 +96,8 @@ export async function PATCH(req: NextRequest) {
             <h2 style="margin:0 0 16px;font-size:20px;color:#1F1F1F;">Revisions Resolved</h2>
             <p style="color:#6B7280;margin:0 0 16px;"><strong>${photographerInfo.name}</strong> (${photographerInfo.email}) has resolved all revision items and is ready for re-review.</p>
             ${emailButton(`${country.baseUrl}/admin`, "Review in Admin")}
-          `)
+          `),
+          { replyTo: replyToAddress(photographerInfo.email) }
         ).catch(e => console.error("[dashboard/revisions] admin email error:", e));
 
         import("@/lib/telegram").then(({ sendTelegram }) => {

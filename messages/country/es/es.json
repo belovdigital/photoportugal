@@ -29,25 +29,33 @@
     "heroDescription": "La forma más fácil de reservar un fotógrafo de viaje o una sesión de fotos de vacaciones en España — profesionales locales seleccionados, reseñas verificadas, reserva instantánea. Cada fotógrafo es verificado personalmente por su calidad, fiabilidad y estilo.",
     "floatingReviews": [
       {
+        "text": "Ana capturó nuestra pedida en Madrid a la perfección. ¡Las fotos son pura magia!",
+        "author": "Sophie L.",
         "location": "Madrid"
       },
       {
+        "text": "La mejor decisión del viaje. Nuestra sesión familiar en la Costa del Sol ya está enmarcada en casa.",
+        "author": "Michael R.",
         "location": "Costa del Sol"
       },
       {
         "text": "Monica conocía los rincones más bonitos y escondidos de Toledo. ¡Una sesión absolutamente mágica!",
+        "author": "Emma W.",
         "location": "Toledo"
       },
       {
+        "text": "Reservamos por la mañana y a la tarde ya estábamos posando. Madrid nunca se vio mejor.",
+        "author": "Laura P.",
         "location": "Madrid"
       },
       {
-        "text": "Jonathan hizo de nuestra sesión al atardecer en Lagos una experiencia inolvidable. ¡Verdaderamente talentoso!",
+        "text": "Jonathan hizo de nuestra sesión al atardecer en Sitges una experiencia inolvidable. ¡Verdaderamente talentoso!",
         "author": "David K.",
-        "location": "Lagos"
+        "location": "Sitges"
       },
       {
         "text": "Elena hizo los retratos individuales más espectaculares en Barcelona. ¡El mejor recuerdo posible!",
+        "author": "Nina S.",
         "location": "Barcelona"
       }
     ],
@@ -162,13 +170,15 @@
     "subtitle": "Historias reales de viajeros que capturaron recuerdos inolvidables en España",
     "items": {
       "sarah": {
-        "location": "Madrid"
+        "location": "Madrid",
+        "text": "Nuestro fotógrafo conocía todos los rincones escondidos de La Latina. ¡Las fotos quedaron absolutamente espectaculares — nuestros amigos no se creen que sean fotos de vacaciones!"
       },
       "martinez": {
         "location": "Costa del Sol"
       },
       "emily": {
-        "location": "Toledo"
+        "location": "Toledo",
+        "text": "Viajaba sola y quería fotos bonitas en el Alcázar. Mi fotógrafa fue como una amiga guía — conocía los mejores ángulos y horarios para evitar las multitudes."
       },
       "david": {
         "location": "Sevilla",
@@ -176,6 +186,9 @@
       },
       "tanaka": {
         "location": "Sitges"
+      },
+      "anna": {
+        "location": "Costa Brava"
       }
     }
   },
@@ -651,5 +664,13 @@
   },
   "subscriptions": {
     "phoneAutoPrefix": "Los números españoles reciben +34 automáticamente. Para otros países, incluya su prefijo, p. ej. +49."
+  },
+  "book": {
+    "form": {
+      "locationDetailPlaceholder": "Ej. Playa de la Barceloneta, recepción del hotel, Barrio Gótico..."
+    }
+  },
+  "cardPreview": {
+    "remind_place": "Un lugar reconocible de España: algo que el cliente pueda nombrar"
   }
 }

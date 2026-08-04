@@ -56,6 +56,24 @@ export async function getAdminEmail(): Promise<string> {
   }
 }
 
+/**
+ * Sanitise a user-supplied address before it becomes a Reply-To header.
+ *
+ * Anchored on purpose: `a@b.com, attacker@evil.com` is a single valid-looking
+ * string that would put two addresses in Reply-To, so a staff Reply-All would
+ * also write to whoever asked for it. The anchors reject anything with a comma
+ * or whitespace. Returns undefined for junk, which drops the header entirely
+ * rather than shipping a broken one — the body still prints the address.
+ *
+ * (Newline injection is separately impossible: nodemailer collapses CR/LF in
+ * header values. This guards the multi-address case, which it does not.)
+ */
+export function replyToAddress(raw?: string | null): string | undefined {
+  const trimmed = (raw || "").trim();
+  if (!trimmed || trimmed.length > 254) return undefined;
+  return /^[^\s@,]+@[^\s@,]+\.[^\s@,]{2,}$/.test(trimmed) ? trimmed : undefined;
+}
+
 export async function sendEmail(to: string, subject: string, html: string, options?: { replyTo?: string }) {
   if (!process.env.SMTP_PASS) {
     console.log(`[email] SMTP not configured, skipping: ${subject} → ${to}`);
@@ -1315,10 +1333,10 @@ export async function sendSubscriptionEmail(
 // === Admin notification emails ===
 
 // Send to all admin emails (Telegram is handled separately per notification for better formatting)
-async function sendToAllAdmins(subject: string, html: string) {
+async function sendToAllAdmins(subject: string, html: string, options?: { replyTo?: string }) {
   const adminEmail = await getAdminEmail();
   const emails = adminEmail.split(",").map((e: string) => e.trim()).filter(Boolean);
-  await Promise.allSettled(emails.map((email) => sendEmail(email, subject, html)));
+  await Promise.allSettled(emails.map((email) => sendEmail(email, subject, html, options)));
 }
 
 export async function sendAdminNewPhotographerNotification(
@@ -1361,7 +1379,10 @@ export async function sendAdminNewBookingNotification(
   clientName: string,
   photographerName: string,
   packageName: string | null,
-  shootDate: string | null
+  shootDate: string | null,
+  // Optional so the ~120 existing three-arg call sites stay untouched; pass
+  // the client's address and Reply goes to them instead of our own From.
+  options?: { replyTo?: string }
 ) {
   shootDate = formatShootDate(shootDate, "en");
   await sendToAllAdmins(
@@ -1375,7 +1396,8 @@ export async function sendAdminNewBookingNotification(
           ${shootDate ? `<p style="margin:0;font-size:15px;color:#4A4A4A;"><strong>Date:</strong> ${shootDate}</p>` : ""}
         </div>
         ${emailButton(`${BASE_URL}/admin`, "Go to Admin Panel")}
-      `)
+      `),
+      options
     );
 }
 
@@ -1907,7 +1929,8 @@ export async function sendAdminAutoCancelNotification(
 export async function sendAdminNewInquiryNotification(
   clientName: string,
   photographerName: string,
-  messagePreview: string
+  messagePreview: string,
+  options?: { replyTo?: string }
 ) {
   await sendToAllAdmins(
     `[New Inquiry] ${clientName} → ${photographerName}`,
@@ -1919,7 +1942,8 @@ export async function sendAdminNewInquiryNotification(
         <p style="margin:0;font-size:15px;color:#4A4A4A;font-style:italic;">"${messagePreview}"</p>
       </div>
       ${emailButton(`${BASE_URL}/admin`, "Go to Admin Panel")}
-    `)
+    `),
+    options
   );
 }
 
@@ -2237,6 +2261,7 @@ export async function sendAdminApprovalRequestNotification(
   photographerName: string,
   photographerEmail: string,
   slug: string,
+  options?: { replyTo?: string },
 ) {
   await sendToAllAdmins(
     `[Review] ${photographerName} asked for approval`,
@@ -2249,7 +2274,8 @@ export async function sendAdminApprovalRequestNotification(
         <p style="margin:0;font-size:15px;color:#4A4A4A;"><strong>Profile:</strong> ${country.baseUrl}/photographers/${slug}</p>
       </div>
       ${emailButton(`${BASE_URL}/admin`, "Review this photographer")}
-    `)
+    `),
+    options
   );
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { queryOne } from "@/lib/db";
-import { sendEmail, getAdminEmail } from "@/lib/email";
+import { sendEmail, getAdminEmail, replyToAddress } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
 import { getLocationDisplayName, isKnownLocationSlug } from "@/lib/location-hierarchy";
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         </table>
         <p style="margin-top:16px;"><a href="${BASE_URL}/admin#matchRequests" style="display:inline-block;background:#C94536;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">Open Admin → Match</a></p>
       </div>`;
-    Promise.all(recipients.map(r => sendEmail(r, `[Match Request] ${name} — ${locationName} ${shootTypeLabel}`, adminBody)))
+    Promise.all(recipients.map(r => sendEmail(r, `[Match Request] ${name} — ${locationName} ${shootTypeLabel}`, adminBody, { replyTo: replyToAddress(email) })))
       .catch(err => console.error("[match-request] admin email error:", err));
 
     // Telegram

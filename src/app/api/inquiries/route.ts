@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authFromRequest } from "@/lib/mobile-auth";
 import { queryOne } from "@/lib/db";
-import { sendEmail, sendAdminNewInquiryNotification } from "@/lib/email";
+import { sendEmail, sendAdminNewInquiryNotification, replyToAddress } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { mentionsPaymentRail, classifyOffPlatformPayment, blockedCopy } from "@/lib/off-platform-payment";
 import { country } from "@/lib/country";
@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
         import("@/lib/telegram").then(({ sendTelegram }) => {
           sendTelegram(`💬 <b>New Inquiry</b>\n\n<b>Client:</b> ${senderName}\n<b>Photographer:</b> ${recipient!.name}\n\n"${msgPreview}"\n\n<a href="${country.baseUrl}/admin">Open Admin →</a>`, "clients");
         }).catch((err) => console.error("[inquiries] telegram admin error:", err));
-        sendAdminNewInquiryNotification(senderName, recipient!.name, msgPreview)
+        sendAdminNewInquiryNotification(senderName, recipient!.name, msgPreview, { replyTo: replyToAddress(user.email) })
           .catch((err) => console.error("[inquiries] admin email error:", err));
       }
     }
