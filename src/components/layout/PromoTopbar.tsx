@@ -16,7 +16,7 @@ import { trackCTAClick } from "@/lib/analytics";
 // cheaper blind offer. Catalog/locations/blog keep it — that's discovery.
 // /for-business is hidden too: a B2B visitor reading "custom quote, one
 // invoice" shouldn't see a consumer €279 discount banner above it.
-const HIDDEN_PREFIXES = ["/dashboard", "/admin", "/book", "/delivery", "/auth", "/try-yourself", "/gift", "/for-business"];
+const HIDDEN_PREFIXES = ["/dashboard", "/admin", "/book", "/delivery", "/auth", "/gift", "/for-business"];
 // photographers|fotografen|fotografos|photographes + one more segment = profile
 const PROFILE_RE = /^\/(photographers|fotografen|fotografos|photographes)\/[^/]+/;
 

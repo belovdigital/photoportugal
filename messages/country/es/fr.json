@@ -603,49 +603,6 @@
     "heroTitleRich": "Une photographie professionnelle pour votre entreprise, <accent>partout en Espagne</accent>",
     "trustPhotographers": "{count} photographes vérifiés dans tout l'Espagne"
   },
-  "tryYourself": {
-    "title2": "en Espagne",
-    "limitReachedBody": "Vous avez utilisé vos aperçus IA gratuits. Envie de la vraie expérience ? Un photographe en Espagne choisi sur mesure est à un clic.",
-    "whileYouWait": "En attendant, découvrez quelques photographes d'Espagne",
-    "stat_photographers": "✨ Des photographes triés sur le volet partout en Espagne",
-    "stat_locations": "📍 Barcelone · Madrid · Séville · Grenade · Majorque · Tenerife",
-    "metaTitle": "Selfie de voyage par IA",
-    "metaDescription": "Téléchargez un selfie et voyez-vous à Grenade, Barcelone, Séville et Madrid. Puis réservez un vrai photographe pour la vraie expérience.",
-    "scenes": {
-      "alhambra-granada": {
-        "name": "L'Alhambra, Grenade",
-        "subtitle": "Palais mauresque sur la crête, la Sierra Nevada derrière"
-      },
-      "park-guell-barcelona": {
-        "name": "Park Güell, Barcelone",
-        "subtitle": "Les mosaïques de Gaudí au-dessus de la ville"
-      },
-      "plaza-espana-seville": {
-        "name": "Plaza de España, Séville",
-        "subtitle": "Ponts de faïence au-dessus du canal"
-      },
-      "ronda-bridge": {
-        "name": "Puente Nuevo, Ronda",
-        "subtitle": "Un pont de pierre sur des gorges de 120 mètres"
-      },
-      "mallorca-cala": {
-        "name": "Une crique de Majorque",
-        "subtitle": "Eau turquoise entre des falaises de pins"
-      },
-      "madrid-debod": {
-        "name": "Templo de Debod, Madrid",
-        "subtitle": "Temple égyptien reflété au coucher du soleil"
-      },
-      "teide-tenerife": {
-        "name": "Le Teide, Tenerife",
-        "subtitle": "Désert volcanique au-dessus d'une mer de nuages"
-      },
-      "toledo-old-town": {
-        "name": "Tolède, cité fortifiée",
-        "subtitle": "Pierre médiévale au-dessus d'un méandre"
-      }
-    }
-  },
   "support": {
     "errorMessage": "Une erreur s'est produite. Veuillez réessayer ou nous écrire à info@photospain.co."
   },

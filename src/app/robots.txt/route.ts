@@ -10,7 +10,7 @@ import { country } from "@/lib/country";
 // explicitly. The pages already noindex via metadata, but a robots.txt
 // disallow saves Google's crawl budget on URLs that will never return
 // indexable content.
-const PRIVATE_PATHS = ["/dashboard/", "/api/", "/auth/", "/book/", "/delivery/", "/gift/claim", "/gift-card/claim", "/gift-cards/success", "/try-yourself"];
+const PRIVATE_PATHS = ["/dashboard/", "/api/", "/auth/", "/book/", "/delivery/", "/gift/claim", "/gift-card/claim", "/gift-cards/success"];
 const LOCALES = ["pt", "de", "es", "fr"];
 
 const disallow = [

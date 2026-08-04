@@ -620,49 +620,6 @@
     "heroTitleRich": "Professional photography for your company, <accent>anywhere in Spain</accent>",
     "trustPhotographers": "{count} vetted photographers across Spain"
   },
-  "tryYourself": {
-    "metaTitle": "See Yourself in Spain — AI Travel Selfie",
-    "metaDescription": "Upload a selfie and see yourself at the Alhambra, Park Güell, Ronda and Mallorca. Then book a real photographer for the real thing.",
-    "stat_locations": "📍 Barcelona · Madrid · Seville · Granada · Mallorca · Tenerife",
-    "title2": "in Spain",
-    "limitReachedBody": "You've used your free AI previews. Want the real thing? A handpicked Spain photographer is just a click away.",
-    "whileYouWait": "While you wait, meet some Spain photographers",
-    "stat_photographers": "✨ Hand-picked photographers across Spain",
-    "scenes": {
-      "alhambra-granada": {
-        "name": "The Alhambra, Granada",
-        "subtitle": "Moorish palace on the ridge, Sierra Nevada behind"
-      },
-      "park-guell-barcelona": {
-        "name": "Park Güell, Barcelona",
-        "subtitle": "Gaudí mosaics above the whole city"
-      },
-      "plaza-espana-seville": {
-        "name": "Plaza de España, Seville",
-        "subtitle": "Tiled bridges over the canal"
-      },
-      "ronda-bridge": {
-        "name": "Puente Nuevo, Ronda",
-        "subtitle": "A stone bridge over a 120-metre gorge"
-      },
-      "mallorca-cala": {
-        "name": "A Mallorca cove",
-        "subtitle": "Turquoise water between pine-backed cliffs"
-      },
-      "madrid-debod": {
-        "name": "Templo de Debod, Madrid",
-        "subtitle": "Egyptian temple reflected at sunset"
-      },
-      "teide-tenerife": {
-        "name": "Mount Teide, Tenerife",
-        "subtitle": "Volcanic desert above a sea of cloud"
-      },
-      "toledo-old-town": {
-        "name": "Toledo, walled city",
-        "subtitle": "Medieval stone above a river bend"
-      }
-    }
-  },
   "support": {
     "errorMessage": "Something went wrong. Please try again or email us at info@photospain.co."
   },

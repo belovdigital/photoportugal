@@ -603,49 +603,6 @@
     "heroTitleRich": "Professionelle Fotografie für Ihr Unternehmen, <accent>überall in Spanien</accent>",
     "trustPhotographers": "{count} geprüfte Fotografen in ganz Spanien"
   },
-  "tryYourself": {
-    "title2": "in Spanien",
-    "limitReachedBody": "Sie haben Ihre kostenlosen KI-Vorschauen aufgebraucht. Lust auf das echte Erlebnis? Ein handverlesener Spanien-Fotograf ist nur einen Klick entfernt.",
-    "whileYouWait": "Bis dahin — lernen Sie ein paar Spanien-Fotografen kennen",
-    "stat_photographers": "✨ Handverlesene Fotografen in ganz Spanien",
-    "stat_locations": "📍 Barcelona · Madrid · Sevilla · Granada · Mallorca · Teneriffa",
-    "metaTitle": "Sehen Sie sich in Spanien — KI-Reiseselfie",
-    "metaDescription": "Laden Sie ein Selfie hoch und sehen Sie sich in Granada, Barcelona, Sevilla und Madrid. Buchen Sie dann einen echten Fotografen für das echte Erlebnis.",
-    "scenes": {
-      "alhambra-granada": {
-        "name": "Die Alhambra, Granada",
-        "subtitle": "Maurischer Palast auf dem Hügel, dahinter die Sierra Nevada"
-      },
-      "park-guell-barcelona": {
-        "name": "Park Güell, Barcelona",
-        "subtitle": "Gaudís Mosaike über der ganzen Stadt"
-      },
-      "plaza-espana-seville": {
-        "name": "Plaza de España, Sevilla",
-        "subtitle": "Geflieste Brücken über dem Kanal"
-      },
-      "ronda-bridge": {
-        "name": "Puente Nuevo, Ronda",
-        "subtitle": "Eine Steinbrücke über eine 120 Meter tiefe Schlucht"
-      },
-      "mallorca-cala": {
-        "name": "Eine Bucht auf Mallorca",
-        "subtitle": "Türkises Wasser zwischen pinienbewachsenen Klippen"
-      },
-      "madrid-debod": {
-        "name": "Templo de Debod, Madrid",
-        "subtitle": "Ägyptischer Tempel, gespiegelt im Sonnenuntergang"
-      },
-      "teide-tenerife": {
-        "name": "Der Teide, Teneriffa",
-        "subtitle": "Vulkanwüste über einem Wolkenmeer"
-      },
-      "toledo-old-town": {
-        "name": "Toledo, Stadt hinter Mauern",
-        "subtitle": "Mittelalterlicher Stein über einer Flussschleife"
-      }
-    }
-  },
   "support": {
     "errorMessage": "Etwas ist schiefgegangen. Bitte versuchen Sie es erneut oder schreiben Sie uns an info@photospain.co."
   },

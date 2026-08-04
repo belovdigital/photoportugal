@@ -616,49 +616,6 @@
     "heroTitleRich": "Fotografía profesional para tu empresa, <accent>en cualquier punto de España</accent>",
     "trustPhotographers": "{count} fotógrafos verificados en toda España"
   },
-  "tryYourself": {
-    "metaTitle": "Verse en España — selfie de viaje con IA",
-    "metaDescription": "Sube un selfie y verte en la Alhambra, el Park Güell, Ronda y Mallorca. Después reserva un fotógrafo real para hacerlo de verdad.",
-    "stat_locations": "📍 Barcelona · Madrid · Sevilla · Granada · Mallorca · Tenerife",
-    "title2": "en España",
-    "limitReachedBody": "Ha usado sus vistas previas gratuitas. ¿Quiere la experiencia real? Un fotógrafo de España seleccionado a mano está a un clic.",
-    "whileYouWait": "Mientras espera, conozca a algunos fotógrafos de España",
-    "stat_photographers": "✨ Fotógrafos seleccionados a mano en toda España",
-    "scenes": {
-      "alhambra-granada": {
-        "name": "La Alhambra, Granada",
-        "subtitle": "Palacio nazarí en la colina, Sierra Nevada al fondo"
-      },
-      "park-guell-barcelona": {
-        "name": "Park Güell, Barcelona",
-        "subtitle": "Mosaicos de Gaudí sobre toda la ciudad"
-      },
-      "plaza-espana-seville": {
-        "name": "Plaza de España, Sevilla",
-        "subtitle": "Puentes de azulejos sobre el canal"
-      },
-      "ronda-bridge": {
-        "name": "Puente Nuevo, Ronda",
-        "subtitle": "Un puente de piedra sobre un tajo de 120 metros"
-      },
-      "mallorca-cala": {
-        "name": "Una cala de Mallorca",
-        "subtitle": "Agua turquesa entre acantilados de pinos"
-      },
-      "madrid-debod": {
-        "name": "Templo de Debod, Madrid",
-        "subtitle": "Templo egipcio reflejado al atardecer"
-      },
-      "teide-tenerife": {
-        "name": "El Teide, Tenerife",
-        "subtitle": "Desierto volcánico sobre un mar de nubes"
-      },
-      "toledo-old-town": {
-        "name": "Toledo, ciudad amurallada",
-        "subtitle": "Piedra medieval sobre un meandro del río"
-      }
-    }
-  },
   "support": {
     "errorMessage": "Algo salió mal. Por favor inténtelo de nuevo o escríbanos a info@photospain.co."
   },

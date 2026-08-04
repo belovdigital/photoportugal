@@ -165,13 +165,10 @@ const advise = (kind, locale, key, detail) =>
  * in the base locale files are never looked up here — reporting them would be
  * noise, and noise is what let the real leaks hide.
  */
-const activeSceneIds = new Set(
-  [...fs.readFileSync("src/lib/ai-scenes-es.ts", "utf8").matchAll(/id:\s*"([^"]+)"/g)].map((m) => m[1])
-);
-const isDeadSceneKey = (key) => {
-  const m = key.match(/^tryYourself\.scenes\.([^.]+)\./);
-  return m ? !activeSceneIds.has(m[1]) : false;
-};
+// The /try-yourself feature and its scene presets were removed on 2026-08-04.
+// Any surviving tryYourself.* string is dead copy nobody renders, so it must not
+// be reported as a leak — that noise is exactly what hid real leaks before.
+const isDeadSceneKey = (key) => key.startsWith("tryYourself.");
 
 for (const locale of LOCALES) {
   const base = flatten(readJson(`messages/${locale}.json`));
@@ -198,21 +195,6 @@ for (const locale of LOCALES) {
     if (glued) report("склеенный токен", locale, key, glued.slice(0, 3).join(", "));
     const brand = value.match(TRANSLATED_BRAND);
     if (brand) report("бренд переведён", locale, key, brand[0]);
-  }
-}
-
-// 3. i18n keys the Spanish datasets reference but nobody defined. next-intl
-//    renders the raw key path when this happens, so it is visible to visitors.
-const sceneIds = [
-  ...fs.readFileSync("src/lib/ai-scenes-es.ts", "utf8").matchAll(/id:\s*"([^"]+)"/g),
-].map((m) => m[1]);
-
-for (const locale of LOCALES) {
-  const override = readJson(path.join(OVERRIDE_DIR, `${locale}.json`));
-  const scenes = override?.tryYourself?.scenes ?? {};
-  for (const id of sceneIds) {
-    if (!scenes[id]?.name) report("нет ключа → сырой путь на экране", locale, `tryYourself.scenes.${id}.name`, "");
-    if (!scenes[id]?.subtitle) report("нет ключа → сырой путь на экране", locale, `tryYourself.scenes.${id}.subtitle`, "");
   }
 }
 

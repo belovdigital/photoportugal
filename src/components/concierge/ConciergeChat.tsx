@@ -213,9 +213,7 @@ export function ConciergeChat({ locale, source, pageContext, pageContextObj, emb
     const type = search.get("type");
     const locName = loc ? humanizeSlug(loc) : null;
     let content: string;
-    if (src === "try-yourself" && locName) {
-      content = t("openingTryYourself", { loc: locName });
-    } else if (locName && type) {
+    if (locName && type) {
       content = t("openingLocAndType", { loc: locName, type: type.replace(/-/g, " ") });
     } else if (locName) {
       content = t("openingLoc", { loc: locName });
