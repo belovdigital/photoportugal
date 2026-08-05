@@ -25,8 +25,12 @@
 #   - Disk space on /var (>90% full)
 #   - Memory (any pm2 process > 1GB RSS)
 #   - 5xx error rate (>5 unique fingerprints in last 5min from error_logs)
+#   - The PEER market's /api/health, probed from outside (PT watches ES and
+#     vice versa) — plus this box's own egress, so a broken local line is never
+#     reported as the peer being down
 #
-# Throttle: alert fires after 3 consecutive failures (~90s). 5-min cooldown.
+# Throttle: alert fires after 3 consecutive failures (~90s), 4 (~2min) for the
+# peer probe since it crosses the public internet. 5-min cooldown.
 # Recovery alert when a previously-alerting check passes.
 #
 # ⚠️ The WebSocket check hits the ORIGIN (--resolve <domain>:443:127.0.0.1),
@@ -55,14 +59,19 @@ fi
 # ============================================================
 # 0. Detect the market
 # ============================================================
+# PEER_* is the OTHER market: each box probes its peer from the outside, which
+# is the one thing a box can never check about itself. Hardcoded because we
+# cannot read the peer's .env from here.
 if [ -f /var/www/photoportugal/.env ]; then
   APP=photoportugal; PREFIX=pp; LABEL=PT
   DEFAULT_DOMAIN=photoportugal.com; DEFAULT_DB=photoportugal
   ALERT_THREAD_FALLBACK=220   # PT group predates TELEGRAM_TOPIC_IDS
+  PEER_LABEL=ES; PEER_DOMAIN=photospain.co
 elif [ -f /var/www/photospain/.env ]; then
   APP=photospain; PREFIX=ps; LABEL=ES
   DEFAULT_DOMAIN=photospain.co; DEFAULT_DB=photospain
   ALERT_THREAD_FALLBACK=""
+  PEER_LABEL=PT; PEER_DOMAIN=photoportugal.com
 else
   echo "Neither /var/www/photoportugal/.env nor /var/www/photospain/.env found." >&2
   echo "Run only on a production VPS." >&2
@@ -110,6 +119,12 @@ ALERT_THREAD_FALLBACK=$ALERT_THREAD_FALLBACK
 FAIL_THRESHOLD=3
 ALERT_COOLDOWN=300
 CHECK_INTERVAL=30
+# Cross-market prober: this box watches the peer market from outside.
+PEER_LABEL=$PEER_LABEL
+PEER_URL=https://$PEER_DOMAIN/api/health
+CONTROL_URL=https://www.google.com/generate_204
+CONTROL_EXPECT=204
+PEER_FAIL_THRESHOLD=4
 CONF
 
 # ============================================================
@@ -179,11 +194,12 @@ check() {
   local PASS="$2"
   local TITLE="$3"
   local BODY="$4"
+  local THRESH="${5:-$FAIL_THRESHOLD}"   # per-check override; peer probe is laxer
   local FAIL_FILE="$STATE_DIR/$NAME.fail"
   local ALERT_FILE="$STATE_DIR/$NAME.last-alert"
 
   if [ "$PASS" = "1" ]; then
-    if [ -f "$FAIL_FILE" ] && [ "$(cat "$FAIL_FILE")" -ge "$FAIL_THRESHOLD" ]; then
+    if [ -f "$FAIL_FILE" ] && [ "$(cat "$FAIL_FILE")" -ge "$THRESH" ]; then
       local DOWN=$(($(cat "$FAIL_FILE") * CHECK_INTERVAL))
       "$ALERT_BIN" "✅ RECOVERED: $NAME" "Was failing for ~${DOWN}s. Now back to normal." || true
     fi
@@ -196,7 +212,7 @@ check() {
   COUNT=$((COUNT + 1))
   echo "$COUNT" > "$FAIL_FILE"
 
-  [ "$COUNT" -lt "$FAIL_THRESHOLD" ] && return
+  [ "$COUNT" -lt "$THRESH" ] && return
 
   local NOW=$(date +%s)
   local LAST=0
@@ -318,6 +334,38 @@ if [ "$ERR_COUNT" -lt 5 ]; then
 else
   RECENT=$(timeout 3 sudo -u postgres psql "$DB" -tAc "SELECT path || ' — ' || error_class FROM error_logs WHERE last_seen > NOW() - INTERVAL '5 minutes' AND resolved_at IS NULL ORDER BY occurrence_count DESC LIMIT 3" 2>/dev/null | tr '\n' ';')
   check "5xx_spike" 0 "5xx error spike" "$ERR_COUNT unique 5xx fingerprints in last 5 min. Top: $RECENT"
+fi
+
+# 8. The peer market, probed from the outside — the one thing a box can never
+# check about itself. PT watches ES and vice versa. The alert lands in THIS
+# market's Telegram group on purpose: a box that is down cannot page anyone,
+# so the healthy box has to do the talking. /api/health is the target because
+# it exercises the whole chain (Cloudflare -> nginx -> Next -> Postgres) and
+# `/` only answers 302 to the locale.
+PEER_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$PEER_URL" 2>/dev/null)
+[ -z "$PEER_CODE" ] && PEER_CODE=000
+if [ "$PEER_CODE" = "200" ]; then
+  check "peer_$PEER_LABEL" 1 "" "" "$PEER_FAIL_THRESHOLD"
+  check "egress" 1 "" ""
+else
+  # Never blame the peer before proving our own line works. The control host is
+  # deliberately NOT behind Cloudflare, so a Cloudflare-wide outage still reads
+  # as "peer unreachable" — which is exactly what visitors would experience.
+  CTRL_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$CONTROL_URL" 2>/dev/null)
+  [ -z "$CTRL_CODE" ] && CTRL_CODE=000
+  if [ "$CTRL_CODE" = "$CONTROL_EXPECT" ]; then
+    check "egress" 1 "" ""
+    check "peer_$PEER_LABEL" 0 "$PEER_LABEL is unreachable from outside" \
+"GET $PEER_URL returned $PEER_CODE (expected 200), probed from $(hostname) [$MARKET_LABEL].
+Control probe $CONTROL_URL returned $CTRL_CODE, so this box's network is fine — $PEER_LABEL itself, its Cloudflare or its DNS is down. Nothing to restart here." \
+      "$PEER_FAIL_THRESHOLD"
+  else
+    # Both failed: our own egress/DNS is the suspect, so the peer's state is
+    # unknown. Leave the peer counter untouched instead of blaming it.
+    check "egress" 0 "Outbound network broken on the $MARKET_LABEL box" \
+"Neither $PEER_URL ($PEER_CODE) nor the neutral control $CONTROL_URL ($CTRL_CODE) answered from $(hostname).
+DNS or egress here is broken; $PEER_LABEL status is unknown. This alert may not have reached Telegram either."
+  fi
 fi
 
 exit 0
