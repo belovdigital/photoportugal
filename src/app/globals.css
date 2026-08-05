@@ -144,6 +144,18 @@ html:has(#promo-topbar) { --promo-h: 36px; }
  * the hero hung 44px below the fold. The clamp keeps the generous spacing on a
  * tall monitor and gives it back on a short one. */
 .hero-pad-y { padding-block: clamp(2rem, 6svh, 7rem); }
+
+/* Below ~860px of viewport the clamp alone is not enough: the column itself
+ * (headline, quote, photographer row, offer card, ask box) needs about 700px
+ * and only ~679 remain on a 780px-tall window, so the offer card fell under
+ * the fold. The headline is the one element that can give without losing
+ * anything — two lines at 2.75rem instead of 3.5rem — and the padding drops to
+ * a third of a screen-height percent. Measured worst case then lands ~13px
+ * inside the fold rather than 53px past it. */
+@media (max-height: 860px) {
+  .hero-pad-y { padding-block: clamp(1rem, 3.5svh, 3rem); }
+  .hero-pad-y h1 { font-size: 2.75rem; }
+}
 /* The concierge chat measures in dvh rather than svh on purpose — the
  * mobile rule above pins body to 100dvh, and a section sized in svh would
  * come up short and open a strip beneath the chat once the URL bar hides. */
