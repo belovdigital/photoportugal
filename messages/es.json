@@ -1250,6 +1250,8 @@
       "coverageMore": "+{count} más",
       "metaTitle": "{name} — Fotógrafo en {locations}",
       "metaDescription": "Reserve a {name}, fotógrafo profesional en {locations}. Vea portafolio, paquetes y reseñas.",
+      "metaShootTypes": "Especialista en fotografía de {types}.",
+      "metaRating": "★ {rating} ({count, plural, one {# reseña} other {# reseñas}}).",
       "packageDescription": "Paquete de fotografía {packageName} de {name}",
       "moreInLocation": "Más fotógrafos en {location}",
       "similarPhotographers": "Fotógrafos similares",

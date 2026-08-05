@@ -9,7 +9,7 @@ import { PhotographerCard } from "@/components/photographers/PhotographerCard";
 import { adaptToPhotographerProfile } from "@/lib/photographer-adapter";
 import { locations as allLocations } from "@/lib/locations-data";
 import { PortfolioGallery } from "@/components/photographers/PortfolioGallery";
-import { localizeShootType, isBusinessPhoto } from "@/lib/shoot-type-labels";
+import { localizeShootType, localizeShootTypes, isBusinessPhoto } from "@/lib/shoot-type-labels";
 import { shootTypes as allShootTypes } from "@/lib/shoot-types-data";
 import { LanguageBadge } from "@/components/ui/LanguageBadge";
 import { AskQuestionButton } from "@/components/ui/AskQuestionButton";
@@ -261,9 +261,21 @@ export async function generateMetadata({
     ? allLocationNames.join(", ") || country.areaServed
     : `${allLocationNames.slice(0, 2).join(", ")} & ${allLocationNames.length - 2} more`;
   const title = t("metaTitle", { name: normalizeName(p.name), locations: locationNames });
-  const topShootTypes = (p.shoot_types || []).slice(0, 2);
-  const shootTypeText = topShootTypes.length > 0 ? ` Specializing in ${topShootTypes.join(" & ").toLowerCase()} photography.` : "";
-  const ratingText = p.review_count > 0 ? ` ★ ${Number(p.rating).toFixed(1)} (${p.review_count} ${p.review_count === 1 ? "review" : "reviews"}).` : "";
+  // Shoot types and the rating badge used to be hardcoded English glued onto a
+  // translated metaDescription, so every /es, /de and /fr profile shipped a
+  // half-English SERP snippet. Both halves are localized now. German keeps the
+  // labels capitalized (nouns); the other locales lowercase them mid-sentence.
+  const topShootTypes = localizeShootTypes((p.shoot_types || []).slice(0, 2), locale);
+  const shootTypeList = topShootTypes.join(" & ");
+  const shootTypeText = topShootTypes.length > 0
+    ? ` ${t("metaShootTypes", { types: locale === "de" ? shootTypeList : shootTypeList.toLowerCase() })}`
+    : "";
+  const ratingText = p.review_count > 0
+    ? ` ${t("metaRating", {
+        rating: Number(p.rating).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+        count: p.review_count,
+      })}`
+    : "";
   // Locale-aware "from €X" hint up front — Google sometimes lifts this
   // into the SERP price line (Casamentos.pt-style "Preço desde 750€").
   const minPackagePrice = (p.packages && p.packages.length > 0)

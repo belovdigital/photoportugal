@@ -1717,6 +1717,8 @@
       "coverageMore": "+{count} autres",
       "metaTitle": "{name} — Photographe à {locations}",
       "metaDescription": "Réservez {name}, photographe professionnel à {locations}. Voir portfolio, forfaits et avis.",
+      "metaShootTypes": "Spécialiste de la photographie de {types}.",
+      "metaRating": "★ {rating} ({count, plural, one {# avis} other {# avis}}).",
       "packageDescription": "Forfait photographie {packageName} par {name}",
       "moreInLocation": "Plus de photographes à {location}",
       "similarPhotographers": "Photographes similaires",
