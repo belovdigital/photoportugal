@@ -134,7 +134,7 @@ R2 → бакет `photospain` → CORS Policy → Add:
 | База данных | Решение выше |
 | R2-бакет | Свой бакет, свой публичный URL, свой CORS |
 | SMTP | Свой ящик на своём домене. Слать испанские письма с адреса photoportugal.com нельзя ни по доставляемости, ни по смыслу |
-| Google OAuth client | Новый клиент, а не правка живого PT-шного |
+| Google OAuth client | Новый клиент, а не правка живого PT-шного. Одного логина мало — см. §19: без календарного redirect URI и без включённого Calendar API фотограф не подключит календарь |
 | `AUTH_SECRET` / `NEXTAUTH_SECRET` | Свои |
 | `CRON_SECRET` | Свой |
 | GA4 / GSC / Google Ads | Свои |
@@ -511,7 +511,9 @@ loc.description`), ровно как это уже работает в порт�
 
 - [ ] Telegram-бот — Алекс пришлёт токен
 - [ ] R2-бакет и ключи
-- [ ] Google OAuth client
+- [x] Google OAuth client — заведён; логин и календарь настроены 05.08.2026 (§19)
+- [ ] Верификация испанского OAuth-приложения в Google — подана 05.08.2026. До
+      её окончания календарь подключают только аккаунты из **Test users**
 - [ ] DNS Migadu (MX / SPF / DKIM / DMARC) на photospain.co
 - [ ] Состав локалей
 - [ ] `photospain.com` — форма регистратора отправлена? Домен истекает 03.09.2026
@@ -722,3 +724,60 @@ status='failed') — форма отдаёт 200, пользователь ни�
 Чтобы включить чат новому рынку — завести отдельное пространство в Интеркоме
 и прописать его id в пак. Переиспользовать португальское нельзя: переписки
 двух рынков смешаются в одном инбоксе.
+
+---
+
+## 19. Google OAuth-клиент: календарь настраивается отдельно от логина
+
+Всплыло 05.08.2026: испанский фотограф не мог подключить Google-календарь и
+получал «Access blocked: This app's request is invalid». Решил, что дело в
+разных почтах (аккаунт на сайте ≠ аккаунт календаря) — нет, почты могут быть
+разными, это штатно. Ошибка была наша: клиент завели **только под логин**.
+
+Ловушка в том, что логин при этом работает и всё выглядит настроенным.
+Португальский redirect URI не подходит: `REDIRECT_URI` собирается из
+`country.baseUrl` (`src/app/api/calendar/google/connect{,-url}/route.ts`), то
+есть на каждом рынке он свой.
+
+Что должно быть в проекте нового рынка, помимо клиента и экрана согласия:
+
+1. **APIs & Services → Library → Google Calendar API → Enable.** Пока API
+   выключен, скоупов Calendar нет даже в списке на экране «Update selected
+   scopes» — там показывают только скоупы включённых API. Больше ничего
+   включать не надо: `openid` / `userinfo.email` живут без API, профиль
+   тянем через `oauth2/v3/userinfo`.
+2. **Скоуп `https://www.googleapis.com/auth/calendar.readonly`** на экране
+   согласия. Он sensitive (не restricted), поэтому требует верификации с
+   обоснованием и демо-видео.
+3. **Authorized redirect URIs — ДВА, не один:**
+   - `https://<домен>/api/auth/callback/google` — вход на сайт;
+   - `https://<домен>/api/calendar/google/callback` — подключение календаря.
+
+Проверять без браузера — запросом к самому Google; ответ однозначный:
+
+```bash
+curl -sL -G "https://accounts.google.com/o/oauth2/v2/auth" \
+  --data-urlencode "client_id=<client_id>" \
+  --data-urlencode "redirect_uri=https://photospain.co/api/calendar/google/callback" \
+  --data-urlencode "response_type=code" \
+  --data-urlencode "scope=https://www.googleapis.com/auth/calendar.readonly openid" \
+  -o /tmp/r.html -w "%{url_effective}\n"
+grep -oE "Error 4[0-9]+[^<]*|invalid_scope" /tmp/r.html
+```
+
+`.../signin/oauth/error` + `Error 400: redirect_uri_mismatch` — URI не заведён;
+`v3/signin/identifier` — конфиг рабочий.
+
+**Пока идёт верификация** приложение отдаёт экран «Google hasn't verified this
+app» и пускает дальше только аккаунты из Test users. Добавлять туда нужно тот
+аккаунт, где лежит календарь, а не тот, которым фотограф логинится на сайт.
+
+Обоснование для формы верификации (997 символов, влезает в лимит 1000) —
+правда по коду: вызываем ровно два read-only метода, `calendarList.list`
+(выбор календарей) и `freeBusy.query` (занятые интервалы, 12 месяцев, раз в
+15 минут), заголовки и участники событий не читаем, ничего не пишем, храним
+только начало/конец занятости. Тех же двух методов хватило бы паре
+гранулярных скоупов `calendar.freebusy` + `calendar.calendarlist.readonly` —
+если однажды дойдут руки сузить, менять придётся оба инстанса сразу
+(кодовая база общая) и проверку выданного скоупа в
+`src/app/api/calendar/google/callback/route.ts`.
