@@ -145,11 +145,25 @@ export async function POST(
         : photo.preview_url;
     }
 
+    // thumbnail_url is a CLEAN 1200px copy — it is uploaded from the same
+    // buffer BEFORE the watermark is composited (delivery/route.ts, "Upload
+    // the CLEAN 1200px buffer FIRST"). It exists so the grid does not have to
+    // load 15MB originals. But the grid prefers it over preview_url, so
+    // before the client accepted anything they were being shown, and could
+    // save, unwatermarked 1200px images — the watermark was built and then
+    // never displayed. Until acceptance an image's thumbnail is therefore the
+    // watermarked preview; the clean one is only handed over once the
+    // delivery is accepted. Videos keep their poster frame either way: it is
+    // a still, and withholding it would leave the grid blank.
+    const thumbSource = (isVideo || isAccepted)
+      ? photo.thumbnail_url
+      : (photo.preview_url || photo.thumbnail_url);
+
     let resolvedThumb: string | null = null;
-    if (photo.thumbnail_url) {
-      resolvedThumb = isS3Path(photo.thumbnail_url)
-        ? await getPresignedUrl(s3KeyFromPath(photo.thumbnail_url), 3600)
-        : photo.thumbnail_url;
+    if (thumbSource) {
+      resolvedThumb = isS3Path(thumbSource)
+        ? await getPresignedUrl(s3KeyFromPath(thumbSource), 3600)
+        : thumbSource;
     }
     return {
       id: photo.id,
