@@ -4,10 +4,15 @@ import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 import { ensurePhotographerCanPurchase } from "@/lib/photographer-purchase-guard";
+import { country } from "@/lib/country";
 
-const PRICE_IDS: Record<string, string> = {
-  pro: process.env.STRIPE_PRO_PRICE_ID || "price_1TC1VTGU0seq3XOV7ztETK3Z",
-  premium: process.env.STRIPE_PREMIUM_PRICE_ID || "price_1TC1VUGU0seq3XOVrUaqC0U4",
+// No hardcoded fallback. Each instance has its OWN Stripe account, so a
+// baked-in price ID is guaranteed wrong on every instance but the one it was
+// copied from — Spain silently inherited Portugal's IDs and every upgrade died
+// on "No such price" with no hint why. Missing env now says exactly that.
+const PRICE_IDS: Record<string, string | undefined> = {
+  pro: process.env.STRIPE_PRO_PRICE_ID,
+  premium: process.env.STRIPE_PREMIUM_PRICE_ID,
 };
 
 // Create or manage subscription
@@ -52,6 +57,13 @@ export async function POST(req: NextRequest) {
         return_url: `${process.env.AUTH_URL}${lp}/dashboard/subscriptions`,
       });
       return NextResponse.json({ url: portalSession.url });
+    }
+
+    if (action === "subscribe" && plan && plan in PRICE_IDS && !PRICE_IDS[plan]) {
+      // Misconfigured instance, not a bad request — name the missing var so
+      // this doesn't read as "Invalid action" for the next person debugging it.
+      console.error(`[stripe/subscription] STRIPE_${plan.toUpperCase()}_PRICE_ID is not set on ${country.code.toUpperCase()} — subscriptions cannot be sold`);
+      return NextResponse.json({ error: "Subscriptions are not configured yet — we're on it." }, { status: 503 });
     }
 
     if (action === "subscribe" && plan && PRICE_IDS[plan]) {

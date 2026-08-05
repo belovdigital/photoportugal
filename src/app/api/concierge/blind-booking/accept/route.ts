@@ -405,7 +405,7 @@ export async function POST(req: NextRequest) {
             price_data: {
               currency: "eur",
               product_data: {
-                name: "Photo Portugal photoshoot — handpicked photographer",
+                name: `${country.brand} photoshoot — handpicked photographer`,
                 description: `${hold.region.replace(/-/g, " ")} · ${hold.duration_minutes} min · ${hold.occasion} · ${hold.date}. Includes €${serviceFeeEur} platform service fee. Authorised now, charged only when your photographer is confirmed (within 24h). Auto-refund otherwise.`,
               },
               unit_amount: totalClientPaysCents,
@@ -475,7 +475,7 @@ export async function POST(req: NextRequest) {
       import("@/lib/email").then(({ sendEmail }) =>
         sendEmail(
           email,
-          "Welcome to Photo Portugal — your booking is being processed",
+          `Welcome to ${country.brand} — your booking is being processed`,
           `<div style="font-family: sans-serif; max-width: 540px; margin: 0 auto;">
             <h2 style="color: #C94536;">Welcome, ${(name.split(" ")[0] || name)
               .replace(/[<>]/g, "")}!</h2>

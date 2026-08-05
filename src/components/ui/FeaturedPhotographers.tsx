@@ -4,6 +4,7 @@ import { query } from "@/lib/db";
 import { maskSurname } from "@/lib/photographer-name";
 import { PhotographerCardCompact } from "@/components/ui/PhotographerCardCompact";
 import { formatLocationList } from "@/lib/location-priority";
+import { isSpain } from "@/lib/country";
 
 interface FeaturedPhotographer {
   slug: string;
@@ -38,6 +39,15 @@ export async function FeaturedPhotographers({ locale }: { locale?: string } = {}
     // the leading slots (paid placement); the rest are randomized so the section
     // looks fresh on each ISR refresh. is_featured DESC pins paid first; RANDOM()
     // shuffles within tier — verified and founding are mixed together.
+    //
+    // Spain is PAID-ONLY: the homepage slot is sold, not granted. Padding it
+    // with verified/founding would give away for free the exact placement the
+    // Featured add-on charges for, and on a young market that is the whole
+    // section. With no paid photographers the query returns nothing and the
+    // block renders null below — it reappears by itself on the first purchase.
+    const poolSql = isSpain
+      ? "pp.is_featured = TRUE"
+      : "(pp.is_featured = TRUE OR pp.is_verified = TRUE OR COALESCE(pp.is_founding, FALSE) = TRUE)";
     photographers = await query<FeaturedPhotographer>(
       `SELECT pp.slug, u.name, ${taglineSql} as tagline,
               u.avatar_url, pp.cover_url, pp.cover_position_y,
@@ -54,7 +64,7 @@ export async function FeaturedPhotographers({ locale }: { locale?: string } = {}
        WHERE pp.is_approved = TRUE
          AND COALESCE(pp.is_test, FALSE) = FALSE
          AND COALESCE(u.is_banned, FALSE) = FALSE
-         AND (pp.is_featured = TRUE OR pp.is_verified = TRUE OR COALESCE(pp.is_founding, FALSE) = TRUE)
+         AND ${poolSql}
        ORDER BY pp.is_featured DESC, RANDOM()
        LIMIT $1`,
       [TOP_PHOTOGRAPHERS_LIMIT]

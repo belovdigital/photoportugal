@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 import { ensurePhotographerCanPurchase } from "@/lib/photographer-purchase-guard";
+import { country } from "@/lib/country";
 
 const VERIFIED_PRICE = 1900; // €19.00
 
@@ -26,7 +27,7 @@ async function getVerifiedPriceId(): Promise<string> {
 
   // Create product + price (yearly subscription)
   const product = await stripeClient.products.create({
-    name: "Photo Portugal — Verified Badge",
+    name: `${country.brand} — Verified Badge`,
     description: "Identity-verified badge with phone number confirmation — annual subscription",
     metadata: { type: "verified" },
   });

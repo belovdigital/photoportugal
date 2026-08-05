@@ -872,7 +872,7 @@ export async function POST(req: NextRequest) {
 
               // WhatsApp/SMS to all admin phones
               sendAdminSMS(
-                `Photo Portugal: ${displayPaidAmount} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
+                `${country.brand}: ${displayPaidAmount} payment received! ${bookingInfo.client_name} → ${bookingInfo.photographer_name}`
               );
               import("@/lib/telegram").then(({ sendTelegram }) => {
                 sendTelegram(`💰 <b>Payment Received!</b>\n\n<b>Amount:</b> ${displayPaidAmount}\n<b>Client:</b> ${bookingInfo!.client_name}\n<b>Photographer:</b> ${bookingInfo!.photographer_name}`, "bookings");
@@ -914,7 +914,7 @@ export async function POST(req: NextRequest) {
                   if (smsPrefs?.sms_bookings !== false) {
                     sendSMS(
                       photographerUser.phone,
-                      `Photo Portugal: ${bookingInfo.client_name.split(" ")[0]} paid for your booking. Your payout: ${payoutLabel}. Log in to view details.`
+                      `${country.brand}: ${bookingInfo.client_name.split(" ")[0]} paid for your booking. Your payout: ${payoutLabel}. Log in to view details.`
                     ).catch(err => console.error("[sms] error:", err));
                   }
                 }

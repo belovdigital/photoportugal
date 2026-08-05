@@ -644,7 +644,7 @@ export async function POST(req: NextRequest) {
         if (photographerPhone?.phone) {
           sendSMS(
             photographerPhone.phone,
-            `New booking request on Photo Portugal from ${clientInfo.name}. Log in to review: ${country.baseUrl}/dashboard/bookings`
+            `New booking request on ${country.brand} from ${clientInfo.name}. Log in to review: ${country.baseUrl}/dashboard/bookings`
           ).catch(err => console.error("[sms] new booking error:", err));
         }
       }

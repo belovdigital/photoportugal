@@ -129,11 +129,11 @@ export async function POST(req: NextRequest) {
           currency: "eur",
           product_data: {
             name: isBlind
-              ? `Photo Portugal photoshoot — handpicked photographer`
+              ? `${country.brand} photoshoot — handpicked photographer`
               : `${booking.package_name || "Photoshoot"} with ${booking.photographer_name}`,
             description: isBlind
               ? "Authorised now — charged when your photographer is confirmed (within 24h). Auto-refund if we can't match."
-              : "Photo Portugal photoshoot session",
+              : `${country.brand} photoshoot session`,
           },
           unit_amount: Math.round(payment.totalClientPays * 100), // Total in cents (package + service fee)
         },

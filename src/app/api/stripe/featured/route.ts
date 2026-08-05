@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { queryOne } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 import { ensurePhotographerCanPurchase } from "@/lib/photographer-purchase-guard";
+import { country } from "@/lib/country";
 
 const FEATURED_PRICE = 1900; // €19.00
 
@@ -27,7 +28,7 @@ async function getFeaturedPriceId(): Promise<string> {
 
   // Create product + price (one-time)
   const product = await stripeClient.products.create({
-    name: "Photo Portugal — Featured Placement",
+    name: `${country.brand} — Featured Placement`,
     description: "Homepage featured section and priority search ranking with Featured badge",
     metadata: { type: "featured" },
   });

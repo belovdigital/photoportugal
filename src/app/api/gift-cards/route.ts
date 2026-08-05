@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
         price_data: {
           currency: "eur",
           product_data: {
-            name: `Photo Portugal — ${meta.label} Gift Session`,
+            name: `${country.brand} — ${meta.label} Gift Session`,
             description: meta.description,
           },
           unit_amount: Math.round(meta.buyerPrice * 100),
