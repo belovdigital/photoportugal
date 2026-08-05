@@ -6,6 +6,7 @@ import { requireStripe, largeGroupMultiplier } from "@/lib/stripe";
 import { blindBaseFromTotal, blindServiceFeeFromTotal } from "@/lib/blind-booking/pricing";
 import { consumeHold } from "@/lib/blind-booking/holds";
 import { country } from "@/lib/country";
+import { CHANNEL } from "@/lib/norteira/catalogue";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
       || req.headers.get("x-real-ip")
       || "anonymous";
-    // PhotoTravel (the MCP/agent channel) proxies every booking through one
+    // Norteira (the MCP/agent channel) proxies every booking through one
     // server, so all of its traffic shares a single IP and would trip a
     // per-IP limit designed for browsers. It authenticates with a shared
     // key instead and stays subject to the per-email limit below, which is
@@ -334,7 +335,7 @@ export async function POST(req: NextRequest) {
         chatUuid,
         // utm_source distinguishes the funnels honestly; utm_medium stays
         // 'blind_booking' for all of them so blind-funnel filters keep working.
-        isAgentChannel ? "phototravel" : holdId ? "concierge" : "quick_booking",
+        isAgentChannel ? CHANNEL.utmSource : holdId ? "concierge" : "quick_booking",
         visitorId,
         gclid,
       ]

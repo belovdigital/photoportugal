@@ -7,12 +7,13 @@ import {
   OCCASIONS,
   DURATIONS,
   LANGUAGES,
-} from "@/lib/phototravel/catalogue";
+  CHANNEL,
+} from "@/lib/norteira/catalogue";
 
 export const dynamic = "force-dynamic";
 
 /**
- * PhotoTravel — MCP endpoint for ChatGPT and any other agent client.
+ * Norteira — MCP endpoint for ChatGPT and any other agent client.
  *
  * Stateless JSON-RPC 2.0 over a single POST. We implement the protocol
  * directly rather than pulling in the MCP SDK: the SDK's HTTP transports
@@ -31,7 +32,7 @@ export const dynamic = "force-dynamic";
  * both are stripped here and must never reach the model.
  */
 
-const SERVER_NAME = "PhotoTravel";
+const SERVER_NAME = CHANNEL.name;
 const SERVER_VERSION = "0.1.0";
 const FALLBACK_PROTOCOL = "2025-06-18";
 
@@ -92,7 +93,7 @@ function toolDefinitions() {
       name: "list_destinations",
       title: "List destinations",
       description:
-        `Every place PhotoTravel can currently book a photographer in (${countries}). ` +
+        `Every place ${CHANNEL.name} can currently book a photographer in (${countries}). ` +
         "Call this first when the traveller names a city you are unsure about, or when " +
         "they ask where shoots are available. Returns the exact slugs the other tools expect.",
       inputSchema: {
@@ -372,7 +373,7 @@ async function callTool(name: string, args: Record<string, unknown>) {
         phone,
         meeting_hint: String(args.notes || "").trim().slice(0, 500),
         locale: language,
-        source: "phototravel-mcp",
+        source: `${CHANNEL.utmSource}-mcp`,
       }),
     });
 
@@ -428,7 +429,7 @@ async function dispatch(msg: RpcRequest) {
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
         instructions:
-          "PhotoTravel books professional holiday photographers. Ask where and when the " +
+          `${CHANNEL.name} books professional holiday photographers. Ask where and when the ` +
           "traveller wants to shoot, what the occasion is, how long and how many people, then " +
           "quote before booking. The price is all-in and fixed. Booking creates a real " +
           "reservation, so confirm the details with the traveller first.",

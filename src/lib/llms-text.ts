@@ -3,6 +3,7 @@ import { shootTypes } from "@/lib/shoot-types-data";
 import { query, queryOne } from "@/lib/db";
 import { country } from "@/lib/country";
 import { lowestBookablePrice } from "@/lib/entry-price";
+import { CHANNEL, MARKETS } from "@/lib/norteira/catalogue";
 
 // Site overview in agent-friendly plain text / markdown. Served both as
 // /llms.txt and as the markdown representation of the homepage when a
@@ -143,6 +144,28 @@ export async function buildLlmsText(): Promise<string> {
     .map((l) => l.name)
     .join(", ");
 
+  // Everything else in this file tells an agent what it can READ. This tells
+  // it what it can DO, so it carries the executable address rather than only
+  // a page about the address. Omitted entirely while this market is off in
+  // the channel — advertising a booking tool that will refuse every
+  // destination here is worse than staying quiet.
+  const channelLive = MARKETS[country.code === "es" ? "spain" : "portugal"].enabled;
+  const agentChannelSection = channelLive
+    ? `
+## Booking API for AI agents (MCP)
+${country.brand} can be booked programmatically. ${CHANNEL.name} is our Model Context Protocol server — the same booking engine this site runs on, exposed as tools an assistant can call directly instead of navigating pages.
+
+- Endpoint: ${CHANNEL.endpoint} (JSON-RPC 2.0 over POST, streamable HTTP, no authentication)
+- Server card: ${country.baseUrl}/.well-known/mcp.json
+- Documentation: ${CHANNEL.docs}
+- Tools: \`list_destinations\`, \`get_photoshoot_quote\`, \`create_photoshoot_booking\`
+
+Scope is the fixed-price booking flow: the traveller names a place, a date and an occasion, pays one all-in price, and a vetted photographer is hand-picked within 24 hours. Per-photographer calendar availability is deliberately NOT exposed, so an agent cannot sell a slot that is already taken. \`create_photoshoot_booking\` makes a real reservation and returns a secure checkout link — confirm details with the traveller before calling it.
+
+${CHANNEL.name} is the umbrella channel and covers every country we operate in from one endpoint, so it does not need to be reconnected per destination.
+`
+    : "";
+
   return `# ${country.brand}
 > Professional vacation photography marketplace in ${country.areaServed}. Travelers book vetted local photographers for engagement, family, couples, proposal, wedding and solo photoshoots in ${topCityList} and other locations across ${country.areaServed}.
 
@@ -193,6 +216,7 @@ ${[
 
 ## AI Concierge Matching (free)
 Travelers can describe what they want (location, date, occasion, budget) to our AI Concierge at ${country.baseUrl}/concierge and get 2-3 hand-picked photographers who fit, instantly, free of charge.
+${agentChannelSection}
 
 ## Location Coverage
 ${locationCoverageText}

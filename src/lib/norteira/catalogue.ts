@@ -1,9 +1,16 @@
 /**
- * PhotoTravel — the agent channel that fronts both markets.
+ * Norteira — the agent channel that fronts every market.
  *
  * ChatGPT (and any other MCP client) talks to one endpoint and never learns
  * that Portugal and Spain are separate deployments with separate databases.
  * This file is the only place that knows the mapping.
+ *
+ * Named after the umbrella brand rather than a country on purpose. The
+ * websites are split for local SEO and local brand trust; an MCP endpoint has
+ * no organic surface, and a traveller connects the channel BEFORE they have
+ * decided which country they are visiting — so one endpoint per market would
+ * make the client pick the answer before asking the question. (Working name
+ * until 2026-08-06 was "PhotoTravel"; nothing had shipped under it.)
  *
  * Scope is deliberately the blind-booking flow and nothing else: the visitor
  * says where, when and what kind of shoot, pays a fixed all-in price, and we
@@ -14,6 +21,22 @@
  * Destination slugs here MUST resolve through `slugToRegion()` in
  * lib/blind-booking/pricing.ts, otherwise the quote endpoint 404s.
  */
+
+/**
+ * The channel's own identity, kept apart from every market's.
+ *
+ * `endpoint` is a subdomain of the umbrella and NOT a path on a country site,
+ * so the published address survives any market being added, renamed or taken
+ * down. It proxies to /api/mcp on the Portugal box; that is an implementation
+ * detail no client should ever see.
+ */
+export const CHANNEL = {
+  name: "Norteira",
+  endpoint: "https://mcp.norteira.com",
+  docs: "https://norteira.com/mcp",
+  /** Booking attribution. Stored on every row the channel creates. */
+  utmSource: "norteira",
+} as const;
 
 export type MarketKey = "portugal" | "spain";
 

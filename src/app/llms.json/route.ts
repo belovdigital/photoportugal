@@ -5,11 +5,13 @@ import { queryOne } from "@/lib/db";
 import { PLAN_PRICES } from "@/lib/stripe";
 import { portugalCoverageStats } from "@/lib/location-coverage-stats";
 import { country } from "@/lib/country";
+import { CHANNEL, MARKETS } from "@/lib/norteira/catalogue";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 3600;
 
 export async function GET() {
+  const channelLive = MARKETS[country.code === "es" ? "spain" : "portugal"].enabled;
   let photographerCount = 0;
   const locationCount = portugalCoverageStats.places;
   let reviewCount = 0;
@@ -42,10 +44,14 @@ export async function GET() {
   }
 
   const data = {
-    name: "Photo Portugal",
+    // Brand and country come from the country pack. Hardcoding them meant
+    // photospain.co/llms.json introduced itself to every agent as "Photo
+    // Portugal ... across Portugal". The coverage counts above were always
+    // per-market (LOCATION_TREE switches on COUNTRY) — only the labels lied.
+    name: country.brand,
     url: country.baseUrl,
     description:
-      "Photo Portugal is a marketplace connecting travelers with professional vacation photographers across Portugal. Travelers can browse verified photographer portfolios, read real reviews, compare prices, and book photoshoots online with instant confirmation. Photographers are vetted for quality and professionalism.",
+      `${country.brand} is a marketplace connecting travelers with professional vacation photographers across ${country.areaServed}. Travelers can browse verified photographer portfolios, read real reviews, compare prices, and book photoshoots online with instant confirmation. Photographers are vetted for quality and professionalism.`,
     photographer_count: photographerCount,
     location_count: locationCount,
     region_count: portugalCoverageStats.regions,
@@ -86,8 +92,23 @@ export async function GET() {
       faq: `${country.baseUrl}/faq`,
     },
     languages: ["en", "pt", "de", "es", "fr"],
-    country: "Portugal",
+    country: country.areaServed,
     contact_email: country.supportEmail,
+    ...(channelLive
+      ? {
+          agent_booking_api: {
+            protocol: "mcp",
+            name: CHANNEL.name,
+            endpoint: CHANNEL.endpoint,
+            transport: "streamable-http",
+            authentication: "none",
+            server_card: `${country.baseUrl}/.well-known/mcp.json`,
+            documentation: CHANNEL.docs,
+            tools: ["list_destinations", "get_photoshoot_quote", "create_photoshoot_booking"],
+            scope: "Fixed-price blind booking. Per-photographer calendar availability is not exposed.",
+          },
+        }
+      : {}),
   };
 
   return NextResponse.json(data, {
