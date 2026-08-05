@@ -14,7 +14,11 @@ import { country } from "@/lib/country";
 const UPLOAD_DIR = process.env.UPLOAD_DIR || "/var/www/photoportugal/uploads";
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB per delivery photo (high-res RAW exports)
 const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB per delivery video (h264 at ~5-10MB/s)
-const MAX_DELIVERY_PHOTOS = 500; // max items per delivery (photos + videos combined) — raised from 200 after Isa hit it generously delivering 222 photos for an Essential package
+// Max items per delivery (photos + videos combined). 200 → 500 after Isa hit
+// the cap delivering 222 photos for an Essential package; 500 → 1000 on
+// 2026-08-05. The ZIP builder streams rather than buffering, so the ceiling is
+// storage and the client gallery's batching, not memory.
+const MAX_DELIVERY_PHOTOS = 1000;
 const MAX_DELIVERY_VIDEOS = 10; // hard cap on videos to keep total ZIP / storage in check
 const BASE_URL = process.env.AUTH_URL || country.baseUrl;
 
