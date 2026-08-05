@@ -1293,6 +1293,7 @@
       "metaDescription": "Reserve {name}, fotógrafo profissional em {locations}. Veja portfólio, pacotes e avaliações.",
       "metaShootTypes": "Especialista em fotografia de {types}.",
       "metaRating": "★ {rating} ({count, plural, one {# avaliação} other {# avaliações}}).",
+      "metaMoreLocations": "{locations} e mais {count}",
       "packageDescription": "Pacote de fotografia {packageName} por {name}",
       "moreInLocation": "Mais Fotógrafos em {location}",
       "similarPhotographers": "Fotógrafos Semelhantes",

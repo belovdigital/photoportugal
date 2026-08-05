@@ -257,9 +257,15 @@ export async function generateMetadata({
 
   const p = result.data;
   const allLocationNames = (p.locations || []).map((l: { name: string }) => l.name);
+  // "& N more" was hardcoded English too, and it lands in BOTH metaTitle and
+  // metaDescription — so every localized profile SERP entry read
+  // "Madrid, Toledo & 4 more".
   const locationNames = allLocationNames.length <= 2
     ? allLocationNames.join(", ") || country.areaServed
-    : `${allLocationNames.slice(0, 2).join(", ")} & ${allLocationNames.length - 2} more`;
+    : t("metaMoreLocations", {
+        locations: allLocationNames.slice(0, 2).join(", "),
+        count: allLocationNames.length - 2,
+      });
   const title = t("metaTitle", { name: normalizeName(p.name), locations: locationNames });
   // Shoot types and the rating badge used to be hardcoded English glued onto a
   // translated metaDescription, so every /es, /de and /fr profile shipped a
