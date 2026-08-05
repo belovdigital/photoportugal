@@ -416,6 +416,7 @@ export async function POST(req: NextRequest) {
         payment_intent_data: {
           capture_method: "manual",
           metadata: {
+            type: "booking",
             booking_id: booking.id,
             blind_booking: "1",
             region: hold.region,

@@ -787,6 +787,7 @@ export async function PATCH(
                 }],
                 payment_intent_data: {
                   metadata: {
+                    type: "booking",
                     booking_id: id,
                     photographer_name: bookingDetails.photographer_name,
                     package_name: bookingDetails.package_name || "Custom",

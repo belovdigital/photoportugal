@@ -1039,7 +1039,18 @@ export async function POST(req: NextRequest) {
         const bookingId = paymentIntent.metadata?.booking_id;
         const giftCardId = paymentIntent.metadata?.gift_card_id;
 
-        if (bookingId) {
+        // `booking_id` alone does NOT mean "this is the payment for the
+        // booking". A tip carries the same key so the notification can name
+        // the shoot, and this branch used to overwrite the booking's
+        // stripe_payment_intent_id with the tip's — which is what the refund
+        // path and the turnover figures read. Three live bookings were left
+        // pointing at a EUR 10-20 tip instead of their ~EUR 280 charge.
+        // Only the booking's own charge is untyped or type=booking; anything
+        // else that mentions a booking is a second, separate payment.
+        const piType = paymentIntent.metadata?.type;
+        const isBookingCharge = !piType || piType === "booking";
+
+        if (bookingId && isBookingCharge) {
           // Update by booking_id (payment intent may or may not be pre-linked)
           await queryOne(
             "UPDATE bookings SET payment_status = 'paid', stripe_payment_intent_id = $1 WHERE id = $2 RETURNING id",
@@ -1067,7 +1078,12 @@ export async function POST(req: NextRequest) {
         const bookingId = paymentIntent.metadata?.booking_id;
         const giftCardId = paymentIntent.metadata?.gift_card_id;
 
-        if (bookingId) {
+        // Same guard as above: a failed tip must not mark the shoot itself
+        // unpaid, nor email the client that their booking payment failed.
+        const piType = paymentIntent.metadata?.type;
+        const isBookingCharge = !piType || piType === "booking";
+
+        if (bookingId && isBookingCharge) {
           await queryOne(
             "UPDATE bookings SET payment_status = 'failed' WHERE id = $1 RETURNING id",
             [bookingId]
