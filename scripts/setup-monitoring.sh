@@ -1,15 +1,21 @@
 #!/bin/bash
-# Idempotent installer for Photo Portugal server-side health monitoring.
-# Run as root on the production VPS:
-#   sudo bash scripts/setup-monitoring.sh
+# Idempotent installer for server-side health monitoring.
+# Run as root on EITHER production VPS — Portugal or Spain:
+#   sudo bash scripts/setup-monitoring.sh [--test-alert]
+#
+# The market is auto-detected from which /var/www/<app>/.env exists:
+#   photoportugal -> prefix pp, domain from .env, db photoportugal
+#   photospain    -> prefix ps, domain from .env, db photospain
 #
 # Installs:
-#   /usr/local/bin/pp-alert.sh      — Telegram-only alert sender (Alerts topic, id=220)
-#   /usr/local/bin/pp-monitor.sh    — runs all health checks
-#   /etc/systemd/system/pp-monitor.{service,timer} — fires every 30s
+#   /etc/default/<prefix>-monitor       — per-market settings (the ONLY per-box difference)
+#   /usr/local/bin/<prefix>-alert.sh    — Telegram alert sender (alerts topic read from .env)
+#   /usr/local/bin/<prefix>-monitor.sh  — runs all health checks
+#   /etc/systemd/system/<prefix>-monitor.{service,timer} — fires every 30s
 #
-# Reads SMTP/Telegram creds from /var/www/photoportugal/.env at runtime, so
-# no secrets in the repo.
+# Reads SMTP/Telegram creds from the market's .env at runtime, so no secrets
+# in the repo. Telegram topic ids are per-group and NOT portable between
+# markets — they come from TELEGRAM_TOPIC_IDS in .env (see src/lib/telegram.ts).
 #
 # Coverage:
 #   - Next.js front (200 on active blue/green port)
@@ -20,11 +26,24 @@
 #   - Memory (any pm2 process > 1GB RSS)
 #   - 5xx error rate (>5 unique fingerprints in last 5min from error_logs)
 #
-# Throttle: alert fires after 2 consecutive failures (~30-60s). 5-min cooldown.
-# Recovery alert when a previously-failing check passes.
+# Throttle: alert fires after 3 consecutive failures (~90s). 5-min cooldown.
+# Recovery alert when a previously-alerting check passes.
+#
+# ⚠️ The WebSocket check hits the ORIGIN (--resolve <domain>:443:127.0.0.1),
+# not the public Cloudflare address, and reads the status line with -D -
+# instead of -w %{http_code}. Both learned the hard way on 2026-08-05:
+#   1. ~15-20% of upgrade requests routed through Cloudflare never deliver the
+#      101 back within the 5s timeout, while nginx logs 101 for every single
+#      one of them. That produced ~10 false "WebSocket DOWN" pages since May,
+#      each followed by RECOVERED ~30s later.
+#   2. curl keeps the tunnel open after a 101, so -w %{http_code} is only
+#      written if the transfer ends before --max-time — a coin flip that
+#      reports 000 on a perfectly healthy socket.
+# The trade-off is deliberate: this verifies nginx + ws-server, NOT whether
+# Cloudflare/DNS can reach us. External reachability needs an off-box prober.
 #
 # Re-run any time — it overwrites scripts and reloads systemd. Existing fail
-# state in /var/run/pp-monitor/ is preserved.
+# state in /var/run/<prefix>-monitor/ is preserved.
 
 set -euo pipefail
 
@@ -33,51 +52,127 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
-ENV_FILE=/var/www/photoportugal/.env
-if [ ! -f "$ENV_FILE" ]; then
-  echo "Expected $ENV_FILE not found. Run only on the prod VPS." >&2
+# ============================================================
+# 0. Detect the market
+# ============================================================
+if [ -f /var/www/photoportugal/.env ]; then
+  APP=photoportugal; PREFIX=pp; LABEL=PT
+  DEFAULT_DOMAIN=photoportugal.com; DEFAULT_DB=photoportugal
+  ALERT_THREAD_FALLBACK=220   # PT group predates TELEGRAM_TOPIC_IDS
+elif [ -f /var/www/photospain/.env ]; then
+  APP=photospain; PREFIX=ps; LABEL=ES
+  DEFAULT_DOMAIN=photospain.co; DEFAULT_DB=photospain
+  ALERT_THREAD_FALLBACK=""
+else
+  echo "Neither /var/www/photoportugal/.env nor /var/www/photospain/.env found." >&2
+  echo "Run only on a production VPS." >&2
   exit 1
 fi
 
+ENV_FILE=/var/www/$APP/.env
+
+# Never let a missing key abort the install: with `set -euo pipefail` a grep
+# that matches nothing kills the script silently. Every read is `|| true`.
+read_env() {
+  grep -m1 "^$1=" "$ENV_FILE" 2>/dev/null | cut -d= -f2- | tr -d "'\"" || true
+}
+
+# PT predates NEXT_PUBLIC_BASE_URL and only has NEXTAUTH_URL/AUTH_URL.
+DOMAIN=""
+for KEY in NEXT_PUBLIC_BASE_URL NEXTAUTH_URL AUTH_URL; do
+  RAW=$(read_env "$KEY")
+  [ -z "$RAW" ] && continue
+  DOMAIN=$(printf '%s' "$RAW" | sed -E 's#^https?://##; s#/.*$##')
+  [ -n "$DOMAIN" ] && break
+done
+[ -z "$DOMAIN" ] && DOMAIN=$DEFAULT_DOMAIN
+
+DB=$(read_env DATABASE_URL | sed -E 's#.*/([A-Za-z0-9_]+)(\?.*)?$#\1#')
+[ -z "$DB" ] && DB=$DEFAULT_DB
+
+echo "=== Installing $LABEL monitoring: app=$APP domain=$DOMAIN db=$DB prefix=$PREFIX ==="
+
 # ============================================================
-# 1. /usr/local/bin/pp-alert.sh
+# 1. /etc/default/<prefix>-monitor — the only per-market file
 # ============================================================
-cat > /usr/local/bin/pp-alert.sh <<'ALERT'
+cat > "/etc/default/$PREFIX-monitor" <<CONF
+# Written by scripts/setup-monitoring.sh — settings for $PREFIX-monitor ($LABEL).
+MARKET_LABEL=$LABEL
+APP=$APP
+DOMAIN=$DOMAIN
+DB=$DB
+ENV_FILE=$ENV_FILE
+NGINX_SITE=/etc/nginx/sites-enabled/$APP
+ACTIVE_FILE=/var/www/$APP-active
+STATE_DIR=/var/run/$PREFIX-monitor
+ALERT_BIN=/usr/local/bin/$PREFIX-alert.sh
+ALERT_THREAD_FALLBACK=$ALERT_THREAD_FALLBACK
+FAIL_THRESHOLD=3
+ALERT_COOLDOWN=300
+CHECK_INTERVAL=30
+CONF
+
+# ============================================================
+# 2. /usr/local/bin/<prefix>-alert.sh
+# ============================================================
+cat > "/usr/local/bin/$PREFIX-alert.sh" <<'ALERT'
 #!/bin/bash
-# Send a message to the Photo Portugal Telegram Alerts topic (forum thread 220).
-# Usage: pp-alert.sh "<title>" "<body>"
+# Send a message to this market's Telegram Alerts topic.
+# Usage: <prefix>-alert.sh "<title>" "<body>"
+CONF=__CONF__
+. "$CONF"
+
 TITLE="$1"
 BODY="$2"
-ENV=/var/www/photoportugal/.env
 
-TOKEN=$(grep "^TELEGRAM_BOT_TOKEN=" "$ENV" | cut -d= -f2- | sed "s/^['\"]//;s/['\"]$//")
-CHAT=$(grep "^TELEGRAM_CHAT_ID=" "$ENV" | cut -d= -f2- | sed "s/^['\"]//;s/['\"]$//")
-THREAD=220  # Alerts topic id (see src/lib/telegram.ts TOPIC_THREAD_IDS)
+TOKEN=$(grep -m1 "^TELEGRAM_BOT_TOKEN=" "$ENV_FILE" | cut -d= -f2- | sed "s/^['\"]//;s/['\"]$//")
+CHAT=$(grep -m1 "^TELEGRAM_CHAT_ID=" "$ENV_FILE" | cut -d= -f2- | sed "s/^['\"]//;s/['\"]$//")
 
 if [ -z "$TOKEN" ] || [ -z "$CHAT" ]; then
-  echo "[pp-alert] missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID" >&2
+  echo "[$MARKET_LABEL-alert] missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID in $ENV_FILE" >&2
   exit 1
 fi
 
+# Topic thread ids are per-group and NOT portable between markets — posting a
+# PT thread id into the ES group 400s. Source of truth: TELEGRAM_TOPIC_IDS.
+THREAD=$(python3 - "$ENV_FILE" "${ALERT_THREAD_FALLBACK:-}" <<'PY'
+import json, sys
+env, fallback = sys.argv[1], sys.argv[2]
+raw = None
+for line in open(env):
+    if line.startswith("TELEGRAM_TOPIC_IDS="):
+        raw = line.split("=", 1)[1].strip().strip("'\"")
+try:
+    print(json.loads(raw)["alerts"])
+except Exception:
+    print(fallback)
+PY
+)
+
+ARGS=(--data-urlencode "chat_id=$CHAT"
+      --data-urlencode "parse_mode=HTML"
+      --data-urlencode "disable_web_page_preview=true")
+[ -n "$THREAD" ] && ARGS+=(--data-urlencode "message_thread_id=$THREAD")
+
 curl -s -X POST "https://api.telegram.org/bot$TOKEN/sendMessage" \
-  --data-urlencode "chat_id=$CHAT" \
-  --data-urlencode "message_thread_id=$THREAD" \
-  --data-urlencode "parse_mode=HTML" \
-  --data-urlencode "disable_web_page_preview=true" \
-  --data-urlencode "text=$(printf "<b>%s</b>\n\n%s" "$TITLE" "$BODY")" \
+  "${ARGS[@]}" \
+  --data-urlencode "text=$(printf "<b>[%s] %s</b>\n\n%s" "$MARKET_LABEL" "$TITLE" "$BODY")" \
   | head -c 200
 ALERT
-chmod +x /usr/local/bin/pp-alert.sh
+sed -i "s|__CONF__|/etc/default/$PREFIX-monitor|" "/usr/local/bin/$PREFIX-alert.sh"
+chmod +x "/usr/local/bin/$PREFIX-alert.sh"
 
 # ============================================================
-# 2. /usr/local/bin/pp-monitor.sh
+# 3. /usr/local/bin/<prefix>-monitor.sh
 # ============================================================
-cat > /usr/local/bin/pp-monitor.sh <<'MONITOR'
+cat > "/usr/local/bin/$PREFIX-monitor.sh" <<'MONITOR'
 #!/bin/bash
-# Photo Portugal server-side health monitor. Fired every 30s by systemd.
-STATE_DIR=/var/run/pp-monitor
+# Server-side health monitor, fired every 30s by systemd. Identical on every
+# box — everything market-specific lives in the config file below.
+CONF=__CONF__
+. "$CONF"
+
 mkdir -p "$STATE_DIR"
-ALERT_COOLDOWN=300
 
 check() {
   local NAME="$1"
@@ -88,9 +183,9 @@ check() {
   local ALERT_FILE="$STATE_DIR/$NAME.last-alert"
 
   if [ "$PASS" = "1" ]; then
-    if [ -f "$FAIL_FILE" ] && [ "$(cat "$FAIL_FILE")" -ge 2 ]; then
-      local DOWN=$(($(cat "$FAIL_FILE") * 30))
-      /usr/local/bin/pp-alert.sh "✅ RECOVERED: $NAME" "Was failing for ~${DOWN}s. Now back to normal." || true
+    if [ -f "$FAIL_FILE" ] && [ "$(cat "$FAIL_FILE")" -ge "$FAIL_THRESHOLD" ]; then
+      local DOWN=$(($(cat "$FAIL_FILE") * CHECK_INTERVAL))
+      "$ALERT_BIN" "✅ RECOVERED: $NAME" "Was failing for ~${DOWN}s. Now back to normal." || true
     fi
     rm -f "$FAIL_FILE" "$ALERT_FILE"
     return
@@ -101,21 +196,21 @@ check() {
   COUNT=$((COUNT + 1))
   echo "$COUNT" > "$FAIL_FILE"
 
-  [ "$COUNT" -lt 2 ] && return
+  [ "$COUNT" -lt "$FAIL_THRESHOLD" ] && return
 
   local NOW=$(date +%s)
   local LAST=0
   [ -f "$ALERT_FILE" ] && LAST=$(cat "$ALERT_FILE")
-  [ $((NOW - LAST)) -lt $ALERT_COOLDOWN ] && return
+  [ $((NOW - LAST)) -lt "$ALERT_COOLDOWN" ] && return
 
-  /usr/local/bin/pp-alert.sh "🔴 $TITLE" "$BODY
+  "$ALERT_BIN" "🔴 $TITLE" "$BODY
 
-Failing for $COUNT consecutive checks (~$((COUNT*30))s)." || true
+Failing for $COUNT consecutive checks (~$((COUNT * CHECK_INTERVAL))s)." || true
   echo "$NOW" > "$ALERT_FILE"
 }
 
 # 1. Next.js front
-ACTIVE=$(cat /var/www/photoportugal-active 2>/dev/null || echo unknown)
+ACTIVE=$(cat "$ACTIVE_FILE" 2>/dev/null || echo unknown)
 PORT=3000
 [ "$ACTIVE" = "green" ] && PORT=3001
 NEXTJS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://127.0.0.1:$PORT/" 2>/dev/null)
@@ -123,47 +218,57 @@ NEXTJS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://127.0.
 if [ "$NEXTJS_CODE" = "200" ]; then
   check "nextjs" 1 "" ""
 else
-  check "nextjs" 0 "Next.js DOWN" "Active: $ACTIVE (port $PORT). HTTP code: $NEXTJS_CODE (expected 200). Fix: pm2 restart photoportugal-$ACTIVE"
+  check "nextjs" 0 "Next.js DOWN" "Active: $ACTIVE (port $PORT). HTTP code: $NEXTJS_CODE (expected 200). Fix: pm2 restart $APP-$ACTIVE"
 fi
 
-# 2. WebSocket handshake
-WS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --http1.1 \
+# 2. WebSocket handshake — against the origin, NOT through Cloudflare, and read
+# from the status line: -w %{http_code} reports 000 on a healthy socket because
+# curl holds the tunnel open past --max-time. See setup-monitoring.sh header.
+# --max-time IS the runtime of this check: curl never returns early, it keeps
+# the upgraded tunnel open. Measured time-to-first-byte on loopback is 20-65ms,
+# so 2s leaves ~30-100x headroom, and a blip needs 3 consecutive misses (~90s)
+# to page anyone.
+WS_STATUS=$(curl -s -D - -o /dev/null --http1.1 \
+  --resolve "$DOMAIN:443:127.0.0.1" \
   -H "Connection: Upgrade" -H "Upgrade: websocket" \
   -H "Sec-WebSocket-Version: 13" -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" \
-  --max-time 5 https://photoportugal.com/ws 2>/dev/null)
-[ -z "$WS_CODE" ] && WS_CODE=000
-if [ "$WS_CODE" = "101" ]; then
-  check "ws" 1 "" ""
-else
-  NGINX_TARGET=$(grep -A 4 'location /ws' /etc/nginx/sites-enabled/photoportugal | grep proxy_pass | head -1 | xargs)
-  PM2_WS=$(pm2 jlist 2>/dev/null | python3 -c "
-import json, sys
+  --max-time 2 "https://$DOMAIN/ws" 2>/dev/null | head -1 | tr -d '\r')
+case "$WS_STATUS" in
+  *" 101"*)
+    check "ws" 1 "" ""
+    ;;
+  *)
+    NGINX_TARGET=$(grep -A 4 'location /ws' "$NGINX_SITE" | grep proxy_pass | head -1 | xargs)
+    PM2_WS=$(pm2 jlist 2>/dev/null | APP="$APP" python3 -c "
+import json, os, sys
 try:
     data = json.load(sys.stdin)
-    ws = [p for p in data if p['name'] == 'photoportugal-ws']
+    ws = [p for p in data if p['name'] == os.environ['APP'] + '-ws']
     print(ws[0]['pm2_env']['status'] if ws else 'not running')
 except Exception:
     print('unknown')
 " 2>/dev/null)
-  check "ws" 0 "WebSocket DOWN" "Got HTTP $WS_CODE (expected 101). pm2 ws: $PM2_WS. Nginx /ws: $NGINX_TARGET. Fix: pm2 restart photoportugal-ws"
-fi
+    check "ws" 0 "WebSocket DOWN" "Origin handshake returned: ${WS_STATUS:-no response} (expected 101 Switching Protocols). pm2 ws: $PM2_WS. Nginx /ws: $NGINX_TARGET. Fix: pm2 restart $APP-ws"
+    ;;
+esac
 
 # 3. Postgres
-PG_OK=$(timeout 3 sudo -u postgres psql photoportugal -tAc "SELECT 1" 2>/dev/null | tr -d '[:space:]')
+PG_OK=$(timeout 3 sudo -u postgres psql "$DB" -tAc "SELECT 1" 2>/dev/null | tr -d '[:space:]')
 if [ "$PG_OK" = "1" ]; then
   check "postgres" 1 "" ""
 else
-  check "postgres" 0 "Postgres DOWN" "psql SELECT 1 on photoportugal failed (timeout 3s). Fix: systemctl restart postgresql"
+  check "postgres" 0 "Postgres DOWN" "psql SELECT 1 on $DB failed (timeout 3s). Fix: systemctl restart postgresql"
 fi
 
 # 4. pm2 processes
-PM2_BAD=$(pm2 jlist 2>/dev/null | python3 -c "
-import json, sys
+PM2_BAD=$(pm2 jlist 2>/dev/null | APP="$APP" python3 -c "
+import json, os, sys
 try:
     data = json.load(sys.stdin)
+    app = os.environ['APP']
     bad = [(p['name'], p['pm2_env']['status'], p['pm2_env'].get('restart_time', 0))
            for p in data
-           if p['name'].startswith('photoportugal')
+           if p['name'].startswith(app)
            and p['pm2_env']['status'] not in ('online', 'launching')]
     print('; '.join(f\"{n} ({s}, restarts={r})\" for n,s,r in bad))
 except Exception:
@@ -186,13 +291,14 @@ else
 fi
 
 # 6. Memory — pm2 process over 1GB
-HIGH_MEM=$(pm2 jlist 2>/dev/null | python3 -c "
-import json, sys
+HIGH_MEM=$(pm2 jlist 2>/dev/null | APP="$APP" python3 -c "
+import json, os, sys
 try:
     data = json.load(sys.stdin)
+    app = os.environ['APP']
     hits = [(p['name'], p['monit'].get('memory', 0))
             for p in data
-            if p['name'].startswith('photoportugal') and p['monit'].get('memory', 0) > 1024*1024*1024]
+            if p['name'].startswith(app) and p['monit'].get('memory', 0) > 1024*1024*1024]
     print('; '.join(f\"{n}={int(m/1024/1024)}MB\" for n,m in hits))
 except Exception:
     pass
@@ -203,37 +309,39 @@ else
   check "memory" 0 "High memory" "Process(es) over 1GB: $HIGH_MEM. Possible memory leak — consider pm2 restart."
 fi
 
-# 7. 5xx spike — >5 unique fingerprints in 5min
-ERR_COUNT=$(timeout 3 sudo -u postgres psql photoportugal -tAc "SELECT COUNT(DISTINCT fingerprint) FROM error_logs WHERE last_seen > NOW() - INTERVAL '5 minutes' AND resolved_at IS NULL" 2>/dev/null | tr -d '[:space:]')
+# 7. 5xx spike — >5 unique fingerprints in 5min. Fails open: if the query
+# errors (no error_logs table yet on a fresh market), ERR_COUNT=0 and no alert.
+ERR_COUNT=$(timeout 3 sudo -u postgres psql "$DB" -tAc "SELECT COUNT(DISTINCT fingerprint) FROM error_logs WHERE last_seen > NOW() - INTERVAL '5 minutes' AND resolved_at IS NULL" 2>/dev/null | tr -d '[:space:]')
 ERR_COUNT=${ERR_COUNT:-0}
 if [ "$ERR_COUNT" -lt 5 ]; then
   check "5xx_spike" 1 "" ""
 else
-  RECENT=$(timeout 3 sudo -u postgres psql photoportugal -tAc "SELECT path || ' — ' || error_class FROM error_logs WHERE last_seen > NOW() - INTERVAL '5 minutes' AND resolved_at IS NULL ORDER BY occurrence_count DESC LIMIT 3" 2>/dev/null | tr '\n' ';')
+  RECENT=$(timeout 3 sudo -u postgres psql "$DB" -tAc "SELECT path || ' — ' || error_class FROM error_logs WHERE last_seen > NOW() - INTERVAL '5 minutes' AND resolved_at IS NULL ORDER BY occurrence_count DESC LIMIT 3" 2>/dev/null | tr '\n' ';')
   check "5xx_spike" 0 "5xx error spike" "$ERR_COUNT unique 5xx fingerprints in last 5 min. Top: $RECENT"
 fi
 
 exit 0
 MONITOR
-chmod +x /usr/local/bin/pp-monitor.sh
+sed -i "s|__CONF__|/etc/default/$PREFIX-monitor|" "/usr/local/bin/$PREFIX-monitor.sh"
+chmod +x "/usr/local/bin/$PREFIX-monitor.sh"
 
 # ============================================================
-# 3. systemd unit + timer
+# 4. systemd unit + timer
 # ============================================================
-cat > /etc/systemd/system/pp-monitor.service <<'SERVICE'
+cat > "/etc/systemd/system/$PREFIX-monitor.service" <<SERVICE
 [Unit]
-Description=Photo Portugal server-side health monitor
+Description=$LABEL server-side health monitor ($APP)
 After=network.target postgresql.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/pp-monitor.sh
+ExecStart=/usr/local/bin/$PREFIX-monitor.sh
 TimeoutStartSec=20s
 SERVICE
 
-cat > /etc/systemd/system/pp-monitor.timer <<'TIMER'
+cat > "/etc/systemd/system/$PREFIX-monitor.timer" <<TIMER
 [Unit]
-Description=Run Photo Portugal health monitor every 30s
+Description=Run $LABEL health monitor every 30s
 
 [Timer]
 OnBootSec=30s
@@ -245,7 +353,7 @@ WantedBy=timers.target
 TIMER
 
 systemctl daemon-reload
-systemctl enable --now pp-monitor.timer
+systemctl enable --now "$PREFIX-monitor.timer"
 
 # Disable any old single-purpose timers that this supersedes.
 if systemctl list-unit-files ws-healthcheck.timer >/dev/null 2>&1; then
@@ -256,19 +364,26 @@ if systemctl list-unit-files ws-healthcheck.timer >/dev/null 2>&1; then
 fi
 
 echo
-echo "=== Setup complete ==="
+echo "=== Setup complete ($LABEL) ==="
 echo "Timer status:"
-systemctl status pp-monitor.timer --no-pager | head -6
+systemctl status "$PREFIX-monitor.timer" --no-pager | head -6
 echo
 echo "Test run:"
-/usr/local/bin/pp-monitor.sh
+"/usr/local/bin/$PREFIX-monitor.sh"
 echo "(empty = all healthy)"
-ls /var/run/pp-monitor 2>/dev/null || true
+ls "/var/run/$PREFIX-monitor" 2>/dev/null || true
+
+if [ "${1:-}" = "--test-alert" ]; then
+  echo
+  echo "Sending test alert to the $LABEL Telegram alerts topic:"
+  "/usr/local/bin/$PREFIX-alert.sh" "📡 Test alert" "Manual ping from $(hostname) — monitoring installed."
+  echo
+fi
 
 echo
 echo "To send a test alert manually:"
-echo "  /usr/local/bin/pp-alert.sh \"📡 Test alert\" \"Manual ping from \$(hostname)\""
+echo "  /usr/local/bin/$PREFIX-alert.sh \"📡 Test alert\" \"Manual ping from \$(hostname)\""
 echo
 echo "Logs:"
-echo "  journalctl -u pp-monitor.service -n 20"
-echo "  systemctl list-timers pp-monitor.timer"
+echo "  journalctl -u $PREFIX-monitor.service -n 20"
+echo "  systemctl list-timers $PREFIX-monitor.timer"
