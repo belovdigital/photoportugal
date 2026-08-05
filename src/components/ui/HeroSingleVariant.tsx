@@ -379,7 +379,7 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
       {isDesktop && (
         <div
           ref={scrollerRef}
-          className="absolute inset-0 flex h-full overflow-x-auto snap-x snap-mandatory scroll-smooth overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="absolute inset-0 flex h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {/* Infinite carousel: render 3 copies of the photos array when
               we have more than one photo. Initial scroll position is the
@@ -472,7 +472,7 @@ export function HeroSingleVariant({ photographer, locationContext, totalPhotogra
         </>
       )}
 
-      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
+      <div className="hero-pad-y relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           {/* Availability / credibility chip */}
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">

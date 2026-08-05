@@ -131,6 +131,14 @@ html:has(#promo-topbar) { --promo-h: 36px; }
 
 .h-below-chrome { height: calc(100svh - 64px - var(--promo-h)); }
 .min-h-below-chrome { min-height: calc(100svh - 64px - var(--promo-h)); }
+
+/* Hero content padding, sized against the viewport HEIGHT rather than its
+ * width. The min-height above reserves exactly one screen minus the chrome,
+ * but min-height caps nothing: a fixed `lg:py-28` spent 224px on air, so on a
+ * 890px-tall laptop window the column needed 834px against 790px available and
+ * the hero hung 44px below the fold. The clamp keeps the generous spacing on a
+ * tall monitor and gives it back on a short one. */
+.hero-pad-y { padding-block: clamp(2rem, 6svh, 7rem); }
 /* The concierge chat measures in dvh rather than svh on purpose — the
  * mobile rule above pins body to 100dvh, and a section sized in svh would
  * come up short and open a strip beneath the chat once the URL bar hides. */
