@@ -500,11 +500,15 @@ export default async function BookingsPage() {
                     )}
                   </div>
                 )}
-                {/* Blind bookings: photographer commits a photo count; client sees it */}
-                {booking.blind_booking && !booking.package_name && isPhotographer && booking.status === "confirmed" && (
+                {/* Any package-less booking, not just blind ones: the number is
+                    what the delivery guard enforces, so whoever it binds has to
+                    see it. Match-request bookings are blind_booking = FALSE and
+                    were previously blocked at delivery by a figure neither side
+                    was ever shown. */}
+                {!booking.package_name && isPhotographer && (booking.status === "confirmed" || booking.status === "completed") && (
                   <PromisedPhotosInput bookingId={booking.id} initial={booking.promised_photos} />
                 )}
-                {booking.blind_booking && !isPhotographer && booking.promised_photos && (
+                {!booking.package_name && !isPhotographer && booking.promised_photos && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2 text-xs text-gray-600">
                     📸 {t("promisedPhotosClient", { count: booking.promised_photos })}
                   </div>

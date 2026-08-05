@@ -165,6 +165,14 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Invalid duration. Please select from the available options." }, { status: 400 });
     }
 
+    // POST rejects a missing or zero count; PUT did not, and this is a full
+    // overwrite — so editing a package could set num_photos = 0, which makes
+    // the delivery guard treat the package as promising nothing and wave
+    // through a gallery of any size for every future booking on it.
+    if (!num_photos || Number(num_photos) < 1) {
+      return NextResponse.json({ error: "Number of photos is required and must be at least 1" }, { status: 400 });
+    }
+
     // Catalog packages (shown on the public profile) must respect the
     // per-duration price floor. Custom one-off proposals sent in chat
     // (/api/messages/share-package) are the ONLY thing exempt from this —
@@ -311,6 +319,21 @@ export async function DELETE(req: NextRequest) {
         code: "tier_package_protected",
       }, { status: 403 });
     }
+
+    // Keep the promise before the link to it disappears. package_id is the
+    // ONLY carrier of the photo count for a package booking, so nulling it
+    // used to erase from delivered history how many photos were owed.
+    await queryOne(
+      `UPDATE bookings b
+          SET promised_photos = p.num_photos
+         FROM packages p
+        WHERE p.id = $1
+          AND p.photographer_id = $2
+          AND b.package_id = $1
+          AND b.promised_photos IS NULL
+          AND b.status IN ('completed', 'delivered', 'cancelled', 'refunded')`,
+      [packageId, profile.id]
+    );
 
     // Unlink completed/cancelled bookings so the package can be deleted
     await queryOne(

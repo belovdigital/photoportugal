@@ -38,15 +38,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Please provide 1-3 photographers with prices." }, { status: 400 });
   }
 
-  // Validate each entry has id and price
+  // Validate each entry has id, price and a photo count. The count is
+  // required because picking one of these options creates a CONFIRMED,
+  // payable booking with no package attached — this is the only moment
+  // anyone decides how many photos are owed on it.
   for (const pp of photographer_prices) {
     if (!pp.id || typeof pp.price !== "number" || pp.price <= 0) {
       return NextResponse.json({ error: "Each photographer must have a valid id and price." }, { status: 400 });
     }
+    if (typeof pp.num_photos !== "number" || pp.num_photos < 5 || pp.num_photos > 1000) {
+      return NextResponse.json({ error: "Each photographer needs a photo count (5-1000)." }, { status: 400 });
+    }
   }
 
-  const photographer_ids = photographer_prices.map((pp: { id: string; price: number }) => pp.id);
-  const priceMap = new Map<string, number>(photographer_prices.map((pp: { id: string; price: number }) => [pp.id, pp.price]));
+  type PriceEntry = { id: string; price: number; num_photos: number };
+  const photographer_ids = photographer_prices.map((pp: PriceEntry) => pp.id);
+  const priceMap = new Map<string, number>(photographer_prices.map((pp: PriceEntry) => [pp.id, pp.price]));
+  const photosMap = new Map<string, number>(photographer_prices.map((pp: PriceEntry) => [pp.id, pp.num_photos]));
 
   try {
     const matchReq = await queryOne<{
@@ -88,10 +96,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         [id, p.id]
       );
       const price = priceMap.get(p.id);
+      const numPhotos = photosMap.get(p.id);
       if (price) {
         await queryOne(
-          "UPDATE match_request_photographers SET price = $1 WHERE match_request_id = $2 AND photographer_id = $3",
-          [price, id, p.id]
+          "UPDATE match_request_photographers SET price = $1, num_photos = $2 WHERE match_request_id = $3 AND photographer_id = $4",
+          [price, numPhotos ?? null, id, p.id]
         );
       }
     }
@@ -363,10 +372,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!pp.id || typeof pp.price !== "number" || pp.price <= 0) {
       return NextResponse.json({ error: "Each photographer must have a valid id and price." }, { status: 400 });
     }
+    if (typeof pp.num_photos !== "number" || pp.num_photos < 5 || pp.num_photos > 1000) {
+      return NextResponse.json({ error: "Each photographer needs a photo count (5-1000)." }, { status: 400 });
+    }
   }
 
-  const photographer_ids = photographer_prices.map((pp: { id: string; price: number }) => pp.id);
-  const priceMap = new Map<string, number>(photographer_prices.map((pp: { id: string; price: number }) => [pp.id, pp.price]));
+  type EditEntry = { id: string; price: number; num_photos: number };
+  const photographer_ids = photographer_prices.map((pp: EditEntry) => pp.id);
+  const priceMap = new Map<string, number>(photographer_prices.map((pp: EditEntry) => [pp.id, pp.price]));
+  const photosMap = new Map<string, number>(photographer_prices.map((pp: EditEntry) => [pp.id, pp.num_photos]));
 
   try {
     const matchReq = await queryOne<{
@@ -404,11 +418,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Delete existing match_request_photographers rows
     await query("DELETE FROM match_request_photographers WHERE match_request_id = $1", [id]);
 
-    // Insert new selections with prices
+    // Insert new selections with prices AND photo counts. This path deletes
+    // every row first, so omitting the count here would silently erase it
+    // each time an admin re-opened a request to fix a price or resend.
     for (const p of photographers) {
       await queryOne(
-        "INSERT INTO match_request_photographers (match_request_id, photographer_id, price) VALUES ($1, $2, $3)",
-        [id, p.id, priceMap.get(p.id) || 0]
+        "INSERT INTO match_request_photographers (match_request_id, photographer_id, price, num_photos) VALUES ($1, $2, $3, $4)",
+        [id, p.id, priceMap.get(p.id) || 0, photosMap.get(p.id) ?? null]
       );
     }
 

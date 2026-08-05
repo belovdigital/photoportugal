@@ -209,6 +209,7 @@ export default async function AdminPage() {
     message: string | null; location_slug: string | null; occasion: string | null;
     group_size: number | null; group_size_is_estimate: boolean; shoot_time: string | null; package_name: string | null;
     package_duration: number | null; service_fee: number | null; payout_amount: number | null;
+    promised_photos: number | null;
     stripe_amount_subtotal_cents: number | null; stripe_amount_paid_cents: number | null;
     stripe_amount_discount_cents: number | null; stripe_currency: string | null;
     stripe_promo_code: string | null; stripe_coupon_name: string | null; stripe_coupon_percent_off: number | null;
@@ -247,6 +248,7 @@ export default async function AdminPage() {
             b.status, b.shoot_date, b.total_price, b.created_at, b.confirmed_at, b.payment_status,
             b.message, b.location_slug, b.occasion, b.group_size, ${groupSizeEstimateSelect}, b.shoot_time,
             pk.name as package_name, pk.duration_minutes as package_duration, b.service_fee, b.payout_amount,
+            COALESCE(pk.num_photos, b.promised_photos) AS promised_photos,
             ${stripePaymentSelect},
             b.flexible_date_from, b.flexible_date_to, b.date_note,
             b.delivery_accepted, b.delivery_accepted_at, b.location_detail,
@@ -404,7 +406,7 @@ export default async function AdminPage() {
     shoot_type: string; group_size: number; budget_range: string;
     message: string | null; status: string; admin_note: string | null;
     created_at: string; matched_at: string | null;
-    photographers: { id: string; name: string; slug: string; avatar_url: string | null; rating: number; review_count: number; min_price: number | null; price: number | null }[];
+    photographers: { id: string; name: string; slug: string; avatar_url: string | null; rating: number; review_count: number; min_price: number | null; price: number | null; num_photos: number | null }[];
   }>(
     `SELECT mr.*,
       COALESCE(
@@ -414,7 +416,8 @@ export default async function AdminPage() {
           'rating', COALESCE(pp.rating, 0),
           'review_count', COALESCE(pp.review_count, 0),
           'min_price', (SELECT MIN(price) FROM packages WHERE photographer_id = pp.id AND is_public = TRUE AND custom_for_user_id IS NULL),
-          'price', mrp.price
+          'price', mrp.price,
+          'num_photos', mrp.num_photos
         ))
         FROM match_request_photographers mrp
         JOIN photographer_profiles pp ON pp.id = mrp.photographer_id

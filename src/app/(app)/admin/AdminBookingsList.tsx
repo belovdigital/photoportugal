@@ -23,6 +23,7 @@ export interface AdminBooking {
   group_size_is_estimate: boolean;
   shoot_time: string | null;
   package_name: string | null;
+  promised_photos: number | null;
   package_duration: number | null;
   service_fee: number | null;
   payout_amount: number | null;
@@ -188,6 +189,9 @@ export function AdminBookingsList({
   const [page, setPage] = useState(0);
   const [assignDraft, setAssignDraft] = useState<Record<string, string>>({});
   const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
+  // Blind bookings carry no package, so the photo count is decided here or
+  // nowhere — the assign endpoint rejects the request without it.
+  const [photosDraft, setPhotosDraft] = useState<Record<string, string>>({});
   const [submittingAssignId, setSubmittingAssignId] = useState<string | null>(null);
   const [cancellingBlindId, setCancellingBlindId] = useState<string | null>(null);
   const roster = photographerRoster || [];
@@ -405,6 +409,8 @@ export function AdminBookingsList({
                       selected={assignDraft[b.id] || ""}
                       onSelect={(v) => setAssignDraft((prev) => ({ ...prev, [b.id]: v }))}
                       notes={notesDraft[b.id] ?? (b.admin_notes || "")}
+                      photos={photosDraft[b.id] ?? ""}
+                      onPhotos={(v) => setPhotosDraft((d) => ({ ...d, [b.id]: v }))}
                       onNotes={(v) => setNotesDraft((prev) => ({ ...prev, [b.id]: v }))}
                       submitting={submittingAssignId === b.id}
                       cancelling={cancellingBlindId === b.id}
@@ -468,6 +474,11 @@ export function AdminBookingsList({
                       onAssign={async () => {
                         const photographerId = assignDraft[b.id];
                         if (!photographerId) return;
+                        const photos = parseInt(photosDraft[b.id] || "", 10) || 0;
+                        if (photos < 5 || photos > 1000) {
+                          alert("Enter how many photos this photographer will deliver (5-1000) — the client is never told otherwise.");
+                          return;
+                        }
                         setSubmittingAssignId(b.id);
                         try {
                           const res = await fetch("/api/admin/bookings", {
@@ -478,6 +489,7 @@ export function AdminBookingsList({
                               booking_id: b.id,
                               photographer_id: photographerId,
                               admin_notes: notesDraft[b.id] ?? null,
+                              promised_photos: parseInt(photosDraft[b.id] || "", 10) || 0,
                             }),
                           });
                           const data = await res.json().catch(() => ({}));
@@ -548,6 +560,17 @@ export function AdminBookingsList({
                         {b.package_duration && <p className="text-[10px] text-gray-400">{b.package_duration} min</p>}
                       </div>
                     )}
+                    <div>
+                      <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Photos</label>
+                      {b.promised_photos ? (
+                        <p className="mt-1 text-sm text-gray-700">{b.promised_photos}</p>
+                      ) : (
+                        // Deliberately loud: with no number the delivery guard has
+                        // nothing to enforce and the client was never told what to
+                        // expect. Legacy rows created before the count was required.
+                        <p className="mt-1 text-sm font-medium text-amber-700">not set</p>
+                      )}
+                    </div>
                     {(b.location_slug || b.location_detail) && (
                       <div>
                         <label className="text-[11px] font-medium uppercase tracking-wider text-gray-400">Location</label>
@@ -777,6 +800,8 @@ function BlindAssignPanel({
   onSelect,
   notes,
   onNotes,
+  photos,
+  onPhotos,
   submitting,
   onAssign,
   cancelling,
@@ -789,6 +814,8 @@ function BlindAssignPanel({
   onSelect: (id: string) => void;
   notes: string;
   onNotes: (v: string) => void;
+  photos: string;
+  onPhotos: (v: string) => void;
   submitting: boolean;
   onAssign: () => void;
   cancelling: boolean;
@@ -886,9 +913,22 @@ function BlindAssignPanel({
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-1.5 rounded-lg border border-warm-200 bg-white px-2 py-2">
+          <span className="text-xs text-gray-500 whitespace-nowrap">Photos</span>
+          <input
+            type="number"
+            min={5}
+            max={1000}
+            step={1}
+            value={photos}
+            onChange={(e) => onPhotos(e.target.value)}
+            placeholder="e.g. 30"
+            className="w-20 border-0 p-0 text-sm text-gray-900 focus:outline-none focus:ring-0"
+          />
+        </label>
         <button
           onClick={onAssign}
-          disabled={!selected || submitting}
+          disabled={!selected || !photos || submitting}
           className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
         >
           {submitting ? "Assigning…" : "Assign & capture"}

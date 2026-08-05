@@ -49,14 +49,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Photographer not found in your matches" }, { status: 400 });
     }
 
-    // Get price from match_request_photographers (admin-set), falling back to min package price
-    const priceRow = await queryOne<{ price: number | null }>(
-      `SELECT COALESCE(mrp.price, (SELECT MIN(price) FROM packages WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL)) as price
+    // Price and photo count both come from the admin-curated option, each
+    // falling back to the photographer's cheapest public package. The count
+    // matters as much as the price here: this INSERT creates a confirmed,
+    // payable booking with no package_id, so without it nothing downstream
+    // knows what was promised.
+    // Both values fall back to the SAME package — the cheapest public one —
+    // rather than each resolving on its own. Every row created before the
+    // num_photos column existed has a price but no count, and independent
+    // fallbacks would pair the admin's EUR 450 option with the photo count of
+    // a EUR 150 package.
+    const priceRow = await queryOne<{ price: number | null; num_photos: number | null }>(
+      `SELECT COALESCE(mrp.price, cheapest.price) AS price,
+              COALESCE(mrp.num_photos, cheapest.num_photos) AS num_photos
        FROM match_request_photographers mrp
+       LEFT JOIN LATERAL (
+         SELECT price, num_photos FROM packages
+          WHERE photographer_id = $1 AND is_public = TRUE AND custom_for_user_id IS NULL
+          ORDER BY price ASC LIMIT 1
+       ) cheapest ON TRUE
        WHERE mrp.match_request_id = $2 AND mrp.photographer_id = $1`,
       [photographer_id, id]
     );
     const price = priceRow?.price || null;
+    const promisedPhotos = priceRow?.num_photos || null;
 
     // Get photographer details
     const photographerInfo = await queryOne<{
@@ -76,8 +92,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Create confirmed booking
     const booking = await queryOne<{ id: string }>(
-      `INSERT INTO bookings (client_id, photographer_id, location_slug, shoot_date, shoot_time, group_size, occasion, total_price, status, message)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'confirmed', $9)
+      `INSERT INTO bookings (client_id, photographer_id, location_slug, shoot_date, shoot_time, group_size, occasion, total_price, status, message, promised_photos)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'confirmed', $9, $10)
        RETURNING id`,
       [
         user.id,
@@ -89,6 +105,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         matchReq.shoot_type,
         price,
         matchReq.message || null,
+        promisedPhotos,
       ]
     );
 

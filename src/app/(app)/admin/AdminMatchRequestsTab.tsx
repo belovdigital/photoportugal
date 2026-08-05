@@ -32,6 +32,7 @@ interface MatchRequest {
     review_count: number;
     min_price: number | null;
     price: number | null;
+    num_photos: number | null;
   }[];
 }
 
@@ -250,12 +251,16 @@ function PhotographerSelector({
   onSelectionChange,
   photographerPrices,
   onPriceChange,
+  photographerPhotos,
+  onPhotosChange,
 }: {
   requestId: string;
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   photographerPrices: Map<string, number>;
   onPriceChange: (id: string, price: number) => void;
+  photographerPhotos: Map<string, number>;
+  onPhotosChange: (id: string, photos: number) => void;
 }) {
   const [photographers, setPhotographers] = useState<Photographer[]>([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -342,6 +347,17 @@ function PhotographerSelector({
                   placeholder="Price"
                   value={photographerPrices.get(p.id) || ""}
                   onChange={(e) => onPriceChange(p.id, parseInt(e.target.value) || 0)}
+                  className="w-20 rounded-md border border-warm-200 px-2 py-1 text-sm text-gray-700 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-200"
+                />
+                <span className="text-xs text-gray-500">photos</span>
+                <input
+                  type="number"
+                  min={5}
+                  max={1000}
+                  step={1}
+                  placeholder="30"
+                  value={photographerPhotos.get(p.id) || ""}
+                  onChange={(e) => onPhotosChange(p.id, parseInt(e.target.value) || 0)}
                   className="w-20 rounded-md border border-warm-200 px-2 py-1 text-sm text-gray-700 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-200"
                 />
               </div>
@@ -442,6 +458,11 @@ export function AdminMatchRequestsTab({
   const [photographerPrices, setPhotographerPrices] = useState<
     Record<string, Map<string, number>>
   >({});
+  // Choosing one of these options creates a confirmed, payable booking with
+  // no package — so the photo count has to be decided here, alongside price.
+  const [photographerPhotos, setPhotographerPhotos] = useState<
+    Record<string, Map<string, number>>
+  >({});
   const [adminComments, setAdminComments] = useState<Record<string, string>>(
     {}
   );
@@ -460,8 +481,9 @@ export function AdminMatchRequestsTab({
   function allPricesSet(id: string): boolean {
     const ids = selectedPhotographers[id] || [];
     const prices = photographerPrices[id];
+    const photos = photographerPhotos[id];
     if (!prices || ids.length === 0) return false;
-    return ids.every((pid) => (prices.get(pid) || 0) > 0);
+    return ids.every((pid) => (prices.get(pid) || 0) > 0 && (photos?.get(pid) || 0) >= 5);
   }
 
   async function sendMatches(id: string) {
@@ -472,7 +494,7 @@ export function AdminMatchRequestsTab({
       return;
     }
     if (!allPricesSet(id)) {
-      alert("Please set a price for each selected photographer.");
+      alert("Please set a price AND a photo count (5-1000) for each selected photographer.");
       return;
     }
     setLoading((prev) => ({ ...prev, [id]: true }));
@@ -480,6 +502,7 @@ export function AdminMatchRequestsTab({
       const photographer_prices = ids.map((pid) => ({
         id: pid,
         price: prices!.get(pid) || 0,
+        num_photos: photographerPhotos[id]?.get(pid) || 0,
       }));
       const res = await fetch(`/api/admin/match-request/${id}/send-matches`, {
         method: "POST",
@@ -509,10 +532,16 @@ export function AdminMatchRequestsTab({
       [req.id]: req.photographers.map((p) => p.id),
     }));
     const priceMap = new Map<string, number>();
+    // Seed the counts too. Without this, edit mode starts with no photo
+    // numbers, allPricesSet() refuses to submit, and an admin who only wanted
+    // to fix a typo cannot save at all.
+    const photosMap = new Map<string, number>();
     req.photographers.forEach((p) => {
       if (p.price !== null) priceMap.set(p.id, p.price);
+      if (p.num_photos !== null && p.num_photos !== undefined) photosMap.set(p.id, p.num_photos);
     });
     setPhotographerPrices((prev) => ({ ...prev, [req.id]: priceMap }));
+    setPhotographerPhotos((prev) => ({ ...prev, [req.id]: photosMap }));
     setAdminComments((prev) => ({ ...prev, [req.id]: req.admin_note || "" }));
     setResendEmail((prev) => ({ ...prev, [req.id]: false }));
   }
@@ -540,7 +569,7 @@ export function AdminMatchRequestsTab({
       return;
     }
     if (!allPricesSet(id)) {
-      alert("Please set a price for each selected photographer.");
+      alert("Please set a price AND a photo count (5-1000) for each selected photographer.");
       return;
     }
     setLoading((prev) => ({ ...prev, [id]: true }));
@@ -548,6 +577,7 @@ export function AdminMatchRequestsTab({
       const photographer_prices = ids.map((pid) => ({
         id: pid,
         price: prices!.get(pid) || 0,
+        num_photos: photographerPhotos[id]?.get(pid) || 0,
       }));
       const res = await fetch(`/api/admin/match-request/${id}/send-matches`, {
         method: "PATCH",
@@ -771,6 +801,14 @@ export function AdminMatchRequestsTab({
                           }))
                         }
                         photographerPrices={photographerPrices[req.id] || new Map()}
+                        photographerPhotos={photographerPhotos[req.id] || new Map()}
+                        onPhotosChange={(pid, photos) =>
+                          setPhotographerPhotos((prev) => {
+                            const map = new Map(prev[req.id] || []);
+                            map.set(pid, photos);
+                            return { ...prev, [req.id]: map };
+                          })
+                        }
                         onPriceChange={(pid, price) =>
                           setPhotographerPrices((prev) => {
                             const map = new Map(prev[req.id] || []);
@@ -842,6 +880,14 @@ export function AdminMatchRequestsTab({
                               }))
                             }
                             photographerPrices={photographerPrices[req.id] || new Map()}
+                        photographerPhotos={photographerPhotos[req.id] || new Map()}
+                        onPhotosChange={(pid, photos) =>
+                          setPhotographerPhotos((prev) => {
+                            const map = new Map(prev[req.id] || []);
+                            map.set(pid, photos);
+                            return { ...prev, [req.id]: map };
+                          })
+                        }
                             onPriceChange={(pid, price) =>
                               setPhotographerPrices((prev) => {
                                 const map = new Map(prev[req.id] || []);

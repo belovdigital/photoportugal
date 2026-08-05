@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest) {
   if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { id, action, archived, reason, booking_id, photographer_id, admin_notes } = body;
+  const { id, action, archived, reason, booking_id, photographer_id, admin_notes, promised_photos } = body;
   const trimmedReason = typeof reason === "string" ? reason.trim().slice(0, 500) : "";
 
   // Archive/unarchive
@@ -34,6 +34,7 @@ export async function PATCH(req: NextRequest) {
       bookingId: String(booking_id || "").trim(),
       photographerId: String(photographer_id || "").trim(),
       adminNotes: admin_notes ? String(admin_notes).trim() : null,
+      promisedPhotos: Number(promised_photos) || 0,
       req,
     });
   }
@@ -225,11 +226,20 @@ async function handleAssignPhotographer(opts: {
   bookingId: string;
   photographerId: string;
   adminNotes: string | null;
+  promisedPhotos: number;
   req: NextRequest;
 }) {
-  const { bookingId, photographerId, adminNotes, req } = opts;
+  const { bookingId, photographerId, adminNotes, promisedPhotos, req } = opts;
   if (!bookingId || !photographerId) {
     return NextResponse.json({ error: "booking_id and photographer_id required" }, { status: 400 });
+  }
+  // A blind booking has no package, so this assignment is the only moment a
+  // human decides how many photos are owed — and before this it was never
+  // asked. Without a number the delivery guard has nothing to enforce and the
+  // client was never told what to expect. Same 5..1000 range the
+  // photographer's own input uses.
+  if (!Number.isInteger(promisedPhotos) || promisedPhotos < 5 || promisedPhotos > 1000) {
+    return NextResponse.json({ error: "promised_photos is required (whole number, 5-1000)" }, { status: 400 });
   }
 
   try {
@@ -344,12 +354,13 @@ async function handleAssignPhotographer(opts: {
               service_fee       = $4,
               platform_fee      = $5,
               payout_amount     = $6,
+              promised_photos   = $7,
               auto_refund_at    = NULL
-        WHERE id = $7
+        WHERE id = $8
           AND status = 'confirmed'
           AND photographer_id IS NULL
         RETURNING id`,
-      [photographer.id, adminUserId, adminNotes, serviceFee, platformFee, photographerPayout, bookingId]
+      [photographer.id, adminUserId, adminNotes, serviceFee, platformFee, photographerPayout, promisedPhotos, bookingId]
     );
     if (!updated) {
       const current = await queryOne<{ status: string; photographer_id: string | null }>(

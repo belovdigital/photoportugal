@@ -113,6 +113,18 @@ export async function PATCH(
     if (!own) {
       return NextResponse.json({ error: "Not authorized or booking not editable" }, { status: 403 });
     }
+    // Raising is fine, lowering is not: an admin sets this when assigning a
+    // blind booking or curating a match, the client is shown it immediately,
+    // and silently cutting it afterwards changes what was promised.
+    const existing = await queryOne<{ promised_photos: number | null }>(
+      "SELECT promised_photos FROM bookings WHERE id = $1", [id]
+    );
+    if (existing?.promised_photos && n < existing.promised_photos) {
+      return NextResponse.json(
+        { error: `This booking already promises ${existing.promised_photos} photos to the client. You can raise that number, not lower it — message them if it has to change.` },
+        { status: 400 }
+      );
+    }
     await queryOne("UPDATE bookings SET promised_photos = $1 WHERE id = $2", [n, id]);
     return NextResponse.json({ success: true, promised_photos: n });
   }
