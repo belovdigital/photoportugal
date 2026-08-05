@@ -114,8 +114,8 @@ html {
 }
 
 /* Full-viewport sections (heroes, the locations map, the concierge chat)
- * size themselves as `100svh - fixed chrome`. The chrome is the 64px
- * header PLUS the promo topbar when it is on screen: the bar sits in
+ * size themselves as `100svh - fixed chrome`. The chrome is the header
+ * (--header-h) PLUS the promo topbar when it is on screen: the bar sits in
  * normal flow above the header, so it pushes every one of those sections
  * down by its own height and they overflow the fold by exactly that much
  * — which is what cut off the hero carousel's arrows and counter.
@@ -129,8 +129,13 @@ html {
 :root { --promo-h: 0px; }
 html:has(#promo-topbar) { --promo-h: 36px; }
 
-.h-below-chrome { height: calc(100svh - 64px - var(--promo-h)); }
-.min-h-below-chrome { min-height: calc(100svh - 64px - var(--promo-h)); }
+/* The header is h-16 (64px) PLUS a 1px bottom border, and it is border-box, so
+ * it occupies 65. Subtracting 64 left every "one screen" block exactly one
+ * pixel too tall and put a scrollbar on a page that was supposed to fit. */
+:root { --header-h: 65px; }
+
+.h-below-chrome { height: calc(100svh - var(--header-h) - var(--promo-h)); }
+.min-h-below-chrome { min-height: calc(100svh - var(--header-h) - var(--promo-h)); }
 
 /* Hero content padding, sized against the viewport HEIGHT rather than its
  * width. The min-height above reserves exactly one screen minus the chrome,
@@ -142,7 +147,7 @@ html:has(#promo-topbar) { --promo-h: 36px; }
 /* The concierge chat measures in dvh rather than svh on purpose — the
  * mobile rule above pins body to 100dvh, and a section sized in svh would
  * come up short and open a strip beneath the chat once the URL bar hides. */
-.h-below-chrome-dvh { height: calc(100dvh - 64px - var(--promo-h)); }
+.h-below-chrome-dvh { height: calc(100dvh - var(--header-h) - var(--promo-h)); }
 
 /* Blog HTML content styling — matches the markdown renderer output */
 .blog-html-content h2 {
