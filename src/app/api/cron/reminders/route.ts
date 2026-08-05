@@ -1347,7 +1347,7 @@ async function runReminders(): Promise<NextResponse> {
               pu.name as photographer_name,
               b.delivery_token, b.delivery_password_plain as password,
               b.delivery_expires_at::date::text as expires,
-              (SELECT COUNT(*)::int FROM delivery_photos dp WHERE dp.booking_id = b.id) as photos
+              (SELECT COUNT(*)::int FROM delivery_photos dp WHERE dp.booking_id = b.id AND dp.is_included = TRUE) as photos
          FROM bookings b
          JOIN users cu ON cu.id = b.client_id
          JOIN photographer_profiles pp ON pp.id = b.photographer_id

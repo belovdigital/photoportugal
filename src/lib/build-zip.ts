@@ -42,7 +42,7 @@ export async function buildDeliveryZip(bookingId: string): Promise<{ path: strin
     if (!booking) return null;
 
     const photos = await query<{ url: string; filename: string }>(
-      "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 ORDER BY sort_order, created_at",
+      "SELECT url, filename FROM delivery_photos WHERE booking_id = $1 AND is_included = TRUE ORDER BY sort_order, created_at",
       [bookingId]
     );
     if (photos.length === 0) return null;

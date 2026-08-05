@@ -300,9 +300,14 @@ export async function POST(
       const requiredPhotos = pkg?.num_photos && Number(pkg.num_photos) > 0
         ? Number(pkg.num_photos)
         : (pkg?.promised_photos && Number(pkg.promised_photos) > 0 ? Number(pkg.promised_photos) : 0);
+      // Counts what the CLIENT will receive, not what sits in the bucket:
+      // the promise is about delivered photos, so uploading 40 and including
+      // 20 must not satisfy a promise of 40. Identical media_type filter to
+      // the one above — videos never count toward a photo promise, and the
+      // included filter has to sit alongside it rather than replace it.
       const deliveredCnt = await queryOne<{ photos: string }>(
         `SELECT COUNT(*) FILTER (WHERE media_type <> 'video') AS photos
-           FROM delivery_photos WHERE booking_id = $1`,
+           FROM delivery_photos WHERE booking_id = $1 AND is_included = TRUE`,
         [id]
       );
       const uploadedPhotos = parseInt(deliveredCnt?.photos || "0");
