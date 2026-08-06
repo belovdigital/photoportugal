@@ -3352,7 +3352,8 @@
     "takeAllMixed": "{free} son gratis y pasan a ser tuyas ya. Las otras {paid} van a la cesta por {total} — comprarlas sigue siendo tu decisión.",
     "takeAllPaid": "Las {count} van a la cesta por {total}. No se cobra nada hasta que pulses Comprar.",
     "takeAllConfirm": "Sí, quiero",
-    "swapShort": "Cambiar"
+    "swapShort": "Cambiar",
+    "extrasSomeGone": "{count, plural, one {# foto ya no está disponible} other {# fotos ya no están disponibles}} — tu galería se ha actualizado. Elige de nuevo."
   },
   "availability": {
     "pageTitle": "Disponibilidad",

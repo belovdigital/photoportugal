@@ -64,6 +64,7 @@ export async function POST(
     extras_zip_size: number | null;
     gift_slots: number;
     gift_used: number;
+    extras_in_archive: number;
     extra_photo_price_cents: number | null;
     extra_photo_payout_cents: number | null;
     profile_extra_photo_payout_cents: number | null;
@@ -81,7 +82,13 @@ export async function POST(
             pp.extra_photo_payout_cents as profile_extra_photo_payout_cents,
             COALESCE(b.extras_gift_slots, 0) as gift_slots,
             (SELECT COUNT(*)::int FROM delivery_extra_purchases g
-              WHERE g.booking_id = b.id AND g.status = 'paid' AND g.amount_cents = 0) as gift_used
+              WHERE g.booking_id = b.id AND g.status = 'paid' AND g.amount_cents = 0) as gift_used,
+            (SELECT COUNT(*)::int FROM delivery_photos dp
+              WHERE dp.booking_id = b.id AND dp.purchased_at IS NOT NULL
+                AND (b.delivery_accepted_at IS NULL OR dp.purchased_at > b.delivery_accepted_at)
+                AND EXISTS (SELECT 1 FROM delivery_extra_purchases x
+                             WHERE x.delivery_photo_id = dp.id AND x.status = 'paid'
+                               AND x.amount_cents > 0)) as extras_in_archive
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -270,7 +277,9 @@ export async function POST(
     // accepted — the client already paid for them.
     extras_zip_ready: booking.extras_zip_ready,
     extras_zip_size: booking.extras_zip_size,
-    extras_owned: photos.filter((p) => !p.locked && p.purchased).length,
+    // Must agree with the archive's own predicate (src/lib/build-zip.ts), or
+    // the client is offered a download of photos that file does not contain.
+    extras_owned: booking.extras_in_archive,
     zip_size: booking.zip_size ? Number(booking.zip_size) : null,
   });
 }

@@ -2045,7 +2045,8 @@ async function runReminders(): Promise<NextResponse> {
           [bId]
         ).catch(() => null);
         const { buildDeliveryZip } = await import("@/lib/build-zip");
-        buildDeliveryZip(bId, "extras").catch(() => {});
+        await buildDeliveryZip(bId, "extras")
+          .catch((e) => { results.errors.push(`Extras zip ${bId}: ${e}`); });
       }
       import("@/lib/telegram").then(({ sendTelegram }) =>
         sendTelegram(`🔧 <b>Доп. фото: доразблокировано кроном</b>\n${extrasUnlocked} шт. по ${bookings.length} броням — вебхук не довёл до конца.`, "alerts")
@@ -2062,11 +2063,13 @@ async function runReminders(): Promise<NextResponse> {
         WHERE dp.purchased_at IS NOT NULL
           AND dp.purchased_at < NOW() - INTERVAL '15 minutes'
           AND COALESCE(ez.ready, FALSE) = FALSE
-          AND (ez.updated_at IS NULL OR ez.updated_at < NOW() - INTERVAL '15 minutes')`
+          AND (ez.updated_at IS NULL OR ez.updated_at < NOW() - INTERVAL '15 minutes')
+        LIMIT 5`
     );
     for (const z of staleZips) {
       const { buildDeliveryZip } = await import("@/lib/build-zip");
-      buildDeliveryZip(z.booking_id, "extras").catch(() => {});
+      await buildDeliveryZip(z.booking_id, "extras")
+        .catch((e) => { results.errors.push(`Extras zip ${z.booking_id}: ${e}`); });
     }
     if (staleZips.length > 0) console.log(`[cron] extras sweep: rebuilding ${staleZips.length} stalled archives`);
 
@@ -2112,6 +2115,9 @@ async function runReminders(): Promise<NextResponse> {
     }
   } catch (err) {
     console.error("[cron] extras sweep failed:", err);
+    // Every other section in this file reports through results.errors; a sweep
+    // that can only fail into the log is a sweep nobody knows has stopped.
+    results.errors.push(`Extras sweep: ${err}`);
   }
 
   // === Two-stage onboarding: the Stripe grace week ===

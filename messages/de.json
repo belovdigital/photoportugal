@@ -3105,7 +3105,8 @@
     "takeAllMixed": "{free} sind gratis und gehören Ihnen sofort. Die anderen {paid} landen für {total} im Warenkorb — der Kauf bleibt Ihre Entscheidung.",
     "takeAllPaid": "Alle {count} landen für {total} im Warenkorb. Berechnet wird erst, wenn Sie auf Kaufen tippen.",
     "takeAllConfirm": "Ja, nehmen",
-    "swapShort": "Tauschen"
+    "swapShort": "Tauschen",
+    "extrasSomeGone": "{count, plural, one {# Foto ist nicht mehr verfügbar} other {# Fotos sind nicht mehr verfügbar}} — Ihre Galerie wurde aktualisiert. Bitte erneut wählen."
   },
   "availability": {
     "pageTitle": "Verfügbarkeit",

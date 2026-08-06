@@ -287,6 +287,28 @@ export function DeliveryPageClient({
       const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
       const ids = [...selectedExtras];
 
+      // Everything in the basket is covered by the gift — redeem, do not
+      // charge. Reachable because the photographer can raise the gift after
+      // the basket was filled, and the basket survives in sessionStorage.
+      if (ids.length <= (gallery?.gift_remaining ?? 0)) {
+        const res = await fetch(`/api/delivery/${token}/extras`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gift: true, photo_ids: ids, password: pw }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { alert(data?.error || t("extrasError")); setBuyingExtras(false); return; }
+        setSelectedExtras(new Set());
+        try { sessionStorage.removeItem(extrasKey); } catch {}
+        const again = await fetch(`/api/delivery/${token}/verify`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pw }),
+        });
+        if (again.ok) setGallery(await again.json());
+        setBuyingExtras(false);
+        return;
+      }
+
 
       const res = await fetch(`/api/delivery/${token}/extras`, {
         method: "POST",
@@ -296,6 +318,11 @@ export function DeliveryPageClient({
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.url) {
         alert(data?.error || t("extrasError"));
+        setBuyingExtras(false);
+        return;
+      }
+      if (typeof data.photos === "number" && data.photos < ids.length) {
+        alert(t("extrasSomeGone", { count: ids.length - data.photos }));
         setBuyingExtras(false);
         return;
       }

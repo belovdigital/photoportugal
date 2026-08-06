@@ -1090,7 +1090,21 @@ export async function DELETE(
     // unaccepted, which is exactly the window the photographer can still edit
     // in — and a sold photo looks identical to an unsold one on their grid.
     // Deleting it would destroy the file the client paid for.
-    "DELETE FROM delivery_photos WHERE id = ANY($1::uuid[]) AND booking_id = $2 AND purchased_at IS NULL RETURNING id, url, preview_url",
+    // The pending guard closes the worst window in the feature: there is no
+    // foreign key from delivery_extra_purchases (deliberately — the money
+    // record must outlive the photo), so deleting a frame that a client has
+    // open in checkout leaves the row behind. The webhook then flips it to
+    // paid, transfers the photographer's share, and the client has bought a
+    // file that no longer exists. Both sweeps miss it: one INNER JOINs the
+    // photo, the other needs a surviving purchased_at.
+    `DELETE FROM delivery_photos
+      WHERE id = ANY($1::uuid[]) AND booking_id = $2 AND purchased_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM delivery_extra_purchases p
+           WHERE p.delivery_photo_id = delivery_photos.id
+             AND p.status = 'pending'
+             AND p.created_at > NOW() - INTERVAL '24 hours')
+      RETURNING id, url, preview_url`,
     [requestedIds, id]
   );
 

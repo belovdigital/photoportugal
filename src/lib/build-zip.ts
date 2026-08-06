@@ -78,7 +78,23 @@ export async function buildDeliveryZip(bookingId: string, set: "delivery" | "ext
             ORDER BY sort_order, created_at`,
       [bookingId]
     );
-    if (photos.length === 0) return null;
+    if (photos.length === 0) {
+      // An empty extras set is a legitimate final state (everything owned was
+      // gifted before acceptance, so it lives in the main archive). Returning
+      // silently left ready = FALSE, which the cron retried every 15 minutes
+      // forever while the client watched a spinner and the download 404'd.
+      if (set === "extras") {
+        await queryOne(
+          `INSERT INTO delivery_extras_zip (booking_id, ready, zip_path, zip_size, updated_at)
+           VALUES ($1, TRUE, NULL, NULL, NOW())
+           ON CONFLICT (booking_id) DO UPDATE
+             SET ready = TRUE, zip_path = NULL, zip_size = NULL, updated_at = NOW()
+           RETURNING booking_id`,
+          [bookingId]
+        ).catch(() => null);
+      }
+      return null;
+    }
 
     const sanitizedName = booking.photographer_name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
     const bookingShort = bookingId.replace(/-/g, "").slice(0, 8);

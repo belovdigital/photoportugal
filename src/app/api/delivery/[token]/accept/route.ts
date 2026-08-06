@@ -361,6 +361,22 @@ export async function POST(
     buildDeliveryZip(booking.id).catch(err => console.error("[accept] zip build error:", err));
   });
 
+  // Acceptance moves the boundary between the two archives: everything owned
+  // by now belongs to the main file, and the extras file becomes "bought
+  // later". Any extras archive built before this moment describes the old
+  // rule and would hand the client a second copy of photos they already have.
+  await queryOne(
+    `INSERT INTO delivery_extras_zip (booking_id, ready, zip_path, zip_size, updated_at)
+     VALUES ($1, FALSE, NULL, NULL, NOW())
+     ON CONFLICT (booking_id) DO UPDATE
+       SET ready = FALSE, zip_path = NULL, zip_size = NULL, updated_at = NOW()
+     RETURNING booking_id`,
+    [booking.id]
+  ).catch(() => null);
+  import("@/lib/build-zip").then(({ buildDeliveryZip }) => {
+    buildDeliveryZip(booking.id, "extras").catch(() => {});
+  });
+
   return NextResponse.json({
     success: true,
     payout_transferred: payoutSuccess,

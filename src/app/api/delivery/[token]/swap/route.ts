@@ -177,12 +177,23 @@ export async function POST(
 
   // A pending checkout for the photo that just became part of the package
   // would sell the client something they now get for free.
-  await queryOne(
-    `UPDATE delivery_extra_purchases SET status = 'superseded'
+  // 'superseded' is claimed by the webhook (it accepts pending OR superseded,
+  // so a retry after a cancelled checkout still works), which made this guard
+  // a no-op: the client could still pay for a photo they had just swapped in
+  // for free. 'voided' is claimed by nothing, and the session is expired so
+  // the page cannot be paid from a stale tab either.
+  const voided = await queryOne<{ stripe_session_id: string | null }>(
+    `UPDATE delivery_extra_purchases SET status = 'voided'
       WHERE booking_id = $1 AND delivery_photo_id = $2 AND status = 'pending'
-      RETURNING id`,
+      RETURNING stripe_session_id`,
     [booking.id, inId]
   ).catch(() => null);
+  if (voided?.stripe_session_id) {
+    try {
+      const { requireStripe } = await import("@/lib/stripe");
+      await requireStripe().checkout.sessions.expire(voided.stripe_session_id);
+    } catch { /* already expired or completed — the status change is the guard */ }
+  }
 
   return NextResponse.json({ success: true, included: result.included });
 }

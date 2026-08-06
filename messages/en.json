@@ -3104,7 +3104,8 @@
     "takeAllMixed": "{free} are free and become yours now. The other {paid} go into your basket for {total} — you still choose whether to buy.",
     "takeAllPaid": "All {count} go into your basket for {total}. Nothing is charged until you press Buy.",
     "takeAllConfirm": "Yes, take them",
-    "swapShort": "Swap"
+    "swapShort": "Swap",
+    "extrasSomeGone": "{count, plural, one {# photo is no longer available} other {# photos are no longer available}} — your gallery has been refreshed. Please choose again."
   },
   "availability": {
     "pageTitle": "Availability",

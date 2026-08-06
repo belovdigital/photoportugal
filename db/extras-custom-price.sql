@@ -55,5 +55,25 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_snapshot_extra_photo_price ON bookings;
 CREATE TRIGGER trg_snapshot_extra_photo_price
-  BEFORE INSERT ON bookings
+  BEFORE INSERT OR UPDATE OF photographer_id ON bookings
   FOR EACH ROW EXECUTE FUNCTION snapshot_extra_photo_price();
+
+-- The UPDATE arm is what covers blind bookings. They are inserted with
+-- photographer_id NULL — nothing to snapshot — and the photographer is
+-- attached later by an admin UPDATE. Without this arm those bookings would
+-- price from the profile at read time forever, so a photographer raising
+-- their rate would change the number in a gallery the client already has
+-- open. The MCP/agent channel only creates blind bookings, so this is the
+-- growing half of the funnel, not a legacy corner.
+
+-- Backfill for galleries that already existed when this shipped. Scoped to
+-- bookings with a live delivery_token: writing today's rate onto dead
+-- inquiries as if it were "the rate at booking time" would be a fiction.
+-- Run on both markets 2026-08-06 (PT: 46 rows, ES: 0).
+UPDATE bookings b
+   SET extra_photo_payout_cents = pp.extra_photo_payout_cents,
+       extra_photo_price_cents  = (CEIL(ROUND(pp.extra_photo_payout_cents * 1.25) / 10.0) * 10)::int
+  FROM photographer_profiles pp
+ WHERE pp.id = b.photographer_id
+   AND b.extra_photo_payout_cents IS NULL
+   AND b.delivery_token IS NOT NULL;
