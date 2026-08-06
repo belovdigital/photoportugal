@@ -3108,7 +3108,6 @@
     "extrasSomeGone": "{count, plural, one {# photo is no longer available} other {# photos are no longer available}} — your gallery has been refreshed. Please choose again.",
     "swapNotOwned": "That photo is already yours — swap onto one from your package instead.",
     "swapNotVideo": "Videos are always included and cannot be swapped.",
-    "yoursBadge": "Free gift",
     "swapNotPaid": "Photos you paid for stay yours — swap onto one from your package or a gifted one instead."
   },
   "availability": {

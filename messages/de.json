@@ -3109,7 +3109,6 @@
     "extrasSomeGone": "{count, plural, one {# Foto ist nicht mehr verfügbar} other {# Fotos sind nicht mehr verfügbar}} — Ihre Galerie wurde aktualisiert. Bitte erneut wählen.",
     "swapNotOwned": "Dieses Foto gehört Ihnen bereits — tauschen Sie stattdessen gegen eines aus Ihrem Paket.",
     "swapNotVideo": "Videos sind immer enthalten und lassen sich nicht tauschen.",
-    "yoursBadge": "Geschenk",
     "swapNotPaid": "Bezahlte Fotos bleiben Ihnen — tauschen Sie stattdessen gegen eines aus Ihrem Paket oder ein geschenktes."
   },
   "availability": {

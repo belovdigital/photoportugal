@@ -309,11 +309,6 @@ export function DeliveryGalleryClient({
         />
         {/* Dragging is not obvious and is fiddly on a phone, so the exchange
             also has a button you can see. Same picker as the lightbox. */}
-        {!locked && photo.purchased && !photo.paid && (
-          <span className="absolute right-1.5 top-1.5 z-20 rounded-md bg-green-600/90 px-2 py-1 text-[10px] font-bold text-white shadow">
-            {t("yoursBadge")}
-          </span>
-        )}
         {locked && canRearrange && (
           <button
             type="button"
