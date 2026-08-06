@@ -2824,7 +2824,14 @@
     "extrasDownload": "Descarregar as suas {count} fotografias extra",
     "extrasZipPreparing": "A preparar as suas fotografias extra…",
     "willBecomeExtra": "Extra ao entregar",
-    "extrasPreviewHint": "As primeiras {included} ficam na entrega — {extras} serão propostas ao cliente como extras pagos. Use Selecionar → Reter para escolher outras."
+    "extrasPreviewHint": "As primeiras {included} ficam na entrega — {extras} serão propostas ao cliente como extras pagos. Use Selecionar → Reter para escolher outras.",
+    "save": "Guardar",
+    "giftSlotsLabel": "Oferecer extras",
+    "giftSlotsHint": "O cliente escolhe esse número de fotografias extra gratuitamente.",
+    "giftBanner": "O seu fotógrafo ofereceu-lhe {count} fotografias extra — escolha-as gratuitamente",
+    "giftGet": "Receber {count} grátis",
+    "giftAllFree": "{count} grátis — uma oferta do seu fotógrafo",
+    "giftFreeLine": "{free} grátis · {paid} mais por €{total}"
   },
   "availability": {
     "pageTitle": "Disponibilidade",

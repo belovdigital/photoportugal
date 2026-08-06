@@ -33,6 +33,7 @@ export function DeliveryUploadClient({
   initialTitle,
   initialMessage,
   requiredPhotos = 0,
+  initialGiftSlots = 0,
   initialPeekToken = null,
   initialPeekSharedAt = null,
 }: {
@@ -49,6 +50,7 @@ export function DeliveryUploadClient({
    *  least this many (videos don't count) before they can deliver. 0 = no
    *  package/expectation, so the check is skipped. */
   requiredPhotos?: number;
+  initialGiftSlots?: number;
   /** Sneak peek state — token + timestamp when already shared. */
   initialPeekToken?: string | null;
   initialPeekSharedAt?: string | null;
@@ -74,6 +76,9 @@ export function DeliveryUploadClient({
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
   const [delivered, setDelivered] = useState(initialDelivered);
+  const [giftSlots, setGiftSlots] = useState(initialGiftSlots);
+  const [giftDraft, setGiftDraft] = useState(String(initialGiftSlots || ""));
+  const [giftSaving, setGiftSaving] = useState(false);
 
   // canEdit: photographer can edit the deliverable up until the client
   // formally accepts. Sharing the link doesn't lock anything — the client
@@ -229,6 +234,24 @@ export function DeliveryUploadClient({
   // of the delivery: the client does not see them, they are not in the
   // archive, and they do not count toward the promise. Once paid extras are
   // live this is also what puts them up for sale.
+  async function saveGiftSlots() {
+    const n = parseInt(giftDraft, 10) || 0;
+    if (n === giftSlots) return;
+    setGiftSaving(true);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/delivery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_gift_slots", gift_slots: n }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(data?.error || t("includeFailed")); return; }
+      setGiftSlots(n);
+    } finally {
+      setGiftSaving(false);
+    }
+  }
+
   // Nothing to hold back when the photographer delivered exactly what was
   // promised: no extras, so no include/exclude controls and no sale. The
   // client side reaches the same conclusion on its own — with no excluded
@@ -1062,6 +1085,29 @@ export function DeliveryUploadClient({
                   </p>
                 );
               })()}
+              {/* The gift: rendered whenever extras exist or will exist. */}
+              {(canHoldBack || photos.some((p) => p.is_included === false)) && !clientAccepted && (
+                <div className="mt-2 flex w-full flex-wrap items-center gap-2 rounded-lg border border-warm-200 bg-warm-50 px-3 py-2">
+                  <span className="text-xs font-medium text-gray-700">🎁 {t("giftSlotsLabel")}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={500}
+                    step={1}
+                    value={giftDraft}
+                    onChange={(e) => setGiftDraft(e.target.value)}
+                    className="w-16 rounded-md border border-warm-200 bg-white px-2 py-1 text-sm"
+                  />
+                  <button
+                    onClick={saveGiftSlots}
+                    disabled={giftSaving || (parseInt(giftDraft, 10) || 0) === giftSlots}
+                    className="rounded-md bg-primary-600 px-3 py-1 text-xs font-semibold text-white disabled:opacity-40"
+                  >
+                    {giftSaving ? "…" : t("save")}
+                  </button>
+                  <span className="text-[11px] text-gray-500">{t("giftSlotsHint")}</span>
+                </div>
+              )}
             </div>
             </>
           )}

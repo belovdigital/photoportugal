@@ -61,6 +61,8 @@ export async function POST(
     zip_ready: boolean;
     extras_zip_ready: boolean;
     extras_zip_size: number | null;
+    gift_slots: number;
+    gift_used: number;
     zip_size: number | null;
   }>(
     `SELECT b.id, b.client_id, b.gift_recipient_user_id, b.delivery_password, b.delivery_expires_at,
@@ -70,7 +72,10 @@ export async function POST(
             COALESCE(b.delivery_accepted, FALSE) as delivery_accepted,
             b.payment_status,
             COALESCE(b.zip_ready, FALSE) as zip_ready, b.zip_size,
-            COALESCE(ez.ready, FALSE) as extras_zip_ready, ez.zip_size as extras_zip_size
+            COALESCE(ez.ready, FALSE) as extras_zip_ready, ez.zip_size as extras_zip_size,
+            COALESCE(b.extras_gift_slots, 0) as gift_slots,
+            (SELECT COUNT(*)::int FROM delivery_extra_purchases g
+              WHERE g.booking_id = b.id AND g.status = 'paid' AND g.amount_cents = 0) as gift_used
      FROM bookings b
      JOIN photographer_profiles pp ON pp.id = b.photographer_id
      JOIN users u ON u.id = pp.user_id
@@ -240,6 +245,7 @@ export async function POST(
     // number in the browser. The server charges from its own constant either
     // way; this is display only.
     extras_price_cents: 290,
+    gift_remaining: Math.max(0, booking.gift_slots - booking.gift_used),
     extras_available: photos.filter((p) => p.locked).length,
     delivery_accepted: isAccepted,
     payment_status: booking.payment_status,

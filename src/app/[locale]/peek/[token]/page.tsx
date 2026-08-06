@@ -85,12 +85,16 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   // time, well inside the window.
   let og = data.photos[0]?.src || country.ogImage;
   try {
-    const raw = await queryOne<{ thumbnail_url: string | null }>(
-      "SELECT thumbnail_url FROM delivery_photos WHERE booking_id = $1 AND is_peek = TRUE ORDER BY sort_order, created_at LIMIT 1",
+    // Same rule as the gallery body: a photo held out of the delivery is
+    // merchandise, and this page is public and passwordless — its og:image
+    // may only ever be the watermarked version of one.
+    const raw = await queryOne<{ thumbnail_url: string | null; preview_url: string | null; is_included: boolean }>(
+      "SELECT thumbnail_url, preview_url, is_included FROM delivery_photos WHERE booking_id = $1 AND is_peek = TRUE ORDER BY sort_order, created_at LIMIT 1",
       [data.booking.id]
     );
-    if (raw?.thumbnail_url && isS3Path(raw.thumbnail_url)) {
-      og = await getPresignedUrl(s3KeyFromPath(raw.thumbnail_url), 6 * 86400);
+    const ogSrc = raw ? (raw.is_included === false ? raw.preview_url : (raw.thumbnail_url || raw.preview_url)) : null;
+    if (ogSrc && isS3Path(ogSrc)) {
+      og = await getPresignedUrl(s3KeyFromPath(ogSrc), 6 * 86400);
     }
   } catch {}
   return {

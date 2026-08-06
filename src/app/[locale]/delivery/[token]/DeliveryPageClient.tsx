@@ -43,6 +43,7 @@ interface GalleryData {
   extras_zip_size?: number | null;
   extras_owned?: number;
   extras_price_cents?: number;
+  gift_remaining?: number;
   extras_available?: number;
   /** A paid tip already exists for this booking — hide the tip card. */
   tipped?: boolean;
@@ -126,10 +127,49 @@ export function DeliveryPageClient({
     setBuyingExtras(true);
     try {
       const pw = password || sessionStorage.getItem(`delivery_pw_${token}`) || "";
+      const giftLeft = gallery?.gift_remaining ?? 0;
+      let ids = [...selectedExtras];
+
+      // Gift slots are spent first, on the photos in the order they were
+      // ticked. If everything fits inside the gift there is no checkout at
+      // all — the photos are simply theirs.
+      if (giftLeft > 0) {
+        const freeIds = ids.slice(0, giftLeft);
+        const res = await fetch(`/api/delivery/${token}/extras`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gift: true, photo_ids: freeIds, password: pw }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert(data?.error || t("extrasError"));
+          setBuyingExtras(false);
+          return;
+        }
+        ids = ids.slice(giftLeft);
+        if (ids.length === 0) {
+          setSelectedExtras(new Set());
+          try { sessionStorage.removeItem(extrasKey); } catch {}
+          // No Stripe round-trip to refresh the page for us — re-read here.
+          const again = await fetch(`/api/delivery/${token}/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: pw }),
+          });
+          if (again.ok) setGallery(await again.json());
+          setBuyingExtras(false);
+          return;
+        }
+        // The paid remainder continues below; keep only it in the basket so a
+        // cancelled checkout does not re-offer the already-redeemed gifts.
+        setSelectedExtras(new Set(ids));
+        try { sessionStorage.setItem(extrasKey, JSON.stringify(ids)); } catch {}
+      }
+
       const res = await fetch(`/api/delivery/${token}/extras`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photo_ids: [...selectedExtras], password: pw }),
+        body: JSON.stringify({ photo_ids: ids, password: pw }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.url) {
@@ -557,6 +597,11 @@ export function DeliveryPageClient({
       )}
 
       {/* Gallery */}
+      {(gallery?.gift_remaining ?? 0) > 0 && (gallery?.extras_available ?? 0) > 0 && (
+        <div className="mb-4 rounded-2xl border border-accent-200 bg-accent-50 px-5 py-4 text-sm text-accent-800">
+          🎁 {t("giftBanner", { count: gallery.gift_remaining ?? 0 })}
+        </div>
+      )}
       <DeliveryGalleryClient
         photos={gallery.photos}
         deliveryAccepted={accepted}
@@ -572,7 +617,13 @@ export function DeliveryPageClient({
               {t("extrasSelected", { count: selectedExtras.size })}
             </p>
             <p className="text-xs text-gray-500">
-              €{((selectedExtras.size * (gallery.extras_price_cents ?? 290)) / 100).toFixed(2)}
+              {(() => {
+                const free = Math.min(selectedExtras.size, gallery.gift_remaining ?? 0);
+                const paid = selectedExtras.size - free;
+                if (free > 0 && paid > 0) return t("giftFreeLine", { free, paid, total: ((paid * (gallery.extras_price_cents ?? 290)) / 100).toFixed(2) });
+                if (free > 0) return t("giftAllFree", { count: free });
+                return `€${((paid * (gallery.extras_price_cents ?? 290)) / 100).toFixed(2)}`;
+              })()}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -587,7 +638,11 @@ export function DeliveryPageClient({
               disabled={buyingExtras}
               className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
             >
-              {buyingExtras ? "…" : t("extrasBuy")}
+              {buyingExtras
+                ? "…"
+                : selectedExtras.size <= (gallery.gift_remaining ?? 0)
+                  ? t("giftGet", { count: selectedExtras.size })
+                  : t("extrasBuy")}
             </button>
           </div>
         </div>

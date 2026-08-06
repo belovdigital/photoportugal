@@ -152,6 +152,31 @@ export async function POST(
       return NextResponse.json({ success: true });
     }
 
+    // ── The gift: N extras on the house ─────────────────────────────
+    // Photographer-only and pre-accept, like every edit here. Writing to the
+    // bookings row is acceptable on THIS path: it is the photographer acting
+    // during the delivery window, the same actor whose own payout clock the
+    // updated_at bump postpones. The client's redemption path never does.
+    if (body.action === "set_gift_slots") {
+      const n = parseInt(body.gift_slots, 10);
+      if (!Number.isInteger(n) || n < 0 || n > 500) {
+        return NextResponse.json({ error: "gift_slots must be 0-500" }, { status: 400 });
+      }
+      const used = await queryOne<{ used: number }>(
+        `SELECT COUNT(*)::int AS used FROM delivery_extra_purchases
+          WHERE booking_id = $1 AND status = 'paid' AND amount_cents = 0`,
+        [id]
+      );
+      if (n < (used?.used ?? 0)) {
+        return NextResponse.json(
+          { error: `The client already picked ${used?.used} gift photos — the gift cannot go below that.` },
+          { status: 400 }
+        );
+      }
+      await queryOne("UPDATE bookings SET extras_gift_slots = $1 WHERE id = $2 RETURNING id", [n, id]);
+      return NextResponse.json({ success: true, gift_slots: n });
+    }
+
     // ── Which photos the client actually receives ───────────────────
     // Everything is included until someone says otherwise. Excluding a photo
     // is how a photographer holds it back — and, once paid extras are live,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { query, queryOne } from "@/lib/db";
+import { query, queryOne, withTransaction } from "@/lib/db";
 import { requireStripe } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -39,7 +39,7 @@ export async function POST(
     return NextResponse.json({ error: "Too many attempts, try again in a minute" }, { status: 429 });
   }
 
-  let body: { photo_ids?: unknown; password?: unknown };
+  let body: { photo_ids?: unknown; password?: unknown; gift?: unknown };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
@@ -102,6 +102,90 @@ export async function POST(
   // for something the client cannot open.
   if (booking.delivery_expires_at && new Date(booking.delivery_expires_at) < new Date()) {
     return NextResponse.json({ error: "This gallery has expired" }, { status: 410 });
+  }
+
+  // ── The photographer's gift ─────────────────────────────────────
+  // N of the extras, free, photographer's choice of N, client's choice of
+  // which. A redemption is a zero-amount PAID purchase: same table, same
+  // one-paid-row-per-photo index, same purchased_at, same archive — so every
+  // rule that protects a bought photo protects a gifted one, and no money
+  // code runs at all (payout 0, transferred already true).
+  if (body.gift === true) {
+    const gifted = await withTransaction(async (client) => {
+      // The advisory lock serialises concurrent redemptions per booking
+      // without touching the bookings row — an UPDATE there would stamp
+      // updated_at, which feeds the 14-day auto-accept.
+      await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [booking.id]);
+      const slotRow = await client.query(
+        `SELECT COALESCE(b.extras_gift_slots, 0)::int AS slots,
+                (SELECT COUNT(*)::int FROM delivery_extra_purchases g
+                  WHERE g.booking_id = b.id AND g.status = 'paid' AND g.amount_cents = 0) AS used
+           FROM bookings b WHERE b.id = $1`,
+        [booking.id]
+      );
+      const slots = slotRow.rows[0]?.slots ?? 0;
+      const used = slotRow.rows[0]?.used ?? 0;
+      const remaining = Math.max(0, slots - used);
+      if (remaining === 0) return { error: "No gift photos left on this delivery", status: 400 };
+      if (photoIds.length > remaining) {
+        return { error: `Only ${remaining} gift photo${remaining === 1 ? "" : "s"} left — unselect ${photoIds.length - remaining}`, status: 400 };
+      }
+      const rows = await client.query(
+        `SELECT dp.id, dp.filename FROM delivery_photos dp
+          WHERE dp.booking_id = $1 AND dp.id = ANY($2::uuid[])
+            AND dp.is_included = FALSE AND dp.purchased_at IS NULL
+            AND COALESCE(dp.media_type, 'image') <> 'video'`,
+        [booking.id, photoIds]
+      );
+      if (rows.rows.length === 0) return { error: "Those photos are not available", status: 409 };
+      const giftOrder = crypto.randomUUID();
+      await client.query(
+        `INSERT INTO delivery_extra_purchases
+           (order_id, booking_id, delivery_photo_id, photo_filename, client_id, photographer_id,
+            amount_cents, platform_fee_cents, payout_cents, status, transferred, paid_at)
+         SELECT $1, $2, p.id, p.filename, $3, $4, 0, 0, 0, 'paid', TRUE, NOW()
+           FROM UNNEST($5::uuid[], $6::text[]) AS p(id, filename)`,
+        [giftOrder, booking.id, booking.client_id, booking.photographer_id,
+         rows.rows.map((r: { id: string }) => r.id), rows.rows.map((r: { filename: string | null }) => r.filename ?? null)]
+      );
+      await client.query(
+        "UPDATE delivery_photos SET purchased_at = NOW() WHERE id = ANY($1::uuid[]) AND purchased_at IS NULL",
+        [rows.rows.map((r: { id: string }) => r.id)]
+      );
+      return { count: rows.rows.length };
+    }).catch((err: unknown) => {
+      // The unique index turns a concurrent double-redeem of the same photo
+      // into a clean conflict rather than a duplicate gift.
+      if (String(err).includes("23505") || String(err).includes("duplicate key")) {
+        return { error: "Those photos are already yours", status: 409 };
+      }
+      throw err;
+    });
+
+    if ("error" in gifted) {
+      return NextResponse.json({ error: gifted.error }, { status: gifted.status });
+    }
+
+    // Same follow-through as a paid order: the archive of owned photos is
+    // stale now, and both sides should hear about it.
+    await queryOne(
+      `INSERT INTO delivery_extras_zip (booking_id, ready, updated_at)
+       VALUES ($1, FALSE, NOW())
+       ON CONFLICT (booking_id) DO UPDATE SET ready = FALSE, updated_at = NOW()
+       RETURNING booking_id`,
+      [booking.id]
+    ).catch(() => null);
+    import("@/lib/build-zip").then(({ buildDeliveryZip }) =>
+      buildDeliveryZip(booking.id, "extras")
+    ).catch(() => {});
+    import("@/lib/telegram").then(({ sendTelegram }) =>
+      sendTelegram(`🎁 <b>Клиент выбрал подарочные фото</b>\n\n${gifted.count} шт · бронь <code>${booking.id.slice(0, 8)}</code>`, "bookings")
+    ).catch(() => {});
+    import("@/lib/realtime").then((m) => {
+      m.notifyUser(booking.client_id, "delivery_uploaded", { bookingId: booking.id });
+    }).catch(() => {});
+
+    return NextResponse.json({ gifted: gifted.count });
   }
 
   // A retry after a cancelled checkout must work — the basket survives
