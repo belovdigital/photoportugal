@@ -3332,7 +3332,7 @@
     "extraPicked": "Añadida",
     "plusExtrasAvailable": "+ {count} extra para elegir",
     "extrasBannerTitle": "{count, plural, one {# foto extra de tu sesión} other {# fotos extra de tu sesión}}",
-    "extrasHowTo": "Son las que llevan marca de agua. Toca Añadir en las que te gusten — se reúnen al final de la página y solo pagas al pulsar Comprar. {price} cada una.",
+    "extrasHowTo": "Toca Añadir en las que te gusten — se reúnen al final de la página y solo pagas al pulsar Comprar. {price} cada una.",
     "extrasFreeFirst": "Tus {count} gratuitas se descuentan primero — elige esa cantidad y no pagas nada.",
     "confirmShareExtras": "{count, plural, one {# foto más queda a la venta — ganas {price} si tu cliente la compra, o puedes regalarla.} other {# fotos más quedan a la venta — ganas {price} por cada una comprada, o puedes regalar algunas.}}",
     "extraPickFree": "Añadir gratis",

@@ -3332,7 +3332,7 @@
     "extraPicked": "Ajoutée",
     "plusExtrasAvailable": "+ {count} supplémentaires au choix",
     "extrasBannerTitle": "{count, plural, one {# photo supplémentaire de votre séance} other {# photos supplémentaires de votre séance}}",
-    "extrasHowTo": "Ce sont celles avec un filigrane. Touchez Ajouter sur celles qui vous plaisent — elles se rassemblent en bas de page et vous ne payez qu'au moment d'Acheter. {price} pièce.",
+    "extrasHowTo": "Touchez Ajouter sur celles qui vous plaisent — elles se rassemblent en bas de page et vous ne payez qu'au moment d'Acheter. {price} pièce.",
     "extrasFreeFirst": "Vos {count} gratuites sont déduites en premier — choisissez-en autant et vous ne payez rien.",
     "confirmShareExtras": "{count, plural, one {# photo de plus est proposée — vous gagnez {price} si votre client l'achète, ou vous pouvez l'offrir.} other {# photos de plus sont proposées — vous gagnez {price} par achat, ou vous pouvez en offrir.}}",
     "extraPickFree": "Ajouter gratuit",

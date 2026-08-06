@@ -324,18 +324,29 @@ export function DeliveryGalleryClient({
           /* A bare "+" in a 28px circle told nobody anything, and on a phone it
              was barely a tap target. A labelled pill across the bottom says what
              pressing it does, and the whole tile is clickable anyway. */
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/40 to-transparent p-2 pt-8">
+          <div className="absolute inset-x-0 bottom-0 flex justify-end bg-gradient-to-t from-black/40 to-transparent p-2 pt-8">
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onToggleExtra?.(photo.id); }}
               onPointerDown={(e) => e.stopPropagation()}
-              /* Translucent so the photograph underneath still reads — this is
-                 the thing the client is deciding about. */
-              className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold shadow-lg ring-1 ring-black/10 backdrop-blur-sm transition hover:brightness-105 ${
-                picked ? "bg-green-600/90 text-white" : giftLeft > 0 ? "bg-accent-600/90 text-white" : "bg-white/75 text-gray-900"
+              /* A basket, not a caption: it adds to the bar at the bottom of
+                 the page. Full width made it read as a label on the photo. */
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold shadow-lg ring-1 ring-black/10 backdrop-blur-sm transition hover:brightness-105 ${
+                picked ? "bg-green-600/90 text-white" : giftLeft > 0 ? "bg-accent-600/90 text-white" : "bg-white/85 text-gray-900"
               }`}
             >
-              {picked ? `✓ ${t("extraPicked")}` : giftLeft > 0 ? `🎁 ${t("extraPickFree")}` : `＋ ${t("extraPick")}`}
+              {picked ? (
+                <>✓ {t("extraPicked")}</>
+              ) : giftLeft > 0 ? (
+                <>🎁 {t("extraPickFree")}</>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 2.3A1 1 0 005.4 17H17M9 21a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z" />
+                  </svg>
+                  {t("extraPick")}
+                </>
+              )}
             </button>
           </div>
         )}

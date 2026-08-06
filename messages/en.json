@@ -3084,7 +3084,7 @@
     "extraPicked": "Added",
     "plusExtrasAvailable": "+ {count} extra to choose from",
     "extrasBannerTitle": "{count, plural, one {# extra photo from your session} other {# extra photos from your session}}",
-    "extrasHowTo": "They are the ones with a watermark. Tap Add on any you like — they gather at the bottom of the page, and you pay only when you press Buy. {price} each.",
+    "extrasHowTo": "Tap Add on any you like — they gather at the bottom of the page, and you pay only when you press Buy. {price} each.",
     "extrasFreeFirst": "Your {count} free ones are taken off first — pick that many and you pay nothing.",
     "confirmShareExtras": "{count, plural, one {# more photo goes on offer — you earn {price} if your client buys it, or you can give it away with a gift.} other {# more photos go on offer — you earn {price} on each one your client buys, or you can give some away with a gift.}}",
     "extraPickFree": "Add free",
