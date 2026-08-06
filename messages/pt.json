@@ -3258,7 +3258,10 @@
     "promisedPhotosEdit": "alterar",
     "promisedPhotosInvalid": "Introduza um número entre 5 e 1000",
     "promisedPhotosClient": "O seu fotógrafo vai entregar {count} fotos",
-    "extrasLine": "{count, plural, one {# fotografia extra} other {# fotografias extra}}"
+    "extrasLine": "{count, plural, one {# fotografia extra} other {# fotografias extra}}",
+    "photosLabel": "Fotografias",
+    "photosLabelHintPhotographer": "na entrega",
+    "photosLabelHintClient": "que recebe"
   },
   "bookingJourney": {
     "cancelled": "Cancelada",

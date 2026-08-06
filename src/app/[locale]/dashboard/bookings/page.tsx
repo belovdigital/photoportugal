@@ -77,6 +77,7 @@ export default async function BookingsPage() {
     payout_amount: number | null;
     blind_booking: boolean | null;
     promised_photos: number | null;
+    package_num_photos: number | null;
     tip_amount_cents: number | null;
     tip_payout_cents: number | null;
     extras_payout_cents: number | null;
@@ -132,7 +133,7 @@ export default async function BookingsPage() {
       if (profile) {
         bookings = await query(
           `SELECT b.id, u.name as other_name, '' as other_slug, u.avatar_url as other_avatar,
-                  p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.blind_booking, b.promised_photos,
+                  p.name as package_name, p.duration_minutes, p.num_photos as package_num_photos, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, b.total_price, b.service_fee, b.payout_amount, b.blind_booking, b.promised_photos,
                   ${stripePaymentSelect},
                   b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                   FALSE as has_review, b.delivery_token,
@@ -196,7 +197,7 @@ export default async function BookingsPage() {
       // booking in their dashboard before they got the gift email.
       bookings = await query(
         `SELECT b.id, u.name as other_name, pp.slug as other_slug, u.avatar_url as other_avatar,
-                p.name as package_name, p.duration_minutes, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, COALESCE(b.client_sms_opt_in, false) as client_sms_opt_in, b.total_price, b.service_fee, b.payout_amount, b.blind_booking, b.promised_photos,
+                p.name as package_name, p.duration_minutes, p.num_photos as package_num_photos, b.status, b.shoot_date, b.shoot_time, b.flexible_date_from, b.flexible_date_to, b.proposed_date, b.proposed_by, b.proposed_time, b.date_note, b.group_size, ${groupSizeEstimateSelect}, b.occasion, COALESCE(b.client_sms_opt_in, false) as client_sms_opt_in, b.total_price, b.service_fee, b.payout_amount, b.blind_booking, b.promised_photos,
                 ${stripePaymentSelect},
                 b.location_slug, b.location_detail, b.message, b.created_at, b.payment_status,
                 (SELECT COUNT(*) FROM reviews r WHERE r.booking_id = b.id) > 0 as has_review, b.delivery_token,
@@ -533,6 +534,23 @@ export default async function BookingsPage() {
                     {booking.duration_minutes && <p className="text-xs text-gray-500">{booking.duration_minutes < 60 ? `${booking.duration_minutes} min` : `${booking.duration_minutes / 60}h`}</p>}
                   </div>
                 )}
+                {/* The promised count is the number the delivery is measured
+                    against: it decides what ships and what goes on sale. Both
+                    sides need it on the card, whether it came from the package
+                    or was set by hand. */}
+                {(() => {
+                  const promised = booking.package_num_photos || booking.promised_photos || 0;
+                  if (!promised || (!booking.package_name && !isPhotographer)) return null;
+                  return (
+                    <div className="rounded-lg bg-warm-50 px-3 py-2">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("photosLabel")}</p>
+                      <p className="text-sm font-medium text-gray-800">{promised}</p>
+                      <p className="text-xs text-gray-500">
+                        {isPhotographer ? t("photosLabelHintPhotographer") : t("photosLabelHintClient")}
+                      </p>
+                    </div>
+                  );
+                })()}
                 {booking.location_slug && (
                   <div className="rounded-lg bg-warm-50 px-3 py-2">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-gray-400">{t("locationLabel") || "Location"}</p>
